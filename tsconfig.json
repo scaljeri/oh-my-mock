@@ -15,6 +15,12 @@
     "lib": [
       "es2018",
       "dom"
-    ]
-  }
+    ],
+    "types": [ "Chrome" ]
+  },
+  "files": [
+    "src/main.ts",
+    "src/polyfills.ts",
+    "src/background.ts"
+  ]
 }

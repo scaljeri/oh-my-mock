@@ -1,0 +1,9 @@
+{
+  "name": "Great Example",
+  "version": "1.0",
+  "description": "Build an Extension with Angular",
+  "manifest_version": 2,
+  "page_action": {
+    "default_popup": "index.html"
+  }
+}
