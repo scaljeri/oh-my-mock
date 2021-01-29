@@ -1,0 +1,11 @@
+:host {
+  display: flex;
+  width: 400px;
+  height: 400px;
+
+  background-color: #000;
+}
+
+.example-spacer {
+  flex: 1 1 auto;
+}

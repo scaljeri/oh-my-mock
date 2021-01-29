@@ -1,8 +1,17 @@
-1)App: {{test}}
+<mat-toolbar>
+  <button mat-icon-button class="example-icon" aria-label="Example icon-button with menu icon">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Oh My Mock</span>
+  <span class="example-spacer"></span>
+  <mat-slide-toggle (change)="onEnableChange($event)"></mat-slide-toggle>
+</mat-toolbar>
+
+<!-- 1)App: {{test}}
 <nav>
   <ul>
     <li><a routerLink="configure" routerLinkActive="active">Configure</a></li>
   </ul>
 </nav>
 
-<router-outlet></router-outlet>
+<router-outlet></router-outlet> -->

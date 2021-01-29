@@ -2,6 +2,18 @@
 
 console.log('(^.^) Content script loaded');
 
+chrome.runtime.onMessage.addListener(
+  function (request, sender, sendResponse) {
+    if (request.OhMyState)
+      sendResponse();
+      window.postMessage(JSON.stringify({ request }), request.OhMyState.domain);
+  }
+);
+// window.addEventListener('message', (data) => {
+//   console.log('XXXXXXXXXXXXXXXXXXXXXX', data);
+//   debugger;
+// })
+
 function ohInject() {
   const xhrScript = document.createElement('script');
   xhrScript.type = 'text/javascript';
@@ -13,6 +25,7 @@ function ohInject() {
 }
 
 ohInject();
+
 
 // chrome.runtime.onMessage.addListener(
 //   function(request, sender, sendResponse) {

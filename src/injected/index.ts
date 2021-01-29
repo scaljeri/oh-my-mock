@@ -8,7 +8,8 @@ declare var window: any;
   console.log('(^.^) Inected script loaded');
 
   const localState = {};
-  const state = {};
+  let state = {} as any;
+  let removeMock = () => { };
 
   window.ohMyMock = (url: string, payload: Record<string, unknown>, method = 'GET') => {
     if (payload) {
@@ -19,19 +20,29 @@ declare var window: any;
   }
 
   window.addEventListener('message', (ev) => {
-    if (ev.data?.ohMyMock) {
+    const dataStr = ev.data;
+
+    try {
+      const data = JSON.parse(dataStr);
+      state = data.request.OhMyState;
+
+      if (state) {
+        removeMock();
+        if (state.enabled) {
+          removeMock = setup((url: string, method: string, data: string): string => {
+            console.log('s((^^..^^))')
+            console.log(url, method, data);
+            console.log('e((^^..^^))')
+            return data;
+          });
+        }
+      }
+    } catch (e) {
+    }
+    if (ev.data?.OhMyState) {
       console.log('(^.^) Received from content: ', ev.data?.ohMyMock);
     }
   });
-
-  setup((url: string, method: string, data: string): string => {
-    console.log('s((^^..^^))')
-    console.log(url, method, data);
-    console.log('e((^^..^^))')
-
-    return data;
-  });
-
 })();
 
 // const state = {} as any;

@@ -1,4 +1,4 @@
-export function setup(mockFn: (url: string, method: string, data: string) => string = (a, b, c) => c): void {
+export function setup(mockFn: (url: string, method: string, data: string) => string = (a, b, c) => c): () => void {
   var _open = XMLHttpRequest.prototype.open;
   const _addEventListener = XMLHttpRequest.prototype.addEventListener;
   window.XMLHttpRequest.prototype.open = function (method, URL, ...args) {
@@ -17,6 +17,7 @@ export function setup(mockFn: (url: string, method: string, data: string) => str
           //             EXAMPLE:             //
           //////////////////////////////////////
           const mocked = mockFn(URL, method, _this.responseText);
+          console.log('------------ mock ------------');
 
           if (URL.match(/^data/)) {
             debugger;
@@ -44,4 +45,8 @@ export function setup(mockFn: (url: string, method: string, data: string) => str
     console.log('__open' + URL);
     return _open.call(_this, method, URL, ...args);
   };
+
+  return () => { // remove mock
+    XMLHttpRequest.prototype.open = _open;
+  }
 }

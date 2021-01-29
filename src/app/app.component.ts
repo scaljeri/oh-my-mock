@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
+import { Dispatch } from '@ngxs-labs/dispatch-decorator';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+
 import { MockXmlHttpRequestService } from './services/mock-xml-http-request.service';
+import { ContentService } from './services/content.service';
+import { EnableDomain } from './store/actions';
 
 @Component({
   selector: 'app-root',
@@ -8,9 +13,10 @@ import { MockXmlHttpRequestService } from './services/mock-xml-http-request.serv
 })
 export class AppComponent {
   title = 'angular-chrome-extension';
-  test;
 
-  constructor(private service: MockXmlHttpRequestService) { }
+  @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
+
+  constructor(private service: MockXmlHttpRequestService, private contentService: ContentService) { }
 
   ngOnInit(): void {
     console.log('XXXXXXXXXXXX');
@@ -19,5 +25,11 @@ export class AppComponent {
     //   console.log(tabs)
     //   port.postMessage({ url: tabs[0].url });
     // })
+  }
+
+  onEnableChange({ checked }: MatSlideToggleChange): void {
+    this.activate(checked);
+
+    // this.contentService.enable(checked);
   }
 }
