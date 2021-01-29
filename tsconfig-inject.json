@@ -3,25 +3,22 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./dist/out-tsc",
-    "sourceMap": true,
+    "outDir": "./dist/injected/",
+    "sourceMap": false,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2015",
-    "module": "es2020",
+    "target": "es5",
+    "module": "commonjs",
     "lib": [
-      "es2018",
+      "es5",
       "dom"
     ],
-    "types": [ "Chrome" ]
+    "types": []
   },
   "files": [
-    "src/main.ts",
-    "src/polyfills.ts",
-    "src/background.ts",
-    "src/content.ts"
+    "src/injected/index.ts"
   ]
 }

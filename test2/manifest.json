@@ -1,0 +1,28 @@
+{
+  "name": "Oh-my-mock",
+  "short_name": "Chrome Response Override",
+  "version": "1.6",
+  "description": "Provides support to override API/HTML/* response using simple Find & Replace steps. No external app installation required",
+  "author": "Pasupathi Rajamanickam",
+  "devtools_page": "devtools.html",
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "permissions": [
+    "activeTab",
+    "webNavigation",
+    "webRequest",
+    "*://*/*",
+    "debugger",
+    "storage",
+    "webRequestBlocking"
+  ],
+  "manifest_version": 2,
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  }
+}

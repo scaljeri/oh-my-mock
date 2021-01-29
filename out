@@ -1,0 +1,56 @@
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/// <reference path="./mock-xml-http-request.ts" />
+var mock_xml_http_request_1 = require("./mock-xml-http-request");
+console.log('Inected script loaded');
+mock_xml_http_request_1.setup();
+
+},{"./mock-xml-http-request":2}],2:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.setup = void 0;
+function setup() {
+    var open = XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function open(method, URL) {
+        var onreadystatechange = this.onreadystatechange;
+        // TODO: Does this work with `this`
+        this.onreadystatechange = function () {
+            // catch only completed 'api/search/universal' requests
+            if (this.readyState === 4 && this.status === 200) {
+                try {
+                    //////////////////////////////////////
+                    // THIS IS ACTIONS FOR YOUR REQUEST //
+                    //             EXAMPLE:             //
+                    //////////////////////////////////////
+                    var data = JSON.parse(this.responseText); // {"fields": ["a","b"]}
+                    if (data.fields) {
+                        data.fields.push('c', 'd');
+                    }
+                    // rewrite responseText
+                    Object.defineProperty(this, 'responseText', { value: JSON.stringify(data) });
+                    /////////////// END //////////////////
+                }
+                catch (e) { }
+                console.log('Caught! :)', method, URL /*, _this.responseText*/);
+            }
+            // call original callback
+            if (onreadystatechange) {
+                onreadystatechange.apply(this, arguments);
+            }
+        };
+        // detect any onreadystatechange changing
+        Object.defineProperty(this, "onreadystatechange", {
+            get: function () {
+                return onreadystatechange;
+            },
+            set: function (value) {
+                onreadystatechange = value;
+            }
+        });
+        return open.apply(this, arguments);
+    };
+}
+exports.setup = setup;
+
+},{}]},{},[1]);

@@ -1,0 +1,33 @@
+{
+  "name": "Oh-my-mock",
+  "manifest_version": 2,
+  "version": "0.1",
+  "permissions": [
+    "background",
+    "debugger",
+    "tabs",
+    "activeTab",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "*://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    "injected-script.js"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_popup": "index.html"
+  }
+}
