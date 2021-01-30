@@ -1,5 +1,6 @@
 :host {
   display: flex;
+  flex-direction: column;
   width: 400px;
   height: 400px;
 
@@ -8,4 +9,8 @@
 
 .example-spacer {
   flex: 1 1 auto;
+}
+
+pre {
+  color: #fff;
 }

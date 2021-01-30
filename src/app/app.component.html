@@ -4,9 +4,10 @@
   </button>
   <span>Oh My Mock</span>
   <span class="example-spacer"></span>
-  <mat-slide-toggle (change)="onEnableChange($event)"></mat-slide-toggle>
+  <mat-slide-toggle (change)="onEnableChange($event)"  [checked]="isEnabled"></mat-slide-toggle>
 </mat-toolbar>
 
+<pre>{{state | json}}</pre>
 <!-- 1)App: {{test}}
 <nav>
   <ul>

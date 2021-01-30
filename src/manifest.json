@@ -1,7 +1,7 @@
 {
   "name": "Oh-my-XHR-Mock",
   "version": "1.1",
-  "description": "Build an Extension with Angular",
+  "description": "Extension to cache and mock API responses",
   "manifest_version": 2,
   "permissions": [
       "background",

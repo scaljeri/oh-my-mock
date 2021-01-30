@@ -2,13 +2,24 @@
 
 console.log('(^.^) Content script loaded');
 
-chrome.runtime.onMessage.addListener(
-  function (request, sender, sendResponse) {
-    if (request.OhMyState)
-      sendResponse();
-      window.postMessage(JSON.stringify({ request }), request.OhMyState.domain);
-  }
-);
+// chrome.storage.onChanged.addListener(function (changes, namespace) {
+//   if (changes.OhMyMocks) {
+//   console.log('xxxxxxxxxxxxxxxx');
+//   }
+//   // for (letkey in changes) {
+//   //   if (key === 'active') {
+//   //     // Do something here
+//   //   }
+//   // }
+// });
+
+// chrome.runtime.onMessage.addListener(
+//   function (request, sender, sendResponse) {
+//     if (request.OhMyState)
+//       sendResponse();
+//       window.postMessage(JSON.stringify({ request }), request.OhMyState.domain);
+//   }
+// );
 // window.addEventListener('message', (data) => {
 //   console.log('XXXXXXXXXXXXXXXXXXXXXX', data);
 //   debugger;

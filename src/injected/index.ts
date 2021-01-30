@@ -29,6 +29,7 @@ declare var window: any;
       if (state) {
         removeMock();
         if (state.enabled) {
+          console.log('Activate');
           removeMock = setup((url: string, method: string, data: string): string => {
             console.log('s((^^..^^))')
             console.log(url, method, data);
