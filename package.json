@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:server": "node ./test-site/server.js",
     "build": "ng build && yarn build:content && yarn build:injected",
     "build:content": "tsc --build ./tsconfig-content.json",
     "build:injected": "tsc --build ./tsconfig-inject.json && browserify --node ./dist/injected/index.js > ./dist/angular-chrome-extension/inject.js",
