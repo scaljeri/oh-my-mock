@@ -1,0 +1,34 @@
+html, body {
+  min-height: 100%;
+  padding: 30px;
+}
+
+section {
+  display: flex;
+  background-color: lightgray;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  padding: 10px;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.get-code {
+  background-color: #000;
+  color: #fff;
+  padding: 10px;
+  margin: 0;
+  border-radius: 10px;
+}
+
+button + .get-code {
+  margin-left: 20px;
+}
+
+.hidden {
+  display: none;
+}
