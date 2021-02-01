@@ -29,12 +29,24 @@ export class AppComponent {
   }
 
   async ngOnInit(): Promise<void> {
-      this.state = await this.storageService.loadState();
-      console.log('Loaded state=', this.state);
-      this.isEnabled = this.state.enabled;
+    // this.state = await this.storageService.loadState();
+    // this.isEnabled = this.state.enabled;
 
-      this.init(this.state)
-      this.state = this.state;
+    // this.init(this.state)
+
+    // const resp = await this.contentService.send('state', this.state);
+    // console.log(resp);
+
+    chrome.runtime.onMessage.addListener(
+      (request, sender) => {
+        console.log('__received data', request);
+      });
+
+    chrome.runtime.sendMessage({
+      popup: 'init msg'
+    }, (response) => {
+      console.log('xresponse: ', response);
+    });
   }
 
   onEnableChange({ checked }: MatSlideToggleChange): void {

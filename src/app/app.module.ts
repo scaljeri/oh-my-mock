@@ -12,15 +12,24 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { ComponentsModule } from './components/components.module';
+import { forwarderGuard } from './forward-guard';
 import { OhMyState } from './store/state';
+import { HomeComponent } from './pages/home/home.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    HomeComponent,
   ],
   imports: [
     BrowserModule,
-    RouterModule.forRoot([]),
+    RouterModule.forRoot([ {
+      path: 'index.html',
+      canActivate: [
+        forwarderGuard
+      ],
+      children: []
+    }]),
     NgxsModule.forRoot([OhMyState], { developmentMode: true }),
     NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,

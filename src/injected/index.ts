@@ -5,7 +5,7 @@ import { setup } from './mock-xml-http-request';
 declare var window: any;
 
 (function () {
-  console.log('(^.^) Inected script loaded');
+  console.log('OhMyMock: XMLHttpRequest Mock injected (inactive!)');
 
   const localState = {};
   let state = {} as any;
@@ -20,12 +20,10 @@ declare var window: any;
   }
 
   window.addEventListener('message', (ev) => {
-    const dataStr = ev.data;
+    const state = ev.data.state;
+    console.log('OhMyMock(Injected) window.addEventListener:', state );
 
     try {
-      const data = JSON.parse(dataStr);
-      state = data.request.OhMyState;
-
       if (state) {
         removeMock();
         if (state.enabled) {
@@ -34,6 +32,8 @@ declare var window: any;
             console.log('s((^^..^^))')
             console.log(url, method, data);
             console.log('e((^^..^^))')
+            window.postMessage({apiResponse: {method, data, url}}, window.location.href);
+
             return data;
           });
         }
@@ -45,6 +45,7 @@ declare var window: any;
     }
   });
 })();
+
 
 // const state = {} as any;
 

@@ -1,6 +1,8 @@
 /// <reference types="chrome"/>
+// import { STORAGE_KEY } from '../app/types';
+const STORAGE_KEY = 'OhMyMocks'; // TODO
 
-console.log('(^.^) Content script loaded');
+console.log('OhMyMock: Content script active');
 
 // chrome.storage.onChanged.addListener(function (changes, namespace) {
 //   if (changes.OhMyMocks) {
@@ -25,7 +27,7 @@ console.log('(^.^) Content script loaded');
 //   debugger;
 // })
 
-function ohInject() {
+(function () {
   const xhrScript = document.createElement('script');
   xhrScript.type = 'text/javascript';
   xhrScript.onload = function () {
@@ -33,23 +35,44 @@ function ohInject() {
   }
   xhrScript.src = chrome.runtime.getURL('inject.js');
   document.head.append(xhrScript);
-}
+})();
 
-ohInject();
+chrome.runtime.onMessage.addListener(
+  (request, sender, sendResponse) => {
+    console.log('received data', request);
+    // const state = request[STORAGE_KEY];
 
+    // if (state) {
+      // console.log('OhMyMock(content): chrome.runtime.onMessage:', state);
+      // window.postMessage(state, state.domain);
+    // }
+    // sendResponse({ contentScript: 'yes' });
+    chrome.runtime.sendMessage({
+      contentScript: 'back msg'
+    }, (response) => {
+      console.log('response: ', response);
+    });
+  }
+);
 
-// chrome.runtime.onMessage.addListener(
-//   function(request, sender, sendResponse) {
-//     console.log('received msg', request);
-//     sendResponse({ code: 9});
-//   }
-// );
-
-// chrome.runtime.sendMessage({
-//   msg: 'connect'
-// }, (response) => {
-//   console.log('response: ', response);
+// chrome.runtime.onConnect.addListener(function (port) {
+//   console.assert(port.name == "knockknock");
+//   port.onMessage.addListener(function (msg)  {
+//     console.log('YESYESYEYSY', msg);
+//   });
 // });
+
+window.addEventListener('message', (ev) => {
+  const data = ev.data;
+  if (data.apiResponse) {
+    console.log('YES YESY APIR ESP', data);
+    chrome.runtime.sendMessage({
+      apiResponse: data.apiResponse
+    }, (response) => {
+      console.log('response: ', response);
+    });
+  }
+});
 
 // function testMessage() {
 //   setChildTextNode("resultsRequest", "running...");

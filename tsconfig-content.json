@@ -20,6 +20,7 @@
   },
   "files": [
     "src/content/index.ts",
-    "src/injected/index.ts"
+    "src/injected/index.ts",
+    "src/background.ts"
   ]
 }
