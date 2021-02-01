@@ -9,14 +9,14 @@ export function setup(
 
     const mock = mockFn(URL, method);
     if (mock) {
-      URL = 'data:application/json; charset=utf-8,' + mock;
+      URL = 'data:application/json; charset=utf-8,' + JSON.stringify(mock);
     }
 
     _this.onreadystatechange = function () {
       if (_this.readyState === 4 && _this.status === 200) {
         try {
           if (!mock) {
-            storeResponseFn(URL, method, _this.responseText);
+            storeResponseFn(URL, method, JSON.parse(_this.responseText));
           }
           // rewrite responseText
           // Object.defineProperty(_this, 'responseText', { value: JSON.stringify(mock) });

@@ -32,6 +32,7 @@ export class AppComponent {
     this.state = await this.storageService.loadState();
     this.isEnabled = this.state.enabled;
 
+    console.log(this.state);
     this.initState(this.state)
 
     this.contentService.send(this.state);

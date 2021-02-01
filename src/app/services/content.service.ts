@@ -20,7 +20,7 @@ export class ContentService {
       (payload) => {
         console.log('sdfjwljenfaljdnflsjnf');
         if (payload.mock) {
-          console.log('Received mock', payload);
+          console.log('Received mock', payload.mock);
           this.updateMock(payload.mock);
         }
       });
