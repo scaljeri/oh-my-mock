@@ -38,99 +38,41 @@ console.log('OhMyMock: Content script active');
 })();
 
 chrome.runtime.onMessage.addListener(
-  (request, sender, sendResponse) => {
+  (request, sender) => {
     console.log('received data', request);
-    // const state = request[STORAGE_KEY];
+    //     // const state = request[STORAGE_KEY];
 
-    // if (state) {
-      // console.log('OhMyMock(content): chrome.runtime.onMessage:', state);
-      // window.postMessage(state, state.domain);
-    // }
-    // sendResponse({ contentScript: 'yes' });
-    chrome.runtime.sendMessage({
-      contentScript: 'back msg'
-    }, (response) => {
-      console.log('response: ', response);
-    });
+    //     // if (state) {
+    //       // console.log('OhMyMock(content): chrome.runtime.onMessage:', state);
+    //       // window.postMessage(state, state.domain);
+    //     // }
+    //     // sendResponse({ contentScript: 'yes' });
+    chrome.runtime.sendMessage({ origin: 'content-script', payload: { y : 10}});
+    //   contentScript: 'back msg'
+    // }, (response) => {
+    //   console.log('response: ', response);
+    // });
   }
 );
 
-// chrome.runtime.onConnect.addListener(function (port) {
-//   console.assert(port.name == "knockknock");
-//   port.onMessage.addListener(function (msg)  {
-//     console.log('YESYESYEYSY', msg);
-//   });
+// window.addEventListener('message', (ev) => {
+//   const data = ev.data;
+//   if (data.apiResponse) {
+//     console.log('YES YESY APIR ESP', data);
+//     chrome.runtime.sendMessage({
+//       apiResponse: data.apiResponse
+//     }, (response) => {
+//       console.log('response: ', response);
+//     });
+//   }
 // });
 
-window.addEventListener('message', (ev) => {
-  const data = ev.data;
-  if (data.apiResponse) {
-    console.log('YES YESY APIR ESP', data);
-    chrome.runtime.sendMessage({
-      apiResponse: data.apiResponse
-    }, (response) => {
-      console.log('response: ', response);
-    });
-  }
-});
+// setTimeout(() => {
+//   console.log('send msg');
+//   var port = chrome.runtime.connect({ name: "knockknock" });
+//   port.postMessage({ joke: "Knock knock" });
 
-// function testMessage() {
-//   setChildTextNode("resultsRequest", "running...");
-
-//   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-//     var timer = new chrome.Interval();
-//     timer.start();
-//     var tab = tabs[0];
-//     chrome.tabs.sendMessage(tab.id, { counter: 1 }, function handler(response) {
-//       if (response.counter < 1000) {
-//         chrome.tabs.sendMessage(tab.id, { counter: response.counter }, handler);
-//       } else {
-//         timer.stop();
-//         var usec = Math.round(timer.microseconds() / response.counter);
-//         setChildTextNode("resultsRequest", usec + "usec");
-//       }
-//     });
+//   port.onMessage.addListener(function (msg) {
+//     console.log('content script.port ', msg);
 //   });
-// }
-
-// window.addEventListener("message", ev => {
-//   ev.data.message && console.log('ContentScript: message in injected script', ev.data.message);
-// });
-
-// if (document.head && document.body) {
-//   const script = buildScriptTag('oh-my-xml-mock');
-//   // script.innerHTML = `
-//   //   const el = document.createElement('div');
-//   //   el.id = 'oh-my-mock-data';
-//   //   el.innerText = '{"x": 10}';
-//   //   console.log(el);
-//   //   document.body.appendChild(el);
-//   //   window.addEventListener('message', (ev)=> {
-//   //       ev.data.message && console.log('Site: received msg: ', ev.data);
-//   //   });
-//   //   setTimeout(() => {
-//   //     el.innerText = '{"x": 20 }';
-//   //     window.postMessage({message: {"x": 20 }});
-//   //   }, 5000);
-//   // `;
-
-//   document.head.prepend(script);
-
-//   setTimeout(() => {
-//     const output = document.querySelector('#oh-my-mock-data');
-//     console.log('output:', JSON.parse(output.innerText));
-
-//     var observer = new MutationObserver(function (mutations) {
-//       mutations.forEach(function (mutation) {
-//         console.log("Data changed", JSON.parse(mutation.target.innerText));
-//       });
-//     });
-
-//     observer.observe(output, { childList: true });
-//   }, 1000);
-
-//   window.postMessage({ message: "injectedpagescript.js loaded" }, "*");
-
-// }
-
-
+// }, 5000);

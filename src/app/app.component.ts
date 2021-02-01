@@ -43,10 +43,19 @@ export class AppComponent {
       });
 
     chrome.runtime.sendMessage({
-      popup: 'init msg'
-    }, (response) => {
+      origin: 'popup',  payload: { x: 10 }
+    })
+    /*, (response) => {
       console.log('xresponse: ', response);
-    });
+    }); */
+
+    // console.log('send msg');
+    // var port = chrome.runtime.connect({ name: "knockknock popup" });
+    // port.postMessage({ joke: "Knock knock popup" });
+
+    // port.onMessage.addListener(function (msg) {
+    //   console.log('content script.port ', msg);
+    // });
   }
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
