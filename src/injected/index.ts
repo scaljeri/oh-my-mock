@@ -21,20 +21,19 @@ declare var window: any;
 
   window.addEventListener('message', (ev) => {
     const state = ev.data.state;
-    console.log('OhMyMock(Injected) window.addEventListener:', state );
+    console.log('OhMyMock(Injected) window.addEventListener:', ev.data );
 
     try {
       if (state) {
         removeMock();
         if (state.enabled) {
           console.log('Activate');
-          removeMock = setup((url: string, method: string, data: string): string => {
-            console.log('s((^^..^^))')
-            console.log(url, method, data);
-            console.log('e((^^..^^))')
-            window.postMessage({apiResponse: {method, data, url}}, window.location.href);
+          removeMock = setup(
+            (url: string, method: string) => {
+              return (state?.urls && state.urls[url]?.payload) || null;
+          }, (url: string, type: string, data: unknown) => {
+            window.postMessage({ mock: {url, type, payload: data, method: 'xhr'}}, window.location.href);
 
-            return data;
           });
         }
       }

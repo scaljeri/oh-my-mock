@@ -1,30 +1,26 @@
-export function setup(mockFn: (url: string, method: string, data: string) => string = (a, b, c) => c): () => void {
+export function setup(
+  mockFn: (url: string, method: string) => unknown | null,
+  storeResponseFn: (url: string, method, data: unknown) => void): () => void {
+
   var _open = XMLHttpRequest.prototype.open;
-  const _addEventListener = XMLHttpRequest.prototype.addEventListener;
   window.XMLHttpRequest.prototype.open = function (method, URL, ...args) {
     var _onreadystatechange = this.onreadystatechange,
       _this = this;
 
-    if (URL.match(/highload/)) {
-      URL = 'data:application/json; charset=utf-8,' + JSON.stringify({ apiVersion: "1.21.0", data: true });
+    const mock = mockFn(URL, method);
+    if (mock) {
+      URL = 'data:application/json; charset=utf-8,' + mock;
     }
 
     _this.onreadystatechange = function () {
       if (_this.readyState === 4 && _this.status === 200) {
         try {
-          //////////////////////////////////////
-          // THIS IS ACTIONS FOR YOUR REQUEST //
-          //             EXAMPLE:             //
-          //////////////////////////////////////
-          const mocked = mockFn(URL, method, _this.responseText);
-          console.log('------------ mock ------------');
-
-          if (URL.match(/^data/)) {
-            debugger;
+          if (!mock) {
+            storeResponseFn(URL, method, _this.responseText);
           }
           // rewrite responseText
-          Object.defineProperty(_this, 'responseText', { value: mocked });
-          Object.defineProperty(_this, 'response', { value: mocked });
+          // Object.defineProperty(_this, 'responseText', { value: JSON.stringify(mock) });
+          // Object.defineProperty(_this, 'response', { value: JSON.stringify(mock) });
           /////////////// END //////////////////
         } catch (e) { }
       }
@@ -42,7 +38,6 @@ export function setup(mockFn: (url: string, method: string, data: string) => str
       }
     });
 
-    console.log('__open' + URL);
     return _open.call(_this, method, URL, ...args);
   };
 

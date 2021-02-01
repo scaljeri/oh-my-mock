@@ -7,5 +7,10 @@ export interface IState {
   enabled?: boolean;
 }
 
-export interface IMock {
+export interface IMock<T = any> {
+  url: string;
+  method: 'xhr' | 'fetch';
+  type: 'GET' | 'POST';
+  payload: T
+  headers?: Record<string, string>
 }

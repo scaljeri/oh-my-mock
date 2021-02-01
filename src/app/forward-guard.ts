@@ -8,15 +8,12 @@ export class forwarderGuard implements CanActivate {
 
   constructor(
     private router: Router,
-    private storageService: StorageService,
-    private contentService: ContentService
+    private storageService: StorageService
   ) { }
 
   canActivate(route: ActivatedRouteSnapshot) {
     const domain = route.queryParams.domain;
-    const tabId = route.queryParams.tabId;
     this.storageService.setDomain(domain);
-    this.contentService.setTabId(tabId);
 
     this.router.navigate([`/`]);
     return false;

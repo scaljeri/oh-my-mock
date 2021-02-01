@@ -37,35 +37,27 @@ console.log('OhMyMock: Content script active');
   document.head.append(xhrScript);
 })();
 
-chrome.runtime.onMessage.addListener(
-  (request, sender) => {
-    console.log('received data', request);
-    //     // const state = request[STORAGE_KEY];
+chrome.runtime.onMessage.addListener(state => {
+  console.log('received data', state);
+  if (state) {
+    window.postMessage(state, state.domain);
 
-    //     // if (state) {
-    //       // console.log('OhMyMock(content): chrome.runtime.onMessage:', state);
-    //       // window.postMessage(state, state.domain);
-    //     // }
-    //     // sendResponse({ contentScript: 'yes' });
-    chrome.runtime.sendMessage({ origin: 'content-script', payload: { y : 10}});
-    //   contentScript: 'back msg'
+    // chrome.runtime.sendMessage({ origin: 'content-script', payload: { y : 10}});
+  }
+});
+
+window.addEventListener('message', (ev) => {
+  const data = ev.data;
+  debugger;
+  if (data.mock) {
+    console.log('YES YESY APIR ESP', data);
+    chrome.runtime.sendMessage(data);
+      // apiResponse: data.apiResponse
     // }, (response) => {
-    //   console.log('response: ', response);
+      // console.log('response: ', response);
     // });
   }
-);
-
-// window.addEventListener('message', (ev) => {
-//   const data = ev.data;
-//   if (data.apiResponse) {
-//     console.log('YES YESY APIR ESP', data);
-//     chrome.runtime.sendMessage({
-//       apiResponse: data.apiResponse
-//     }, (response) => {
-//       console.log('response: ', response);
-//     });
-//   }
-// });
+});
 
 // setTimeout(() => {
 //   console.log('send msg');

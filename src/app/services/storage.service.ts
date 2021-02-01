@@ -15,8 +15,6 @@ export class StorageService {
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor() {
-    // chrome.storage.local.set({ [STORAGE_KEY]: { domains: {} } });
-
     this.state$.subscribe((state) => {
       if (this.domain && state[STORAGE_KEY]) {
         chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
@@ -39,16 +37,19 @@ export class StorageService {
     return new Promise(resolve => {
       chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
         const allDomains: IOhMyMock = data[STORAGE_KEY] || { domains: {} };
-        let state: IState;
 
-        if (data[STORAGE_KEY]) {
-          state = allDomains.domains[this.domain] || { domain: this.domain, urls: {}, enabled: false };
-        } else {
+        const state: IState = allDomains.domains[this.domain] || { domain: this.domain, urls: {}, enabled: false };
+
+        if (!data[STORAGE_KEY]) {
           chrome.storage.local.set({ [STORAGE_KEY]: allDomains });
         }
 
         resolve(state);
       });
     });
+  }
+
+  reset(): void {
+    chrome.storage.local.set({ [STORAGE_KEY]: null });
   }
 }

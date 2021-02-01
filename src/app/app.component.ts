@@ -18,7 +18,7 @@ export class AppComponent {
   state: IState;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
-  @Dispatch() init = (state: IState) => new InitState(state);
+  @Dispatch() initState = (state: IState) => new InitState(state);
 
   constructor(
     private storageService: StorageService,
@@ -29,22 +29,14 @@ export class AppComponent {
   }
 
   async ngOnInit(): Promise<void> {
-    // this.state = await this.storageService.loadState();
-    // this.isEnabled = this.state.enabled;
+    this.state = await this.storageService.loadState();
+    this.isEnabled = this.state.enabled;
 
-    // this.init(this.state)
+    this.initState(this.state)
 
-    // const resp = await this.contentService.send('state', this.state);
-    // console.log(resp);
+    this.contentService.send(this.state);
 
-    chrome.runtime.onMessage.addListener(
-      (request, sender) => {
-        console.log('__received data', request);
-      });
 
-    chrome.runtime.sendMessage({
-      origin: 'popup',  payload: { x: 10 }
-    })
     /*, (response) => {
       console.log('xresponse: ', response);
     }); */
@@ -60,5 +52,10 @@ export class AppComponent {
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
     this.activate(checked);
+  }
+
+  onReset(): void {
+    this.storageService.reset();
+
   }
 }
