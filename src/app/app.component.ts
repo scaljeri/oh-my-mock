@@ -7,6 +7,11 @@ import { ContentService } from './services/content.service';
 import { EnableDomain, InitState } from './store/actions';
 import { StorageService } from './services/storage.service';
 import { IState } from './store/type';
+import { Select } from '@ngxs/store';
+import { OhMyState } from './store/state';
+import { Observable } from 'rxjs';
+import { STORAGE_KEY } from './types';
+import { ThemePalette } from '@angular/material/core';
 
 @Component({
   selector: 'app-root',
@@ -16,9 +21,13 @@ import { IState } from './store/type';
 export class AppComponent {
   isEnabled = false;
   state: IState;
+  color: ThemePalette = 'warn';
+  drawerMode = 'over';
+  dawerBackdrop = true;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IState) => new InitState(state);
+  @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(
     private storageService: StorageService,
@@ -35,7 +44,12 @@ export class AppComponent {
     console.log(this.state);
     this.initState(this.state)
 
-    this.contentService.send(this.state);
+    // this.contentService.send(this.state);
+
+    this.state$.subscribe(state => {
+      this.state = state[STORAGE_KEY];
+    });
+
 
 
     /*, (response) => {

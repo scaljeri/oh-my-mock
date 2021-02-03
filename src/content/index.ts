@@ -37,8 +37,17 @@ console.log('OhMyMock: Content script active');
   document.head.append(xhrScript);
 })();
 
+try {
+  // window.postMessage({ connect: true }, window.location.protocol + '//' + window.location.host);
+  console.log('bla');
+  chrome.runtime.sendMessage({ reconnect: true});
+
+} catch (e) {
+  console.log('Warning: Cannot connect to OhMyMock', e);
+}
+
 chrome.runtime.onMessage.addListener(state => {
-  console.log('received data', state);
+  console.log('----received data', state);
   if (state) {
     window.postMessage(state, state.domain);
 
@@ -48,13 +57,13 @@ chrome.runtime.onMessage.addListener(state => {
 
 window.addEventListener('message', (ev) => {
   const data = ev.data;
+  console.log('COntent: received data from injected', ev);
   debugger;
   if (data.mock) {
-    console.log('YES YESY APIR ESP', data);
     chrome.runtime.sendMessage(data);
-      // apiResponse: data.apiResponse
+    // apiResponse: data.apiResponse
     // }, (response) => {
-      // console.log('response: ', response);
+    // console.log('response: ', response);
     // });
   }
 });

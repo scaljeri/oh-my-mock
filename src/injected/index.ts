@@ -32,6 +32,7 @@ declare var window: any;
             (url: string, method: string) => {
               return (state?.urls && state.urls[url]?.payload) || null;
           }, (url: string, type: string, data: unknown) => {
+            console.log('Injected: Send response to content');
             window.postMessage({ mock: {url, type, payload: data, method: 'xhr'}}, window.location.href);
 
           });

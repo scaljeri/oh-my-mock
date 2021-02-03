@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+
+  table {
+    width: 100%;
+
+    td {
+      position: relative;
+      cursor: pointer;
+    }
+
+    tr td:last-child::after {
+      content: '>';
+      position: absolute;
+      color: #000;
+      right: 10px;
+      top: 5px;
+      font-size: 30px;
+    }
+  }
+}
+
+.is-active td {
+  background-color: #B6F9D6;
+}

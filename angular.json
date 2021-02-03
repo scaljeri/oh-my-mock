@@ -33,8 +33,7 @@
               "src/devtools"
             ],
             "styles": [
-              "src/styles.scss",
-              "node_modules/scss-reset/_reset.scss"
+              "src/styles.scss"
             ],
             "scripts": []
           },

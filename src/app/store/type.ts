@@ -13,4 +13,5 @@ export interface IMock<T = any> {
   type: 'GET' | 'POST';
   payload: T
   headers?: Record<string, string>
+  active?: boolean
 }

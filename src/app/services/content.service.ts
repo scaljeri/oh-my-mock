@@ -18,10 +18,12 @@ export class ContentService {
   constructor(private store: Store) {
     chrome.runtime.onMessage.addListener(
       (payload) => {
-        console.log('sdfjwljenfaljdnflsjnf');
+        console.log('sdfjwljenfaljdnflsjnf', payload);
         if (payload.mock) {
           console.log('Received mock', payload.mock);
           this.updateMock(payload.mock);
+        } else if(payload.reconnect) {
+          this.send(this.store.snapshot()[STORAGE_KEY]);
         }
       });
 
