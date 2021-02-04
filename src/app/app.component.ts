@@ -12,6 +12,7 @@ import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { STORAGE_KEY } from './types';
 import { ThemePalette } from '@angular/material/core';
+import { ActivatedRoute, ActivationStart, Event as NavigationEvent, NavigationStart, Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +25,7 @@ export class AppComponent {
   color: ThemePalette = 'warn';
   drawerMode = 'over';
   dawerBackdrop = true;
+  page = '';
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IState) => new InitState(state);
@@ -33,6 +35,7 @@ export class AppComponent {
     private storageService: StorageService,
     private mockService: MockXmlHttpRequestService,
     private contentService: ContentService,
+    private router: Router,
     private cdr: ChangeDetectorRef) {
 
   }
@@ -49,6 +52,17 @@ export class AppComponent {
     this.state$.subscribe(state => {
       this.state = state[STORAGE_KEY];
     });
+
+    this.router.events
+      .subscribe(
+        (event: NavigationEvent) => {
+          if (event instanceof ActivationStart) {
+            debugger;
+            this.page = event.snapshot.url[0]?.path || '';
+            console.log('page=' + this.page);
+          }
+        });
+
 
 
 

@@ -3,7 +3,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import { NgxsModule } from '@ngxs/store'
 import { NgxsDispatchPluginModule } from "@ngxs-labs/dispatch-decorator";
 
@@ -17,6 +17,23 @@ import { ComponentsModule } from './components/components.module';
 import { forwarderGuard } from './forward-guard';
 import { OhMyState } from './store/state';
 import { HomeComponent } from './pages/home/home.component';
+import { UrlsOverviewComponent } from './components/urls-overview/urls-overview.component';
+import { ConfigComponent } from './components/config/config.component';
+import { MockComponent } from './components/mock/mock.component';
+
+const routes: Routes = [{
+  path: 'index.html',
+  canActivate: [
+    forwarderGuard
+  ],
+  children: []
+}, {
+  path: '', component: UrlsOverviewComponent
+}, {
+  path: 'configure', component: ConfigComponent
+}, {
+  path: 'mock/:id', component: MockComponent
+}]
 
 @NgModule({
   declarations: [
@@ -26,13 +43,7 @@ import { HomeComponent } from './pages/home/home.component';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot([ {
-      path: 'index.html',
-      canActivate: [
-        forwarderGuard
-      ],
-      children: []
-    }]),
+    RouterModule.forRoot(routes),
     NgxsModule.forRoot([OhMyState], { developmentMode: true }),
     NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,
@@ -42,7 +53,7 @@ import { HomeComponent } from './pages/home/home.component';
     MatSidenavModule,
     ComponentsModule
   ],
-  providers: [{ provide: Window, useValue: window}],
+  providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

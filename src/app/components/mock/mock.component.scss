@@ -1,0 +1,56 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+
+  pre {
+    margin-top: 0;
+  }
+}
+
+.key-value {
+  margin: 5px 0;
+}
+
+.label {
+  font-weight: bold;
+  display: inline-flex;
+  padding-right: 10px;
+}
+
+.value {
+
+}
+
+.response {
+  display: flex;
+  align-items: stretch;
+
+  &>div {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    pre {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      code {
+        flex: 1;
+      }
+    }
+
+    .error {
+      color: red;
+    }
+  }
+
+  a {
+    flex: 0 0 auto;
+    margin: 0 10px;
+    align-self: center;
+  }
+
+}

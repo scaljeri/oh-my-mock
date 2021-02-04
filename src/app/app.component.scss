@@ -1,6 +1,4 @@
 :host {
-
-
   background-color: #000;
 }
 
@@ -9,6 +7,10 @@ mat-drawer-content {
   height: 100vh;
   display: flex;
   flex-direction: column;
+
+  .button-wrapper {
+    margin-right: 10px;
+  }
 
   .header-spacer {
     flex: 1 1 auto;

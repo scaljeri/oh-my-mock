@@ -1,0 +1,22 @@
+<mat-card>
+  <div class="key-value">
+    <span class="label">Url:</span>
+    <span class="value">{{mock.url}}</span>
+  </div>
+  <div class="response">
+    <div class="original-response">
+      <h2>Response</h2>
+      <pre><code #responseOrig class="language-json">{{originalResponse}}</code></pre>
+    </div>
+    <a (click)="copyResponse()" mat-icon-button mat-mini-fab color="accent">
+      <mat-icon>keyboard_arrow_right</mat-icon>
+    </a>
+    <div class="mock-response">
+      <h2>Mock</h2>
+      <pre #responseMock (blur)="onMockBlur()" contenteditable="true">
+        <code class="language-json"></code>
+      </pre>
+      <div class="error">{{jsonError}}</div>
+    </div>
+  </div>
+</mat-card>
