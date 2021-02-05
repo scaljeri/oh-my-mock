@@ -25,6 +25,8 @@
     "@angular/platform-browser": "~11.0.5",
     "@angular/platform-browser-dynamic": "~11.0.5",
     "@angular/router": "~11.0.5",
+    "@ngneat/hot-toast": "^1.0.4",
+    "@ngneat/overview": "^1.0.0",
     "@ngxs-labs/dispatch-decorator": "^2.1.0",
     "@ngxs/store": "^3.7.1",
     "@types/typescript": "^2.0.0",

@@ -1,5 +1,7 @@
 <mat-drawer-container class="example-container" [hasBackdrop]="dawerBackdrop">
-  <mat-drawer #drawer [mode]="drawerMode">I'm a drawer</mat-drawer>
+  <mat-drawer #drawer [mode]="drawerMode">
+    <button mat-button color="primary" (click)="onResetAll()">RESET ALL</button>
+  </mat-drawer>
   <mat-drawer-content>
     <mat-toolbar>
       <div class='button-wrapper'>

@@ -1,32 +1,10 @@
 /// <reference types="chrome"/>
-// import { STORAGE_KEY } from '../app/types';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
 
-console.log('OhMyMock: Content script active');
+const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
+log('Script loaded and waiting....');
 
-// chrome.storage.onChanged.addListener(function (changes, namespace) {
-//   if (changes.OhMyMocks) {
-//   console.log('xxxxxxxxxxxxxxxx');
-//   }
-//   // for (letkey in changes) {
-//   //   if (key === 'active') {
-//   //     // Do something here
-//   //   }
-//   // }
-// });
-
-// chrome.runtime.onMessage.addListener(
-//   function (request, sender, sendResponse) {
-//     if (request.OhMyState)
-//       sendResponse();
-//       window.postMessage(JSON.stringify({ request }), request.OhMyState.domain);
-//   }
-// );
-// window.addEventListener('message', (data) => {
-//   console.log('XXXXXXXXXXXXXXXXXXXXXX', data);
-//   debugger;
-// })
-
+// Inject XHR mocking code
 (function () {
   const xhrScript = document.createElement('script');
   xhrScript.type = 'text/javascript';
@@ -39,35 +17,31 @@ console.log('OhMyMock: Content script active');
 
 try {
   // window.postMessage({ connect: true }, window.location.protocol + '//' + window.location.host);
-  console.log('bla');
-  chrome.runtime.sendMessage({ reconnect: true});
+  chrome.runtime.sendMessage({ knockknock: { source: 'content' } });
 
 } catch (e) {
-  console.log('Warning: Cannot connect to OhMyMock', e);
+  log('Cannot connect to the OhMyMock tab', e);
 }
 
+// Listen for messages from Popup
 chrome.runtime.onMessage.addListener(state => {
-  console.log('----received data', state);
   if (state) {
+    log('State update', state);
     window.postMessage(state, state.domain);
-
-    // chrome.runtime.sendMessage({ origin: 'content-script', payload: { y : 10}});
   }
 });
 
+// Recieve messages from the injected code
 window.addEventListener('message', (ev) => {
-  const data = ev.data;
-  console.log('COntent: received data from injected', ev);
-  debugger;
-  if (data.mock) {
-    chrome.runtime.sendMessage(data);
-    // apiResponse: data.apiResponse
-    // }, (response) => {
-    // console.log('response: ', response);
-    // });
+  const { mock } = ev.data;
+
+  if (mock) {
+    log('Received data from InJecTed', mock);
+    chrome.runtime.sendMessage({mock});
   }
 });
 
+// to send msg to background script
 // setTimeout(() => {
 //   console.log('send msg');
 //   var port = chrome.runtime.connect({ name: "knockknock" });

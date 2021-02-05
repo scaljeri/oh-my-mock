@@ -6,7 +6,7 @@ import { UpdateMock } from '../store/actions';
 import { OhMyState } from '../store/state';
 import { IMock, IState } from '../store/type';
 import { STORAGE_KEY } from '../types';
-
+import { log } from '../utils/log';
 @Injectable({
   providedIn: 'root'
 })
@@ -18,17 +18,16 @@ export class ContentService {
   constructor(private store: Store) {
     chrome.runtime.onMessage.addListener(
       (payload) => {
-        console.log('sdfjwljenfaljdnflsjnf', payload);
+        log('Recieved a message', payload);
         if (payload.mock) {
-          console.log('Received mock', payload.mock);
           this.updateMock(payload.mock);
-        } else if(payload.reconnect) {
+        } else if (payload.knockknock) {
           this.send(this.store.snapshot()[STORAGE_KEY]);
         }
       });
 
     this.state$.subscribe((state) => {
-      this.send({ state: state[STORAGE_KEY] });
+      this.send(state[STORAGE_KEY]);
     });
   }
 

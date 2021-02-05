@@ -8,10 +8,16 @@ export interface IState {
 }
 
 export interface IMock<T = any> {
+  name: string;
   url: string;
   method: 'xhr' | 'fetch';
   type: 'GET' | 'POST';
   payload: T
+  mock?: string;
   headers?: Record<string, string>
-  active?: boolean
+  active?: boolean,
+  passThrough?: boolean;
+  useMock?: boolean;
+  useCode?: boolean;
+  code?: string;
 }

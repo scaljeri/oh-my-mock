@@ -50,6 +50,6 @@ export class StorageService {
   }
 
   reset(): void {
-    chrome.storage.local.set({ [STORAGE_KEY]: null });
+    chrome.storage.local.set({ [STORAGE_KEY]: { domains: {}} });
   }
 }

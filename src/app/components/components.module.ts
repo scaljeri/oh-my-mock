@@ -11,9 +11,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MockComponent } from './mock/mock.component';
 import { PipesModule } from '../pipes/pipes.module';
 import { RouterModule } from '@angular/router';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDialogModule } from '@angular/material/dialog';
+import { HotToastModule } from '@ngneat/hot-toast';
+
+import { MockTestComponent } from './mock-test/mock-test.component';
+
 
 @NgModule({
-  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent],
+  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent, MockTestComponent],
   imports: [
     CommonModule,
     MatTableModule,
@@ -23,7 +30,11 @@ import { RouterModule } from '@angular/router';
     MatFormFieldModule,
     MatCardModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatSlideToggleModule,
+    MatExpansionModule,
+    MatDialogModule,
+    HotToastModule
   ],
   exports: [UrlsOverviewComponent, MockComponent, ConfigComponent]
 })

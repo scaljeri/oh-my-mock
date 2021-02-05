@@ -10,6 +10,11 @@ export class InitState {
   constructor(public payload: IState) { }
 }
 
+export class StateReset {
+  static readonly type = '[Domain] Reset';
+  constructor() { }
+}
+
 export class UpdateMock {
   static readonly type = '[Mock] update';
   constructor(public payload: IMock) { }

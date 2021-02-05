@@ -5,44 +5,57 @@ import { setup } from './mock-xml-http-request';
 declare var window: any;
 
 (function () {
-  console.log('OhMyMock: XMLHttpRequest Mock injected (inactive!)');
+  const STORAGE_KEY = 'OhMyMocks'; // TODO
+  const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | InJecTed: ${msg}`, ...data);
+  log('XMLHttpRequest Mock injected (inactive!)');
 
-  const localState = {};
-  let state = {} as any;
+  let localState = {};
+  let state: any = null;
+
   let removeMock = () => { };
 
-  window.ohMyMock = (url: string, payload: Record<string, unknown>, method = 'GET') => {
+  window[STORAGE_KEY] = (url: string, payload: Record<string, unknown>, options) => {
     if (payload) {
-      localState[url] = { method, payload };
+      localState[url] = { ...options, payload, url };
     } else {
       delete localState[url];
     }
   }
 
+  // Receive messages from Content script
   window.addEventListener('message', (ev) => {
-    const state = ev.data.state;
-    console.log('OhMyMock(Injected) window.addEventListener:', ev.data );
+    if (!ev.data) {
+      return;
+    }
 
     try {
-      if (state) {
+      log('Received state update', ev.data, state);
+
+      if (!state || ev.data.enabled !== state.enabled) {
         removeMock();
-        if (state.enabled) {
-          console.log('Activate');
+
+        if (ev.data.enabled) {
+          log('Activate!!');
           removeMock = setup(
             (url: string, method: string) => {
+              const mock = state?.urls[url] || {};
+              if (mock.useMock) {
+                return mock.mock;
+              }
               return (state?.urls && state.urls[url]?.payload) || null;
-          }, (url: string, type: string, data: unknown) => {
-            console.log('Injected: Send response to content');
-            window.postMessage({ mock: {url, type, payload: data, method: 'xhr'}}, window.location.href);
+            }, (url: string, type: string, data: unknown) => {
+              log('Received new response');
+              window.postMessage({ mock: { url, type, payload: data, method: 'xhr' } }, window.location.href);
 
-          });
+            });
+        } else if (state?.enabled) {
+          log('Deactivate!!');
         }
       }
-    } catch (e) {
-    }
-    if (ev.data?.OhMyState) {
-      console.log('(^.^) Received from content: ', ev.data?.ohMyMock);
-    }
+
+      state = ev.data;
+    } catch (e) { /* TODO */ }
+
   });
 })();
 

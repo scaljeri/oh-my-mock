@@ -1,6 +1,6 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { EnableDomain, InitState, UpdateMock } from './actions';
+import { EnableDomain, InitState, StateReset, UpdateMock } from './actions';
 import { IMock, IOhMyMock, IState } from './type';
 import { STORAGE_KEY } from '../types';
 
@@ -44,5 +44,11 @@ export class OhMyState {
   updateMock(ctx: StateContext<IState>, { payload }: { payload: IMock }) {
     const state = ctx.getState();
     ctx.setState({ ...state, urls: {...state.urls, [payload.url]: payload }});
+  }
+
+  @Action(StateReset)
+  reset(ctx: StateContext<IState>) {
+    const state = ctx.getState();
+    ctx.setState({ urls: {}, domain: state.domain });
   }
 }

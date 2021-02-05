@@ -20,6 +20,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { UrlsOverviewComponent } from './components/urls-overview/urls-overview.component';
 import { ConfigComponent } from './components/config/config.component';
 import { MockComponent } from './components/mock/mock.component';
+import { HotToastModule } from '@ngneat/hot-toast';
 
 const routes: Routes = [{
   path: 'index.html',
@@ -51,6 +52,7 @@ const routes: Routes = [{
     MatButtonModule,
     MatSlideToggleModule,
     MatSidenavModule,
+    HotToastModule.forRoot(),
     ComponentsModule
   ],
   providers: [{ provide: Window, useValue: window }],
