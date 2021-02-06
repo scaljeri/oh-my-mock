@@ -1,5 +1,6 @@
 /// <reference types="chrome"/>
 const STORAGE_KEY = 'OhMyMocks'; // TODO
+let state;
 
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
 log('Script loaded and waiting....');
@@ -10,6 +11,9 @@ log('Script loaded and waiting....');
   xhrScript.type = 'text/javascript';
   xhrScript.onload = function () {
     (this as any).remove();
+    if (state) {
+      window.postMessage(state, state.domain);
+    }
   }
   xhrScript.src = chrome.runtime.getURL('inject.js');
   document.head.append(xhrScript);
@@ -24,10 +28,13 @@ try {
 }
 
 // Listen for messages from Popup
-chrome.runtime.onMessage.addListener(state => {
-  if (state) {
-    log('State update', state);
-    window.postMessage(state, state.domain);
+chrome.runtime.onMessage.addListener(update => {
+  if (update) {
+    log('State update', update);
+    if (update?.domain) {
+      state = update;
+      window.postMessage(state, state.domain);
+    }
   }
 });
 

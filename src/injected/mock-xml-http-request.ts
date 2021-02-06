@@ -9,6 +9,7 @@ export function setup(
   var _open = XMLHttpRequest.prototype.open;
   window.XMLHttpRequest.prototype.open = function (method, URL, ...args) {
     log('Received request', URL);
+    const origUrl = URL;
     var _onreadystatechange = this.onreadystatechange,
       _this = this;
 
@@ -20,15 +21,13 @@ export function setup(
     _this.onreadystatechange = function () {
       if (_this.readyState === 4 && _this.status === 200) {
         try {
-          log('Received data', URL, _this.responseText, mock);
+          log('Received data', origUrl, _this.responseText, mock);
 
-          if (!mock) {
-            storeResponseFn(URL, method, JSON.parse(_this.responseText));
-          }
+          const rspTxt = JSON.stringify(storeResponseFn(origUrl, method, JSON.parse(_this.responseText)));
 
           // rewrite responseText
-          // Object.defineProperty(_this, 'responseText', { value: JSON.stringify(mock) });
-          // Object.defineProperty(_this, 'response', { value: JSON.stringify(mock) });
+          Object.defineProperty(_this, 'responseText', { value: rspTxt });
+          Object.defineProperty(_this, 'response', { value: rspTxt });
           /////////////// END //////////////////
         } catch (e) { }
       }

@@ -43,7 +43,10 @@ export class OhMyState {
   @Action(UpdateMock)
   updateMock(ctx: StateContext<IState>, { payload }: { payload: IMock }) {
     const state = ctx.getState();
-    ctx.setState({ ...state, urls: {...state.urls, [payload.url]: payload }});
+    const old = state.urls[payload.url] || {};
+    const update = { ...old, ...payload};
+
+    ctx.setState({ ...state, urls: {...state.urls, [payload.url]: update }});
   }
 
   @Action(StateReset)

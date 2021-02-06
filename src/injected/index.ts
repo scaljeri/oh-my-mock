@@ -14,6 +14,55 @@ declare var window: any;
 
   let removeMock = () => { };
 
+  const mockFn = (url: string, method: string) => {
+    const mock = state?.urls[url] || {};
+
+    if (!mock.passThrough && mock.active) {
+      if (mock.useCode) {
+        try {
+          log('Create mock with code', mock.code) ;
+          const fnc = eval(new Function('response', 'mock', mock.code) as any);
+          return fnc(mock.payload, mock.mock);
+        } catch(e) {
+          console.error(e);
+        }
+      } else if (mock.useMock) {
+        return mock.mock;
+      } else {
+        return mock.payload;
+      }
+    }
+
+    return null
+  }
+
+  const postProcess = (url: string, type: string, data: unknown) => {
+    log('Received new response');
+    const mock = state?.urls[url] || {};
+
+    if (!mock.active || mock.passThrough || !mock.useMock && !mock.useCode ) {
+      window.postMessage({ mock: { url, type, payload: data, method: 'xhr' } }, window.location.href);
+    }
+
+    if (mock.active) {
+      if (mock.passThrough ) {
+        if (mock.useCode) {
+          try {
+            log('Modify data with code', mock.code);
+            const fnc = eval(new Function('response', 'mock', mock.code) as any);
+            return fnc(data, mock.mock);
+          } catch (e) {
+            console.error(e);
+          }
+        } else if (mock.useMock) {
+          return mock.mock;
+        }
+      }
+    }
+
+    return data;
+  }
+
   window[STORAGE_KEY] = (url: string, payload: Record<string, unknown>, options) => {
     if (payload) {
       localState[url] = { ...options, payload, url };
@@ -24,7 +73,7 @@ declare var window: any;
 
   // Receive messages from Content script
   window.addEventListener('message', (ev) => {
-    if (!ev.data) {
+    if (!ev.data || !ev.data.urls) {
       return;
     }
 
@@ -36,18 +85,7 @@ declare var window: any;
 
         if (ev.data.enabled) {
           log('Activate!!');
-          removeMock = setup(
-            (url: string, method: string) => {
-              const mock = state?.urls[url] || {};
-              if (mock.useMock) {
-                return mock.mock;
-              }
-              return (state?.urls && state.urls[url]?.payload) || null;
-            }, (url: string, type: string, data: unknown) => {
-              log('Received new response');
-              window.postMessage({ mock: { url, type, payload: data, method: 'xhr' } }, window.location.href);
-
-            });
+          removeMock = setup(mockFn, postProcess);
         } else if (state?.enabled) {
           log('Deactivate!!');
         }
