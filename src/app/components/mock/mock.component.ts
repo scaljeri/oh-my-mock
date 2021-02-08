@@ -15,7 +15,7 @@ const DEFAULT_CODE = `// global variables:
 //   mock: if active, this variable contains the mock data
 // IMPORTANT: This code should return a response!'
 
-return response || mock;`;
+return mock || response;`;
 
 @Component({
   selector: 'app-mock',
