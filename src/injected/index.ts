@@ -36,7 +36,7 @@ declare var window: any;
     return null
   }
 
-  const postProcess = (url: string, type: string, data: unknown) => {
+  const processResponseFn = (url: string, type: string, data: unknown) => {
     log('Received new response');
     const mock = state?.urls[url] || {};
 
@@ -45,7 +45,7 @@ declare var window: any;
     }
 
     if (mock.active) {
-      if (mock.passThrough ) {
+      if (mock.passThrough ) { // new data received -> update
         if (mock.useCode) {
           try {
             log('Modify data with code', mock.code);
@@ -61,6 +61,11 @@ declare var window: any;
     }
 
     return data;
+  }
+
+  const mockStatusCodeFn = (url: string, method: string, statusCode): number => {
+    const mock = state?.urls[url] || {};
+    return (mock.isStatusCodeActive ? mock?.statusCodes : null) || statusCode;
   }
 
   window[STORAGE_KEY] = (url: string, payload: Record<string, unknown>, options) => {
@@ -85,7 +90,7 @@ declare var window: any;
 
         if (ev.data.enabled) {
           log('Activate!!');
-          removeMock = setup(mockFn, postProcess);
+          removeMock = setup(mockFn, processResponseFn, mockStatusCodeFn);
         } else if (state?.enabled) {
           log('Deactivate!!');
         }

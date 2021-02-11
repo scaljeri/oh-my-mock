@@ -2,8 +2,9 @@ const STORAGE_KEY = 'OhMyMocks'; // TODO
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) InJecTed(XML): ${msg}`, ...data);
 
 export function setup(
-  mockFn: (url: string, method: string) => unknown | null,
-  storeResponseFn: (url: string, method, data: unknown) => void): () => void {
+  mockDataFn: (url: string, method: string) => unknown | null,
+  processResponseFn: (url: string, method: string, data: unknown) => void,
+  mockStatusCodeFn: (url: string, method: string, statusCode: number) => number): () => void {
   log('Patched XMLHttpRequest');
 
   var _open = XMLHttpRequest.prototype.open;
@@ -13,7 +14,7 @@ export function setup(
     var _onreadystatechange = this.onreadystatechange,
       _this = this;
 
-    const mock = mockFn(URL, method);
+    const mock = mockDataFn(URL, method);
     if (mock) {
       URL = 'data:application/json; charset=utf-8,' + encodeURIComponent(JSON.stringify(mock));
     }
@@ -23,9 +24,10 @@ export function setup(
         try {
           log('Received data', origUrl, _this.responseText, mock);
 
-          const rspTxt = JSON.stringify(storeResponseFn(origUrl, method, JSON.parse(_this.responseText)));
+          const rspTxt = JSON.stringify(processResponseFn(origUrl, method, JSON.parse(_this.responseText)));
 
           // rewrite responseText
+          Object.defineProperty(_this, 'status', { value: mockStatusCodeFn(origUrl, method, _this.status) });
           Object.defineProperty(_this, 'responseText', { value: rspTxt });
           Object.defineProperty(_this, 'response', { value: rspTxt });
           /////////////// END //////////////////

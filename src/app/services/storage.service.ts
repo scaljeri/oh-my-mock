@@ -38,7 +38,7 @@ export class StorageService {
       chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
         const allDomains: IOhMyMock = data[STORAGE_KEY] || { domains: {} };
 
-        const state: IState = allDomains.domains[this.domain] || { domain: this.domain, urls: {}, enabled: false };
+        const state: IState = allDomains.domains[this.domain] || { domain: this.domain, responses: [], enabled: false };
 
         if (!data[STORAGE_KEY]) {
           chrome.storage.local.set({ [STORAGE_KEY]: allDomains });

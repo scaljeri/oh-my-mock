@@ -1,4 +1,4 @@
-import { IMock, IState } from './type';
+import { IState, IUpdateResponse } from './type';
 
 export class EnableDomain {
   static readonly type = '[Domain] Enable';
@@ -15,7 +15,12 @@ export class StateReset {
   constructor() { }
 }
 
+export class UpdateResponse {
+  static readonly type = '[Response] update';
+  constructor(public payload: IUpdateResponse) { }
+}
+
 export class UpdateMock {
   static readonly type = '[Mock] update';
-  constructor(public payload: IMock) { }
+  constructor(public payload: any) { }
 }

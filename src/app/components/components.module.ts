@@ -14,6 +14,7 @@ import { RouterModule } from '@angular/router';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
 import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockTestComponent } from './mock-test/mock-test.component';
@@ -34,6 +35,7 @@ import { MockTestComponent } from './mock-test/mock-test.component';
     MatSlideToggleModule,
     MatExpansionModule,
     MatDialogModule,
+    MatTabsModule,
     HotToastModule
   ],
   exports: [UrlsOverviewComponent, MockComponent, ConfigComponent]

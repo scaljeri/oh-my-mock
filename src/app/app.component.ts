@@ -2,8 +2,6 @@ import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
-import { MockXmlHttpRequestService } from './services/mock-xml-http-request.service';
-import { ContentService } from './services/content.service';
 import { EnableDomain, InitState, StateReset } from './store/actions';
 import { StorageService } from './services/storage.service';
 import { IState } from './store/type';
@@ -37,11 +35,8 @@ export class AppComponent {
 
   constructor(
     private storageService: StorageService,
-    private mockService: MockXmlHttpRequestService,
-    private contentService: ContentService,
     private router: Router,
     private cdr: ChangeDetectorRef) {
-
   }
 
   async ngOnInit(): Promise<void> {
@@ -86,6 +81,9 @@ export class AppComponent {
   onResetAll(): void {
     this.storageService.reset();
     this.stateReset();
-    this.drawer.close();
+
+    if (this.drawer) {
+      this.drawer.close();
+    }
   }
 }

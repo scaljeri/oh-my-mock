@@ -1,8 +1,8 @@
-<table mat-table [dataSource]="mocks" class="mat-elevation-z8">
+<table *ngIf="responses.length" mat-table [dataSource]="responses" class="mat-elevation-z8">
 
   <ng-container matColumnDef="type">
     <th mat-header-cell *matHeaderCellDef>Type </th>
-    <td mat-cell *matCellDef="let element"> {{element.type}} </td>
+    <td mat-cell *matCellDef="let element"> {{element.method}} </td>
   </ng-container>
 
   <ng-container matColumnDef="url">
@@ -10,12 +10,16 @@
     <td mat-cell *matCellDef="let element"> {{element.url}} </td>
   </ng-container>
 
-  <ng-container matColumnDef="active">
+  <!-- <ng-container matColumnDef="active">
     <th mat-header-cell *matHeaderCellDef> Active </th>
     <td mat-cell *matCellDef="let element"> {{element.active ? 'On' : 'Off'}} </td>
-  </ng-container>
+  </ng-container> -->
 
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row [routerLink]="'/mock/' + (row.url | encode)"   *matRowDef="let row; columns: displayedColumns;" [ngClass]="{'is-active': row.active}">
   </tr>
 </table>
+
+<section *ngIf="!responses.length" class="no-data">
+  <h2>No responses available</h2>
+</section>
