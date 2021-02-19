@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "angular-chrome-extension": {
+    "oh-my-mock": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
             "customWebpackConfig": {
               "path": "./custom-webpack.config.js"
             },
-            "outputPath": "dist/angular-chrome-extension",
+            "outputPath": "dist/oh-my-mock",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -71,18 +71,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "angular-chrome-extension:build"
+            "browserTarget": "oh-my-mock:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "angular-chrome-extension:build:production"
+              "browserTarget": "oh-my-mock:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "angular-chrome-extension:build"
+            "browserTarget": "oh-my-mock:build"
           }
         },
         "test": {
@@ -119,18 +119,18 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "angular-chrome-extension:serve"
+            "devServerTarget": "oh-my-mock:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "angular-chrome-extension:serve:production"
+              "devServerTarget": "oh-my-mock:serve:production"
             }
           }
         }
       }
     }
   },
-  "defaultProject": "angular-chrome-extension",
+  "defaultProject": "oh-my-mock",
   "cli": {
     "analytics": false
   }
