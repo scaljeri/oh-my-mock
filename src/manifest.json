@@ -1,5 +1,5 @@
 {
-  "name": "Oh-my-XHR-Mock",
+  "name": "Oh-my-Mock",
   "version": "1.1",
   "description": "Extension to cache and mock API responses",
   "manifest_version": 2,
