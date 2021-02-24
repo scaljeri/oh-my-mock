@@ -15,7 +15,7 @@ export class forwarderGuard implements CanActivate {
     const domain = route.queryParams.domain;
     this.storageService.setDomain(domain);
 
-    this.router.navigate([`/`]);
+    this.router.navigate([`index.html`]);
     return false;
   }
 }

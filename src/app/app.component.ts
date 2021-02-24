@@ -12,6 +12,7 @@ import { STORAGE_KEY } from './types';
 import { ThemePalette } from '@angular/material/core';
 import { ActivationStart, Event as NavigationEvent, NavigationStart, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
+import { ContentService } from './services/content.service';
 
 @Component({
   selector: 'app-root',
@@ -34,6 +35,7 @@ export class AppComponent {
   @ViewChild('drawer') drawer: MatDrawer;
 
   constructor(
+    private contentService: ContentService,
     private storageService: StorageService,
     private router: Router,
     private cdr: ChangeDetectorRef) {

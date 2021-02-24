@@ -37,6 +37,7 @@ export class OhMyState {
   @Action(EnableDomain)
   enable(ctx: StateContext<IState>, { payload }: { payload: boolean }) {
     const state = ctx.getState();
+    console.log('state updates');
     ctx.setState({ ...state, enabled: payload });
   }
 

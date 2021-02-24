@@ -3,7 +3,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./dist/oh-my-mock/",
+    "outDir": "./dist/",
     "sourceMap": false,
     "declaration": false,
     "downlevelIteration": true,

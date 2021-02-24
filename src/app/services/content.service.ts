@@ -10,7 +10,6 @@ import { log } from '../utils/log';
 @Injectable({
   providedIn: 'root'
 })
-
 export class ContentService {
   @Dispatch() updateResponse = (response: IUpdateResponse) => new UpdateResponse(response);
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
@@ -26,7 +25,9 @@ export class ContentService {
         }
       });
 
+      console.log('INIITNITNITIN COntentS');
     this.state$.subscribe((state) => {
+      console.log('STATE UPDATE');
       this.send(state[STORAGE_KEY]);
     });
   }
