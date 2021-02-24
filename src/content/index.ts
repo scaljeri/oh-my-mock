@@ -15,7 +15,7 @@ log('Script loaded and waiting....');
       window.postMessage(state, state.domain);
     }
   }
-  xhrScript.src = chrome.runtime.getURL('inject.js');
+  xhrScript.src = chrome.runtime.getURL('injected.js');
   document.head.append(xhrScript);
 })();
 
@@ -30,11 +30,14 @@ try {
 // Listen for messages from Popup
 chrome.runtime.onMessage.addListener(update => {
   if (update) {
-    log('State update', update);
-    if (update?.domain) {
-      state = update;
-      window.postMessage(state, state.domain);
+    log('State update ', update);
+    // Sanity check
+    if (update.domain.indexOf(window.location.host) >= 0) {
+      log(`ERROR: Domains are mixed, this is a BUG: received: ${update.domain}, active: ${window.location.host}`);
     }
+
+    state = update;
+    window.postMessage(state, state.domain);
   }
 });
 
@@ -44,7 +47,7 @@ window.addEventListener('message', (ev) => {
 
   if (mock) {
     log('Received data from InJecTed', mock);
-    chrome.runtime.sendMessage({mock});
+    chrome.runtime.sendMessage({ mock });
   }
 });
 

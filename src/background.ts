@@ -8,11 +8,8 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', request.payload)
       if (request.origin !== 'content-script') {
-        // chrome.tabs.sendMessage(tabs[0].id, request.payload);
-        // } else {
-        chrome.tabs.sendMessage(tab.id, request.payload);
+        chrome.tabs.sendMessage(tab.id, { domain: url, ...request.payload});
       }
     });
   });

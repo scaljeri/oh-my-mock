@@ -14,7 +14,7 @@ export interface IResponses {
   url: string;            //  composite primary key
   method: requestMethod;  //  composite PK
   type: requestType;     //  CPK
-  mocks?: Record<number, IResponseMock>;
+  mocks?: Record<number, IResponseMock>; // number === statusCode
 }
 
 export interface IResponseMock<T = any> {

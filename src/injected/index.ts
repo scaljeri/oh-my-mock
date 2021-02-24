@@ -78,7 +78,8 @@ declare var window: any;
 
   // Receive messages from Content script
   window.addEventListener('message', (ev) => {
-    if (!ev.data || !ev.data.urls) {
+    debugger;
+    if (!ev.data || ev.data.responses === undefined) {
       return;
     }
 

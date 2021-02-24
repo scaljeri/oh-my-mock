@@ -25,9 +25,7 @@ export class ContentService {
         }
       });
 
-      console.log('INIITNITNITIN COntentS');
     this.state$.subscribe((state) => {
-      console.log('STATE UPDATE');
       this.send(state[STORAGE_KEY]);
     });
   }
