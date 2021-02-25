@@ -14,13 +14,13 @@ chokidar.watch(['./src/content', './src/injected', './src/background.ts']).on('a
 
     if (promise) {
       promise.then(() => {
-        promise = build().finally(() => {
+        promise = build().catch(() => {}).finally(() => {
           promise = null;
           console.log('- finished delayed build');
         });
       });
     } else {
-      promise = build().finally(() => {
+      promise = build().catch(() => {}).finally(() => {
           promise = null;
           console.log('-finished build');
       });

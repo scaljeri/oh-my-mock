@@ -20,18 +20,16 @@ log('Script loaded and waiting....');
 })();
 
 try {
-  // window.postMessage({ connect: true }, window.location.protocol + '//' + window.location.host);
   chrome.runtime.sendMessage({ knockknock: { source: 'content' } });
 
 } catch (e) {
   log('Cannot connect to the OhMyMock tab', e);
 }
 
-
 // Listen for messages from Popup
 chrome.runtime.onMessage.addListener(update => {
   if (update) {
-    log('State update ', update);
+    log('Received a state update ', update);
     // Sanity check
     if (update.domain.indexOf(window.location.host) === -1) {
       log(`ERROR: Domains are mixed, this is a BUG: received: ${update.domain}, active: ${window.location.host}`);
@@ -42,7 +40,7 @@ chrome.runtime.onMessage.addListener(update => {
   }
 });
 
-// Recieve messages from the injected code
+// Recieve messages from the Injected code
 window.addEventListener('message', (ev) => {
   const { mock } = ev.data;
 
@@ -51,14 +49,3 @@ window.addEventListener('message', (ev) => {
     chrome.runtime.sendMessage({ mock });
   }
 });
-
-// to send msg to background script
-// setTimeout(() => {
-//   console.log('send msg');
-//   var port = chrome.runtime.connect({ name: "knockknock" });
-//   port.postMessage({ joke: "Knock knock" });
-
-//   port.onMessage.addListener(function (msg) {
-//     console.log('content script.port ', msg);
-//   });
-// }, 5000);

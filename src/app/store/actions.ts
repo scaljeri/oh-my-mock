@@ -1,4 +1,4 @@
-import { IState, IUpdateResponse } from './type';
+import { IState, IUpsertResponse } from '../../shared/type';
 
 export class EnableDomain {
   static readonly type = '[Domain] Enable';
@@ -15,9 +15,9 @@ export class StateReset {
   constructor() { }
 }
 
-export class UpdateResponse {
+export class UpsertResponse {
   static readonly type = '[Response] update';
-  constructor(public payload: IUpdateResponse) { }
+  constructor(public payload: IUpsertResponse) { }
 }
 
 export class UpdateMock {

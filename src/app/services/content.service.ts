@@ -2,24 +2,24 @@ import { Injectable } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { UpdateResponse } from '../store/actions';
+import { UpsertResponse } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IState, IUpdateResponse } from '../store/type';
-import { STORAGE_KEY } from '../types';
+import { IState, IUpsertResponse } from '../../shared/type';
+import { STORAGE_KEY } from '@shared/constants';
 import { log } from '../utils/log';
 @Injectable({
   providedIn: 'root'
 })
 export class ContentService {
-  @Dispatch() updateResponse = (response: IUpdateResponse) => new UpdateResponse(response);
+  @Dispatch() upsertResponse = (response: IUpsertResponse) => new UpsertResponse(response);
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(private store: Store) {
     chrome.runtime.onMessage.addListener(
       (payload) => {
         log('Recieved a message', payload);
-        if (payload.update) {
-          this.updateResponse(payload.update);
+        if (payload.mock) {
+          this.upsertResponse(payload.mock);
         } else if (payload.knockknock) {
           this.send(this.store.snapshot()[STORAGE_KEY]);
         }

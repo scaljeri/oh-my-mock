@@ -16,7 +16,10 @@
       "es2018",
       "dom"
     ],
-    "types": [ "Chrome" ]
+    "types": [ "Chrome" ],
+    "paths": {
+      "@shared/*": ["src/shared/*"]
+    }
   },
   "files": [
     "src/main.ts",

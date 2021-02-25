@@ -1,8 +1,8 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { EnableDomain, InitState, StateReset, UpdateMock, UpdateResponse } from './actions';
-import { IResponses, IState, IUpdateResponse, requestMethod, requestType } from './type';
-import { STORAGE_KEY } from '../types';
+import { EnableDomain, InitState, StateReset, UpdateMock, UpsertResponse } from './actions';
+import { IResponses, IState, IUpsertResponse, requestMethod, requestType } from '../../shared/type';
+import { STORAGE_KEY } from '@shared/constants';
 
 @State<IState>({
   name: STORAGE_KEY,
@@ -42,18 +42,29 @@ export class OhMyState {
     ctx.setState({ ...state, enabled: payload });
   }
 
-  @Action(UpdateResponse)
-  updateResponses(ctx: StateContext<IState>, { payload }: { payload: IUpdateResponse }) {
+  @Action(UpsertResponse)
+  upsertResponses(ctx: StateContext<IState>, { payload }: { payload: IUpsertResponse }) {
     const state = ctx.getState();
-    const responses = OhMyState.findResponses(state, payload.url, payload.method, payload.responseType) || {
+    const source: IResponses = OhMyState.findResponses(state, payload.url, payload.method, payload.type) || {
       url: payload.url,
       method: payload.method,
-      type: payload.responseType,
-      data: {}
+      type: payload.type,
+      mocks: {}
     };
 
-    responses[payload.status].data = { ...responses[payload.status].data, dataType: payload.dataType, data: payload.data };
-    ctx.setState({ ...state, responses: [...state.responses, responses] });
+    const indexOf = state.responses.indexOf(source);
+    const responses = [...state.responses];
+
+    const updated = { ...source,
+      mocks: { ...source.mocks,
+        [payload.statusCode]: {
+          data: payload.data,
+          dataType: payload.dataType
+        }
+      }
+    };
+    responses[indexOf] = updated;
+    ctx.setState({ ...state, responses });
   }
 
   // NOTE: Without Responses it is currently not possible to go to the mock page

@@ -13,14 +13,14 @@ export interface IState {
 export interface IResponses {
   url: string;            //  composite primary key
   method: requestMethod;  //  composite PK
-  type: requestType;     //  CPK
+  type: requestType;      //  CPK
   mocks?: Record<number, IResponseMock>; // number === statusCode
 }
 
 export interface IResponseMock<T = any> {
   dataType: string;
-  data: T;
-  mock?: string;
+  response?: T;
+  mock?: T;
   useMock?: boolean;
   headers?: Record<string, string>
   enabled?: boolean,
@@ -30,11 +30,11 @@ export interface IResponseMock<T = any> {
 }
 
 // actions
-export interface IUpdateResponse<T = any> {
+export interface IUpsertResponse<T = any> {
   url: string;
   method: requestMethod;
-  status: number;
-  responseType: requestType;
+  type: requestType;
+  statusCode: number;
   data: T
-  dataType: string;
+  dataType?: string;
 }

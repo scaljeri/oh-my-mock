@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { IResponses } from '../store/type';
+import { IResponses } from '../../shared/type';
 
 @Injectable({
   providedIn: 'root'

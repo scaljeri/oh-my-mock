@@ -6,8 +6,8 @@ import { Store } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { HotToastService } from '@ngneat/hot-toast';
 import { UpdateMock } from 'src/app/store/actions';
-import { IResponses, IOhMyMock } from 'src/app/store/type';
-import { STORAGE_KEY } from 'src/app/types';
+import { IResponses, IOhMyMock } from 'src/shared/type';
+import { STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
 
 const DEFAULT_CODE = `// global variables:

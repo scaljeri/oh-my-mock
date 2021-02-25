@@ -3,8 +3,8 @@ import { Select } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { OhMyState } from '../store/state';
 
-import { IOhMyMock, IState } from '../store/type';
-import { STORAGE_KEY } from '../types';
+import { IOhMyMock, IState } from '../../shared/type';
+import { STORAGE_KEY } from '@shared/constants';
 
 @Injectable({
   providedIn: 'root'

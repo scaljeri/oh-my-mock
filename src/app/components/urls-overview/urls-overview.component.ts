@@ -3,8 +3,8 @@ import { Select } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { OhMyState } from 'src/app/store/state';
-import { IResponses, IState } from 'src/app/store/type';
-import { STORAGE_KEY } from 'src/app/types';
+import { IResponses, IState } from 'src/shared/type';
+import { STORAGE_KEY } from 'src/shared/constants';
 
 export interface PeriodicElement {
 	name: string;

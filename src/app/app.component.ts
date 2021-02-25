@@ -4,13 +4,13 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 import { EnableDomain, InitState, StateReset } from './store/actions';
 import { StorageService } from './services/storage.service';
-import { IState } from './store/type';
+import { IState } from '../shared/type';
 import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
-import { STORAGE_KEY } from './types';
+import { STORAGE_KEY } from '@shared/constants';
 import { ThemePalette } from '@angular/material/core';
-import { ActivatedRoute, ActivationStart, Event as NavigationEvent, NavigationStart, Router } from '@angular/router';
+import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
 

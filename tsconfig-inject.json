@@ -3,17 +3,18 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./dist/injected/",
+    "outDir": "./dist",
     "sourceMap": false,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es5",
+    "target": "es6",
     "module": "commonjs",
     "lib": [
       "es5",
+      "es6",
       "dom"
     ],
     "types": []
