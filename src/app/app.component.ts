@@ -10,7 +10,7 @@ import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { STORAGE_KEY } from './types';
 import { ThemePalette } from '@angular/material/core';
-import { ActivationStart, Event as NavigationEvent, NavigationStart, Router } from '@angular/router';
+import { ActivatedRoute, ActivationStart, Event as NavigationEvent, NavigationStart, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
 
@@ -42,9 +42,11 @@ export class AppComponent {
   }
 
   async ngOnInit(): Promise<void> {
+    // this.storageService.reset();
+
     this.state = await this.storageService.loadState();
 
-    console.log(this.state);
+    console.log('RRRRRRRRRRRRRRRRRRR', this.state);
     this.initState(this.state)
 
     this.state$.subscribe(state => {

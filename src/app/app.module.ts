@@ -23,20 +23,17 @@ import { MockComponent } from './components/mock/mock.component';
 import { HotToastModule } from '@ngneat/hot-toast';
 
 const routes: Routes = [
-  // {
-  // path: '',
-  // canActivate: [
-  //   forwarderGuard
-  // ],
-  // children: []
-// },
-{
-  path: 'index.html', component: UrlsOverviewComponent
-}, {
-  path: 'configure', component: ConfigComponent
-}, {
-  path: 'mock/:id', component: MockComponent
-}]
+  {
+    path: '', component: UrlsOverviewComponent,
+    canActivate: [
+      forwarderGuard
+    ],
+    children: []
+  }, {
+    path: 'configure', component: ConfigComponent
+  }, {
+    path: 'mock/:id', component: MockComponent
+  }];
 
 @NgModule({
   declarations: [

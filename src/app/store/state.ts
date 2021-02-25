@@ -1,13 +1,14 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
 import { EnableDomain, InitState, StateReset, UpdateMock, UpdateResponse } from './actions';
-import { IOhMyMock, IResponses, IState, IUpdateResponse, requestMethod, requestType } from './type';
+import { IResponses, IState, IUpdateResponse, requestMethod, requestType } from './type';
 import { STORAGE_KEY } from '../types';
 
-@State<IOhMyMock>({
+@State<IState>({
   name: STORAGE_KEY,
   defaults: {
-    domains: {}
+    domain: '',
+    responses: []
   }
 })
 @Injectable()
@@ -63,7 +64,7 @@ export class OhMyState {
     const responses = OhMyState.findResponses(state, payload.url, payload.method, payload.responseType);
     const index = state.responses.indexOf(responses);
     const newState = { ...state, responses: [...state.responses] };
-    newState.responses[index] = { ...responses, mocks: {...responses.mocks, [payload.status]: payload.mock} };
+    newState.responses[index] = { ...responses, mocks: { ...responses.mocks, [payload.status]: payload.mock } };
 
     ctx.setState(newState);
   }

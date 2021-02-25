@@ -10,27 +10,18 @@ import { STORAGE_KEY } from '../types';
   providedIn: 'root'
 })
 export class StorageService {
-  private domain: string;
+  public domain: string;
 
-  @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
+  @Select(OhMyState.getState) state$: Observable<IState>;
 
   constructor() {
     this.state$.subscribe((state) => {
-      if (this.domain && state[STORAGE_KEY]) {
-        chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
-          data[STORAGE_KEY].domains[this.domain] = state[STORAGE_KEY];
-          chrome.storage.local.set(data);
-        });
-      }
-    })
+      this.update(state[STORAGE_KEY]);
+    });
   }
 
   setDomain(domain: string): void {
     this.domain = domain;
-  }
-
-  getDomain(): string {
-    return this.domain;
   }
 
   async loadState(): Promise<IState> {
@@ -39,8 +30,10 @@ export class StorageService {
         const allDomains: IOhMyMock = data[STORAGE_KEY] || { domains: {} };
 
         const state: IState = allDomains.domains[this.domain] || { domain: this.domain, responses: [], enabled: false };
+        state.domain = this.domain;
 
         if (!data[STORAGE_KEY]) {
+          data[STORAGE_KEY][this.domain] = state;
           chrome.storage.local.set({ [STORAGE_KEY]: allDomains });
         }
 
@@ -49,7 +42,22 @@ export class StorageService {
     });
   }
 
+  // Reset all data for current domain or replace the state with provided data
+  update(update?: IState): void {
+    chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
+      const state = data[STORAGE_KEY].domains[this.domain];
+
+      if (update) {
+        data[STORAGE_KEY].domains[this.domain] = update;
+      } else {
+        data[STORAGE_KEY].domains[this.domain] = { ...state, responses: [] };
+      }
+
+      chrome.storage.local.set(data);
+    });
+  }
+
   reset(): void {
-    chrome.storage.local.set({ [STORAGE_KEY]: { domains: {}} });
+      chrome.storage.local.set({domains: {}});
   }
 }

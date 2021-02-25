@@ -25,7 +25,7 @@ export class ContentService {
         }
       });
 
-    this.state$.subscribe((state) => {
+    this.state$.subscribe(state => {
       this.send(state[STORAGE_KEY]);
     });
   }

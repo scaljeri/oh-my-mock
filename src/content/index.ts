@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener(update => {
   if (update) {
     log('State update ', update);
     // Sanity check
-    if (update.domain.indexOf(window.location.host) >= 0) {
+    if (update.domain.indexOf(window.location.host) === -1) {
       log(`ERROR: Domains are mixed, this is a BUG: received: ${update.domain}, active: ${window.location.host}`);
     }
 
