@@ -8,15 +8,19 @@
 This script opens the new tab containing the angular application. 
 
 ##### content.js
+If the extension is enabled, this script will run on any tab.
 This script injects the `injected.js` and communicates with the angular application (via background.js).
 This script communicates with the injected script via window.message/window.addMessage
 
 ##### injected.js
-Mocks XHR calls. Based on state it can pass through XHR calls or directly mock responses
+If the extension is enabled, this script will run on any tab, but it will not save or mock
+responses until OhMyMock is enabled. But if it is enabled it will mocks XHR calls. Based on state 
+it can pass through XHR calls or mock responses 
 
 ##### Angular app
 Display of the chrome extension. If the state changes, `content.service.js` directly sends data to 
 `content.js`
+
 ### Sources
   * https://medium.com/angular-in-depth/chrome-extension-with-angular-why-and-how-778200b87575
   * https://github.com/Pasupathi-Rajamanickam/chrome-response-override
