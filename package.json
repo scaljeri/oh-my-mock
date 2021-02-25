@@ -10,7 +10,8 @@
     "build:content": "tsc --build ./tsconfig-content.json && mv dist/content/index.js dist/content.js && rm -rf dist/content && cp manifest.json dist/",
     "build:injected": "tsc --build ./tsconfig-inject.json && browserify --node ./dist/injected/index.js > ./dist/injected.js && rm -rf dist/injected",
     "build:watchng": "ng build  --base-href=. --watch",
-    "build:watch": "node ./scripts/monitor.js",
+    "build:custom": "node ./scripts/monitor.js",
+    "build:watch": "run-p build:custom build:watchng",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -61,6 +62,7 @@
     "karma-coverage": "~2.0.3",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
+    "npm-run-all": "^4.1.5",
     "protractor": "~7.0.0",
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",

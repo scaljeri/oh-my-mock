@@ -27,6 +27,7 @@ try {
   log('Cannot connect to the OhMyMock tab', e);
 }
 
+
 // Listen for messages from Popup
 chrome.runtime.onMessage.addListener(update => {
   if (update) {
