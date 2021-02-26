@@ -14,7 +14,6 @@ export function setup(
     var _onreadystatechange = this.onreadystatechange,
       _this = this;
 
-      debugger;
     const mock = mockDataFn(URL, 'XHR', type);
     if (mock) {
       URL = 'data:application/json; charset=utf-8,' + encodeURIComponent(JSON.stringify(mock));

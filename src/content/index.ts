@@ -1,9 +1,9 @@
 /// <reference types="chrome"/>
+import { IState } from '../shared/type';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
-let state;
 
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
-log('Script loaded and waiting....');
+log('Script loaded and ready....');
 
 // Inject XHR mocking code
 (function () {
@@ -11,31 +11,23 @@ log('Script loaded and waiting....');
   xhrScript.type = 'text/javascript';
   xhrScript.onload = function () {
     (this as any).remove();
-    if (state) {
-      window.postMessage(state, state.domain);
-    }
+    // Notify Popup that content script is ready
+    try { chrome.runtime.sendMessage({ knockknock: { source: 'content' } }) }
+    catch (e) { log('Cannot connect to the OhMyMock tab', e)}
   }
   xhrScript.src = chrome.runtime.getURL('injected.js');
   document.head.append(xhrScript);
 })();
 
-try {
-  chrome.runtime.sendMessage({ knockknock: { source: 'content' } });
-
-} catch (e) {
-  log('Cannot connect to the OhMyMock tab', e);
-}
-
-// Listen for messages from Popup
-chrome.runtime.onMessage.addListener(update => {
-  if (update) {
-    log('Received a state update ', update);
+// Listen for messages from Popup/Angular
+chrome.runtime.onMessage.addListener((state: IState) => {
+  if (state) {
+    log('Received a state update ', state);
     // Sanity check
-    if (update.domain.indexOf(window.location.host) === -1) {
-      log(`ERROR: Domains are mixed, this is a BUG: received: ${update.domain}, active: ${window.location.host}`);
+    if (state.domain.indexOf(window.location.host) === -1) {
+      log(`ERROR: Domains are mixed, this is a BUG: received: ${state.domain} current: ${window.location.host}`);
     }
 
-    state = update;
     window.postMessage(state, state.domain);
   }
 });

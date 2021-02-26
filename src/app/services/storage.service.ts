@@ -16,6 +16,7 @@ export class StorageService {
 
   constructor() {
     this.state$.subscribe((state) => {
+      console.log('state updated', state);
       this.update(state[STORAGE_KEY]);
     });
   }
@@ -33,7 +34,7 @@ export class StorageService {
         state.domain = this.domain;
 
         if (!data[STORAGE_KEY]) {
-          data[STORAGE_KEY][this.domain] = state;
+          allDomains.domains[this.domain] = state;
           chrome.storage.local.set({ [STORAGE_KEY]: allDomains });
         }
 
@@ -42,17 +43,9 @@ export class StorageService {
     });
   }
 
-  // Reset all data for current domain or replace the state with provided data
   update(update?: IState): void {
     chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
-      const state = data[STORAGE_KEY].domains[this.domain];
-
-      if (update) {
-        data[STORAGE_KEY].domains[this.domain] = update;
-      } else {
-        data[STORAGE_KEY].domains[this.domain] = { ...state, responses: [] };
-      }
-
+      data[STORAGE_KEY].domains[this.domain] = update;
       chrome.storage.local.set(data);
     });
   }

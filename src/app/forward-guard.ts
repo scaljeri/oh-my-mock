@@ -13,7 +13,14 @@ export class forwarderGuard implements CanActivate {
     // TODO: route.queryParams.domain is alwaus `undefined`
     // const domain = route.queryParams.domain;
     const urlParams = new URLSearchParams(window.location.search);
-    const domain = urlParams.get('domain');
+    let domain = urlParams.get('domain');
+
+    if (domain) {
+      sessionStorage.setItem('domain', domain);
+    } else {
+      domain = sessionStorage.getItem('domain');
+    }
+    console.log('SET DOMAIN', domain);
 
     this.storageService.setDomain(domain);
 

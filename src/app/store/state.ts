@@ -26,7 +26,6 @@ export class OhMyState {
 
   // @Selector([FbpState])
   static getState(state: IState): IState {
-    console.log('State#nodes', state);
     return state;
   }
 
@@ -38,7 +37,6 @@ export class OhMyState {
   @Action(EnableDomain)
   enable(ctx: StateContext<IState>, { payload }: { payload: boolean }) {
     const state = ctx.getState();
-    console.log('state updates');
     ctx.setState({ ...state, enabled: payload });
   }
 
@@ -55,15 +53,23 @@ export class OhMyState {
     const indexOf = state.responses.indexOf(source);
     const responses = [...state.responses];
 
-    const updated = { ...source,
-      mocks: { ...source.mocks,
+    const updated = {
+      ...source,
+      mocks: {
+        ...source.mocks,
         [payload.statusCode]: {
           data: payload.data,
           dataType: payload.dataType
         }
       }
     };
-    responses[indexOf] = updated;
+
+    if (indexOf === -1) {
+      responses.push(updated);
+    } else {
+      responses[indexOf] = updated;
+    }
+    console.log('STORE: state updates(upsert)', state, responses);
     ctx.setState({ ...state, responses });
   }
 
@@ -77,6 +83,7 @@ export class OhMyState {
     const newState = { ...state, responses: [...state.responses] };
     newState.responses[index] = { ...responses, mocks: { ...responses.mocks, [payload.status]: payload.mock } };
 
+    console.log('STORE: state updates(newState)', state, responses);
     ctx.setState(newState);
   }
 

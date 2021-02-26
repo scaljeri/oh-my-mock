@@ -1,4 +1,6 @@
-console.log('OhMyMock: background script is ready');
+import { STORAGE_KEY } from './shared/constants';
+
+console.log(`${STORAGE_KEY}: background script is ready`);
 
 chrome.browserAction.onClicked.addListener(function (tab) {
   console.log('OhMyMock: Extension clicked', tab.id);

@@ -34,8 +34,7 @@
   ],
   "web_accessible_resources": [
     "injected.js",
-    "oh-my-mock/index.html",
-    "oh-my-mock/styles.css"
+    "oh-my-mock/index.html"
   ],
   "icons": {
     "16": "oh-my-mock/assets/images/icon-16.png",
