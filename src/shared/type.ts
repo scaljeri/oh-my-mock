@@ -17,6 +17,7 @@ export interface IResponses {
   type: requestType;      //  CPK
   mocks?: Record<statusCode, IResponseMock>;
   activeStatusCode?: statusCode;
+  enabled?: boolean;
 }
 
 export interface IResponseMock<T = any> {
@@ -25,7 +26,6 @@ export interface IResponseMock<T = any> {
   mock?: T;
   useMock?: boolean;
   headers?: Record<string, string>
-  enabled?: boolean,
   passThrough?: boolean;
   useJsCode?: boolean;
   jsCode?: string;

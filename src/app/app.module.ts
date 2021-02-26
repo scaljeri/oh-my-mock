@@ -27,12 +27,12 @@ const routes: Routes = [
     path: '', component: UrlsOverviewComponent,
     canActivate: [
       forwarderGuard
-    ],
-    children: []
-  }, {
+    ]
+  },
+  {
     path: 'configure', component: ConfigComponent
   }, {
-    path: 'mock/:id', component: MockComponent
+    path: 'mocks/:index', component: MockComponent
   }];
 
 @NgModule({

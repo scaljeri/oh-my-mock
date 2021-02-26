@@ -3,132 +3,165 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-
-  pre {
-    margin-top: 0;
-    padding: 5px;
-    background-color: #F0F0F0;
-  }
-
-  ::ng-deep code {
-    padding: 0;
-  }
-
-  .error {
-    font-weight: bold;
-    color: red;
-  }
-
-  .ok {
-    font-weight: bold;
-    color: green
-  }
+  background-color: #fff;
 }
 
-.top {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-
-  .main-toggle {
-    align-items: center;
-    align-self: flex-end;
+.header {
+  .main {
     display: flex;
 
     span {
-      padding-right: 5px;
-      font-weight: bold;
-      font-size: 15px;
-    }
-  }
-}
-
-.key-value {
-  margin: 5px 0;
-}
-
-.label {
-  font-weight: bold;
-  display: inline-flex;
-  padding-right: 10px;
-}
-
-.response {
-  display: flex;
-  // align-items: stretch;
-  justify-content: center;
-
-  h2 {
-    display: flex;
-    justify-content: space-between;
-
-    .toggle {
-      font-weight: normal;
-    }
-
-  }
-
-  &>div {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-
-    pre {
-      flex-direction: column;
-      flex: 1;
+      display: inline-flex;
+      font-weight: 900;
       padding: 5px;
-      height: 300px;
-      max-height: 300px;
-      overflow: scroll;
+      border: 1px solid #a9a9a9;
+      border-radius: 5px;
+      margin-right: 10px;
     }
-  }
 
-  a {
-    flex: 0 0 auto;
-    margin: 0 10px;
-    align-self: center;
-  }
+    input {
+      width: 300px;
+    }
 
-}
-
-.code-editor-pane {
-  display: flex;
-  flex-direction: column;
-
-  .toggle {
-    align-items: center;
-    display: inline-flex;
-    font-weight: bold;
-    margin-bottom: 5px;
+    .spacer {
+      flex: 1;
+      opacity: 0;
+    }
 
     mat-slide-toggle {
-      margin-left: 5px;
     }
+  }
+
+  .codes {
+    margin-top: 10px;
   }
 }
 
-.code-highlight {
-  align-self: flex-end;
-}
+//   pre {
+//     margin-top: 0;
+//     padding: 5px;
+//     background-color: #F0F0F0;
+//   }
 
-.code-editor {
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  background-color: #F0F0F0;
-}
+//   ::ng-deep code {
+//     padding: 0;
+//   }
 
-.code-actions {
-  display: flex;
-  justify-content: flex-end;
-}
+//   .error {
+//     font-weight: bold;
+//     color: red;
+//   }
 
-.page-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
+//   .ok {
+//     font-weight: bold;
+//     color: green
+//   }
+// }
 
-.original-response, .mock-response {
-  overflow: scroll;
-}
+// .top {
+//   display: flex;
+//   flex-direction: column;
+//   margin-bottom: 10px;
+
+//   .main-toggle {
+//     align-items: center;
+//     align-self: flex-end;
+//     display: flex;
+
+//     span {
+//       padding-right: 5px;
+//       font-weight: bold;
+//       font-size: 15px;
+//     }
+//   }
+// }
+
+// .key-value {
+//   margin: 5px 0;
+// }
+
+// .label {
+//   font-weight: bold;
+//   display: inline-flex;
+//   padding-right: 10px;
+// }
+
+// .response {
+//   display: flex;
+//   // align-items: stretch;
+//   justify-content: center;
+
+//   h2 {
+//     display: flex;
+//     justify-content: space-between;
+
+//     .toggle {
+//       font-weight: normal;
+//     }
+
+//   }
+
+//   &>div {
+//     display: flex;
+//     flex-direction: column;
+//     flex: 1;
+
+//     pre {
+//       flex-direction: column;
+//       flex: 1;
+//       padding: 5px;
+//       height: 300px;
+//       max-height: 300px;
+//       overflow: scroll;
+//     }
+//   }
+
+//   a {
+//     flex: 0 0 auto;
+//     margin: 0 10px;
+//     align-self: center;
+//   }
+
+// }
+
+// .code-editor-pane {
+//   display: flex;
+//   flex-direction: column;
+
+//   .toggle {
+//     align-items: center;
+//     display: inline-flex;
+//     font-weight: bold;
+//     margin-bottom: 5px;
+
+//     mat-slide-toggle {
+//       margin-left: 5px;
+//     }
+//   }
+// }
+
+// .code-highlight {
+//   align-self: flex-end;
+// }
+
+// .code-editor {
+//   height: 400px;
+//   display: flex;
+//   flex-direction: column;
+//   background-color: #F0F0F0;
+// }
+
+// .code-actions {
+//   display: flex;
+//   justify-content: flex-end;
+// }
+
+// .page-actions {
+//   display: flex;
+//   justify-content: flex-end;
+//   margin-top: 10px;
+// }
+
+// .original-response, .mock-response {
+//   overflow: scroll;
+// }

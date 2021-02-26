@@ -1,10 +1,25 @@
-<mat-card>
-  <section class="top">
-    <!-- <div class="main-toggle">
+<mat-card class="header">
+  <div *ngIf="state" class="main">
+    <span>{{state.type}}</span>
+    <span>{{state.method}}</span>
+    <input matInput [value]="state.url" (change)="onUrlUpdate($event)">
+    <span class="spacer"></span>
+    <mat-slide-toggle [checked]="state.enabled" (change)="onActivityMocksChange()"></mat-slide-toggle>
+  </div>
+
+  <div class="codes">
+    <button mat-raised-button (click)="onViewMock(code)" *ngFor="let code of codes">{{code}}</button>
+    <button mat-raised-button (click)="onViewMockAdd()">+</button>
+  </div>
+</mat-card>
+
+<!-- <mat-card>
+  <section class="top"> -->
+<!-- <div class="main-toggle">
       <span>active</span>
       <mat-slide-toggle [checked]="mocks.enabled" (change)="mock.active = $event.checked"></mat-slide-toggle>
     </div> -->
-    {{responses.url}} {{responses.method}} {{responses.type}}
+<!-- {{responses.url}} {{responses.method}} {{responses.type}}
   </section>
   <mat-tab-group>
     <ng-container *ngFor="let code of codes;let i = index">
@@ -14,8 +29,8 @@
             <mat-expansion-panel-header>
               <mat-panel-title>TODO</mat-panel-title>
               <mat-panel-description>TODO</mat-panel-description>
-            </mat-expansion-panel-header>
-            <!-- <section class="key-value">
+            </mat-expansion-panel-header> -->
+<!-- <section class="key-value">
               <span class="label">Url:</span>
               <span class="value">{{mock.url}}</span>
             </section>
@@ -82,7 +97,7 @@
                   color="accent">Highlight</button>
               </div>
             </div> -->
-          </mat-expansion-panel>
+<!-- </mat-expansion-panel>
         </mat-accordion>
       </mat-tab>
     </ng-container>
@@ -90,4 +105,4 @@
   <div class="page-actions">
     <button (click)="onSave()" mat-raised-button color="primary">Save</button>
   </div>
-</mat-card>
+</mat-card> -->

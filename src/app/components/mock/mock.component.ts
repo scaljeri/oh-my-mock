@@ -2,13 +2,15 @@ import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewCh
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Store } from '@ngxs/store';
+import { Select, Store } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { HotToastService } from '@ngneat/hot-toast';
 import { UpdateMock } from 'src/app/store/actions';
-import { IResponses, IOhMyMock } from 'src/shared/type';
+import { IResponses, IState, statusCode } from 'src/shared/type';
 import { STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
+import { OhMyState } from 'src/app/store/state';
+import { Observable } from 'rxjs';
 
 const DEFAULT_CODE = `// global variables:
 //   response: if active, this variable contains the api response
@@ -22,7 +24,7 @@ return mock || response;`;
   templateUrl: './mock.component.html',
   styleUrls: ['./mock.component.scss']
 })
-export class MockComponent implements OnInit, AfterViewInit {
+export class MockComponent implements AfterViewInit {
   defaultCode = DEFAULT_CODE;
   panelOpenState = false;
   originalResponse: string;
@@ -34,26 +36,41 @@ export class MockComponent implements OnInit, AfterViewInit {
   responses: IResponses;
   url: string;
 
+  state: IResponses;
+
   @ViewChild('responseMock') responseMock: ElementRef;
   @ViewChild('responseOrig') responseOrig: ElementRef;
   @ViewChild('codeEditor') editor: ElementRef;
 
   @Dispatch() updateMock = (responses: IResponses) => new UpdateMock({ url: this.url, responses });
+  @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(
     private appState: AppStateService,
-    private activeRoute: ActivatedRoute, private store: Store,
+    private activeRoute: ActivatedRoute,
+    private store: Store,
     public dialog: MatDialog,
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) { }
 
-  ngOnInit(): void {
-    // const url = decodeURIComponent(this.activeRoute.snapshot.params.url);
+  ngAfterViewInit(): void {
+    this.state$.subscribe(state => {
+      debugger;
+    });
+    const index = this.activeRoute.snapshot.params.index;
     // const method = decodeURIComponent(this.activeRoute.snapshot.params.method);
+    setTimeout(() => {
+      this.state = this.store.selectSnapshot<IResponses>((state: { [STORAGE_KEY]: IState }) => {
+        return state[STORAGE_KEY].responses[index];
+      });
 
-    this.responses = this.appState.responses;
+      this.codes = Object.keys(this.state.mocks).sort();
+    console.log('STATTTTTTT-',this.state)
+    });
 
-    this.codes = Object.values(this.responses.mocks).sort();
+    // this.responses = this.appState.responses;
+
+    // this.codes = Object.values(this.responses.mocks).sort();
     // this.originalResponse = JSON.stringify(this.mock.payload, null, 4);
     // this.store.select(state => state[STORAGE_KEY].urls[mockId])
     //   .subscribe((mock: IMock) => {
@@ -61,11 +78,27 @@ export class MockComponent implements OnInit, AfterViewInit {
     //   });
   }
 
-  ngAfterViewInit(): void {
-    hljs.highlightBlock(this.responseMock.nativeElement.querySelector('code'));
-    hljs.highlightBlock(this.responseOrig.nativeElement);
+  onActivityMocksChange(): void {
+    // TODO
+  }
+
+  onUrlUpdate(event): void {
+    // TODO
+  }
+
+  onViewMock(code: statusCode) {
+    // TODO
+  }
+
+  onViewMockAdd(): void {
 
   }
+
+  // ngAfterViewInit(): void {
+  //   hljs.highlightBlock(this.responseMock.nativeElement.querySelector('code'));
+  //   hljs.highlightBlock(this.responseOrig.nativeElement);
+
+  // }
 
   copyResponse(source?) {
     // this.mock.mock = source || this.mock.payload;
