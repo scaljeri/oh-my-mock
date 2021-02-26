@@ -22,7 +22,7 @@ export class UrlsOverviewComponent implements OnInit {
 	// @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 	@Select(OhMyState.getState) state$: Observable<{ [STORAGE_KEY]: IState }>;
 
-	displayedColumns = ['type', 'url', 'method'];
+	displayedColumns = ['type', 'url', 'method', 'activeStatusCode'];
 
 	responses: IResponses[] = [];
 
@@ -35,6 +35,7 @@ export class UrlsOverviewComponent implements OnInit {
 			map(state => state[STORAGE_KEY].responses)
 		).subscribe((responses: IResponses[]) => {
 			this.responses = responses;
+      console.log('RESPONZES are: ', this.responses);
 		});
 	}
 
