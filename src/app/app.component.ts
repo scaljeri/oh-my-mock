@@ -9,7 +9,7 @@ import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { ThemePalette } from '@angular/material/core';
-import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
+import { ActivatedRoute, ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
 
@@ -37,6 +37,7 @@ export class AppComponent implements AfterViewInit {
     private contentService: ContentService,
     private storageService: StorageService,
     private router: Router,
+    private activatedRoute: ActivatedRoute,
     private cdr: ChangeDetectorRef) {
   }
 
@@ -45,6 +46,7 @@ export class AppComponent implements AfterViewInit {
     this.state = await this.storageService.loadState();
     this.initState(this.state)
     this.isEnabled = this.state.enabled;
+
 
     // this.state$.subscribe(state => {
     //   this.state = state[STORAGE_KEY];
@@ -55,9 +57,10 @@ export class AppComponent implements AfterViewInit {
       .subscribe(
         (event: NavigationEvent) => {
           if (event instanceof ActivationStart) {
-            this.page = event.snapshot.url[0]?.path || '';
+            this.page = event.snapshot.url[0]?.path || '/';
           }
         });
+        this.page = (this.router.url.match(/^\/([^/]+)/) || [])[1] || '/';
   }
 
   onEnableChange({ checked }: MatSlideToggleChange): void {

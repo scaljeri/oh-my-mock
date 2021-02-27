@@ -1,15 +1,34 @@
 <mat-card class="header">
   <div *ngIf="state" class="main">
-    <span>{{state.type}}</span>
     <span>{{state.method}}</span>
+    <span>{{state.type}}</span>
     <input matInput [value]="state.url" (change)="onUrlUpdate($event)">
     <span class="spacer"></span>
     <mat-slide-toggle [checked]="state.enabled" (change)="onActivityMocksChange()"></mat-slide-toggle>
   </div>
 
   <div class="codes">
-    <button mat-raised-button (click)="onViewMock(code)" *ngFor="let code of codes">{{code}}</button>
-    <button mat-raised-button (click)="onViewMockAdd()">+</button>
+    <div class="label"><span>Status</span><span>Codes</span></div>
+    <div class="codes-wrapper">
+      <button mat-raised-button (click)="onViewMock(code)" *ngFor="let code of codes" [ngClass]="{'is-active': code === statusCode}">{{code}}</button>
+      <button mat-raised-button (click)="onViewMockAdd()">+</button>
+      <div class="spacer"></div>
+      <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+    </div>
+  </div>
+</mat-card>
+
+<mat-card class="response" *ngIf="mock">
+  <div class="original-response">
+    <h2>
+      <span>Response</span>
+      <span class="toggle">
+        passthrough
+        <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
+        </mat-slide-toggle>
+      </span>
+    </h2>
+    <pre><code #responseOrig class="language-json">{{mock.data}}</code></pre>
   </div>
 </mat-card>
 

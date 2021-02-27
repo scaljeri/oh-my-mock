@@ -1,12 +1,12 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { HotToastService } from '@ngneat/hot-toast';
 import { UpdateMock } from 'src/app/store/actions';
-import { IResponses, IState, statusCode } from 'src/shared/type';
+import { IResponseMock, IResponses, IState, statusCode } from 'src/shared/type';
 import { STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from 'src/app/store/state';
@@ -37,16 +37,20 @@ export class MockComponent implements AfterViewInit {
   url: string;
 
   state: IResponses;
+  mock: IResponseMock;
+  statusCode: statusCode;
 
-  @ViewChild('responseMock') responseMock: ElementRef;
-  @ViewChild('responseOrig') responseOrig: ElementRef;
-  @ViewChild('codeEditor') editor: ElementRef;
+  // @ViewChild('responseMock') responseMock: ElementRef;
+  // @ViewChild('responseOrig') responseOrig: ElementRef;
+  // @ViewChild('codeEditor') editor: ElementRef;
 
   @Dispatch() updateMock = (responses: IResponses) => new UpdateMock({ url: this.url, responses });
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(
     private appState: AppStateService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
     private activeRoute: ActivatedRoute,
     private store: Store,
     public dialog: MatDialog,
@@ -54,18 +58,23 @@ export class MockComponent implements AfterViewInit {
     private cdr: ChangeDetectorRef) { }
 
   ngAfterViewInit(): void {
-    this.state$.subscribe(state => {
-      debugger;
-    });
-    const index = this.activeRoute.snapshot.params.index;
-    // const method = decodeURIComponent(this.activeRoute.snapshot.params.method);
+    // this.state$.subscribe(state => {
+    //   debugger;
+    // });
+    const { index } = this.activeRoute.snapshot.params;
+    const { statusCode } = this.activeRoute.snapshot.queryParams;
+
     setTimeout(() => {
       this.state = this.store.selectSnapshot<IResponses>((state: { [STORAGE_KEY]: IState }) => {
         return state[STORAGE_KEY].responses[index];
       });
 
+      if (!this.state) {
+        return this.router.navigate(['/']);
+      }
+
       this.codes = Object.keys(this.state.mocks).sort();
-    console.log('STATTTTTTT-',this.state)
+      this.onViewMock(statusCode || this.codes[0]);
     });
 
     // this.responses = this.appState.responses;
@@ -87,7 +96,20 @@ export class MockComponent implements AfterViewInit {
   }
 
   onViewMock(code: statusCode) {
-    // TODO
+    if (!code) {
+      return;
+    }
+
+    this.mock = this.state.mocks[code];
+    this.statusCode = code;
+
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: { statusCode: code },
+        queryParamsHandling: 'merge',
+      });
   }
 
   onViewMockAdd(): void {
