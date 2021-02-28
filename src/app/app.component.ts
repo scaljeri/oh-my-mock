@@ -12,6 +12,7 @@ import { ThemePalette } from '@angular/material/core';
 import { ActivatedRoute, ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
+import { STORAGE_KEY } from '@shared/constants';
 
 @Component({
   selector: 'app-root',
@@ -42,16 +43,16 @@ export class AppComponent implements AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.storageService.reset();
+    // this.storageService.reset();
     this.state = await this.storageService.loadState();
     this.initState(this.state)
     this.isEnabled = this.state.enabled;
 
 
-    // this.state$.subscribe(state => {
-    //   this.state = state[STORAGE_KEY];
-    //   this.isEnabled = this.state.enabled;
-    // });
+    this.state$.subscribe(state => {
+      this.state = state[STORAGE_KEY];
+      this.isEnabled = this.state.enabled;
+    });
 
     this.router.events
       .subscribe(

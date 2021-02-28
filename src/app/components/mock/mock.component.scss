@@ -28,8 +28,7 @@
       opacity: 0;
     }
 
-    mat-slide-toggle {
-    }
+    mat-slide-toggle {}
   }
 
   .codes {
@@ -53,7 +52,7 @@
       border: 2px solid transparent;
     }
 
-    button + button {
+    button+button {
       margin-left: 10px;
     }
 
@@ -63,8 +62,63 @@
   }
 }
 
-mat-card + mat-card {
+mat-card+mat-card {
   margin-top: 10px;
+}
+
+.response {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+
+    h2 {
+      width: 49%;
+    }
+  }
+
+  .data {
+    width: 100%;
+    display: flex;
+    margin-bottom: 15px;
+    width: 100%;
+    justify-content: space-between;
+
+    pre {
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      font-size: 15px;
+      width: 49%;
+      max-width: 49%;
+
+      code {
+        min-height: 100%;
+        overflow: scroll;
+      }
+
+      &+pre {
+        code {
+          box-shadow: inset 0 0 5px #000000;
+        }
+      }
+    }
+  }
+
+  .js-code-edit {
+    align-self: flex-end;
+    margin-top: 10px;
+  }
+}
+
+ngx-monaco-editor {
+  height: 300px;
+  width: 100%;
 }
 
 //   pre {

@@ -11,6 +11,7 @@ import { STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from 'src/app/store/state';
 import { Observable } from 'rxjs';
+import { CodeEditComponent } from '../code-edit/code-edit.component';
 
 const DEFAULT_CODE = `// global variables:
 //   response: if active, this variable contains the api response
@@ -24,7 +25,7 @@ return mock || response;`;
   templateUrl: './mock.component.html',
   styleUrls: ['./mock.component.scss']
 })
-export class MockComponent implements AfterViewInit {
+export class MockComponent implements OnInit, AfterViewInit {
   defaultCode = DEFAULT_CODE;
   panelOpenState = false;
   originalResponse: string;
@@ -39,9 +40,10 @@ export class MockComponent implements AfterViewInit {
   state: IResponses;
   mock: IResponseMock;
   statusCode: statusCode;
+  jsCode: string;
 
-  // @ViewChild('responseMock') responseMock: ElementRef;
-  // @ViewChild('responseOrig') responseOrig: ElementRef;
+  @ViewChild('responseMock') responseMock: ElementRef;
+  @ViewChild('responseOrig') responseOrig: ElementRef;
   // @ViewChild('codeEditor') editor: ElementRef;
 
   @Dispatch() updateMock = (responses: IResponses) => new UpdateMock({ url: this.url, responses });
@@ -57,25 +59,49 @@ export class MockComponent implements AfterViewInit {
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) { }
 
+  ngOnInit(): void {
+    const { index } = this.activeRoute.snapshot.params;
+    const { statusCode } = this.activeRoute.snapshot.queryParams;
+
+    this.store.selectSnapshot<IResponses>((s: { [STORAGE_KEY]: IState }) => {
+      this.state = s[STORAGE_KEY].responses[index];
+
+      if (!this.state) {
+        this.router.navigate(['/']);
+      } else {
+        this.codes = Object.keys(this.state.mocks).sort();
+        this.onViewMock(statusCode || this.codes[0]);
+      }
+
+      return this.state;
+    });
+  }
+
   ngAfterViewInit(): void {
     // this.state$.subscribe(state => {
     //   debugger;
     // });
-    const { index } = this.activeRoute.snapshot.params;
-    const { statusCode } = this.activeRoute.snapshot.queryParams;
+    // const { index } = this.activeRoute.snapshot.params;
+    // const { statusCode } = this.activeRoute.snapshot.queryParams;
 
     setTimeout(() => {
-      this.state = this.store.selectSnapshot<IResponses>((state: { [STORAGE_KEY]: IState }) => {
-        return state[STORAGE_KEY].responses[index];
-      });
+      // this.state = this.store.selectSnapshot<IResponses>((state: { [STORAGE_KEY]: IState }) => {
+      //   return state[STORAGE_KEY].responses[index];
+      // });
 
-      if (!this.state) {
-        return this.router.navigate(['/']);
-      }
+      // if (!this.state) {
+      //   return this.router.navigate(['/']);
+      // }
 
-      this.codes = Object.keys(this.state.mocks).sort();
-      this.onViewMock(statusCode || this.codes[0]);
+      // this.codes = Object.keys(this.state.mocks).sort();
+      // this.onViewMock(statusCode || this.codes[0]);
+
+      setTimeout(() => {
+        hljs.highlightBlock(this.responseOrig.nativeElement);
+        hljs.highlightBlock(this.responseMock.nativeElement);
+      }, 100);
     });
+
 
     // this.responses = this.appState.responses;
 
@@ -102,6 +128,7 @@ export class MockComponent implements AfterViewInit {
 
     this.mock = this.state.mocks[code];
     this.statusCode = code;
+    this.jsCode = this.mock.jsCode;
 
     this.router.navigate(
       [],
@@ -117,8 +144,6 @@ export class MockComponent implements AfterViewInit {
   }
 
   // ngAfterViewInit(): void {
-  //   hljs.highlightBlock(this.responseMock.nativeElement.querySelector('code'));
-  //   hljs.highlightBlock(this.responseOrig.nativeElement);
 
   // }
 
@@ -185,5 +210,17 @@ export class MockComponent implements AfterViewInit {
   onSave(): void {
     // this.updateMock(this.mock)
     // this.toast.success('Mock saved!!');
+  }
+
+  openDialog(): void {
+    const dialogRef = this.dialog.open(CodeEditComponent, {
+      width: '80%',
+      data: { code: this.jsCode, originalCode: this.mock.jsCode }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed', result);
+      this.jsCode = result;
+    });
   }
 }

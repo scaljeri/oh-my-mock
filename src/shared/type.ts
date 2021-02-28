@@ -27,7 +27,6 @@ export interface IResponseMock<T = any> {
   useMock?: boolean;
   headers?: Record<string, string>
   passThrough?: boolean;
-  useJsCode?: boolean;
   jsCode?: string;
 }
 
@@ -37,6 +36,6 @@ export interface IUpsertResponse<T = any> {
   method: requestMethod;
   type: requestType;
   statusCode: number;
-  data: T
+  response: T
   dataType?: string;
 }

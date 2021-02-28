@@ -58,7 +58,7 @@ export class OhMyState {
       mocks: {
         ...source.mocks,
         [payload.statusCode]: {
-          data: payload.data,
+          response: payload.response,
           dataType: payload.dataType
         }
       }

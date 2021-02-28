@@ -1170,6 +1170,13 @@
     merge-source-map "^1.1.0"
     schema-utils "^2.7.0"
 
+"@materia-ui/ngx-monaco-editor@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@materia-ui/ngx-monaco-editor/-/ngx-monaco-editor-5.0.0.tgz#50791ce2ebd5888ada8cb31bc22ffbaffe4917c2"
+  integrity sha512-YN/0zN2XReMh5wC7VqKZSDaLEtAh87L6exfxTTF8Y7VHrVhTDx/Ah7E91uqhKOvdZgrLQhui4LaAEb8VAt7LuA==
+  dependencies:
+    tslib "^1.10.0"
+
 "@ngneat/hot-toast@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@ngneat/hot-toast/-/hot-toast-1.0.4.tgz#0f12fb9fb4ecd6adc3afac240a242e73725db7b9"
@@ -7168,6 +7175,11 @@ module-deps@^6.2.3:
     subarg "^1.0.0"
     through2 "^2.0.0"
     xtend "^4.0.0"
+
+monaco-editor@^0.22.3:
+  version "0.22.3"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.22.3.tgz#69b42451d3116c6c08d9b8e052007ff891fd85d7"
+  integrity sha512-RM559z2CJbczZ3k2b+ouacMINkAYWwRit4/vs0g2X/lkYefDiu0k2GmgWjAuiIpQi+AqASPOKvXNmYc8KUSvVQ==
 
 move-concurrently@^1.0.1:
   version "1.0.1"

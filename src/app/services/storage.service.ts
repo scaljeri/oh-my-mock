@@ -28,6 +28,7 @@ export class StorageService {
   async loadState(): Promise<IState> {
     return new Promise(resolve => {
       chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
+        console.log('Data loaded from storage', data);
         const allDomains: IOhMyMock = data[STORAGE_KEY] || { domains: {} };
 
         const state: IState = allDomains.domains[this.domain] || { domain: this.domain, responses: [], enabled: false };

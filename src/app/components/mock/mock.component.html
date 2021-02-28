@@ -10,7 +10,8 @@
   <div class="codes">
     <div class="label"><span>Status</span><span>Codes</span></div>
     <div class="codes-wrapper">
-      <button mat-raised-button (click)="onViewMock(code)" *ngFor="let code of codes" [ngClass]="{'is-active': code === statusCode}">{{code}}</button>
+      <button mat-raised-button (click)="onViewMock(code)" *ngFor="let code of codes"
+        [ngClass]="{'is-active': code === statusCode}">{{code}}</button>
       <button mat-raised-button (click)="onViewMockAdd()">+</button>
       <div class="spacer"></div>
       <button mat-raised-button color="primary" (click)="onSave()">Save</button>
@@ -19,17 +20,22 @@
 </mat-card>
 
 <mat-card class="response" *ngIf="mock">
-  <div class="original-response">
-    <h2>
-      <span>Response</span>
-      <span class="toggle">
+  <header>
+    <h2>Response<span class="toggle">
         passthrough
         <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
         </mat-slide-toggle>
-      </span>
+      </span></h2>
+    <h2>
+      <span>Mock</span>
     </h2>
-    <pre><code #responseOrig class="language-json">{{mock.data}}</code></pre>
+  </header>
+  <div class="data">
+    <pre><code #responseOrig class="language-json">{{mock.response | prettyPrint}}</code></pre>
+    <pre><code #responseMock contenteditable="true" class="language-json">{{mock.mock | prettyPrint}}</code></pre>
   </div>
+
+  <button class="js-code-edit" (click)="openDialog()" mat-stroked-button>Mocking with code</button>
 </mat-card>
 
 <!-- <mat-card>

@@ -18,10 +18,13 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockTestComponent } from './mock-test/mock-test.component';
+import { CodeEditComponent } from './code-edit/code-edit.component';
+import { FormsModule } from '@angular/forms';
 
+import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 
 @NgModule({
-  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent, MockTestComponent],
+  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent, MockTestComponent, CodeEditComponent],
   imports: [
     CommonModule,
     MatTableModule,
@@ -36,7 +39,9 @@ import { MockTestComponent } from './mock-test/mock-test.component';
     MatExpansionModule,
     MatDialogModule,
     MatTabsModule,
-    HotToastModule
+    HotToastModule,
+    FormsModule,
+    MonacoEditorModule
   ],
   exports: [UrlsOverviewComponent, MockComponent, ConfigComponent]
 })

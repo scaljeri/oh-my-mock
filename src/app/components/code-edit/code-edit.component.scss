@@ -1,0 +1,32 @@
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-wrapper {
+  background-color: rgba(0, 0, 0, .87);
+  display: block;
+  padding: 5px 0;
+}
+
+.button-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+
+  button + button {
+    margin-left: 10px;
+  }
+}
+
+ngx-monaco-diff-editor,
+ngx-monaco-editor {
+  display: block;
+  height: 80vh;
+  width: 100%;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+}
