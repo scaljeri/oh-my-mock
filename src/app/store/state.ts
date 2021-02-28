@@ -1,7 +1,7 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { EnableDomain, InitState, StateReset, UpdateMock, UpsertResponse } from './actions';
-import { IResponses, IState, IUpsertResponse, requestMethod, requestType } from '../../shared/type';
+import { DeleteResponse, EnableDomain, InitState, StateReset, UpdateMock, UpsertResponse } from './actions';
+import { IResponses, IState, IUpsertResponse, requestMethod, requestType, statusCode, IResponseMock, IDeleteResponse } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 
 @State<IState>({
@@ -57,7 +57,7 @@ export class OhMyState {
       ...source,
       mocks: {
         ...source.mocks,
-        [payload.statusCode]: {
+        [payload.activeStatusCode]: {
           response: payload.response,
           dataType: payload.dataType
         }
@@ -73,19 +73,53 @@ export class OhMyState {
     ctx.setState({ ...state, responses });
   }
 
+  @Action(DeleteResponse)
+  deleteResponse(ctx: StateContext<IState>, { payload }: { payload: IDeleteResponse }) {
+    const state = ctx.getState();
+    const origMockResponses: IResponses = OhMyState.findResponses(state, payload.url, payload.method, payload.type);
+
+    const mocks = { ...origMockResponses.mocks };
+    delete mocks[payload.statusCode];
+
+    const mockResponses = { ...origMockResponses, mocks};
+    const index = state.responses.indexOf(origMockResponses);
+
+    const responses = [...state.responses];
+    responses[index] = mockResponses;
+
+    ctx.setState({ ...state, responses });
+  }
+
   // NOTE: Without Responses it is currently not possible to go to the mock page
   // This update is only done on the mock page!
-  @Action(UpdateMock)
-  updateMock(ctx: StateContext<IState>, payload) {
-    const state = ctx.getState();
-    const responses = OhMyState.findResponses(state, payload.url, payload.method, payload.responseType);
-    const index = state.responses.indexOf(responses);
-    const newState = { ...state, responses: [...state.responses] };
-    newState.responses[index] = { ...responses, mocks: { ...responses.mocks, [payload.status]: payload.mock } };
+  // @Action(UpdateMock)
+  // updateMock(ctx: StateContext<IState>, payload: IUpsertResponse) {
+  //   const state = ctx.getState();
+  //   const responses = OhMyState.findResponses(state, payload.url, payload.method, payload.type);
 
-    console.log('STORE: state updates(newState)', state, responses);
-    ctx.setState(newState);
-  }
+  //   if (!responses) {
+  //     console.error('Error: Attempt to update mock, but it does not exist!', payload);
+  //   }
+
+  //   const index = state.responses.indexOf(responses);
+  //   const mock = responses.mocks[payload.statusCode] || {};
+
+  //   const newState = { ...state, responses: [...state.responses] };
+  //   newState.responses[index] = {
+  //     ...responses,
+  //     mocks: {
+  //       ...responses.mocks, [payload.statusCode]: {
+  //         ...mock,
+  //         dataType: payload.dataType,
+  //         response: payload.response,
+  //         mock: payload.mock
+  //       }
+  //     }
+  //   };
+
+  //   // console.log('STORE: state updates(newState)', state, responses);
+  //   ctx.setState(newState);
+  // }
 
   @Action(StateReset)
   reset(ctx: StateContext<IState>) {

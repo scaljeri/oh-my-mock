@@ -14,7 +14,7 @@ export class CodeEditComponent implements OnInit {
   public editorOptions = { theme: 'vs-dark', language: 'javascript' };
   public editMode = 'edit';
   public originalCode: string;
-  public error: string = 'xz';
+  public error: string;
 
   constructor(private dialogRef: MatDialogRef<CodeEditComponent>,
     @Inject(MAT_DIALOG_DATA) private input: {code: string, originalCode: string}) {
@@ -36,5 +36,9 @@ export class CodeEditComponent implements OnInit {
 
   onToggle(): void {
     this.editMode = this.editMode === 'diff' ? 'edit' : 'diff';
+  }
+
+  onReset(): void {
+    this.code = this.originalCode;
   }
 }

@@ -15,13 +15,13 @@ export interface IResponses {
   url: string;            //  composite primary key
   method: requestMethod;  //  composite PK
   type: requestType;      //  CPK
-  mocks?: Record<statusCode, IResponseMock>;
   activeStatusCode?: statusCode;
   enabled?: boolean;
+  mocks?: Record<statusCode, IResponseMock>;
 }
 
 export interface IResponseMock<T = any> {
-  dataType: string;
+  dataType?: string;
   response?: T;
   mock?: T;
   useMock?: boolean;
@@ -35,7 +35,24 @@ export interface IUpsertResponse<T = any> {
   url: string;
   method: requestMethod;
   type: requestType;
-  statusCode: number;
-  response: T
+  activeStatusCode: number;
+  response?: T
+  enabled?: boolean;
   dataType?: string;
+  mock?: IResponseMock;
+}
+
+export interface IUpsetMock {
+  url: string;
+  method: requestMethod;
+  type: requestType;
+  statusCode: statusCode;
+  mock: IResponseMock;
+}
+
+export interface IDeleteResponse {
+  url: string;
+  method: requestMethod;
+  type: requestType;
+  statusCode: statusCode;
 }

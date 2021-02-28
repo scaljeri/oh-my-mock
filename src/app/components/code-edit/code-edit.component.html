@@ -9,6 +9,7 @@
   <mat-error>{{error}}</mat-error>
 
   <div class="button-actions">
+    <button mat-raised-button (click)="onReset()">Reset</button>
     <button mat-raised-button (click)="onToggle()">{{editMode === 'diff' ? 'Edit' : 'Diff'}}</button>
     <button mat-raised-button color="primary" (click)="onClose()">Close</button>
   </div>

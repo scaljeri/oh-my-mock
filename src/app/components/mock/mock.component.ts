@@ -5,13 +5,13 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { HotToastService } from '@ngneat/hot-toast';
-import { UpdateMock } from 'src/app/store/actions';
-import { IResponseMock, IResponses, IState, statusCode } from 'src/shared/type';
-import { STORAGE_KEY } from 'src/shared/constants';
+import { IResponseMock, IResponses, IState, IDeleteResponse, IUpsertResponse, statusCode } from 'src/shared/type';
+import { STATUS_CODE_EXISTS, STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from 'src/app/store/state';
 import { Observable } from 'rxjs';
 import { CodeEditComponent } from '../code-edit/code-edit.component';
+import { DeleteResponse, UpsertResponses } from 'src/app/store/actions';
 
 const DEFAULT_CODE = `// global variables:
 //   response: if active, this variable contains the api response
@@ -38,15 +38,19 @@ export class MockComponent implements OnInit, AfterViewInit {
   url: string;
 
   state: IResponses;
-  mock: IResponseMock;
-  statusCode: statusCode;
+  mocks: Record<statusCode, IResponseMock> = {};
+  // mockResponse: string;
+  activeStatusCode: statusCode;
   jsCode: string;
+  enabled = false;
+  statusCodeError: string;
 
   @ViewChild('responseMock') responseMock: ElementRef;
   @ViewChild('responseOrig') responseOrig: ElementRef;
   // @ViewChild('codeEditor') editor: ElementRef;
 
-  @Dispatch() updateMock = (responses: IResponses) => new UpdateMock({ url: this.url, responses });
+  @Dispatch() upsertResponses = (responses: IResponses) => new UpsertResponses(responses);
+  @Dispatch() deleteMockResponse = (response: IDeleteResponse) => new DeleteResponse(response);
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(
@@ -65,6 +69,7 @@ export class MockComponent implements OnInit, AfterViewInit {
 
     this.store.selectSnapshot<IResponses>((s: { [STORAGE_KEY]: IState }) => {
       this.state = s[STORAGE_KEY].responses[index];
+      this.enabled = this.state.enabled;
 
       if (!this.state) {
         this.router.navigate(['/']);
@@ -122,13 +127,12 @@ export class MockComponent implements OnInit, AfterViewInit {
   }
 
   onViewMock(code: statusCode) {
-    if (!code) {
+    if (code === undefined) {
       return;
     }
 
-    this.mock = this.state.mocks[code];
-    this.statusCode = code;
-    this.jsCode = this.mock.jsCode;
+    this.activeStatusCode = code;
+    this.mocks[code] = { ...(this.state.mocks[code] || {}) };
 
     this.router.navigate(
       [],
@@ -140,87 +144,56 @@ export class MockComponent implements OnInit, AfterViewInit {
   }
 
   onViewMockAdd(): void {
+    this.onViewMock(0);
 
+    if (this.codes.indexOf(0) === -1) {
+      this.codes.push(0);
+    }
   }
 
-  // ngAfterViewInit(): void {
-
-  // }
-
-  copyResponse(source?) {
-    // this.mock.mock = source || this.mock.payload;
-
-    // const codeEl = document.createElement('code');
-    // codeEl.innerText = JSON.stringify(this.mock.mock, null, 4);
-    // this.responseMock.nativeElement.innerHTML = '';
-    // this.responseMock.nativeElement.appendChild(codeEl);
-    // hljs.highlightBlock(codeEl);
-
-    // if (!source) {
-    //   this.jsonError = null;
-    // }
-
-    // this.cdr.detectChanges();
-  }
-
-  onMockBlur(): void {
-    // this.jsonError = null;
-
-    // try {
-    //   this.mock.mock = JSON.parse(this.responseMock.nativeElement.innerText);
-    //   this.copyResponse(this.mock.mock);
-    // } catch (e) {
-    //   this.jsonError = e;
-    // }
-  }
-
-  onCodePanelCheck(useContent = false, runTest = false): void {
-    // this.isSyntaxOk = false;
-    // this.jsError = null;
-
-    // if (useContent) {
-    //   const code = this.editor.nativeElement.innerText.replace(/^\s+|\s+$/g, '');
-    //   try {
-    //     const fnc = eval(new Function('response', 'mock', code) as any);
-    //     this.mock.code = code;
-    //     this.isSyntaxOk = true;
-    //     if (runTest) {
-    //       const dialogRef = this.dialog.open(MockTestComponent, {
-    //         data: { result: fnc(this.mock.payload, this.mock.mock) }
-    //       });
-
-    //       dialogRef.afterClosed().subscribe(result => {
-    //         console.log(`Dialog result: ${result}`);
-    //       });
-
-    //     }
-    //   } catch (e) {
-    //     this.jsError = e;
-    //   }
-
-    //   this.editor.nativeElement.innerHTML = `<code>${code}</code>`;
-    // }
-    // hljs.highlightBlock(this.editor.nativeElement.querySelector('code'));
-  }
-
-  onCodeBlur(): void {
-    this.onCodePanelCheck(true);
+  onMockChange(json: string): void {
+    this.activeMock.mock = json;
   }
 
   onSave(): void {
-    // this.updateMock(this.mock)
-    // this.toast.success('Mock saved!!');
+    this.upsertResponses({
+      url: this.state.url,
+      method: this.state.method,
+      type: this.state.type,
+      activeStatusCode: this.activeStatusCode,
+      enabled: this.enabled,
+      mocks: {
+        ...this.state.mocks,
+        ...this.mocks
+      }
+    });
+  }
+
+  validateStatusCode(value: string): void {
+    this.statusCodeError = null
+
+    if (this.codes.indexOf(value) !== -1) {
+      this.statusCodeError = STATUS_CODE_EXISTS;
+    }
+  }
+
+  onDelete(): void {
+    const { url, method, type } = this.state;
+    this.deleteMockResponse({url, method, type, statusCode: this.activeStatusCode });
   }
 
   openDialog(): void {
     const dialogRef = this.dialog.open(CodeEditComponent, {
       width: '80%',
-      data: { code: this.jsCode, originalCode: this.mock.jsCode }
+      data: { code: this.jsCode, originalCode: this.activeMock.jsCode }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed', result);
       this.jsCode = result;
     });
+  }
+
+  get activeMock(): IResponseMock {
+    return this.mocks[this.activeStatusCode];
   }
 }

@@ -52,6 +52,18 @@
       border: 2px solid transparent;
     }
 
+    input {
+      border-radius: 3px;
+      padding: 0 5px;
+      width: 25px;
+
+      &.is-invalid {
+        border: 1px solid red;
+      }
+    }
+
+    button+input,
+    input+button,
     button+button {
       margin-left: 10px;
     }
@@ -59,6 +71,11 @@
     .is-active {
       border: 2px solid green;
     }
+  }
+
+  .mat-error {
+    display: block;
+    margin-top: 5px;
   }
 }
 
@@ -96,6 +113,7 @@ mat-card+mat-card {
       font-size: 15px;
       width: 49%;
       max-width: 49%;
+      min-height: 250px;
 
       code {
         min-height: 100%;

@@ -10,20 +10,26 @@
   <div class="codes">
     <div class="label"><span>Status</span><span>Codes</span></div>
     <div class="codes-wrapper">
-      <button mat-raised-button (click)="onViewMock(code)" *ngFor="let code of codes"
-        [ngClass]="{'is-active': code === statusCode}">{{code}}</button>
+      <ng-container *ngFor="let code of codes">
+        <button *ngIf="code > 0" kmat-raised-button (click)="onViewMock(code)"
+          [ngClass]="{'is-active': code === activeStatusCode}">{{code}}</button>
+        <input #sc *ngIf="code === 0" (keyup)="validateStatusCode(sc.value)"
+          [ngClass]="{'is-invalid': !!statusCodeError}" mat-input>
+      </ng-container>
       <button mat-raised-button (click)="onViewMockAdd()">+</button>
       <div class="spacer"></div>
       <button mat-raised-button color="primary" (click)="onSave()">Save</button>
     </div>
   </div>
+  <mat-error *ngIf="statusCodeError">{{statusCodeError}}</mat-error>
 </mat-card>
 
-<mat-card class="response" *ngIf="mock">
+<mat-card class="response" *ngIf="activeStatusCode">
+  <button (click)="onDelete()"><mat-icon>delete_forever</mat-icon></button>
   <header>
     <h2>Response<span class="toggle">
         passthrough
-        <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
+        <mat-slide-toggle [checked]="activeMock.passThrough" (change)="mock.passThrough = $event.checked">
         </mat-slide-toggle>
       </span></h2>
     <h2>
@@ -31,8 +37,8 @@
     </h2>
   </header>
   <div class="data">
-    <pre><code #responseOrig class="language-json">{{mock.response | prettyPrint}}</code></pre>
-    <pre><code #responseMock contenteditable="true" class="language-json">{{mock.mock | prettyPrint}}</code></pre>
+    <pre><code #responseOrig class="language-json">{{activeMock.response | prettyPrint}}</code></pre>
+    <pre><code (keyup)="onMockChange($event.target.innterText)" #responseMock contenteditable="true" class="language-json">{{activeMock.mock | prettyPrint}}</code></pre>
   </div>
 
   <button class="js-code-edit" (click)="openDialog()" mat-stroked-button>Mocking with code</button>
