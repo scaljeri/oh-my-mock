@@ -1,8 +1,8 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { DeleteMock, EnableDomain, InitState, UpsertMock } from './actions';
-import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock } from '@shared/type';
-import { STORAGE_KEY } from '@shared/constants';
+import { CreateStatusCode, DeleteMock, EnableDomain, InitState, UpsertData, UpsertMock } from './actions';
+import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode } from '@shared/type';
+import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 
 @State<IState>({
   name: STORAGE_KEY,
@@ -43,13 +43,12 @@ export class OhMyState {
   @Action(UpsertMock)
   upsertResponses(ctx: StateContext<IState>, { payload }: { payload: IUpsertMock }) {
     const state = ctx.getState();
-    const source: IData = OhMyState.findResponses(state, payload.url, payload.method, payload.type) || {
+    const source: IData = OhMyState.findData(state, payload.url, payload.method, payload.type) || {
       url: payload.url,
       method: payload.method,
       type: payload.type,
       mocks: {}
     };
-    debugger;
 
     const indexOf = state.data.indexOf(source);
     const data = [...state.data];
@@ -74,15 +73,20 @@ export class OhMyState {
     ctx.setState({ ...state, data });
   }
 
+  @Action(UpsertData)
+  upsertData(ctx: StateContext<IState>, { payload }: { payload: IData }) {
+    console.log('TODO');
+  }
+
   @Action(DeleteMock)
   deleteResponse(ctx: StateContext<IState>, { payload }: { payload: IDeleteMock }) {
     const state = ctx.getState();
-    const origMockResponses: IData = OhMyState.findResponses(state, payload.url, payload.method, payload.type);
+    const origMockResponses: IData = OhMyState.findData(state, payload.url, payload.method, payload.type);
 
     const mocks = { ...origMockResponses.mocks };
     delete mocks[payload.statusCode];
 
-    const mockResponses = { ...origMockResponses, mocks};
+    const mockResponses = { ...origMockResponses, mocks };
     const index = state.data.indexOf(origMockResponses);
 
     const data = [...state.data];
@@ -91,38 +95,24 @@ export class OhMyState {
     ctx.setState({ ...state, data });
   }
 
-  // NOTE: Without Responses it is currently not possible to go to the mock page
-  // This update is only done on the mock page!
-  // @Action(UpdateMock)
-  // updateMock(ctx: StateContext<IState>, payload: IUpsertResponse) {
-  //   const state = ctx.getState();
-  //   const responses = OhMyState.findResponses(state, payload.url, payload.method, payload.type);
+  @Action(CreateStatusCode)
+  createStatusCode(ctx: StateContext<IState>, { payload }: { payload: ICreateStatusCode }) {
+    const state = ctx.getState();
+    const { url, method, type, statusCode } = payload;
+    const origData: IData = OhMyState.findData(state, url, method, type);
+    const data: IData = { ...origData };
+    data.mocks = {
+      ...data.mocks,
+      [statusCode]: { jsCode: MOCK_JS_CODE }
+    };
+    const index = state.data.indexOf(origData);
+    const newState = { ...state, data: [...state.data ]};
+    newState.data[index] = data;
 
-  //   if (!responses) {
-  //     console.error('Error: Attempt to update mock, but it does not exist!', payload);
-  //   }
+    ctx.setState(newState);
+  }
 
-  //   const index = state.responses.indexOf(responses);
-  //   const mock = responses.mocks[payload.statusCode] || {};
-
-  //   const newState = { ...state, responses: [...state.responses] };
-  //   newState.responses[index] = {
-  //     ...responses,
-  //     mocks: {
-  //       ...responses.mocks, [payload.statusCode]: {
-  //         ...mock,
-  //         dataType: payload.dataType,
-  //         response: payload.response,
-  //         mock: payload.mock
-  //       }
-  //     }
-  //   };
-
-  //   // console.log('STORE: state updates(newState)', state, responses);
-  //   ctx.setState(newState);
-  // }
-
-  static findResponses(state: IState, url: string, method: requestMethod, type: requestType): IData | null {
+  static findData(state: IState, url: string, method: requestMethod, type: requestType): IData | null {
     return state.data.find(r =>
       r.url === url && r.method === method && r.type === type) || null;
   }

@@ -1,7 +1,6 @@
 <div class="editor-wrapper">
   <ngx-monaco-editor *ngIf="editMode === 'edit'" [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
-  <ngx-monaco-diff-editor *ngIf="editMode === 'diff'" [options]="editorOptions" [original]="originalCode"
-    [modified]="code">
+  <ngx-monaco-diff-editor *ngIf="editMode === 'diff'" [options]="editorOptions" [original]="input.code" [modified]="code">
   </ngx-monaco-diff-editor>
 </div>
 

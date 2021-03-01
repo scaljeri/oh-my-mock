@@ -1,6 +1,6 @@
-import { Component, Inject, Input, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { JS_INCORRECT_MSG, MOCK_CODE } from '@shared/constants';
+import { JS_INCORRECT_MSG } from '@shared/constants';
 import { evalJsCode } from '@shared/utils/eval-jscode';
 
 @Component({
@@ -13,13 +13,11 @@ export class CodeEditComponent implements OnInit {
 
   public editorOptions = { theme: 'vs-dark', language: 'javascript' };
   public editMode = 'edit';
-  public originalCode: string;
   public error: string;
 
   constructor(private dialogRef: MatDialogRef<CodeEditComponent>,
-    @Inject(MAT_DIALOG_DATA) private input: {code: string, originalCode: string}) {
-      this.code = input.code || MOCK_CODE;
-      this.originalCode = input.originalCode || MOCK_CODE;
+    @Inject(MAT_DIALOG_DATA) public input: {code: string}) {
+      this.code = input.code;
     }
   ngOnInit(): void {
     // this.originalCode = this.code;
@@ -39,6 +37,6 @@ export class CodeEditComponent implements OnInit {
   }
 
   onReset(): void {
-    this.code = this.originalCode;
+    this.code = this.input.code;
   }
 }

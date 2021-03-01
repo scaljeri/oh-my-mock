@@ -4,7 +4,7 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 import { EnableDomain, InitState } from './store/actions';
 import { StorageService } from './services/storage.service';
-import { IState } from '../shared/type';
+import { IState, IStore } from '../shared/type';
 import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
@@ -30,7 +30,7 @@ export class AppComponent implements AfterViewInit {
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IState) => new InitState(state);
   @Dispatch() stateReset = () => new InitState();
-  @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
+  @Select(OhMyState.getState) state$: Observable<IStore>;
 
   @ViewChild('drawer') drawer: MatDrawer;
 

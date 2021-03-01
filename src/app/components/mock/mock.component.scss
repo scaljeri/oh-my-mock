@@ -52,18 +52,6 @@
       border: 2px solid transparent;
     }
 
-    input {
-      border-radius: 3px;
-      padding: 0 5px;
-      width: 25px;
-
-      &.is-invalid {
-        border: 1px solid red;
-      }
-    }
-
-    button+input,
-    input+button,
     button+button {
       margin-left: 10px;
     }
@@ -71,11 +59,6 @@
     .is-active {
       border: 2px solid green;
     }
-  }
-
-  .mat-error {
-    display: block;
-    margin-top: 5px;
   }
 }
 
@@ -115,13 +98,13 @@ mat-card+mat-card {
       max-width: 49%;
       min-height: 250px;
 
-      code {
+      ::ng-deep code {
         min-height: 100%;
         overflow: scroll;
       }
 
-      &+pre {
-        code {
+      &.mock {
+        ::ng-deep code {
           box-shadow: inset 0 0 5px #000000;
         }
       }

@@ -11,22 +11,20 @@
     <div class="label"><span>Status</span><span>Codes</span></div>
     <div class="codes-wrapper">
       <button mat-raised-button *ngFor="let code of codes" (click)="onViewMock(code)"
-        [ngClass]="{'is-active': code === activeStatusCode}">{{code}}</button>
+        [ngClass]="{'is-active': code == statusCode}">{{code}}</button>
       <button mat-raised-button (click)="openAddStatusCodeDialog()">+</button>
-      <!-- <div class="spacer"></div> -->
-      <!-- <button mat-raised-button color="primary" (click)="onSave()">Save</button> -->
     </div>
   </div>
 </mat-card>
 
-<mat-card class="response" *ngIf="activeStatusCode">
+<mat-card class="response" *ngIf="statusCode">
   <button (click)="onDelete()">
     <mat-icon>delete_forever</mat-icon>
   </button>
   <header>
     <h2>Response<span class="toggle">
         passthrough
-        <mat-slide-toggle [checked]="activeMock.passThrough" (change)="mock.passThrough = $event.checked">
+        <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
         </mat-slide-toggle>
       </span></h2>
     <h2>
@@ -34,103 +32,9 @@
     </h2>
   </header>
   <div class="data">
-    <pre><code #responseOrig class="language-json">{{activeMock.response | prettyPrint}}</code></pre>
-    <pre><code (keyup)="onMockChange($event.target.innterText)" #responseMock contenteditable="true" class="language-json">{{activeMock.mock | prettyPrint}}</code></pre>
+    <pre #responseRef></pre>
+    <pre #mockRef (keyup)="onMockChange($event)" class="mock"></pre>
   </div>
 
   <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
 </mat-card>
-
-<!-- <mat-card>
-  <section class="top"> -->
-<!-- <div class="main-toggle">
-      <span>active</span>
-      <mat-slide-toggle [checked]="mocks.enabled" (change)="mock.active = $event.checked"></mat-slide-toggle>
-    </div> -->
-<!-- {{responses.url}} {{responses.method}} {{responses.type}}
-  </section>
-  <mat-tab-group>
-    <ng-container *ngFor="let code of codes;let i = index">
-      <mat-tab *ngIf="responses.mocks[code] as mocks" [label]="code">
-        <mat-accordion>
-          <mat-expansion-panel [expanded]="i === 0">
-            <mat-expansion-panel-header>
-              <mat-panel-title>TODO</mat-panel-title>
-              <mat-panel-description>TODO</mat-panel-description>
-            </mat-expansion-panel-header> -->
-<!-- <section class="key-value">
-              <span class="label">Url:</span>
-              <span class="value">{{mock.url}}</span>
-            </section>
-            <section class="key-value">
-              <span class="label">StatusCode:</span>
-              <input class="value" matInput type="text" [value]="mock.statusCode">
-            </section>
-            <section class="response">
-              <div class="original-response">
-                <h2>
-                  <span>Response</span>
-                  <span class="toggle">
-                    passthrough
-                    <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
-                    </mat-slide-toggle>
-                  </span>
-                </h2>
-                <pre><code #responseOrig class="language-json">{{originalResponse}}</code></pre>
-              </div>
-              <a (click)="copyResponse()" mat-icon-button mat-mini-fab color="accent">
-                <mat-icon>keyboard_arrow_right</mat-icon>
-              </a>
-              <div class="mock-response">
-                <h2>
-                  <span>Mock</span>
-                  <span class="toggle">
-                    active
-                    <mat-slide-toggle [checked]="mock.useMock" (change)="mock.useMock = $event.checked">
-                    </mat-slide-toggle>
-                  </span>
-                </h2>
-                <pre #responseMock (blur)="onMockBlur()" contenteditable="true">
-                <code class="language-json">{{mock.mock|prettyPrint}}</code>
-              </pre>
-                <div class="error">{{jsonError}}</div>
-              </div>
-            </section>
-
-          </mat-expansion-panel>
-          <mat-expansion-panel (opened)="onCodePanelCheck();panelOpenState = true" (closed)="panelOpenState = false">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                Code2Mock
-              </mat-panel-title>
-              <mat-panel-description>
-                Create mock data with javascript
-              </mat-panel-description>
-            </mat-expansion-panel-header>
-            <div class="code-editor-pane">
-              <span class="toggle">
-                active
-                <mat-slide-toggle [checked]="mock.useCode" (change)="mock.useCode = $event.checked"></mat-slide-toggle>
-              </span>
-              <pre class="code-editor" #codeEditor (blur)="onCodeBlur()" contenteditable="true">
-        <code ng-non-bindable class="language-javascript">{{mock.code || defaultCode}}
-        </code>
-      </pre>
-              <div *ngIf="jsError" class="error">{{jsError}}</div>
-              <div *ngIf="isSyntaxOk" class="ok">Syntax OK!</div>
-              <div class="code-actions">
-                <button (click)="onCodePanelCheck(true, true)" class="code-highlight" mat-button
-                  color="accent">Test</button>
-                <button (click)="onCodePanelCheck(true)" class="code-highlight" mat-button
-                  color="accent">Highlight</button>
-              </div>
-            </div> -->
-<!-- </mat-expansion-panel>
-        </mat-accordion>
-      </mat-tab>
-    </ng-container>
-  </mat-tab-group>
-  <div class="page-actions">
-    <button (click)="onSave()" mat-raised-button color="primary">Save</button>
-  </div>
-</mat-card> -->

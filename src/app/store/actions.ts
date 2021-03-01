@@ -1,4 +1,4 @@
-import { IState, IData, IMock, IDeleteData, IDeleteMock } from '@shared/type';
+import { IState, IData, IMock, IDeleteData, IDeleteMock, statusCode, ICreateStatusCode } from '@shared/type';
 
 export class EnableDomain {
   static readonly type = '[Domain] Enable';
@@ -28,4 +28,9 @@ export class DeleteData {
 export class DeleteMock {
   static readonly type = '[Mock] delete';
   constructor(public payload: IDeleteMock) { }
+}
+
+export class CreateStatusCode {
+  static readonly type = '[StatusCode] create';
+  constructor(public payload: ICreateStatusCode) {}
 }

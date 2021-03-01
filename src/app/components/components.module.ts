@@ -19,7 +19,7 @@ import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockTestComponent } from './mock-test/mock-test.component';
 import { CodeEditComponent } from './code-edit/code-edit.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
@@ -42,7 +42,8 @@ import { CreateStatusCodeComponent } from './create-status-code/create-status-co
     MatTabsModule,
     HotToastModule,
     ReactiveFormsModule,
-    MonacoEditorModule
+    FormsModule,
+    MonacoEditorModule,
   ],
   exports: [UrlsOverviewComponent, MockComponent, ConfigComponent]
 })

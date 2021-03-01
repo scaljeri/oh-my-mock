@@ -1,3 +1,5 @@
+import { STORAGE_KEY } from './constants';
+
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
 export type requestMethod = 'XHR' | 'FETCH';
 export type statusCode = number;
@@ -5,6 +7,11 @@ export type statusCode = number;
 export interface IOhMyMock {
   domains: Record<string, IState>;
 }
+
+export interface IStore {
+  [STORAGE_KEY]: IState;
+}
+
 export interface IState {
   domain: string;
   data: IData[];
@@ -49,5 +56,9 @@ export interface IDeleteData extends IDataBase {
 }
 
 export interface IDeleteMock extends IDataBase {
+  statusCode: statusCode;
+}
+
+export interface ICreateStatusCode extends IDataBase {
   statusCode: statusCode;
 }

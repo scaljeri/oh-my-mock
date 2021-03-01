@@ -1,6 +1,6 @@
 export const STORAGE_KEY = 'OhMyMocks';
 
-export const MOCK_CODE = '/* This is the code used to mock. Feel free to modify as you see fit\n' +
+export const MOCK_JS_CODE = '/* This is the code used to mock. Feel free to modify as you see fit\n' +
   'There are 3 global variables:\n' +
   '   * response - the response from the API\n' +
   '   * data     - an object which holds everything you\'ve configured on this page:\n' +

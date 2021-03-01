@@ -1,6 +1,6 @@
 <h2>Create a Status code</h2>
 <mat-form-field>
-  <input matInput type="text" [formControl]="statusCodeControl">
+  <input matInput type="text" [formControl]="statusCodeControl" (keydown.enter)="onSave()">
   <mat-error *ngIf="statusCodeControl.errors?.required">{{requiredError}}</mat-error>
   <mat-error *ngIf="statusCodeControl.errors?.exists">{{existsError}}</mat-error>
   <mat-error *ngIf="statusCodeControl.errors?.invalid">{{invalidError}}</mat-error>

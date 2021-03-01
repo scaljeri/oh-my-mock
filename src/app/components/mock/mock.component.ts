@@ -10,9 +10,10 @@ import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from 'src/app/store/state';
 import { Observable } from 'rxjs';
 import { CodeEditComponent } from '../code-edit/code-edit.component';
-import { DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
-import { IData, IDeleteMock, IMock, IState, statusCode } from '@shared/type';
+import { CreateStatusCode, DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
+import { IData, IDeleteMock, IMock, IState, IStore, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from '../create-status-code/create-status-code.component';
+import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 
 const DEFAULT_CODE = `// global variables:
 //   response: if active, this variable contains the api response
@@ -41,83 +42,56 @@ export class MockComponent implements OnInit, AfterViewInit {
   state: IData;
   mocks: Record<statusCode, IMock> = {};
   // mockResponse: string;
-  activeStatusCode: statusCode;
+  statusCode: statusCode;
   jsCode: string;
   enabled = false;
   statusCodeError: string;
+  index: number;
+  mock: IMock;
+  saveTimeoutId: number;
 
-  @ViewChild('responseMock') responseMock: ElementRef;
-  @ViewChild('responseOrig') responseOrig: ElementRef;
+  @ViewChild('mockRef') mockRef: ElementRef;
+  @ViewChild('responseRef') responseRef: ElementRef;
   // @ViewChild('codeEditor') editor: ElementRef;
 
+  @Dispatch() createStatusCode = (statusCode: statusCode) =>
+    new CreateStatusCode({ url: this.state.url, method: this.state.method, type: this.state.type, statusCode });
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Dispatch() upsertMock = (mock: IMock) => new UpsertMock(mock);
   @Dispatch() deleteMockResponse = (response: IDeleteMock) => new DeleteMock(response);
-  @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
+  @Select(OhMyState.getState) state$: Observable<IStore>;
 
   constructor(
-    private appState: AppStateService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private activeRoute: ActivatedRoute,
-    private store: Store,
     public dialog: MatDialog,
+    private prettyPrintPipe: PrettyPrintPipe,
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    const { index } = this.activeRoute.snapshot.params;
-    const { statusCode } = this.activeRoute.snapshot.queryParams;
-
-    this.store.selectSnapshot<IData>((s: { [STORAGE_KEY]: IState }) => {
-      this.state = s[STORAGE_KEY].data[index];
-
-      if (!this.state) {
-        this.router.navigate(['/']);
-      } else {
-        this.enabled = this.state.enabled;
-        this.codes = Object.keys(this.state.mocks).sort();
-        this.onViewMock(statusCode || this.codes[0]);
-      }
-
-      return this.state;
+    this.state$.subscribe((state: IStore) => {
+      this.init(state);
     });
   }
 
+  init(state: IStore): void {
+    const index = Number(this.activeRoute.snapshot.params.index);
+    this.state = state[STORAGE_KEY].data[index];
+
+    if (!this.state) {
+      this.router.navigate(['/']);
+    } else {
+      this.statusCode = this.statusCode || Number(this.activeRoute.snapshot.queryParams || this.state.activeStatusCode);
+      this.enabled = this.state.enabled;
+      this.codes = Object.keys(this.state.mocks).sort();
+      this.onViewMock(this.statusCode || this.codes[0]);
+    }
+    this.cdr.detectChanges();
+  }
+
   ngAfterViewInit(): void {
-    // this.state$.subscribe(state => {
-    //   debugger;
-    // });
-    // const { index } = this.activeRoute.snapshot.params;
-    // const { statusCode } = this.activeRoute.snapshot.queryParams;
-
-    setTimeout(() => {
-      // this.state = this.store.selectSnapshot<IResponses>((state: { [STORAGE_KEY]: IState }) => {
-      //   return state[STORAGE_KEY].responses[index];
-      // });
-
-      // if (!this.state) {
-      //   return this.router.navigate(['/']);
-      // }
-
-      // this.codes = Object.keys(this.state.mocks).sort();
-      // this.onViewMock(statusCode || this.codes[0]);
-
-      setTimeout(() => {
-        hljs.highlightBlock(this.responseOrig.nativeElement);
-        hljs.highlightBlock(this.responseMock.nativeElement);
-      }, 100);
-    });
-
-
-    // this.responses = this.appState.responses;
-
-    // this.codes = Object.values(this.responses.mocks).sort();
-    // this.originalResponse = JSON.stringify(this.mock.payload, null, 4);
-    // this.store.select(state => state[STORAGE_KEY].urls[mockId])
-    //   .subscribe((mock: IMock) => {
-    //     this.mock = { ...this.mock, payload: mock.payload };
-    //   });
   }
 
   onActivityMocksChange(): void {
@@ -133,8 +107,8 @@ export class MockComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.activeStatusCode = code;
-    this.mocks[code] = { ...(this.state.mocks[code] || {}) };
+    this.statusCode = Number(code);
+    this.mock = { ... this.state.mocks[this.statusCode] };
 
     this.router.navigate(
       [],
@@ -143,6 +117,11 @@ export class MockComponent implements OnInit, AfterViewInit {
         queryParams: { statusCode: code },
         queryParamsHandling: 'merge',
       });
+
+    setTimeout(() => {
+      this.injectJSON(this.responseRef, this.mock.response);
+      this.injectJSON(this.mockRef, this.mock.mock, true);
+    })
   }
 
   onViewMockAdd(): void {
@@ -153,33 +132,41 @@ export class MockComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onMockChange(json: string): void {
-    this.activeMock.mock = json;
+  onMockChange(event: KeyboardEvent): void {
+    // TODO: validate if dataType is json
+
+    clearTimeout(this.saveTimeoutId);
+    this.mock.mock = (event.target as HTMLElement).innerText;
+    this.saveTimeoutId = setTimeout(() => {
+      this.save();
+    }, 1000);
   }
 
-  onSave(): void {
+  save(): void {
+    const mocks = { ... this.state.mocks };
+    mocks[this.statusCode] = this.mock;
+
     this.upsertData({
       url: this.state.url,
       method: this.state.method,
       type: this.state.type,
-      activeStatusCode: this.activeStatusCode,
+      activeStatusCode: this.statusCode,
       enabled: this.enabled,
-      mocks: {
-        ...this.state.mocks,
-        ...this.mocks
-      }
+      mocks
     });
+
+    this.toast.success('Changes saved');
   }
 
   onDelete(): void {
     const { url, method, type } = this.state;
-    this.deleteMockResponse({ url, method, type, statusCode: this.activeStatusCode });
+    this.deleteMockResponse({ url, method, type, statusCode: this.statusCode });
   }
 
   openJsCodeDialog(): void {
     const dialogRef = this.dialog.open(CodeEditComponent, {
       width: '80%',
-      data: { code: this.jsCode, originalCode: this.activeMock.jsCode }
+      data: { code: this.jsCode, originalCode: this.mock.jsCode }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -195,11 +182,21 @@ export class MockComponent implements OnInit, AfterViewInit {
     });
 
     dialogRef.afterClosed().subscribe(newStatusCode => {
+      this.statusCode = newStatusCode;
+      this.createStatusCode(newStatusCode);
     });
-
   }
 
-  get activeMock(): IMock {
-    return this.mocks[this.activeStatusCode];
+  injectJSON(ref: ElementRef, json: Record<string, unknown>, editable = false) {
+    ref.nativeElement.innerHTML = '';
+
+    const codeEl = document.createElement('code');
+    codeEl.className = 'language-json';
+    if (editable) {
+      codeEl.setAttribute('contenteditable', "true");
+    }
+    codeEl.innerText = this.prettyPrintPipe.transform(json);
+    hljs.highlightBlock(codeEl);
+    ref.nativeElement.appendChild(codeEl);
   }
 }
