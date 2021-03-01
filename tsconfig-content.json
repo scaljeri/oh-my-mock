@@ -3,24 +3,23 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./dist/oh-my-mock/",
+    "outDir": "./dist/",
     "sourceMap": false,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es5",
-    "module": "es2020",
+    "target": "es6",
+    "module": "commonjs",
     "lib": [
-      "es2018",
+      "es5",
+      "es6",
       "dom"
     ],
     "types": []
   },
   "files": [
-    "src/content/index.ts",
-    "src/injected/index.ts",
-    "src/background.ts"
+    "src/content/index.ts"
   ]
 }

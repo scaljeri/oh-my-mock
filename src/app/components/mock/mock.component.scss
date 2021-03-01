@@ -3,132 +3,250 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-
-  pre {
-    margin-top: 0;
-    padding: 5px;
-    background-color: #F0F0F0;
-  }
-
-  ::ng-deep code {
-    padding: 0;
-  }
-
-  .error {
-    font-weight: bold;
-    color: red;
-  }
-
-  .ok {
-    font-weight: bold;
-    color: green
-  }
+  background-color: #fff;
 }
 
-.top {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-
-  .main-toggle {
-    align-items: center;
-    align-self: flex-end;
+.header {
+  .main {
     display: flex;
 
     span {
-      padding-right: 5px;
-      font-weight: bold;
-      font-size: 15px;
-    }
-  }
-}
-
-.key-value {
-  margin: 5px 0;
-}
-
-.label {
-  font-weight: bold;
-  display: inline-flex;
-  padding-right: 10px;
-}
-
-.response {
-  display: flex;
-  // align-items: stretch;
-  justify-content: center;
-
-  h2 {
-    display: flex;
-    justify-content: space-between;
-
-    .toggle {
-      font-weight: normal;
-    }
-
-  }
-
-  &>div {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-
-    pre {
-      flex-direction: column;
-      flex: 1;
+      display: inline-flex;
+      font-weight: 900;
       padding: 5px;
-      height: 300px;
-      max-height: 300px;
-      overflow: scroll;
+      border: 1px solid #a9a9a9;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+
+    input {
+      width: 300px;
+    }
+
+    .spacer {
+      flex: 1;
+      opacity: 0;
+    }
+
+    mat-slide-toggle {}
+  }
+
+  .codes {
+    display: flex;
+    margin-top: 10px;
+
+    .label {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 20px;
+    }
+
+    .codes-wrapper {
+      display: flex;
+      flex: 1;
+    }
+
+    button {
+      border: 2px solid transparent;
+    }
+
+    button+button {
+      margin-left: 10px;
+    }
+
+    .is-active {
+      border: 2px solid green;
     }
   }
-
-  a {
-    flex: 0 0 auto;
-    margin: 0 10px;
-    align-self: center;
-  }
-
 }
 
-.code-editor-pane {
-  display: flex;
-  flex-direction: column;
-
-  .toggle {
-    align-items: center;
-    display: inline-flex;
-    font-weight: bold;
-    margin-bottom: 5px;
-
-    mat-slide-toggle {
-      margin-left: 5px;
-    }
-  }
-}
-
-.code-highlight {
-  align-self: flex-end;
-}
-
-.code-editor {
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  background-color: #F0F0F0;
-}
-
-.code-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.page-actions {
-  display: flex;
-  justify-content: flex-end;
+mat-card+mat-card {
   margin-top: 10px;
 }
 
-.original-response, .mock-response {
-  overflow: scroll;
+.response {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+
+    h2 {
+      width: 49%;
+    }
+  }
+
+  .data {
+    width: 100%;
+    display: flex;
+    margin-bottom: 15px;
+    width: 100%;
+    justify-content: space-between;
+
+    pre {
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      font-size: 15px;
+      width: 49%;
+      max-width: 49%;
+      min-height: 250px;
+
+      ::ng-deep code {
+        min-height: 100%;
+        overflow: scroll;
+      }
+
+      &.mock {
+        ::ng-deep code {
+          box-shadow: inset 0 0 5px #000000;
+        }
+      }
+    }
+  }
+
+  .js-code-edit {
+    align-self: flex-end;
+    margin-top: 10px;
+  }
 }
+
+ngx-monaco-editor {
+  height: 300px;
+  width: 100%;
+}
+
+//   pre {
+//     margin-top: 0;
+//     padding: 5px;
+//     background-color: #F0F0F0;
+//   }
+
+//   ::ng-deep code {
+//     padding: 0;
+//   }
+
+//   .error {
+//     font-weight: bold;
+//     color: red;
+//   }
+
+//   .ok {
+//     font-weight: bold;
+//     color: green
+//   }
+// }
+
+// .top {
+//   display: flex;
+//   flex-direction: column;
+//   margin-bottom: 10px;
+
+//   .main-toggle {
+//     align-items: center;
+//     align-self: flex-end;
+//     display: flex;
+
+//     span {
+//       padding-right: 5px;
+//       font-weight: bold;
+//       font-size: 15px;
+//     }
+//   }
+// }
+
+// .key-value {
+//   margin: 5px 0;
+// }
+
+// .label {
+//   font-weight: bold;
+//   display: inline-flex;
+//   padding-right: 10px;
+// }
+
+// .response {
+//   display: flex;
+//   // align-items: stretch;
+//   justify-content: center;
+
+//   h2 {
+//     display: flex;
+//     justify-content: space-between;
+
+//     .toggle {
+//       font-weight: normal;
+//     }
+
+//   }
+
+//   &>div {
+//     display: flex;
+//     flex-direction: column;
+//     flex: 1;
+
+//     pre {
+//       flex-direction: column;
+//       flex: 1;
+//       padding: 5px;
+//       height: 300px;
+//       max-height: 300px;
+//       overflow: scroll;
+//     }
+//   }
+
+//   a {
+//     flex: 0 0 auto;
+//     margin: 0 10px;
+//     align-self: center;
+//   }
+
+// }
+
+// .code-editor-pane {
+//   display: flex;
+//   flex-direction: column;
+
+//   .toggle {
+//     align-items: center;
+//     display: inline-flex;
+//     font-weight: bold;
+//     margin-bottom: 5px;
+
+//     mat-slide-toggle {
+//       margin-left: 5px;
+//     }
+//   }
+// }
+
+// .code-highlight {
+//   align-self: flex-end;
+// }
+
+// .code-editor {
+//   height: 400px;
+//   display: flex;
+//   flex-direction: column;
+//   background-color: #F0F0F0;
+// }
+
+// .code-actions {
+//   display: flex;
+//   justify-content: flex-end;
+// }
+
+// .page-actions {
+//   display: flex;
+//   justify-content: flex-end;
+//   margin-top: 10px;
+// }
+
+// .original-response, .mock-response {
+//   overflow: scroll;
+// }

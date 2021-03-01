@@ -22,19 +22,24 @@ import { ConfigComponent } from './components/config/config.component';
 import { MockComponent } from './components/mock/mock.component';
 import { HotToastModule } from '@ngneat/hot-toast';
 
-const routes: Routes = [{
-  path: 'index.html',
-  canActivate: [
-    forwarderGuard
-  ],
-  children: []
-}, {
-  path: '', component: UrlsOverviewComponent
-}, {
-  path: 'configure', component: ConfigComponent
-}, {
-  path: 'mock/:id', component: MockComponent
-}]
+const routes: Routes = [
+  {
+    path: '',
+    canActivate: [
+      forwarderGuard
+    ],
+    children: [
+      {
+        path: '', component: UrlsOverviewComponent,
+      },
+      {
+        path: 'configure', component: ConfigComponent
+      }, {
+        path: 'mocks/:index', component: MockComponent
+      }
+    ]
+  }
+];
 
 @NgModule({
   declarations: [
@@ -44,7 +49,7 @@ const routes: Routes = [{
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(routes),
+    RouterModule.forRoot(routes, { useHash: true }),
     NgxsModule.forRoot([OhMyState], { developmentMode: true }),
     NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,

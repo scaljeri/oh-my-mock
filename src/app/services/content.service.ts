@@ -2,17 +2,16 @@ import { Injectable } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { UpdateMock } from '../store/actions';
+import { UpsertMock } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IMock, IState } from '../store/type';
-import { STORAGE_KEY } from '../types';
+import { IState, IUpsertMock } from '../../shared/type';
+import { STORAGE_KEY } from '@shared/constants';
 import { log } from '../utils/log';
 @Injectable({
   providedIn: 'root'
 })
-
 export class ContentService {
-  @Dispatch() updateMock = (mock: IMock) => new UpdateMock(mock);
+  @Dispatch() upsertMock = (mock: IUpsertMock) => new UpsertMock(mock);
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(private store: Store) {
@@ -20,13 +19,13 @@ export class ContentService {
       (payload) => {
         log('Recieved a message', payload);
         if (payload.mock) {
-          this.updateMock(payload.mock);
+          this.upsertMock(payload.mock);
         } else if (payload.knockknock) {
           this.send(this.store.snapshot()[STORAGE_KEY]);
         }
       });
 
-    this.state$.subscribe((state) => {
+    this.state$.subscribe(state => {
       this.send(state[STORAGE_KEY]);
     });
   }

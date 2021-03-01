@@ -2,18 +2,19 @@ const STORAGE_KEY = 'OhMyMocks'; // TODO
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) InJecTed(XML): ${msg}`, ...data);
 
 export function setup(
-  mockFn: (url: string, method: string) => unknown | null,
-  storeResponseFn: (url: string, method, data: unknown) => void): () => void {
+  mockDataFn: (url: string, method: string, type: string) => unknown | null,
+  processResponseFn: (url: string, method: string, type: string, statusCode: number, data: unknown) => void,
+  mockStatusCodeFn: (url: string, method: string, type: string, statusCode: number) => number): () => void {
   log('Patched XMLHttpRequest');
 
   var _open = XMLHttpRequest.prototype.open;
-  window.XMLHttpRequest.prototype.open = function (method, URL, ...args) {
+  window.XMLHttpRequest.prototype.open = function (type, URL, ...args) {
     log('Received request', URL);
     const origUrl = URL;
     var _onreadystatechange = this.onreadystatechange,
       _this = this;
 
-    const mock = mockFn(URL, method);
+    const mock = mockDataFn(URL, 'XHR', type);
     if (mock) {
       URL = 'data:application/json; charset=utf-8,' + encodeURIComponent(JSON.stringify(mock));
     }
@@ -23,9 +24,10 @@ export function setup(
         try {
           log('Received data', origUrl, _this.responseText, mock);
 
-          const rspTxt = JSON.stringify(storeResponseFn(origUrl, method, JSON.parse(_this.responseText)));
+          const rspTxt = JSON.stringify(processResponseFn(origUrl, 'XHR', type, _this.status, JSON.parse(_this.responseText)));
 
           // rewrite responseText
+          Object.defineProperty(_this, 'status', { value: mockStatusCodeFn(origUrl, 'XHR', type, _this.status) });
           Object.defineProperty(_this, 'responseText', { value: rspTxt });
           Object.defineProperty(_this, 'response', { value: rspTxt });
           /////////////// END //////////////////
@@ -45,7 +47,7 @@ export function setup(
       }
     });
 
-    return _open.call(_this, method, URL, ...args);
+    return _open.call(_this, type, URL, ...args);
   };
 
   return () => { // remove mock

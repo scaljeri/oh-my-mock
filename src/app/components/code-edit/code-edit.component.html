@@ -1,0 +1,15 @@
+<div class="editor-wrapper">
+  <ngx-monaco-editor *ngIf="editMode === 'edit'" [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
+  <ngx-monaco-diff-editor *ngIf="editMode === 'diff'" [options]="editorOptions" [original]="input.code" [modified]="code">
+  </ngx-monaco-diff-editor>
+</div>
+
+<footer>
+  <mat-error>{{error}}</mat-error>
+
+  <div class="button-actions">
+    <button mat-raised-button (click)="onReset()">Reset</button>
+    <button mat-raised-button (click)="onToggle()">{{editMode === 'diff' ? 'Edit' : 'Diff'}}</button>
+    <button mat-raised-button color="primary" (click)="onClose()">Close</button>
+  </div>
+</footer>

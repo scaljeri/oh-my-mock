@@ -12,9 +12,9 @@
     }
 
     tr td:last-child::after {
-      content: '>';
+      content: '→';
       position: absolute;
-      color: #000;
+      color: #6e6d6d;
       right: 10px;
       top: 5px;
       font-size: 30px;
@@ -24,4 +24,9 @@
 
 .is-active td {
   background-color: #B6F9D6;
+}
+
+.no-data {
+  color: #fff;
+  font-weight: bold;
 }

@@ -1,9 +1,9 @@
 /// <reference types="chrome"/>
+import { IState } from '../shared/type';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
-let state;
 
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
-log('Script loaded and waiting....');
+log('Script loaded and ready....');
 
 // Inject XHR mocking code
 (function () {
@@ -11,50 +11,33 @@ log('Script loaded and waiting....');
   xhrScript.type = 'text/javascript';
   xhrScript.onload = function () {
     (this as any).remove();
-    if (state) {
-      window.postMessage(state, state.domain);
-    }
+    // Notify Popup that content script is ready
+    try { chrome.runtime.sendMessage({ knockknock: { source: 'content' } }) }
+    catch (e) { log('Cannot connect to the OhMyMock tab', e)}
   }
-  xhrScript.src = chrome.runtime.getURL('inject.js');
+  xhrScript.src = chrome.runtime.getURL('injected.js');
   document.head.append(xhrScript);
 })();
 
-try {
-  // window.postMessage({ connect: true }, window.location.protocol + '//' + window.location.host);
-  chrome.runtime.sendMessage({ knockknock: { source: 'content' } });
-
-} catch (e) {
-  log('Cannot connect to the OhMyMock tab', e);
-}
-
-// Listen for messages from Popup
-chrome.runtime.onMessage.addListener(update => {
-  if (update) {
-    log('State update', update);
-    if (update?.domain) {
-      state = update;
-      window.postMessage(state, state.domain);
+// Listen for messages from Popup/Angular
+chrome.runtime.onMessage.addListener((state: IState) => {
+  if (state) {
+    log('Received a state update ', state);
+    // Sanity check
+    if (state.domain.indexOf(window.location.host) === -1) {
+      log(`ERROR: Domains are mixed, this is a BUG: received: ${state.domain} current: ${window.location.host}`);
     }
+
+    window.postMessage(state, state.domain);
   }
 });
 
-// Recieve messages from the injected code
+// Recieve messages from the Injected code
 window.addEventListener('message', (ev) => {
   const { mock } = ev.data;
 
   if (mock) {
     log('Received data from InJecTed', mock);
-    chrome.runtime.sendMessage({mock});
+    chrome.runtime.sendMessage({ mock });
   }
 });
-
-// to send msg to background script
-// setTimeout(() => {
-//   console.log('send msg');
-//   var port = chrome.runtime.connect({ name: "knockknock" });
-//   port.postMessage({ joke: "Knock knock" });
-
-//   port.onMessage.addListener(function (msg) {
-//     console.log('content script.port ', msg);
-//   });
-// }, 5000);

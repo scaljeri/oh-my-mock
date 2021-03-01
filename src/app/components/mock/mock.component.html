@@ -1,80 +1,40 @@
-<mat-card>
-  <section class="top">
-    <div class="main-toggle">
-      <span>active</span>
-      <mat-slide-toggle [checked]="mock.active" (change)="mock.active = $event.checked"></mat-slide-toggle>
-    </div>
-  </section>
-  <mat-accordion>
-    <mat-expansion-panel [expanded]="true">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          Mock settings
-        </mat-panel-title>
-        <mat-panel-description>{{mock.name}}</mat-panel-description>
-      </mat-expansion-panel-header>
-      <section class="key-value">
-        <span class="label">Url:</span>
-        <span class="value">{{mock.url}}</span>
-      </section>
-      <section class="response">
-        <div class="original-response">
-          <h2>
-            <span>Response</span>
-            <span class="toggle">
-              passthrough
-              <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked"></mat-slide-toggle>
-            </span>
-          </h2>
-          <pre><code #responseOrig class="language-json">{{originalResponse}}</code></pre>
-        </div>
-        <a (click)="copyResponse()" mat-icon-button mat-mini-fab color="accent">
-          <mat-icon>keyboard_arrow_right</mat-icon>
-        </a>
-        <div class="mock-response">
-          <h2>
-            <span>Mock</span>
-            <span class="toggle">
-              active
-              <mat-slide-toggle [checked]="mock.useMock" (change)="mock.useMock = $event.checked"></mat-slide-toggle>
-            </span>
-          </h2>
-          <pre #responseMock (blur)="onMockBlur()" contenteditable="true">
-                <code class="language-json">{{mock.mock|prettyPrint}}</code>
-              </pre>
-          <div class="error">{{jsonError}}</div>
-        </div>
-      </section>
-
-    </mat-expansion-panel>
-    <mat-expansion-panel (opened)="onCodePanelCheck();panelOpenState = true" (closed)="panelOpenState = false">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          Code2Mock
-        </mat-panel-title>
-        <mat-panel-description>
-          Create mock data with javascript
-        </mat-panel-description>
-      </mat-expansion-panel-header>
-      <div class="code-editor-pane">
-        <span class="toggle">
-          active
-          <mat-slide-toggle [checked]="mock.useCode" (change)="mock.useCode = $event.checked"></mat-slide-toggle>
-        </span>
-        <pre class="code-editor" #codeEditor (blur)="onCodeBlur()" contenteditable="true">
-        <code ng-non-bindable class="language-javascript">{{mock.code || defaultCode}}
-        </code>
-      </pre>
-        <div *ngIf="jsError" class="error">{{jsError}}</div>
-        <div *ngIf="isSyntaxOk" class="ok">Syntax OK!</div>
-        <div class="code-actions">
-          <button (click)="onCodePanelCheck(true, true)" class="code-highlight" mat-button color="accent">Test</button>
-          <button (click)="onCodePanelCheck(true)" class="code-highlight" mat-button color="accent">Highlight</button>
-        </div>
-      </div>
-    </mat-expansion-panel>
-  </mat-accordion>
-  <div class="page-actions">
-    <button (click)="onSave()" mat-raised-button color="primary">Save</button>
+<mat-card class="header">
+  <div *ngIf="state" class="main">
+    <span>{{state.method}}</span>
+    <span>{{state.type}}</span>
+    <input matInput [value]="state.url" (change)="onUrlUpdate($event)">
+    <span class="spacer"></span>
+    <mat-slide-toggle [checked]="state.enabled" (change)="onActivityMocksChange()"></mat-slide-toggle>
   </div>
+
+  <div class="codes">
+    <div class="label"><span>Status</span><span>Codes</span></div>
+    <div class="codes-wrapper">
+      <button mat-raised-button *ngFor="let code of codes" (click)="onViewMock(code)"
+        [ngClass]="{'is-active': code == statusCode}">{{code}}</button>
+      <button mat-raised-button (click)="openAddStatusCodeDialog()">+</button>
+    </div>
+  </div>
+</mat-card>
+
+<mat-card class="response" *ngIf="statusCode">
+  <button (click)="onDelete()">
+    <mat-icon>delete_forever</mat-icon>
+  </button>
+  <header>
+    <h2>Response<span class="toggle">
+        passthrough
+        <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
+        </mat-slide-toggle>
+      </span></h2>
+    <h2>
+      <span>Mock</span>
+    </h2>
+  </header>
+  <div class="data">
+    <pre #responseRef></pre>
+    <pre #mockRef (keyup)="onMockChange($event)" class="mock"></pre>
+  </div>
+
+  <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
 </mat-card>

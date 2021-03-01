@@ -14,13 +14,18 @@ import { RouterModule } from '@angular/router';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
 import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockTestComponent } from './mock-test/mock-test.component';
+import { CodeEditComponent } from './code-edit/code-edit.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
+import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
 
 @NgModule({
-  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent, MockTestComponent],
+  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent, MockTestComponent, CodeEditComponent, CreateStatusCodeComponent],
   imports: [
     CommonModule,
     MatTableModule,
@@ -34,7 +39,11 @@ import { MockTestComponent } from './mock-test/mock-test.component';
     MatSlideToggleModule,
     MatExpansionModule,
     MatDialogModule,
-    HotToastModule
+    MatTabsModule,
+    HotToastModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MonacoEditorModule,
   ],
   exports: [UrlsOverviewComponent, MockComponent, ConfigComponent]
 })

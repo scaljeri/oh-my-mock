@@ -8,13 +8,15 @@ const appRouter = (app, fs) => {
   const usersPath = path.join(__dirname, '..', 'data', 'users.json');
   // READ
   app.get('/users', (req, res) => {
-    fs.readFile(usersPath, 'utf8', (err, data) => {
-      if (err) {
-        throw err;
-      }
+    setTimeout(() => {
+      fs.readFile(usersPath, 'utf8', (err, data) => {
+        if (err) {
+          throw err;
+        }
 
-      res.send(JSON.parse(data));
-    });
+        res.send(JSON.parse(data));
+      });
+    }, 2000);
   });
 
 

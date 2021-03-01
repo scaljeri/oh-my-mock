@@ -4,6 +4,18 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
+// // For local serving only (with `ng serve`)
+declare var chrome: any;
+if (!chrome) {
+  window['chrome'] = {
+    storage: { local: { get: () => { }, set: () => { } } },
+    runtime: {
+      onMessage: { addListener: () => { } },
+      sendMessage: () => { }
+    }
+  } as any;
+}
+
 if (environment.production) {
   enableProdMode();
 }

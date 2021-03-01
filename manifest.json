@@ -1,7 +1,7 @@
 {
-  "name": "Oh-my-XHR-Mock",
+  "name": "Oh-my-Mock",
   "version": "1.1",
-  "description": "Extension to cache and mock API responses",
+  "description": "Extension for caching and mocking API (XHR/Fetch) responses",
   "manifest_version": 2,
   "permissions": [
       "background",
@@ -15,7 +15,7 @@
       "*://*/*"
   ],
   "browser_action": {
-    "default_icon": "assets/images/icon-16.png"
+    "default_icon": "oh-my-mock/assets/images/icon-16.png"
   },
   "background": {
     "scripts": [
@@ -28,18 +28,18 @@
         "<all_urls>"
       ],
       "js": [
-        "content/index.js"
+        "content.js"
       ]
     }
   ],
   "web_accessible_resources": [
-    "inject.js",
-    "index.html"
+    "injected.js",
+    "oh-my-mock/index.html"
   ],
   "icons": {
-    "16": "assets/images/icon-16.png",
-    "48": "assets/images/icon-48.png",
-    "128": "assets/images/icon-128.png"
+    "16": "oh-my-mock/assets/images/icon-16.png",
+    "48": "oh-my-mock/assets/images/icon-48.png",
+    "128": "oh-my-mock/assets/images/icon-128.png"
   },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

@@ -5,21 +5,21 @@
   <mat-drawer-content>
     <mat-toolbar>
       <div class='button-wrapper'>
-        <a *ngIf="page === 'mock'" routerLink="/" mat-icon-button>
+        <a *ngIf="page && page !== '/'" routerLink="/" mat-icon-button>
           <mat-icon>keyboard_arrow_left</mat-icon>
         </a>
-        <button *ngIf="page === ''" mat-icon-button (click)="drawer.toggle()" class="example-icon"
+        <button *ngIf="page === '/'" mat-icon-button (click)="drawer.toggle()" class="example-icon"
           aria-label="Example icon-button with menu icon">
           <mat-icon>menu</mat-icon>
         </button>
       </div>
 
-      <h1>Oh My Mock</h1>
+      <h1>Oh My Mock </h1>
       <span class="header-spacer"></span>
       <mat-slide-toggle (change)="onEnableChange($event)" [checked]="isEnabled" [color]="color"></mat-slide-toggle>
     </mat-toolbar>
 
-    <section>
+    <section *ngIf="state">
       <router-outlet></router-outlet>
     </section>
 

@@ -1,6 +1,9 @@
 declare var ActiveXObject: any;
 declare var window: any;
 
+// THIS IS NOT USED
+// This is a complete replacement of all XHR functionality
+
 const overwriteXhr = (function () {
   var CB_REG = /^on[a-z]+$/;
   var CST_REG = /^[A-Z]+$/;

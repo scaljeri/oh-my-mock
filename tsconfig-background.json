@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig-content.json",
+   "compilerOptions": {
+     "types": ["Chrome"]
+  },
+  "files": [
+    "src/background.ts"
+  ]
+}
