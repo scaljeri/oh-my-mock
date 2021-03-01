@@ -43,7 +43,7 @@ export class AppComponent implements AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.storageService.reset();
+    // this.storageService.reset();
     this.state = await this.storageService.loadState();
     console.log(this.state);
     this.initState(this.state)

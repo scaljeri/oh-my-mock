@@ -11,4 +11,6 @@ export const MOCK_CODE = '/* This is the code used to mock. Feel free to modify 
   'if (data.useMock) {\n    output = data.mock;\n} else {\n    output = response || data.response;\n}\n';
 
 export const JS_INCORRECT_MSG = 'Javascript contains errors';
-export const STATUS_CODE_EXISTS = 'The StatusCode already exists';
+export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';
+export const STATUS_CODE_INVALID_MSG = 'Invalid status code';
+export const REQUIRED_MSG = 'This is a required field';

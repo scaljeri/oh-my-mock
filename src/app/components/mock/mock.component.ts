@@ -5,13 +5,14 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { HotToastService } from '@ngneat/hot-toast';
-import { STATUS_CODE_EXISTS, STORAGE_KEY } from 'src/shared/constants';
+import { STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from 'src/app/store/state';
 import { Observable } from 'rxjs';
 import { CodeEditComponent } from '../code-edit/code-edit.component';
 import { DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
 import { IData, IDeleteMock, IMock, IState, statusCode } from '@shared/type';
+import { CreateStatusCodeComponent } from '../create-status-code/create-status-code.component';
 
 const DEFAULT_CODE = `// global variables:
 //   response: if active, this variable contains the api response
@@ -70,11 +71,11 @@ export class MockComponent implements OnInit, AfterViewInit {
 
     this.store.selectSnapshot<IData>((s: { [STORAGE_KEY]: IState }) => {
       this.state = s[STORAGE_KEY].data[index];
-      this.enabled = this.state.enabled;
 
       if (!this.state) {
         this.router.navigate(['/']);
       } else {
+        this.enabled = this.state.enabled;
         this.codes = Object.keys(this.state.mocks).sort();
         this.onViewMock(statusCode || this.codes[0]);
       }
@@ -170,20 +171,12 @@ export class MockComponent implements OnInit, AfterViewInit {
     });
   }
 
-  validateStatusCode(value: string): void {
-    this.statusCodeError = null
-
-    if (this.codes.indexOf(value) !== -1) {
-      this.statusCodeError = STATUS_CODE_EXISTS;
-    }
-  }
-
   onDelete(): void {
     const { url, method, type } = this.state;
-    this.deleteMockResponse({url, method, type, statusCode: this.activeStatusCode });
+    this.deleteMockResponse({ url, method, type, statusCode: this.activeStatusCode });
   }
 
-  openDialog(): void {
+  openJsCodeDialog(): void {
     const dialogRef = this.dialog.open(CodeEditComponent, {
       width: '80%',
       data: { code: this.jsCode, originalCode: this.activeMock.jsCode }
@@ -192,6 +185,18 @@ export class MockComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       this.jsCode = result;
     });
+  }
+
+  openAddStatusCodeDialog(): void {
+    const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
+      width: '250px',
+      height: '250px',
+      data: { existingStatusCodes: this.codes }
+    });
+
+    dialogRef.afterClosed().subscribe(newStatusCode => {
+    });
+
   }
 
   get activeMock(): IMock {

@@ -10,22 +10,19 @@
   <div class="codes">
     <div class="label"><span>Status</span><span>Codes</span></div>
     <div class="codes-wrapper">
-      <ng-container *ngFor="let code of codes">
-        <button *ngIf="code > 0" kmat-raised-button (click)="onViewMock(code)"
-          [ngClass]="{'is-active': code === activeStatusCode}">{{code}}</button>
-        <input #sc *ngIf="code === 0" (keyup)="validateStatusCode(sc.value)"
-          [ngClass]="{'is-invalid': !!statusCodeError}" mat-input>
-      </ng-container>
-      <button mat-raised-button (click)="onViewMockAdd()">+</button>
-      <div class="spacer"></div>
-      <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+      <button mat-raised-button *ngFor="let code of codes" (click)="onViewMock(code)"
+        [ngClass]="{'is-active': code === activeStatusCode}">{{code}}</button>
+      <button mat-raised-button (click)="openAddStatusCodeDialog()">+</button>
+      <!-- <div class="spacer"></div> -->
+      <!-- <button mat-raised-button color="primary" (click)="onSave()">Save</button> -->
     </div>
   </div>
-  <mat-error *ngIf="statusCodeError">{{statusCodeError}}</mat-error>
 </mat-card>
 
 <mat-card class="response" *ngIf="activeStatusCode">
-  <button (click)="onDelete()"><mat-icon>delete_forever</mat-icon></button>
+  <button (click)="onDelete()">
+    <mat-icon>delete_forever</mat-icon>
+  </button>
   <header>
     <h2>Response<span class="toggle">
         passthrough
@@ -41,7 +38,7 @@
     <pre><code (keyup)="onMockChange($event.target.innterText)" #responseMock contenteditable="true" class="language-json">{{activeMock.mock | prettyPrint}}</code></pre>
   </div>
 
-  <button class="js-code-edit" (click)="openDialog()" mat-stroked-button>Mocking with code</button>
+  <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
 </mat-card>
 
 <!-- <mat-card>
