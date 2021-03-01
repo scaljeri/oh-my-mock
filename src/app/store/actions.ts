@@ -1,4 +1,4 @@
-import { IResponses, IState, IDeleteResponse, IUpsertResponse } from '@shared/type';
+import { IState, IData, IMock, IDeleteData, IDeleteMock } from '@shared/type';
 
 export class EnableDomain {
   static readonly type = '[Domain] Enable';
@@ -7,30 +7,25 @@ export class EnableDomain {
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: IState) { }
+  constructor(public payload: IState = { domain: '', data: [] }) { }
 }
 
-export class StateReset {
-  static readonly type = '[Domain] Reset';
-  constructor() { }
+export class UpsertData {
+  static readonly type = '[Data] upsert';
+  constructor(public payload: IData) { }
 }
 
-export class UpsertResponse {
-  static readonly type = '[Response] upsert';
-  constructor(public payload: IUpsertResponse) { }
+export class UpsertMock {
+  static readonly type = '[Mock] upsert';
+  constructor(public payload: IMock) { }
 }
 
-export class UpsertResponses {
-  static readonly type = '[Responses] upsert';
-  constructor(public payload: IResponses) { }
+export class DeleteData {
+  static readonly type = '[Data] delete';
+  constructor(public payload: IDeleteData) { }
 }
 
-export class UpdateMock {
-  static readonly type = '[Mock] update';
-  constructor(public payload: any) { }
-}
-
-export class DeleteResponse {
-  static readonly type = '[Response] delete';
-  constructor(public payload: IDeleteResponse) { }
+export class DeleteMock {
+  static readonly type = '[Mock] delete';
+  constructor(public payload: IDeleteMock) { }
 }

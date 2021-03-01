@@ -1,14 +1,14 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { DeleteResponse, EnableDomain, InitState, StateReset, UpdateMock, UpsertResponse } from './actions';
-import { IResponses, IState, IUpsertResponse, requestMethod, requestType, statusCode, IResponseMock, IDeleteResponse } from '@shared/type';
+import { DeleteMock, EnableDomain, InitState, UpsertMock } from './actions';
+import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 
 @State<IState>({
   name: STORAGE_KEY,
   defaults: {
     domain: '',
-    responses: []
+    data: []
   }
 })
 @Injectable()
@@ -40,24 +40,25 @@ export class OhMyState {
     ctx.setState({ ...state, enabled: payload });
   }
 
-  @Action(UpsertResponse)
-  upsertResponses(ctx: StateContext<IState>, { payload }: { payload: IUpsertResponse }) {
+  @Action(UpsertMock)
+  upsertResponses(ctx: StateContext<IState>, { payload }: { payload: IUpsertMock }) {
     const state = ctx.getState();
-    const source: IResponses = OhMyState.findResponses(state, payload.url, payload.method, payload.type) || {
+    const source: IData = OhMyState.findResponses(state, payload.url, payload.method, payload.type) || {
       url: payload.url,
       method: payload.method,
       type: payload.type,
       mocks: {}
     };
+    debugger;
 
-    const indexOf = state.responses.indexOf(source);
-    const responses = [...state.responses];
+    const indexOf = state.data.indexOf(source);
+    const data = [...state.data];
 
     const updated = {
       ...source,
       mocks: {
         ...source.mocks,
-        [payload.activeStatusCode]: {
+        [payload.statusCode]: {
           response: payload.response,
           dataType: payload.dataType
         }
@@ -65,29 +66,29 @@ export class OhMyState {
     };
 
     if (indexOf === -1) {
-      responses.push(updated);
+      data.push(updated);
     } else {
-      responses[indexOf] = updated;
+      data[indexOf] = updated;
     }
-    console.log('STORE: state updates(upsert)', state, responses);
-    ctx.setState({ ...state, responses });
+    console.log('STORE: state updates(upsert)', state, data);
+    ctx.setState({ ...state, data });
   }
 
-  @Action(DeleteResponse)
-  deleteResponse(ctx: StateContext<IState>, { payload }: { payload: IDeleteResponse }) {
+  @Action(DeleteMock)
+  deleteResponse(ctx: StateContext<IState>, { payload }: { payload: IDeleteMock }) {
     const state = ctx.getState();
-    const origMockResponses: IResponses = OhMyState.findResponses(state, payload.url, payload.method, payload.type);
+    const origMockResponses: IData = OhMyState.findResponses(state, payload.url, payload.method, payload.type);
 
     const mocks = { ...origMockResponses.mocks };
     delete mocks[payload.statusCode];
 
     const mockResponses = { ...origMockResponses, mocks};
-    const index = state.responses.indexOf(origMockResponses);
+    const index = state.data.indexOf(origMockResponses);
 
-    const responses = [...state.responses];
-    responses[index] = mockResponses;
+    const data = [...state.data];
+    data[index] = mockResponses;
 
-    ctx.setState({ ...state, responses });
+    ctx.setState({ ...state, data });
   }
 
   // NOTE: Without Responses it is currently not possible to go to the mock page
@@ -121,14 +122,8 @@ export class OhMyState {
   //   ctx.setState(newState);
   // }
 
-  @Action(StateReset)
-  reset(ctx: StateContext<IState>) {
-    const state = ctx.getState();
-    ctx.setState({ responses: [], domain: state.domain });
-  }
-
-  static findResponses(state: IState, url: string, method: requestMethod, type: requestType): IResponses | null {
-    return state.responses.find(r =>
+  static findResponses(state: IState, url: string, method: requestMethod, type: requestType): IData | null {
+    return state.data.find(r =>
       r.url === url && r.method === method && r.type === type) || null;
   }
 }

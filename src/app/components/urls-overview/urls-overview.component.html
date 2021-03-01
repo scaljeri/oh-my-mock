@@ -1,4 +1,4 @@
-<table *ngIf="responses.length" mat-table [dataSource]="responses" class="mat-elevation-z8">
+<table *ngIf="data.length" mat-table [dataSource]="data" class="mat-elevation-z8">
 
   <ng-container matColumnDef="type">
     <th mat-header-cell *matHeaderCellDef>Type </th>
@@ -27,6 +27,6 @@
   </tr>
 </table>
 
-<section *ngIf="!responses.length" class="no-data">
+<section *ngIf="!data.length" class="no-data">
   <h2>No responses available</h2>
 </section>

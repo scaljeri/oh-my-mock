@@ -2,7 +2,7 @@ import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
-import { EnableDomain, InitState, StateReset } from './store/actions';
+import { EnableDomain, InitState } from './store/actions';
 import { StorageService } from './services/storage.service';
 import { IState } from '../shared/type';
 import { Select } from '@ngxs/store';
@@ -29,7 +29,7 @@ export class AppComponent implements AfterViewInit {
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IState) => new InitState(state);
-  @Dispatch() stateReset = () => new StateReset();
+  @Dispatch() stateReset = () => new InitState();
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   @ViewChild('drawer') drawer: MatDrawer;
@@ -43,8 +43,9 @@ export class AppComponent implements AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    // this.storageService.reset();
+    this.storageService.reset();
     this.state = await this.storageService.loadState();
+    console.log(this.state);
     this.initState(this.state)
     this.isEnabled = this.state.enabled;
 

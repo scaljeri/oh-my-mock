@@ -5,13 +5,13 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { HotToastService } from '@ngneat/hot-toast';
-import { IResponseMock, IResponses, IState, IDeleteResponse, IUpsertResponse, statusCode } from 'src/shared/type';
 import { STATUS_CODE_EXISTS, STORAGE_KEY } from 'src/shared/constants';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from 'src/app/store/state';
 import { Observable } from 'rxjs';
 import { CodeEditComponent } from '../code-edit/code-edit.component';
-import { DeleteResponse, UpsertResponses } from 'src/app/store/actions';
+import { DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
+import { IData, IDeleteMock, IMock, IState, statusCode } from '@shared/type';
 
 const DEFAULT_CODE = `// global variables:
 //   response: if active, this variable contains the api response
@@ -34,11 +34,11 @@ export class MockComponent implements OnInit, AfterViewInit {
   isSyntaxOk = false;
   text: string;
   codes = [];
-  responses: IResponses;
+  responses: IData;
   url: string;
 
-  state: IResponses;
-  mocks: Record<statusCode, IResponseMock> = {};
+  state: IData;
+  mocks: Record<statusCode, IMock> = {};
   // mockResponse: string;
   activeStatusCode: statusCode;
   jsCode: string;
@@ -49,8 +49,9 @@ export class MockComponent implements OnInit, AfterViewInit {
   @ViewChild('responseOrig') responseOrig: ElementRef;
   // @ViewChild('codeEditor') editor: ElementRef;
 
-  @Dispatch() upsertResponses = (responses: IResponses) => new UpsertResponses(responses);
-  @Dispatch() deleteMockResponse = (response: IDeleteResponse) => new DeleteResponse(response);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() upsertMock = (mock: IMock) => new UpsertMock(mock);
+  @Dispatch() deleteMockResponse = (response: IDeleteMock) => new DeleteMock(response);
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(
@@ -67,8 +68,8 @@ export class MockComponent implements OnInit, AfterViewInit {
     const { index } = this.activeRoute.snapshot.params;
     const { statusCode } = this.activeRoute.snapshot.queryParams;
 
-    this.store.selectSnapshot<IResponses>((s: { [STORAGE_KEY]: IState }) => {
-      this.state = s[STORAGE_KEY].responses[index];
+    this.store.selectSnapshot<IData>((s: { [STORAGE_KEY]: IState }) => {
+      this.state = s[STORAGE_KEY].data[index];
       this.enabled = this.state.enabled;
 
       if (!this.state) {
@@ -156,7 +157,7 @@ export class MockComponent implements OnInit, AfterViewInit {
   }
 
   onSave(): void {
-    this.upsertResponses({
+    this.upsertData({
       url: this.state.url,
       method: this.state.method,
       type: this.state.type,
@@ -193,7 +194,7 @@ export class MockComponent implements OnInit, AfterViewInit {
     });
   }
 
-  get activeMock(): IResponseMock {
+  get activeMock(): IMock {
     return this.mocks[this.activeStatusCode];
   }
 }

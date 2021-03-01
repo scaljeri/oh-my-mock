@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
-import { IResponses } from '../../shared/type';
+import { IData } from '../../shared/type';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppStateService {
-  responses: IResponses;
+  responses: IData;
 
-  setResponses(responses: IResponses): void {
+  setResponses(responses: IData): void {
     this.responses = responses;
   }
 }

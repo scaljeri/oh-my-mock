@@ -7,52 +7,47 @@ export interface IOhMyMock {
 }
 export interface IState {
   domain: string;
-  responses: IResponses[];
+  data: IData[];
   enabled?: boolean;
 }
 
-export interface IResponses {
-  url: string;            //  composite primary key
-  method: requestMethod;  //  composite PK
-  type: requestType;      //  CPK
+export interface IDataBase {
+  url: string;              // composite primary key
+  method: requestMethod;    //  composite PK
+  type: requestType;        // CPK
+}
+
+export interface IData extends IDataBase {
   activeStatusCode?: statusCode;
   enabled?: boolean;
-  mocks?: Record<statusCode, IResponseMock>;
+  mocks?: Record<statusCode, IMock>;
 }
 
-export interface IResponseMock<T = any> {
+export interface IMock<T = any> {
   dataType?: string;
   response?: T;
-  mock?: T;
-  useMock?: boolean;
   headers?: Record<string, string>
   passThrough?: boolean;
+  mock?: T;
+  delay?: number;
   jsCode?: string;
 }
 
 // actions
-export interface IUpsertResponse<T = any> {
+export interface IUpsertMock<T = any> {
   url: string;
   method: requestMethod;
   type: requestType;
-  activeStatusCode: number;
+  statusCode: number;
   response?: T
   enabled?: boolean;
   dataType?: string;
-  mock?: IResponseMock;
+  mock?: IMock;
 }
 
-export interface IUpsetMock {
-  url: string;
-  method: requestMethod;
-  type: requestType;
-  statusCode: statusCode;
-  mock: IResponseMock;
+export interface IDeleteData extends IDataBase {
 }
 
-export interface IDeleteResponse {
-  url: string;
-  method: requestMethod;
-  type: requestType;
+export interface IDeleteMock extends IDataBase {
   statusCode: statusCode;
 }

@@ -3,7 +3,7 @@ import { Select } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { OhMyState } from 'src/app/store/state';
-import { IResponses, IState } from 'src/shared/type';
+import { IData, IState } from 'src/shared/type';
 import { STORAGE_KEY } from 'src/shared/constants';
 
 export interface PeriodicElement {
@@ -24,18 +24,17 @@ export class UrlsOverviewComponent implements OnInit {
 
 	displayedColumns = ['type', 'url', 'method', 'activeStatusCode'];
 
-	responses: IResponses[] = [];
+	data: IData[] = [];
 
 	constructor() {
 	}
 
 	ngOnInit(): void {
 		this.state$.pipe(
-			filter(state => !!state && !!state[STORAGE_KEY].responses),
-			map(state => state[STORAGE_KEY].responses)
-		).subscribe((responses: IResponses[]) => {
-			this.responses = responses;
-      console.log('RESPONZES are: ', this.responses);
+			filter(state => !!state && !!state[STORAGE_KEY].data),
+			map(state => state[STORAGE_KEY].data)
+		).subscribe((data: IData[]) => {
+			this.data = data;
 		});
 	}
 

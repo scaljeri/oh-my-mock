@@ -31,7 +31,7 @@ export class StorageService {
         console.log('Data loaded from storage', data);
         const allDomains: IOhMyMock = data[STORAGE_KEY] || { domains: {} };
 
-        const state: IState = allDomains.domains[this.domain] || { domain: this.domain, responses: [], enabled: false };
+        const state: IState = allDomains.domains[this.domain] || { domain: this.domain, data: [], enabled: false };
         state.domain = this.domain;
 
         if (!data[STORAGE_KEY]) {
@@ -52,6 +52,6 @@ export class StorageService {
   }
 
   reset(): void {
-      chrome.storage.local.set({domains: {}});
+      return chrome.storage.local.set({ [STORAGE_KEY]: {domains: {}}});
   }
 }

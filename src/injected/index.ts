@@ -30,7 +30,7 @@ declare var window: any;
 
   // Receive messages/state updates from Content script
   window.addEventListener('message', (ev) => {
-    if (!ev.data || ev.data.responses === undefined) {
+    if (!ev.data || ev.data.domain === undefined) {
       return;
     }
 
