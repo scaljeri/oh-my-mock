@@ -1,7 +1,7 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { CreateStatusCode, DeleteMock, EnableDomain, InitState, UpsertData, UpsertMock } from './actions';
-import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode } from '@shared/type';
+import { CreateStatusCode, DeleteMock, EnableDomain, InitState, UpdateDataStatusCode, UpdateDataUrl, UpsertData, UpsertMock } from './actions';
+import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 
 @State<IState>({
@@ -13,18 +13,6 @@ import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 })
 @Injectable()
 export class OhMyState {
-  // private domain = this.window.location.hostname;;
-  // constructor(private window: Window) {
-  // chrome.storage.local.set({ [STORAGE_KEY]: { domains: {}} });
-  //  }
-
-  // static node(id: string) {
-  // return createSelector([OhMyState], (state: IFbpState) => {
-  //         return state.nodes?.find(node => node.id === id);
-  //     });
-  // }
-
-  // @Selector([FbpState])
   static getState(state: IState): IState {
     return state;
   }
@@ -41,80 +29,118 @@ export class OhMyState {
   }
 
   @Action(UpsertMock)
-  upsertResponses(ctx: StateContext<IState>, { payload }: { payload: IUpsertMock }) {
+  upsertMock(ctx: StateContext<IState>, { payload }: { payload: IUpsertMock }) {
     const state = ctx.getState();
-    const source: IData = OhMyState.findData(state, payload.url, payload.method, payload.type) || {
-      url: payload.url,
-      method: payload.method,
-      type: payload.type,
-      mocks: {}
-    };
+    const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
+    const dataList = [...state.data];
+    const mocks = { ...data.mocks};
+    const mock = {jsCode: MOCK_JS_CODE, ...mocks[payload.statusCode]};
 
-    const indexOf = state.data.indexOf(source);
-    const data = [...state.data];
+    Object.entries(payload.mock).forEach(i => mock[i[0]] = i[1]);
+    data.mocks = { ...mocks, [payload.statusCode]: mock };
 
-    const updated = {
-      ...source,
-      mocks: {
-        ...source.mocks,
-        [payload.statusCode]: {
-          response: payload.response,
-          dataType: payload.dataType
-        }
-      }
-    };
-
-    if (indexOf === -1) {
-      data.push(updated);
+    if (index === -1) {
+      dataList.push(data);
     } else {
-      data[indexOf] = updated;
+      dataList[index] = data;
     }
-    console.log('STORE: state updates(upsert)', state, data);
-    ctx.setState({ ...state, data });
+
+    ctx.setState({ ...state, data: dataList });
   }
 
   @Action(UpsertData)
   upsertData(ctx: StateContext<IState>, { payload }: { payload: IData }) {
-    console.log('TODO');
+    const state = ctx.getState();
+    const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
+    const dataList = [...state.data];
+
+    if (index === -1) {
+      dataList.push(data)
+    } else {
+      Object.keys(payload).forEach(key => data[key] = payload[key]);
+      dataList[index] = data;
+    }
+
+    ctx.setState({ ...state, data: dataList });
   }
 
   @Action(DeleteMock)
-  deleteResponse(ctx: StateContext<IState>, { payload }: { payload: IDeleteMock }) {
+  deleteMock(ctx: StateContext<IState>, { payload }: { payload: IDeleteMock }) {
     const state = ctx.getState();
-    const origMockResponses: IData = OhMyState.findData(state, payload.url, payload.method, payload.type);
+    const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
 
-    const mocks = { ...origMockResponses.mocks };
+    const mocks = { ...data.mocks };
     delete mocks[payload.statusCode];
+    data.mocks = mocks;
 
-    const mockResponses = { ...origMockResponses, mocks };
-    const index = state.data.indexOf(origMockResponses);
+    if (data.activeStatusCode === payload.statusCode) {
+      data.activeStatusCode = 0;
+    }
+    const dataList = [...state.data];
+    dataList[index] = data;
 
-    const data = [...state.data];
-    data[index] = mockResponses;
-
-    ctx.setState({ ...state, data });
+    ctx.setState({ ...state, data: dataList });
   }
 
   @Action(CreateStatusCode)
   createStatusCode(ctx: StateContext<IState>, { payload }: { payload: ICreateStatusCode }) {
     const state = ctx.getState();
-    const { url, method, type, statusCode } = payload;
-    const origData: IData = OhMyState.findData(state, url, method, type);
-    const data: IData = { ...origData };
-    data.mocks = {
-      ...data.mocks,
-      [statusCode]: { jsCode: MOCK_JS_CODE }
-    };
-    const index = state.data.indexOf(origData);
-    const newState = { ...state, data: [...state.data ]};
-    newState.data[index] = data;
+    const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
 
-    ctx.setState(newState);
+    data.mocks = { ...data.mocks, [payload.statusCode]: { jsCode: MOCK_JS_CODE } };
+    if (payload.activeStatusCode) {
+      data.activeStatusCode = payload.activeStatusCode;
+    }
+    const dataList = [...state.data];
+
+    if (index === -1) {
+      dataList.push(data);
+    } else {
+      dataList[index] = data;
+    }
+
+    ctx.setState({ ...state, data: dataList });
   }
 
-  static findData(state: IState, url: string, method: requestMethod, type: requestType): IData | null {
-    return state.data.find(r =>
-      r.url === url && r.method === method && r.type === type) || null;
+  @Action(UpdateDataUrl)
+  updateDataUrl(ctx: StateContext<IState>, { payload }: { payload: IUpdateDataUrl }) {
+    const state = ctx.getState();
+    const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
+
+    data.url = payload.newUrl;
+    const dataList = [...state.data];
+
+    if (index === -1) {
+      dataList.push(data);
+    } else {
+      dataList[index] = data;
+    }
+
+    ctx.setState({ ...state, data: dataList });
+  }
+
+  @Action(UpdateDataStatusCode)
+  updateDataStatusCode(ctx: StateContext<IState>, { payload }: { payload: IUpdateDataStatusCode }) {
+    const state = ctx.getState();
+
+    const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
+    data.activeStatusCode = payload.statusCode;
+
+    const dataList = [...state.data];
+
+    if (index === -1) {
+      dataList.push(data);
+    } else {
+      dataList[index] = data;
+    }
+
+    ctx.setState({ ...state, data: dataList });
+  }
+
+  static findData(state: IState, url: string, method: requestMethod, type: requestType): { index: number, data: IData } {
+    let data = state.data.find(r => r.url === url && r.method === method && r.type === type) || { url, method, type, mocks: {} };
+
+    return { index: state.data.indexOf(data), data: {...data } };
   }
 }
 

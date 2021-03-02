@@ -11,7 +11,7 @@ import { log } from '../utils/log';
   providedIn: 'root'
 })
 export class ContentService {
-  @Dispatch() upsertMock = (mock: IUpsertMock) => new UpsertMock(mock);
+  @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
   @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   constructor(private store: Store) {
@@ -19,7 +19,7 @@ export class ContentService {
       (payload) => {
         log('Recieved a message', payload);
         if (payload.mock) {
-          this.upsertMock(payload.mock);
+          this.upsertMock(payload as IUpsertMock);
         } else if (payload.knockknock) {
           this.send(this.store.snapshot()[STORAGE_KEY]);
         }

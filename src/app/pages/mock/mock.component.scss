@@ -6,62 +6,6 @@
   background-color: #fff;
 }
 
-.header {
-  .main {
-    display: flex;
-
-    span {
-      display: inline-flex;
-      font-weight: 900;
-      padding: 5px;
-      border: 1px solid #a9a9a9;
-      border-radius: 5px;
-      margin-right: 10px;
-    }
-
-    input {
-      width: 300px;
-    }
-
-    .spacer {
-      flex: 1;
-      opacity: 0;
-    }
-
-    mat-slide-toggle {}
-  }
-
-  .codes {
-    display: flex;
-    margin-top: 10px;
-
-    .label {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      font-weight: bold;
-      margin-right: 20px;
-    }
-
-    .codes-wrapper {
-      display: flex;
-      flex: 1;
-    }
-
-    button {
-      border: 2px solid transparent;
-    }
-
-    button+button {
-      margin-left: 10px;
-    }
-
-    .is-active {
-      border: 2px solid green;
-    }
-  }
-}
-
 mat-card+mat-card {
   margin-top: 10px;
 }
@@ -89,24 +33,39 @@ mat-card+mat-card {
     width: 100%;
     justify-content: space-between;
 
+    .pre {
+      display: flex;
+      flex-direction: column;
+
+      mat-error {
+        margin-top: 5px;
+      }
+    }
+
+    .pre,
     pre {
       padding: 0;
       margin: 0;
       flex: 1;
       font-size: 15px;
-      width: 49%;
-      max-width: 49%;
       min-height: 250px;
 
       ::ng-deep code {
         min-height: 100%;
         overflow: scroll;
       }
+    }
 
-      &.mock {
-        ::ng-deep code {
-          box-shadow: inset 0 0 5px #000000;
-        }
+    .pre,
+    &>pre {
+      width: 49%;
+      max-width: 49%;
+
+    }
+
+    .pre .mock {
+      ::ng-deep code {
+        box-shadow: inset 0 0 5px #000000;
       }
     }
   }

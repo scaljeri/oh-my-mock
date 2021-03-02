@@ -8,7 +8,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MockComponent } from './mock/mock.component';
 import { PipesModule } from '../pipes/pipes.module';
 import { RouterModule } from '@angular/router';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -25,7 +24,13 @@ import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
 
 @NgModule({
-  declarations: [ConfigComponent, UrlsOverviewComponent, MockComponent, MockTestComponent, CodeEditComponent, CreateStatusCodeComponent],
+  declarations: [
+    ConfigComponent,
+    UrlsOverviewComponent,
+    MockTestComponent,
+    CodeEditComponent,
+    CreateStatusCodeComponent,
+  ],
   imports: [
     CommonModule,
     MatTableModule,
@@ -45,6 +50,6 @@ import { CreateStatusCodeComponent } from './create-status-code/create-status-co
     FormsModule,
     MonacoEditorModule,
   ],
-  exports: [UrlsOverviewComponent, MockComponent, ConfigComponent]
+  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent]
 })
 export class ComponentsModule { }

@@ -3,9 +3,12 @@ import { findMock } from '../shared/utils/find-mock';
 export const processResponseFn = function (url: string, method: string, type: string, statusCode: number, response: unknown) {
   const rm = findMock(this, url, method, type); // Response mock
 
+  debugger;
+  console.log('sfdsddsdsdsdsd');
   // is the data from the backend?
   if (!rm || !rm.active || rm.passThrough || !rm.useMock && !rm.useCode && !rm.response) {
-    window.postMessage({ mock: { url, method, type, response, statusCode } }, window.location.href);
+    debugger;
+    window.postMessage({ url, method, type, statusCode, mock: { response } }, window.location.href);
   }
 
   if (rm.active) {

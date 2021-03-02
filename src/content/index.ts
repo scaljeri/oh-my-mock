@@ -34,10 +34,9 @@ chrome.runtime.onMessage.addListener((state: IState) => {
 
 // Recieve messages from the Injected code
 window.addEventListener('message', (ev) => {
-  const { mock } = ev.data;
-
-  if (mock) {
-    log('Received data from InJecTed', mock);
-    chrome.runtime.sendMessage({ mock });
+  debugger;
+  if (ev.data.mock) {
+    log('Received data from InJecTed', ev.data);
+    chrome.runtime.sendMessage(ev.data);
   }
 });

@@ -1,0 +1,28 @@
+<mat-card class="header">
+  <app-mock-header [data]="data"></app-mock-header>
+</mat-card>
+
+<mat-card *ngIf="data.activeStatusCode > 0" class="response">
+  <button (click)="onDelete()">
+    <mat-icon>delete_forever</mat-icon>
+  </button>
+  <header>
+    <h2>Response<span class="toggle">
+        passthrough
+        <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
+        </mat-slide-toggle>
+      </span></h2>
+    <h2>
+      <span>Mock</span>
+    </h2>
+  </header>
+  <div class="data">
+    <pre #responseRef></pre>
+    <div class="pre">
+      <pre #mockRef (keyup)="onMockChange($event)" class="mock"></pre>
+      <mat-error>{{mockJsonError}}</mat-error>
+    </div>
+  </div>
+
+  <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
+</mat-card>

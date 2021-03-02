@@ -46,10 +46,7 @@ export interface IUpsertMock<T = any> {
   method: requestMethod;
   type: requestType;
   statusCode: number;
-  response?: T
-  enabled?: boolean;
-  dataType?: string;
-  mock?: IMock;
+  mock: IMock;
 }
 
 export interface IDeleteData extends IDataBase {
@@ -60,5 +57,14 @@ export interface IDeleteMock extends IDataBase {
 }
 
 export interface ICreateStatusCode extends IDataBase {
+  statusCode: statusCode;
+  activeStatusCode?: statusCode;
+}
+
+export interface IUpdateDataUrl extends IDataBase {
+  newUrl: string;
+}
+
+export interface IUpdateDataStatusCode extends IDataBase {
   statusCode: statusCode;
 }

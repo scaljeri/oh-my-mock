@@ -17,10 +17,11 @@ import { ComponentsModule } from './components/components.module';
 import { forwarderGuard } from './forward-guard';
 import { OhMyState } from './store/state';
 import { HomeComponent } from './pages/home/home.component';
-import { UrlsOverviewComponent } from './components/urls-overview/urls-overview.component';
 import { ConfigComponent } from './components/config/config.component';
-import { MockComponent } from './components/mock/mock.component';
 import { HotToastModule } from '@ngneat/hot-toast';
+
+import { MockModule } from './pages/mock/mock.module';
+import { MockComponent } from './pages/mock/mock.component';
 
 const routes: Routes = [
   {
@@ -30,7 +31,7 @@ const routes: Routes = [
     ],
     children: [
       {
-        path: '', component: UrlsOverviewComponent,
+        path: '', component: HomeComponent,
       },
       {
         path: 'configure', component: ConfigComponent
@@ -58,7 +59,8 @@ const routes: Routes = [
     MatSlideToggleModule,
     MatSidenavModule,
     HotToastModule.forRoot(),
-    ComponentsModule
+    ComponentsModule,
+    MockModule,
   ],
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
