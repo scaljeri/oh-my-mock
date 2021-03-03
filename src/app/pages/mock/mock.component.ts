@@ -46,7 +46,8 @@ export class MockComponent implements OnInit, AfterViewInit {
 
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Dispatch() upsertMock = (mock: IMock) => new UpsertMock({
-    url: this.data.url, method: this.data.method, type: this.data.type, statusCode: this.data.activeStatusCode, mock });
+    url: this.data.url, method: this.data.method, type: this.data.type, statusCode: this.data.activeStatusCode, mock
+  });
   @Dispatch() deleteMockResponse = (response: IDeleteMock) => new DeleteMock(response);
   @Select(OhMyState.getState) state$: Observable<IStore>;
 
@@ -91,10 +92,12 @@ export class MockComponent implements OnInit, AfterViewInit {
   initMock() {
     this.mock = this.data.mocks[this.data.activeStatusCode] || {};
 
-    setTimeout(() => {
-      this.injectJSON(this.responseRef, this.mock.response);
-      this.injectJSON(this.mockRef, this.mock.mock, true);
-    })
+    if (this.data.activeStatusCode > 0) {
+      setTimeout(() => {
+        this.injectJSON(this.responseRef, this.mock.response);
+        this.injectJSON(this.mockRef, this.mock.mock, true);
+      });
+    }
   }
 
   onDelete(): void {
@@ -122,7 +125,7 @@ export class MockComponent implements OnInit, AfterViewInit {
     });
 
     dialogRef.afterClosed().subscribe(jsCode => {
-      this.upsertMock({...this.mock, jsCode});
+      this.upsertMock({ jsCode });
     });
   }
 
@@ -137,5 +140,9 @@ export class MockComponent implements OnInit, AfterViewInit {
     codeEl.innerText = this.prettyPrintPipe.transform(json);
     hljs.highlightBlock(codeEl);
     ref.nativeElement.appendChild(codeEl);
+  }
+
+  onPassThroughChange(checked): void {
+    this.upsertMock({ passThrough: checked })
   }
 }

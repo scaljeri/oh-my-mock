@@ -9,7 +9,7 @@
   <header>
     <h2>Response<span class="toggle">
         passthrough
-        <mat-slide-toggle [checked]="mock.passThrough" (change)="mock.passThrough = $event.checked">
+        <mat-slide-toggle [checked]="mock.passThrough" (change)="onPassThroughChange($event.checked)">
         </mat-slide-toggle>
       </span></h2>
     <h2>

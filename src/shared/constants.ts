@@ -8,7 +8,11 @@ export const MOCK_JS_CODE = '/* This is the code used to mock. Feel free to modi
   '      - mock     - the mock response\n' +
   '      - useMock  - a boolean\n' +
   '      - passThrough - a boolean */\n\n' +
-  'if (data.useMock) {\n    output = data.mock;\n} else {\n    output = responses || data.response;\n}\n';
+  'if (data.useMock) {\n' +
+  '     output = data.mock;\n' +
+  '} else {\n' +
+  '    output = response || data.response;\n' +
+  '}\n';
 
 export const JS_INCORRECT_MSG = 'Javascript contains errors';
 export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';

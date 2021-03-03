@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
       code.classList.remove('hidden');
       const data = JSON.parse(xhr.responseText);
       code.innerText = JSON.stringify(data, null, 4)
+      document.querySelector('.status-code').innerText = xhr.status;
     });
     xhr.send();
   });
