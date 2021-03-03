@@ -1,16 +1,12 @@
-export const findMock = (state, url, method, type, statusCode = null) => {
-  const urlRe = new RegExp(url);
-  const responses = (state?.responses || []).find(resp => {
-    return method === resp.method && type === resp.method && resp.url.match(urlRe);
+export const findActiveData = (state, url, method, type) => {
+  const data = (state?.data || []).find(item => {
+    return method === item.method && type === item.type && item.activeStatusCode &&
+      url.match(new RegExp(item.url));
   });
 
-  if (!responses) {
+  if (!data) {
     return null;
   }
 
-  const sc = Object.keys(responses.mocks).find(k => {
-    return statusCode === k || !statusCode && responses.mock[k].enabled;
-  });
-
-  return responses.mock[sc];
+  return data;
 }

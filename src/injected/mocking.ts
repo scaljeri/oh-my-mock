@@ -1,29 +1,13 @@
-import { findMock } from '../shared/utils/find-mock';
+import { STORAGE_KEY } from '../shared/constants';
+import { findActiveData } from '../shared/utils/find-mock';
 
 export const mockingFn = function (url: string, method: string, type: string) {
-  const rm = findMock(this, url, method, type); // Response mock
+  const data = findActiveData(this.state, url, method, type);
+  const mock = data?.mocks[data.activeStatusCode];
 
-  if (!rm || rm.passThrough) {
+  if (!mock || mock.passThrough) {
     return;
   }
 
-  return { OhMyMock: { perf: Date.now() }};
-
-  // if (rm.useCode) {
-  //   try {
-  //     // TODO: can return anything here { startDate: Date.now() }
-  //     this.log('Create mock with code for', url);
-
-  //     const fnc = eval(new Function('response', 'mock', rm.code) as any);
-  //     return fnc(rm.response, rm.mock);
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // } else if (rm.useMock) {
-  //   return rm.mock;
-  // } else {
-  //   return rm.response;
-  // }
-
-  // return null
+  return { [STORAGE_KEY]: { start: Date.now(), mockIndex: this.state.data.indexOf(data) }};
 }

@@ -4,7 +4,7 @@ const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) InJecTed(XML): $
 export function setup(
   mockDataFn: (url: string, method: string, type: string) => unknown | null,
   processResponseFn: (url: string, method: string, type: string, statusCode: number, data: unknown) => void,
-  mockStatusCodeFn: (url: string, method: string, type: string, statusCode: number) => number): () => void {
+  mockStatusCodeFn: (url: string, method: string, type: string, statusCode: number, data: unknown) => number): () => void {
   log('Patched XMLHttpRequest');
 
   var _open = XMLHttpRequest.prototype.open;
@@ -24,10 +24,11 @@ export function setup(
         try {
           log('Received data', origUrl, _this.responseText, mock);
 
-          const rspTxt = JSON.stringify(processResponseFn(origUrl, 'XHR', type, _this.status, JSON.parse(_this.responseText)));
+          const respJson = JSON.parse(_this.responseText);
+          const rspTxt = JSON.stringify(processResponseFn(origUrl, 'XHR', type, _this.status, respJson));
 
           // rewrite responseText
-          Object.defineProperty(_this, 'status', { value: mockStatusCodeFn(origUrl, 'XHR', type, _this.status) });
+          Object.defineProperty(_this, 'status', { value: mockStatusCodeFn(origUrl, 'XHR', type, _this.status, respJson) });
           Object.defineProperty(_this, 'responseText', { value: rspTxt });
           Object.defineProperty(_this, 'response', { value: rspTxt });
           /////////////// END //////////////////

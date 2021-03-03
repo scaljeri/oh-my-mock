@@ -36,6 +36,7 @@ export interface IMock<T = any> {
   headers?: Record<string, string>
   passThrough?: boolean;
   mock?: T;
+  useMock?: boolean;
   delay?: number;
   jsCode?: string;
 }

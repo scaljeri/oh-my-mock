@@ -1,31 +1,36 @@
-import { findMock } from '../shared/utils/find-mock';
+import { STORAGE_KEY } from '../shared/constants';
+import { IData, IMock } from '../shared/type';
+import { findActiveData } from '../shared/utils/find-mock';
+import { evalJsCode } from '../shared/utils/eval-jscode';
 
 export const processResponseFn = function (url: string, method: string, type: string, statusCode: number, response: unknown) {
-  const rm = findMock(this, url, method, type); // Response mock
+  let data: IData;
+  let mock: IMock;
 
-  debugger;
-  console.log('sfdsddsdsdsdsd');
-  // is the data from the backend?
-  if (!rm || !rm.active || rm.passThrough || !rm.useMock && !rm.useCode && !rm.response) {
-    debugger;
+  if (response[STORAGE_KEY]) {
+    data = this.state.data[response[STORAGE_KEY].mockIndex];
+    this.log(`Duration for ${method} ${url} was ${ Math.round((Date.now() - response[STORAGE_KEY].start)/1000)} `);
+  } else {
     window.postMessage({ url, method, type, statusCode, mock: { response } }, window.location.href);
+    data = findActiveData(this.state, url, method, type);
   }
 
-  if (rm.active) {
-    if (rm.passThrough) {
-      if (rm.useCode) {
-        try {
-          this.log('Modify data with code', rm.code);
-          const fnc = eval(new Function('response', 'mock', rm.code) as any);
-          return fnc(response, rm.mock);
-        } catch (e) {
-          console.error(e);
-        }
-      } else if (rm.useMock) {
-        return rm.mock;
-      }
+  if (!data) {
+    return response;
+  }
+
+  try {
+    mock = data.mocks[data.activeStatusCode];
+
+    if (!mock) {
+      return response;
     }
-  }
 
-  return response;
+    const code = evalJsCode(mock.jsCode);
+    return code(mock, response[STORAGE_KEY] ? null : response);
+  } catch(err) {
+    console.error('Could not execute jsCode', url, method, type, statusCode, response, data);
+
+    return mock?.response;
+  }
 }

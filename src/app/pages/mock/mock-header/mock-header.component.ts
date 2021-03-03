@@ -53,8 +53,10 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     });
 
     dialogRef.afterClosed().subscribe(newStatusCode => {
-      this.statusCode = newStatusCode;
-      this.createStatusCode(newStatusCode);
+      if (newStatusCode) {
+        this.statusCode = newStatusCode;
+        this.createStatusCode(newStatusCode);
+      }
     });
 
   }
