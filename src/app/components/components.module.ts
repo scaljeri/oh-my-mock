@@ -22,6 +22,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
+import { AddDataComponent } from './add-data/add-data.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { CreateStatusCodeComponent } from './create-status-code/create-status-co
     MockTestComponent,
     CodeEditComponent,
     CreateStatusCodeComponent,
+    AddDataComponent,
   ],
   imports: [
     CommonModule,

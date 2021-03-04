@@ -1,7 +1,7 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { CreateStatusCode, DeleteMock, EnableDomain, InitState, UpdateDataStatusCode, UpdateDataUrl, UpsertData, UpsertMock } from './actions';
-import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode } from '@shared/type';
+import { CreateStatusCode, DeleteData, DeleteMock, EnableDomain, InitState, UpdateDataStatusCode, UpdateDataUrl, UpsertData, UpsertMock } from './actions';
+import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode, IDeleteData } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 
 @State<IState>({
@@ -80,6 +80,19 @@ export class OhMyState {
     }
     const dataList = [...state.data];
     dataList[index] = data;
+
+    ctx.setState({ ...state, data: dataList });
+  }
+
+  @Action(DeleteData)
+  deleteData(ctx: StateContext<IState>, { payload }: { payload: IDeleteData }) {
+    const state = ctx.getState();
+    const { index } = OhMyState.findData(state, payload.url, payload.method, payload.type);
+
+    const dataList = [...state.data];
+    if (index >= 0) {
+      dataList.splice(index, 1);
+    }
 
     ctx.setState({ ...state, data: dataList });
   }
