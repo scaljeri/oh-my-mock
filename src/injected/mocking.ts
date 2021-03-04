@@ -9,5 +9,9 @@ export const mockingFn = function (url: string, method: string, type: string) {
     return;
   }
 
-  return { [STORAGE_KEY]: { start: Date.now(), mockIndex: this.state.data.indexOf(data) }};
+  return { [STORAGE_KEY]: {
+      sourceUrl: url,
+      matchedUrl: data.url,
+      start: Date.now(),
+      mockIndex: this.state.data.indexOf(data) }};
 }

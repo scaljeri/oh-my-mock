@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 import { appSources, packetTypes } from '../shared/constants';
-import { IPacket, IState } from '../shared/type';
+import { IPacket } from '../shared/type';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
 
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
@@ -30,7 +30,6 @@ chrome.runtime.onMessage.addListener((data: IPacket) => {
 
 // Recieve messages from the Injected code
 window.addEventListener('message', (ev) => {
-  debugger;
   if (ev.data.domain && ev.data.type && window.location.href.indexOf(ev.data.domain) >= 0) {
     log('Received data from InJecTed', ev.data);
     chrome.runtime.sendMessage(ev.data);

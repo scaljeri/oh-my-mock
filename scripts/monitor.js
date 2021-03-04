@@ -4,7 +4,7 @@ const { exec } = require("child_process");
 let promise;
 let timeoutId;
 // One-liner for current directory
-chokidar.watch(['./src/content', './src/injected', './src/background.ts']).on('all', (event, path) => {
+chokidar.watch(['./src/content', './src/injected', './src/background.ts', './src/shared']).on('all', (event, path) => {
   console.log('---', event, path);
   if (timeoutId) {
     clearTimeout(timeoutId);
