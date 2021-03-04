@@ -22,8 +22,6 @@ export function setup(
     _this.onreadystatechange = function () {
       if (_this.readyState === 4 && _this.status === 200) {
         try {
-          log('Received data', origUrl, _this.responseText, mock);
-
           const respJson = JSON.parse(_this.responseText);
           const rspTxt = JSON.stringify(processResponseFn(origUrl, 'XHR', type, _this.status, respJson));
 

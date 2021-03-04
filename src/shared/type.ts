@@ -1,4 +1,4 @@
-import { STORAGE_KEY } from './constants';
+import { appSources, packetTypes, STORAGE_KEY } from './constants';
 
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
 export type requestMethod = 'XHR' | 'FETCH';
@@ -18,13 +18,13 @@ export interface IState {
   enabled?: boolean;
 }
 
-export interface IDataBase {
+export interface IContext {
   url: string;              // composite primary key
   method: requestMethod;    //  composite PK
   type: requestType;        // CPK
 }
 
-export interface IData extends IDataBase {
+export interface IData extends IContext {
   activeStatusCode?: statusCode;
   enabled?: boolean;
   mocks?: Record<statusCode, IMock>;
@@ -50,22 +50,30 @@ export interface IUpsertMock<T = any> {
   mock: IMock;
 }
 
-export interface IDeleteData extends IDataBase {
+export interface IDeleteData extends IContext {
 }
 
-export interface IDeleteMock extends IDataBase {
+export interface IDeleteMock extends IContext {
   statusCode: statusCode;
 }
 
-export interface ICreateStatusCode extends IDataBase {
+export interface ICreateStatusCode extends IContext {
   statusCode: statusCode;
   activeStatusCode?: statusCode;
 }
 
-export interface IUpdateDataUrl extends IDataBase {
+export interface IUpdateDataUrl extends IContext {
   newUrl: string;
 }
 
-export interface IUpdateDataStatusCode extends IDataBase {
+export interface IUpdateDataStatusCode extends IContext {
   statusCode: statusCode;
+}
+
+export interface IPacket {
+  context?: IContext & { statusCode: statusCode},
+  domain: string;
+  source: appSources;
+  type: packetTypes;
+  payload?: IMock | IState;
 }

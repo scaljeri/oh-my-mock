@@ -33,10 +33,12 @@ export class OhMyState {
     const state = ctx.getState();
     const { index, data } = OhMyState.findData(state, payload.url, payload.method, payload.type);
     const dataList = [...state.data];
-    const mocks = { ...data.mocks};
-    const mock = {jsCode: MOCK_JS_CODE, ...mocks[payload.statusCode]};
+    const mocks = { ...data.mocks };
+    const mock = { jsCode: MOCK_JS_CODE, ...mocks[payload.statusCode] };
 
-    Object.entries(payload.mock).forEach(i => mock[i[0]] = i[1]);
+    if (payload.mock) {
+      Object.entries(payload.mock).forEach(i => mock[i[0]] = i[1]);
+    }
     data.mocks = { ...mocks, [payload.statusCode]: mock };
 
     if (index === -1) {
@@ -140,7 +142,7 @@ export class OhMyState {
   static findData(state: IState, url: string, method: requestMethod, type: requestType): { index: number, data: IData } {
     let data = state.data.find(r => r.url === url && r.method === method && r.type === type) || { url, method, type, mocks: {} };
 
-    return { index: state.data.indexOf(data), data: {...data } };
+    return { index: state.data.indexOf(data), data: { ...data } };
   }
 }
 

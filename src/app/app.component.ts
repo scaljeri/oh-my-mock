@@ -26,6 +26,7 @@ export class AppComponent implements AfterViewInit {
   drawerMode = 'over';
   dawerBackdrop = true;
   page = '';
+  domain: string;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IState) => new InitState(state);
@@ -45,6 +46,7 @@ export class AppComponent implements AfterViewInit {
   async ngAfterViewInit(): Promise<void> {
     // this.storageService.reset();
     this.state = await this.storageService.loadState();
+    this.domain = this.storageService.domain;
     console.log(this.state);
     this.initState(this.state)
     this.isEnabled = this.state.enabled;

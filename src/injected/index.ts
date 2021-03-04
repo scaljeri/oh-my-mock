@@ -35,16 +35,16 @@ declare var window: any;
     }
 
     try {
-      log('Received state update', ev.data, context.state);
+      log('Received state update', ev.data);
 
       if (!context.state || ev.data.enabled !== context.state.enabled) {
         removeMock();
 
         if (ev.data.enabled) {
-          log('Activate!!');
+          log(' *** Activate ***');
           removeMock = setup(mockingFn.bind(context), processResponseFn.bind(context), mockStatusCodeFn.bind(context));
         } else if (context.state?.enabled) {
-          log('Deactivate!!');
+          log(' *** Deactivate ***');
         }
       }
 

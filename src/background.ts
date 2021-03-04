@@ -1,4 +1,4 @@
-import { STORAGE_KEY } from './shared/constants';
+import { appSources, STORAGE_KEY } from './shared/constants';
 
 console.log(`${STORAGE_KEY}: background script is ready`);
 
@@ -10,7 +10,7 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.origin !== 'content-script') {
+      if (request.source !== appSources.CONTENT) {
         chrome.tabs.sendMessage(tab.id, request.payload);
       }
     });

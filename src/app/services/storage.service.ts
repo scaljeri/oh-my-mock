@@ -21,6 +21,10 @@ export class StorageService {
     });
   }
 
+  isDomainValid(domain) {
+    return !!this.domain || domain.indexOf(this.domain) >= 0;
+  }
+
   setDomain(domain: string): void {
     this.domain = domain;
   }

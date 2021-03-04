@@ -1,5 +1,6 @@
 /// <reference types="chrome"/>
-import { IState } from '../shared/type';
+import { appSources, packetTypes } from '../shared/constants';
+import { IPacket, IState } from '../shared/type';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
 
 const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
@@ -12,29 +13,25 @@ log('Script loaded and ready....');
   xhrScript.onload = function () {
     (this as any).remove();
     // Notify Popup that content script is ready
-    try { chrome.runtime.sendMessage({ knockknock: { source: 'content' } }) }
-    catch (e) { log('Cannot connect to the OhMyMock tab', e)}
+    try { chrome.runtime.sendMessage({ domain: window.location.host, type: packetTypes.KNOCKKNOCK }) }
+    catch (e) { log('Cannot connect to the OhMyMock tab', e) }
   }
   xhrScript.src = chrome.runtime.getURL('injected.js');
   document.head.append(xhrScript);
 })();
 
 // Listen for messages from Popup/Angular
-chrome.runtime.onMessage.addListener((state: IState) => {
-  if (state) {
-    log('Received a state update ', state);
-    // Sanity check
-    if (state.domain.indexOf(window.location.host) === -1) {
-      log(`ERROR: Domains are mixed, this is a BUG: received: ${state.domain} current: ${window.location.host}`);
-    }
-
-    window.postMessage(state, state.domain);
+chrome.runtime.onMessage.addListener((data: IPacket) => {
+  if (data?.source === appSources.POPUP && data.domain.indexOf(window.location.host) >= 0) {
+    log('Received a state update ', data);
+    window.postMessage(data.payload, window.location.href);
   }
 });
 
 // Recieve messages from the Injected code
 window.addEventListener('message', (ev) => {
-  if (ev.data.mock) {
+  debugger;
+  if (ev.data.domain && ev.data.type && window.location.href.indexOf(ev.data.domain) >= 0) {
     log('Received data from InJecTed', ev.data);
     chrome.runtime.sendMessage(ev.data);
   }
