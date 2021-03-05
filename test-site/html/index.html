@@ -3,11 +3,12 @@
 <head>
   <link rel="stylesheet" href="styles.css">
   <script src="get.js"></script>
+  <script src="fetch.js"></script>
 </head>
 
 <body>
   <h1>Test site</h1>
-  <section>
+  <section class="xhr">
     <h2>XMLHttpResponse</h2>
     <article class="get">
       <h3>
@@ -18,13 +19,26 @@
         <pre class="get-code hidden"></pre>
         <div class="header">
           <p><span>StatusCode</span><span class="status-code"></span></p>
-          <p><span>Headers</span><span class="headers"><span</p>
+          <p><span>Headers</span><span class="headers"></span></p>
           </div>
       </div>
     </article>
   </section>
-  <section>
+  <section class="fetch">
     <h2>Fetch</h2>
+    <article class="get">
+      <h3>
+        <span>GET</span>
+        <button class="fetch">Load users</button>
+      </h3>
+      <div class="content-wrapper">
+        <pre class="get-code hidden"></pre>
+        <div class="header">
+          <p><span>StatusCode</span><span class="status-code"></span></p>
+          <p><span>Headers</span><span class="headers"></span></p>
+        </div>
+      </div>
+    </article>
   </section>
 </body>
 
