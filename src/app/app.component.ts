@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, HostListener, ViewChild } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
@@ -63,10 +63,19 @@ export class AppComponent implements AfterViewInit {
             this.page = event.snapshot.url[0]?.path || '/';
           }
         });
-        this.page = (this.router.url.match(/^\/([^/]+)/) || [])[1] || '/';
+    this.page = (this.router.url.match(/^\/([^/]+)/) || [])[1] || '/';
   }
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
     this.activate(checked);
+  }
+
+  @HostListener('window:keyup.backspace')
+  goBack(): void {
+    const el = document.activeElement;
+
+    if (el.tagName.toLowerCase() !== 'input' && el.getAttribute('contenteditable') !== 'true') {
+      this.router.navigate(['../']);
+    }
   }
 }

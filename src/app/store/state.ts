@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { CreateStatusCode, DeleteData, DeleteMock, EnableDomain, InitState, UpdateDataStatusCode, UpdateDataUrl, UpsertData, UpsertMock } from './actions';
 import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode, IDeleteData } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
+import { url2regex } from '@shared/utils/urls';
 
 @State<IState>({
   name: STORAGE_KEY,
@@ -153,7 +154,7 @@ export class OhMyState {
   }
 
   static findData(state: IState, url: string, method: requestMethod, type: requestType): { index: number, data: IData } {
-    let data = state.data.find(r => r.url === url && r.method === method && r.type === type) || { url, method, type, mocks: {} };
+    let data = state.data.find(r => r.url === url && r.method === method && r.type === type) || { url: url2regex(url), method, type, mocks: {} };
 
     return { index: state.data.indexOf(data), data: { ...data } };
   }

@@ -5,7 +5,7 @@
   <mat-drawer-content>
     <mat-toolbar>
       <div class='button-wrapper'>
-        <a *ngIf="page && page !== '/'" routerLink="/" mat-icon-button>
+        <a *ngIf="page && page !== '/'" routerLink="/" mat-icon-button title="Go to previous page (key=Backspace)">
           <mat-icon>keyboard_arrow_left</mat-icon>
         </a>
         <button *ngIf="page === '/'" mat-icon-button (click)="drawer.toggle()" class="example-icon"

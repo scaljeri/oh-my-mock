@@ -11,13 +11,14 @@ export const processResponseFn = function (url: string, method: string, type: st
     data = this.state.data[response[STORAGE_KEY].mockIndex];
     this.log(`Duration for ${method} ${url} was ${ Math.round((Date.now() - response[STORAGE_KEY].start)/1000)} `);
   } else {
+    data = findActiveData(this.state, url, method, type);
+
     window.postMessage({
       context: { url, method, type, statusCode: xhr.status },
       domain: window.location.host,
       source: appSources.INJECTED,
       type: packetTypes.MOCK,
       payload: { response, headers: xhr.getAllResponseHeaders() } }, '*');
-    data = findActiveData(this.state, url, method, type);
   }
 
   if (!data) {
