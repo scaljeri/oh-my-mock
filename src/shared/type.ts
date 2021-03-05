@@ -1,4 +1,4 @@
-import { appSources, packetTypes, STORAGE_KEY } from './constants';
+import { appSources, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
 
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
 export type requestMethod = 'XHR' | 'FETCH';
@@ -77,3 +77,5 @@ export interface IPacket {
   type: packetTypes;
   payload?: IMock | IState;
 }
+
+export type ResetStateOptions = resetStateOptions;

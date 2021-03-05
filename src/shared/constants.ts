@@ -29,3 +29,8 @@ export enum appSources {
   CONTENT = 'content',
   POPUP = 'popup'
 }
+
+export enum resetStateOptions {
+  ALL = 'all',
+  SELF = 'self'
+}

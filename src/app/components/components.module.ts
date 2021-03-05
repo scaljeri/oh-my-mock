@@ -22,6 +22,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
 import { AddDataComponent } from './add-data/add-data.component';
+import { NavListComponent } from './nav-list/nav-list.component';
+import { ResetStateComponent } from './reset-state/reset-state.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +32,8 @@ import { AddDataComponent } from './add-data/add-data.component';
     CodeEditComponent,
     CreateStatusCodeComponent,
     AddDataComponent,
+    NavListComponent,
+    ResetStateComponent,
   ],
   imports: [
     CommonModule,
@@ -50,6 +54,6 @@ import { AddDataComponent } from './add-data/add-data.component';
     FormsModule,
     MonacoEditorModule,
   ],
-  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent]
+  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent, NavListComponent]
 })
 export class ComponentsModule { }

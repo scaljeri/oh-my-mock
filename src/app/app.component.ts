@@ -30,7 +30,6 @@ export class AppComponent implements AfterViewInit {
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IState) => new InitState(state);
-  @Dispatch() stateReset = () => new InitState();
   @Select(OhMyState.getState) state$: Observable<IStore>;
 
   @ViewChild('drawer') drawer: MatDrawer;
@@ -69,14 +68,5 @@ export class AppComponent implements AfterViewInit {
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
     this.activate(checked);
-  }
-
-  onResetAll(): void {
-    this.storageService.reset();
-    this.stateReset();
-
-    if (this.drawer) {
-      this.drawer.close();
-    }
   }
 }

@@ -1,0 +1,32 @@
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+
+h3 {
+  text-align: center;
+}
+
+div {
+  display: flex;
+  flex-direction: column;
+  background-color: #6b6561;
+  padding: 5px 10px 20px 10px;
+  border-radius: 4px;
+  justify-content: center;
+  color: #fff;
+
+  &+div {
+    margin: 20px 0;
+  }
+
+  button {
+    align-self: center;
+    width: 200px;
+  }
+}
+
+.cancel {
+  align-self: flex-end;
+}

@@ -22,7 +22,6 @@ export class AddDataComponent {
     this.formGroup.updateValueAndValidity();
 
     if (this.formGroup.valid) {
-      debugger;
       this.dialogRef.close(this.formGroup.value);
     }
   }

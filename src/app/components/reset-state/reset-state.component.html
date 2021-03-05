@@ -1,0 +1,13 @@
+<h2>Reset state options:</h2>
+
+<div>
+  <h3>{{ domain }}</h3>
+  <button mat-raised-button color="warn" (click)="onReset(optionTypes.SELF)">Reset</button>
+</div>
+
+<div>
+  <h3>Everything</h3>
+  <button mat-raised-button color="warn" (click)="onReset(optionTypes.ALL)">Reset</button>
+</div>
+
+<button class="cancel" mat-button (click)="onCancel()">Cancel</button>

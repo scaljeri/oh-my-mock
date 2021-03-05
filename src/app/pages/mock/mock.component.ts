@@ -142,7 +142,11 @@ export class MockComponent implements OnInit, AfterViewInit {
     ref.nativeElement.appendChild(codeEl);
   }
 
-  onPassThroughChange(checked): void {
+  onPassThroughToggle(checked): void {
     this.upsertMock({ passThrough: checked })
+  }
+
+  onEnableMockToggle(checked): void {
+    this.upsertMock({ useMock: checked })
   }
 }
