@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { resetStateOptions } from '@shared/constants';
 import { ResetStateOptions } from '@shared/type';
@@ -17,7 +18,7 @@ export class NavListComponent implements OnInit {
 
   @Dispatch() stateReset = () => new InitState();
 
-  constructor(private storageService: StorageService, public dialog: MatDialog) { }
+  constructor(private storageService: StorageService, public dialog: MatDialog, private router: Router) { }
 
   ngOnInit(): void {
   }
@@ -38,5 +39,10 @@ export class NavListComponent implements OnInit {
     });
 
     this.navigate.emit();
+  }
+
+  onNgApiMock(): void {
+    this.navigate.emit();
+    this.router.navigate(['exports', 'ngapimock']);
   }
 }

@@ -22,6 +22,7 @@ import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockModule } from './pages/mock/mock.module';
 import { MockComponent } from './pages/mock/mock.component';
+import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 
 const routes: Routes = [
   {
@@ -37,7 +38,9 @@ const routes: Routes = [
         path: 'configure', component: ConfigComponent
       }, {
         path: 'mocks/:index', component: MockComponent
-      }
+      }, {
+        path: 'exports/ngapimock', component: NgApiMockExportComponent
+      },
     ]
   }
 ];
@@ -46,6 +49,7 @@ const routes: Routes = [
   declarations: [
     AppComponent,
     HomeComponent,
+    NgApiMockExportComponent,
   ],
   imports: [
     BrowserModule,
