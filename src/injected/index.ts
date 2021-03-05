@@ -5,6 +5,7 @@ import { mockingFn } from './mocking';
 import { processResponseFn } from './processing';
 import { mockStatusCodeFn } from './status-code';
 import { STORAGE_KEY } from '../shared/constants';
+import { mockAllResponseHeaders } from './mock-response-headers';
 
 declare var window: any;
 
@@ -42,7 +43,11 @@ declare var window: any;
 
         if (ev.data.enabled) {
           log(' *** Activate ***');
-          removeMock = setup(mockingFn.bind(context), processResponseFn.bind(context), mockStatusCodeFn.bind(context));
+          removeMock = setup(
+            mockingFn.bind(context),
+            processResponseFn.bind(context),
+            mockStatusCodeFn.bind(context),
+            mockAllResponseHeaders.bind(context));
         } else if (context.state?.enabled) {
           log(' *** Deactivate ***');
         }

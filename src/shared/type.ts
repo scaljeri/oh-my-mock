@@ -78,4 +78,13 @@ export interface IPacket {
   payload?: IMock | IState;
 }
 
+export interface IMockedTmpResponse {
+  [STORAGE_KEY]: {
+    sourceUrl: string;
+    matchedUrl: string;
+    start: number;
+    mockIndex: number;
+  }
+}
+
 export type ResetStateOptions = resetStateOptions;

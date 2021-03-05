@@ -26,14 +26,17 @@ export class ContentService {
         if (data.type === packetTypes.MOCK) {
           this.upsertMock({
             mock: data.payload as IMock,
-            ...data.context});
+            ...data.context
+          });
         } else if (data.type === packetTypes.KNOCKKNOCK) {
           this.send(this.store.snapshot()[STORAGE_KEY]);
         }
       });
 
     this.state$.subscribe(state => {
-      this.send(state[STORAGE_KEY]);
+      if (state[STORAGE_KEY].domain) { // Initially it has an empty state
+        this.send(state[STORAGE_KEY]);
+      }
     });
   }
 

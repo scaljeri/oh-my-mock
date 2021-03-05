@@ -108,9 +108,11 @@ export class MockComponent implements OnInit, AfterViewInit {
   onMockChange(event): void {
     const mockValue = this.mockRef.nativeElement.innerText;
     this.mockJsonError = null;
+
     if (mockValue) {
       try {
         const json = JSON.parse(mockValue);
+        this.upsertMock({mock: mockValue})
       } catch (err) {
         this.mockJsonError = err;
       }

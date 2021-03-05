@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
       const data = JSON.parse(xhr.responseText);
       code.innerText = JSON.stringify(data, null, 4)
       document.querySelector('.status-code').innerText = xhr.status;
+      document.querySelector('.headers').innerText = xhr.getAllResponseHeaders();
+      debugger;
     });
     xhr.send();
   });
