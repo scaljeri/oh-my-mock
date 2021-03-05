@@ -16,7 +16,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { HotToastModule } from '@ngneat/hot-toast';
 
-import { MockTestComponent } from './mock-test/mock-test.component';
 import { CodeEditComponent } from './code-edit/code-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -28,7 +27,6 @@ import { AddDataComponent } from './add-data/add-data.component';
   declarations: [
     ConfigComponent,
     UrlsOverviewComponent,
-    MockTestComponent,
     CodeEditComponent,
     CreateStatusCodeComponent,
     AddDataComponent,
