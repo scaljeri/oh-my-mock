@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -6,7 +6,7 @@ import { Select } from '@ngxs/store';
 import * as hljs from 'highlight.js';
 import { STORAGE_KEY } from 'src/shared/constants';
 import { OhMyState } from 'src/app/store/state';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
 import { IData, IDeleteMock, IMock, IState, IStore, statusCode } from '@shared/type';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
@@ -17,20 +17,10 @@ import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.compon
   templateUrl: './mock.component.html',
   styleUrls: ['./mock.component.scss']
 })
-export class MockComponent implements OnInit, AfterViewInit {
-  panelOpenState = false;
-  originalResponse: string;
-  jsonError: string;
-  jsError: string;
-  isSyntaxOk = false;
-  text: string;
+export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
   codes = [];
-  responses: IData;
-  url: string;
-
   data: IData;
   mocks: Record<statusCode, IMock> = {};
-  // mockResponse: string;
   statusCode: statusCode;
   enabled = false;
   statusCodeError: string;
@@ -41,15 +31,15 @@ export class MockComponent implements OnInit, AfterViewInit {
 
   @ViewChild('mockRef') mockRef: ElementRef;
   @ViewChild('responseRef') responseRef: ElementRef;
-  // @ViewChild('codeEditor') editor: ElementRef;
-
 
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Dispatch() upsertMock = (mock: IMock) => new UpsertMock({
     url: this.data.url, method: this.data.method, type: this.data.type, statusCode: this.data.activeStatusCode, mock
   });
   @Dispatch() deleteMockResponse = (response: IDeleteMock) => new DeleteMock(response);
-  @Select(OhMyState.getState) state$: Observable<IStore>;
+  @Select(OhMyState.getActiveState) state$: Observable<IState>;
+
+  private subscription: Subscription;
 
   constructor(
     private router: Router,
@@ -59,14 +49,18 @@ export class MockComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    this.state$.subscribe((state: IStore) => {
+    this.subscription = this.state$.subscribe((state: IState) => {
       this.init(state);
     });
   }
 
-  init(state: IStore): void {
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
+  init(state: IState): void {
     const index = Number(this.activeRoute.snapshot.params.index);
-    this.data = state[STORAGE_KEY].data[index];
+    this.data = state?.data[index];
 
     if (!this.data) {
       this.router.navigate(['/']);
@@ -79,14 +73,6 @@ export class MockComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-  }
-
-  onActivityMocksChange(): void {
-    // TODO
-  }
-
-  onUrlUpdate(event): void {
-    // TODO
   }
 
   initMock() {

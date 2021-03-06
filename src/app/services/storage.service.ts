@@ -3,7 +3,7 @@ import { Select } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { OhMyState } from '../store/state';
 
-import { IOhMyMock, IState } from '../../shared/type';
+import { IOhMyMock, IState, IStore } from '../../shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 
 @Injectable({
@@ -12,50 +12,36 @@ import { STORAGE_KEY } from '@shared/constants';
 export class StorageService {
   public domain: string;
 
-  @Select(OhMyState.getState) state$: Observable<IState>;
+  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
   constructor() {
-    this.state$.subscribe((state) => {
-      console.log('state updated', state);
-      this.update(state[STORAGE_KEY]);
-    });
   }
 
   isDomainValid(domain) {
-    return !!this.domain || domain.indexOf(this.domain) >= 0;
+    return !!this.domain || this.domain === domain;
   }
 
   setDomain(domain: string): void {
     this.domain = domain;
   }
 
-  async loadState(): Promise<IState> {
+  async initialize(): Promise<IOhMyMock> {
     return new Promise(resolve => {
-      chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
-        console.log('Data loaded from storage', data);
-        const allDomains: IOhMyMock = data[STORAGE_KEY] || { domains: {} };
-
-        const state: IState = allDomains.domains[this.domain] || { domain: this.domain, data: [], enabled: false };
-        state.domain = this.domain;
-
-        if (!data[STORAGE_KEY]) {
-          allDomains.domains[this.domain] = state;
-          chrome.storage.local.set({ [STORAGE_KEY]: allDomains });
-        }
-
-        resolve(state);
+      chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
+        resolve(state[STORAGE_KEY]);
       });
     });
   }
 
-  update(update?: IState): void {
-    chrome.storage.local.get(STORAGE_KEY, (data: Record<string, IOhMyMock>) => {
-      data[STORAGE_KEY].domains[this.domain] = update;
-      chrome.storage.local.set(data);
-    });
+  monitorStateChanges(): void {
+    this.state$.subscribe((state) => this.update(state));
+  }
+
+  update(update?: IOhMyMock): void {
+    chrome.storage.local.set({ [STORAGE_KEY]: update });
   }
 
   reset(): void {
-      return chrome.storage.local.set({ [STORAGE_KEY]: {domains: {}}});
+    return chrome.storage.local.set({ [STORAGE_KEY]: { domains: {} } });
   }
 }

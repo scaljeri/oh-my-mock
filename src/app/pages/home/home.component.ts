@@ -7,6 +7,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { IData, IState, IStore } from '@shared/type';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
 import { UpsertData } from 'src/app/store/actions';
+import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'app-home',
@@ -28,10 +29,15 @@ export class HomeComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((data: IData) => {
-      const newDataIndex = this.store.selectSnapshot<number>((state: IStore) => state[STORAGE_KEY].data.length);
+      const state = this.stateSnapshot;
+      const newDataIndex = state.data.length;
       this.upsertData(data);
       this.router.navigate(['mocks', newDataIndex]);
     })
+  }
+
+  get stateSnapshot(): IState {
+    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 }
 

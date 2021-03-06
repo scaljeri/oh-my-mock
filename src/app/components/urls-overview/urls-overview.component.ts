@@ -24,7 +24,7 @@ export class UrlsOverviewComponent implements OnInit {
   // @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
 
   @Dispatch() deleteData = (data: IDeleteData) => new DeleteData(data);
-  @Select(OhMyState.getState) state$: Observable<{ [STORAGE_KEY]: IState }>;
+  @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   displayedColumns = ['type', 'method', 'url', 'activeStatusCode'];
 
@@ -36,8 +36,8 @@ export class UrlsOverviewComponent implements OnInit {
 
   ngOnInit(): void {
     this.state$.pipe(
-      filter(state => !!state && !!state[STORAGE_KEY].data),
-      map(state => state[STORAGE_KEY].data)
+      filter(state => !!state),
+      map(state => state?.data)
     ).subscribe((data: IData[]) => {
       this.data = data;
     });

@@ -2,9 +2,9 @@ import { AfterViewInit, ChangeDetectorRef, Component, HostListener, ViewChild } 
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
-import { EnableDomain, InitState } from './store/actions';
+import { EnableDomain, InitGlobalState, InitState } from './store/actions';
 import { StorageService } from './services/storage.service';
-import { IState, IStore } from '../shared/type';
+import { IOhMyMock, IState, IStore } from '../shared/type';
 import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
@@ -20,7 +20,6 @@ import { STORAGE_KEY } from '@shared/constants';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements AfterViewInit {
-  isEnabled = false;
   state: IState;
   color: ThemePalette = 'warn';
   drawerMode = 'over';
@@ -29,10 +28,10 @@ export class AppComponent implements AfterViewInit {
   domain: string;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
-  @Dispatch() initState = (state: IState) => new InitState(state);
-  @Select(OhMyState.getState) state$: Observable<IStore>;
+  @Dispatch() initState = (state: IOhMyMock) => new InitGlobalState(state);
+  @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
-  @ViewChild('drawer') drawer: MatDrawer;
+  @ViewChild('dawer') drawer: MatDrawer;
 
   constructor(
     private contentService: ContentService,
@@ -43,19 +42,19 @@ export class AppComponent implements AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    // this.storageService.reset();
-    this.state = await this.storageService.loadState();
+    const globalState = await this.storageService.initialize();
+
+    // this.state = OhMyState.getActiveState(globalState);
     this.domain = this.storageService.domain;
-    console.log(this.state);
-    this.initState(this.state)
-    this.isEnabled = this.state.enabled;
+    this.initState(globalState);
 
+    this.storageService.monitorStateChanges();
 
-    this.state$.subscribe(state => {
-      this.state = state[STORAGE_KEY];
-      this.isEnabled = this.state.enabled;
+    this.state$.subscribe((state: IState) => {
+      this.state = state;
     });
 
+    // Some logic used to show the correct header button
     this.router.events
       .subscribe(
         (event: NavigationEvent) => {

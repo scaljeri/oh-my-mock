@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
       code.innerText = JSON.stringify(data, null, 4)
       document.querySelector('.get .status-code').innerText = xhr.status;
       document.querySelector('.get .headers').innerText = xhr.getAllResponseHeaders();
-      debugger;
     });
     xhr.send();
   });

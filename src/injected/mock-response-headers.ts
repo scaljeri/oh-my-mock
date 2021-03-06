@@ -1,23 +1,25 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { IMockedTmpResponse } from '../shared/type';
-import { getHeaderKeys, getHeaderValues } from '../shared/utils/parse-xhr-headers';
+import * as xhrHeaders from '../shared/utils/xhr-headers';
 
 export function mockAllResponseHeaders(origHeaders: string, response: IMockedTmpResponse | unknown): string {
   if (response[STORAGE_KEY]) {
-    const data = this.state.data[response[STORAGE_KEY].mockIndex]
-    return data.mocks[data.activeStatusCode].headers;
+    const data = this.state.data[response[STORAGE_KEY].mockIndex];
+    return xhrHeaders.stringify(data.mocks[data.activeStatusCode].headers);
   } else {
     return origHeaders;
   }
 }
 
 export function mockResponseHeader(xhr: XMLHttpRequest, response: IMockedTmpResponse | unknown): (key: string) => string | null {
-  let getResponseHeader = xhr.getResponseHeader.bind(xhr);
+  let mock = xhr.getResponseHeader;
 
   if (response[STORAGE_KEY]) {
-    const arh = xhr.getAllResponseHeaders();
-    getResponseHeader = key => getHeaderValues(arh)[getHeaderKeys(arh).indexOf(key)];
+    const data = this.state.data[response[STORAGE_KEY].mockIndex];
+    const headers = data.mocks[data.activeStatusCode].headers;
+
+    mock = key => headers[key];
   }
 
-  return getResponseHeader;
+  return mock;
 }

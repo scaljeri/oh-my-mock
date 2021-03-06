@@ -14,36 +14,14 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
 
 import { ComponentsModule } from './components/components.module';
-import { forwarderGuard } from './forward-guard';
 import { OhMyState } from './store/state';
 import { HomeComponent } from './pages/home/home.component';
-import { ConfigComponent } from './components/config/config.component';
 import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockModule } from './pages/mock/mock.module';
-import { MockComponent } from './pages/mock/mock.component';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
-
-const routes: Routes = [
-  {
-    path: '',
-    canActivate: [
-      forwarderGuard
-    ],
-    children: [
-      {
-        path: '', component: HomeComponent,
-      },
-      {
-        path: 'configure', component: ConfigComponent
-      }, {
-        path: 'mocks/:index', component: MockComponent
-      }, {
-        path: 'exports/ngapimock', component: NgApiMockExportComponent
-      },
-    ]
-  }
-];
+import { StateExplorerModule } from './pages/state-explorer/state-explorer.module';
+import { appRoutes } from './app.routes';
 
 @NgModule({
   declarations: [
@@ -54,7 +32,7 @@ const routes: Routes = [
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(routes, { useHash: true }),
+    RouterModule.forRoot(appRoutes, { useHash: true }),
     NgxsModule.forRoot([OhMyState], { developmentMode: true }),
     NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,
@@ -65,6 +43,7 @@ const routes: Routes = [
     HotToastModule.forRoot(),
     ComponentsModule,
     MockModule,
+    StateExplorerModule,
   ],
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]

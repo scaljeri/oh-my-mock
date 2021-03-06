@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { MockComponent } from './mock.component';
 import { MockHeaderComponent } from './mock-header/mock-header.component';
+import { ComponentsModule } from 'src/app/components/components.module';
 
 @NgModule({
   declarations: [MockComponent, MockHeaderComponent],
@@ -20,6 +21,7 @@ import { MockHeaderComponent } from './mock-header/mock-header.component';
     MatIconModule,
     MatCardModule,
     MatButtonModule,
+    ComponentsModule
   ]
 })
 export class MockModule { }

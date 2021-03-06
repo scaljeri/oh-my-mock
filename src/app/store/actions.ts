@@ -1,4 +1,4 @@
-import { IState, IData, IMock, IDeleteData, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode, IUpsertMock } from '@shared/type';
+import { IState, IData, IDeleteData, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode, IUpsertMock, IOhMyMock } from '@shared/type';
 
 export class EnableDomain {
   static readonly type = '[Domain] Enable';
@@ -7,7 +7,12 @@ export class EnableDomain {
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: IState = { domain: '', data: [] }) { }
+  constructor(public payload: IState = { data: [], domain: '' }) { }
+}
+
+export class InitGlobalState {
+  static readonly type = '[Domain] Init';
+  constructor(public payload: IOhMyMock = { domains: {} }) { }
 }
 
 export class UpsertData {

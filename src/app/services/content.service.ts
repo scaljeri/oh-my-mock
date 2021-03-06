@@ -4,7 +4,7 @@ import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { UpsertMock } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IMock, IPacket, IState, IUpsertMock } from '@shared/type';
+import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
 import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
 import { log } from '../utils/log';
 import { StorageService } from './storage.service';
@@ -13,7 +13,7 @@ import { StorageService } from './storage.service';
 })
 export class ContentService {
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
-  @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
+  @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   constructor(private store: Store, private storageService: StorageService) {
     chrome.runtime.onMessage.addListener(
@@ -29,13 +29,17 @@ export class ContentService {
             ...data.context
           });
         } else if (data.type === packetTypes.KNOCKKNOCK) {
-          this.send(this.store.snapshot()[STORAGE_KEY]);
+          this.send(OhMyState.getActiveState(this.store.snapshot()));
         }
       });
 
-    this.state$.subscribe(state => {
-      if (state[STORAGE_KEY].domain) { // Initially it has an empty state
-        this.send(state[STORAGE_KEY]);
+    this.state$.subscribe((state: IState) => {
+      if (!state) {
+        return;
+      }
+
+      if (state.domain) {
+        this.send(state);
       }
     });
   }
@@ -45,6 +49,7 @@ export class ContentService {
       payload: {
         domain: this.storageService.domain,
         source: appSources.POPUP,
+        type: packetTypes.STATE,
         payload
       }
     })

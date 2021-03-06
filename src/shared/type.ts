@@ -3,13 +3,14 @@ import { appSources, packetTypes, resetStateOptions, STORAGE_KEY } from './const
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
 export type requestMethod = 'XHR' | 'FETCH';
 export type statusCode = number;
-
-export interface IOhMyMock {
-  domains: Record<string, IState>;
-}
+export type domain = string;
 
 export interface IStore {
-  [STORAGE_KEY]: IState;
+  [STORAGE_KEY]: IOhMyMock;
+}
+export interface IOhMyMock {
+  domains: Record<domain, IState>;
+  activeDomain?: domain;
 }
 
 export interface IState {

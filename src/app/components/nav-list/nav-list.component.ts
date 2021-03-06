@@ -31,9 +31,11 @@ export class NavListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((reset: undefined | ResetStateOptions) => {
       if (reset === resetStateOptions.ALL) {
+        // TODO
         this.storageService.reset();
         this.stateReset();
       } else if (reset === resetStateOptions.SELF) {
+        // TODO
         this.stateReset();
       }
     });
@@ -44,5 +46,10 @@ export class NavListComponent implements OnInit {
   onNgApiMock(): void {
     this.navigate.emit();
     this.router.navigate(['exports', 'ngapimock']);
+  }
+
+  onExploreState(): void {
+    this.navigate.emit();
+    this.router.navigate(['state-explore']);
   }
 }

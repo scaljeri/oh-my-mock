@@ -2,6 +2,7 @@ import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
 import { IData, IMock } from '../shared/type';
 import { findActiveData } from '../shared/utils/find-mock';
 import { evalJsCode } from '../shared/utils/eval-jscode';
+import { parse } from '../shared/utils/xhr-headers';
 
 export const processResponseFn = function (url: string, method: string, type: string, xhr: XMLHttpRequest, response: unknown) {
   let data: IData;
@@ -18,7 +19,7 @@ export const processResponseFn = function (url: string, method: string, type: st
       domain: window.location.host,
       source: appSources.INJECTED,
       type: packetTypes.MOCK,
-      payload: { response, headers: xhr.getAllResponseHeaders() } }, '*');
+      payload: { response, headers: parse(xhr.getAllResponseHeaders()) } }, '*');
   }
 
   if (!data) {

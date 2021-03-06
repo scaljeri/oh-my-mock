@@ -31,5 +31,8 @@
     </div>
   </div>
 
-  <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
+  <section class="headers">
+    <app-header-overview [data]="data"></app-header-overview>
+    <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
+  </section>
 </mat-card>
