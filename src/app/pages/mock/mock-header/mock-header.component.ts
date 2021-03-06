@@ -30,7 +30,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.codes = Object.keys(this.data.mocks).map(Number).sort();
+    this.codes = this.data ? Object.keys(this.data.mocks).map(Number).sort() : [];
   }
 
   onUrlUpdate(url: string): void {

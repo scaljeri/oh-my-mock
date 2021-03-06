@@ -1,8 +1,8 @@
-<mat-card class="header">
+<mat-card *ngIf="data" class="header">
   <app-mock-header [data]="data"></app-mock-header>
 </mat-card>
 
-<mat-card *ngIf="data.activeStatusCode > 0" class="details">
+<mat-card *ngIf="data?.activeStatusCode > 0" class="details">
   <button (click)="onDelete()">
     <mat-icon>delete_forever</mat-icon>
   </button>
