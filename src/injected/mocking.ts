@@ -12,7 +12,7 @@ export const mockingFn = function (url: string, method: string, type: string): I
 
   return { [STORAGE_KEY]: {
       sourceUrl: url,
-      matchedUrl: data.url,
-      start: Date.now(),
-      mockIndex: this.state.data.indexOf(data) }};
+      mockUrl: data.url,
+      start: Date.now()}};
+      // mockIndex: this.state.data.indexOf(data) }};
 }
