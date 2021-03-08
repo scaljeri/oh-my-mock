@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
       const header = [...response.headers.entries()];
       const headerEl = parent.querySelector('.headers');
 
-      debugger;
       headerEl.innerHTML = ':</br>' + header.reduce((out, item) => out + `${item[0]}: ${item[1]}<br>`, '');
 
       response.json().then(data => {
