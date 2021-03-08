@@ -6,7 +6,14 @@ document.addEventListener('DOMContentLoaded', function(event) {
       const header = [...response.headers.entries()];
       const headerEl = parent.querySelector('.headers');
 
+      debugger;
       headerEl.innerHTML = ':</br>' + header.reduce((out, item) => out + `${item[0]}: ${item[1]}<br>`, '');
+
+      response.json().then(data => {
+        const code = document.querySelector('.fetch .get-code');
+        code.classList.remove('hidden');
+        code.innerText = JSON.stringify(data, null, 4);
+      });
       // const code = document.querySelector('.get-code');
       // code.classList.remove('hidden');
       // const data = JSON.parse(xhr.responseText);
