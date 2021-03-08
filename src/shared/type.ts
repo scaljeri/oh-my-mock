@@ -82,10 +82,13 @@ export interface IPacket {
 export interface IMockedTmpResponse {
   [STORAGE_KEY]: {
     sourceUrl: string;
-    matchedUrl: string;
+    mockUrl: string;
     start: number;
-    mockIndex: number;
   }
 }
 
 export type ResetStateOptions = resetStateOptions;
+
+export interface IMockInject {
+
+}

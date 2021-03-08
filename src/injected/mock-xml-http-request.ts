@@ -37,7 +37,7 @@ export function setup(
           Object.defineProperty(_this, 'getAllResponseHeaders', { value: () => mockAllResponseHeadersFn(origHeaders, respJson)})
           Object.defineProperty(_this, 'getResponseHeader', { value: mockResponseHeader(_this, respJson)})
 
-          _this.getResponseHeader('date');
+          // _this.getResponseHeader('date');
           /////////////// END //////////////////
         } catch (e) { }
       }
