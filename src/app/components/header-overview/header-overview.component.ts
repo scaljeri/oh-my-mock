@@ -17,6 +17,6 @@ export class HeaderOverviewComponent implements OnInit {
   get headers(): [string, string][] {
     const headers = this.data ? this.data.mocks[this.data.activeStatusCode].headers : [];
 
-    return Object.entries(headers);
+    return Object.entries(headers || []);
   }
 }

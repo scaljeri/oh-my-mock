@@ -37,6 +37,9 @@ declare var window: any;
     try {
       log('Received state update', ev.data);
       mockXhr.state = ev.data;
+      mockXhr.onUpdate = json => {
+        window.postMessage(json, '*');
+      };
 
       if (!state || ev.data.enabled !== state.enabled) {
         mockXhr.disable();

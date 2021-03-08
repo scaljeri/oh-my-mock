@@ -5,6 +5,7 @@ import * as headers from '../shared/utils/xhr-headers';
 export const mockXhr = {
   memOpen: null,
   state: null,
+  onUpdate: null,
   isMocking: function () { return !!this.memOpen },
   enable: function () {
     const self = this;
@@ -13,29 +14,25 @@ export const mockXhr = {
     self.memOpen = XMLHttpRequest.prototype.open;
     window.XMLHttpRequest.prototype.open = function (type, url, ...args) {
       let _onreadystatechange = this.onreadystatechange;
-      const _this = this;
-      const mock = new MockXhrResponse(
-        this,
-        url,
-        type,
-        findActiveData(self.state, url, 'XHR', type));
-
+      const mock = new MockXhrResponse(this, url, type, findActiveData(self.state, url, 'XHR', type));
       url = mock.changeUrl(url);
 
-      _this.onreadystatechange = function () {
-        if (_this.readyState === 4) {
-          // TODO: response type is alwas JSON
-          mock.setResponse(_this.responseText);
-          const msg = mock.mockUpdateMessage();
+      this.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          // TODO: response type is alwas JSON now
+          mock.setResponse(this.responseText);
+          if(self.onUpdate) {
+            self.onUpdate(mock.mockUpdateMessage());
+          }
           // TODO: Post msg
           const newRespStr = mock.mockResponse();
 
           if (mock.willMock()) {
-            Object.defineProperty(_this, 'status', { value: mock.mockStatusCode() });
-            Object.defineProperty(_this, 'responseText', { value: newRespStr });
-            Object.defineProperty(_this, 'response', { value: newRespStr });
-            Object.defineProperty(_this, 'getAllResponseHeaders', { value: () => headers.stringify(mock.mockAllResponseHeaders()) })
-            Object.defineProperty(_this, 'getResponseHeader', { value: mock.mockResponseHeader.bind(mock) })
+            Object.defineProperty(this, 'status', { value: mock.mockStatusCode() });
+            Object.defineProperty(this, 'responseText', { value: newRespStr });
+            Object.defineProperty(this, 'response', { value: newRespStr });
+            Object.defineProperty(this, 'getAllResponseHeaders', { value: () => headers.stringify(mock.mockAllResponseHeaders()) })
+            Object.defineProperty(this, 'getResponseHeader', { value: mock.mockResponseHeader.bind(mock) })
           }
         }
         if (_onreadystatechange) _onreadystatechange.apply(this, arguments);
@@ -51,7 +48,7 @@ export const mockXhr = {
         }
       });
 
-      return self.memOpen.call(_this, type, url, ...args);
+      return self.memOpen.call(this, type, url, ...args);
     }
   },
   disable: function () {
