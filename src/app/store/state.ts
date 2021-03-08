@@ -51,7 +51,6 @@ export class OhMyState {
 
   @Action(EnableDomain)
   enable(ctx: StateContext<IOhMyMock>, { payload }: { payload: boolean }) {
-    debugger;
     const state = ctx.getState();
     const domainState = { ...OhMyState.getActiveState(state), enabled: payload };
     const domains = { ...state.domains, [state.activeDomain]: domainState };
@@ -67,7 +66,7 @@ export class OhMyState {
     const { index, data } = OhMyState.findData(domainState, payload.url, payload.method, payload.type);
     const dataList = [...domainState.data];
     const mocks = { ...data.mocks };
-    const mock = { jsCode: MOCK_JS_CODE, ...mocks[payload.statusCode] };
+    const mock = { jsCode: MOCK_JS_CODE, useMock: true, ...mocks[payload.statusCode] };
 
     if (payload.mock) {
       Object.entries(payload.mock).forEach(i => mock[i[0]] = i[1]);

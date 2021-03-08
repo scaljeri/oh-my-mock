@@ -19,7 +19,6 @@ export class StateExplorerComponent implements OnInit {
   ngOnInit(): void {
     this.state$.subscribe(state => {
       this.domains = Object.keys(state.domains);
-      debugger;
     });
   }
 

@@ -35,7 +35,6 @@ export interface IMock<T = any> {
   dataType?: string;
   response?: T;
   headers?: Record<string, string>
-  passThrough?: boolean;
   mock?: T;
   useMock?: boolean;
   delay?: number;
@@ -47,6 +46,7 @@ export interface IUpsertMock<T = any> {
   url: string;
   method: requestMethod;
   type: requestType;
+  // response: T;
   statusCode: number;
   mock: IMock;
 }

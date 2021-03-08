@@ -1,26 +1,19 @@
-/// <reference path="./mock-xml-http-request.ts" />
 import { logging } from '../shared/utils/log';
 import { STORAGE_KEY } from '../shared/constants';
-import { mockXhr } from './mock-xhr';
 import { IState } from '../shared/type';
+import { OhMockXhr } from './mock-oh-xhr';
 
 declare var window: any;
 
 (function () {
+  window.XMLHttpRequest = OhMockXhr;
+
   const log = logging(`${STORAGE_KEY} (^*^) | InJecTed`);
   log('XMLHttpRequest Mock injected (inactive!)');
 
-  // const context = {
-  //   state: null,
-  //   localState: {},
-  //   log
-  // }
-
-  // let removeMock = () => { };
   let state: IState;
 
   window[STORAGE_KEY] = (url: string, payload: Record<string, unknown>, options) => {
-    // TODO
     // if (payload) {
     //   context.localState[url] = { ...options, payload, url };
     // } else {
@@ -36,21 +29,24 @@ declare var window: any;
 
     try {
       log('Received state update', ev.data);
-      mockXhr.state = ev.data;
-      mockXhr.onUpdate = json => {
-        window.postMessage(json, '*');
-      };
+      OhMockXhr.ohState = ev.data;
+      // mockXhr.state = ev.data;
 
-      if (!state || ev.data.enabled !== state.enabled) {
-        mockXhr.disable();
 
-        if (ev.data.enabled) {
-          log(' *** Activate ***');
-          mockXhr.enable();
-        } else if (state?.enabled) {
-          log(' *** Deactivate ***');
-        }
-      }
+      // if (!state || ev.data.enabled !== state.enabled) {
+      //   mockXhr.disable();
+
+      //   if (ev.data.enabled) {
+      //     log(' *** Activate ***');
+      //     mockXhr.enable(json => {
+      //       if (json) {
+      //         window.postMessage(json, '*');
+      //       }
+      //     });
+      //   } else if (state?.enabled) {
+      //     log(' *** Deactivate ***');
+      //   }
+      // }
     } catch (e) { /* TODO */ }
   });
 })();

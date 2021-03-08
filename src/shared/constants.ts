@@ -10,7 +10,8 @@ export const MOCK_JS_CODE = '/* This is the code used to mock. Feel free to modi
   '      - passThrough - a boolean */\n\n' +
   'if (data.useMock) {\n' +
   '     output = data.mock;\n' +
-  '} else {\n' +
+  '}\n' +
+  'if (!output) {\n' +
   '    output = response || data.response;\n' +
   '}\n';
 
