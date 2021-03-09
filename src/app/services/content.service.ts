@@ -45,7 +45,6 @@ export class ContentService {
   }
 
   send(payload): void {
-    debugger;
     chrome.runtime.sendMessage({
       payload: {
         domain: this.storageService.domain,

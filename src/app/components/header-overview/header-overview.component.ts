@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { IData } from '@shared/type';
+import { IData, IMock } from '@shared/type';
 
 @Component({
   selector: 'app-header-overview',
@@ -9,14 +9,21 @@ import { IData } from '@shared/type';
 export class HeaderOverviewComponent implements OnInit {
   @Input() data: IData;
 
+  public mock: IMock;
+
   constructor() { }
 
   ngOnInit(): void {
+    this.mock = this.data?.mocks[this.data.activeStatusCode];
   }
 
   get headers(): [string, string][] {
     const headers = this.data ? this.data.mocks[this.data.activeStatusCode].headers : [];
 
     return Object.entries(headers || []);
+  }
+
+  onHeadersMockToggle(toggle): void {
+
   }
 }

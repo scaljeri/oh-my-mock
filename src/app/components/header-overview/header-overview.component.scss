@@ -1,3 +1,19 @@
 .label {
   font-weight: 900;
 }
+
+section {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.source {
+  flex: 1;
+  border-right: 1px solid grey;
+  overflow: scroll;
+}
+
+.mock {
+  flex: 1;
+}
