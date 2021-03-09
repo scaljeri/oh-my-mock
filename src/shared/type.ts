@@ -31,11 +31,11 @@ export interface IData extends IContext {
   mocks?: Record<statusCode, IMock>;
 }
 
-export interface IMock<T = any> {
+export interface IMock {
   dataType?: string;
-  response?: T;
+  response?: string;
   headers?: Record<string, string>
-  mock?: T;
+  mock?: string;
   useMock?: boolean;
   delay?: number;
   jsCode?: string;

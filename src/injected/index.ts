@@ -5,6 +5,8 @@ import { OhMockXhr } from './mock-oh-xhr';
 
 declare var window: any;
 
+const MEM_XHR_REQUEST = window.XMLHttpRequest;
+
 (function () {
   window.XMLHttpRequest = OhMockXhr;
 
@@ -21,32 +23,19 @@ declare var window: any;
     // }
   }
 
-  // Receive messages/state updates from Content script
   window.addEventListener('message', (ev) => {
     if (!ev.data || ev.data.domain === undefined) {
       return;
     }
 
-    try {
-      log('Received state update', ev.data);
-      OhMockXhr.ohState = ev.data;
-      // mockXhr.state = ev.data;
-
-
-      // if (!state || ev.data.enabled !== state.enabled) {
-      //   mockXhr.disable();
-
-      //   if (ev.data.enabled) {
-      //     log(' *** Activate ***');
-      //     mockXhr.enable(json => {
-      //       if (json) {
-      //         window.postMessage(json, '*');
-      //       }
-      //     });
-      //   } else if (state?.enabled) {
-      //     log(' *** Deactivate ***');
-      //   }
-      // }
-    } catch (e) { /* TODO */ }
+    log('Received state update', ev.data);
+    OhMockXhr.ohState = ev.data;
+    if (ev.data.enabled) {
+      log(' *** Activate ***');
+      window.XMLHttpRequest = OhMockXhr;
+    } else {
+      window.XMLHttpRequest = MEM_XHR_REQUEST;
+      log(' *** Deactivate ***');
+    }
   });
 })();

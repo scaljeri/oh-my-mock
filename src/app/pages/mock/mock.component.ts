@@ -117,7 +117,7 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  injectJSON(ref: ElementRef, json: Record<string, unknown>, editable = false) {
+  injectJSON(ref: ElementRef, response: string, editable = false) {
     ref.nativeElement.innerHTML = '';
 
     const codeEl = document.createElement('code');
@@ -125,7 +125,7 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
     if (editable) {
       codeEl.setAttribute('contenteditable', "true");
     }
-    codeEl.innerText = this.prettyPrintPipe.transform(json);
+    codeEl.innerText = response; // this.prettyPrintPipe.transform(response);
     hljs.highlightBlock(codeEl);
     ref.nativeElement.appendChild(codeEl);
   }

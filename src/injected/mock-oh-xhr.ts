@@ -40,7 +40,7 @@ export class OhMockXhr extends Base {
       this.parseState();
 
       if (this.ohMock) {
-        const response = this.mockResponse(this.response);
+        const response = this.mockResponse();
         const headersString = headers.stringify(this.ohMock.headers);
 
         Object.defineProperty(this, 'status', { value: this.ohData.activeStatusCode });
@@ -54,7 +54,7 @@ export class OhMockXhr extends Base {
           domain: window.location.host,
           source: appSources.INJECTED,
           type: packetTypes.MOCK,
-          payload: { response: JSON.parse(this.response), headers: headers.parse(this.getAllResponseHeaders()) }
+          payload: { response: this.response, headers: headers.parse(this.getAllResponseHeaders()) }
         }, '*');
 
       }
@@ -65,31 +65,24 @@ export class OhMockXhr extends Base {
 
   private mockedUrl(url: string): string {
     if (this.ohMock) {
-      const resp = {
-        [STORAGE_KEY]: {
-          sourceUrl: url,
-          mockUrl: this.ohData.url,
-          start: Date.now()
-        }
-      }
-      return 'data:application/json; charset=utf-8,' + encodeURIComponent(JSON.stringify(resp));
+      const mimeType = this.ohMock.headers['content-type'] || 'text/plain';
+      return `data:${mimeType},${STORAGE_KEY}`;
     }
 
     return url;
   }
 
-  private mockResponse(response: string): string {
+  private mockResponse(): unknown {
     if (!this.ohMock) {
-      return response;
+      return this.response;
     }
 
     try {
-      const responseJson = JSON.parse(response);
       const code = evalJsCode(this.ohMock.jsCode);
-      return JSON.stringify(code(this.ohMock, responseJson[STORAGE_KEY] ? null : responseJson));
+      return code(this.ohMock, this.response === STORAGE_KEY? null : this.response);
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
-      return this.response;
+      return this.ohMock.response || this.response;
     }
   }
 
