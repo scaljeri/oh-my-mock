@@ -43,6 +43,7 @@ export class OhMockXhr extends Base {
         const response = this.mockResponse();
         const headersString = headers.stringify(this.getHeaders());
 
+        debugger;
         Object.defineProperty(this, 'status', { value: this.ohData.activeStatusCode });
         Object.defineProperty(this, 'responseText', { value: response });
         Object.defineProperty(this, 'response', { value: response });

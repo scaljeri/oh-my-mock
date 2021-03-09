@@ -8,8 +8,6 @@ declare var window: any;
 const MEM_XHR_REQUEST = window.XMLHttpRequest;
 
 (function () {
-  window.XMLHttpRequest = OhMockXhr;
-
   const log = logging(`${STORAGE_KEY} (^*^) | InJecTed`);
   log('XMLHttpRequest Mock injected (inactive!)');
 
