@@ -20,6 +20,7 @@ mat-card+mat-card {
     display: flex;
     justify-content: space-between;
     width: 100%;
+    margin-bottom: 10px;
 
     h2 {
       display: flex;
@@ -37,60 +38,31 @@ mat-card+mat-card {
       }
     }
   }
+}
 
-  .data {
-    width: 100%;
-    display: flex;
-    margin-bottom: 15px;
-    width: 100%;
-    justify-content: space-between;
-
-    .pre {
-      display: flex;
-      flex-direction: column;
-
-      mat-error {
-        margin-top: 5px;
-      }
-    }
-
-    .pre,
-    pre {
-      padding: 0;
-      margin: 0;
-      flex: 1;
-      font-size: 15px;
-      min-height: 250px;
-
-      ::ng-deep code {
-        min-height: 100%;
-        overflow: scroll;
-      }
-    }
-
-    .pre,
-    &>pre {
-      width: 49%;
-      max-width: 49%;
-
-    }
-
-    .pre .mock {
-      ::ng-deep code {
-        box-shadow: inset 0 0 5px #000000;
-      }
-    }
-  }
-
-  .js-code-edit {
-    align-self: flex-end;
-    margin-top: 10px;
-  }
+.js-code-edit {
+  align-self: flex-end;
+  margin-top: 10px;
 }
 
 ngx-monaco-editor {
   height: 300px;
   width: 100%;
+}
+
+.data {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  button {
+    align-self: flex-end;
+    margin-top: 5px;
+  }
+}
+
+app-edit-data {
+  height: 250px;
 }
 
 .headers {

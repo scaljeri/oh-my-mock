@@ -2,14 +2,11 @@ import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnI
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select } from '@ngxs/store';
-import * as hljs from 'highlight.js';
-import { STORAGE_KEY } from 'src/shared/constants';
+import { Select, Store } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
 import { Observable, Subscription } from 'rxjs';
 import { DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
-import { IData, IDeleteMock, IMock, IState, IStore, statusCode } from '@shared/type';
-import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
+import { IData, IDeleteMock, IMock, IOhMyMock, IState, IStore, statusCode } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 
 @Component({
@@ -17,19 +14,14 @@ import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.compon
   templateUrl: './mock.component.html',
   styleUrls: ['./mock.component.scss']
 })
-export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
-  codes = [];
+export class MockComponent implements OnInit {
   data: IData;
+  mock: IMock;
   mocks: Record<statusCode, IMock> = {};
   statusCode: statusCode;
-  enabled = false;
-  statusCodeError: string;
-  index: number;
-  mock: IMock;
-  saveTimeoutId: number;
-  mockJsonError: string = null;
+  responseMock: string;
+  headersMock: Record<string, string>;
 
-  @ViewChild('mockRef') mockRef: ElementRef;
   @ViewChild('responseRef') responseRef: ElementRef;
 
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
@@ -39,71 +31,35 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
   @Dispatch() deleteMockResponse = (response: IDeleteMock) => new DeleteMock(response);
   @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
-  private subscription: Subscription;
-
   constructor(
     private router: Router,
     private activeRoute: ActivatedRoute,
     public dialog: MatDialog,
-    private prettyPrintPipe: PrettyPrintPipe,
+    private store: Store,
     private cdr: ChangeDetectorRef) { }
 
-  ngOnInit(): void {
-    this.subscription = this.state$.subscribe((state: IState) => {
-      this.init(state);
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-  }
-
-  init(state: IState): void {
+  ngOnInit() {
     const index = Number(this.activeRoute.snapshot.params.index);
-    this.data = state?.data[index];
 
-    if (!this.data) {
-      this.router.navigate(['/']);
-    } else {
-      this.enabled = this.data.enabled;
-      this.codes = Object.keys(this.data.mocks).sort();
-      this.initMock();
-    }
-    this.cdr.detectChanges();
-  }
+    this.state$.subscribe(state => {
+      this.data = state?.data[index];
 
-  ngAfterViewInit(): void {
-  }
+      if (!this.data) {
+        return this.router.navigate(['/']);
+      }
 
-  initMock() {
-    this.mock = this.data.mocks[this.data.activeStatusCode] || {};
+      this.mock = this.data.mocks[this.data.activeStatusCode] || {};
 
-    if (this.data.activeStatusCode > 0) {
-      setTimeout(() => {
-        this.injectJSON(this.responseRef, this.mock.response);
-        this.injectJSON(this.mockRef, this.mock.responseMock, true);
-      });
-    }
+      if (!this.responseMock) {
+        this.responseMock = this.mock?.responseMock;
+        this.headersMock = this.mock.headersMock;
+      }
+    });
   }
 
   onDelete(): void {
     const { url, method, type, activeStatusCode } = this.data;
     this.deleteMockResponse({ url, method, type, statusCode: activeStatusCode });
-  }
-
-  onMockChange(event): void {
-    const mockValue = this.mockRef.nativeElement.innerText;
-    this.mockJsonError = null;
-
-    if (mockValue) {
-      try {
-        const json = JSON.parse(mockValue);
-        this.upsertMock({responseMock: mockValue})
-      } catch (err) {
-        this.mockJsonError = err;
-      }
-    }
-    console.log(mockValue);
   }
 
   openJsCodeDialog(): void {
@@ -117,20 +73,16 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  injectJSON(ref: ElementRef, response = '', editable = false) {
-    ref.nativeElement.innerHTML = '';
-
-    const codeEl = document.createElement('code');
-    codeEl.className = 'language-json';
-    if (editable) {
-      codeEl.setAttribute('contenteditable', "true");
-    }
-    codeEl.innerText = response; // this.prettyPrintPipe.transform(response);
-    hljs.highlightBlock(codeEl);
-    ref.nativeElement.appendChild(codeEl);
+  onResponseChange(data): void {
+    this.responseMock = data;
+    this.upsertMock({ responseMock: data });
   }
 
-  onEnableMockToggle(checked): void {
-    this.upsertMock({ useResponseMock: checked })
+  onRevertResponse(): void {
+    setTimeout(() => { // Make sure that `onResponseChanges` goes first!
+      this.responseMock = this.mock.response;
+      this.upsertMock({ responseMock: this.mock.response });
+      this.cdr.detectChanges();
+    });
   }
 }

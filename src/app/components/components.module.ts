@@ -24,7 +24,7 @@ import { CreateStatusCodeComponent } from './create-status-code/create-status-co
 import { AddDataComponent } from './add-data/add-data.component';
 import { NavListComponent } from './nav-list/nav-list.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
-import { HeaderOverviewComponent } from './header-overview/header-overview.component';
+import { EditDataComponent } from './edit-data/edit-data.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +35,7 @@ import { HeaderOverviewComponent } from './header-overview/header-overview.compo
     AddDataComponent,
     NavListComponent,
     ResetStateComponent,
-    HeaderOverviewComponent,
+    EditDataComponent,
   ],
   imports: [
     CommonModule,
@@ -56,6 +56,6 @@ import { HeaderOverviewComponent } from './header-overview/header-overview.compo
     FormsModule,
     MonacoEditorModule,
   ],
-  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent, NavListComponent, HeaderOverviewComponent]
+  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent, NavListComponent, EditDataComponent]
 })
 export class ComponentsModule { }

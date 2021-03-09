@@ -1,5 +1,5 @@
-export const evalJsCode = (code: string): ((resp, mock) => unknown) => {
+export const evalJsCode = (code: string): ((mock) => unknown) => {
   code = `let output;${code};return output;`;
-  const fnc = eval(new Function('data', 'response', code) as any);
+  const fnc = eval(new Function('mock', code) as any);
   return fnc;
 }

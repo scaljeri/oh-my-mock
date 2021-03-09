@@ -8,25 +8,14 @@
   </button>
   <header>
     <h2>Response</h2>
-    <h2>
-      <span>Mock</span>
-      <span class="toggle">
-        enable
-        <mat-slide-toggle [checked]="mock.useMock" (change)="onEnableMockToggle($event.checked)">
-        </mat-slide-toggle>
-      </span>
-    </h2>
+    <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
   </header>
   <div class="data">
-    <pre #responseRef></pre>
-    <div class="pre">
-      <pre #mockRef (keyup)="onMockChange($event)" class="mock"></pre>
-      <mat-error>{{mockJsonError}}</mat-error>
-    </div>
+    <app-edit-data [data]="responseMock" (dataChange)="onResponseChange($event)"></app-edit-data>
+    <button mat-button (click)="onRevertResponse()">Revert</button>
   </div>
 
   <section class="headers">
-    <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>
-    <app-header-overview [data]="data"></app-header-overview>
+    <app-edit-data [data]="headersMock" (dataChange)="onHeadersChange($event)"></app-edit-data>
   </section>
 </mat-card>

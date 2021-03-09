@@ -37,7 +37,7 @@ export class OhMyState {
 
   @Action(InitGlobalState)
   initGlobal(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyMock }) {
-    const state = { ...payload, domains: { ... payload.domains } };
+    const state = { ...payload, domains: { ...payload.domains } };
 
     if (!state.domains[state.activeDomain]) {
       state.domains[state.activeDomain] = { data: [], enabled: false, domain: state.activeDomain };
@@ -67,6 +67,14 @@ export class OhMyState {
 
     if (payload.mock) {
       Object.entries(payload.mock).forEach(i => mock[i[0]] = i[1]);
+
+      if (!mock.responseMock) {
+        mock.responseMock = mock.response;
+      }
+
+      if (!mock.headersMock) {
+        mock.headersMock = mock.headers;
+      }
     }
     data.mocks = { ...mocks, [payload.statusCode]: mock };
 

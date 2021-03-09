@@ -43,7 +43,6 @@ export class OhMockXhr extends Base {
         const response = this.mockResponse();
         const headersString = headers.stringify(this.getHeaders());
 
-        debugger;
         Object.defineProperty(this, 'status', { value: this.ohData.activeStatusCode });
         Object.defineProperty(this, 'responseText', { value: response });
         Object.defineProperty(this, 'response', { value: response });
@@ -67,7 +66,7 @@ export class OhMockXhr extends Base {
   private mockedUrl(url: string): string {
     if (this.ohMock) {
       const mimeType = this.getHeaders('content-type') || 'text/plain';
-      return `data:${mimeType},${STORAGE_KEY}`;
+      return `data:${mimeType},${STORAGE_KEY}-${this.ohUrl}`;
     }
 
     return url;
@@ -80,7 +79,8 @@ export class OhMockXhr extends Base {
 
     try {
       const code = evalJsCode(this.ohMock.jsCode);
-      return code(this.ohMock, this.response === STORAGE_KEY ? null : this.response);
+
+      return code(this.ohMock);
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
       return this.ohMock.response || this.response;
