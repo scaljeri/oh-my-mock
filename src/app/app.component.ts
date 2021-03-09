@@ -46,6 +46,7 @@ export class AppComponent implements AfterViewInit {
 
     // this.state = OhMyState.getActiveState(globalState);
     this.domain = this.storageService.domain;
+    globalState.activeDomain = this.domain;
     this.initState(globalState);
 
     this.storageService.monitorStateChanges();

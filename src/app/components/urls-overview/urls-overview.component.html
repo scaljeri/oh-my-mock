@@ -1,4 +1,4 @@
-<ng-container *ngIf="data.length">
+<ng-container *ngIf="data?.length">
   <button class="edit-data" (click)="onEdit()" mat-mini-fab color="warn" aria-label="Edit data">
     <mat-icon>{{edit ? 'clear' : 'edit'}}</mat-icon>
   </button>
@@ -41,6 +41,6 @@
   </table>
 </ng-container>
 
-<section *ngIf="!data.length" class="no-data">
+<section *ngIf="!data?.length" class="no-data">
   <h2>No responses available</h2>
 </section>

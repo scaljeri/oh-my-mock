@@ -37,16 +37,13 @@ export class OhMyState {
 
   @Action(InitGlobalState)
   initGlobal(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyMock }) {
-    const state = ctx.getState();
-    const newState = {
-      domains: {
-        [state.activeDomain]: { data: [], enabled: false, domain: state.activeDomain },
-      },
-      activeDomain: state.activeDomain,
-      ...payload
-    };
+    const state = { ...payload, domains: { ... payload.domains } };
 
-    ctx.setState(newState);
+    if (!state.domains[state.activeDomain]) {
+      state.domains[state.activeDomain] = { data: [], enabled: false, domain: state.activeDomain };
+    }
+
+    ctx.setState(state);
   }
 
   @Action(EnableDomain)

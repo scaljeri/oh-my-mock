@@ -4,10 +4,10 @@ export const MOCK_JS_CODE = '/* This is the code used to mock. Feel free to modi
   'There are 3 global variables:\n' +
   '   * response - the response from the API only if it was called\n' +
   '   * data     - an object which holds everything you\'ve configured on this page:\n' +
-  '      - response - already stored API response\n' +
-  '      - mock     - the mock response\n' +
+  '      - response - already stored API response (string)\n' +
+  '      - mock     - the mock response (string)\n' +
   '      - useMock  - a boolean\n' +
-  '      - passThrough - a boolean */\n\n' +
+  '      - headers - Object with all headers, for example: data.headers[`content-type`] */\n\n' +
   'if (data.useMock) {\n' +
   '     output = data.mock;\n' +
   '}\n' +

@@ -4,8 +4,8 @@ import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { UpsertMock } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
-import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
+import { IMock, IPacket, IState, IUpsertMock } from '@shared/type';
+import { appSources, packetTypes } from '@shared/constants';
 import { log } from '../utils/log';
 import { StorageService } from './storage.service';
 @Injectable({
@@ -45,6 +45,7 @@ export class ContentService {
   }
 
   send(payload): void {
+    debugger;
     chrome.runtime.sendMessage({
       payload: {
         domain: this.storageService.domain,

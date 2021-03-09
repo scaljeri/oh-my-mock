@@ -34,9 +34,11 @@ export interface IData extends IContext {
 export interface IMock {
   dataType?: string;
   response?: string;
+  responseMock?: string;
+  useResponseMock?: boolean;
   headers?: Record<string, string>
-  mock?: string;
-  useMock?: boolean;
+  headersMock?: Record<string, string>,
+  useHeadersMock?: boolean;
   delay?: number;
   jsCode?: string;
 }

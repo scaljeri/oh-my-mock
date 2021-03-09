@@ -41,7 +41,7 @@ export class OhMockXhr extends Base {
 
       if (this.ohMock) {
         const response = this.mockResponse();
-        const headersString = headers.stringify(this.ohMock.headers);
+        const headersString = headers.stringify(this.getHeaders());
 
         Object.defineProperty(this, 'status', { value: this.ohData.activeStatusCode });
         Object.defineProperty(this, 'responseText', { value: response });
@@ -65,7 +65,7 @@ export class OhMockXhr extends Base {
 
   private mockedUrl(url: string): string {
     if (this.ohMock) {
-      const mimeType = this.ohMock.headers['content-type'] || 'text/plain';
+      const mimeType = this.getHeaders('content-type') || 'text/plain';
       return `data:${mimeType},${STORAGE_KEY}`;
     }
 
@@ -79,7 +79,7 @@ export class OhMockXhr extends Base {
 
     try {
       const code = evalJsCode(this.ohMock.jsCode);
-      return code(this.ohMock, this.response === STORAGE_KEY? null : this.response);
+      return code(this.ohMock, this.response === STORAGE_KEY ? null : this.response);
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
       return this.ohMock.response || this.response;
@@ -94,5 +94,17 @@ export class OhMockXhr extends Base {
       this.ohData = findActiveData(OhMockXhr.ohState, this.ohUrl, 'XHR', this.ohType);
       this.ohMock = this.ohData?.mocks ? this.ohData.mocks[this.ohData.activeStatusCode] : null;
     }
+  }
+
+  private getHeaders(): Record<string, string>;
+  private getHeaders(key: string): string;
+  private getHeaders(key?: string): Record<string, string> | string | void {
+    let output = this.ohMock.headers;
+
+    if (this.ohMock && this.ohMock.useHeadersMock) {
+      output = this.ohMock.headersMock;
+    }
+
+    return key ? (output || {})[key] : output;
   }
 }

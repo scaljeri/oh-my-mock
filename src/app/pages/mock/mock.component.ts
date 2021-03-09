@@ -81,7 +81,7 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.data.activeStatusCode > 0) {
       setTimeout(() => {
         this.injectJSON(this.responseRef, this.mock.response);
-        this.injectJSON(this.mockRef, this.mock.mock, true);
+        this.injectJSON(this.mockRef, this.mock.responseMock, true);
       });
     }
   }
@@ -98,7 +98,7 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
     if (mockValue) {
       try {
         const json = JSON.parse(mockValue);
-        this.upsertMock({mock: mockValue})
+        this.upsertMock({responseMock: mockValue})
       } catch (err) {
         this.mockJsonError = err;
       }
@@ -117,7 +117,7 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  injectJSON(ref: ElementRef, response: string, editable = false) {
+  injectJSON(ref: ElementRef, response = '', editable = false) {
     ref.nativeElement.innerHTML = '';
 
     const codeEl = document.createElement('code');
@@ -131,6 +131,6 @@ export class MockComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onEnableMockToggle(checked): void {
-    this.upsertMock({ useMock: checked })
+    this.upsertMock({ useResponseMock: checked })
   }
 }
