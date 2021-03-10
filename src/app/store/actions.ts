@@ -7,12 +7,17 @@ export class EnableDomain {
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: IState = { data: [], domain: '' }) { }
+  constructor(public payload: Partial<IOhMyMock> = { domains: {}, activeDomain: '' }) { }
 }
 
 export class InitGlobalState {
   static readonly type = '[Domain] Init';
   constructor(public payload: IOhMyMock = { domains: {} }) { }
+}
+
+export class ResetState {
+  static readonly type = '[Domain] Reset';
+  constructor(public payload: string) { }
 }
 
 export class UpsertData {
