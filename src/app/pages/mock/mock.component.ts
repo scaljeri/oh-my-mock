@@ -24,7 +24,7 @@ export class MockComponent implements OnInit {
 
   @ViewChild('responseRef') responseRef: ElementRef;
 
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data);
   @Dispatch() upsertMock = (mock: IMock) => new UpsertMock({
     url: this.data.url, method: this.data.method, type: this.data.type, statusCode: this.data.activeStatusCode, mock
   });
@@ -35,7 +35,6 @@ export class MockComponent implements OnInit {
     private router: Router,
     private activeRoute: ActivatedRoute,
     public dialog: MatDialog,
-    private store: Store,
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit() {
@@ -49,6 +48,7 @@ export class MockComponent implements OnInit {
       }
 
       this.mock = this.data.mocks[this.data.activeStatusCode] || {};
+      this.statusCode = this.data.activeStatusCode;
 
       if (!this.responseMock) {
         this.responseMock = this.mock?.responseMock;

@@ -3,9 +3,15 @@
 </mat-card>
 
 <mat-card *ngIf="data?.activeStatusCode > 0" class="details">
-  <button (click)="onDelete()">
-    <mat-icon>delete_forever</mat-icon>
-  </button>
+  <section>
+    <div>
+      <p><span class="label">Status code:</span><span class="value">{{statusCode}}</span></p>
+    </div>
+    <button (click)="onDelete()">
+      <mat-icon>delete_forever</mat-icon>
+    </button>
+  </section>
+
   <header>
     <h2>Response</h2>
     <button class="js-code-edit" (click)="openJsCodeDialog()" mat-stroked-button>Mocking with code</button>

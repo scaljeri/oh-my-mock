@@ -1,25 +1,24 @@
-import { AfterViewInit, ChangeDetectorRef, Component, HostListener, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, HostListener, OnDestroy, ViewChild } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
-import { EnableDomain, InitGlobalState, InitState } from './store/actions';
+import { EnableDomain, InitState } from './store/actions';
 import { StorageService } from './services/storage.service';
-import { IOhMyMock, IState, IStore } from '../shared/type';
+import { IOhMyMock, IState } from '../shared/type';
 import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { ThemePalette } from '@angular/material/core';
-import { ActivatedRoute, ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
+import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
-import { STORAGE_KEY } from '@shared/constants';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements AfterViewInit, OnDestroy {
   state: IState;
   color: ThemePalette = 'warn';
   drawerMode = 'over';
@@ -28,23 +27,20 @@ export class AppComponent implements AfterViewInit {
   domain: string;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
-  @Dispatch() initState = (state: IOhMyMock) => new InitGlobalState(state);
+  @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
   @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   @ViewChild('dawer') drawer: MatDrawer;
 
   constructor(
-    private contentService: ContentService,
     private storageService: StorageService,
     private router: Router,
-    private activatedRoute: ActivatedRoute,
     private cdr: ChangeDetectorRef) {
   }
 
   async ngAfterViewInit(): Promise<void> {
     const globalState = await this.storageService.initialize();
 
-    // this.state = OhMyState.getActiveState(globalState);
     this.domain = this.storageService.domain;
     this.initState({ ...globalState, activeDomain: this.domain });
 
@@ -76,5 +72,10 @@ export class AppComponent implements AfterViewInit {
     if (el.tagName.toLowerCase() !== 'input' && el.getAttribute('contenteditable') !== 'true') {
       this.router.navigate(['../']);
     }
+  }
+
+  @HostListener('window:beforeunload')
+  async ngOnDestroy() {
+    // this.contentService.destroy();
   }
 }

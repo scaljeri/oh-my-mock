@@ -9,7 +9,7 @@ const MEM_XHR_REQUEST = window.XMLHttpRequest;
 
 (function () {
   const log = logging(`${STORAGE_KEY} (^*^) | InJecTed`);
-  log('XMLHttpRequest Mock injected (inactive!)');
+  log('XMLHttpRequest Mock is ready (inactive!)');
 
   let state: IState;
 

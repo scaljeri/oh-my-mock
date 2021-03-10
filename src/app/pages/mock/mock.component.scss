@@ -6,6 +6,25 @@
   background-color: #fff;
 }
 
+.label {
+  display: inline-flex;
+  font-weight: bold;
+  font-size: 15px;
+  width: 150px;
+  justify-content: flex-end;
+  padding-right: 5px;
+}
+
+.value {
+  font-size: 15px;
+}
+
+section {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
 mat-card+mat-card {
   margin-top: 10px;
 }

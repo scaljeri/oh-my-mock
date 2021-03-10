@@ -1,6 +1,6 @@
 import { State, Action, StateContext, Selector, createSelector } from '@ngxs/store';
 import { Injectable } from '@angular/core';
-import { CreateStatusCode, DeleteData, DeleteMock, EnableDomain, InitGlobalState, InitState, ResetState, UpdateDataStatusCode, UpdateDataUrl, UpsertData, UpsertMock } from './actions';
+import { CreateStatusCode, DeleteData, DeleteMock, EnableDomain, InitState, ResetState, UpdateDataStatusCode, UpdateDataUrl, UpsertData, UpsertMock } from './actions';
 import { IData, IState, IUpsertMock, requestMethod, requestType, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode, IDeleteData, IOhMyMock, IStore } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
@@ -47,17 +47,6 @@ export class OhMyState {
     domains[payload] = { domain: payload, data: [] };
 
     ctx.setState({ ...state, domains });
-  }
-
-  @Action(InitGlobalState)
-  initGlobal(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyMock }) {
-    const state = { ...payload, domains: { ...payload.domains } };
-
-    if (!state.domains[state.activeDomain]) {
-      state.domains[state.activeDomain] = { data: [], enabled: false, domain: state.activeDomain };
-    }
-
-    ctx.setState(state);
   }
 
   @Action(EnableDomain)

@@ -22,6 +22,7 @@ import { MockModule } from './pages/mock/mock.module';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 import { StateExplorerModule } from './pages/state-explorer/state-explorer.module';
 import { appRoutes } from './app.routes';
+import { ContentService } from './services/content.service';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,10 @@ import { appRoutes } from './app.routes';
     MockModule,
     StateExplorerModule,
   ],
-  providers: [{ provide: Window, useValue: window }],
+  providers: [
+    { provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  constructor(contentService: ContentService) {}
+ }
