@@ -30,7 +30,7 @@
 
     <ng-container matColumnDef="activeStatusCode">
       <th mat-header-cell *matHeaderCellDef> Active statusCode </th>
-      <td mat-cell *matCellDef="let element"> {{element.activeStatusCode}} </td>
+      <td mat-cell *matCellDef="let element"> {{element.activeStatusCode === 0 ? 'Off' : element.activeStatusCode }} </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns">

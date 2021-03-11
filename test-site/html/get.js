@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', function(event) {
   const btn = document.querySelector('button.get');
   btn.addEventListener('click', () => {
+    document.querySelector('.get .status-code').innerText = 'loading...';
+    document.querySelector('.get .headers').innerText = ''
+     document.querySelector('.get .get-code').innerText = '';
+
     const xhr = new XMLHttpRequest();
     xhr.open('GET', '/users');
     xhr.addEventListener('load', (res) => {
