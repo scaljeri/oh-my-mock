@@ -3,7 +3,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { NgxsModule } from '@ngxs/store'
 import { NgxsDispatchPluginModule } from "@ngxs-labs/dispatch-decorator";
 
@@ -22,7 +22,6 @@ import { MockModule } from './pages/mock/mock.module';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 import { StateExplorerModule } from './pages/state-explorer/state-explorer.module';
 import { appRoutes } from './app.routes';
-import { ContentService } from './services/content.service';
 
 @NgModule({
   declarations: [
@@ -50,6 +49,4 @@ import { ContentService } from './services/content.service';
     { provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule {
-  constructor(contentService: ContentService) {}
- }
+export class AppModule {}

@@ -34,6 +34,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private storageService: StorageService,
+    private contentService: ContentService,
     private router: Router,
     private cdr: ChangeDetectorRef) {
   }
@@ -76,6 +77,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
-    // this.contentService.destroy();
+    this.contentService.destroy();
   }
 }

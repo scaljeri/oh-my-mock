@@ -15,6 +15,7 @@ export class ContentService {
 
   private listener;
   private destination: string;
+  private state: IState;
 
   constructor(private store: Store, private storageService: StorageService) {
     this.listener = (data: IPacket) => {
@@ -40,6 +41,8 @@ export class ContentService {
         return;
       }
 
+      this.state = state;
+
       if (state.domain) {
         this.send(state);
       }
@@ -63,8 +66,9 @@ export class ContentService {
     this.destination = tabId;
   }
 
-  // destroy(): void {
+  destroy(): void {
     // const x = chrome.runtime.onMessage.hasListener(this.listener);
     // chrome.runtime.onMessage.removeListener(this.listener);
-  // }
+    this.send({...this.state, enabled: false });
+  }
 }
