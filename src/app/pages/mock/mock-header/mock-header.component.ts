@@ -27,6 +27,11 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   constructor(public dialog: MatDialog,) { }
 
   ngOnInit(): void {
+    setTimeout(() => {
+      if (this.data.activeStatusCode === undefined) {
+        this.onSelectStatusCode(Number(Object.keys(this.data.mocks).sort()[0]));
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

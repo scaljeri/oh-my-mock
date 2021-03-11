@@ -13,7 +13,8 @@ log('Script loaded and ready....');
   xhrScript.onload = function () {
     (this as any).remove();
     // Notify Popup that content script is ready
-    try { chrome.runtime.sendMessage({ domain: window.location.host, type: packetTypes.KNOCKKNOCK }) }
+    try {
+      chrome.runtime.sendMessage({ domain: window.location.host, type: packetTypes.KNOCKKNOCK }) }
     catch (e) { log('Cannot connect to the OhMyMock tab', e) }
   }
   xhrScript.src = chrome.runtime.getURL('injected.js');

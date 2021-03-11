@@ -3,7 +3,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { NgxsModule } from '@ngxs/store'
 import { NgxsDispatchPluginModule } from "@ngxs-labs/dispatch-decorator";
 
@@ -45,7 +45,8 @@ import { appRoutes } from './app.routes';
     MockModule,
     StateExplorerModule,
   ],
-  providers: [{ provide: Window, useValue: window }],
+  providers: [
+    { provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}

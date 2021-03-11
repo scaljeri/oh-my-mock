@@ -18,7 +18,7 @@ export class StorageService {
   }
 
   isDomainValid(domain) {
-    return !!this.domain || this.domain === domain;
+    return domain && this.domain === domain;
   }
 
   setDomain(domain: string): void {
