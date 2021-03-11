@@ -93,4 +93,8 @@ app-edit-data {
   flex-direction: column;
   width: 100%;
   justify-content: space-between;
+
+  button {
+    align-self: flex-end;
+  }
 }
