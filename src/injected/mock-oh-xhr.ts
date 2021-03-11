@@ -1,5 +1,5 @@
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IData, IMock, IState, requestType } from '../shared/type';
+import { IData, IMock, IState, requestType, statusCode } from '../shared/type';
 import { evalJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
@@ -48,7 +48,7 @@ export class OhMockXhr extends Base {
         Object.defineProperty(this, 'response', { value: response });
         Object.defineProperty(this, 'getAllResponseHeaders', { value: () => headersString })
         Object.defineProperty(this, 'getResponseHeader', { value: (key) => this.ohMock.headers[key] })
-      } else if (OhMockXhr.ohState?.enabled) {
+      } else if (OhMockXhr.ohState?.enabled && !this.checkMockExists(this.status)) {
         window.postMessage({
           context: { url: this.ohUrl, method: 'XHR', type: this.ohType, statusCode: this.status },
           domain: window.location.host,
@@ -56,11 +56,16 @@ export class OhMockXhr extends Base {
           type: packetTypes.MOCK,
           payload: { response: this.response, headers: headers.parse(this.getAllResponseHeaders()) }
         }, '*');
-
       }
     }
 
     if (onReadyChangeCallback) onReadyChangeCallback.apply(this, args);
+  }
+
+  private checkMockExists(status: statusCode): boolean {
+    this.ohData = findActiveData(OhMockXhr.ohState, this.ohUrl, 'XHR', this.ohType);
+
+    return !!this.ohData?.mocks[status];
   }
 
   private mockedUrl(url: string): string {
