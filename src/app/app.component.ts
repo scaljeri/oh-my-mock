@@ -12,6 +12,8 @@ import { ThemePalette } from '@angular/material/core';
 import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
+import { MatDialog } from '@angular/material/dialog';
+import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +27,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   dawerBackdrop = true;
   page = '';
   domain: string;
+  isFirstTime = true;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
@@ -36,6 +39,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private storageService: StorageService,
     private contentService: ContentService,
     private router: Router,
+    public dialog: MatDialog,
     private cdr: ChangeDetectorRef) {
   }
 
@@ -49,6 +53,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     this.state$.subscribe((state: IState) => {
       this.state = state;
+
+      if (!this.state.enabled && this.isFirstTime) {
+        this.notifyDisabled();
+      }
+
+      this.isFirstTime = false;
     });
 
     // Some logic used to show the correct header button
@@ -78,5 +88,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
     this.contentService.destroy();
+  }
+
+  notifyDisabled(): void {
+    const dialogRef = this.dialog.open(DisabledEnabledComponent, {
+      width: '300px'
+    });
+
+    dialogRef.afterClosed().subscribe(enable => {
+      if (enable) {
+        this.activate(enable);
+      }
+    });
   }
 }
