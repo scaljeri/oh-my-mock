@@ -63,9 +63,9 @@ export class OhMockXhr extends Base {
   }
 
   private checkMockExists(status: statusCode): boolean {
-    this.ohData = findActiveData(OhMockXhr.ohState, this.ohUrl, 'XHR', this.ohType);
+    const ohData = findActiveData(OhMockXhr.ohState, this.ohUrl, 'XHR', this.ohType);
 
-    return !!this.ohData?.mocks[status];
+    return !!ohData?.mocks[status];
   }
 
   private mockedUrl(url: string): string {
