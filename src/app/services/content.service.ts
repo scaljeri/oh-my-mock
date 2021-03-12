@@ -7,7 +7,7 @@ import { OhMyState } from '../store/state';
 import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
 import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
 import { log } from '../utils/log';
-import { StorageService } from './storage.service';
+import { AppStateService } from './app-state.service';
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
@@ -15,10 +15,9 @@ export class ContentService {
   @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   private listener;
-  private tabId: number;
   private state: IState;
 
-  constructor(private store: Store, private storageService: StorageService) {
+  constructor(private store: Store, private appStateService: AppStateService) {
     this.listener = ({ payload, tabId, domain, source }: IPacket) => {
       if (source !== appSources.CONTENT) {
         return;
@@ -26,10 +25,10 @@ export class ContentService {
 
       log('Recieved a message', payload);
 
-      if (tabId === this.tabId) {
-        if (!this.storageService.isSameDomain(domain)) {
+      if (tabId === this.appStateService.tabId) {
+        if (!this.appStateService.isSameDomain(domain)) {
           sessionStorage.setItem('domain', domain);
-          this.storageService.setDomain(domain);
+          this.appStateService.domain = domain;
           this.initState({ ...this.store.snapshot()[STORAGE_KEY], activeDomain: domain })
         }
 
@@ -62,20 +61,16 @@ export class ContentService {
   }
 
   send(data): void {
-    log('Sending state to injected', data);
+    log('Sending state to content script', data);
     chrome.runtime.sendMessage({
-      tabId: this.tabId,
+      tabId: this.appStateService.tabId,
       source: appSources.POPUP,
-      domain: this.storageService.domain,
+      domain: this.appStateService.domain,
       payload: {
         type: packetTypes.STATE,
         data
       }
     })
-  }
-
-  setTabId(tabId: number): void {
-    this.tabId = tabId;
   }
 
   destroy(): void {

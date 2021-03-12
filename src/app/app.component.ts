@@ -46,8 +46,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     const globalState = await this.storageService.initialize();
-    this.initState({ ...globalState, activeDomain: this.storageService.domain });
-
+    this.initState(globalState);
     this.storageService.monitorStateChanges();
 
     this.state$.subscribe((state: IState) => {

@@ -35,7 +35,6 @@ let tabId: number;
 
 // Listen for messages from Popup/Angular
 chrome.runtime.onMessage.addListener((data: IPacket, sender) => {
-
   if (data.source !== appSources.POPUP) {
     return;
   }
