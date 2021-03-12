@@ -19,14 +19,14 @@ export class NgApimockSettingsService {
         return resolve(this.settings);
       }
       chrome.storage.local.get([this.settingKey],
-        (result) => result[this.settingKey] ? resolve(JSON.parse(result[this.settingKey])) : reject('no settings'));
+        (result) => result[this.settingKey] ? resolve(result[this.settingKey]) : reject('no settings'));
     });
   }
 
   storeSettings(newSettings: NgApiMockSettings): Promise<boolean> {
     this.settings = newSettings;
     return new Promise((resolve) => {
-      chrome.storage.local.set({[this.settingKey]:  JSON.stringify(newSettings)}, () => resolve(true));
+      chrome.storage.local.set({[this.settingKey]:  newSettings}, () => resolve(true));
     });
   }
 }
