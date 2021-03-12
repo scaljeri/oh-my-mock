@@ -3,8 +3,8 @@ import { STORAGE_KEY } from './shared/constants';
 console.log(`${STORAGE_KEY}: background script is ready`);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.destination) {
-    chrome.tabs.sendMessage(Number(request.destination), request.payload);
+  if (request.tabId) {
+    chrome.tabs.sendMessage(Number(request.tabId), request);
   }
 });
 

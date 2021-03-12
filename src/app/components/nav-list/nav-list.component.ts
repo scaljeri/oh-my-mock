@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { resetStateOptions } from '@shared/constants';
 import { IOhMyMock, IState, ResetStateOptions } from '@shared/type';
+import { AppStateService } from 'src/app/services/app-state.service';
 import { InitState, ResetState } from 'src/app/store/actions';
 import { StorageService } from '../../services/storage.service';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
@@ -16,10 +17,11 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
 export class NavListComponent implements OnInit {
   @Output() navigate = new EventEmitter<void>();
 
-  @Dispatch() stateGlobalReset = (state: Partial<IOhMyMock>) => new InitState(state);
-  @Dispatch() stateReset = (domain: string) => new ResetState(domain);
+  @Dispatch() stateReset = (domain?: string) => new ResetState(domain);
 
-  constructor(private storageService: StorageService, public dialog: MatDialog, private router: Router) { }
+  constructor(
+    private appStateService: AppStateService,
+    public dialog: MatDialog, private router: Router) { }
 
   ngOnInit(): void {
   }
@@ -32,10 +34,9 @@ export class NavListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((reset: undefined | ResetStateOptions) => {
       if (reset === resetStateOptions.ALL) {
-        // this.storageService.reset();
-        this.stateGlobalReset({ domains: {} });
+        this.stateReset();
       } else if (reset === resetStateOptions.SELF) {
-        this.stateReset(this.storageService.domain);
+        this.stateReset(this.appStateService.domain);
       }
     });
 

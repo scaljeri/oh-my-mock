@@ -1,5 +1,5 @@
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IData, IMock, IState, requestType, statusCode } from '../shared/type';
+import { IData, IMock, IPacket, IState, requestType, statusCode } from '../shared/type';
 import { evalJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
@@ -49,13 +49,15 @@ export class OhMockXhr extends Base {
         Object.defineProperty(this, 'getAllResponseHeaders', { value: () => headersString })
         Object.defineProperty(this, 'getResponseHeader', { value: (key) => this.ohMock.headers[key] })
       } else if (OhMockXhr.ohState?.enabled && !this.checkMockExists(this.status)) {
+        // TODO: move to injected script
         window.postMessage({
-          context: { url: this.ohUrl, method: 'XHR', type: this.ohType, statusCode: this.status },
-          domain: window.location.host,
           source: appSources.INJECTED,
-          type: packetTypes.MOCK,
-          payload: { response: this.response, headers: headers.parse(this.getAllResponseHeaders()) }
-        }, '*');
+          payload: {
+            context: { url: this.ohUrl, method: 'XHR', type: this.ohType, statusCode: this.status },
+            type: packetTypes.MOCK,
+            data: { response: this.response, headers: headers.parse(this.getAllResponseHeaders()) }
+          }
+        } as IPacket, '*');
       }
     }
 
