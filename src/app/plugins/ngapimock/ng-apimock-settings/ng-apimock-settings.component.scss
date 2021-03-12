@@ -1,0 +1,20 @@
+@import '../../../style-utils/variables';
+
+
+:host {
+	display: block;
+	background-color: $color-white;
+	color: $color-black;
+	padding: $spacer-4;
+	.settings {
+		display: flex;
+		mat-form-field {
+			width: 300px;
+			margin-right: $spacer-3;
+			margin-bottom: $spacer-2;
+		}
+	}
+	section {
+		margin-bottom: $spacer-2;
+	}
+}
