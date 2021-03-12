@@ -6,7 +6,7 @@ import { evalJsCode } from '@shared/utils/eval-jscode';
 @Component({
   selector: 'app-code-edit',
   templateUrl: './code-edit.component.html',
-  styleUrls: ['./code-edit.component.scss'],
+  styleUrls: ['./code-edit.component.scss']
 })
 export class CodeEditComponent implements OnInit {
   code: string;

@@ -5,6 +5,6 @@ import { StateExplorerComponent } from './state-explorer.component';
 @NgModule({
   declarations: [StateExplorerComponent],
   imports: [CommonModule],
-  exports: [StateExplorerComponent],
+  exports: [StateExplorerComponent]
 })
 export class StateExplorerModule {}

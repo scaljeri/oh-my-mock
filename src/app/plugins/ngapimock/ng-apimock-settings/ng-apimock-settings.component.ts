@@ -4,13 +4,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import {
   NgApimockSettingsService,
-  NgApiMockSettings,
+  NgApiMockSettings
 } from '../ng-apimock-settings.service';
 
 @Component({
   selector: 'app-ng-apimock-settings',
   templateUrl: './ng-apimock-settings.component.html',
-  styleUrls: ['./ng-apimock-settings.component.scss'],
+  styleUrls: ['./ng-apimock-settings.component.scss']
 })
 export class NgApimockSettingsComponent implements OnInit {
   private apiMockSettings: NgApiMockSettings = {} as NgApiMockSettings;
@@ -43,7 +43,7 @@ export class NgApimockSettingsComponent implements OnInit {
       ngApiMockHost: new FormControl(this.apiMockSettings.ngApiMockHost),
       ngApiMockBasePath: new FormControl(
         this.apiMockSettings.ngApiMockBasePath || 'ngapimock'
-      ),
+      )
     });
   }
 
@@ -53,8 +53,20 @@ export class NgApimockSettingsComponent implements OnInit {
       .then(() => {
         this.snackBar.open('Settings stored', 'ngApiMockSettings', {
           verticalPosition: 'top',
-          duration: 3000,
+          duration: 3000
         });
       });
+  }
+
+  get integrate(): FormControl {
+    return this.settingsForm.get('integrate') as FormControl;
+  }
+
+  get ngApiMockHost(): FormControl {
+    return this.settingsForm.get('ngApiMockHost') as FormControl;
+  }
+
+  get ngApiMockBasePath(): FormControl {
+    return this.settingsForm.get('ngApiMockBasePath') as FormControl;
   }
 }

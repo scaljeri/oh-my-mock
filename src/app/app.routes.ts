@@ -15,26 +15,26 @@ const appRoutes: Routes = [
     children: [
       {
         path: '',
-        component: HomeComponent,
+        component: HomeComponent
       },
       {
         path: 'configure',
-        component: ConfigComponent,
+        component: ConfigComponent
       },
       {
         path: 'mocks/:index',
-        component: MockComponent,
+        component: MockComponent
       },
       {
         path: 'state-explore',
-        component: StateExplorerComponent,
+        component: StateExplorerComponent
       },
       {
         path: 'settings/ngapimock',
-        component: NgApimockSettingsComponent,
-      },
-    ],
-  },
+        component: NgApimockSettingsComponent
+      }
+    ]
+  }
 ];
 
 export { appRoutes };

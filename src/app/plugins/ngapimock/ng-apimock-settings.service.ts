@@ -6,7 +6,7 @@ export interface NgApiMockSettings {
   ngApiMockBasePath: string;
 }
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class NgApimockSettingsService {
   private settings: NgApiMockSettings;

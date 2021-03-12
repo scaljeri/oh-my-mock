@@ -10,15 +10,15 @@ export const REQUIRED_MSG = 'This is a required field';
 export enum packetTypes {
   MOCK = 'mock',
   STATE = 'state',
-  KNOCKKNOCK = 'knockknock',
+  KNOCKKNOCK = 'knockknock'
 }
 export enum appSources {
   INJECTED = 'injected',
   CONTENT = 'content',
-  POPUP = 'popup',
+  POPUP = 'popup'
 }
 
 export enum resetStateOptions {
   ALL = 'all',
-  SELF = 'self',
+  SELF = 'self'
 }

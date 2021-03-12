@@ -8,7 +8,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { AppStateService } from './app-state.service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class StorageService {
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
@@ -35,7 +35,7 @@ export class StorageService {
     });
   }
 
-  update(update: IOhMyMock, key = STORAGE_KEY) {
+  update(update: IOhMyMock, key = STORAGE_KEY): void {
     return chrome.storage.local.set({ [key]: update });
   }
 

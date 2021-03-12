@@ -3,7 +3,7 @@ import {
   Input,
   OnChanges,
   OnInit,
-  SimpleChanges,
+  SimpleChanges
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -12,13 +12,13 @@ import { CreateStatusCodeComponent } from 'src/app/components/create-status-code
 import {
   CreateStatusCode,
   UpdateDataStatusCode,
-  UpdateDataUrl,
+  UpdateDataUrl
 } from 'src/app/store/actions';
 
 @Component({
   selector: 'app-mock-header',
   templateUrl: './mock-header.component.html',
-  styleUrls: ['./mock-header.component.scss'],
+  styleUrls: ['./mock-header.component.scss']
 })
 export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
@@ -32,7 +32,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
       method: this.data.method,
       type: this.data.type,
       statusCode,
-      activeStatusCode: statusCode,
+      activeStatusCode: statusCode
     });
   @Dispatch() updateDataUrl = (
     url: string,
@@ -46,7 +46,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
       url: this.data.url,
       method: this.data.method,
       type: this.data.type,
-      statusCode,
+      statusCode
     });
 
   constructor(public dialog: MatDialog) {}
@@ -77,7 +77,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
       width: '250px',
       height: '250px',
-      data: { existingStatusCodes: this.codes },
+      data: { existingStatusCodes: this.codes }
     });
 
     dialogRef.afterClosed().subscribe((newStatusCode) => {

@@ -3,7 +3,7 @@ import {
   Action,
   StateContext,
   Selector,
-  createSelector,
+  createSelector
 } from '@ngxs/store';
 import { Injectable } from '@angular/core';
 import {
@@ -16,7 +16,7 @@ import {
   UpdateDataStatusCode,
   UpdateDataUrl,
   UpsertData,
-  UpsertMock,
+  UpsertMock
 } from './actions';
 import {
   IData,
@@ -30,7 +30,7 @@ import {
   IUpdateDataStatusCode,
   IDeleteData,
   IOhMyMock,
-  IStore,
+  IStore
 } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
@@ -38,8 +38,8 @@ import { url2regex } from '@shared/utils/urls';
 @State<IOhMyMock>({
   name: STORAGE_KEY,
   defaults: {
-    domains: {},
-  },
+    domains: {}
+  }
 })
 @Injectable()
 export class OhMyState {
@@ -69,8 +69,8 @@ export class OhMyState {
         [state.activeDomain]: {
           domain: state.activeDomain,
           data: [],
-          enabled: false,
-        },
+          enabled: false
+        }
       };
     }
 
@@ -86,7 +86,7 @@ export class OhMyState {
       domains[payload] = { domain: payload, data: [] };
     } else {
       domains = {
-        [state.activeDomain]: { domain: state.activeDomain, data: [] },
+        [state.activeDomain]: { domain: state.activeDomain, data: [] }
       };
     }
 
@@ -98,7 +98,7 @@ export class OhMyState {
     const state = ctx.getState();
     const domainState = {
       ...OhMyState.getActiveState(state),
-      enabled: payload,
+      enabled: payload
     };
     const domains = { ...state.domains, [state.activeDomain]: domainState };
 
@@ -124,7 +124,7 @@ export class OhMyState {
     const mock = {
       jsCode: MOCK_JS_CODE,
       useMock: true,
-      ...mocks[payload.statusCode],
+      ...mocks[payload.statusCode]
     };
 
     if (payload.mock) {
@@ -259,7 +259,7 @@ export class OhMyState {
 
     data.mocks = {
       ...data.mocks,
-      [payload.statusCode]: { jsCode: MOCK_JS_CODE },
+      [payload.statusCode]: { jsCode: MOCK_JS_CODE }
     };
     if (payload.activeStatusCode) {
       data.activeStatusCode = payload.activeStatusCode;

@@ -7,7 +7,7 @@ import { OhMyState } from 'src/app/store/state';
 @Component({
   selector: 'app-state-explorer',
   templateUrl: './state-explorer.component.html',
-  styleUrls: ['./state-explorer.component.scss'],
+  styleUrls: ['./state-explorer.component.scss']
 })
 export class StateExplorerComponent implements OnInit {
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;

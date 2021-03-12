@@ -1,5 +1,4 @@
 import {
-  IState,
   IData,
   IDeleteData,
   IDeleteMock,
@@ -7,7 +6,7 @@ import {
   IUpdateDataUrl,
   IUpdateDataStatusCode,
   IUpsertMock,
-  IOhMyMock,
+  IOhMyMock
 } from '@shared/type';
 
 export class EnableDomain {

@@ -12,7 +12,7 @@ function sendKnockKnock(tabId?: number) {
     tabId,
     domain: window.location.host,
     source: appSources.CONTENT,
-    payload: { type: packetTypes.KNOCKKNOCK },
+    payload: { type: packetTypes.KNOCKKNOCK }
   });
 }
 
@@ -62,7 +62,7 @@ window.addEventListener('message', (ev) => {
       ...packet,
       domain: window.location.host,
       source: appSources.CONTENT,
-      tabId: tabId,
+      tabId: tabId
     } as IPacket);
   }
 });

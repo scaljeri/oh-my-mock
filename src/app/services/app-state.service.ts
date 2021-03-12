@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class AppStateService {
   private _domain: string;
@@ -34,7 +34,7 @@ export class AppStateService {
     sessionStorage.setItem('tabId', String(tabId));
   }
 
-  isSameDomain(domain) {
+  isSameDomain(domain: string): boolean {
     return domain && this._domain === domain;
   }
 }

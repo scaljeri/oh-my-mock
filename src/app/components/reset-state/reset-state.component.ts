@@ -7,7 +7,7 @@ import { AppStateService } from 'src/app/services/app-state.service';
 @Component({
   selector: 'app-reset-state',
   templateUrl: './reset-state.component.html',
-  styleUrls: ['./reset-state.component.scss'],
+  styleUrls: ['./reset-state.component.scss']
 })
 export class ResetStateComponent implements OnInit {
   public domain: string;

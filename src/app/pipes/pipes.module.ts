@@ -7,6 +7,6 @@ import { PrettyPrintPipe } from './pretty-print.pipe';
   declarations: [EncodePipe, PrettyPrintPipe],
   imports: [CommonModule],
   providers: [PrettyPrintPipe],
-  exports: [EncodePipe, PrettyPrintPipe],
+  exports: [EncodePipe, PrettyPrintPipe]
 })
 export class PipesModule {}

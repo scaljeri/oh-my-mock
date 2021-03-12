@@ -31,14 +31,14 @@ export class ContentService {
           this.appStateService.domain = domain;
           this.initState({
             ...this.store.snapshot()[STORAGE_KEY],
-            activeDomain: domain,
+            activeDomain: domain
           });
         }
 
         if (payload.type === packetTypes.MOCK) {
           this.upsertMock({
             mock: payload.data as IMock,
-            ...payload.context,
+            ...payload.context
           });
         }
       } else {
@@ -71,8 +71,8 @@ export class ContentService {
       domain: this.appStateService.domain,
       payload: {
         type: packetTypes.STATE,
-        data,
-      },
+        data
+      }
     });
   }
 

@@ -4,9 +4,8 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  OnInit,
   Output,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import * as hljs from 'highlight.js';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
@@ -14,13 +13,13 @@ import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 @Component({
   selector: 'app-edit-data',
   templateUrl: './edit-data.component.html',
-  styleUrls: ['./edit-data.component.scss'],
+  styleUrls: ['./edit-data.component.scss']
 })
 export class EditDataComponent implements AfterViewInit {
   @Input() data: Record<string, string> | string;
   @Input() type = 'json';
   @Input() editable = true;
-  @Output() dataChange = new EventEmitter<string | Record<string, string>>();
+  @Output() dataChange = new EventEmitter<string>();
 
   @ViewChild('ref') ref: ElementRef;
 
@@ -46,7 +45,9 @@ export class EditDataComponent implements AfterViewInit {
       }
 
       if (this.type === 'json') {
-        codeEl.innerText = this.prettyPrintPipe.transform(this.data);
+        codeEl.innerText = this.prettyPrintPipe.transform(
+          this.data as Record<string, string>
+        );
       }
 
       codeEl.addEventListener('blur', () => {
@@ -59,6 +60,7 @@ export class EditDataComponent implements AfterViewInit {
   }
 
   onDataChange(): void {
-    this.dataChange.emit(this.ref.nativeElement.innerText);
+    const txt = this.ref.nativeElement.innerText;
+    this.dataChange.emit(txt);
   }
 }

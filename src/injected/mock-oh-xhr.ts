@@ -5,7 +5,7 @@ import {
   IPacket,
   IState,
   requestType,
-  statusCode,
+  statusCode
 } from '../shared/type';
 import { evalJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
@@ -30,16 +30,16 @@ export class OhMockXhr extends Base {
       },
       set: function (callback) {
         this.onReadyStateChange = this._onreadystatechange.bind(this, callback);
-      },
+      }
     });
   }
 
-  open(type, url, ...args) {
+  open(type: requestType, url: string, ...args: unknown[]): void {
     this.ohType = type;
     this.ohUrl = url;
 
     this.parseState();
-    super.open.apply(this, [type, this.mockedUrl(url), ...args]);
+    return super.open.apply(this, [type, this.mockedUrl(url), ...args]);
   }
 
   _onreadystatechange(onReadyChangeCallback, ...args): void {
@@ -51,15 +51,15 @@ export class OhMockXhr extends Base {
         const headersString = headers.stringify(this.getHeaders());
 
         Object.defineProperty(this, 'status', {
-          value: this.ohData.activeStatusCode,
+          value: this.ohData.activeStatusCode
         });
         Object.defineProperty(this, 'responseText', { value: response });
         Object.defineProperty(this, 'response', { value: response });
         Object.defineProperty(this, 'getAllResponseHeaders', {
-          value: () => headersString,
+          value: () => headersString
         });
         Object.defineProperty(this, 'getResponseHeader', {
-          value: (key) => this.ohMock.headers[key],
+          value: (key) => this.ohMock.headers[key]
         });
       } else if (
         OhMockXhr.ohState?.enabled &&
@@ -74,14 +74,14 @@ export class OhMockXhr extends Base {
                 url: this.ohUrl,
                 method: 'XHR',
                 type: this.ohType,
-                statusCode: this.status,
+                statusCode: this.status
               },
               type: packetTypes.MOCK,
               data: {
                 response: this.response,
-                headers: headers.parse(this.getAllResponseHeaders()),
-              },
-            },
+                headers: headers.parse(this.getAllResponseHeaders())
+              }
+            }
           } as IPacket,
           '*'
         );

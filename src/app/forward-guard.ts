@@ -3,7 +3,7 @@ import {
   ActivatedRouteSnapshot,
   CanActivate,
   Router,
-  RouterStateSnapshot,
+  RouterStateSnapshot
 } from '@angular/router';
 import { AppStateService } from './services/app-state.service';
 
@@ -11,7 +11,7 @@ import { AppStateService } from './services/app-state.service';
 export class forwarderGuard implements CanActivate {
   constructor(private appStateService: AppStateService) {}
 
-  canActivate(route: ActivatedRouteSnapshot) {
+  canActivate(): boolean {
     const urlParams = new URLSearchParams(window.location.search);
 
     const domain = urlParams.get('domain');

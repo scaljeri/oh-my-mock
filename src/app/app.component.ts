@@ -4,7 +4,7 @@ import {
   Component,
   HostListener,
   OnDestroy,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -19,9 +19,9 @@ import { ThemePalette } from '@angular/material/core';
 import {
   ActivationStart,
   Event as NavigationEvent,
-  Router,
+  Router
 } from '@angular/router';
-import { MatDrawer } from '@angular/material/sidenav';
+import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
@@ -29,12 +29,12 @@ import { DisabledEnabledComponent } from './components/disabled-enabled/disabled
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   state: IState;
   color: ThemePalette = 'warn';
-  drawerMode = 'over';
+  drawerMode: MatDrawerMode = 'over';
   dawerBackdrop = true;
   page = '';
   domain: string;
@@ -45,7 +45,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('dawer') drawer: MatDrawer;
 
-  private dialogRef: MatDialogRef<DisabledEnabledComponent, any>;
+  private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
 
   constructor(
     private storageService: StorageService,
@@ -100,13 +100,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   @HostListener('window:beforeunload')
-  async ngOnDestroy() {
+  ngOnDestroy(): void {
     this.contentService.destroy();
   }
 
   notifyDisabled(): void {
     this.dialogRef = this.dialog.open(DisabledEnabledComponent, {
-      width: '300px',
+      width: '300px'
     });
 
     this.dialogRef.afterClosed().subscribe((enable) => {

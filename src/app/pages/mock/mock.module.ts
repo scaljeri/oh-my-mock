@@ -20,7 +20,7 @@ import { ComponentsModule } from 'src/app/components/components.module';
     MatIconModule,
     MatCardModule,
     MatButtonModule,
-    ComponentsModule,
-  ],
+    ComponentsModule
+  ]
 })
 export class MockModule {}

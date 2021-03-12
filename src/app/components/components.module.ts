@@ -14,7 +14,6 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
-import { HotToastModule } from '@ngneat/hot-toast';
 
 import { CodeEditComponent } from './code-edit/code-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -37,7 +36,7 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
     NavListComponent,
     ResetStateComponent,
     EditDataComponent,
-    DisabledEnabledComponent,
+    DisabledEnabledComponent
   ],
   imports: [
     CommonModule,
@@ -53,10 +52,9 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
     MatExpansionModule,
     MatDialogModule,
     MatTabsModule,
-    HotToastModule,
     ReactiveFormsModule,
     FormsModule,
-    MonacoEditorModule,
+    MonacoEditorModule
   ],
   exports: [
     UrlsOverviewComponent,
@@ -64,7 +62,7 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
     CodeEditComponent,
     NavListComponent,
     EditDataComponent,
-    DisabledEnabledComponent,
-  ],
+    DisabledEnabledComponent
+  ]
 })
 export class ComponentsModule {}

@@ -12,7 +12,7 @@ import { OhMyState } from 'src/app/store/state';
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
@@ -25,7 +25,7 @@ export class HomeComponent {
 
   onAddData(): void {
     const dialogRef = this.dialog.open(AddDataComponent, {
-      width: '30%',
+      width: '30%'
     });
 
     dialogRef.afterClosed().subscribe((data: IData) => {

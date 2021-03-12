@@ -11,7 +11,7 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
 @Component({
   selector: 'app-nav-list',
   templateUrl: './nav-list.component.html',
-  styleUrls: ['./nav-list.component.scss'],
+  styleUrls: ['./nav-list.component.scss']
 })
 export class NavListComponent {
   @Output() navigate = new EventEmitter<void>();
@@ -27,7 +27,7 @@ export class NavListComponent {
   onReset(): void {
     const dialogRef = this.dialog.open(ResetStateComponent, {
       width: '40%',
-      data: {},
+      data: {}
     });
 
     dialogRef

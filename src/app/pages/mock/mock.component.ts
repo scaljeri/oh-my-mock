@@ -1,34 +1,24 @@
 import {
-  AfterViewInit,
   ChangeDetectorRef,
   Component,
   ElementRef,
-  OnDestroy,
   OnInit,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select, Store } from '@ngxs/store';
+import { Select } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { DeleteMock, UpsertData, UpsertMock } from 'src/app/store/actions';
-import {
-  IData,
-  IDeleteMock,
-  IMock,
-  IOhMyMock,
-  IState,
-  IStore,
-  statusCode,
-} from '@shared/type';
+import { IData, IDeleteMock, IMock, IState, statusCode } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 
 @Component({
   selector: 'app-mock',
   templateUrl: './mock.component.html',
-  styleUrls: ['./mock.component.scss'],
+  styleUrls: ['./mock.component.scss']
 })
 export class MockComponent implements OnInit {
   data: IData;
@@ -47,7 +37,7 @@ export class MockComponent implements OnInit {
       method: this.data.method,
       type: this.data.type,
       statusCode: this.data.activeStatusCode,
-      mock,
+      mock
     });
   @Dispatch() deleteMockResponse = (response: IDeleteMock) =>
     new DeleteMock(response);
@@ -60,7 +50,7 @@ export class MockComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     const index = Number(this.activeRoute.snapshot.params.index);
 
     this.state$.subscribe((state) => {
@@ -86,14 +76,14 @@ export class MockComponent implements OnInit {
       url,
       method,
       type,
-      statusCode: activeStatusCode,
+      statusCode: activeStatusCode
     });
   }
 
   openJsCodeDialog(): void {
     const dialogRef = this.dialog.open(CodeEditComponent, {
       width: '80%',
-      data: { code: this.mock.jsCode, originalCode: this.mock.jsCode },
+      data: { code: this.mock.jsCode, originalCode: this.mock.jsCode }
     });
 
     dialogRef.afterClosed().subscribe((jsCode) => {
@@ -115,8 +105,8 @@ export class MockComponent implements OnInit {
     });
   }
 
-  onHeadersChange(data: string): void {
-    this.upsertMock({ headersMock: JSON.parse(data) });
+  onHeadersChange(headersMock: string): void {
+    this.upsertMock({ headersMock: JSON.parse(headersMock) });
     this.cdr.detectChanges();
   }
 

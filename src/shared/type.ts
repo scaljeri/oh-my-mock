@@ -2,7 +2,7 @@ import {
   appSources,
   packetTypes,
   resetStateOptions,
-  STORAGE_KEY,
+  STORAGE_KEY
 } from './constants';
 
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
