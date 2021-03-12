@@ -6,6 +6,7 @@ import { ConfigComponent } from './components/config/config.component';
 import { MockComponent } from './pages/mock/mock.component';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 import { StateExplorerComponent } from './pages/state-explorer/state-explorer.component';
+import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 
 const appRoutes: Routes = [
   {
@@ -24,7 +25,7 @@ const appRoutes: Routes = [
       }, {
         path: 'state-explore', component: StateExplorerComponent
       }, {
-        path: 'exports/ngapimock', component: NgApiMockExportComponent
+        path: 'settings/ngapimock', component: NgApimockSettingsComponent
       },
     ]
   }
