@@ -1,6 +1,6 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subject } from 'rxjs';
 import { NgApimockSettingsService } from '../ng-apimock-settings.service';
 
 import { NgApimockSettingsComponent } from './ng-apimock-settings.component';
@@ -15,10 +15,11 @@ describe('NgApimockSettingsComponent', () => {
       providers: [
         {
           provide: NgApimockSettingsService,
-          useValue: { getSettings: () => new Promise(() => {}) },
+          useValue: { getSettings: () => new Promise(() => {}) }
         },
-        { provide: MatSnackBar, useValue: {} },
+        { provide: MatSnackBar, useValue: {} }
       ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 
