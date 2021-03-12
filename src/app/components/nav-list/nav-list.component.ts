@@ -16,8 +16,7 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
 export class NavListComponent implements OnInit {
   @Output() navigate = new EventEmitter<void>();
 
-  @Dispatch() stateGlobalReset = (state: Partial<IOhMyMock>) => new InitState(state);
-  @Dispatch() stateReset = (domain: string) => new ResetState(domain);
+  @Dispatch() stateReset = (domain?: string) => new ResetState(domain);
 
   constructor(private storageService: StorageService, public dialog: MatDialog, private router: Router) { }
 
@@ -32,8 +31,7 @@ export class NavListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((reset: undefined | ResetStateOptions) => {
       if (reset === resetStateOptions.ALL) {
-        // this.storageService.reset();
-        this.stateGlobalReset({ domains: {} });
+        this.stateReset();
       } else if (reset === resetStateOptions.SELF) {
         this.stateReset(this.storageService.domain);
       }

@@ -16,18 +16,18 @@ export class forwarderGuard implements CanActivate {
     // const domain = route.queryParams.domain;
     const urlParams = new URLSearchParams(window.location.search);
     let domain = urlParams.get('domain');
-    let destination = urlParams.get('tabId');
+    let tabId = urlParams.get('tabId');
 
     if (domain) {
       sessionStorage.setItem('domain', domain);
-      sessionStorage.setItem('tabId', destination);
+      sessionStorage.setItem('tabId', tabId);
     } else {
       domain = sessionStorage.getItem('domain');
-      destination = sessionStorage.getItem('tabId');
+      tabId = sessionStorage.getItem('tabId');
     }
 
     this.storageService.setDomain(domain);
-    this.contentService.setDestination(destination);
+    this.contentService.setTabId(Number(tabId));
 
     return true;
   }

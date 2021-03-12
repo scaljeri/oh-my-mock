@@ -73,11 +73,16 @@ export interface IUpdateDataStatusCode extends IContext {
 }
 
 export interface IPacket {
-  context?: IContext & { statusCode: statusCode},
-  domain: string;
+  tabId?: number;
+  domain?: string;
   source: appSources;
+  payload: IPacketPayload;
+}
+
+export interface IPacketPayload {
+  context?: IContext & { statusCode: statusCode},
   type: packetTypes;
-  payload?: IMock | IState;
+  data?: IMock | IState;
 }
 
 export interface IMockedTmpResponse {

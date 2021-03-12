@@ -17,7 +17,7 @@ export class StorageService {
   constructor() {
   }
 
-  isDomainValid(domain) {
+  isSameDomain(domain) {
     return domain && this.domain === domain;
   }
 
@@ -34,7 +34,11 @@ export class StorageService {
   }
 
   monitorStateChanges(): void {
-    this.state$.subscribe((state) => this.update(state));
+    this.state$.subscribe((state) => {
+      const clone = { ... state };
+      delete clone.activeDomain;
+      this.update(clone);
+    });
   }
 
   update(update?: IOhMyMock): void {

@@ -40,11 +40,16 @@ export class OhMyState {
     ctx.setState(state);
   }
 
-  @Action(ResetState)
+  @Action(ResetState) // payload === domain string (optional)
   reset(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
     const state = ctx.getState();
-    const domains = { ...state.domains };
-    domains[payload] = { domain: payload, data: [] };
+    let domains = { ...state.domains };
+
+    if (payload) {
+      domains[payload] = { domain: payload, data: [] };
+    } else {
+      domains = { [state.activeDomain]: { domain: state.activeDomain, data: [] }};
+    }
 
     ctx.setState({ ...state, domains });
   }

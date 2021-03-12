@@ -12,7 +12,7 @@ import { ThemePalette } from '@angular/material/core';
 import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 
 @Component({
@@ -27,13 +27,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   dawerBackdrop = true;
   page = '';
   domain: string;
-  isFirstTime = true;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
   @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   @ViewChild('dawer') drawer: MatDrawer;
+
+  private dialogRef: MatDialogRef<DisabledEnabledComponent, any>;
 
   constructor(
     private storageService: StorageService,
@@ -45,20 +46,22 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     const globalState = await this.storageService.initialize();
-
-    this.domain = this.storageService.domain;
-    this.initState({ ...globalState, activeDomain: this.domain });
+    this.initState({ ...globalState, activeDomain: this.storageService.domain });
 
     this.storageService.monitorStateChanges();
 
     this.state$.subscribe((state: IState) => {
       this.state = state;
 
-      if (!this.state.enabled && this.isFirstTime) {
-        this.notifyDisabled();
+      if (!this.state.enabled) {
+        if (this.domain !== this.state.domain) {
+          this.notifyDisabled();
+        }
+      } else if (this.dialogRef) {
+        this.dialogRef.close();
       }
 
-      this.isFirstTime = false;
+      this.domain = this.state.domain;
     });
 
     // Some logic used to show the correct header button
@@ -91,14 +94,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   notifyDisabled(): void {
-    const dialogRef = this.dialog.open(DisabledEnabledComponent, {
+    this.dialogRef = this.dialog.open(DisabledEnabledComponent, {
       width: '300px'
     });
 
-    dialogRef.afterClosed().subscribe(enable => {
+    this.dialogRef.afterClosed().subscribe(enable => {
       if (enable) {
         this.activate(enable);
       }
+      this.dialogRef = null;
     });
   }
 }

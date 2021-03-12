@@ -2,35 +2,47 @@ import { Injectable } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { UpsertMock } from '../store/actions';
+import { InitState, UpsertMock } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IMock, IPacket, IState, IUpsertMock } from '@shared/type';
-import { appSources, packetTypes } from '@shared/constants';
+import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
+import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
 import { log } from '../utils/log';
 import { StorageService } from './storage.service';
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
+  @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
   @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   private listener;
-  private destination: string;
+  private tabId: number;
   private state: IState;
 
   constructor(private store: Store, private storageService: StorageService) {
-    this.listener = (data: IPacket) => {
-      log('Recieved a message', data);
-      if (!this.storageService.isDomainValid(data.domain)) {
+    this.listener = ({ payload, tabId, domain, source }: IPacket) => {
+      if (source !== appSources.CONTENT) {
         return;
       }
 
-      if (data.type === packetTypes.MOCK) {
-        this.upsertMock({
-          mock: data.payload as IMock,
-          ...data.context
-        });
-      } else if (data.type === packetTypes.KNOCKKNOCK) {
-        this.send(OhMyState.getActiveState(this.store.snapshot()));
+      log('Recieved a message', payload);
+
+      if (tabId === this.tabId) {
+        if (!this.storageService.isSameDomain(domain)) {
+          sessionStorage.setItem('domain', domain);
+          this.storageService.setDomain(domain);
+          this.initState({ ...this.store.snapshot()[STORAGE_KEY], activeDomain: domain })
+        }
+
+        if (payload.type === packetTypes.MOCK) {
+          this.upsertMock({
+            mock: payload.data as IMock,
+            ...payload.context
+          });
+        }
+      } else {
+        if (payload.type === packetTypes.KNOCKKNOCK) {
+          this.send(OhMyState.getActiveState(this.store.snapshot()));
+        }
       }
     };
 
@@ -49,26 +61,26 @@ export class ContentService {
     });
   }
 
-  send(payload): void {
-    log('Sending state to injected', payload);
+  send(data): void {
+    log('Sending state to injected', data);
     chrome.runtime.sendMessage({
-      destination: this.destination,
+      tabId: this.tabId,
+      source: appSources.POPUP,
+      domain: this.storageService.domain,
       payload: {
-        domain: this.storageService.domain,
-        source: appSources.POPUP,
         type: packetTypes.STATE,
-        payload
+        data
       }
     })
   }
 
-  setDestination(tabId: string): void {
-    this.destination = tabId;
+  setTabId(tabId: number): void {
+    this.tabId = tabId;
   }
 
   destroy(): void {
     // const x = chrome.runtime.onMessage.hasListener(this.listener);
     // chrome.runtime.onMessage.removeListener(this.listener);
-    this.send({...this.state, enabled: false });
+    this.send({ ...this.state, enabled: false });
   }
 }
