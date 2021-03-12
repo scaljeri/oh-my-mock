@@ -1,38 +1,50 @@
-import { IState, IData, IDeleteData, IDeleteMock, ICreateStatusCode, IUpdateDataUrl, IUpdateDataStatusCode, IUpsertMock, IOhMyMock } from '@shared/type';
+import {
+  IState,
+  IData,
+  IDeleteData,
+  IDeleteMock,
+  ICreateStatusCode,
+  IUpdateDataUrl,
+  IUpdateDataStatusCode,
+  IUpsertMock,
+  IOhMyMock,
+} from '@shared/type';
 
 export class EnableDomain {
   static readonly type = '[Domain] Enable';
-  constructor(public payload: boolean) { }
+  constructor(public payload: boolean) {}
 }
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: Partial<IOhMyMock> = { domains: {}, activeDomain: '' }) { }
+  constructor(
+    public payload: Partial<IOhMyMock> = { domains: {}, activeDomain: '' }
+  ) {}
 }
 
 export class ResetState {
   static readonly type = '[Domain] Reset';
-  constructor(public payload: string) { }
+  constructor(public payload: string) {}
 }
 
 export class UpsertData {
   static readonly type = '[Data] upsert';
-  constructor(public payload: Partial<IData>) { }
+  constructor(public payload: Partial<IData>) {}
 }
 
 export class UpsertMock {
   static readonly type = '[Mock] upsert';
-  constructor(public payload: IUpsertMock) { }
+  constructor(public payload: IUpsertMock) {}
 }
 
 export class DeleteData {
   static readonly type = '[Data] delete';
-  constructor(public payload: IDeleteData) { }
+  constructor(public payload: IDeleteData) {}
 }
 
 export class DeleteMock {
   static readonly type = '[Mock] delete';
-  constructor(public payload: IDeleteMock) { }
+  constructor(public payload: IDeleteMock) {}
 }
 
 export class CreateStatusCode {
@@ -42,10 +54,10 @@ export class CreateStatusCode {
 
 export class UpdateDataUrl {
   static readonly type = '[Data] update url';
-  constructor(public payload: IUpdateDataUrl) { }
+  constructor(public payload: IUpdateDataUrl) {}
 }
 
 export class UpdateDataStatusCode {
   static readonly type = '[Data] update status code';
-  constructor(public payload: IUpdateDataStatusCode) { }
+  constructor(public payload: IUpdateDataStatusCode) {}
 }

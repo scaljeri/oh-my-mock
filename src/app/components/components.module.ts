@@ -58,6 +58,13 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
     FormsModule,
     MonacoEditorModule,
   ],
-  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent, NavListComponent, EditDataComponent, DisabledEnabledComponent]
+  exports: [
+    UrlsOverviewComponent,
+    ConfigComponent,
+    CodeEditComponent,
+    NavListComponent,
+    EditDataComponent,
+    DisabledEnabledComponent,
+  ],
 })
-export class ComponentsModule { }
+export class ComponentsModule {}

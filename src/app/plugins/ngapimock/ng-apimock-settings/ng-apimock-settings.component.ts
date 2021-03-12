@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { NgApimockSettingsService, NgApiMockSettings } from '../ng-apimock-settings.service';
+import {
+  NgApimockSettingsService,
+  NgApiMockSettings,
+} from '../ng-apimock-settings.service';
 
 @Component({
   selector: 'app-ng-apimock-settings',
@@ -15,10 +18,14 @@ export class NgApimockSettingsComponent implements OnInit {
   public settingsForm: FormGroup;
   public loading = true;
 
-  constructor(private ngApimockSettingsService: NgApimockSettingsService, private snackBar: MatSnackBar) {}
+  constructor(
+    private ngApimockSettingsService: NgApimockSettingsService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
-    this.ngApimockSettingsService.getSettings()
+    this.ngApimockSettingsService
+      .getSettings()
       .then((settings) => {
         this.apiMockSettings = settings;
         this.generateForm();
@@ -41,8 +48,13 @@ export class NgApimockSettingsComponent implements OnInit {
   }
 
   storeSettings(): void {
-    this.ngApimockSettingsService.storeSettings(this.settingsForm.value).then(() => {
-      this.snackBar.open('Settings stored', 'ngApiMockSettings', { verticalPosition: 'top', duration: 3000});
-    });
+    this.ngApimockSettingsService
+      .storeSettings(this.settingsForm.value)
+      .then(() => {
+        this.snackBar.open('Settings stored', 'ngApiMockSettings', {
+          verticalPosition: 'top',
+          duration: 3000,
+        });
+      });
   }
 }

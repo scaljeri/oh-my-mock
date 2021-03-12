@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 
-
 import { MockComponent } from './mock.component';
 import { MockHeaderComponent } from './mock-header/mock-header.component';
 import { ComponentsModule } from 'src/app/components/components.module';
@@ -21,7 +20,7 @@ import { ComponentsModule } from 'src/app/components/components.module';
     MatIconModule,
     MatCardModule,
     MatButtonModule,
-    ComponentsModule
-  ]
+    ComponentsModule,
+  ],
 })
-export class MockModule { }
+export class MockModule {}

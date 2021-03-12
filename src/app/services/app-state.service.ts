@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AppStateService {
   private _domain: string;
@@ -20,13 +20,13 @@ export class AppStateService {
     return this._domain;
   }
 
-  get tabId(): number {
-    return this._tabId;
+  set domain(domain: string) {
+    this._domain = domain;
+    sessionStorage.setItem('domain', domain);
   }
 
-  set domain(domain: string) {
-     this._domain = domain;
-      sessionStorage.setItem('domain', domain);
+  get tabId(): number {
+    return this._tabId;
   }
 
   set tabId(tabId: number) {

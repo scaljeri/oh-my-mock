@@ -47,7 +47,7 @@ alert('x');
 // };
 
 // chrome.runtime.onMessage.addListener(
-  // function(request, sender, sendResponse) {
+// function(request, sender, sendResponse) {
 //     console.log('xhr call msg', request);
 //     sendResponse({ code: 9});
 //   }

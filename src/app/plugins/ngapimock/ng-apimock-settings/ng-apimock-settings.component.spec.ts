@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subject } from 'rxjs';
+import { NgApimockSettingsService } from '../ng-apimock-settings.service';
 
 import { NgApimockSettingsComponent } from './ng-apimock-settings.component';
 
@@ -8,9 +11,15 @@ describe('NgApimockSettingsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ NgApimockSettingsComponent ]
-    })
-    .compileComponents();
+      declarations: [NgApimockSettingsComponent],
+      providers: [
+        {
+          provide: NgApimockSettingsService,
+          useValue: { getSettings: () => new Promise(() => {}) },
+        },
+        { provide: MatSnackBar, useValue: {} },
+      ],
+    }).compileComponents();
   });
 
   beforeEach(() => {

@@ -8,9 +8,8 @@ describe('NgApiMockExportComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ NgApiMockExportComponent ]
-    })
-    .compileComponents();
+      declarations: [NgApiMockExportComponent],
+    }).compileComponents();
   });
 
   beforeEach(() => {

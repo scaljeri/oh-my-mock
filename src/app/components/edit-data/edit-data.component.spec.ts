@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 import { EditDataComponent } from './edit-data.component';
 
 describe('EditDataComponent', () => {
@@ -8,9 +8,11 @@ describe('EditDataComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ EditDataComponent ]
-    })
-    .compileComponents();
+      declarations: [EditDataComponent],
+      providers: [
+        { provide: PrettyPrintPipe, useValue: { transform: () => {} } },
+      ],
+    }).compileComponents();
   });
 
   beforeEach(() => {

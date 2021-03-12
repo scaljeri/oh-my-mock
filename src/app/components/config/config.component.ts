@@ -3,12 +3,10 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-config',
   templateUrl: './config.component.html',
-  styleUrls: ['./config.component.scss']
+  styleUrls: ['./config.component.scss'],
 })
 export class ConfigComponent implements OnInit {
   test: string;
-
-  constructor() { }
 
   ngOnInit(): void {
     chrome.debugger.onEvent.addListener((source, method, params: any) => {
@@ -17,7 +15,6 @@ export class ConfigComponent implements OnInit {
       //     requestId: params.requestId,
       //   };
       this.test = 'yesyesy';
-    })
+    });
   }
-
 }

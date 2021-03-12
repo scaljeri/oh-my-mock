@@ -1,4 +1,6 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
 
 import { DisabledEnabledComponent } from './disabled-enabled.component';
 
@@ -8,9 +10,10 @@ describe('DisabledEnabledComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ DisabledEnabledComponent ]
-    })
-    .compileComponents();
+      declarations: [DisabledEnabledComponent],
+      providers: [{ provide: MatDialogRef, useValue: {} }],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
   });
 
   beforeEach(() => {

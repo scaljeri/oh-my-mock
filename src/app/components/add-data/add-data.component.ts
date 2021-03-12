@@ -6,13 +6,13 @@ import { MatDialogRef } from '@angular/material/dialog';
 @Component({
   selector: 'app-add-data',
   templateUrl: './add-data.component.html',
-  styleUrls: ['./add-data.component.scss']
+  styleUrls: ['./add-data.component.scss'],
 })
 export class AddDataComponent {
   formGroup = new FormGroup({
     url: new FormControl('', [Validators.required]),
     type: new FormControl('XHR', [Validators.required]),
-    method: new FormControl('GET', [Validators.required])
+    method: new FormControl('GET', [Validators.required]),
   });
 
   constructor(private dialogRef: MatDialogRef<AddDataComponent>) {}

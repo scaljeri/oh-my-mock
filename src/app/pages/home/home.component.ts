@@ -12,16 +12,16 @@ import { OhMyState } from 'src/app/store/state';
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent implements OnInit {
-
+export class HomeComponent {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
 
-  constructor(public dialog: MatDialog, private store: Store, private router: Router) { }
-
-  ngOnInit(): void {
-  }
+  constructor(
+    public dialog: MatDialog,
+    private store: Store,
+    private router: Router
+  ) {}
 
   onAddData(): void {
     const dialogRef = this.dialog.open(AddDataComponent, {
@@ -33,11 +33,12 @@ export class HomeComponent implements OnInit {
       const newDataIndex = state.data.length;
       this.upsertData(data);
       this.router.navigate(['mocks', newDataIndex]);
-    })
+    });
   }
 
   get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+    return this.store.selectSnapshot<IState>((state: IStore) =>
+      OhMyState.getActiveState(state)
+    );
   }
 }
-

@@ -7,24 +7,26 @@ export const parse = (headers: string): Record<string, string> => {
 
     return s;
   }, {});
-}
+};
 
 export const stringify = (headers: Record<string, string> = {}): string => {
   const entries = Object.entries(headers);
   if (entries.length) {
-    return Object.entries(headers || {}).reduce((out, input) => {
-      out.push(`${input[0]}: ${input[1]}`);
-      return out;
-    }).join('\r\n');
+    return Object.entries(headers || {})
+      .reduce((out, input) => {
+        out.push(`${input[0]}: ${input[1]}`);
+        return out;
+      })
+      .join('\r\n');
   }
 
   return '';
-}
+};
 
 export const getHeaderKeys = (headers: string): string[] => {
   return headers.match(/(?<=\b)(..*)(?=: )/g);
-}
+};
 
 export const getHeaderValues = (headers: string): string[] => {
   return headers.match(/(?<=: )(.*)(?=\b)/g);
-}
+};

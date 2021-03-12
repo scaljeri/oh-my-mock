@@ -6,7 +6,7 @@ import { evalJsCode } from '@shared/utils/eval-jscode';
 @Component({
   selector: 'app-code-edit',
   templateUrl: './code-edit.component.html',
-  styleUrls: ['./code-edit.component.scss']
+  styleUrls: ['./code-edit.component.scss'],
 })
 export class CodeEditComponent implements OnInit {
   code: string;
@@ -15,20 +15,22 @@ export class CodeEditComponent implements OnInit {
   public editMode = 'edit';
   public error: string;
 
-  constructor(private dialogRef: MatDialogRef<CodeEditComponent>,
-    @Inject(MAT_DIALOG_DATA) public input: {code: string}) {
-      this.code = input.code;
-    }
+  constructor(
+    private dialogRef: MatDialogRef<CodeEditComponent>,
+    @Inject(MAT_DIALOG_DATA) public input: { code: string }
+  ) {
+    this.code = input.code;
+  }
   ngOnInit(): void {
     // this.originalCode = this.code;
   }
 
   onClose(): void {
     try {
-      evalJsCode(this.code);   // Check if javascript can be evaled
+      evalJsCode(this.code); // Check if javascript can be evaled
       this.dialogRef.close(this.code);
-    } catch(err) {
-      this.error = JS_INCORRECT_MSG ;
+    } catch (err) {
+      this.error = JS_INCORRECT_MSG;
     }
   }
 

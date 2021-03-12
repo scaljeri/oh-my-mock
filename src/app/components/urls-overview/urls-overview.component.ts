@@ -18,7 +18,7 @@ export interface PeriodicElement {
 @Component({
   selector: 'app-urls-overview',
   templateUrl: './urls-overview.component.html',
-  styleUrls: ['./urls-overview.component.scss']
+  styleUrls: ['./urls-overview.component.scss'],
 })
 export class UrlsOverviewComponent implements OnInit {
   // @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
@@ -31,16 +31,15 @@ export class UrlsOverviewComponent implements OnInit {
   data: IData[] = [];
   edit = false;
 
-  constructor() {
-  }
-
   ngOnInit(): void {
-    this.state$.pipe(
-      filter(state => !!state),
-      map(state => state?.data)
-    ).subscribe((data: IData[]) => {
-      this.data = data;
-    });
+    this.state$
+      .pipe(
+        filter((state) => !!state),
+        map((state) => state?.data)
+      )
+      .subscribe((data: IData[]) => {
+        this.data = data;
+      });
   }
 
   onEdit(): void {

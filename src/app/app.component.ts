@@ -1,4 +1,11 @@
-import { AfterViewInit, ChangeDetectorRef, Component, HostListener, OnDestroy, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  HostListener,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
@@ -9,7 +16,11 @@ import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { ThemePalette } from '@angular/material/core';
-import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
+import {
+  ActivationStart,
+  Event as NavigationEvent,
+  Router,
+} from '@angular/router';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -18,7 +29,7 @@ import { DisabledEnabledComponent } from './components/disabled-enabled/disabled
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   state: IState;
@@ -41,8 +52,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private contentService: ContentService,
     private router: Router,
     public dialog: MatDialog,
-    private cdr: ChangeDetectorRef) {
-  }
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngAfterViewInit(): Promise<void> {
     const globalState = await this.storageService.initialize();
@@ -64,13 +75,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     });
 
     // Some logic used to show the correct header button
-    this.router.events
-      .subscribe(
-        (event: NavigationEvent) => {
-          if (event instanceof ActivationStart) {
-            this.page = event.snapshot.url[0]?.path || '/';
-          }
-        });
+    this.router.events.subscribe((event: NavigationEvent) => {
+      if (event instanceof ActivationStart) {
+        this.page = event.snapshot.url[0]?.path || '/';
+      }
+    });
     this.page = (this.router.url.match(/^\/([^/]+)/) || [])[1] || '/';
   }
 
@@ -82,7 +91,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   goBack(): void {
     const el = document.activeElement;
 
-    if (el.tagName.toLowerCase() !== 'input' && el.getAttribute('contenteditable') !== 'true') {
+    if (
+      el.tagName.toLowerCase() !== 'input' &&
+      el.getAttribute('contenteditable') !== 'true'
+    ) {
       this.router.navigate(['../']);
     }
   }
@@ -94,10 +106,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   notifyDisabled(): void {
     this.dialogRef = this.dialog.open(DisabledEnabledComponent, {
-      width: '300px'
+      width: '300px',
     });
 
-    this.dialogRef.afterClosed().subscribe(enable => {
+    this.dialogRef.afterClosed().subscribe((enable) => {
       if (enable) {
         this.activate(enable);
       }

@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { AppStateService } from '../../services/app-state.service';
 
 import { NavListComponent } from './nav-list.component';
 
@@ -8,9 +11,13 @@ describe('NavListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ NavListComponent ]
-    })
-    .compileComponents();
+      declarations: [NavListComponent],
+      providers: [
+        { provide: AppStateService, useValue: {} },
+        { provide: MatDialog, useValue: {} },
+        { provide: Router, useValue: {} },
+      ],
+    }).compileComponents();
   });
 
   beforeEach(() => {
