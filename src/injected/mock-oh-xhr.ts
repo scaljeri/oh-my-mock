@@ -105,11 +105,7 @@ export class OhMockXhr extends Base {
   private getHeaders(): Record<string, string>;
   private getHeaders(key: string): string;
   private getHeaders(key?: string): Record<string, string> | string | void {
-    let output = this.ohMock.headers;
-
-    if (this.ohMock && this.ohMock.useHeadersMock) {
-      output = this.ohMock.headersMock;
-    }
+    let output = this.ohMock?.headersMock;
 
     return key ? (output || {})[key] : output;
   }

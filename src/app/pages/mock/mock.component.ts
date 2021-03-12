@@ -73,7 +73,7 @@ export class MockComponent implements OnInit {
     });
   }
 
-  onResponseChange(data): void {
+  onResponseChange(data: string): void {
     this.responseMock = data;
     this.upsertMock({ responseMock: data });
   }
@@ -82,6 +82,19 @@ export class MockComponent implements OnInit {
     setTimeout(() => { // Make sure that `onResponseChanges` goes first!
       this.responseMock = this.mock.response;
       this.upsertMock({ responseMock: this.mock.response });
+      this.cdr.detectChanges();
+    });
+  }
+
+  onHeadersChange(data: string): void {
+    this.upsertMock({ headersMock: JSON.parse(data)});
+    this.cdr.detectChanges();
+  }
+
+  onRevertHeaders(): void {
+    setTimeout(() => {
+      this.headersMock = this.mock.headers;
+      this.upsertMock({ headersMock: this.mock.headers });
       this.cdr.detectChanges();
     });
   }

@@ -35,12 +35,12 @@ export interface IMock {
   dataType?: string;
   response?: string;
   responseMock?: string;
-  useResponseMock?: boolean;
   headers?: Record<string, string>
   headersMock?: Record<string, string>,
-  useHeadersMock?: boolean;
   delay?: number;
   jsCode?: string;
+  createdOn?: string;
+  modifiedOn?: string;
 }
 
 // actions
@@ -48,7 +48,6 @@ export interface IUpsertMock<T = any> {
   url: string;
   method: requestMethod;
   type: requestType;
-  // response: T;
   statusCode: number;
   mock: IMock;
 }

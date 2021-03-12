@@ -19,6 +19,10 @@
   font-size: 15px;
 }
 
+.delete-mock {
+  align-self: flex-start;
+}
+
 section {
   display: flex;
   justify-content: space-between;
@@ -89,4 +93,8 @@ app-edit-data {
   flex-direction: column;
   width: 100%;
   justify-content: space-between;
+
+  button {
+    align-self: flex-end;
+  }
 }

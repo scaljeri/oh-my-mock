@@ -25,6 +25,7 @@ import { AddDataComponent } from './add-data/add-data.component';
 import { NavListComponent } from './nav-list/nav-list.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
 import { EditDataComponent } from './edit-data/edit-data.component';
+import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import { EditDataComponent } from './edit-data/edit-data.component';
     NavListComponent,
     ResetStateComponent,
     EditDataComponent,
+    DisabledEnabledComponent,
   ],
   imports: [
     CommonModule,
@@ -56,6 +58,6 @@ import { EditDataComponent } from './edit-data/edit-data.component';
     FormsModule,
     MonacoEditorModule,
   ],
-  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent, NavListComponent, EditDataComponent]
+  exports: [UrlsOverviewComponent, ConfigComponent, CodeEditComponent, NavListComponent, EditDataComponent, DisabledEnabledComponent]
 })
 export class ComponentsModule { }

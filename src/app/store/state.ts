@@ -72,7 +72,10 @@ export class OhMyState {
       Object.entries(payload.mock).forEach(i => mock[i[0]] = i[1]);
 
       if (!mock.responseMock) {
+        mock.createdOn = new Date().toISOString();
         mock.responseMock = mock.response;
+      } else {
+        mock.modifiedOn = new Date().toISOString();
       }
 
       if (!mock.headersMock) {

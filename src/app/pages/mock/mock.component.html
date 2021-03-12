@@ -6,8 +6,10 @@
   <section>
     <div>
       <p><span class="label">Status code:</span><span class="value">{{statusCode}}</span></p>
+      <p><span class="label">Created:</span><span class="value">{{mock.createdOn}}</span></p>
+      <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn}}</span></p>
     </div>
-    <button (click)="onDelete()">
+    <button class="delete-mock" (click)="onDelete()">
       <mat-icon>delete_forever</mat-icon>
     </button>
   </section>
@@ -23,5 +25,6 @@
 
   <section class="headers">
     <app-edit-data [data]="headersMock" (dataChange)="onHeadersChange($event)"></app-edit-data>
+    <button mat-button (click)="onRevertHeaders()">Revert</button>
   </section>
 </mat-card>
