@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { IData, IDeleteData } from 'src/shared/type';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteData } from 'src/app/store/actions';
@@ -11,23 +11,18 @@ export interface PeriodicElement {
 }
 
 @Component({
-  selector: 'app-urls-overview',
-  templateUrl: './urls-overview.component.html',
-  styleUrls: ['./urls-overview.component.scss']
+  selector: 'oh-my-data-list',
+  templateUrl: './data-list.component.html',
+  styleUrls: ['./data-list.component.scss']
 })
-export class UrlsOverviewComponent implements OnInit {
+export class UrlsOverviewComponent {
   @Input() data: IData[] = [];
+  @Output() select = new EventEmitter<number>();
 
   @Dispatch() deleteData = (data: IDeleteData) => new DeleteData(data);
-  // @Select(OhMyState.getState) state$: Observable<{ OhMyState: IState }>;
-  // @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   displayedColumns = ['type', 'method', 'url', 'activeStatusCode'];
-
   edit = false;
-
-  ngOnInit(): void {
-  }
 
   onEdit(): void {
     this.edit = !this.edit;
@@ -42,5 +37,9 @@ export class UrlsOverviewComponent implements OnInit {
 
   onDeleteData(row: IDeleteData): void {
     this.deleteData(row);
+  }
+
+  onDataClick(index: number): void {
+    this.select.emit(index);
   }
 }

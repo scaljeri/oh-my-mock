@@ -1,21 +1,22 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgxsModule } from '@ngxs/store';
 
-import { HomeComponent } from './home.component';
+import { MockComponent } from './mock.component';
 
-describe('HomeComponent', () => {
-  let component: HomeComponent;
-  let fixture: ComponentFixture<HomeComponent>;
+describe('MockComponent', () => {
+  let component: MockComponent;
+  let fixture: ComponentFixture<MockComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [HomeComponent],
+      declarations: [MockComponent],
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: Router, useValue: {} },
+        { provide: ActivatedRoute, useValue: { snapshot: { params: {} } } },
       ],
       imports: [NgxsModule.forRoot([])],
       schemas: [NO_ERRORS_SCHEMA],
@@ -23,7 +24,7 @@ describe('HomeComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(HomeComponent);
+    fixture = TestBed.createComponent(MockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

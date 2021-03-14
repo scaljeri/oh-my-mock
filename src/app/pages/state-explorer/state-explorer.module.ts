@@ -5,7 +5,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
 import { StateExplorerComponent } from './state-explorer.component';
 import { RouterModule, Routes } from '@angular/router';
-import { UrlsOverviewComponent } from 'src/app/components/urls-overview/urls-overview.component';
+import { DataOverviewComponent } from '../data-overview/data-overview.component';
+import { PageMockComponent } from '../mock/mock.component';
 
 const routes: Routes = [
   {
@@ -14,7 +15,11 @@ const routes: Routes = [
     children: [
       {
         path: ':domain',
-        component: UrlsOverviewComponent
+        component: DataOverviewComponent
+      },
+      {
+        path: ':domain/mocks/:mockIndex',
+        component: PageMockComponent
       }
     ]
   }

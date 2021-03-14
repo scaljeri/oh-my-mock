@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { MatTableModule } from '@angular/material/table';
 
-import { UrlsOverviewComponent } from './urls-overview.component';
+import { UrlsOverviewComponent } from './data-list.component';
 
 describe('UrlsOverviewComponent', () => {
   let component: UrlsOverviewComponent;

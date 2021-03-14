@@ -1,44 +1,52 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
-import { STORAGE_KEY } from '@shared/constants';
-import { IData, IState, IStore } from '@shared/type';
+import { IData, IOhMyMock, IState, IStore } from '@shared/type';
 import { Observable } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  selector: 'oh-my-data-overview',
+  templateUrl: './data-overview.component.html',
+  styleUrls: ['./data-overview.component.scss']
 })
-export class HomeComponent {
+export class DataOverviewComponent {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Select(OhMyState.getActiveState) state$: Observable<IState>;
+  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
   public data: IData[];
+  public domain: string;
+  private state: IOhMyMock;
 
   constructor(
-    private appStateService: AppStateService,
     public dialog: MatDialog,
+    private appStateService: AppStateService,
     private store: Store,
-    private router: Router
-  ) {}
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
-    this.state$
-      .pipe(
-        filter((state) => !!state),
-        map((state) => state.data || [])
-      )
-      .subscribe((data: IData[]) => {
-        this.data = data;
-      });
+    this.activatedRoute.params.subscribe(params => {
+      const domain = params.domain;
+      if (domain) {
+        this.domain = decodeURIComponent(domain);
+      }
+
+      if (this.state) {
+        this.data = this.state.domains[this.domain].data;
+      }
+    });
+
+    this.state$.subscribe((state: IOhMyMock) => {
+      this.state = state;
+      this.data = state.domains[this.domain || this.appStateService.domain].data;
+    });
   }
 
   onAddData(): void {
@@ -52,6 +60,10 @@ export class HomeComponent {
       this.upsertData(data);
       this.router.navigate(['mocks', newDataIndex]);
     });
+  }
+
+  onDataSelect(index: number): void {
+    this.router.navigate(['mocks', index], { relativeTo: this.activatedRoute });
   }
 
   get stateSnapshot(): IState {

@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { forwarderGuard } from './forward-guard';
-import { HomeComponent } from './pages/home/home.component';
+import { DataOverviewComponent } from './pages/data-overview/data-overview.component';
 import { ConfigComponent } from './components/config/config.component';
 
-import { MockComponent } from './pages/mock/mock.component';
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
+import { PageMockComponent } from './pages/mock/mock.component';
 
 const appRoutes: Routes = [
   {
@@ -13,15 +13,15 @@ const appRoutes: Routes = [
     children: [
       {
         path: '',
-        component: HomeComponent
+        component: DataOverviewComponent
       },
       {
         path: 'configure',
         component: ConfigComponent
       },
       {
-        path: 'mocks/:index',
-        component: MockComponent
+        path: 'mocks/:mockIndex',
+        component: PageMockComponent
       },
       {
         path: 'state-explore',

@@ -1,0 +1,5 @@
+<oh-my-data-list [data]="data" (select)="onDataSelect($event)"></oh-my-data-list>
+
+<button *ngIf="!domain" (click)="onAddData()" class="delete-data" mat-fab color="primary" aria-label="Delete all mocks for a specific URL">
+  <mat-icon>add</mat-icon>
+</button>

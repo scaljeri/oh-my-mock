@@ -42,7 +42,7 @@
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns">
     </tr>
-    <tr mat-row [routerLink]="'/mocks/' + i" *matRowDef="let row; columns: displayedColumns;let i = index"
+    <tr mat-row (click)="onDataClick(i)" *matRowDef="let row; columns: displayedColumns;let i = index"
       [ngClass]="{'is-active': row.activeStatusCode > 0, 'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
     </tr>
   </table>

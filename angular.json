@@ -12,7 +12,7 @@
       },
       "root": "",
       "sourceRoot": "src",
-      "prefix": "app",
+      "prefix": "oh-my",
       "architect": {
         "build": {
           "builder": "@angular-builders/custom-webpack:browser",

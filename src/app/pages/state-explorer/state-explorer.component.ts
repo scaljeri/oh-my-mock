@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {
   ActivatedRoute,
+  ActivationEnd,
   ActivationStart,
   Event as NavigationEvent,
   Router
@@ -10,7 +11,6 @@ import { Select } from '@ngxs/store';
 import { domain, IOhMyMock } from '@shared/type';
 import { Observable } from 'rxjs';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { StorageService } from 'src/app/services/storage.service';
 import { InitState } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
@@ -37,10 +37,19 @@ export class StateExplorerComponent implements OnInit {
       this.domains = Object.keys(state.domains);
     });
 
+    if (this.activatedRoute.firstChild) {
+      this.selectedDomain = decodeURIComponent(this.activatedRoute.firstChild.snapshot.params.domain);
+      this.panelOpenState = false;
+    }
+
     this.router.events.subscribe((event: NavigationEvent) => {
-      if (event instanceof ActivationStart) {
-        if (event.snapshot.parent.routeConfig.component !== StateExplorerComponent) {
-          this.onSelectDomain();
+      if (event instanceof ActivationEnd) {
+        if (event.snapshot.component === StateExplorerComponent) {
+          if (this.selectedDomain && !this.panelOpenState) {
+            this.panelOpenState = true;
+          } else {
+            this.panelOpenState = false;
+          }
         }
       }
     });
@@ -48,9 +57,6 @@ export class StateExplorerComponent implements OnInit {
 
   async onSelectDomain(domain = this.appStateService.domain): Promise<void> {
     this.selectedDomain = domain;
-    this.panelOpenState = false;
-    // const state = await this.storageService.initialize(domain);
-    // this.initState(state);
 
     setTimeout(() => {
       this.router.navigate([encodeURIComponent(domain)], {

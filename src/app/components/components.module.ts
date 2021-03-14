@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { ConfigComponent } from './config/config.component';
-import { UrlsOverviewComponent } from './urls-overview/urls-overview.component';
+import { UrlsOverviewComponent } from './data-list/data-list.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
+
 import {
   Location,
   LocationStrategy,
@@ -31,6 +32,8 @@ import { ResetStateComponent } from './reset-state/reset-state.component';
 import { EditDataComponent } from './edit-data/edit-data.component';
 import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
 import { HeaderButtonComponent } from './header-button/header-button.component';
+import { MockComponent } from './mock/mock.component';
+import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +46,9 @@ import { HeaderButtonComponent } from './header-button/header-button.component';
     ResetStateComponent,
     EditDataComponent,
     DisabledEnabledComponent,
-    HeaderButtonComponent
+    HeaderButtonComponent,
+    MockComponent,
+    MockHeaderComponent
   ],
   imports: [
     CommonModule,
@@ -62,7 +67,7 @@ import { HeaderButtonComponent } from './header-button/header-button.component';
     MatTabsModule,
     ReactiveFormsModule,
     FormsModule,
-    MonacoEditorModule
+    MonacoEditorModule,
   ],
   exports: [
     UrlsOverviewComponent,
@@ -71,10 +76,12 @@ import { HeaderButtonComponent } from './header-button/header-button.component';
     NavListComponent,
     EditDataComponent,
     DisabledEnabledComponent,
-    HeaderButtonComponent
+    HeaderButtonComponent,
+    MockComponent,
+    MockHeaderComponent
   ],
   providers: [
     Location,
     { provide: LocationStrategy, useClass: PathLocationStrategy }]
 })
-export class ComponentsModule {}
+export class ComponentsModule { }

@@ -18,20 +18,21 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ComponentsModule } from './components/components.module';
 import { OhMyState } from './store/state';
-import { HomeComponent } from './pages/home/home.component';
+import { DataOverviewComponent } from './pages/data-overview/data-overview.component';
 
-import { MockModule } from './pages/mock/mock.module';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 import { appRoutes } from './app.routes';
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { PageMockComponent } from './pages/mock/mock.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
+    DataOverviewComponent,
     NgApiMockExportComponent,
-    NgApimockSettingsComponent
+    NgApimockSettingsComponent,
+    PageMockComponent
   ],
   imports: [
     BrowserModule,
@@ -50,7 +51,6 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatInputModule,
     MatSnackBarModule,
     ComponentsModule,
-    MockModule
   ],
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
