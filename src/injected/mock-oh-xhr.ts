@@ -1,5 +1,12 @@
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IData, IMock, IPacket, IState, requestType, statusCode } from '../shared/type';
+import {
+  IData,
+  IMock,
+  IPacket,
+  IState,
+  requestType,
+  statusCode
+} from '../shared/type';
 import { evalJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
@@ -17,7 +24,7 @@ export class OhMockXhr extends Base {
     super();
 
     this.onreadystatechange = this._onreadystatechange.bind(this, null);
-    Object.defineProperty(this, "onreadystatechange", {
+    Object.defineProperty(this, 'onreadystatechange', {
       get: function () {
         return this.onReadyStateChange;
       },
@@ -27,12 +34,12 @@ export class OhMockXhr extends Base {
     });
   }
 
-  open(type, url, ...args) {
+  open(type: requestType, url: string, ...args: unknown[]): void {
     this.ohType = type;
     this.ohUrl = url;
 
     this.parseState();
-    super.open.apply(this, [type, this.mockedUrl(url), ...args]);
+    return super.open.apply(this, [type, this.mockedUrl(url), ...args]);
   }
 
   _onreadystatechange(onReadyChangeCallback, ...args): void {
@@ -43,21 +50,41 @@ export class OhMockXhr extends Base {
         const response = this.mockResponse();
         const headersString = headers.stringify(this.getHeaders());
 
-        Object.defineProperty(this, 'status', { value: this.ohData.activeStatusCode });
+        Object.defineProperty(this, 'status', {
+          value: this.ohData.activeStatusCode
+        });
         Object.defineProperty(this, 'responseText', { value: response });
         Object.defineProperty(this, 'response', { value: response });
-        Object.defineProperty(this, 'getAllResponseHeaders', { value: () => headersString })
-        Object.defineProperty(this, 'getResponseHeader', { value: (key) => this.ohMock.headers[key] })
-      } else if (OhMockXhr.ohState?.enabled && !this.checkMockExists(this.status)) {
+        Object.defineProperty(this, 'getAllResponseHeaders', {
+          value: () => headersString
+        });
+        Object.defineProperty(this, 'getResponseHeader', {
+          value: (key) => this.ohMock.headers[key]
+        });
+      } else if (
+        OhMockXhr.ohState?.enabled &&
+        !this.checkMockExists(this.status)
+      ) {
         // TODO: move to injected script
-        window.postMessage({
-          source: appSources.INJECTED,
-          payload: {
-            context: { url: this.ohUrl, method: 'XHR', type: this.ohType, statusCode: this.status },
-            type: packetTypes.MOCK,
-            data: { response: this.response, headers: headers.parse(this.getAllResponseHeaders()) }
-          }
-        } as IPacket, '*');
+        window.postMessage(
+          {
+            source: appSources.INJECTED,
+            payload: {
+              context: {
+                url: this.ohUrl,
+                method: 'XHR',
+                type: this.ohType,
+                statusCode: this.status
+              },
+              type: packetTypes.MOCK,
+              data: {
+                response: this.response,
+                headers: headers.parse(this.getAllResponseHeaders())
+              }
+            }
+          } as IPacket,
+          '*'
+        );
       }
     }
 
@@ -65,7 +92,12 @@ export class OhMockXhr extends Base {
   }
 
   private checkMockExists(status: statusCode): boolean {
-    const ohData = findActiveData(OhMockXhr.ohState, this.ohUrl, 'XHR', this.ohType);
+    const ohData = findActiveData(
+      OhMockXhr.ohState,
+      this.ohUrl,
+      'XHR',
+      this.ohType
+    );
 
     return !!ohData?.mocks[status];
   }
@@ -98,16 +130,24 @@ export class OhMockXhr extends Base {
     this.ohData = null;
     this.ohMock = null;
 
-    if (OhMockXhr.ohState.enabled) { // State can arrive late at the party
-      this.ohData = findActiveData(OhMockXhr.ohState, this.ohUrl, 'XHR', this.ohType);
-      this.ohMock = this.ohData?.mocks ? this.ohData.mocks[this.ohData.activeStatusCode] : null;
+    if (OhMockXhr.ohState.enabled) {
+      // State can arrive late at the party
+      this.ohData = findActiveData(
+        OhMockXhr.ohState,
+        this.ohUrl,
+        'XHR',
+        this.ohType
+      );
+      this.ohMock = this.ohData?.mocks
+        ? this.ohData.mocks[this.ohData.activeStatusCode]
+        : null;
     }
   }
 
   private getHeaders(): Record<string, string>;
   private getHeaders(key: string): string;
   private getHeaders(key?: string): Record<string, string> | string | void {
-    let output = this.ohMock?.headersMock;
+    const output = this.ohMock?.headersMock;
 
     return key ? (output || {})[key] : output;
   }

@@ -10,7 +10,7 @@
 
 	<h2>Integration</h2>
 	<section>
-	  <mat-checkbox class="integrate" [formControl]="settingsForm.get('integrate')">
+	  <mat-checkbox class="integrate" [formControl]="integrate">
 		Intergrate with ngApiMock
 	  </mat-checkbox>
 	</section>
@@ -18,12 +18,12 @@
 	<section class="settings">
 		<mat-form-field appearance="standard">
 			<mat-label>Server host</mat-label>
-			<input name="serverhost" matInput [formControl]="settingsForm.get('ngApiMockHost')"  placeholder="http://someserver:port"/>
+			<input name="serverhost" matInput [formControl]="ngApiMockHost"  placeholder="http://someserver:port"/>
 			<mat-hint>Hostname of NgApiMock server, incl. port number</mat-hint>
 		</mat-form-field>
 		<mat-form-field appearance="standard">
 			<mat-label>Base URL</mat-label>
-			<input name="baseurl" [formControl]="settingsForm.get('ngApiMockBasePath')" matInput >
+			<input name="baseurl" [formControl]="ngApiMockBasePath" matInput >
 			<mat-hint>The configured baseURL. leave as is for default setting.</mat-hint>
 		</mat-form-field>
 	</section>

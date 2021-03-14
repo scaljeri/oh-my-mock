@@ -29,7 +29,10 @@ export class ContentService {
         if (!this.appStateService.isSameDomain(domain)) {
           sessionStorage.setItem('domain', domain);
           this.appStateService.domain = domain;
-          this.initState({ ...this.store.snapshot()[STORAGE_KEY], activeDomain: domain })
+          this.initState({
+            ...this.store.snapshot()[STORAGE_KEY],
+            activeDomain: domain
+          });
         }
 
         if (payload.type === packetTypes.MOCK) {
@@ -70,7 +73,7 @@ export class ContentService {
         type: packetTypes.STATE,
         data
       }
-    })
+    });
   }
 
   destroy(): void {

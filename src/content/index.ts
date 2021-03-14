@@ -3,7 +3,8 @@ import { appSources, packetTypes } from '../shared/constants';
 import { IPacket } from '../shared/type';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
 
-const log = (msg, ...data) => console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
+const log = (msg, ...data) =>
+  console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
 log('Script loaded and ready....');
 
 function sendKnockKnock(tabId?: number) {
@@ -24,9 +25,10 @@ function sendKnockKnock(tabId?: number) {
     // Notify Popup that content script is ready
     try {
       sendKnockKnock();
+    } catch (e) {
+      log('Cannot connect to the OhMyMock tab', e);
     }
-    catch (e) { log('Cannot connect to the OhMyMock tab', e) }
-  }
+  };
   xhrScript.src = chrome.runtime.getURL('injected.js');
   document.head.append(xhrScript);
 })();
@@ -41,7 +43,8 @@ chrome.runtime.onMessage.addListener((data: IPacket, sender) => {
 
   tabId = data.tabId;
 
-  if (data.domain !== window.location.host) { // Domain mismatch
+  if (data.domain !== window.location.host) {
+    // Domain mismatch
     return sendKnockKnock(tabId);
   }
 

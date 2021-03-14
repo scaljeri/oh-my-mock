@@ -13,17 +13,20 @@ export class ResetStateComponent implements OnInit {
   public domain: string;
   public optionTypes = resetStateOptions;
 
-  constructor(private appStateService: AppStateService, private dialogRef: MatDialogRef<ResetStateComponent>) { }
+  constructor(
+    private appStateService: AppStateService,
+    private dialogRef: MatDialogRef<ResetStateComponent>
+  ) {}
 
   ngOnInit(): void {
     this.domain = this.appStateService.domain;
   }
 
   onCancel(): void {
-   this.dialogRef.close();
+    this.dialogRef.close();
   }
 
-  onReset(option: ResetStateOptions ): void {
-   this.dialogRef.close(option);
+  onReset(option: ResetStateOptions): void {
+    this.dialogRef.close(option);
   }
 }

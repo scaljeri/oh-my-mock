@@ -5,11 +5,4 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './ng-api-mock-export.component.html',
   styleUrls: ['./ng-api-mock-export.component.scss']
 })
-export class NgApiMockExportComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
-}
+export class NgApiMockExportComponent {}

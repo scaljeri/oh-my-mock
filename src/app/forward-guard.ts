@@ -1,17 +1,21 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  CanActivate,
+  Router,
+  RouterStateSnapshot
+} from '@angular/router';
 import { AppStateService } from './services/app-state.service';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class forwarderGuard implements CanActivate {
-
   constructor(private appStateService: AppStateService) {}
 
-  canActivate(route: ActivatedRouteSnapshot) {
+  canActivate(): boolean {
     const urlParams = new URLSearchParams(window.location.search);
 
-    let domain = urlParams.get('domain');
-    let tabId = urlParams.get('tabId');
+    const domain = urlParams.get('domain');
+    const tabId = urlParams.get('tabId');
 
     if (domain) {
       this.appStateService.domain = domain;

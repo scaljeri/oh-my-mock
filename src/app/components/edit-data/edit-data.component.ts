@@ -1,4 +1,12 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild
+} from '@angular/core';
 import * as hljs from 'highlight.js';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 
@@ -9,13 +17,13 @@ import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 })
 export class EditDataComponent implements AfterViewInit {
   @Input() data: Record<string, string> | string;
-  @Input() type: string = 'json';
+  @Input() type = 'json';
   @Input() editable = true;
-  @Output() dataChange = new EventEmitter<string | Record<string, string>>();
+  @Output() dataChange = new EventEmitter<string>();
 
   @ViewChild('ref') ref: ElementRef;
 
-  constructor(private prettyPrintPipe: PrettyPrintPipe) { }
+  constructor(private prettyPrintPipe: PrettyPrintPipe) {}
 
   ngAfterViewInit(): void {
     this.injectCode();
@@ -33,11 +41,13 @@ export class EditDataComponent implements AfterViewInit {
       codeEl.className = `language-${this.type}`;
 
       if (this.editable) {
-        codeEl.setAttribute('contenteditable', "true");
+        codeEl.setAttribute('contenteditable', 'true');
       }
 
       if (this.type === 'json') {
-        codeEl.innerText = this.prettyPrintPipe.transform(this.data);
+        codeEl.innerText = this.prettyPrintPipe.transform(
+          this.data as Record<string, string>
+        );
       }
 
       codeEl.addEventListener('blur', () => {
@@ -50,6 +60,7 @@ export class EditDataComponent implements AfterViewInit {
   }
 
   onDataChange(): void {
-    this.dataChange.emit(this.ref.nativeElement.innerText);
+    const txt = this.ref.nativeElement.innerText;
+    this.dataChange.emit(txt);
   }
 }

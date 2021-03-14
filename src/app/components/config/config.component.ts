@@ -8,8 +8,6 @@ import { Component, OnInit } from '@angular/core';
 export class ConfigComponent implements OnInit {
   test: string;
 
-  constructor() { }
-
   ngOnInit(): void {
     chrome.debugger.onEvent.addListener((source, method, params: any) => {
       //   var request = params.request;
@@ -17,7 +15,6 @@ export class ConfigComponent implements OnInit {
       //     requestId: params.requestId,
       //   };
       this.test = 'yesyesy';
-    })
+    });
   }
-
 }

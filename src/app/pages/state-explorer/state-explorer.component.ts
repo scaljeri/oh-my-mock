@@ -14,12 +14,9 @@ export class StateExplorerComponent implements OnInit {
 
   domains: domain[];
 
-  constructor() { }
-
   ngOnInit(): void {
-    this.state$.subscribe(state => {
+    this.state$.subscribe((state) => {
       this.domains = Object.keys(state.domains);
     });
   }
-
 }

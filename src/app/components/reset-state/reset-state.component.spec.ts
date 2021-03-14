@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
+import { AppStateService } from '../../services/app-state.service';
 
 import { ResetStateComponent } from './reset-state.component';
 
@@ -8,9 +10,12 @@ describe('ResetStateComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ResetStateComponent ]
-    })
-    .compileComponents();
+      declarations: [ResetStateComponent],
+      providers: [
+        { provide: AppStateService, useValue: {} },
+        { provide: MatDialogRef, useValue: {} },
+      ],
+    }).compileComponents();
   });
 
   beforeEach(() => {
