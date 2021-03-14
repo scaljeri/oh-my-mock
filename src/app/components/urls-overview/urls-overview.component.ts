@@ -31,16 +31,15 @@ export class UrlsOverviewComponent implements OnInit {
   data: IData[] = [];
   edit = false;
 
-  constructor() {
-  }
-
   ngOnInit(): void {
-    this.state$.pipe(
-      filter(state => !!state),
-      map(state => state?.data)
-    ).subscribe((data: IData[]) => {
-      this.data = data;
-    });
+    this.state$
+      .pipe(
+        filter((state) => !!state),
+        map((state) => state?.data)
+      )
+      .subscribe((data: IData[]) => {
+        this.data = data;
+      });
   }
 
   onEdit(): void {

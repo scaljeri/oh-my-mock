@@ -19,7 +19,6 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ComponentsModule } from './components/components.module';
 import { OhMyState } from './store/state';
 import { HomeComponent } from './pages/home/home.component';
-import { HotToastModule } from '@ngneat/hot-toast';
 
 import { MockModule } from './pages/mock/mock.module';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
@@ -27,13 +26,14 @@ import { StateExplorerModule } from './pages/state-explorer/state-explorer.modul
 import { appRoutes } from './app.routes';
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { HotToastModule } from '@ngneat/hot-toast/lib/hot-toast.module';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
     NgApiMockExportComponent,
-    NgApimockSettingsComponent,
+    NgApimockSettingsComponent
   ],
   imports: [
     BrowserModule,
@@ -54,9 +54,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     HotToastModule.forRoot(),
     ComponentsModule,
     MockModule,
-    StateExplorerModule,
+    StateExplorerModule
   ],
   providers: [{ provide: Window, useValue: window }],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}

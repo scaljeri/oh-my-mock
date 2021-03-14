@@ -1,0 +1,10 @@
+package.json
+package-lock.json
+dist
+e2e
+jest.config.js
+karma.conf.js
+test-site
+test.ts
+*.spec.ts
+monitor.js

@@ -6,7 +6,7 @@ export interface NgApiMockSettings {
   ngApiMockBasePath: string;
 }
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class NgApimockSettingsService {
   private settings: NgApiMockSettings;
@@ -18,15 +18,20 @@ export class NgApimockSettingsService {
       if (this.settings) {
         return resolve(this.settings);
       }
-      chrome.storage.local.get([this.settingKey],
-        (result) => result[this.settingKey] ? resolve(result[this.settingKey]) : reject('no settings'));
+      chrome.storage.local.get([this.settingKey], (result) =>
+        result[this.settingKey]
+          ? resolve(result[this.settingKey])
+          : reject('no settings')
+      );
     });
   }
 
   storeSettings(newSettings: NgApiMockSettings): Promise<boolean> {
     this.settings = newSettings;
     return new Promise((resolve) => {
-      chrome.storage.local.set({[this.settingKey]:  newSettings}, () => resolve(true));
+      chrome.storage.local.set({ [this.settingKey]: newSettings }, () =>
+        resolve(true)
+      );
     });
   }
 }

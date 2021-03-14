@@ -1,4 +1,11 @@
-import { AfterViewInit, ChangeDetectorRef, Component, HostListener, OnDestroy, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  HostListener,
+  OnDestroy,
+  ViewChild
+} from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
@@ -9,10 +16,14 @@ import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { ThemePalette } from '@angular/material/core';
-import { ActivationStart, Event as NavigationEvent, Router } from '@angular/router';
-import { MatDrawer } from '@angular/material/sidenav';
+import {
+  ActivationStart,
+  Event as NavigationEvent,
+  Router
+} from '@angular/router';
+import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 
 @Component({
@@ -23,11 +34,10 @@ import { DisabledEnabledComponent } from './components/disabled-enabled/disabled
 export class AppComponent implements AfterViewInit, OnDestroy {
   state: IState;
   color: ThemePalette = 'warn';
-  drawerMode = 'over';
+  drawerMode: MatDrawerMode = 'over';
   dawerBackdrop = true;
   page = '';
   domain: string;
-  isFirstTime = true;
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
@@ -35,40 +45,41 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('dawer') drawer: MatDrawer;
 
+  private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
+
   constructor(
     private storageService: StorageService,
     private contentService: ContentService,
     private router: Router,
     public dialog: MatDialog,
-    private cdr: ChangeDetectorRef) {
-  }
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngAfterViewInit(): Promise<void> {
     const globalState = await this.storageService.initialize();
-
-    this.domain = this.storageService.domain;
-    this.initState({ ...globalState, activeDomain: this.domain });
-
+    this.initState(globalState);
     this.storageService.monitorStateChanges();
 
     this.state$.subscribe((state: IState) => {
       this.state = state;
 
-      if (!this.state.enabled && this.isFirstTime) {
-        this.notifyDisabled();
+      if (!this.state.enabled) {
+        if (this.domain !== this.state.domain) {
+          this.notifyDisabled();
+        }
+      } else if (this.dialogRef) {
+        this.dialogRef.close();
       }
 
-      this.isFirstTime = false;
+      this.domain = this.state.domain;
     });
 
     // Some logic used to show the correct header button
-    this.router.events
-      .subscribe(
-        (event: NavigationEvent) => {
-          if (event instanceof ActivationStart) {
-            this.page = event.snapshot.url[0]?.path || '/';
-          }
-        });
+    this.router.events.subscribe((event: NavigationEvent) => {
+      if (event instanceof ActivationStart) {
+        this.page = event.snapshot.url[0]?.path || '/';
+      }
+    });
     this.page = (this.router.url.match(/^\/([^/]+)/) || [])[1] || '/';
   }
 
@@ -80,25 +91,29 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   goBack(): void {
     const el = document.activeElement;
 
-    if (el.tagName.toLowerCase() !== 'input' && el.getAttribute('contenteditable') !== 'true') {
+    if (
+      el.tagName.toLowerCase() !== 'input' &&
+      el.getAttribute('contenteditable') !== 'true'
+    ) {
       this.router.navigate(['../']);
     }
   }
 
   @HostListener('window:beforeunload')
-  async ngOnDestroy() {
+  ngOnDestroy(): void {
     this.contentService.destroy();
   }
 
   notifyDisabled(): void {
-    const dialogRef = this.dialog.open(DisabledEnabledComponent, {
+    this.dialogRef = this.dialog.open(DisabledEnabledComponent, {
       width: '300px'
     });
 
-    dialogRef.afterClosed().subscribe(enable => {
+    this.dialogRef.afterClosed().subscribe((enable) => {
       if (enable) {
         this.activate(enable);
       }
+      this.dialogRef = null;
     });
   }
 }

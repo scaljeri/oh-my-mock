@@ -12,14 +12,8 @@
     "importHelpers": true,
     "target": "es6",
     "module": "commonjs",
-    "lib": [
-      "es5",
-      "es6",
-      "dom"
-    ],
+    "lib": ["es5", "es6", "dom"],
     "types": []
   },
-  "files": [
-    "src/content/index.ts"
-  ]
+  "files": ["src/content/index.ts"]
 }

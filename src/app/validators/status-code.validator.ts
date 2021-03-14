@@ -10,10 +10,10 @@ export const statusCodeValidator = (existingCodes: string[]): ValidatorFn => {
 
     if (value.match(/^\d+$/)) {
       if (existingCodes.indexOf(value) >= 0) {
-       return { exists: true};
+        return { exists: true };
       }
     } else {
-      return { invalid: true};
+      return { invalid: true };
     }
-  }
-}
+  };
+};

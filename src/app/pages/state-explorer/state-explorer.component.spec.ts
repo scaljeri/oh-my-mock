@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgxsModule } from '@ngxs/store';
 
 import { StateExplorerComponent } from './state-explorer.component';
 
@@ -8,9 +9,9 @@ describe('StateExplorerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ StateExplorerComponent ]
-    })
-    .compileComponents();
+      declarations: [StateExplorerComponent],
+      imports: [NgxsModule.forRoot([])],
+    }).compileComponents();
   });
 
   beforeEach(() => {

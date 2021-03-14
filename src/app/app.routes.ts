@@ -11,22 +11,28 @@ import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-setti
 const appRoutes: Routes = [
   {
     path: '',
-    canActivate: [
-      forwarderGuard
-    ],
+    canActivate: [forwarderGuard],
     children: [
       {
-        path: '', component: HomeComponent,
+        path: '',
+        component: HomeComponent
       },
       {
-        path: 'configure', component: ConfigComponent
-      }, {
-        path: 'mocks/:index', component: MockComponent
-      }, {
-        path: 'state-explore', component: StateExplorerComponent
-      }, {
-        path: 'settings/ngapimock', component: NgApimockSettingsComponent
+        path: 'configure',
+        component: ConfigComponent
       },
+      {
+        path: 'mocks/:index',
+        component: MockComponent
+      },
+      {
+        path: 'state-explore',
+        component: StateExplorerComponent
+      },
+      {
+        path: 'settings/ngapimock',
+        component: NgApimockSettingsComponent
+      }
     ]
   }
 ];

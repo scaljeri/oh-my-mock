@@ -1,4 +1,9 @@
-import { appSources, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
+import {
+  appSources,
+  packetTypes,
+  resetStateOptions,
+  STORAGE_KEY
+} from './constants';
 
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
 export type requestMethod = 'XHR' | 'FETCH';
@@ -20,9 +25,9 @@ export interface IState {
 }
 
 export interface IContext {
-  url: string;              // composite primary key
-  method: requestMethod;    //  composite PK
-  type: requestType;        // CPK
+  url: string; // composite primary key
+  method: requestMethod; //  composite PK
+  type: requestType; // CPK
 }
 
 export interface IData extends IContext {
@@ -35,8 +40,8 @@ export interface IMock {
   dataType?: string;
   response?: string;
   responseMock?: string;
-  headers?: Record<string, string>
-  headersMock?: Record<string, string>,
+  headers?: Record<string, string>;
+  headersMock?: Record<string, string>;
   delay?: number;
   jsCode?: string;
   createdOn?: string;
@@ -52,8 +57,7 @@ export interface IUpsertMock<T = any> {
   mock: IMock;
 }
 
-export interface IDeleteData extends IContext {
-}
+export type IDeleteData = IContext;
 
 export interface IDeleteMock extends IContext {
   statusCode: statusCode;
@@ -73,11 +77,16 @@ export interface IUpdateDataStatusCode extends IContext {
 }
 
 export interface IPacket {
-  context?: IContext & { statusCode: statusCode},
-  domain: string;
+  tabId?: number;
+  domain?: string;
   source: appSources;
+  payload: IPacketPayload;
+}
+
+export interface IPacketPayload {
+  context?: IContext & { statusCode: statusCode };
   type: packetTypes;
-  payload?: IMock | IState;
+  data?: IMock | IState;
 }
 
 export interface IMockedTmpResponse {
@@ -85,11 +94,7 @@ export interface IMockedTmpResponse {
     sourceUrl: string;
     mockUrl: string;
     start: number;
-  }
+  };
 }
 
 export type ResetStateOptions = resetStateOptions;
-
-export interface IMockInject {
-
-}
