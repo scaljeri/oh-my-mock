@@ -30,4 +30,4 @@ const routes: Routes = [
   ],
   exports: [StateExplorerComponent]
 })
-export class StateExplorerModule { }
+export class StateExplorerModule {}

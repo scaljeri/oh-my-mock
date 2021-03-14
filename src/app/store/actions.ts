@@ -26,7 +26,7 @@ export class ChangeDomain {
 
 export class ResetState {
   static readonly type = '[Domain] Reset';
-  constructor(public payload: string) { }
+  constructor(public payload: string) {}
 }
 
 export class UpsertData {

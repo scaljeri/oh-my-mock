@@ -18,7 +18,6 @@ export class StorageService {
         if (!state[STORAGE_KEY]) {
           state[STORAGE_KEY] = { domains: {} };
         }
-
         resolve(state[STORAGE_KEY]);
       });
     });

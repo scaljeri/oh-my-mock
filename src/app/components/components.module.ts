@@ -77,4 +77,4 @@ import { HeaderButtonComponent } from './header-button/header-button.component';
     Location,
     { provide: LocationStrategy, useClass: PathLocationStrategy }]
 })
-export class ComponentsModule { }
+export class ComponentsModule {}
