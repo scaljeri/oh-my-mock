@@ -1,5 +1,23 @@
+@import 'mixins';
+
 :host {
-  background-color: #fff;
+  background-color: $color-light;
   display: flex;
   flex-direction: column;
+}
+
+mat-panel-title span {
+  font-size: $oh-sub-header;
+  font-weight: bold;
+}
+
+ol {
+  @include oh-list-unstyled;
+  margin: $spacer-4;
+
+  li {
+    margin: $spacer-2;
+    font-weight: bold;
+    font-size: $oh-font-size;
+  }
 }

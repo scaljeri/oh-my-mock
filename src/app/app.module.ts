@@ -22,7 +22,6 @@ import { HomeComponent } from './pages/home/home.component';
 
 import { MockModule } from './pages/mock/mock.module';
 import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
-import { StateExplorerModule } from './pages/state-explorer/state-explorer.module';
 import { appRoutes } from './app.routes';
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -51,10 +50,10 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatInputModule,
     MatSnackBarModule,
     ComponentsModule,
-    MockModule,
-    StateExplorerModule
+    MockModule
   ],
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule {
+}

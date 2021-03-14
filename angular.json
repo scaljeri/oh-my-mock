@@ -36,6 +36,11 @@
               }
             ],
             "styles": ["src/styles.scss"],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "src/app/style-utils"
+              ]
+            },
             "scripts": []
           },
           "configurations": {

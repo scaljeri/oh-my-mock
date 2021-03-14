@@ -14,6 +14,11 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
+import {
+  Location,
+  LocationStrategy,
+  PathLocationStrategy
+} from '@angular/common';
 
 import { CodeEditComponent } from './code-edit/code-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -25,6 +30,7 @@ import { NavListComponent } from './nav-list/nav-list.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
 import { EditDataComponent } from './edit-data/edit-data.component';
 import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
+import { HeaderButtonComponent } from './header-button/header-button.component';
 
 @NgModule({
   declarations: [
@@ -36,10 +42,12 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
     NavListComponent,
     ResetStateComponent,
     EditDataComponent,
-    DisabledEnabledComponent
+    DisabledEnabledComponent,
+    HeaderButtonComponent
   ],
   imports: [
     CommonModule,
+    RouterModule.forChild([]),
     MatTableModule,
     MatIconModule,
     PipesModule,
@@ -62,7 +70,11 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
     CodeEditComponent,
     NavListComponent,
     EditDataComponent,
-    DisabledEnabledComponent
-  ]
+    DisabledEnabledComponent,
+    HeaderButtonComponent
+  ],
+  providers: [
+    Location,
+    { provide: LocationStrategy, useClass: PathLocationStrategy }]
 })
-export class ComponentsModule {}
+export class ComponentsModule { }

@@ -5,7 +5,6 @@ import { OhMyState } from '../store/state';
 
 import { IOhMyMock, IStore } from '../../shared/type';
 import { STORAGE_KEY } from '@shared/constants';
-import { AppStateService } from './app-state.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,15 +12,13 @@ import { AppStateService } from './app-state.service';
 export class StorageService {
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
-  constructor(private appStateService: AppStateService) {}
-
   async initialize(): Promise<IOhMyMock> {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
         if (!state[STORAGE_KEY]) {
           state[STORAGE_KEY] = { domains: {} };
         }
-        state[STORAGE_KEY].activeDomain = this.appStateService.domain;
+
         resolve(state[STORAGE_KEY]);
       });
     });
@@ -29,9 +26,7 @@ export class StorageService {
 
   monitorStateChanges(): void {
     this.state$.subscribe((state) => {
-      const clone = { ...state };
-      delete clone.activeDomain;
-      this.update(clone);
+      this.update(state);
     });
   }
 

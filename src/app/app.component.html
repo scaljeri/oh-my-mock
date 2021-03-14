@@ -1,27 +1,20 @@
 <mat-drawer-container class="example-container" [hasBackdrop]="dawerBackdrop">
-  <mat-drawer #drawer [mode]="drawerMode">
+  <mat-drawer [mode]="drawerMode">
     <app-nav-list (navigate)="drawer.close()"></app-nav-list>
   </mat-drawer>
+
   <mat-drawer-content>
     <mat-toolbar>
-      <div class='button-wrapper'>
-        <a *ngIf="page && page !== '/'" routerLink="/" mat-icon-button title="Go to previous page (key=Backspace)">
-          <mat-icon>keyboard_arrow_left</mat-icon>
-        </a>
-        <button *ngIf="page === '/'" mat-icon-button (click)="drawer.toggle()" class="example-icon"
-          aria-label="Example icon-button with menu icon">
-          <mat-icon>menu</mat-icon>
-        </button>
-      </div>
+      <app-header-button (menu)="drawer.toggle()"></app-header-button>
 
       <h1>Oh My Mock - {{domain}} </h1>
       <span class="header-spacer"></span>
-      <mat-slide-toggle (change)="onEnableChange($event)" [checked]="state?.enabled" [color]="color"></mat-slide-toggle>
+      <mat-slide-toggle (change)="onEnableChange($event)" [checked]="enabled" [color]="color"></mat-slide-toggle>
     </mat-toolbar>
 
     <section>
       <router-outlet></router-outlet>
     </section>
-
   </mat-drawer-content>
+
 </mat-drawer-container>

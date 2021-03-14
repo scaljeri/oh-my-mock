@@ -1,2 +1,23 @@
-<p>TODO Domaines:</p>
-<p *ngFor="let x of domains">{{x}}</p>
+<mat-card>
+  <mat-accordion>
+    <mat-expansion-panel [expanded]="panelOpenState" (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <span *ngIf="panelOpenState">Available domains:</span>
+          <span *ngIf="!panelOpenState">Selected domain:</span>
+        </mat-panel-title>
+        <mat-panel-description>
+          {{selectedDomain}}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <ol>
+        <li *ngFor="let domain of domains">
+          <a [routerLink]="" (click)="onSelectDomain(domain)">{{domain}}</a>
+        </li>
+      </ol>
+    </mat-expansion-panel>
+    <mat-expansion-panel [expanded]="!panelOpenState" (opened)="panelOpenState = false" (closed)="panelOpenState = true">
+      <router-outlet></router-outlet>
+    </mat-expansion-panel>
+  </mat-accordion>
+</mat-card>
