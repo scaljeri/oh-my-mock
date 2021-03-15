@@ -1,18 +1,30 @@
 <div class="main">
-  <span>{{data.method}}</span>
-  <span>{{data.type}}</span>
-  <input #url matInput [value]="data.url" (keyup)="onUrlUpdate(url.value)">
+  <span>{{ data.method }}</span>
+  <span>{{ data.type }}</span>
+  <input #url matInput [value]="data.url" (keyup)="onUrlUpdate(url.value)" />
   <span class="spacer"></span>
 </div>
 
 <div class="codes">
   <div class="label">Mocks</div>
   <div class="codes-wrapper">
-    <button mat-raised-button
+    <button
+      mat-raised-button
       (click)="onSelectStatusCode(0)"
-      [ngClass]="{'is-active': !data.activeStatusCode}">Off</button>
-    <button mat-raised-button *ngFor="let code of codes" (click)="onSelectStatusCode(code)"
-      [ngClass]="{'is-active': code == data.activeStatusCode}">{{code}}</button>
+      [ngClass]="{ 'is-active': !data.activeStatusCode }"
+    >
+      Off
+    </button>
+    <button
+      mat-raised-button
+      *ngFor="let code of codes"
+      (click)="onSelectStatusCode(code)"
+      [ngClass]="{ 'is-active': code == data.activeStatusCode }">
+      {{ code }}
+    </button>
     <button mat-raised-button (click)="openAddStatusCodeDialog()">+</button>
+  </div>
+  <div>
+    <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button>
   </div>
 </div>

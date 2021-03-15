@@ -9,6 +9,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IData, requestMethod, requestType, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
+import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
+import { StoreMockComponent } from 'src/app/plugins/ngapimock/store-mock/store-mock.component';
 import {
   CreateStatusCode,
   UpdateDataStatusCode,
@@ -85,6 +87,12 @@ export class MockHeaderComponent implements OnInit, OnChanges {
         this.statusCode = newStatusCode;
         this.createStatusCode(newStatusCode);
       }
+    });
+  }
+
+  exportNgApiMock(): void {
+    this.dialog.open(NgApiMockCreateMockDialogWrapperComponent, {
+      data: this.data
     });
   }
 }

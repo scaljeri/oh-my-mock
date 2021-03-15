@@ -21,19 +21,15 @@ import { OhMyState } from './store/state';
 import { HomeComponent } from './pages/home/home.component';
 
 import { MockModule } from './pages/mock/mock.module';
-import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 import { StateExplorerModule } from './pages/state-explorer/state-explorer.module';
 import { appRoutes } from './app.routes';
-import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
-import { HotToastModule } from '@ngneat/hot-toast/lib/hot-toast.module';
-
+import { HotToastModule } from '@ngneat/hot-toast';
+import { NgApimockPluginModule } from './plugins/ngapimock/ngapimock.module';
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
-    NgApiMockExportComponent,
-    NgApimockSettingsComponent
+    HomeComponent
   ],
   imports: [
     BrowserModule,
@@ -54,6 +50,7 @@ import { HotToastModule } from '@ngneat/hot-toast/lib/hot-toast.module';
     HotToastModule.forRoot(),
     ComponentsModule,
     MockModule,
+	NgApimockPluginModule,
     StateExplorerModule
   ],
   providers: [{ provide: Window, useValue: window }],
