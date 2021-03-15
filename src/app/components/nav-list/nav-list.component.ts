@@ -1,4 +1,10 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  HostListener,
+  OnInit,
+  Output
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -24,6 +30,11 @@ export class NavListComponent {
     private router: Router
   ) {}
 
+  @HostListener('click')
+  closeDrawer(): void {
+    this.navigate.emit();
+  }
+
   onReset(): void {
     const dialogRef = this.dialog.open(ResetStateComponent, {
       width: '40%',
@@ -43,13 +54,4 @@ export class NavListComponent {
     this.navigate.emit();
   }
 
-  onNgApiMock(): void {
-    this.navigate.emit();
-    this.router.navigate(['exports', 'ngapimock']);
-  }
-
-  onExploreState(): void {
-    this.navigate.emit();
-    this.router.navigate(['state-explore']);
-  }
 }

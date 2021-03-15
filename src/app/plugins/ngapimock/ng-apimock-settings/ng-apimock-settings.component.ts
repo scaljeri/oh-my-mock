@@ -48,6 +48,9 @@ export class NgApimockSettingsComponent implements OnInit {
   }
 
   storeSettings(): void {
+    this.ngApimockSettingsService.storeSettings(this.settingsForm.value).then(() => {
+      this.snackBar.open('Settings stored', 'ngApiMockSettings', { verticalPosition: 'top', duration: 3000});
+    });
     this.ngApimockSettingsService
       .storeSettings(this.settingsForm.value)
       .then(() => {

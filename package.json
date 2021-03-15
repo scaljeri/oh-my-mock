@@ -53,6 +53,7 @@
     "@angular-devkit/build-angular": "~0.1100.5",
     "@angular/cli": "~11.0.5",
     "@angular/compiler-cli": "~11.0.5",
+    "@ng-apimock/core": "^2.5.0",
     "@types/chrome": "^0.0.127",
     "@types/jasmine": "~3.6.0",
     "@types/jest": "^26.0.20",
