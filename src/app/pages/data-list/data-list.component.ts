@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, HostBinding, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -7,16 +7,25 @@ import { IData, IOhMyMock, IState, IStore } from '@shared/type';
 import { Observable } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { UpsertData } from 'src/app/store/actions';
+import { DeleteData, UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'oh-my-data-list-page',
   templateUrl: './data-list.component.html',
-  styleUrls: ['./data-list.component.scss']
+  styleUrls: ['./data-list.component.scss'],
 })
-export class PageDataListComponent {
+export class PageDataListComponent implements OnInit {
+  @HostBinding('class')
+  get classes(): string { return `${this.theme} ${this.context}` }
+
+  public showRowAction = false;
+
+  private theme = 'dark';
+  private context: 'edit' | 'clone' = 'edit';
+
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
   public data: IData[];
@@ -28,10 +37,12 @@ export class PageDataListComponent {
     private appStateService: AppStateService,
     private store: Store,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {
+    this.theme = this.activatedRoute.snapshot.data.theme || 'dark';
+
     this.activatedRoute.params.subscribe(params => {
       const domain = params.domain;
       if (domain) {
@@ -64,6 +75,14 @@ export class PageDataListComponent {
 
   onDataSelect(index: number): void {
     this.router.navigate(['mocks', index], { relativeTo: this.activatedRoute });
+  }
+
+  onMainAction(): void {
+    this.showRowAction = !this.showRowAction;
+  }
+
+  onRowAction(rowIndex: number): void {
+    this.deleteData(rowIndex);
   }
 
   get stateSnapshot(): IState {

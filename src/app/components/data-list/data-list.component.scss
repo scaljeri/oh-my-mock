@@ -7,7 +7,9 @@
   position: relative;
 
   &.light {
-    .no-data {
+
+    .no-data,
+    .legenda {
       color: $color-dark;
     }
   }

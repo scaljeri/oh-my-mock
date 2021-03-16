@@ -1,3 +1,13 @@
+@import 'mixins';
+
+:host {
+  &.light {
+    .no-data {
+      color: $color-dark;
+    }
+  }
+}
+
 .delete-data {
   position: absolute;
   right: 20px;

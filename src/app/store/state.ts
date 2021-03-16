@@ -227,22 +227,13 @@ export class OhMyState {
   }
 
   @Action(DeleteData)
-  deleteData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IDeleteData, domain?: string }) {
+  deleteData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: number, domain?: string }) {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state) };
 
-    const { index } = OhMyState.findData(
-      domainState,
-      payload.url,
-      payload.method,
-      payload.type
-    );
-
     const dataList = [...domainState.data];
-    if (index >= 0) {
-      dataList.splice(index, 1);
-    }
+    dataList.splice(payload, 1);
 
     domainState.data = dataList;
     const domains = { ...state.domains };
