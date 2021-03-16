@@ -3,22 +3,23 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { MatTableModule } from '@angular/material/table';
 
-import { UrlsOverviewComponent } from './urls-overview.component';
+import { DataListComponent } from './data-list.component';
+import { RouterTestingModule } from '@angular/router/testing';
 
-describe('UrlsOverviewComponent', () => {
-  let component: UrlsOverviewComponent;
-  let fixture: ComponentFixture<UrlsOverviewComponent>;
+describe('DataListComponent', () => {
+  let component: DataListComponent;
+  let fixture: ComponentFixture<DataListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [UrlsOverviewComponent],
+      declarations: [DataListComponent],
       schemas: [NO_ERRORS_SCHEMA],
-      imports: [NgxsModule.forRoot([]), MatTableModule],
+      imports: [RouterTestingModule.withRoutes([]), NgxsModule.forRoot([]), MatTableModule],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(UrlsOverviewComponent);
+    fixture = TestBed.createComponent(DataListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

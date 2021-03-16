@@ -1,0 +1,100 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+}
+
+.label {
+  display: inline-flex;
+  font-weight: bold;
+  font-size: 15px;
+  width: 150px;
+  justify-content: flex-end;
+  padding-right: 5px;
+}
+
+.value {
+  font-size: 15px;
+}
+
+.delete-mock {
+  align-self: flex-start;
+}
+
+section {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+mat-card+mat-card {
+  margin-top: 10px;
+}
+
+.details {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 10px;
+
+    h2 {
+      display: flex;
+      justify-content: space-between;
+      width: 49%;
+
+      .toggle {
+        align-items: center;
+        display: flex;
+        font-size: 13px;
+
+        mat-slide-toggle {
+          margin-left: 5px;
+        }
+      }
+    }
+  }
+}
+
+.js-code-edit {
+  align-self: flex-end;
+  margin-top: 10px;
+}
+
+ngx-monaco-editor {
+  height: 300px;
+  width: 100%;
+}
+
+.data {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  button {
+    align-self: flex-end;
+    margin-top: 5px;
+  }
+}
+
+app-edit-data {
+  height: 250px;
+}
+
+.headers {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  justify-content: space-between;
+
+  button {
+    align-self: flex-end;
+  }
+}

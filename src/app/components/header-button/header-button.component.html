@@ -1,0 +1,8 @@
+<a *ngIf="!isMenu" (click)="onGoBack()" mat-icon-button title="Go to previous page (key=Backspace)">
+  <mat-icon>keyboard_arrow_left</mat-icon>
+</a>
+
+<button *ngIf="isMenu" (click)="onOpenMenu()" mat-icon-button  class="example-icon"
+  aria-label="Example icon-button with menu icon">
+  <mat-icon>menu</mat-icon>
+</button>

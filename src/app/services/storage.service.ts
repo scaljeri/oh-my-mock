@@ -5,7 +5,6 @@ import { OhMyState } from '../store/state';
 
 import { IOhMyMock, IStore } from '../../shared/type';
 import { STORAGE_KEY } from '@shared/constants';
-import { AppStateService } from './app-state.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +12,9 @@ import { AppStateService } from './app-state.service';
 export class StorageService {
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
-  constructor(private appStateService: AppStateService) {}
+  constructor() {
+    // this.reset();
+  }
 
   async initialize(): Promise<IOhMyMock> {
     return new Promise((resolve) => {
@@ -21,7 +22,7 @@ export class StorageService {
         if (!state[STORAGE_KEY]) {
           state[STORAGE_KEY] = { domains: {} };
         }
-        state[STORAGE_KEY].activeDomain = this.appStateService.domain;
+        console.log('State from storage', state);
         resolve(state[STORAGE_KEY]);
       });
     });
@@ -29,9 +30,7 @@ export class StorageService {
 
   monitorStateChanges(): void {
     this.state$.subscribe((state) => {
-      const clone = { ...state };
-      delete clone.activeDomain;
-      this.update(clone);
+      this.update(state);
     });
   }
 

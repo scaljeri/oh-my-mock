@@ -18,18 +18,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ComponentsModule } from './components/components.module';
 import { OhMyState } from './store/state';
-import { HomeComponent } from './pages/home/home.component';
 
-import { MockModule } from './pages/mock/mock.module';
-import { StateExplorerModule } from './pages/state-explorer/state-explorer.module';
 import { appRoutes } from './app.routes';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HotToastModule } from '@ngneat/hot-toast';
 import { NgApimockPluginModule } from './plugins/ngapimock/ngapimock.module';
+import { PageMockComponent } from './pages/mock/mock.component';
+import { PageDataListComponent } from './pages/data-list/data-list.component';
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent
+    PageMockComponent,
+    PageDataListComponent
   ],
   imports: [
     BrowserModule,
@@ -49,11 +49,9 @@ import { NgApimockPluginModule } from './plugins/ngapimock/ngapimock.module';
     MatSnackBarModule,
     HotToastModule.forRoot(),
     ComponentsModule,
-    MockModule,
-	NgApimockPluginModule,
-    StateExplorerModule
+    NgApimockPluginModule,
   ],
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }

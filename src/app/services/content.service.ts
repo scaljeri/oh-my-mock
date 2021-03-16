@@ -2,16 +2,17 @@ import { Injectable } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { InitState, UpsertMock } from '../store/actions';
+import { ChangeDomain, InitState, UpsertMock } from '../store/actions';
 import { OhMyState } from '../store/state';
 import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
-import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
+import { appSources, packetTypes } from '@shared/constants';
 import { log } from '../utils/log';
 import { AppStateService } from './app-state.service';
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
+  @Dispatch() changeDomain = (domain: string) => new ChangeDomain(domain);
   @Select(OhMyState.getActiveState) state$: Observable<IState>;
 
   private listener;
@@ -27,12 +28,8 @@ export class ContentService {
 
       if (tabId === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
-          sessionStorage.setItem('domain', domain);
           this.appStateService.domain = domain;
-          this.initState({
-            ...this.store.snapshot()[STORAGE_KEY],
-            activeDomain: domain
-          });
+          this.changeDomain(domain);
         }
 
         if (payload.type === packetTypes.MOCK) {

@@ -15,7 +15,6 @@ export interface IStore {
 }
 export interface IOhMyMock {
   domains: Record<domain, IState>;
-  activeDomain?: domain;
 }
 
 export interface IState {

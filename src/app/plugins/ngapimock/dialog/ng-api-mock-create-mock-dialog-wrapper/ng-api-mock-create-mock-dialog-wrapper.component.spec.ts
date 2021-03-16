@@ -1,5 +1,6 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NgApiMockCreateMockDialogWrapperComponent } from './ng-api-mock-create-mock-dialog-wrapper.component';
 
 describe('NgApiMockCreateMockDialogWrapperComponent', () => {
@@ -8,9 +9,12 @@ describe('NgApiMockCreateMockDialogWrapperComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ NgApiMockCreateMockDialogWrapperComponent ]
+      declarations: [NgApiMockCreateMockDialogWrapperComponent],
+      imports: [MatDialogModule],
+      providers: [{ provide: MAT_DIALOG_DATA, useValue: {} }],
+      schemas: [NO_ERRORS_SCHEMA]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {

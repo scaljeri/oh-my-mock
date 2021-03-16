@@ -1,1 +1,3 @@
-<pre #ref></pre>
+<pre class="code-wrapper" #ref (click)="onPreClick($event)"></pre>
+
+<mat-error *ngIf="error">{{error}}</mat-error>
