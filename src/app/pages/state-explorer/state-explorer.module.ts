@@ -3,19 +3,20 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 
-import { StateExplorerComponent } from './state-explorer.component';
+import { PageStateExplorerComponent } from './state-explorer.component';
 import { RouterModule, Routes } from '@angular/router';
-import { DataOverviewComponent } from '../data-overview/data-overview.component';
 import { PageMockComponent } from '../mock/mock.component';
+import { PageDataListComponent } from '../data-list/data-list.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: StateExplorerComponent,
+    component: PageStateExplorerComponent,
     children: [
       {
         path: ':domain',
-        component: DataOverviewComponent
+        component: PageDataListComponent,
+        data: { theme: 'light' }
       },
       {
         path: ':domain/mocks/:mockIndex',
@@ -26,13 +27,13 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [StateExplorerComponent],
+  declarations: [PageStateExplorerComponent],
   imports: [
     CommonModule,
     MatCardModule,
     MatExpansionModule,
     RouterModule.forChild(routes)
   ],
-  exports: [StateExplorerComponent]
+  exports: [PageStateExplorerComponent]
 })
 export class StateExplorerModule {}

@@ -11,11 +11,11 @@ import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
 @Component({
-  selector: 'oh-my-data-overview',
-  templateUrl: './data-overview.component.html',
-  styleUrls: ['./data-overview.component.scss']
+  selector: 'oh-my-data-list-page',
+  templateUrl: './data-list.component.html',
+  styleUrls: ['./data-list.component.scss']
 })
-export class DataOverviewComponent {
+export class PageDataListComponent {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 

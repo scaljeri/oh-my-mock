@@ -18,21 +18,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ComponentsModule } from './components/components.module';
 import { OhMyState } from './store/state';
-import { DataOverviewComponent } from './pages/data-overview/data-overview.component';
 
-import { NgApiMockExportComponent } from './pages/exports/ng-api-mock-export/ng-api-mock-export.component';
 import { appRoutes } from './app.routes';
-import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { HotToastModule } from '@ngneat/hot-toast';
+import { NgApimockPluginModule } from './plugins/ngapimock/ngapimock.module';
 import { PageMockComponent } from './pages/mock/mock.component';
-
+import { PageDataListComponent } from './pages/data-list/data-list.component';
 @NgModule({
   declarations: [
     AppComponent,
-    DataOverviewComponent,
-    NgApiMockExportComponent,
-    NgApimockSettingsComponent,
-    PageMockComponent
+    PageMockComponent,
+    PageDataListComponent
   ],
   imports: [
     BrowserModule,
@@ -50,10 +47,11 @@ import { PageMockComponent } from './pages/mock/mock.component';
     MatFormFieldModule,
     MatInputModule,
     MatSnackBarModule,
+    HotToastModule.forRoot(),
     ComponentsModule,
+    NgApimockPluginModule,
   ],
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule {
-}
+export class AppModule { }

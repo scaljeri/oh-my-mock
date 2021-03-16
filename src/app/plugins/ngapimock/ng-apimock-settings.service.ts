@@ -11,6 +11,7 @@ export interface NgApiMockSettings {
 export class NgApimockSettingsService {
   private settings: NgApiMockSettings;
   private settingKey = 'ngApiMockSettings';
+  constructor() {}
 
   getSettings(): Promise<NgApiMockSettings> {
     return new Promise((resolve, reject) => {

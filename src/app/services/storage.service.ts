@@ -12,12 +12,17 @@ import { STORAGE_KEY } from '@shared/constants';
 export class StorageService {
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
+  constructor() {
+    // this.reset();
+  }
+
   async initialize(): Promise<IOhMyMock> {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
         if (!state[STORAGE_KEY]) {
           state[STORAGE_KEY] = { domains: {} };
         }
+        console.log('State from storage', state);
         resolve(state[STORAGE_KEY]);
       });
     });

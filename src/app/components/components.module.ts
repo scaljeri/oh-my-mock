@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { ConfigComponent } from './config/config.component';
-import { UrlsOverviewComponent } from './data-list/data-list.component';
+import { DataListComponent } from './data-list/data-list.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
@@ -38,7 +38,7 @@ import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
 @NgModule({
   declarations: [
     ConfigComponent,
-    UrlsOverviewComponent,
+    DataListComponent,
     CodeEditComponent,
     CreateStatusCodeComponent,
     AddDataComponent,
@@ -70,7 +70,7 @@ import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
     MonacoEditorModule,
   ],
   exports: [
-    UrlsOverviewComponent,
+    DataListComponent,
     ConfigComponent,
     CodeEditComponent,
     NavListComponent,

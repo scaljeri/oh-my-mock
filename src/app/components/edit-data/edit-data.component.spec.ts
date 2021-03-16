@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 import { EditDataComponent } from './edit-data.component';
+import { PrettyPrintPipe } from '../../pipes/pretty-print.pipe';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('EditDataComponent', () => {
   let component: EditDataComponent;
@@ -12,6 +13,7 @@ describe('EditDataComponent', () => {
       providers: [
         { provide: PrettyPrintPipe, useValue: { transform: () => {} } },
       ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 

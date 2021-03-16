@@ -23,7 +23,10 @@ export class EditDataComponent implements AfterViewInit {
 
   @ViewChild('ref') ref: ElementRef;
 
-  constructor(private prettyPrintPipe: PrettyPrintPipe) {}
+  public error: string;
+  private timeoutId: number;
+
+  constructor(private prettyPrintPipe: PrettyPrintPipe) { }
 
   ngAfterViewInit(): void {
     this.injectCode();
@@ -61,6 +64,34 @@ export class EditDataComponent implements AfterViewInit {
 
   onDataChange(): void {
     const txt = this.ref.nativeElement.innerText;
+    this.error = null;
     this.dataChange.emit(txt);
+
+    if (this.type === 'json' && txt.length > 0) {
+      clearTimeout(this.timeoutId);
+
+      this.timeoutId = setTimeout(() => {
+        try {
+          JSON.parse(txt);
+        } catch (err) {
+          this.error = err;
+        }
+      }, 1000);
+    }
+  }
+
+  onPreClick(event: MouseEvent): void {
+    if ((event.target as HTMLElement).classList.contains('code-wrapper')) {
+      const code = (event.target as HTMLElement).querySelector('code');
+      code.focus();
+
+      // Move Caret to end of content
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      range.collapse(false);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   }
 }

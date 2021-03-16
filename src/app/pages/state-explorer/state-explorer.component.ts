@@ -15,17 +15,17 @@ import { InitState } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
 @Component({
-  selector: 'app-state-explorer',
+  selector: 'oh-my-state-explorer-page',
   templateUrl: './state-explorer.component.html',
   styleUrls: ['./state-explorer.component.scss']
 })
-export class StateExplorerComponent implements OnInit {
+export class PageStateExplorerComponent implements OnInit {
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
   public panelOpenState = true;
   public domains: domain[];
-  public selectedDomain: string;
+  public selectedDomain = '-';
 
   constructor(
     private appStateService: AppStateService,
@@ -34,7 +34,7 @@ export class StateExplorerComponent implements OnInit {
 
   ngOnInit(): void {
     this.state$.subscribe((state) => {
-      this.domains = Object.keys(state.domains);
+      this.domains = Object.keys(state.domains).filter(d => d !== this.appStateService.domain);
     });
 
     if (this.activatedRoute.firstChild) {
@@ -43,13 +43,15 @@ export class StateExplorerComponent implements OnInit {
     }
 
     this.router.events.subscribe((event: NavigationEvent) => {
-      if (event instanceof ActivationEnd) {
-        if (event.snapshot.component === StateExplorerComponent) {
-          if (this.selectedDomain && !this.panelOpenState) {
-            this.panelOpenState = true;
-          } else {
-            this.panelOpenState = false;
-          }
+      if (event instanceof ActivationEnd ) {
+        const selectedDomain = this.activatedRoute.children[0]?.url['value'][0]?.path;
+        // const selectedData = this.activatedRoute.children[0].url['value'][2]?.path;
+
+        if (selectedDomain) {
+          this.selectedDomain = decodeURIComponent(selectedDomain);
+          this.panelOpenState = false;
+        } else {
+          this.panelOpenState = true;
         }
       }
     });

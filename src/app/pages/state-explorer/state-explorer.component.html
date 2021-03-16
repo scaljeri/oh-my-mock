@@ -15,6 +15,7 @@
           <a [routerLink]="" (click)="onSelectDomain(domain)">{{domain}}</a>
         </li>
       </ol>
+      <p *ngIf="!domains?.length">No domains available!</p>
     </mat-expansion-panel>
     <mat-expansion-panel [expanded]="!panelOpenState" (opened)="panelOpenState = false" (closed)="panelOpenState = true">
       <router-outlet></router-outlet>
