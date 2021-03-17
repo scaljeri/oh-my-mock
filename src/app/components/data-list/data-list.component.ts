@@ -12,13 +12,10 @@ export class DataListComponent {
   @Input() mainActionIconName = 'edit';
   @Input() rowActionIconName = 'delete';
   @Input() @HostBinding('class') theme = 'dark';
-  @Input() @HostBinding('class.minimal') minimal = false;
 
   @Output() select = new EventEmitter<number>();
   @Output() rowAction = new EventEmitter<number>();
   @Output() mainAction = new EventEmitter<number>();
-
-  // @Dispatch() deleteData = (data: IDeleteData) => new DeleteData(data);
 
   displayedColumns = ['type', 'method', 'url', 'activeStatusCode'];
 
@@ -34,14 +31,6 @@ export class DataListComponent {
 
   onMainAction(): void {
     this.mainAction.emit();
-    // this.edit = !this.edit;
-
-    // if (this.edit) {
-    //   this.displayedColumns.unshift('edit');
-    // } else {
-    //   this.displayedColumns.shift();
-    // }
-    // console.log(this.edit, this.displayedColumns);
   }
 
   onRowAction(event: MouseEvent, rowIndex: number): void {

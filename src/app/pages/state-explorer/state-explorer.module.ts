@@ -18,7 +18,7 @@ const routes: Routes = [
       {
         path: ':domain',
         component: PageDataListComponent,
-        data: { theme: 'light', context: 'clone' }
+        data: { theme: 'light' }
       },
       {
         path: ':domain/mocks/:mockIndex',
