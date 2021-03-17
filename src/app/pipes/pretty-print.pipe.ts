@@ -9,12 +9,16 @@ export class PrettyPrintPipe implements PipeTransform {
       return '';
     }
 
+    let obj = value;
+
     if (typeof value === 'string') {
       try {
-        return JSON.stringify(JSON.parse(value), null, indent);
+        obj = JSON.parse(value);
       } catch {
         return value;
       }
     }
+
+    return JSON.stringify(obj, null, indent);
   }
 }
