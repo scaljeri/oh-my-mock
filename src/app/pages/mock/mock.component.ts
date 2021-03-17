@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Select, Store } from '@ngxs/store';
-import { IData, IMock, IOhMyMock } from '@shared/type';
+import { Select } from '@ngxs/store';
+import { IData, IState } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { OhMyState } from 'src/app/store/state';
 
@@ -14,19 +14,19 @@ export class PageMockComponent implements OnInit {
   public data: IData;
   private subscription: Subscription;
 
-  @Select(OhMyState) state$: Observable<IOhMyMock>;
+  @Select(OhMyState.mainState) state$: Observable<IState>;
 
-  constructor(
-    private activeRoute: ActivatedRoute,
-    private store: Store) { }
+  constructor(private activeRoute: ActivatedRoute) { }
 
   ngOnInit(): void {
     const index = Number(this.activeRoute.snapshot.params.mockIndex);
-    const domain = decodeURIComponent(this.activeRoute.snapshot.params.domain || '');
 
-    this.subscription = this.state$.subscribe((state: IOhMyMock) => {
-      const activeState = domain ? state.domains[domain] : OhMyState.getActiveState(state);
-      this.data = activeState.data[index];
+    this.subscription = this.state$.subscribe((state: IState) => {
+      this.data = state.data[index];
     })
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }

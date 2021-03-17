@@ -1,5 +1,5 @@
 <mat-card *ngIf="data" class="header">
-  <app-mock-header [data]="data"></app-mock-header>
+  <app-mock-header [data]="data" [domain]="domain"></app-mock-header>
 </mat-card>
 
 <mat-card *ngIf="data?.activeStatusCode > 0" class="details">

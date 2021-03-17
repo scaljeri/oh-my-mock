@@ -12,6 +12,7 @@ export class DataListComponent {
   @Input() mainActionIconName = 'edit';
   @Input() rowActionIconName = 'delete';
   @Input() @HostBinding('class') theme = 'dark';
+  @Input() @HostBinding('class.minimal') minimal = false;
 
   @Output() select = new EventEmitter<number>();
   @Output() rowAction = new EventEmitter<number>();
@@ -22,10 +23,12 @@ export class DataListComponent {
   displayedColumns = ['type', 'method', 'url', 'activeStatusCode'];
 
   ngOnChanges(): void {
-    if (this.showRowAction) {
-      this.displayedColumns.unshift('edit');
-    } else {
+    if (this.displayedColumns.indexOf('rowAction') === 0) {
       this.displayedColumns.shift();
+    }
+
+    if (this.showRowAction) {
+      this.displayedColumns.unshift('rowAction');
     }
   }
 
@@ -41,13 +44,10 @@ export class DataListComponent {
     // console.log(this.edit, this.displayedColumns);
   }
 
-  onRowAction(rowIndex: number): void {
+  onRowAction(event: MouseEvent, rowIndex: number): void {
+    event.stopPropagation();
     this.rowAction.emit(rowIndex);
   }
-
-  // onDeleteData(row: IDeleteData): void {
-  //   this.deleteData(row);
-  // }
 
   onDataClick(index: number): void {
     this.select.emit(index);

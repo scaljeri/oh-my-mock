@@ -1,6 +1,6 @@
 <mat-card>
   <mat-accordion>
-    <mat-expansion-panel [expanded]="panelOpenState" (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+    <mat-expansion-panel [expanded]="true">
       <mat-expansion-panel-header>
         <mat-panel-title>
           <span *ngIf="panelOpenState">Available domains:</span>
@@ -17,8 +17,27 @@
       </ol>
       <p *ngIf="!domains?.length">No domains available!</p>
     </mat-expansion-panel>
-    <mat-expansion-panel [expanded]="!panelOpenState" (opened)="panelOpenState = false" (closed)="panelOpenState = true">
-      <router-outlet></router-outlet>
+    <mat-expansion-panel #panel (closed)="panelOpenState = true">
+      <mat-expansion-panel-header *ngIf="dataItem">
+        <mat-panel-title>
+          {{dataItem.method}} {{dataItem.type}}
+        </mat-panel-title>
+        <mat-panel-description>
+          {{dataItem.url}}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <oh-my-data-list
+        theme="light"
+        [data]="dataList"
+        [showRowAction]="showRowAction"
+        [mainActionIconName]="mainActionIconName"
+        [rowActionIconName]="rowActionIconName"
+        (mainAction)="onMainAction()"
+        (rowAction)="onRowAction($event)"
+        (select)="onDataSelect($event)"></oh-my-data-list>
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+      <oh-my-mock *ngIf="dataItem" [data]="dataItem" [domain]="selectedDomain"></oh-my-mock>
     </mat-expansion-panel>
   </mat-accordion>
 </mat-card>
