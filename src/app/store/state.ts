@@ -135,7 +135,6 @@ export class OhMyState {
     const mocks = { ...data.mocks };
     const mock = {
       jsCode: MOCK_JS_CODE,
-      useMock: true,
       ...mocks[payload.statusCode]
     };
 

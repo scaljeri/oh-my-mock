@@ -18,19 +18,19 @@ function sendKnockKnock(tabId?: number) {
 
 // Inject XHR mocking code
 (function () {
-  const xhrScript = document.createElement('script');
-  xhrScript.type = 'text/javascript';
-  xhrScript.onload = function () {
-    (this as any).remove();
-    // Notify Popup that content script is ready
+  const mockScript = document.createElement('script');
+  mockScript.type = 'text/javascript';
+  mockScript.onload = function () {
+    (this as HTMLScriptElement).remove();
     try {
+      // Notify Popup that content script is ready
       sendKnockKnock();
     } catch (e) {
       log('Cannot connect to the OhMyMock tab', e);
     }
   };
-  xhrScript.src = chrome.runtime.getURL('injected.js');
-  document.head.append(xhrScript);
+  mockScript.src = chrome.runtime.getURL('injected.js');
+  document.head.append(mockScript);
 })();
 
 let tabId: number;
