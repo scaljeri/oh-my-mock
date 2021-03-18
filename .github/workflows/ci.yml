@@ -5,22 +5,28 @@ on:
   push:
     branches:
       - master
+      - feat/19-ci-cd
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [15.5.x]
-
     steps:
-      - uses: actions/checkout@v1
-      - name: Install node modules
-        run: yarn
-      - name: Run Linting
-        run: yarn lint
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: yarn
+      - run: npm lint
+
+
+#    steps:
+#      - uses: actions/checkout@v1
+#      - name: Install node modules
+#        run: yarn
+#      - name: Run Linting
+#        run: yarn lint
+#      - name: Run a multi-line script
+#        run: |
+#          echo Add other actions to build,
+#          echo test, and deploy your project.
