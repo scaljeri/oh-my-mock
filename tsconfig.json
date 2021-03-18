@@ -15,7 +15,8 @@
     "types": ["Chrome"],
     "paths": {
       "@shared/*": ["src/shared/*"]
-    }
+    },
+    "skipLibCheck": true
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
   "angularCompilerOptions": {
