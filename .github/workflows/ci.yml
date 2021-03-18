@@ -18,7 +18,7 @@ jobs:
           node-version: '15.5.x'
       - run: |
           yarn
-          ls -lart node_modules
+          yarn lint
       - run: ls -lart node_modules
       - run: yarn lint
 
