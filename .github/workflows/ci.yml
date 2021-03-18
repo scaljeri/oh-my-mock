@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+      - name: Install node modules
+        run: yarn
       - name: Run Linting
         run: yarn lint
       - name: Run a multi-line script
