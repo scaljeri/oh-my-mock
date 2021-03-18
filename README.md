@@ -1,3 +1,5 @@
+![example workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/ci.yml/badge.svg)
+
 ### setup development
 
     $> yarn build:watch
