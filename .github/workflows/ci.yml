@@ -13,14 +13,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: borales/actions-yarn@v2.0.0
         with:
-          node-version: '15.5.x'
-      - run: |
-          yarn
-          yarn lint
-      - run: ls -lart node_modules
-      - run: yarn lint
+          cmd: install # will run `yarn install` command
+      - uses: borales/actions-yarn@v2.0.0
+        with:
+          cmd: build # will run `yarn build` command
+      - uses: borales/actions-yarn@v2.0.0
+        with:
+          cmd: test # will run `yarn test` command
+
+
+ #   steps:
+ #     - uses: actions/checkout@v2
+ #     - uses: actions/setup-node@v2
+ #       with:
+ #         node-version: '15.5.x'
+ #     - run: |
+ #         yarn
+ #         yarn lint
+ #     - run: ls -lart node_modules
+ #     - run: yarn lint
 
 
 #    steps:
