@@ -16,8 +16,8 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - run: ls -lart node_modules
       - run: yarn
+      - run: ls -lart node_modules
       - run: yarn lint
 
 
