@@ -17,6 +17,7 @@ import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.compon
 })
 export class MockComponent implements OnChanges {
   @Input() data: IData;
+  @Input() domain: string;
   mock: IMock;
 
   @Dispatch() upsertMock = (mock: IMock) =>
@@ -26,7 +27,7 @@ export class MockComponent implements OnChanges {
       type: this.data.type,
       statusCode: this.data.activeStatusCode,
       mock
-    });
+    }, this.domain);
   @Dispatch() deleteMockResponse = (response: IDeleteMock) =>
     new DeleteMock(response);
 

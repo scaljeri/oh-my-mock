@@ -10,7 +10,7 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IData, requestMethod, requestType, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
-import { StoreMockComponent } from 'src/app/plugins/ngapimock/store-mock/store-mock.component';
+
 import {
   CreateStatusCode,
   UpdateDataStatusCode,
@@ -24,6 +24,7 @@ import {
 })
 export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
+  @Input() domain: string;
 
   public statusCode: statusCode;
   public codes: statusCode[];
@@ -35,7 +36,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
       type: this.data.type,
       statusCode,
       activeStatusCode: statusCode
-    });
+    }, this.domain);
   @Dispatch() updateDataUrl = (
     url: string,
     method: requestMethod,
@@ -55,13 +56,13 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     setTimeout(() => {
-      if (this.data.activeStatusCode === undefined) {
+      if (this.data.activeStatusCode === undefined && Object.keys(this.data.mocks).length > 0) {
         this.onSelectStatusCode(Number(Object.keys(this.data.mocks).sort()[0]));
       }
     });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
+  ngOnChanges(): void {
     this.codes = this.data
       ? Object.keys(this.data.mocks).map(Number).sort()
       : [];

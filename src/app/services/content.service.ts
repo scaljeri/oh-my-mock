@@ -13,7 +13,7 @@ export class ContentService {
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
   @Dispatch() changeDomain = (domain: string) => new ChangeDomain(domain);
-  @Select(OhMyState.getActiveState) state$: Observable<IState>;
+  @Select(OhMyState.mainState) state$: Observable<IState>;
 
   private listener;
   private state: IState;

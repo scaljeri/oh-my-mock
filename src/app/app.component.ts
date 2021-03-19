@@ -36,7 +36,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   page = '';
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
-  @Select(OhMyState.getActiveState) state$: Observable<IState>;
+  @Select(OhMyState.mainState) state$: Observable<IState>;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 

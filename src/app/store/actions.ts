@@ -41,7 +41,7 @@ export class UpsertMock {
 
 export class DeleteData {
   static readonly type = '[Data] delete';
-  constructor(public payload: IDeleteData, public domain?: string) { }
+  constructor(public payload: number, public domain?: string) { }
 }
 
 export class DeleteMock {

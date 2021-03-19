@@ -1,52 +1,52 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
-import { IData, IOhMyMock, IState, IStore } from '@shared/type';
+import { IData, IState, IStore } from '@shared/type';
 import { Observable } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { UpsertData } from 'src/app/store/actions';
+import { DeleteData, UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'oh-my-data-list-page',
   templateUrl: './data-list.component.html',
-  styleUrls: ['./data-list.component.scss']
+  styleUrls: ['./data-list.component.scss'],
 })
-export class PageDataListComponent {
+export class PageDataListComponent implements OnInit {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
+  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
+  @Select(OhMyState.mainState) state$: Observable<IState>;
 
+  public showRowAction = false;
   public data: IData[];
   public domain: string;
-  private state: IOhMyMock;
 
   constructor(
     public dialog: MatDialog,
-    private appStateService: AppStateService,
     private store: Store,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {
-    this.activatedRoute.params.subscribe(params => {
-      const domain = params.domain;
-      if (domain) {
-        this.domain = decodeURIComponent(domain);
-      }
-
-      if (this.state) {
-        this.data = this.state.domains[this.domain].data;
-      }
+    this.state$.subscribe((state: IState) => {
+      this.data = state?.data || [];
     });
+  }
 
-    this.state$.subscribe((state: IOhMyMock) => {
-      this.state = state;
-      this.data = state.domains[this.domain || this.appStateService.domain].data;
-    });
+  onDataSelect(index: number): void {
+    this.router.navigate(['mocks', index], { relativeTo: this.activatedRoute });
+  }
+
+  onMainAction(): void {
+    this.showRowAction = !this.showRowAction;
+  }
+
+  onRowAction(rowIndex: number): void {
+    this.deleteData(rowIndex);
   }
 
   onAddData(): void {
@@ -60,10 +60,6 @@ export class PageDataListComponent {
       this.upsertData(data);
       this.router.navigate(['mocks', newDataIndex]);
     });
-  }
-
-  onDataSelect(index: number): void {
-    this.router.navigate(['mocks', index], { relativeTo: this.activatedRoute });
   }
 
   get stateSnapshot(): IState {

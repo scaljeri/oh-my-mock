@@ -7,6 +7,8 @@ import { PageStateExplorerComponent } from './state-explorer.component';
 import { RouterModule, Routes } from '@angular/router';
 import { PageMockComponent } from '../mock/mock.component';
 import { PageDataListComponent } from '../data-list/data-list.component';
+import { ComponentsModule } from 'src/app/components/components.module';
+import { HotToastModule } from '@ngneat/hot-toast';
 
 const routes: Routes = [
   {
@@ -32,8 +34,10 @@ const routes: Routes = [
     CommonModule,
     MatCardModule,
     MatExpansionModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    ComponentsModule,
+    HotToastModule
   ],
   exports: [PageStateExplorerComponent]
 })
-export class StateExplorerModule {}
+export class StateExplorerModule { }

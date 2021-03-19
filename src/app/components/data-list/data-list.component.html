@@ -1,21 +1,22 @@
 <ng-container *ngIf="data?.length">
-  <button class="edit-data" (click)="onEdit()" mat-mini-fab color="warn" aria-label="Edit data">
-    <mat-icon>{{edit ? 'clear' : 'edit'}}</mat-icon>
+  <button *ngIf="mainActionIconName" class="edit-data" (click)="onMainAction()" mat-mini-fab color="warn" aria-label="Edit data">
+    <mat-icon>{{mainActionIconName}}</mat-icon>
   </button>
 
   <div class="legenda">
     <span class="active">Active</span>
+
     <span class="active-modified">Active/modified</span>
     <span class="inactive">Inactive</span>
   </div>
 
-  <table [ngClass]="{'is-edit': edit}" mat-table [dataSource]="data" class="mat-elevation-z8">
-    <ng-container matColumnDef="edit">
+  <table mat-table [dataSource]="data" class="mat-elevation-z8">
+    <ng-container matColumnDef="rowAction">
       <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell [hidden]="!edit" *matCellDef="let element">
-        <button (click)="onDeleteData(element)" mat-mini-fab color="primary"
+      <td mat-cell *matCellDef="let element;let i = index">
+        <button (click)="onRowAction($event, i)" mat-mini-fab color="primary"
           aria-label="Example icon button with a menu icon">
-          <mat-icon>delete</mat-icon>
+          <mat-icon>{{rowActionIconName}}</mat-icon>
         </button>
       </td>
     </ng-container>
