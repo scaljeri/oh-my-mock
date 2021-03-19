@@ -4,8 +4,10 @@ name: CI
 on:
   push:
     branches:
-      - master
-      - feat/19-ci-cd
+      - '*'         # matches every branch that doesn't contain a '/'
+      - '*/*'       # matches every branch containing a single '/'
+      - '**'        # matches every branch
+      - '!master'   # excludes master
 
 jobs:
   build:
@@ -26,7 +28,6 @@ jobs:
         with:
           cmd: test # will run `yarn test` command
 
-
  #   steps:
  #     - uses: actions/checkout@v2
  #     - uses: actions/setup-node@v2
@@ -37,15 +38,3 @@ jobs:
  #         yarn lint
  #     - run: ls -lart node_modules
  #     - run: yarn lint
-
-
-#    steps:
-#      - uses: actions/checkout@v1
-#      - name: Install node modules
-#        run: yarn
-#      - name: Run Linting
-#        run: yarn lint
-#      - name: Run a multi-line script
-#        run: |
-#          echo Add other actions to build,
-#          echo test, and deploy your project.
