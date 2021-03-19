@@ -1,3 +1,5 @@
+///<reference types="chrome"/>
+
 import { Injectable } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
