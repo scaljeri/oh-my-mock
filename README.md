@@ -1,4 +1,4 @@
-![example workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/ci.yml/badge.svg)
+![example workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/master.yml/badge.svg)
 
 ### setup development
 
