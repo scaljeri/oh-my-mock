@@ -14,7 +14,7 @@
     "build:custom": "node ./scripts/monitor.js",
     "build:watch": "run-p build:custom build:watchng",
     "test": "npx jest",
-    "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix",
+    "lint": "tsc --project tsconfig.json --noEmit && eslint . --ext js,ts,json --quiet --fix",
     "e2e": "ng e2e",
     "prepare": "husky install"
   },
