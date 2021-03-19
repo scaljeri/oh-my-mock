@@ -13,7 +13,7 @@
     "target": "es6",
     "module": "commonjs",
     "lib": ["es5", "es6", "dom"],
-    "types": [],
+    "types": ["Chrome"],
     "skipLibCheck": true
   },
   "files": ["src/content/index.ts"]
