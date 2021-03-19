@@ -1,7 +1,4 @@
 <ng-container *ngIf="data?.length">
-  <button *ngIf="mainActionIconName" class="edit-data" (click)="onMainAction()" mat-mini-fab color="warn" aria-label="Edit data">
-    <mat-icon>{{mainActionIconName}}</mat-icon>
-  </button>
 
   <div class="legenda">
     <span class="active">Active</span>
@@ -11,15 +8,6 @@
   </div>
 
   <table mat-table [dataSource]="data" class="mat-elevation-z8">
-    <ng-container matColumnDef="rowAction">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let element;let i = index">
-        <button (click)="onRowAction($event, i)" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
-          <mat-icon>{{rowActionIconName}}</mat-icon>
-        </button>
-      </td>
-    </ng-container>
     <ng-container matColumnDef="type">
       <th mat-header-cell *matHeaderCellDef>Type </th>
       <td mat-cell *matCellDef="let element"> {{element.type}} </td>
@@ -41,9 +29,29 @@
       </td>
     </ng-container>
 
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let element;let i = index">
+        <div class="action-btn-wrapper">
+          <button *ngIf="showActivate && !element.activeStatusCode" (click)="onActivate(i)" mat-mini-fab color="primary"
+            aria-label="Example icon button with a menu icon">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+          <button *ngIf="showClone" (click)="onClone(i)" mat-mini-fab color="primary"
+            aria-label="Example icon button with a menu icon">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+          <button *ngIf="showDelete" (click)="onDelete(i)" mat-mini-fab color="primary"
+            aria-label="Example icon button with a menu icon">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </td>
+    </ng-container>
+
     <tr mat-header-row *matHeaderRowDef="displayedColumns">
     </tr>
-    <tr mat-row (click)="onDataClick(i)" *matRowDef="let row; columns: displayedColumns;let i = index"
+    <tr mat-row (click)="onDataClick($event, i)" *matRowDef="let row; columns: displayedColumns;let i = index"
       [ngClass]="{'is-active': row.activeStatusCode > 0, 'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
     </tr>
   </table>

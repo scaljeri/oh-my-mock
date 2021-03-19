@@ -3,13 +3,13 @@ import {
   Input,
   OnChanges,
   OnInit,
-  SimpleChanges
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IData, requestMethod, requestType, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
+import { findAutoActiveMock } from '../../../utils/data';
 
 import {
   CreateStatusCode,
@@ -52,12 +52,12 @@ export class MockHeaderComponent implements OnInit, OnChanges {
       statusCode
     });
 
-  constructor(public dialog: MatDialog) {}
+  constructor(public dialog: MatDialog) { }
 
   ngOnInit(): void {
     setTimeout(() => {
       if (this.data.activeStatusCode === undefined && Object.keys(this.data.mocks).length > 0) {
-        this.onSelectStatusCode(Number(Object.keys(this.data.mocks).sort()[0]));
+        this.onSelectStatusCode(findAutoActiveMock(this.data));
       }
     });
   }
@@ -72,8 +72,10 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     this.updateDataUrl(this.data.url, this.data.method, this.data.type, url);
   }
 
-  onSelectStatusCode(statusCode: statusCode): void {
-    this.updateActiveStatusCode(statusCode);
+  onSelectStatusCode(statusCode: statusCode | void): void {
+    if (statusCode) {
+      this.updateActiveStatusCode(statusCode);
+    }
   }
 
   openAddStatusCodeDialog(): void {

@@ -1,5 +1,11 @@
-import { Component, EventEmitter, HostBinding, Inject, Input, Optional, Output, SimpleChanges } from '@angular/core';
-import { IData } from 'src/shared/type';
+import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
+import { HotToastService } from '@ngneat/hot-toast';
+import { Dispatch } from '@ngxs-labs/dispatch-decorator';
+import { Store } from '@ngxs/store';
+import { DeleteData, UpdateDataStatusCode, UpsertData } from 'src/app/store/actions';
+import { OhMyState } from 'src/app/store/state';
+import { findAutoActiveMock } from 'src/app/utils/data';
+import { IData, IState, IStore, statusCode } from 'src/shared/type';
 
 @Component({
   selector: 'oh-my-data-list',
@@ -8,38 +14,61 @@ import { IData } from 'src/shared/type';
 })
 export class DataListComponent {
   @Input() data: IData[] = [];
-  @Input() showRowAction = false;
-  @Input() mainActionIconName = 'edit';
-  @Input() rowActionIconName = 'delete';
+  @Input() domain: string;
+  @Input() showDelete: boolean;
+  @Input() showClone: boolean;
+  @Input() showActivate: boolean;
   @Input() @HostBinding('class') theme = 'dark';
-
   @Output() select = new EventEmitter<number>();
-  @Output() rowAction = new EventEmitter<number>();
-  @Output() mainAction = new EventEmitter<number>();
 
-  displayedColumns = ['type', 'method', 'url', 'activeStatusCode'];
+  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
+    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode });
+
+  public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
+
+  constructor(private store: Store, private toast: HotToastService) {}
 
   ngOnChanges(): void {
     if (this.displayedColumns.indexOf('rowAction') === 0) {
       this.displayedColumns.shift();
     }
+  }
 
-    if (this.showRowAction) {
-      this.displayedColumns.unshift('rowAction');
+  onActivate(rowIndex: number): void {
+    const statusCode = findAutoActiveMock(this.data[rowIndex]);
+    if (statusCode > 0) {
+      this.updateActiveStatusCode(this.data[rowIndex], statusCode as number);
+    } else {
+      this.toast.error('Could not activate mock, responses available!');
     }
   }
 
-  onMainAction(): void {
-    this.mainAction.emit();
+  onDelete(rowIndex: number): void {
+    this.deleteData(rowIndex);
+  }
+  onClone(rowIndex: number): void {
+    const data = this.data[rowIndex];
+    const state = this.getActiveStateSnapshot();
+
+    if (!state.data.some(d => d.url === data.url)) {
+      this.upsertData(data);
+      this.toast.success('Cloned ' + data.url);
+    } else {
+      this.toast.error(`Mock already exists (${data.url})`);
+    }
   }
 
-  onRowAction(event: MouseEvent, rowIndex: number): void {
-    event.stopPropagation();
-    this.rowAction.emit(rowIndex);
+  onDataClick(event: MouseEvent, index: number): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.mat-column-actions')) {
+      this.select.emit(index);
+    }
   }
 
-  onDataClick(index: number): void {
-    this.select.emit(index);
+  private getActiveStateSnapshot(): IState {
+    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 }
 
