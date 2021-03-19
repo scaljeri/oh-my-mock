@@ -15,8 +15,7 @@
     "build:watch": "run-p build:custom build:watchng",
     "test": "npx jest",
     "lint": "tsc --project tsconfig.json --noEmit && eslint . --ext js,ts,json --quiet --fix",
-    "e2e": "ng e2e",
-    "prepare": "husky install"
+    "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
