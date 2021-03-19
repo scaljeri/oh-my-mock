@@ -12,7 +12,7 @@
     "target": "es2015",
     "module": "es2020",
     "lib": ["es2018", "dom"],
-    "types": ["Chrome"],
+    "types": [],
     "paths": {
       "@shared/*": ["src/shared/*"]
     },
