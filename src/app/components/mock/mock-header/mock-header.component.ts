@@ -2,8 +2,7 @@ import {
   Component,
   Input,
   OnChanges,
-  OnInit,
-  SimpleChanges
+  OnInit
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';

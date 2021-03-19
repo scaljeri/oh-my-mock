@@ -135,10 +135,12 @@ export class OhMyState {
       payload.method,
       payload.type
     );
+
     const dataList = [...domainState.data];
     const mocks = { ...data.mocks };
     const mock = {
       jsCode: MOCK_JS_CODE,
+      delay: 0,
       ...mocks[payload.statusCode]
     };
 
