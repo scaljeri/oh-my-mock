@@ -10,8 +10,8 @@
   position: relative;
 
   &.light {
-    --bg-color: $color-light;
-    --color: $color-dark;
+    --bg-color: #{$color-light};
+    --color: #{$color-dark};
 
     .no-data,
     .legenda {
