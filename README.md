@@ -1,4 +1,5 @@
-![Master workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/feature.yml/badge.svg)
+![Master workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/master.yml/badge.svg)
+![Feature workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/feature.yml/badge.svg)
 
 ### setup development
 
