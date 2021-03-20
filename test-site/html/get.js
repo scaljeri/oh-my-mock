@@ -1,3 +1,39 @@
+document.addEventListener('OhMyMocksLoaded', () => {
+    const findData = () => {
+      return window.OhMyMocks.state.data.find(d => d.url === '/users' && d.method === 'XHR' && d.type === 'GET');
+    }
+
+    document.querySelector('.codes').addEventListener('change', (e) => {
+      const selected = Number(e.target.value);
+      const data = findData();
+
+      if (data) {
+        data.activeStatusCode = selected;
+      }
+    });
+
+    window.OhMyMocks.state$.subscribe(state => {
+      if (!state) {
+        return
+      }
+      const data = state.data.find(d => d.url === '/users' && d.method === 'XHR' && d.type === 'GET');
+      const codes = Object.keys(data.mocks);
+      codes.unshift(0);
+      const select = document.querySelector(".codes");
+      select.innerText = '';
+
+      for (const code of codes) {
+        const option = document.createElement("option");
+        option.value = code;
+        option.text = code === 0 ? 'Off' : code;
+        if (code == data.activeStatusCode || code === 0 && !data.activeStatusCode) {
+          option.setAttribute('selected', 'selected');
+        }
+        select.appendChild(option);
+      }
+    });
+});
+
 document.addEventListener("DOMContentLoaded", function (event) {
   const btn = document.querySelector("button.get");
   btn.addEventListener("click", () => {
