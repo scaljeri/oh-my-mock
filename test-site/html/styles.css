@@ -32,3 +32,12 @@ button + .get-code {
 .hidden {
   display: none;
 }
+
+.codes {
+  display: none;
+}
+
+.is-active + .codes {
+  display: block;
+
+}
