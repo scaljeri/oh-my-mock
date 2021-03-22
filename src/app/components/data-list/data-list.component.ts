@@ -36,18 +36,23 @@ export class DataListComponent {
     }
   }
 
-  onActivate(rowIndex: number): void {
-    const statusCode = findAutoActiveMock(this.data[rowIndex]);
-    if (statusCode > 0) {
+  onActivateToggle(rowIndex: number): void {
+    const data = this.data[rowIndex];
+
+    if (data.activeStatusCode === 0) {
+      const statusCode = findAutoActiveMock(data);
       this.updateActiveStatusCode(this.data[rowIndex], statusCode as number);
+      this.toast.success(`Mock with status-code ${statusCode} activated`);
     } else {
-      this.toast.error('Could not activate mock, responses available!');
+      this.updateActiveStatusCode(this.data[rowIndex], 0);
+      this.toast.warning('Mock disabled!');
     }
   }
 
   onDelete(rowIndex: number): void {
     this.deleteData(rowIndex);
   }
+
   onClone(rowIndex: number): void {
     const data = this.data[rowIndex];
     const state = this.getActiveStateSnapshot();
