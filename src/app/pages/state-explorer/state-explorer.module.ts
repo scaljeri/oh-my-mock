@@ -9,6 +9,8 @@ import { PageMockComponent } from '../mock/mock.component';
 import { PageDataListComponent } from '../data-list/data-list.component';
 import { ComponentsModule } from 'src/app/components/components.module';
 import { HotToastModule } from '@ngneat/hot-toast';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 const routes: Routes = [
   {
@@ -34,6 +36,8 @@ const routes: Routes = [
     CommonModule,
     MatCardModule,
     MatExpansionModule,
+    MatIconModule,
+    MatButtonModule,
     RouterModule.forChild(routes),
     ComponentsModule,
     HotToastModule

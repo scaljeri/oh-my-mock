@@ -6,7 +6,6 @@ import { Select, Store } from '@ngxs/store';
 import { IData, IState, IStore } from '@shared/type';
 import { Observable } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
-import { AppStateService } from 'src/app/services/app-state.service';
 import { DeleteData, UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 

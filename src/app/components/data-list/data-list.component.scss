@@ -1,16 +1,21 @@
 @import 'mixins';
 
 :host {
+  --color: #{$color-light};
+  --bg-color: #{$color-dark};
+
   display: flex;
   flex-direction: column;
   padding: 20px;
   position: relative;
 
   &.light {
+    --bg-color: #{$color-light};
+    --color: #{$color-dark};
 
     .no-data,
     .legenda {
-      color: $color-dark;
+      color: var(--color);
     }
   }
 
@@ -26,7 +31,7 @@
       }
     }
 
-    tr td:last-child::after {
+    td.mat-column-activeStatusCode::after {
       content: '→';
       position: absolute;
       color: #6e6d6d;
@@ -93,4 +98,25 @@
   position: absolute;
   top: 27px;
   right: 30px;
+}
+
+//
+th.mat-column-actions {
+  background-color: var(--bg-color);
+}
+
+td.mat-column-actions.mat-column-actions {
+  background-color: var(--bg-color) !important;
+  cursor: default !important;
+  width: 140px;
+
+  .action-btn-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    padding-left: $spacer-2;
+  }
+
+  button+button {
+    margin-left: $spacer-1;
+  }
 }

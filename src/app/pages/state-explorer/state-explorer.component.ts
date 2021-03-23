@@ -59,11 +59,7 @@ export class PageStateExplorerComponent implements OnInit {
     this.panels.toArray()[1].open();
   }
 
-  onMainAction(): void {
-    this.getStateSnapshot(this.selectedDomain).data.forEach((_, i) => this.onRowAction(i));
-  }
-
-  onRowAction(rowIndex: number): void {
+  private cloneData(rowIndex: number): void {
     const state = this.getActiveStateSnapshot();
     const data = this.getStateSnapshot(this.selectedDomain).data[rowIndex];
 
@@ -73,6 +69,10 @@ export class PageStateExplorerComponent implements OnInit {
     } else {
       this.toast.error(`Mock already exists (${data.url})`);
     }
+  }
+
+  onCloneAll(): void {
+    this.getStateSnapshot(this.selectedDomain).data.forEach((_, i) => this.cloneData(i));
   }
 
   onDataSelect(rowIndex: number): void {

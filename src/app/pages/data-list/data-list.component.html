@@ -1,11 +1,10 @@
 <oh-my-data-list
   [data]="data"
-  [showRowAction]="showRowAction"
-  (mainAction)="onMainAction()"
-  (rowAction)="onRowAction($event)"
+  [showActivate]="true"
+  [showDelete]="true"
   (select)="onDataSelect($event)"></oh-my-data-list>
 
-<button *ngIf="!domain" (click)="onAddData()" class="delete-data" mat-fab color="primary"
+<button *ngIf="!domain" (click)="onAddData()" class="new-data" mat-fab color="primary"
   aria-label="Delete all mocks for a specific URL">
   <mat-icon>add</mat-icon>
 </button>
