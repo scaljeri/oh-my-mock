@@ -14,9 +14,8 @@
     "build:custom": "node ./scripts/monitor.js",
     "build:watch": "run-p build:custom build:watchng",
     "test": "npx jest",
-    "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix",
-    "e2e": "ng e2e",
-    "prepare": "husky install"
+    "lint": "tsc --project tsconfig.json --noEmit && eslint . --ext js,ts,json --quiet --fix",
+    "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
@@ -67,7 +66,6 @@
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-prettier": "^3.3.1",
-    "husky": "^5.1.3",
     "jasmine-core": "~3.6.0",
     "jasmine-spec-reporter": "~5.0.0",
     "jest": "^26.6.3",
