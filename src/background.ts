@@ -1,3 +1,5 @@
+///<reference types="chrome"/>
+
 import { STORAGE_KEY } from './shared/constants';
 
 console.log(`${STORAGE_KEY}: background script is ready`);

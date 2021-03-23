@@ -2,28 +2,24 @@ import { logging } from '../shared/utils/log';
 import { packetTypes, STORAGE_KEY } from '../shared/constants';
 import { IPacketPayload, IState } from '../shared/type';
 import { OhMockXhr } from './mock-oh-xhr';
+import { BehaviorSubject } from 'rxjs';
 
 declare let window: any;
 
 const MEM_XHR_REQUEST = window.XMLHttpRequest;
 
 (function () {
+  const stateChangeSubject = new BehaviorSubject<IState>(null);
+  // Public API
+  window[STORAGE_KEY] = { state$: stateChangeSubject.asObservable() };
+  Object.defineProperty(window[STORAGE_KEY], 'state', {
+    get: () => OhMockXhr.ohState,
+    set: (state: IState) => OhMockXhr.ohState = state
+  });
+  Object.freeze(window[STORAGE_KEY]);
+
   const log = logging(`${STORAGE_KEY} (^*^) | InJecTed`);
   log('XMLHttpRequest Mock is ready (inactive!)');
-
-  let state: IState;
-
-  window[STORAGE_KEY] = (
-    url: string,
-    payload: Record<string, unknown>,
-    options
-  ) => {
-    // if (payload) {
-    //   context.localState[url] = { ...options, payload, url };
-    // } else {
-    //   delete context.localState[url];
-    // }
-  };
 
   window.addEventListener('message', (ev) => {
     const payload = ev.data as IPacketPayload;
@@ -33,8 +29,11 @@ const MEM_XHR_REQUEST = window.XMLHttpRequest;
     }
 
     log('Received state update', payload);
+
     const wasEnabled = OhMockXhr.ohState?.enabled;
     OhMockXhr.ohState = payload.data as IState;
+    stateChangeSubject.next(OhMockXhr.ohState);
+
     if (wasEnabled !== OhMockXhr.ohState.enabled) {
       // Activity change
       if (OhMockXhr.ohState.enabled) {
@@ -46,4 +45,7 @@ const MEM_XHR_REQUEST = window.XMLHttpRequest;
       }
     }
   });
+
+  document.dispatchEvent(new Event(`${STORAGE_KEY}Loaded`));
 })();
+
