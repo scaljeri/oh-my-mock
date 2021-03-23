@@ -9,6 +9,8 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
 import { IData, IDeleteMock, IMock } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
+import { FormControl } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'oh-my-mock',
@@ -31,10 +33,29 @@ export class MockComponent implements OnChanges {
   @Dispatch() deleteMockResponse = (response: IDeleteMock) =>
     new DeleteMock(response);
 
+  public delayFormControl = new FormControl();
+  private delaySubscription: Subscription;
+
   constructor(public dialog: MatDialog, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
     this.mock = this.data.mocks[this.data.activeStatusCode];
+
+    if (this.delaySubscription) {
+      this.delaySubscription.unsubscribe();
+    }
+    this.delayFormControl.setValue(this.mock?.delay);
+
+    // NOTE: The subscription var is needed because ngOnChanges will trigger each time this.mock changes
+    let delayTimeoutId;
+    this.delaySubscription = this.delayFormControl.valueChanges.subscribe(value => {
+      clearTimeout(delayTimeoutId);
+      if (value !== '') {
+        delayTimeoutId = setTimeout(() => {
+          this.upsertMock({ delay: Number(value) });
+        }, 500);
+      }
+    });
   }
 
   onDelete(): void {

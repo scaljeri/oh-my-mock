@@ -19,17 +19,35 @@ export class OhMockXhr extends Base {
   private ohMock: IMock;
   private ohType: requestType;
   private ohUrl: string;
+  private ohAddEventListener;
+  private ohListeners = [];
 
   constructor() {
     super();
 
-    this.onreadystatechange = this._onreadystatechange.bind(this, null);
     Object.defineProperty(this, 'onreadystatechange', {
       get: function () {
-        return this.onReadyStateChange;
+        return undefined;
       },
       set: function (callback) {
-        this.onReadyStateChange = this._onreadystatechange.bind(this, callback);
+        this.ohListeners.push(callback);
+      }
+    });
+
+    this.addEventListener('load', (...args) => {
+      setTimeout(() => {
+        this.ohMyReady(...args);
+      }, this.ohMock?.delay || 0);
+    });
+
+    const ael = this.addEventListener.bind(this);
+    Object.defineProperty(this, 'addEventListener', {
+      value: (type: string, cb: (_: Event) => void) => {
+        if (type == 'load') {
+          this.ohListeners.push(cb);
+        } else {
+          ael(type, cb);
+        }
       }
     });
   }
@@ -42,53 +60,50 @@ export class OhMockXhr extends Base {
     return super.open.apply(this, [type, this.mockedUrl(url), ...args]);
   }
 
-  _onreadystatechange(onReadyChangeCallback, ...args): void {
-    if (this.readyState === 4) {
-      this.parseState();
+  ohMyReady(...args): void {
+    this.parseState();
 
-      if (this.ohMock) {
-        const response = this.mockResponse();
-        const headersString = headers.stringify(this.getHeaders());
+    if (this.ohMock) {
+      const response = this.mockResponse();
+      const headersString = headers.stringify(this.getHeaders());
 
-        Object.defineProperty(this, 'status', {
-          value: this.ohData.activeStatusCode
-        });
-        Object.defineProperty(this, 'responseText', { value: response });
-        Object.defineProperty(this, 'response', { value: response });
-        Object.defineProperty(this, 'getAllResponseHeaders', {
-          value: () => headersString
-        });
-        Object.defineProperty(this, 'getResponseHeader', {
-          value: (key) => this.ohMock.headers[key]
-        });
-      } else if (
-        OhMockXhr.ohState?.enabled &&
-        !this.checkMockExists(this.status)
-      ) {
-        // TODO: move to injected script
-        window.postMessage(
-          {
-            source: appSources.INJECTED,
-            payload: {
-              context: {
-                url: this.ohUrl,
-                method: 'XHR',
-                type: this.ohType,
-                statusCode: this.status
-              },
-              type: packetTypes.MOCK,
-              data: {
-                response: this.response,
-                headers: headers.parse(this.getAllResponseHeaders())
-              }
+      Object.defineProperty(this, 'status', {
+        value: this.ohData.activeStatusCode
+      });
+      Object.defineProperty(this, 'responseText', { value: response });
+      Object.defineProperty(this, 'response', { value: response });
+      Object.defineProperty(this, 'getAllResponseHeaders', {
+        value: () => headersString
+      });
+      Object.defineProperty(this, 'getResponseHeader', {
+        value: (key) => this.ohMock.headers[key]
+      });
+    } else if (
+      OhMockXhr.ohState?.enabled &&
+      !this.checkMockExists(this.status)
+    ) {
+      // TODO: move to injected script
+      window.postMessage(
+        {
+          source: appSources.INJECTED,
+          payload: {
+            context: {
+              url: this.ohUrl,
+              method: 'XHR',
+              type: this.ohType,
+              statusCode: this.status
+            },
+            type: packetTypes.MOCK,
+            data: {
+              response: this.response,
+              headers: headers.parse(this.getAllResponseHeaders())
             }
-          } as IPacket,
-          '*'
-        );
-      }
+          }
+        } as IPacket,
+        '*'
+      );
     }
-
-    if (onReadyChangeCallback) onReadyChangeCallback.apply(this, args);
+    this.ohListeners.forEach(l => l(...args));
   }
 
   private checkMockExists(status: statusCode): boolean {

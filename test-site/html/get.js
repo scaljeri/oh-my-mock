@@ -60,7 +60,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
     document.querySelector(".get .get-code").innerText = "";
 
     const xhr = new XMLHttpRequest();
+    const start = Date.now();
     xhr.open("GET", "/users");
+    xhr.onreadystatechange = () => {
+      document.querySelector('.onreadystatechange').innerText = 'yes';
+    }
     xhr.addEventListener("load", (res) => {
       const code = document.querySelector(".get .get-code");
       code.classList.remove("hidden");
@@ -70,6 +74,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
       document.querySelector(
         ".get .headers"
       ).innerText = xhr.getAllResponseHeaders();
+      document.querySelector('.duration').innerHTML = `&nbsp;${Math.round((Date.now()  - start)/1000)} seconds`;
     });
     xhr.send();
   });

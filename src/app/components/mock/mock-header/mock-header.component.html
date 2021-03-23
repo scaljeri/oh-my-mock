@@ -1,7 +1,7 @@
 <div class="main">
   <span>{{ data.method }}</span>
   <span>{{ data.type }}</span>
-  <input #url matInput [value]="data.url" (keyup)="onUrlUpdate(url.value)" />
+  <input #url [value]="data.url" (keyup)="onUrlUpdate(url.value)" />
   <span class="spacer"></span>
 </div>
 
