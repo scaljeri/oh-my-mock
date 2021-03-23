@@ -1,3 +1,4 @@
+import { SelectionModel } from '@angular/cdk/collections';
 import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -18,8 +19,10 @@ export class DataListComponent {
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
+  @Input() showExport: boolean;
   @Input() @HostBinding('class') theme = 'dark';
   @Output() select = new EventEmitter<number>();
+  @Output() dataExport = new EventEmitter<number>();
 
   @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
@@ -27,6 +30,7 @@ export class DataListComponent {
     new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode });
 
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
+  public selection = new SelectionModel<number>(true);
 
   constructor(private store: Store, private toast: HotToastService) {}
 
@@ -39,7 +43,7 @@ export class DataListComponent {
   onActivateToggle(rowIndex: number): void {
     const data = this.data[rowIndex];
 
-    if (data.activeStatusCode === 0) {
+    if (!data.activeStatusCode) {
       const statusCode = findAutoActiveMock(data);
       this.updateActiveStatusCode(this.data[rowIndex], statusCode as number);
       this.toast.success(`Mock with status-code ${statusCode} activated`);
@@ -67,9 +71,24 @@ export class DataListComponent {
 
   onDataClick(event: MouseEvent, index: number): void {
     const target = event.target as HTMLElement;
+    this.selection.toggle(index);
     if (!target.closest('.mat-column-actions')) {
       this.select.emit(index);
     }
+  }
+
+  onExport(rowIndex: number) {
+    this.dataExport.emit(rowIndex);
+  }
+
+  public selectAll(): void {
+    this.data.forEach((d, i) => {
+        this.selection.select(i);
+    });
+  }
+
+  public deselectAll(): void {
+    this.selection.clear();
   }
 
   private getActiveStateSnapshot(): IState {

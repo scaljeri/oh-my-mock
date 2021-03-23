@@ -89,6 +89,13 @@
   background-color: #ffff99;
 }
 
+.is-selected {
+  background-color: blue;
+  * {
+    color: #fff;
+  }
+}
+
 .no-data {
   color: #fff;
   font-weight: bold;
