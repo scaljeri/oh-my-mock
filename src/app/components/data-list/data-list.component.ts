@@ -24,10 +24,10 @@ export class DataListComponent {
   @Output() select = new EventEmitter<number>();
   @Output() dataExport = new EventEmitter<number>();
 
-  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.domain);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data, this.domain);
   @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
-    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode });
+    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.domain);
 
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
   public selection = new SelectionModel<number>(true);
@@ -54,6 +54,11 @@ export class DataListComponent {
   }
 
   onDelete(rowIndex: number): void {
+    let msg = `Deleted mock ${this.data[rowIndex].url}`;
+    if (this.domain) {
+      msg += ` on domain ${this.domain}`;
+    }
+    this.toast.success(msg);
     this.deleteData(rowIndex);
   }
 

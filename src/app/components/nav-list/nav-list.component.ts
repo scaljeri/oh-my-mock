@@ -2,7 +2,6 @@ import {
   Component,
   EventEmitter,
   HostListener,
-  OnInit,
   Output
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,6 +11,7 @@ import { resetStateOptions } from '@shared/constants';
 import { ResetStateOptions } from '@shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { ResetState } from 'src/app/store/actions';
+import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
 
 @Component({
@@ -37,6 +37,25 @@ export class NavListComponent {
 
   onReset(): void {
     const dialogRef = this.dialog.open(ResetStateComponent, {
+      width: '40%',
+      data: {}
+    });
+
+    dialogRef
+      .afterClosed()
+      .subscribe((reset: undefined | ResetStateOptions) => {
+        if (reset === resetStateOptions.ALL) {
+          this.stateReset();
+        } else if (reset === resetStateOptions.SELF) {
+          this.stateReset(this.appStateService.domain);
+        }
+      });
+
+    this.navigate.emit();
+  }
+
+  onJsonImport(): void {
+    const dialogRef = this.dialog.open(JsonImportComponent, {
       width: '40%',
       data: {}
     });

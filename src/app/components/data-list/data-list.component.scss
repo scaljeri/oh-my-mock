@@ -81,16 +81,16 @@
   }
 }
 
-.is-active {
+.is-active:not(.is-selected) {
   background-color: #99ffcc;
 }
 
-.is-active.is-modified {
+.is-active.is-modified:not(.is-selected) {
   background-color: #ffff99;
 }
 
 .is-selected {
-  background-color: blue;
+  background-color: grey;
   * {
     color: #fff;
   }

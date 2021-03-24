@@ -1,9 +1,5 @@
 import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
-import {
-  ActivatedRoute,
-  Router
-} from '@angular/router'
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
@@ -49,6 +45,8 @@ export class PageStateExplorerComponent implements OnInit {
       if (this.dataItem) {
         this.dataItem = state.domains[this.selectedDomain].data[this.dataItemIndex];
       }
+
+      this.dataList = state.domains[this.selectedDomain]?.data;
     });
   }
 
