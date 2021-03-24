@@ -12,21 +12,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['15']
+
 
     steps:
       - uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: install # will run `yarn install` command
-      - uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: build # will run `yarn build` command
-      - uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: lint # will run `yarn test` command
-      - uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: test # will run `yarn test` command
+      - uses: actions/setup-node@v2
+      - run: yarn
+      - run: yarn lint
+      - run: yarn test
+      - run: echo 'pass!!'
 
  #   steps:
  #     - uses: actions/checkout@v2
