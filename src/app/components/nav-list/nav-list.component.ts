@@ -55,20 +55,10 @@ export class NavListComponent {
   }
 
   onJsonImport(): void {
-    const dialogRef = this.dialog.open(JsonImportComponent, {
+    this.dialog.open(JsonImportComponent, {
       width: '40%',
       data: {}
     });
-
-    dialogRef
-      .afterClosed()
-      .subscribe((reset: undefined | ResetStateOptions) => {
-        if (reset === resetStateOptions.ALL) {
-          this.stateReset();
-        } else if (reset === resetStateOptions.SELF) {
-          this.stateReset(this.appStateService.domain);
-        }
-      });
 
     this.navigate.emit();
   }
