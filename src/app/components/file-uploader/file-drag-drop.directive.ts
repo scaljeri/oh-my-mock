@@ -1,14 +1,14 @@
 import { Directive, HostListener, Input, Output, EventEmitter, HostBinding } from '@angular/core';
 
 @Directive({
-  selector: '[appDragDrop]'
+  selector: '[ohMyFileDragDrop]'
 })
-export class DragDropDirective {
+export class FileDragDropDirective {
 
   private _enabled: boolean;
   private _dragInProgress: boolean;
 
-  @Input() set appDragDrop(value: any) {
+  @Input() set ohMyFileDragDrop(value: boolean | string) {
     this._enabled = value === '' ? true : !!value;
   }
 
@@ -17,11 +17,7 @@ export class DragDropDirective {
     return this._dragInProgress;
   }
 
-  @Output() dropped: EventEmitter<any>;
-
-  constructor() {
-    this.dropped = new EventEmitter();
-  }
+  @Output() dropped = new EventEmitter<DragEvent>();
 
   @HostListener('dragenter', ['$event'])
   @HostListener('dragover', ['$event'])
@@ -46,7 +42,7 @@ export class DragDropDirective {
   }
 
   @HostListener('drop', ['$event'])
-  private handleDrop(event: UIEvent): void {
+  private handleDrop(event: DragEvent): void {
     this.stopAndPreventDefault(event);
     this._dragInProgress = false;
     this.dropped.emit(event);

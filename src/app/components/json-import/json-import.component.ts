@@ -13,23 +13,25 @@ export class JsonImportComponent {
 
   @Dispatch() upsertData = (data: IData, domain: string) => new UpsertData(data, domain);
 
-  constructor(private toast: HotToastService) {}
+  constructor(private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
-    const fileReader = new FileReader();
-    fileReader.onload = (fileLoadedEvent) => {
-      try {
-        const importedState = JSON.parse(fileLoadedEvent.target.result as string) as IState;
+    Array.from(fileList).forEach(file => {
+      const fileReader = new FileReader();
+      fileReader.onload = (fileLoadedEvent) => {
+        try {
+          const importedState = JSON.parse(fileLoadedEvent.target.result as string) as IState;
 
-        importedState.data.forEach(d => {
-          this.upsertData(d, importedState.domain);
-        });
-        this.toast.success(`Imported ${importedState.data.length} mocks into ${importedState.domain}`);
-      } catch {
-        this.toast.error('The file to import does not contain (valid) JSON');
-      }
-    };
+          importedState.data.forEach(d => {
+            this.upsertData(d, importedState.domain);
+          });
+          this.toast.success(`Imported mocks from ${file.name} into ${importedState.domain}`);
+        } catch {
+          this.toast.error(`File ${file} does not contain (valid) JSON`);
+        }
+      };
 
-    fileReader.readAsText(fileList[0], "UTF-8");
+      fileReader.readAsText(file, "UTF-8");
+    });
   }
 }
