@@ -16,6 +16,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatBadgeModule } from '@angular/material/badge';
 import { ComponentsModule } from './components/components.module';
 import { OhMyState } from './store/state';
 
@@ -25,11 +26,13 @@ import { HotToastModule } from '@ngneat/hot-toast';
 import { NgApimockPluginModule } from './plugins/ngapimock/ngapimock.module';
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
+import { JsonExportComponent } from './pages/json-export/json-export.component';
 @NgModule({
   declarations: [
     AppComponent,
     PageMockComponent,
-    PageDataListComponent
+    PageDataListComponent,
+    JsonExportComponent
   ],
   imports: [
     BrowserModule,
@@ -46,6 +49,7 @@ import { PageDataListComponent } from './pages/data-list/data-list.component';
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
+    MatBadgeModule,
     MatSnackBarModule,
     HotToastModule.forRoot(),
     ComponentsModule,

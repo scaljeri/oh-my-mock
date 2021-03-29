@@ -46,6 +46,10 @@
             aria-label="Example icon button with a menu icon">
             <mat-icon>delete</mat-icon>
           </button>
+          <button *ngIf="showExport" (click)="onExport(i)" mat-mini-fab color="primary"
+            aria-label="Example icon button with a menu icon">
+            <mat-icon>import_export</mat-icon>
+          </button>
         </div>
       </td>
     </ng-container>
@@ -53,7 +57,10 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns">
     </tr>
     <tr mat-row (click)="onDataClick($event, i)" *matRowDef="let row; columns: displayedColumns;let i = index"
-      [ngClass]="{'is-active': row.activeStatusCode > 0, 'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
+      [ngClass]="{
+        'is-selected': selection.isSelected(i),
+        'is-active': row.activeStatusCode > 0,
+        'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
     </tr>
   </table>
 </ng-container>

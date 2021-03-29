@@ -14,7 +14,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
-
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import {
   Location,
   LocationStrategy,
@@ -34,6 +34,9 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
 import { HeaderButtonComponent } from './header-button/header-button.component';
 import { MockComponent } from './mock/mock.component';
 import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
+import { JsonImportComponent } from './json-import/json-import.component';
+import { FileUploaderComponent } from './file-uploader/file-uploader.component';
+import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
 
 @NgModule({
   declarations: [
@@ -48,7 +51,10 @@ import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
     DisabledEnabledComponent,
     HeaderButtonComponent,
     MockComponent,
-    MockHeaderComponent
+    MockHeaderComponent,
+    JsonImportComponent,
+    FileUploaderComponent,
+    FileDragDropDirective
   ],
   imports: [
     CommonModule,
@@ -65,6 +71,7 @@ import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
     MatExpansionModule,
     MatDialogModule,
     MatTabsModule,
+    DragDropModule,
     ReactiveFormsModule,
     FormsModule,
     MonacoEditorModule,
@@ -78,7 +85,8 @@ import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
     DisabledEnabledComponent,
     HeaderButtonComponent,
     MockComponent,
-    MockHeaderComponent
+    MockHeaderComponent,
+    FileUploaderComponent
   ],
   providers: [
     Location,

@@ -1,0 +1,19 @@
+.wrapper {
+  padding-bottom: 50px;
+  position: relative;
+
+  button.export-all {
+    position: absolute;
+    right: 113px;
+    top: 51px;
+    z-index: 1;
+  }
+
+  button.export {
+    position: absolute;
+    right: 159px;
+    bottom: 0;
+    z-index: 1;
+  }
+
+}

@@ -5,6 +5,7 @@ import { ConfigComponent } from './components/config/config.component';
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
+import { JsonExportComponent } from './pages/json-export/json-export.component';
 
 const appRoutes: Routes = [
   {
@@ -30,6 +31,10 @@ const appRoutes: Routes = [
       {
         path: 'settings/ngapimock',
         component: NgApimockSettingsComponent
+      },
+      {
+        path: 'json-export',
+        component: JsonExportComponent
       }
     ]
   }

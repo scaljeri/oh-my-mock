@@ -40,6 +40,9 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+dist.crx
+dist.pem
+oh-my-mock.zip
 
 # System Files
 .DS_Store
