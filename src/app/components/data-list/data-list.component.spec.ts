@@ -5,6 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 
 import { DataListComponent } from './data-list.component';
 import { RouterTestingModule } from '@angular/router/testing';
+import { AnimationBuilder } from '@angular/animations';
 
 describe('DataListComponent', () => {
   let component: DataListComponent;
@@ -15,6 +16,7 @@ describe('DataListComponent', () => {
       declarations: [DataListComponent],
       schemas: [NO_ERRORS_SCHEMA],
       imports: [RouterTestingModule.withRoutes([]), NgxsModule.forRoot([]), MatTableModule],
+      providers: [AnimationBuilder]
     }).compileComponents();
   });
 

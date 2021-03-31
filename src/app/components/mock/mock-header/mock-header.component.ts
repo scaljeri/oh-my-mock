@@ -73,8 +73,8 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onSelectStatusCode(statusCode: statusCode | void): void {
-    if (statusCode) {
-      this.updateActiveStatusCode(statusCode);
+    if (statusCode >= 0) {
+      this.updateActiveStatusCode(statusCode as statusCode);
     }
   }
 

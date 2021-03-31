@@ -1,8 +1,9 @@
-import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
+import { Subject } from 'rxjs';
+import { STORAGE_KEY } from '../shared/constants';
 import {
+  IContext,
   IData,
   IMock,
-  IPacket,
   IState,
   requestType,
   statusCode
@@ -14,13 +15,22 @@ import * as headers from '../shared/utils/xhr-headers';
 const Base = window.XMLHttpRequest;
 
 export class OhMockXhr extends Base {
-  static ohState: IState;
+  public static ohState: IState;
+  private static newMockSubject = new Subject<{
+    context: IContext & { statusCode: statusCode },
+    data: { response: string, headers: Record<string, string> }
+  }>();
+  public static newMock$ = OhMockXhr.newMockSubject.asObservable();
+  private static hitSubject = new Subject<IContext & { statusCode: statusCode }>();
+  public static hit$ = OhMockXhr.hitSubject.asObservable();
+
   private ohData: IData;
   private ohMock: IMock;
   private ohType: requestType;
   private ohUrl: string;
-  private ohAddEventListener;
   private ohListeners = [];
+
+
 
   constructor() {
     super();
@@ -78,44 +88,30 @@ export class OhMockXhr extends Base {
       Object.defineProperty(this, 'getResponseHeader', {
         value: (key) => this.ohMock.headers[key]
       });
-    } else if (
-      OhMockXhr.ohState?.enabled &&
-      !this.checkMockExists(this.status)
-    ) {
-      // TODO: move to injected script
-      window.postMessage(
-        {
-          source: appSources.INJECTED,
-          payload: {
-            context: {
-              url: this.ohUrl,
-              method: 'XHR',
-              type: this.ohType,
-              statusCode: this.status
-            },
-            type: packetTypes.MOCK,
-            data: {
-              response: this.response,
-              headers: headers.parse(this.getAllResponseHeaders())
-            }
-          }
-        } as IPacket,
-        '*'
-      );
+
+      OhMockXhr.hitSubject.next({
+        url: this.ohUrl,
+        method: 'XHR',
+        type: this.ohType,
+        statusCode: this.status
+      });
+    } else {
+      OhMockXhr.newMockSubject.next({
+        context: {
+          url: this.ohUrl,
+          method: 'XHR',
+          type: this.ohType,
+          statusCode: this.status
+        },
+        data: {
+          response: this.response,
+          headers: headers.parse(this.getAllResponseHeaders())
+         }
+      });
     }
     this.ohListeners.forEach(l => l(...args));
   }
 
-  private checkMockExists(status: statusCode): boolean {
-    const ohData = findActiveData(
-      OhMockXhr.ohState,
-      this.ohUrl,
-      'XHR',
-      this.ohType
-    );
-
-    return !!ohData?.mocks[status];
-  }
 
   private mockedUrl(url: string): string {
     if (this.ohMock) {

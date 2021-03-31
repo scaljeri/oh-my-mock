@@ -1,19 +1,30 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, ViewChildren } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { DeleteData, UpdateDataStatusCode, UpsertData } from 'src/app/store/actions';
+import { AnimationBuilder } from "@angular/animations";
+
 import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
 import { IData, IState, IStore, statusCode } from 'src/shared/type';
+import { AppStateService } from 'src/app/services/app-state.service';
+import { Subscription } from 'rxjs';
+import { animate, style } from '@angular/animations';
+
+export const highlightSeq = [
+  style({ backgroundColor: '*' }),
+  animate('1s ease-in', style({ backgroundColor: '{{color}}' })),
+  animate('1s ease-out', style({ backgroundColor: '*' }))
+];
 
 @Component({
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
-  styleUrls: ['./data-list.component.scss']
+  styleUrls: ['./data-list.component.scss'],
 })
-export class DataListComponent {
+export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() data: IData[] = [];
   @Input() domain: string;
   @Input() showDelete: boolean;
@@ -31,13 +42,40 @@ export class DataListComponent {
 
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
   public selection = new SelectionModel<number>(true);
+  private hitSubscription: Subscription;
+  public hits: boolean[] = [];
 
-  constructor(private store: Store, private toast: HotToastService) {}
+  @ViewChildren('row', { read: ElementRef }) rows: QueryList<ElementRef>;
 
+  constructor(
+    private appState: AppStateService,
+    private animationBuilder: AnimationBuilder,
+    private store: Store,
+    private toast: HotToastService) { }
+
+  ngOnInit(): void {
+    this.hitSubscription = this.appState.hit$.subscribe(context => {
+      const data = this.data.find(d =>
+        d.method === context.method && d.type === context.type &&
+        d.url === context.url);
+
+      if (data) {
+        const index = this.data.indexOf(data);
+
+        const highlightFactory = this.animationBuilder.build(highlightSeq);
+        const highlightPlayer = highlightFactory.create(this.rows.toArray()[index].nativeElement, { params: { color: '#97A8B6' } });
+        highlightPlayer.play();
+      }
+    });
+  }
   ngOnChanges(): void {
     if (this.displayedColumns.indexOf('rowAction') === 0) {
       this.displayedColumns.shift();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.hitSubscription.unsubscribe();
   }
 
   onActivateToggle(rowIndex: number): void {
@@ -88,7 +126,7 @@ export class DataListComponent {
 
   public selectAll(): void {
     this.data.forEach((d, i) => {
-        this.selection.select(i);
+      this.selection.select(i);
     });
   }
 

@@ -6,6 +6,7 @@
   "permissions": [
     "background",
     "storage",
+    "unlimitedStorage",
     "*://*/*"
   ],
   "browser_action": {

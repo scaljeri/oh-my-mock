@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { IContext } from '@shared/type';
+import { BehaviorSubject, Subject, Observable } from 'rxjs';
 
 export interface IPage {
   title: string;
@@ -10,6 +11,9 @@ export interface IPage {
 export class AppStateService {
   private _domain: string;
   private _tabId: number;
+
+  private hitSubject = new Subject<IContext>();
+  public hit$: Observable<IContext> = this.hitSubject.asObservable();
 
   private domainChangeSubject = new BehaviorSubject<string>(null);
   public domain$ = this.domainChangeSubject.asObservable();
@@ -46,5 +50,9 @@ export class AppStateService {
 
   isSameDomain(domain: string): boolean {
     return domain && this._domain === domain;
+  }
+
+  hit(data: IContext): void {
+    this.hitSubject.next(data);
   }
 }
