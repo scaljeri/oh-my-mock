@@ -34,6 +34,7 @@ import {
 } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
+import * as contentParser from 'content-type-parser';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
@@ -156,6 +157,14 @@ export class OhMyState {
 
       if (!mock.headersMock) {
         mock.headersMock = mock.headers;
+      }
+
+      if (mock.headersMock) {
+        const contentType = contentParser(mock.headersMock['content-type']);
+        if (contentType) {
+          mock.type = contentType.type;
+          mock.subType = contentType.subtype;
+        }
       }
     }
     data.mocks = { ...mocks, [payload.statusCode]: mock };

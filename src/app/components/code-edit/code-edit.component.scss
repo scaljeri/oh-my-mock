@@ -1,18 +1,24 @@
 :host {
   display: flex;
   flex-direction: column;
+
+  &.is-dialog {
+    height: 80vh;
+  }
 }
 
 .editor-wrapper {
   background-color: rgba(0, 0, 0, .87);
   display: block;
   padding: 5px 0;
+  height: 100%;
 }
 
 .button-actions {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
+  width: 100%;
 
   button + button {
     margin-left: 10px;
@@ -22,7 +28,7 @@
 ngx-monaco-diff-editor,
 ngx-monaco-editor {
   display: block;
-  height: 80vh;
+  height: 100%;
   width: 100%;
 }
 

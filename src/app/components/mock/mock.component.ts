@@ -3,6 +3,7 @@ import {
   Component,
   Input,
   OnChanges,
+  ViewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -36,6 +37,9 @@ export class MockComponent implements OnChanges {
   public delayFormControl = new FormControl();
   private delaySubscription: Subscription;
 
+  @ViewChild('response') responseRef: CodeEditComponent;
+  @ViewChild('headers') headersRef: CodeEditComponent;
+
   constructor(public dialog: MatDialog, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
@@ -68,17 +72,6 @@ export class MockComponent implements OnChanges {
     });
   }
 
-  openJsCodeDialog(): void {
-    const dialogRef = this.dialog.open(CodeEditComponent, {
-      width: '80%',
-      data: { code: this.mock.jsCode, originalCode: this.mock.jsCode }
-    });
-
-    dialogRef.afterClosed().subscribe((jsCode) => {
-      this.upsertMock({ jsCode });
-    });
-  }
-
   onResponseChange(data: string): void {
     this.upsertMock({ responseMock: data });
   }
@@ -100,6 +93,43 @@ export class MockComponent implements OnChanges {
     setTimeout(() => {
       this.upsertMock({ headersMock: this.mock.headers });
       this.cdr.detectChanges();
+    });
+  }
+
+  openShowMockCode(): void {
+    this.openCodeDialog(this.mock.jsCode, 'javascript', (update: string) => {
+      this.upsertMock({ jsCode: update });
+    });
+  }
+
+  onShowResponseFullscreen(): void {
+    this.openCodeDialog(this.mock.responseMock, this.mock.subType, (update: string) => {
+      this.upsertMock({ responseMock: update });
+      setTimeout(() => {
+        this.responseRef.update();
+      });
+    });
+  }
+
+  onShowHeadersFullscreen(): void {
+    this.openCodeDialog(this.mock.headersMock, 'json', (update: string) => {
+      this.upsertMock({ headersMock: JSON.parse(update) });
+      setTimeout(() => {
+        this.headersRef.update();
+      })
+    });
+  }
+
+  openCodeDialog(code: string | Record<string, string>, type: string, cb: (update: string) => void): void {
+    const dialogRef = this.dialog.open(CodeEditComponent, {
+      width: '80%',
+      data: { code, type }
+    });
+
+    dialogRef.afterClosed().subscribe(update => {
+      if (update) {
+        cb(update);
+      }
     });
   }
 }

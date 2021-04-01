@@ -1,3 +1,5 @@
+@import "mixins";
+
 :host {
   display: flex;
   flex-direction: column;
@@ -40,35 +42,27 @@ mat-card+mat-card {
   padding-bottom: 10px;
 
   header {
+    align-items: center;
     display: flex;
     justify-content: space-between;
+    margin-bottom: $spacer-1;
     width: 100%;
-    margin-bottom: 10px;
 
     h2 {
       display: flex;
+      flex: 0;
       justify-content: space-between;
+      margin: 0;
       width: 49%;
-
-      .toggle {
-        align-items: center;
-        display: flex;
-        font-size: 13px;
-
-        mat-slide-toggle {
-          margin-left: 5px;
-        }
-      }
     }
   }
 }
 
 .js-code-edit {
-  align-self: flex-end;
-  margin-top: 10px;
+  margin-left: $spacer-2;
 }
 
-ngx-monaco-editor {
+app-code-edit {
   height: 300px;
   width: 100%;
 }
@@ -84,15 +78,14 @@ ngx-monaco-editor {
   }
 }
 
-app-edit-data {
-  height: 250px;
-}
 
+.response,
 .headers {
   display: flex;
   flex-direction: column;
   width: 100%;
   justify-content: space-between;
+  margin-top: $spacer-4;
 
   button {
     align-self: flex-end;

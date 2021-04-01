@@ -36,8 +36,9 @@ export interface IData extends IContext {
 }
 
 export interface IMock {
-  dataType?: string;
   response?: string;
+  type?: string;    // In application/json the `type` will be `application`
+  subType?: string; // In application/json the `subType` will be `json`
   responseMock?: string;
   headers?: Record<string, string>;
   headersMock?: Record<string, string>;
@@ -48,7 +49,7 @@ export interface IMock {
 }
 
 // actions
-export interface IUpsertMock<T = any> {
+export interface IUpsertMock {
   url: string;
   method: requestMethod;
   type: requestType;

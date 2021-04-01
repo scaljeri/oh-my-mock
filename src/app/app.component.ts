@@ -95,6 +95,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     const el = document.activeElement;
 
     if (
+      !el.closest('.oh-no-backspace-nav') &&
       el.tagName.toLowerCase() !== 'input' &&
       el.getAttribute('contenteditable') !== 'true'
     ) {
