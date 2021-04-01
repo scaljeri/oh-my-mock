@@ -56,8 +56,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit(): void {
     this.hitSubscription = this.appState.hit$.subscribe(context => {
       const data = this.data.find(d =>
-        d.method === context.method && d.type === context.type &&
-        d.url === context.url);
+        d.method === context.method && d.type === context.type && context.url.match(d.url));
 
       if (data) {
         const index = this.data.indexOf(data);
