@@ -39,6 +39,8 @@ export class ContentService {
             mock: payload.data as IMock,
             ...payload.context
           });
+        } else if (payload.type === packetTypes.HIT) {
+          this.appStateService.hit(payload.context)
         }
       } else {
         if (payload.type === packetTypes.KNOCKKNOCK) {

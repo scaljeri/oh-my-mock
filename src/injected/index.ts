@@ -3,10 +3,15 @@ import { packetTypes, STORAGE_KEY } from '../shared/constants';
 import { IPacketPayload, IState } from '../shared/type';
 import { OhMockXhr } from './mock-oh-xhr';
 import { BehaviorSubject } from 'rxjs';
+import { mockHitMessage } from './message/mock-hit';
+import { newMockMessage } from './message/new-response';
 
 declare let window: any;
 
 const MEM_XHR_REQUEST = window.XMLHttpRequest;
+
+OhMockXhr.hit$.subscribe(mockHitMessage);
+OhMockXhr.newMock$.subscribe(newMockMessage);
 
 (function () {
   const stateChangeSubject = new BehaviorSubject<IState>(null);
