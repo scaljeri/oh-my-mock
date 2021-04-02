@@ -6,6 +6,7 @@ import { skip } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { themes, IOhMyCodeEditOptions, IMarker } from './code-edit';
 
+declare let monaco: any;
 @Component({
   selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
@@ -130,12 +131,13 @@ export class CodeEditComponent implements OnInit {
   }
 
   onEditorInit(editor: any): void {
-    editor.onDidChangeModelDecorations(() => {
+    editor.onDidChangeModelDecorations((...args) => {
       const model = editor.getModel();
       const owner = model.getModeId();
 
-      this.errors = monaco.editor.getModelMarkers({ owner });
-      console.log(this.errors);
+      // TODO: Do we need global monaco?
+      this.errors = monaco?.editor.getModelMarkers({ owner });
+      debugger;
     });
   }
 }
