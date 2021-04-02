@@ -1,15 +1,13 @@
-import { Component, EventEmitter, HostBinding, Inject, Input, OnChanges, OnInit, Optional, Output } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Inject, Input, OnInit, Optional, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { JS_INCORRECT_MSG, MOCK_JS_CODE } from '@shared/constants';
-import { evalJsCode } from '@shared/utils/eval-jscode';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 import { skip } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { themes, IOhMyCodeEditOptions, IMarker } from './code-edit';
 
-type themes = 'vs' | 'vs-dark' | 'hc-black';
 @Component({
-  selector: 'app-code-edit',
+  selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
   styleUrls: ['./code-edit.component.scss']
 })
@@ -17,6 +15,7 @@ export class CodeEditComponent implements OnInit {
   @Input() code: string | Record<string, string>;
   @Input() type: string;
   @Input() theme: themes = 'vs';
+  @Input() allowErrors = true;
   @Output() codeChange = new EventEmitter<string>();
 
   @HostBinding('class.is-dialog') isDialog = false;
@@ -24,21 +23,23 @@ export class CodeEditComponent implements OnInit {
   public originalCode: string;
   public editorOptions = { theme: 'vs-dark', language: 'javascript' };
   public editMode = 'edit';
-  public error: string;
   public codeStr: string;
   public control = new FormControl();
+  public errors: IMarker[] = [];
+  public showErrors = false;
 
   private changeSub: Subscription;
 
   constructor(
     private prettyPrintPipe: PrettyPrintPipe,
     @Optional() private dialogRef: MatDialogRef<CodeEditComponent>,
-    @Optional() @Inject(MAT_DIALOG_DATA) public input: { code: string, type: string, theme: themes }
+    @Optional() @Inject(MAT_DIALOG_DATA) public input: IOhMyCodeEditOptions
   ) {
     if (this.input) {
       this.code = input.code;
       this.type = input.type;
       this.theme = input.theme || 'vs-dark';
+      this.allowErrors = input.allowErrors ?? true;
       this.isDialog = true;
     }
   }
@@ -49,14 +50,7 @@ export class CodeEditComponent implements OnInit {
 
   public update(): void {
     this.setEditorOptions();
-
-    let tmpCode = this.code;
-
-    if (this.type === 'json' && typeof this.code === 'string') {
-      tmpCode = JSON.parse(this.code);
-    }
-
-    this.originalCode = this.prettyPrintPipe.transform(tmpCode);
+    this.originalCode = this.formatJSON(this.code);
     this.control.setValue(this.originalCode);
 
     if (!this.input) {
@@ -65,15 +59,9 @@ export class CodeEditComponent implements OnInit {
       }
 
       this.changeSub = this.control.valueChanges.pipe(skip(1)).subscribe(val => {
-        if (this.type === 'json') {
-          try {
-            // TODO: validate JSON
-            this.codeChange.emit(val);
-          } catch {
-            console.log('json parse error');
-          }
+        if (this.allowErrors || this.errors.length === 0) {
+          this.codeChange.emit(val);
         }
-        this.codeChange.emit(val);
       });
     }
   }
@@ -88,18 +76,49 @@ export class CodeEditComponent implements OnInit {
     }
   }
 
+  private formatJSON(json: string | Record<string, string>): string {
+    if (this.type !== 'json') {
+      return json as string;
+    }
+
+    let tmp = json;
+
+    if (typeof this.code === 'string') {
+      try {
+        tmp = JSON.parse(this.code);
+      } catch { // If JSON is invalid, leave it as is
+        return this.code;
+      }
+    }
+
+    // Format JSON
+    return this.prettyPrintPipe.transform(tmp);
+  }
+
   onCancel(): void {
+    this.editorOptions = { ...this.editorOptions, theme: 'vs' };
     this.dialogRef.close();
   }
 
   onSave(): void {
-    // TODO: validate json
-    // try {
-    //   evalJsCode(this.code); // Check if javascript can be evaled
+    if (this.errors.length > 0) { // we have errors
+      this.showErrors = true;
+    } else {
+      this.done();
+    }
+  }
+
+  done(): void {
+    this.editorOptions = { ...this.editorOptions, theme: 'vs' };
     this.dialogRef.close(this.control.value);
-    // } catch (err) {
-    //   this.error = JS_INCORRECT_MSG;
-    // }
+  }
+
+  onDoneErrors(state: boolean): void {
+    if (state) {
+      this.done();
+    }
+
+    this.showErrors = false;
   }
 
   onToggle(): void {
@@ -108,6 +127,16 @@ export class CodeEditComponent implements OnInit {
 
   onReset(): void {
     this.control.setValue(this.originalCode);
+  }
+
+  onEditorInit(editor: any): void {
+    editor.onDidChangeModelDecorations(() => {
+      const model = editor.getModel();
+      const owner = model.getModeId();
+
+      this.errors = monaco.editor.getModelMarkers({ owner });
+      console.log(this.errors);
+    });
   }
 }
 

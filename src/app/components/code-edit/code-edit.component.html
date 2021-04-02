@@ -1,13 +1,13 @@
 <div class="editor-wrapper oh-no-backspace-nav">
-  <ngx-monaco-editor *ngIf="editMode === 'edit'"
-    [options]="editorOptions" [formControl]="control"></ngx-monaco-editor>
-  <ngx-monaco-diff-editor *ngIf="editMode === 'diff'"
-    [options]="editorOptions" [original]="originalCode" [modified]="control.value">
+  <ngx-monaco-editor *ngIf="editMode === 'edit'" [options]="editorOptions" [formControl]="control"
+    (init)="onEditorInit($event)"></ngx-monaco-editor>
+  <ngx-monaco-diff-editor *ngIf="editMode === 'diff'" [options]="editorOptions" [original]="originalCode"
+    [modified]="control.value">
   </ngx-monaco-diff-editor>
 </div>
 
 <footer>
-  <mat-error>{{error}}</mat-error>
+  <mat-error *ngIf="!isDialog && !allowErrors && errors.length > 0">You have errors, cannot auto-save</mat-error>
 
   <div *ngIf="isDialog" class="button-actions">
     <button mat-raised-button (click)="onReset()">Reset</button>
@@ -17,3 +17,7 @@
     <button mat-raised-button color="primary" (click)="onSave()">Save</button>
   </div>
 </footer>
+
+<section *ngIf="showErrors" class="close-with-errors">
+  <oh-my-code-errors (done)="onDoneErrors($event)" [errors]="errors" [allowErrors]="allowErrors"></oh-my-code-errors>
+</section>

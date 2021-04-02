@@ -1,0 +1,33 @@
+<h3>You have errors in your code</h3>
+<mat-error *ngIf="!allowErrors">Cannot save {{errors[0]?.owner.toUpperCase()}} with errors!</mat-error>
+
+<table mat-table [dataSource]="errors" class="mat-elevation-z8">
+
+  <ng-container matColumnDef="startLineNumber">
+    <th mat-header-cell *matHeaderCellDef> Line No. </th>
+    <td mat-cell *matCellDef="let element"> {{element.startLineNumber}} </td>
+  </ng-container>
+
+  <ng-container matColumnDef="severity">
+    <th mat-header-cell *matHeaderCellDef> Severity </th>
+    <td mat-cell *matCellDef="let element"> {{element.severity}} </td>
+  </ng-container>
+
+  <ng-container matColumnDef="message">
+    <th mat-header-cell *matHeaderCellDef> Message </th>
+    <td mat-cell *matCellDef="let element"> {{element.message}} </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+</table>
+
+<div *ngIf="allowErrors" class="buttons">
+  <button mat-raised-button color="primary" (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="warn" (click)="onClose()">Yes, it's ok</button>
+</div>
+
+<div *ngIf="!allowErrors" class="buttons">
+  <button class="fix-errors" mat-raised-button color="primary" (click)="onCancel()">Close</button>
+</div>

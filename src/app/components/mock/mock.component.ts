@@ -12,6 +12,7 @@ import { IData, IDeleteMock, IMock } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
 
 @Component({
   selector: 'oh-my-mock',
@@ -35,6 +36,7 @@ export class MockComponent implements OnChanges {
     new DeleteMock(response);
 
   public delayFormControl = new FormControl();
+  public dialogIsOpen = false;
   private delaySubscription: Subscription;
 
   @ViewChild('response') responseRef: CodeEditComponent;
@@ -97,13 +99,17 @@ export class MockComponent implements OnChanges {
   }
 
   openShowMockCode(): void {
-    this.openCodeDialog(this.mock.jsCode, 'javascript', (update: string) => {
+    const data = { code: this.mock.jsCode, type: 'javascript', allowErrors: false };
+
+    this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ jsCode: update });
     });
   }
 
   onShowResponseFullscreen(): void {
-    this.openCodeDialog(this.mock.responseMock, this.mock.subType, (update: string) => {
+    const data = { code: this.mock.responseMock, type: this.mock.subType };
+
+    this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ responseMock: update });
       setTimeout(() => {
         this.responseRef.update();
@@ -112,7 +118,8 @@ export class MockComponent implements OnChanges {
   }
 
   onShowHeadersFullscreen(): void {
-    this.openCodeDialog(this.mock.headersMock, 'json', (update: string) => {
+    const data = { code: this.mock.headersMock, type: 'json', allowErrors: false };
+    this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ headersMock: JSON.parse(update) });
       setTimeout(() => {
         this.headersRef.update();
@@ -120,13 +127,15 @@ export class MockComponent implements OnChanges {
     });
   }
 
-  openCodeDialog(code: string | Record<string, string>, type: string, cb: (update: string) => void): void {
+  openCodeDialog(data: IOhMyCodeEditOptions, cb: (update: string) => void): void {
+    this.dialogIsOpen = true;
     const dialogRef = this.dialog.open(CodeEditComponent, {
       width: '80%',
-      data: { code, type }
+      data
     });
 
     dialogRef.afterClosed().subscribe(update => {
+      this.dialogIsOpen = false;
       if (update) {
         cb(update);
       }

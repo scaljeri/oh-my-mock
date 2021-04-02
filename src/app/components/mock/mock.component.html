@@ -22,7 +22,7 @@
     </button>
   </section>
 
-  <section class="response">
+  <section *ngIf="!dialogIsOpen" class="response">
     <header>
       <h2>Response</h2>
       <button class="js-code-edit" (click)="openShowMockCode()" mat-stroked-button>Mocking with code</button>
@@ -32,13 +32,13 @@
         <mat-icon>fullscreen</mat-icon>
       </button>
     </header>
-    <app-code-edit #response [code]="mock.responseMock" (codeChange)="onResponseChange($event)"
-      theme="vs" [type]="mock.subType">
-    </app-code-edit>
+    <oh-my-code-edit #response [code]="mock.responseMock" (codeChange)="onResponseChange($event)" theme="vs"
+      [type]="mock.subType">
+    </oh-my-code-edit>
     <button mat-button (click)="onRevertResponse()">Reset</button>
   </section>
 
-  <section class="headers">
+  <section *ngIf="!dialogIsOpen" class="headers">
     <header>
       <h2>Headers</h2>
       <div class="spacer"></div>
@@ -47,8 +47,9 @@
         <mat-icon>fullscreen</mat-icon>
       </button>
     </header>
-    <app-code-edit #headers [code]="mock.headersMock" (codeChange)="onHeadersChange($event)" type="json">
-    </app-code-edit>
+    <oh-my-code-edit #headers [code]="mock.headersMock" [allowErrors]="false" (codeChange)="onHeadersChange($event)"
+      type="json">
+    </oh-my-code-edit>
     <button mat-button (click)="onRevertHeaders()">Reset</button>
   </section>
 </mat-card>
