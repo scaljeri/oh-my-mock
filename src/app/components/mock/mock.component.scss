@@ -63,8 +63,10 @@ mat-card+mat-card {
 }
 
 oh-my-code-edit {
+  align-self: center;
+  border: 1px solid lightgrey;
   height: 300px;
-  width: 100%;
+  width: 60%;
 }
 
 .data {

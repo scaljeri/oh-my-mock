@@ -8,7 +8,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
-import { IData, IDeleteMock, IMock } from '@shared/type';
+import { IData, IDeleteMock, IMock, statusCode } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -38,6 +38,7 @@ export class MockComponent implements OnChanges {
   public delayFormControl = new FormControl();
   public dialogIsOpen = false;
   private delaySubscription: Subscription;
+  private activeStatusCode: statusCode;
 
   @ViewChild('response') responseRef: CodeEditComponent;
   @ViewChild('headers') headersRef: CodeEditComponent;
@@ -46,6 +47,17 @@ export class MockComponent implements OnChanges {
 
   ngOnChanges(): void {
     this.mock = this.data.mocks[this.data.activeStatusCode];
+
+    if (this.activeStatusCode !== this.data.activeStatusCode) {
+      this.activeStatusCode = this.data.activeStatusCode;
+
+      if (this.responseRef) {
+        setTimeout(() => {
+          this.responseRef.update();
+          this.headersRef.update();
+        });
+      }
+    }
 
     if (this.delaySubscription) {
       this.delaySubscription.unsubscribe();
@@ -87,6 +99,7 @@ export class MockComponent implements OnChanges {
   }
 
   onHeadersChange(headersMock: string): void {
+    debugger;
     this.upsertMock({ headersMock: JSON.parse(headersMock) });
     this.cdr.detectChanges();
   }

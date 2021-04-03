@@ -41,3 +41,33 @@ button + .get-code {
   display: block;
 
 }
+
+.selection {
+  align-items: center;
+  border: 1px solid grey;
+  border-radius: 5px;
+  display: inline-flex;
+  padding: 10px;
+}
+
+.selection div + div {
+  margin-left: 10px;
+}
+
+button.go {
+  margin-left: 10px;
+  height: 30px;
+  width: 110px;
+}
+
+article.data {
+  display: flex;
+}
+
+h3 {
+  margin-top: 0;
+}
+
+.data .body {
+  margin-left: 20px;
+}

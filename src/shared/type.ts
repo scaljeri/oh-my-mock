@@ -66,6 +66,7 @@ export interface IDeleteMock extends IContext {
 export interface ICreateStatusCode extends IContext {
   statusCode: statusCode;
   activeStatusCode?: statusCode;
+  clone?: boolean;
 }
 
 export interface IUpdateDataUrl extends IContext {

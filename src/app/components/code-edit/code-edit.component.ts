@@ -137,7 +137,6 @@ export class CodeEditComponent implements OnInit {
 
       // TODO: Do we need global monaco?
       this.errors = monaco?.editor.getModelMarkers({ owner });
-      debugger;
     });
   }
 }

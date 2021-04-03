@@ -29,11 +29,12 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   public statusCode: statusCode;
   public codes: statusCode[];
 
-  @Dispatch() createStatusCode = (statusCode: statusCode) =>
+  @Dispatch() createStatusCode = (statusCode: statusCode, clone: boolean) =>
     new CreateStatusCode({
       url: this.data.url,
       method: this.data.method,
       type: this.data.type,
+      clone,
       statusCode,
       activeStatusCode: statusCode
     }, this.domain);
@@ -85,10 +86,10 @@ export class MockHeaderComponent implements OnInit, OnChanges {
       data: { existingStatusCodes: this.codes }
     });
 
-    dialogRef.afterClosed().subscribe((newStatusCode) => {
-      if (newStatusCode) {
-        this.statusCode = newStatusCode;
-        this.createStatusCode(newStatusCode);
+    dialogRef.afterClosed().subscribe((newMock: { statusCode: number, clone: boolean }) => {
+      if (newMock) {
+        this.statusCode = newMock.statusCode;
+        this.createStatusCode(this.statusCode, newMock.clone);
       }
     });
   }

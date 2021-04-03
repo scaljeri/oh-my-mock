@@ -30,7 +30,8 @@ import {
   IUpdateDataUrl,
   IUpdateDataStatusCode,
   IOhMyMock,
-  IStore
+  IStore,
+  IMock
 } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
@@ -271,8 +272,10 @@ export class OhMyState {
 
     data.mocks = {
       ...data.mocks,
-      [payload.statusCode]: { jsCode: MOCK_JS_CODE }
+      [payload.statusCode]: payload.clone ? OhMyState.cloneMock(data.mocks[data.activeStatusCode]) :
+        { jsCode: MOCK_JS_CODE, delay: 0 }
     };
+
     if (payload.activeStatusCode) {
       data.activeStatusCode = payload.activeStatusCode;
     }
@@ -360,5 +363,13 @@ export class OhMyState {
     ) || { url: url2regex(url), method, type, mocks: {} };
 
     return { index: state.data.indexOf(data), data: { ...data } };
+  }
+
+  static cloneMock(mock: IMock): IMock {
+    return {
+      ...mock,
+      headers: { ...mock.headers },
+      headersMock: { ...mock.headersMock }
+    };
   }
 }
