@@ -99,7 +99,6 @@ export class MockComponent implements OnChanges {
   }
 
   onHeadersChange(headersMock: string): void {
-    debugger;
     this.upsertMock({ headersMock: JSON.parse(headersMock) });
     this.cdr.detectChanges();
   }
