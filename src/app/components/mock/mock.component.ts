@@ -51,12 +51,10 @@ export class MockComponent implements OnChanges {
     if (this.activeStatusCode !== this.data.activeStatusCode) {
       this.activeStatusCode = this.data.activeStatusCode;
 
-      if (this.responseRef) {
-        setTimeout(() => {
-          this.responseRef.update();
-          this.headersRef.update();
-        });
-      }
+      setTimeout(() => {
+        this.responseRef?.update();
+        this.headersRef?.update();
+      });
     }
 
     if (this.delaySubscription) {
@@ -99,8 +97,10 @@ export class MockComponent implements OnChanges {
   }
 
   onHeadersChange(headersMock: string): void {
-    this.upsertMock({ headersMock: JSON.parse(headersMock) });
-    this.cdr.detectChanges();
+    if (headersMock) {
+      this.upsertMock({ headersMock: JSON.parse(headersMock) });
+      this.cdr.detectChanges();
+    }
   }
 
   onRevertHeaders(): void {

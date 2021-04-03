@@ -366,10 +366,14 @@ export class OhMyState {
   }
 
   static cloneMock(mock: IMock): IMock {
-    return {
-      ...mock,
-      headers: { ...mock.headers },
-      headersMock: { ...mock.headersMock }
-    };
+    if (!mock) {
+      return { jsCode: MOCK_JS_CODE, delay: 0 };
+    } else {
+      return {
+        ...mock,
+        headers: { ...mock.headers },
+        headersMock: { ...mock.headersMock }
+      };
+    }
   }
 }
