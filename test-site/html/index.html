@@ -2,6 +2,14 @@
 
 <head>
   <link rel="stylesheet" href="styles.css">
+  <script>
+    window.ohMyMock = {
+      urlMap: {
+        html: '/site',
+        json: '/users'
+      }
+    };
+  </script>
   <script src="get.js"></script>
   <script src="fetch.js"></script>
 </head>
@@ -66,7 +74,11 @@
     ohMyMock.responseFn = r => {
       if (window.ohMyMock.response === 'json') {
         try {
-          r = JSON.stringify(JSON.parse(xhr.responseText), null, 4);
+          if (typeof r === 'object') {
+            r = JSON.stringify(r);
+          }
+
+          r = JSON.stringify(JSON.parse(r), null, 4);
         } catch { /* Ooops */ }
       }
 
@@ -81,7 +93,7 @@
 
     ohMyMock.headersFn = h => {
       if (typeof h === 'object') {
-        h = JSON.parse(h, null, 4);
+        h = JSON.stringify(h, null, 4);
       }
 
       document.querySelector('.headers').innerText = h;
