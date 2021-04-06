@@ -30,8 +30,6 @@ export class OhMockXhr extends Base {
   private ohUrl: string;
   private ohListeners = [];
 
-
-
   constructor() {
     super();
 
