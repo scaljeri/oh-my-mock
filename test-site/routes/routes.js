@@ -31,6 +31,11 @@ const appRouter = (app, fs) => {
     }, 2000);
   });
 
+  app.post('/users', (req,res) => {
+     res.contentType('application/json');
+     res.end(JSON.stringify({msg: 'success'}));
+  });
+
   app.get("/*", (req, res) => {
     const file = path.join(__dirname, "..", "html", req.url);
 
