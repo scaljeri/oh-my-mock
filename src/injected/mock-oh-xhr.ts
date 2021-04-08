@@ -15,15 +15,6 @@ import * as headers from '../shared/utils/xhr-headers';
 const Base = window.XMLHttpRequest;
 
 export class OhMockXhr extends Base {
-  public static ohState: IState;
-  private static newMockSubject = new Subject<{
-    context: IContext & { statusCode: statusCode },
-    data: { response: string, headers: Record<string, string> }
-  }>();
-  public static newMock$ = OhMockXhr.newMockSubject.asObservable();
-  private static hitSubject = new Subject<IContext & { statusCode: statusCode }>();
-  public static hit$ = OhMockXhr.hitSubject.asObservable();
-
   private ohData: IData;
   private ohMock: IMock;
   private ohType: requestType;
@@ -87,14 +78,14 @@ export class OhMockXhr extends Base {
         value: (key) => this.ohMock.headers[key]
       });
 
-      OhMockXhr.hitSubject.next({
+      window[STORAGE_KEY].hitSubject.next({
         url: this.ohUrl,
         method: 'XHR',
         type: this.ohType,
         statusCode: this.status
       });
     } else {
-      OhMockXhr.newMockSubject.next({
+      window[STORAGE_KEY].newMockSubject.next({
         context: {
           url: this.ohUrl,
           method: 'XHR',
@@ -104,7 +95,7 @@ export class OhMockXhr extends Base {
         data: {
           response: this.response,
           headers: headers.parse(this.getAllResponseHeaders())
-         }
+        }
       });
     }
     this.ohListeners.forEach(l => l(...args));
@@ -139,18 +130,16 @@ export class OhMockXhr extends Base {
     this.ohData = null;
     this.ohMock = null;
 
-    if (OhMockXhr.ohState.enabled) {
-      // State can arrive late at the party
-      this.ohData = findActiveData(
-        OhMockXhr.ohState,
-        this.ohUrl,
-        'XHR',
-        this.ohType
-      );
-      this.ohMock = this.ohData?.mocks
-        ? this.ohData.mocks[this.ohData.activeStatusCode]
-        : null;
-    }
+    this.ohData = findActiveData(
+      window[STORAGE_KEY].state,
+      this.ohUrl,
+      'XHR',
+      this.ohType
+    );
+
+    this.ohMock = this.ohData?.mocks
+      ? this.ohData.mocks[this.ohData.activeStatusCode]
+      : null;
   }
 
   private getHeaders(): Record<string, string>;
