@@ -1,12 +1,8 @@
-import { Subject } from 'rxjs';
 import { STORAGE_KEY } from '../shared/constants';
 import {
-  IContext,
   IData,
   IMock,
-  IState,
   requestType,
-  statusCode
 } from '../shared/type';
 import { evalJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';

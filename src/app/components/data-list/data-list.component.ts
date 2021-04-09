@@ -5,6 +5,7 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { DeleteData, UpdateDataStatusCode, UpsertData } from 'src/app/store/actions';
 import { AnimationBuilder } from "@angular/animations";
+import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
@@ -36,7 +37,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() dataExport = new EventEmitter<number>();
 
   @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.domain);
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data, this.domain);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
     new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.domain);
 
@@ -103,7 +104,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     const data = this.data[rowIndex];
     const state = this.getActiveStateSnapshot();
 
-    if (!state.data.some(d => d.url === data.url)) {
+    // Cannot clone a mock which already exists
+    if (!findActiveData(state, data.url, data.method, data.type)) {
       this.upsertData(data);
       this.toast.success('Cloned ' + data.url);
     } else {
