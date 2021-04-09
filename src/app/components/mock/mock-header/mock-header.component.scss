@@ -1,51 +1,56 @@
-  .main {
-    display: flex;
+@import "mixins";
 
-    span {
-      display: inline-flex;
-      font-weight: 900;
-      padding: 5px;
-      border: 1px solid #a9a9a9;
-      border-radius: 5px;
-      margin-right: 10px;
-    }
+.main {
+  display: flex;
 
-    input {
-      width: 300px;
-    }
-
-    .spacer {
-      flex: 1;
-      opacity: 0;
-    }
+  span {
+    display: inline-flex;
+    font-weight: 900;
+    padding: 5px;
+    border: 1px solid #a9a9a9;
+    border-radius: 5px;
+    margin-right: 10px;
   }
 
-  .codes {
-    display: flex;
-    margin-top: 10px;
-
-    .label {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      font-weight: bold;
-      margin-right: 20px;
-    }
-
-    .codes-wrapper {
-      display: flex;
-      flex: 1;
-    }
-
-    button {
-      border: 2px solid transparent;
-    }
-
-    button+button {
-      margin-left: 10px;
-    }
-
-    .is-active {
-      border: 2px solid green;
-    }
+  input {
+    width: 300px;
   }
+
+  .spacer {
+    flex: 1;
+    opacity: 0;
+  }
+}
+
+.codes {
+  display: flex;
+  margin-top: 10px;
+
+  .label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 20px;
+  }
+
+  .codes-wrapper {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    margin-right: $spacer-2;
+  }
+
+  button {
+    border: 2px solid transparent;
+  }
+
+  button {
+    margin-right: $spacer-2;
+    margin-top: $spacer-2;
+  }
+
+  .is-active {
+    border: 2px solid green;
+  }
+}
