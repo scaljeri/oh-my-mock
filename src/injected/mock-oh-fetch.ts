@@ -1,6 +1,6 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { IData, IMock, requestType } from '../shared/type';
-import { evalJsCode } from '../shared/utils/eval-jscode';
+import { compileJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';
 
@@ -21,7 +21,7 @@ const OhMyFetch = (url, config: { method?: requestType } = {}) => {
 
     return new Promise((resolv, reject) => {
       try {
-        const responseData = evalJsCode(mock.jsCode)(mock) as string;
+        const responseData = compileJsCode(mock.jsCode).call(mock, mock) as string;
         const body = new Blob([responseData], { type: mock.headersMock['content-type'] });
 
         const response = new Response(body, {

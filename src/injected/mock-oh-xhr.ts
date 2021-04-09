@@ -4,7 +4,7 @@ import {
   IMock,
   requestType,
 } from '../shared/type';
-import { evalJsCode } from '../shared/utils/eval-jscode';
+import { compileJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
 
@@ -113,9 +113,9 @@ export class OhMockXhr extends Base {
     }
 
     try {
-      const code = evalJsCode(this.ohMock.jsCode);
+      const code = compileJsCode(this.ohMock.jsCode);
 
-      return code(this.ohMock);
+      return code.call(this.ohMock, this.ohMock);
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
       return this.ohMock.response || this.response;
