@@ -5,21 +5,20 @@ OhMyMock is a Chrome Extension that mocks API calls. It can mock XmlHttpRequest 
 requests. As soon as OhMyMock is enabled it will start caching API responses but it will not
 mock requests by default. Via the OhMyMock UI you have to enable mocking per response/request.
 
-There is an article on medium.com which describes OhMyMock in great detail [here](https://medium.com/p/875ac5d85999/edit).
+There is an article on medium.com which describes OhMyMock in more detail [here](https://medium.com/p/875ac5d85999/edit).
 
 ### Installation
 OhMyMock can be install from the 
 [chrome extension store](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock), 
-but you can also compile the source and use that instead if you like. This is especially handy if you want
-to OhMyMock develop. To install it from source checkout this repository and run the following commands
+but you can also compile the source and use that instead if you like. This is what you would do if you want to do OhMyMock develop. 
+To install it from source checkout this repository and run the following commands
 
     $> yarn
     $> yarn build
 
-The compiled code is stored in "./dist"
+The compiled code is stored in **"./dist"**
 
-Navigate in Chrome to chrome:extensions and enable `development` mode and upload the "./dist" folder 
-via the `Load unpacked` button. Thats all.
+Navigate in Chrome to chrome:extensions and enable `development mode` and upload the **"./dist"** folder via the `Load unpacked` button. Thats it.
 
 ### Setup development
 First install all dependencies
@@ -36,10 +35,10 @@ Finally start the build in watch mode
 
     $> yarn build:watch
 
-Everytime you hit save the project will rebuild. Simply reload the extension and test page to load the new build.
+Everytime you hit save the project will rebuild, but after each rebuild you have to reload the extension and test page your self!
 
 ### Project structure
-This project consists of a couple of different part, each performs a different task. Those parts are:
+This project consists of a couple of different part, each with a specific task. Those parts are:
 
   * ./scripts           - Tooling
   * ./test-site         - Webserver (test/demo site)
@@ -52,12 +51,12 @@ This project consists of a couple of different part, each performs a different t
 
 ##### background.js
 For all tabs in the chrome browser there will be just one instance running of this script. It is
-always active and when the OhMyMock icons is clicked it will open the OhMyMock popup (angular app) 
-and it will pass messages from the popup to the content script. Messages from the content script
-go straight to the popup. 
+always active and when the OhMyMock icons is clicked it will open the OhMyMock popup (angular app). 
+Its other taks is to pass messages from the popup to the content script. Messages send from the 
+content script go straight to the popup. 
 
 ##### content script
-Each tab has its own instance of the content script. It takes care of 2 things, 1) inject code into the context of the website and 2) communicate between popup and injected script. 
+Each tab has its own instance of the content script. It takes care of 2 things, 1) inject code into the context of the website and 2) communicate between popup/background and injected script. 
 
 ##### injected script
 The injected script remains dormant until OhMyMock is enabled. If active it will patch window.fetch 
