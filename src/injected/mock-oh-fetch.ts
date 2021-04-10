@@ -9,7 +9,6 @@ const OhMyFetch = (url, config: { method?: requestType } = {}) => {
   const { method = 'GET' } = config;
   const data: IData = findActiveData(window[STORAGE_KEY].state, url, 'FETCH', method);
   const mock: IMock = data?.mocks[data?.activeStatusCode];
-  debugger;
 
   if (mock) {
     window[STORAGE_KEY].hitSubject.next({
