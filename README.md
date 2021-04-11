@@ -78,23 +78,18 @@ responses, allow you to modified responses and headers, created new ones and a l
 ## Core Team
 
 <table>
-  <style>
-
-  </style>
   <tr>
     <td align="center" >
-      <a style="display:flex;flex-direction:column;white-space:nowrap"
+      <a style="white-space:nowrap"
         href="https://github.com/scaljeri">
-        <img style="max-width:100px" src="https://avatars2.githubusercontent.com/u/1078741?v=4" 
-          width="100px;" alt="Lucas Calje"/>
+        <img style="max-width:100px" src="https://avatars2.githubusercontent.com/u/1078741?v=4" width="100px;" alt="Lucas Calje"/></br>
         <sub><b>Lucas Calje</b></sub>
       </a>
     </td>
     <td align="center">
-      <a style="display:flex;flex-direction:column;white-space:nowrap" 
+      <a style="white-space:nowrap" 
          href="https://github.com/remco75">
-        <img style="max-width:100px" src="https://avatars1.githubusercontent.com/u/5644903?v=4"
-        width="100px;" alt="Remco Vlierman"/>
+        <img style="max-width:100px" src="https://avatars1.githubusercontent.com/u/5644903?v=4" width="100px;" alt="Remco Vlierman"/></br>
         <sub><b>Remco Vlierman</b></sub></a>
     </td>
   </tr>
