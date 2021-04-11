@@ -77,7 +77,7 @@ responses, allow you to modified responses and headers, created new ones and a l
 
 ## Core Team
 
-<table>
+<table border="0">
   <tr>
     <td align="center" >
       <a style="white-space:nowrap"
