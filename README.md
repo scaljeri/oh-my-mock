@@ -1,6 +1,8 @@
 ![Master workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/master.yml/badge.svg)
 ![Feature workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/feature.yml/badge.svg)
 
+## OhMyMock
+
 OhMyMock is a Chrome Extension that mocks API calls. It can mock XmlHttpRequest and Fetch 
 requests. As soon as OhMyMock is enabled it will start caching API responses but it will not
 mock requests by default. Via the OhMyMock UI you have to enable mocking per response/request.
