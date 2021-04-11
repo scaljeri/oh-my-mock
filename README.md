@@ -3,8 +3,7 @@
 
 ## OhMyMock
 
-OhMyMock is a Chrome Extension that mocks API calls. It can mock XmlHttpRequest and Fetch 
-requests. 
+OhMyMock is a Chrome Extension that mocks API calls. It can mock XmlHttpRequest and Fetch requests. 
 
 There is an article on medium.com which describes OhMyMock in more detail [here](https://medium.com/p/875ac5d85999/edit).
 
