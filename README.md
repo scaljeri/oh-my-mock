@@ -79,12 +79,6 @@ responses, allow you to modified responses and headers, created new ones and a l
 
 ## Core Team
 
-<style type="text/css">
-table {
-  border:1px solid black;
-}
-</style>
-
 <table border="0">
   <tr style="border:none">
     <td align="center">
