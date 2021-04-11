@@ -78,15 +78,15 @@ responses, allow you to modified responses and headers, created new ones and a l
 ## Core Team
 
 <table border="0">
-  <tr>
-    <td align="center" >
+  <tr style="border:none">
+    <td align="center" style="border:none">
       <a style="white-space:nowrap"
         href="https://github.com/scaljeri">
         <img style="max-width:100px" src="https://avatars2.githubusercontent.com/u/1078741?v=4" width="100px;" alt="Lucas Calje"/></br>
         <sub><b>Lucas Calje</b></sub>
       </a>
     </td>
-    <td align="center">
+    <td align="center" style="border:none">
       <a style="white-space:nowrap" 
          href="https://github.com/remco75">
         <img style="max-width:100px" src="https://avatars1.githubusercontent.com/u/5644903?v=4" width="100px;" alt="Remco Vlierman"/></br>
