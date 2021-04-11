@@ -74,3 +74,14 @@ are restored, as if nothing ever happend.
 ##### Angular app
 The angular application is where you can interact with OhMyMock. This is where OhMyMock persists 
 responses, allow you to modified responses and headers, created new ones and a lot more.
+
+## Core Team
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/scaljeri"><img src="https://avatars2.githubusercontent.com/u/1078741
+?v=4" width="100px;" alt="Lucas Calje"/><br /><sub><b>Lucas Calje</b></sub></a></td>
+    <td align="center"><a href="https://github.com/remco75"><img src="https://avatars1.githubusercontent.com/u/5644903
+?v=4" width="100px;" alt="Remco Vlierman"/><br /><sub><b>Remco Vlierman</b></sub></a></td>
+    </tr>
+</table>
