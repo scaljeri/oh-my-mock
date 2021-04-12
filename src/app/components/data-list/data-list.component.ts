@@ -9,7 +9,7 @@ import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IState, IStore, statusCode } from 'src/shared/type';
+import { IContext, IData, IState, IStore, statusCode } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Subscription } from 'rxjs';
 import { animate, style } from '@angular/animations';
@@ -55,9 +55,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     private toast: HotToastService) { }
 
   ngOnInit(): void {
-    this.hitSubscription = this.appState.hit$.subscribe(context => {
-      const data = this.data.find(d =>
-        d.method === context.method && d.type === context.type && context.url.match(d.url));
+    this.hitSubscription = this.appState.hit$.subscribe((context: IContext) => {
+      const data = findActiveData(this.getActiveStateSnapshot(),
+        context.url, context.method, context.type);
+      // this.data.find(d =>
+        // d.method === context.method && d.type === context.type && context.url.match(d.url));
 
       if (data) {
         const index = this.data.indexOf(data);
