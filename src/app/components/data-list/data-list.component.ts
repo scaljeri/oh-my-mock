@@ -58,8 +58,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.hitSubscription = this.appState.hit$.subscribe((context: IContext) => {
       const data = findActiveData(this.getActiveStateSnapshot(),
         context.url, context.method, context.type);
-      // this.data.find(d =>
-        // d.method === context.method && d.type === context.type && context.url.match(d.url));
 
       if (data) {
         const index = this.data.indexOf(data);
