@@ -20,15 +20,15 @@ const OhMyFetch = (url, config: { method?: requestType } = {}) => {
 
     return new Promise((resolv, reject) => {
       try {
-        const responseData = compileJsCode(mock.jsCode).call(mock, mock) as string;
-        const body = new Blob([responseData], { type: mock.headersMock['content-type'] });
+        const respMock = compileJsCode(mock.jsCode).call({ ...mock, statusCode: data.activeStatusCode }, config);
+        const body = new Blob([respMock.responseMock], { type: respMock.headersMock['content-type'] });
 
         const response = new Response(body, {
           headers: fetchUtils.jsonToHeaders(mock.headersMock),
-          status: data.activeStatusCode
+          status: respMock.statusCode
         });
 
-        setTimeout(() => resolv(response), mock.delay);
+        setTimeout(() => resolv(response), respMock.delay);
       } catch (err) {
         reject(err);
       }

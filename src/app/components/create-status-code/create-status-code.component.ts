@@ -17,6 +17,8 @@ export class CreateStatusCodeComponent {
   public error: string;
   public statusCodeControl = new FormControl('', [
     Validators.required,
+    Validators.min(200),
+    Validators.max(599),
     statusCodeValidator(this.input.existingStatusCodes)
   ]);
   public cloneCtrl = new FormControl('');

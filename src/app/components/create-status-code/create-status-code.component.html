@@ -3,6 +3,7 @@
   <input matInput type="text" [formControl]="statusCodeControl" (keydown.enter)="onSave()">
   <mat-error *ngIf="statusCodeControl.errors?.required">{{requiredError}}</mat-error>
   <mat-error *ngIf="statusCodeControl.errors?.exists">{{existsError}}</mat-error>
+  <mat-error *ngIf="statusCodeControl.errors?.min || statusCodeControl.errors?.max ">Value should be between 200 and 599</mat-error>
   <mat-error *ngIf="statusCodeControl.errors?.invalid">{{invalidError}}</mat-error>
 </mat-form-field>
 <mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>

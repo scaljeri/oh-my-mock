@@ -1,6 +1,6 @@
 export const STORAGE_KEY = 'OhMyMocks';
 
-export const MOCK_JS_CODE = 'output = this.responseMock;\n';
+export const MOCK_JS_CODE = 'response = this.responseMock;\nstatusCode = this.statusCode;\n';
 
 export const JS_INCORRECT_MSG = 'Javascript contains errors';
 export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';

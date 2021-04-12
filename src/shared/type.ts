@@ -99,3 +99,12 @@ export interface IMockedTmpResponse {
 }
 
 export type ResetStateOptions = resetStateOptions;
+
+export interface IOhMyRequest {
+  url: string;
+  method: requestType;
+  body: unknown;
+  headers: Record<string, string>;
+}
+
+export type IOhMockResponse = IMock & { statusCode: statusCode };

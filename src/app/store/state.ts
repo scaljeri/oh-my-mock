@@ -273,7 +273,7 @@ export class OhMyState {
     data.mocks = {
       ...data.mocks,
       [payload.statusCode]: payload.clone ? OhMyState.cloneMock(data.mocks[data.activeStatusCode]) :
-        { jsCode: MOCK_JS_CODE, delay: 0 }
+        { jsCode: MOCK_JS_CODE, delay: 0, headers: {}, headersMock: {} }
     };
 
     if (payload.activeStatusCode) {
