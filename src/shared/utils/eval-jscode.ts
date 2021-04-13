@@ -1,8 +1,8 @@
 import { IOhMockResponse } from '../type';
 
-export const compileJsCode = (code: string): ((request) => IOhMockResponse) => {
-  code = `${code};\n\nreturn this;`;
+export const compileJsCode = (code: string): ((mock, request) => IOhMockResponse) => {
+  code = `${code};\n\nreturn mock;`;
   // tslint-disable-next
-  return eval(new Function('request', code) as any);
+  return eval(new Function('mock', 'request', code) as any);
 };
 

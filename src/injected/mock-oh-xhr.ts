@@ -82,8 +82,8 @@ export class OhMockXhr extends Base {
       Object.defineProperty(this, 'status', {
         value: this.ohOutput.statusCode
       });
-      Object.defineProperty(this, 'responseText', { value: this.ohOutput.responseMock });
-      Object.defineProperty(this, 'response', { value: this.ohOutput.responseMock });
+      Object.defineProperty(this, 'responseText', { value: this.ohOutput.response });
+      Object.defineProperty(this, 'response', { value: this.ohOutput.response });
       Object.defineProperty(this, 'getAllResponseHeaders', {
         value: () => headersString
       });
@@ -132,7 +132,14 @@ export class OhMockXhr extends Base {
     try {
       const code = compileJsCode(this.ohMock.jsCode);
 
-      return code.call({ ...this.ohMock, statusCode: this.ohData.activeStatusCode }, {
+      const context = {
+        response: this.ohMock.responseMock,
+        headers: this.ohMock.headersMock,
+        delay: this.ohMock.delay,
+        statusCode: this.ohData.activeStatusCode
+      }
+
+      return code(context, {
         url: this.ohUrl,
         method: this.ohType,
         requestBody: this.ohRequestBody,
@@ -162,7 +169,7 @@ export class OhMockXhr extends Base {
   private getHeaders(): Record<string, string>;
   private getHeaders(key: string): string;
   private getHeaders(key?: string): Record<string, string> | string | void {
-    const output = this.ohOutput?.headersMock;
+    const output = this.ohOutput?.headers;
 
     return key ? (output || {})[key] : output;
   }
