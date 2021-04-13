@@ -40,7 +40,7 @@ import * as contentParser from 'content-type-parser';
 @State<IOhMyMock>({
   name: STORAGE_KEY,
   defaults: {
-    domains: {}
+    domains: {}, version: ''
   }
 })
 @Injectable()

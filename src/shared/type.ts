@@ -5,7 +5,7 @@ import {
   STORAGE_KEY
 } from './constants';
 
-export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
+export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestMethod = 'XHR' | 'FETCH';
 export type statusCode = number;
 export type domain = string;
@@ -15,6 +15,7 @@ export interface IStore {
 }
 export interface IOhMyMock {
   domains: Record<domain, IState>;
+  version: string;
 }
 
 export interface IState {

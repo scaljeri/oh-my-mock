@@ -14,6 +14,7 @@ export class AppStateService {
 
   private hitSubject = new Subject<IContext>();
   public hit$: Observable<IContext> = this.hitSubject.asObservable();
+  public version = '__OH_MY_VERSION__';
 
   private domainChangeSubject = new BehaviorSubject<string>(null);
   public domain$ = this.domainChangeSubject.asObservable();
