@@ -50,8 +50,8 @@ export class CodeEditComponent implements OnInit {
   }
 
   public update(): void {
+    this.originalCode = this.format(this.code);
     this.setEditorOptions();
-    this.originalCode = this.formatJSON(this.code);
     this.control.setValue(this.originalCode);
 
     if (!this.input) {
@@ -77,8 +77,9 @@ export class CodeEditComponent implements OnInit {
     }
   }
 
-  private formatJSON(json: string | Record<string, string>): string {
-    if (this.type !== 'json') {
+  // If no type is set, JSON is assumed
+  private format(json: string | Record<string, string>): string {
+    if (this.type && this.type !== 'json') {
       return json as string;
     }
 
@@ -87,7 +88,12 @@ export class CodeEditComponent implements OnInit {
     if (typeof this.code === 'string') {
       try {
         tmp = JSON.parse(this.code);
-      } catch { // If JSON is invalid, leave it as is
+
+        // If this point is reached, it most likely is JSON
+        if (!this.type) {
+          this.type = 'json'; // this value is used by the editor for code highlighting
+        }
+      } catch { // It is not JSON or it is invalid, leave it as is
         return this.code;
       }
     }
@@ -95,6 +101,8 @@ export class CodeEditComponent implements OnInit {
     // Format JSON
     return this.prettyPrintPipe.transform(tmp);
   }
+
+
 
   onCancel(): void {
     this.editorOptions = { ...this.editorOptions, theme: 'vs' };
