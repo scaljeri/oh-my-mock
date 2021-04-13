@@ -1,0 +1,73 @@
+html, body {
+  min-height: 100%;
+  padding: 30px;
+}
+
+section {
+  display: flex;
+  background-color: lightgray;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  padding: 10px;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.get-code {
+  background-color: #000;
+  color: #fff;
+  padding: 10px;
+  margin: 0;
+  border-radius: 10px;
+}
+
+button + .get-code {
+  margin-left: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+.codes {
+  display: none;
+}
+
+.is-active + .codes {
+  display: block;
+
+}
+
+.selection {
+  align-items: center;
+  border: 1px solid grey;
+  border-radius: 5px;
+  display: inline-flex;
+  padding: 10px;
+}
+
+.selection div + div {
+  margin-left: 10px;
+}
+
+button.go {
+  margin-left: 10px;
+  height: 30px;
+  width: 110px;
+}
+
+article.data {
+  display: flex;
+}
+
+h3 {
+  margin-top: 0;
+}
+
+.data .body {
+  margin-left: 20px;
+}
