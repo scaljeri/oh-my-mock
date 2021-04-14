@@ -52,7 +52,7 @@ const MEM_FETCH = window.fetch;
     const wasEnabled = window[STORAGE_KEY].state?.enabled;
     window[STORAGE_KEY].state = payload.data as IState;
 
-    if (wasEnabled !== window[STORAGE_KEY].state.enabled) {
+    if (wasEnabled !== window[STORAGE_KEY].state?.enabled) {
       // Activity change
       if (window[STORAGE_KEY].state.enabled) {
         log(' *** Activate ***');

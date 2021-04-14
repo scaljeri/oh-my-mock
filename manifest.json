@@ -1,6 +1,6 @@
 {
   "name": "Oh-my-Mock",
-  "version": "1.1",
+  "version": "__OH_MY_VERSION__",
   "description": "Extension for caching and mocking API (XHR/Fetch) responses",
   "manifest_version": 2,
   "permissions": [

@@ -3,8 +3,9 @@ import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './app-state.service';
 
 const MIGRATION_MAP = {
-  // During development the version-token is not replaced
-  '__OH_MY_VERSION__': { next: '2.0.0', migrate: (_) => _ },
+  // This is a token that is replaced in the application by the token-repace.js script. But,
+  // during development is not replace (and it should not be replaced here) so we need to take care of it
+  ['__OH_MY_' + 'VERSION__']: { next: '2.0.0', migrate: (_) => _ },
   '0.0.0': { next: '2.0.0', migrate: () => null },
   '2.0.0:': {}
 }
