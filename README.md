@@ -9,7 +9,8 @@ OhMyMock is a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my
 There is an article on medium.com which describes OhMyMock in more detail [here](https://medium.com/p/875ac5d85999/edit).
 
 If you have the extension install you can see how it works with XMLHttpRequest and Fetch request on
-the [demo page](https://scaljeri.github.io/oh-my-mock/).
+the [demo page](https://scaljeri.github.io/oh-my-mock/). Note that you need OhMyMock for that page,
+because there is no API to serve the responses!
 
 By default OhMyMock is disabled and you need to enabled it, otherwise it will not cache or mock API
 responses. Via the OhMyMock UI you have can enable caching and mocking per response/request.
