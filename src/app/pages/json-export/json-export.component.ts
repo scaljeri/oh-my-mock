@@ -51,7 +51,8 @@ export class JsonExportComponent implements OnInit {
     const data = this.dataListRef.selection.selected.map((v) => this.dataList[v]);
     const exportObj = {
       data,
-      domain: this.appStateService.domain
+      domain: this.appStateService.domain,
+      version: this.appStateService.version
     }
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
 

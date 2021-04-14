@@ -17,8 +17,11 @@ export class CreateStatusCodeComponent {
   public error: string;
   public statusCodeControl = new FormControl('', [
     Validators.required,
+    Validators.min(200),
+    Validators.max(599),
     statusCodeValidator(this.input.existingStatusCodes)
   ]);
+  public cloneCtrl = new FormControl('');
   public requiredError = REQUIRED_MSG;
   public existsError = STATUS_CODE_EXISTS_MSG;
   public invalidError = STATUS_CODE_INVALID_MSG;
@@ -30,7 +33,9 @@ export class CreateStatusCodeComponent {
 
   onSave(): void {
     if (this.statusCodeControl.valid) {
-      this.dialogRef.close(this.statusCodeControl.value);
+      const clone = this.cloneCtrl.value;
+
+      this.dialogRef.close({ statusCode: this.statusCodeControl.value, clone });
     }
   }
 

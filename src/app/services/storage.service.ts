@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import { Select } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { OhMyState } from '../store/state';
-
+import { MigrationsService } from './migrations.service';
 import { IOhMyMock, IStore } from '../../shared/type';
 import { STORAGE_KEY } from '@shared/constants';
+import { AppStateService } from './app-state.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,16 +13,15 @@ import { STORAGE_KEY } from '@shared/constants';
 export class StorageService {
   @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
-  constructor() {
+  constructor(private appState: AppStateService, private migrateService: MigrationsService) {
     // this.reset();
+
   }
 
   async initialize(): Promise<IOhMyMock> {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
-        if (!state[STORAGE_KEY]) {
-          state[STORAGE_KEY] = { domains: {} };
-        }
+        state[STORAGE_KEY] = this.migrateService.update(state[STORAGE_KEY]);
         console.log('State from storage', state);
         resolve(state[STORAGE_KEY]);
       });
@@ -35,10 +35,11 @@ export class StorageService {
   }
 
   update(update: IOhMyMock, key = STORAGE_KEY): void {
-    return chrome.storage.local.set({ [key]: update });
+    const updated = this.migrateService.update(update);
+    return chrome.storage.local.set({ [key]: updated });
   }
 
   reset(): void {
-    this.update({ domains: {} });
+    this.update(this.migrateService.reset()[STORAGE_KEY]);
   }
 }

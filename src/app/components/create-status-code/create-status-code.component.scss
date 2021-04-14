@@ -1,3 +1,5 @@
+@import "mixins";
+
 :host {
   display: flex;
   flex-direction: column;
@@ -6,6 +8,14 @@
 
 mat-error {
   font-size: 13px;
+
+  & + mat-error {
+    display: none;
+  }
+}
+
+mat-slide-toggle  {
+  margin-top: $spacer-4;
 }
 
 .actions {

@@ -5,7 +5,7 @@ import {
   STORAGE_KEY
 } from './constants';
 
-export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE';
+export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestMethod = 'XHR' | 'FETCH';
 export type statusCode = number;
 export type domain = string;
@@ -15,6 +15,7 @@ export interface IStore {
 }
 export interface IOhMyMock {
   domains: Record<domain, IState>;
+  version: string;
 }
 
 export interface IState {
@@ -36,8 +37,9 @@ export interface IData extends IContext {
 }
 
 export interface IMock {
-  dataType?: string;
   response?: string;
+  type?: string;    // In application/json the `type` will be `application`
+  subType?: string; // In application/json the `subType` will be `json`
   responseMock?: string;
   headers?: Record<string, string>;
   headersMock?: Record<string, string>;
@@ -48,7 +50,7 @@ export interface IMock {
 }
 
 // actions
-export interface IUpsertMock<T = any> {
+export interface IUpsertMock {
   url: string;
   method: requestMethod;
   type: requestType;
@@ -65,6 +67,7 @@ export interface IDeleteMock extends IContext {
 export interface ICreateStatusCode extends IContext {
   statusCode: statusCode;
   activeStatusCode?: statusCode;
+  clone?: boolean;
 }
 
 export interface IUpdateDataUrl extends IContext {
@@ -97,3 +100,12 @@ export interface IMockedTmpResponse {
 }
 
 export type ResetStateOptions = resetStateOptions;
+
+export interface IOhMyRequest {
+  url: string;
+  method: requestType;
+  body: unknown;
+  headers: Record<string, string>;
+}
+
+export type IOhMockResponse = IMock & { statusCode: statusCode };

@@ -30,15 +30,19 @@ import {
   IUpdateDataUrl,
   IUpdateDataStatusCode,
   IOhMyMock,
-  IStore
+  IStore,
+  IMock
 } from '@shared/type';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
+import * as contentParser from 'content-type-parser';
+import { addTestData } from '../migrations/test-data';
+import { addCurrentDomain } from '../migrations/current-domain';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
   defaults: {
-    domains: {}
+    domains: {}, version: ''
   }
 })
 @Injectable()
@@ -64,24 +68,8 @@ export class OhMyState {
 
   @Action(InitState)
   init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
-    const state = { ...ctx.getState(), ...payload };
-
-    if (state.domains === undefined) {
-      state.domains = {};
-    }
-
     const activeDomain = domain || OhMyState.domain;
-
-    if (state.domains[activeDomain] === undefined) {
-      state.domains = {
-        ...state.domains,
-        [activeDomain]: {
-          domain: activeDomain,
-          data: [],
-          enabled: false
-        }
-      };
-    }
+    const state = addCurrentDomain(addTestData({ ...ctx.getState(), ...payload }), activeDomain);
 
     ctx.setState(state);
   }
@@ -96,18 +84,16 @@ export class OhMyState {
   @Action(ResetState) // payload === domain string (optional)
   reset(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: string, domain?: string }) {
     const state = ctx.getState();
-    const activeDomain = domain || OhMyState.domain;
-    let domains = { ...state.domains };
+    // const activeDomain = domain || OhMyState.domain;
+    const domains = { ...state.domains };
 
+    // TODO: unclear what `domain` argument is doing here, is it needed, don't think so?
     if (payload) {
       domains[payload] = { domain: payload, data: [] };
+      ctx.setState({ ...state, domains });
     } else {
-      domains = {
-        [activeDomain]: { domain: activeDomain, data: [] }
-      };
+      ctx.setState(addCurrentDomain(addTestData({ domains: {}, version: state.version }), OhMyState.domain));
     }
-
-    ctx.setState({ ...state, domains });
   }
 
   @Action(EnableDomain)
@@ -156,6 +142,14 @@ export class OhMyState {
 
       if (!mock.headersMock) {
         mock.headersMock = mock.headers;
+      }
+
+      if (mock.headersMock) {
+        const contentType = contentParser(mock.headersMock['content-type']);
+        if (contentType) {
+          mock.type = contentType.type;
+          mock.subType = contentType.subtype;
+        }
       }
     }
     data.mocks = { ...mocks, [payload.statusCode]: mock };
@@ -262,8 +256,10 @@ export class OhMyState {
 
     data.mocks = {
       ...data.mocks,
-      [payload.statusCode]: { jsCode: MOCK_JS_CODE }
+      [payload.statusCode]: payload.clone ? OhMyState.cloneMock(data.mocks[data.activeStatusCode]) :
+        { jsCode: MOCK_JS_CODE, delay: 0, headers: {}, headersMock: {} }
     };
+
     if (payload.activeStatusCode) {
       data.activeStatusCode = payload.activeStatusCode;
     }
@@ -351,5 +347,17 @@ export class OhMyState {
     ) || { url: url2regex(url), method, type, mocks: {} };
 
     return { index: state.data.indexOf(data), data: { ...data } };
+  }
+
+  static cloneMock(mock: IMock): IMock {
+    if (!mock) {
+      return { jsCode: MOCK_JS_CODE, delay: 0 };
+    } else {
+      return {
+        ...mock,
+        headers: { ...mock.headers },
+        headersMock: { ...mock.headersMock }
+      };
+    }
   }
 }

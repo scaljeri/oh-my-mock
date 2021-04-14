@@ -1,0 +1,21 @@
+@import "mixins";
+
+:host {
+  background-color: $color-light;
+  width: 80%;
+  padding: $spacer-4;
+}
+
+table {
+  width: 100%;
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: $spacer-3;
+
+  .fix-errors {
+    margin-left: auto;
+  }
+}

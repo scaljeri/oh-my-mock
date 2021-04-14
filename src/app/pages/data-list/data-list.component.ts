@@ -54,10 +54,12 @@ export class PageDataListComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((data: IData) => {
-      const state = this.stateSnapshot;
-      const newDataIndex = state.data.length;
-      this.upsertData(data);
-      this.router.navigate(['mocks', newDataIndex]);
+      if (data) {
+        const state = this.stateSnapshot;
+        const newDataIndex = state.data.length;
+        this.upsertData(data);
+        this.router.navigate(['mocks', newDataIndex]);
+      }
     });
   }
 

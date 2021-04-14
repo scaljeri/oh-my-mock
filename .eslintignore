@@ -8,3 +8,4 @@ test-site
 test.ts
 *.spec.ts
 monitor.js
+token-replace.js

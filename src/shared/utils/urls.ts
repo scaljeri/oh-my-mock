@@ -4,6 +4,14 @@ export const url2regex = (url: string): string => {
   return url.replace(/(?<!\\)\?/g, '\\?');
 };
 
-export const compareUrls = (url, urlRe): boolean => {
+export const compareUrls = (url: string, urlRe: string): boolean => {
+  if (urlRe[0] !== '^') {
+    urlRe = '^' + urlRe;
+  }
+
+  if (urlRe.charAt(urlRe.length - 1) !== '$') {
+    urlRe += '$';
+  }
+
   return !!url.match(urlRe);
 };

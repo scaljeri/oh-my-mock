@@ -9,7 +9,7 @@ export const findActiveData = (
 ): IData => {
   const data = (state?.data || []).find((item) => {
     return (
-      method === item.method && type === item.type && compareUrls(url, item.url)
+      method === item.method && type === item.type && (url === item.url || compareUrls(url, item.url))
     );
   });
 

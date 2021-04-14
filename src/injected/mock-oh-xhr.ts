@@ -1,36 +1,25 @@
-import { Subject } from 'rxjs';
 import { STORAGE_KEY } from '../shared/constants';
 import {
-  IContext,
   IData,
   IMock,
-  IState,
+  IOhMockResponse,
   requestType,
-  statusCode
 } from '../shared/type';
-import { evalJsCode } from '../shared/utils/eval-jscode';
+import { compileJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
 
 const Base = window.XMLHttpRequest;
 
 export class OhMockXhr extends Base {
-  public static ohState: IState;
-  private static newMockSubject = new Subject<{
-    context: IContext & { statusCode: statusCode },
-    data: { response: string, headers: Record<string, string> }
-  }>();
-  public static newMock$ = OhMockXhr.newMockSubject.asObservable();
-  private static hitSubject = new Subject<IContext & { statusCode: statusCode }>();
-  public static hit$ = OhMockXhr.hitSubject.asObservable();
-
   private ohData: IData;
   private ohMock: IMock;
   private ohType: requestType;
   private ohUrl: string;
   private ohListeners = [];
-
-
+  private ohRequestBody: unknown;
+  private ohRequestHeaders: Record<string, string> = {};
+  private ohOutput: IOhMockResponse;
 
   constructor() {
     super();
@@ -45,9 +34,15 @@ export class OhMockXhr extends Base {
     });
 
     this.addEventListener('load', (...args) => {
+      this.parseState();
+
+      if (this.ohMock) {
+        this.ohOutput = this.mockResponse();
+      }
+
       setTimeout(() => {
         this.ohMyReady(...args);
-      }, this.ohMock?.delay || 0);
+      }, this.ohOutput?.delay || 0);
     });
 
     const ael = this.addEventListener.bind(this);
@@ -62,8 +57,18 @@ export class OhMockXhr extends Base {
     });
   }
 
+  send(body) {
+    this.ohRequestBody = body;
+    super.send(body);
+  }
+
+  setRequestHeader(key, value) {
+    this.ohRequestHeaders[key] = value;
+    super.setRequestHeader(key, value);
+  }
+
   open(type: requestType, url: string, ...args: unknown[]): void {
-    this.ohType = type;
+    this.ohType = type; // e.g GET, POST
     this.ohUrl = url;
 
     this.parseState();
@@ -71,32 +76,29 @@ export class OhMockXhr extends Base {
   }
 
   ohMyReady(...args): void {
-    this.parseState();
-
-    if (this.ohMock) {
-      const response = this.mockResponse();
+    if (this.ohOutput) {
       const headersString = headers.stringify(this.getHeaders());
 
       Object.defineProperty(this, 'status', {
-        value: this.ohData.activeStatusCode
+        value: this.ohOutput.statusCode
       });
-      Object.defineProperty(this, 'responseText', { value: response });
-      Object.defineProperty(this, 'response', { value: response });
+      Object.defineProperty(this, 'responseText', { value: this.ohOutput.response });
+      Object.defineProperty(this, 'response', { value: this.ohOutput.response });
       Object.defineProperty(this, 'getAllResponseHeaders', {
         value: () => headersString
       });
       Object.defineProperty(this, 'getResponseHeader', {
-        value: (key) => this.ohMock.headers[key]
+        value: (key) => this.ohOutput.headers[key]
       });
 
-      OhMockXhr.hitSubject.next({
+      window[STORAGE_KEY].hitSubject.next({
         url: this.ohUrl,
         method: 'XHR',
         type: this.ohType,
         statusCode: this.status
       });
     } else {
-      OhMockXhr.newMockSubject.next({
+      window[STORAGE_KEY].newMockSubject.next({
         context: {
           url: this.ohUrl,
           method: 'XHR',
@@ -106,10 +108,10 @@ export class OhMockXhr extends Base {
         data: {
           response: this.response,
           headers: headers.parse(this.getAllResponseHeaders())
-         }
+        }
       });
     }
-    this.ohListeners.forEach(l => l(...args));
+    this.ohListeners.forEach(l => l.apply(this, args));
   }
 
 
@@ -122,18 +124,29 @@ export class OhMockXhr extends Base {
     return url;
   }
 
-  private mockResponse(): unknown {
+  private mockResponse(): IOhMockResponse {
     if (!this.ohMock) {
       return this.response;
     }
 
     try {
-      const code = evalJsCode(this.ohMock.jsCode);
+      const code = compileJsCode(this.ohMock.jsCode);
 
-      return code(this.ohMock);
+      const context = {
+        response: this.ohMock.responseMock,
+        headers: this.ohMock.headersMock,
+        delay: this.ohMock.delay,
+        statusCode: this.ohData.activeStatusCode
+      }
+
+      return code(context, {
+        url: this.ohUrl,
+        method: this.ohType,
+        requestBody: this.ohRequestBody,
+        requestHeaders: this.ohRequestHeaders });
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
-      return this.ohMock.response || this.response;
+      return this.ohMock.responseMock || this.response;
     }
   }
 
@@ -141,24 +154,22 @@ export class OhMockXhr extends Base {
     this.ohData = null;
     this.ohMock = null;
 
-    if (OhMockXhr.ohState.enabled) {
-      // State can arrive late at the party
-      this.ohData = findActiveData(
-        OhMockXhr.ohState,
-        this.ohUrl,
-        'XHR',
-        this.ohType
-      );
-      this.ohMock = this.ohData?.mocks
-        ? this.ohData.mocks[this.ohData.activeStatusCode]
-        : null;
-    }
+    this.ohData = findActiveData(
+      window[STORAGE_KEY].state,
+      this.ohUrl,
+      'XHR',
+      this.ohType
+    );
+
+    this.ohMock = this.ohData?.mocks
+      ? this.ohData.mocks[this.ohData.activeStatusCode]
+      : null;
   }
 
   private getHeaders(): Record<string, string>;
   private getHeaders(key: string): string;
   private getHeaders(key?: string): Record<string, string> | string | void {
-    const output = this.ohMock?.headersMock;
+    const output = this.ohOutput?.headers;
 
     return key ? (output || {})[key] : output;
   }

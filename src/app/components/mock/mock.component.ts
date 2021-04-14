@@ -3,14 +3,16 @@ import {
   Component,
   Input,
   OnChanges,
+  ViewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
-import { IData, IDeleteMock, IMock } from '@shared/type';
+import { IData, IDeleteMock, IMock, statusCode } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
 
 @Component({
   selector: 'oh-my-mock',
@@ -34,12 +36,26 @@ export class MockComponent implements OnChanges {
     new DeleteMock(response);
 
   public delayFormControl = new FormControl();
+  public dialogIsOpen = false;
   private delaySubscription: Subscription;
+  private activeStatusCode: statusCode;
+
+  @ViewChild('response') responseRef: CodeEditComponent;
+  @ViewChild('headers') headersRef: CodeEditComponent;
 
   constructor(public dialog: MatDialog, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
     this.mock = this.data.mocks[this.data.activeStatusCode];
+
+    if (this.activeStatusCode !== this.data.activeStatusCode) {
+      this.activeStatusCode = this.data.activeStatusCode;
+
+      setTimeout(() => {
+        this.responseRef?.update();
+        this.headersRef?.update();
+      });
+    }
 
     if (this.delaySubscription) {
       this.delaySubscription.unsubscribe();
@@ -68,17 +84,6 @@ export class MockComponent implements OnChanges {
     });
   }
 
-  openJsCodeDialog(): void {
-    const dialogRef = this.dialog.open(CodeEditComponent, {
-      width: '80%',
-      data: { code: this.mock.jsCode, originalCode: this.mock.jsCode }
-    });
-
-    dialogRef.afterClosed().subscribe((jsCode) => {
-      this.upsertMock({ jsCode });
-    });
-  }
-
   onResponseChange(data: string): void {
     this.upsertMock({ responseMock: data });
   }
@@ -92,14 +97,60 @@ export class MockComponent implements OnChanges {
   }
 
   onHeadersChange(headersMock: string): void {
-    this.upsertMock({ headersMock: JSON.parse(headersMock) });
-    this.cdr.detectChanges();
+    if (headersMock) {
+      this.upsertMock({ headersMock: JSON.parse(headersMock) });
+      this.cdr.detectChanges();
+    }
   }
 
   onRevertHeaders(): void {
     setTimeout(() => {
       this.upsertMock({ headersMock: this.mock.headers });
       this.cdr.detectChanges();
+    });
+  }
+
+  openShowMockCode(): void {
+    const data = { code: this.mock.jsCode, type: 'javascript', allowErrors: false };
+
+    this.openCodeDialog(data, (update: string) => {
+      this.upsertMock({ jsCode: update });
+    });
+  }
+
+  onShowResponseFullscreen(): void {
+    const data = { code: this.mock.responseMock, type: this.mock.subType };
+
+    this.openCodeDialog(data, (update: string) => {
+      this.upsertMock({ responseMock: update });
+      setTimeout(() => {
+        this.responseRef.update();
+      });
+    });
+  }
+
+  onShowHeadersFullscreen(): void {
+    const data = { code: this.mock.headersMock, type: 'json', allowErrors: false };
+    this.openCodeDialog(data, (update: string) => {
+      this.upsertMock({ headersMock: JSON.parse(update) });
+      setTimeout(() => {
+        this.headersRef.update();
+      })
+    });
+  }
+
+  openCodeDialog(data: IOhMyCodeEditOptions, cb: (update: string) => void): void {
+    this.dialogIsOpen = true;
+    const dialogRef = this.dialog.open(CodeEditComponent, {
+      width: '80%',
+      data
+    });
+
+    dialogRef.afterClosed().subscribe(update => {
+      this.dialogIsOpen = false;
+      if (update) {
+        cb(update);
+      }
     });
   }
 }

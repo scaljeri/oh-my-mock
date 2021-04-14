@@ -12,7 +12,7 @@
     "importHelpers": true,
     "target": "es6",
     "module": "commonjs",
-    "lib": ["es2017", "es5", "es6", "dom"],
+    "lib": ["es2020", "dom"],
     "types": []
   },
   "files": ["src/injected/index.ts"]

@@ -1,6 +1,8 @@
-export const evalJsCode = (code: string): ((mock) => unknown) => {
-  code = `let output;${code};return output;`;
+import { IOhMockResponse } from '../type';
+
+export const compileJsCode = (code: string): ((mock, request) => IOhMockResponse) => {
+  code = `${code};\n\nreturn mock;`;
   // tslint-disable-next
-  const fnc = eval(new Function('mock', code) as any);
-  return fnc;
+  return eval(new Function('mock', 'request', code) as any);
 };
+

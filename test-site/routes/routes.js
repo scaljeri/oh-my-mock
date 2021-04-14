@@ -3,6 +3,7 @@ const mime = require("mime-types");
 
 const appRouter = (app, fs) => {
   const usersPath = path.join(__dirname, "..", "data", "users.json");
+  const sitePath = path.join(__dirname, "..", "data", "site.html");
   // READ
   app.get("/users", (req, res) => {
     setTimeout(() => {
@@ -11,9 +12,28 @@ const appRouter = (app, fs) => {
           throw err;
         }
 
-        res.send(JSON.parse(data));
+        res.contentType('application/json');
+        res.send(data);
+      });
+    }, 1000);
+  });
+
+  app.get("/site", (req, res) => {
+    setTimeout(() => {
+      fs.readFile(sitePath, "utf8", (err, data) => {
+        if (err) {
+          throw err;
+        }
+
+        res.contentType('text/html');
+        res.send(data);
       });
     }, 2000);
+  });
+
+  app.post('/users', (req,res) => {
+     res.contentType('application/json');
+     res.end(JSON.stringify({msg: 'success'}));
   });
 
   app.get("/*", (req, res) => {

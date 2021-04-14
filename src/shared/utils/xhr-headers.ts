@@ -12,11 +12,10 @@ export const parse = (headers: string): Record<string, string> => {
 export const stringify = (headers: Record<string, string> = {}): string => {
   const entries = Object.entries(headers);
   if (entries.length) {
-    return Object.entries(headers || {})
-      .reduce((out, input) => {
+    return entries.reduce((out, input) => {
         out.push(`${input[0]}: ${input[1]}`);
         return out;
-      })
+      }, [])
       .join('\r\n');
   }
 

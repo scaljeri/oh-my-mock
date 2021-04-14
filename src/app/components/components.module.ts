@@ -14,7 +14,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
-import { DragDropModule } from '@angular/cdk/drag-drop';
+
 import {
   Location,
   LocationStrategy,
@@ -37,6 +37,7 @@ import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
 import { JsonImportComponent } from './json-import/json-import.component';
 import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
+import { CodeErrorsComponent } from './code-errors/code-errors.component';
 
 @NgModule({
   declarations: [
@@ -54,7 +55,8 @@ import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive'
     MockHeaderComponent,
     JsonImportComponent,
     FileUploaderComponent,
-    FileDragDropDirective
+    FileDragDropDirective,
+    CodeErrorsComponent
   ],
   imports: [
     CommonModule,
@@ -71,7 +73,6 @@ import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive'
     MatExpansionModule,
     MatDialogModule,
     MatTabsModule,
-    DragDropModule,
     ReactiveFormsModule,
     FormsModule,
     MonacoEditorModule,

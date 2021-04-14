@@ -2,53 +2,130 @@
 
 <head>
   <link rel="stylesheet" href="styles.css">
+  <script>
+    window.ohMyMock = {
+      urlMap: {
+        html: '/site',
+        json: '/users'
+      }
+    };
+  </script>
   <script src="get.js"></script>
   <script src="fetch.js"></script>
 </head>
 
 <body>
   <h1>Test site</h1>
-  <section class="xhr">
-    <h2>XMLHttpResponse</h2>
-    <article class="get">
-      <h3>
-        <span>GET</span>
-      </h3>
-      <div class="ohmymock">
-        <p class="is-oh-my-mocks-active">OhMyMocks is not active</p>
-        <p class="codes">
-          <span>Available status-codes:</span>
-          <select></select>
-        </p>
+
+  <form class="selection" onsubmit="return onSubmit()">
+    <div class="type">
+      <h3>Type</h3>
+      <select name=type>
+        <option value="xhr" selected="selected">XHR</option>
+        <option value="fetch">FETCH</option>
+      </select>
+    </div>
+
+    <div class="method">
+      <h3>Method</h3>
+      <select name="method">
+        <option value="GET" selected="selected">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">UPDATE</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+    </div>
+
+    <div class="response">
+      <h3>Response type</h3>
+      <select name="response">
+        <option value="html">HTML</option>
+        <option value="json" selected="selected">JSON</option>
+      </select>
+    </div>
+
+    <button class="go">GO >>></button>
+  </form>
+
+  <section class="oh-my-response">
+    <h2>Response</h2>
+    <article class="data">
+      <div class="fields">
+        <div class="status-code">StatusCode: <span></span></div>
+        <div class="duration">Duration: <span></span></div>
+        <pre class="headers"></pre>
       </div>
-      <button class="get">Load users</button>
-      <div class="content-wrapper">
-        <pre class="get-code hidden"></pre>
-        <div class="header">
-          <p><span>StatusCode:</span><span class="status-code"></span></p>
-          <p><span>Headers:</span><span class="headers"></span></p>
-          <p><span>Duration:</span><span class="duration"></span></p>
-          <p><span>onreadystatechange fired?:</span><span class="onreadystatechange"></span></p>
-          </div>
+      <div class="body">
+        <h3>Body</h3>
+        <pre></pre>
       </div>
     </article>
   </section>
-  <section class="fetch">
-    <h2>Fetch</h2>
-    <article class="get">
-      <h3>
-        <span>GET</span>
-        <button class="fetch">Load users</button>
-      </h3>
-      <div class="content-wrapper">
-        <pre class="get-code hidden"></pre>
-        <div class="header">
-          <p><span>StatusCode</span><span class="status-code"></span></p>
-          <p><span>Headers</span><span class="headers"></span></p>
-        </div>
-      </div>
-    </article>
-  </section>
+
+  <script>
+    if (!window.ohMyMock) {
+      window.ohMyMock = {}
+    }
+
+    ohMyMock.statusCodeFn = st => {
+      document.querySelector('.status-code span').innerText = st;
+    };
+
+    ohMyMock.responseFn = r => {
+      if (window.ohMyMock.response === 'json') {
+        try {
+          if (typeof r === 'object') {
+            r = JSON.stringify(r);
+          }
+
+          r = JSON.stringify(JSON.parse(r), null, 4);
+        } catch { /* Ooops */ }
+      }
+
+      document.querySelector('.body pre').innerText = r;
+    };
+
+    ohMyMock.durationFn = () => {
+      console.log('dur');
+      document.querySelector('.duration span').innerText =
+        (Date.now() - ohMyMock.starttime) + 'ms';
+    };
+
+    ohMyMock.headersFn = h => {
+      if (typeof h === 'object') {
+        h = JSON.stringify(h, null, 4);
+      }
+
+      document.querySelector('.headers').innerText = h;
+    }
+
+    ohMyMock.resetFn = () => {
+      ohMyMock.headersFn('');
+      ohMyMock.statusCodeFn('');
+      ohMyMock.responseFn('');
+    };
+
+    window.onSubmit = () => {
+      const form = document.forms[0];
+      const fd = new FormData(form);
+
+      ohMyMock.type = fd.get('type');
+      ohMyMock.method = fd.get('method');
+      ohMyMock.response = fd.get('response');
+
+      ohMyMock.starttime = Date.now();
+      const interId = setInterval(() => ohMyMock.durationFn(), 100);
+
+      const handler = window.ohMyMock[fd.get('type')];
+      ohMyMock.resetFn();
+      handler(fd.get('method'), fd.get('response'), () => {
+        clearInterval(interId);
+        ohMyMock.durationFn();
+      });
+
+      return false;
+    };
+  </script>
 </body>
 
 </html>

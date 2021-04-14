@@ -5,10 +5,11 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { DeleteData, UpdateDataStatusCode, UpsertData } from 'src/app/store/actions';
 import { AnimationBuilder } from "@angular/animations";
+import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IState, IStore, statusCode } from 'src/shared/type';
+import { IContext, IData, IState, IStore, statusCode } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Subscription } from 'rxjs';
 import { animate, style } from '@angular/animations';
@@ -36,7 +37,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() dataExport = new EventEmitter<number>();
 
   @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.domain);
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data, this.domain);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
     new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.domain);
 
@@ -54,9 +55,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     private toast: HotToastService) { }
 
   ngOnInit(): void {
-    this.hitSubscription = this.appState.hit$.subscribe(context => {
-      const data = this.data.find(d =>
-        d.method === context.method && d.type === context.type && context.url.match(d.url));
+    this.hitSubscription = this.appState.hit$.subscribe((context: IContext) => {
+      const data = findActiveData(this.getActiveStateSnapshot(),
+        context.url, context.method, context.type);
 
       if (data) {
         const index = this.data.indexOf(data);
@@ -103,7 +104,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     const data = this.data[rowIndex];
     const state = this.getActiveStateSnapshot();
 
-    if (!state.data.some(d => d.url === data.url)) {
+    // Cannot clone a mock which already exists
+    if (!findActiveData(state, data.url, data.method, data.type)) {
       this.upsertData(data);
       this.toast.success('Cloned ' + data.url);
     } else {
