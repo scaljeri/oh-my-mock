@@ -30,26 +30,22 @@ export class JsonImportComponent {
           const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
           let addCount = 0;
 
-          const migratedState = this.mirgationService.update({
-            [STORAGE_KEY]: {
-              version,
-              domains: { [domain]: { domain, data } }
-            }
-          });
+          const migratedState = this.mirgationService.update(
+            { version, domains: { [domain]: { domain, data } } });
 
-          if (version > migratedState[STORAGE_KEY].version) {
+          if (version > migratedState.version) {
             this.toast.error(`Import failed, version of OhMyMock version is too old1`)
-          } else if ((version || '0.0.0') < migratedState[STORAGE_KEY].version) {
-            if (migratedState[STORAGE_KEY].domains[domain]?.data?.length !== 0) {
+          } else if ((version || '0.0.0') < migratedState.version) {
+            if (migratedState.domains[domain]?.data?.length !== 0) {
               return this.toast.warning(`Nothing imported, version of the data is too old!`);
             } else {
-              this.toast.warning(`Data was migrated to version ${migratedState[STORAGE_KEY].version} before import!`);
+              this.toast.warning(`Data was migrated to version ${migratedState.version} before import!`);
             }
           }
 
           // Mocks that already exist are not imported but skipped, this should change!!
           // TODO: A mock can already exist, but the import can have different status codes!!
-          migratedState[STORAGE_KEY].domains[domain]?.data.forEach(d => {
+          migratedState.domains[domain]?.data.forEach(d => {
             if (!findActiveData(state, d.url, d.method, d.type)) {
               addCount++;
               this.upsertData(d, domain);

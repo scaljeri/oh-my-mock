@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import { STORAGE_KEY } from '@shared/constants';
-import { IStore } from '@shared/type';
+import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './app-state.service';
-import { addTestData } from '../migrations/test-data';
 
 const MIGRATION_MAP = {
   // During development the version-token is not replaced
@@ -18,27 +16,27 @@ export class MigrationsService {
 
   constructor(private appState: AppStateService) { }
 
-  update(state: IStore = this.reset()): IStore {
-    const version = state[STORAGE_KEY].version;
+  update(state: IOhMyMock = this.reset()): IOhMyMock {
+    const version = state.version;
 
     if (version && !MIGRATION_MAP[version] && version > this.appState.version ) {
       // This can only happen with imports. The App version is lower than the imported data
       return this.reset();
     }
 
-    let action = MIGRATION_MAP[state[STORAGE_KEY]?.version || '0.0.0'];
+    let action = MIGRATION_MAP[state?.version || '0.0.0'];
 
     while (action?.next) {
       state = action.migrate(state) || this.reset();
-      state[STORAGE_KEY].version = action.next;
+      state.version = action.next;
 
       action = MIGRATION_MAP[action.next];
     }
 
-    return addTestData(state);
+    return state;
   }
 
-  reset(): IStore {
-    return { [STORAGE_KEY]: { domains: {}, version: this.appState.version } };
+  reset(): IOhMyMock {
+    return { domains: {}, version: this.appState.version };
   }
 }

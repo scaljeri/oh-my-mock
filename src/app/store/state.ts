@@ -36,6 +36,8 @@ import {
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
 import * as contentParser from 'content-type-parser';
+import { addTestData } from '../migrations/test-data';
+import { addCurrentDomain } from '../migrations/current-domain';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
@@ -66,24 +68,8 @@ export class OhMyState {
 
   @Action(InitState)
   init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
-    const state = { ...ctx.getState(), ...payload };
-
-    if (state.domains === undefined) {
-      state.domains = {};
-    }
-
     const activeDomain = domain || OhMyState.domain;
-
-    if (state.domains[activeDomain] === undefined) {
-      state.domains = {
-        ...state.domains,
-        [activeDomain]: {
-          domain: activeDomain,
-          data: [],
-          enabled: false
-        }
-      };
-    }
+    const state = addCurrentDomain(addTestData({ ...ctx.getState(), ...payload }), activeDomain);
 
     ctx.setState(state);
   }
@@ -98,18 +84,16 @@ export class OhMyState {
   @Action(ResetState) // payload === domain string (optional)
   reset(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: string, domain?: string }) {
     const state = ctx.getState();
-    const activeDomain = domain || OhMyState.domain;
-    let domains = { ...state.domains };
+    // const activeDomain = domain || OhMyState.domain;
+    const domains = { ...state.domains };
 
+    // TODO: unclear what `domain` argument is doing here, is it needed, don't think so?
     if (payload) {
       domains[payload] = { domain: payload, data: [] };
+      ctx.setState({ ...state, domains });
     } else {
-      domains = {
-        [activeDomain]: { domain: activeDomain, data: [] }
-      };
+      ctx.setState(addCurrentDomain(addTestData({ domains: {}, version: state.version }), OhMyState.domain));
     }
-
-    ctx.setState({ ...state, domains });
   }
 
   @Action(EnableDomain)
