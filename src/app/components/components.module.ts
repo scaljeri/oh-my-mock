@@ -14,6 +14,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   Location,
@@ -69,6 +70,7 @@ import { CodeErrorsComponent } from './code-errors/code-errors.component';
     MatCardModule,
     MatInputModule,
     MatButtonModule,
+    MatTooltipModule,
     MatSlideToggleModule,
     MatExpansionModule,
     MatDialogModule,

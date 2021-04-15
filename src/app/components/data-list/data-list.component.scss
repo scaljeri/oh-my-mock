@@ -113,6 +113,19 @@ th.mat-column-actions {
   background-color: var(--bg-color);
 }
 
+th {
+  white-space: nowrap;
+}
+
+th,
+td {
+  padding-right: 20px !important;
+
+  &.cdk-column-url {
+    overflow-wrap: anywhere;
+  }
+}
+
 td.mat-column-actions.mat-column-actions {
   background-color: var(--bg-color) !important;
   cursor: default !important;

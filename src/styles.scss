@@ -33,3 +33,8 @@ ol.reset ul li {
 .spacer {
   flex: 1;
 }
+
+// This in a toaster is not wrapped
+.hot-toast-message dynamic-content > div {
+  overflow-wrap: anywhere;
+}

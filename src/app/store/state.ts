@@ -77,7 +77,8 @@ export class OhMyState {
   @Action(ChangeDomain)
   changeDomain(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
     OhMyState.domain = payload;
-    const state = { ...ctx.getState() };
+    const state = addCurrentDomain(ctx.getState(), payload);
+
     ctx.setState(state);
   }
 
@@ -344,7 +345,7 @@ export class OhMyState {
   ): { index: number; data: IData } {
     const data = state.data.find(
       (r) => r.url === url && r.method === method && r.type === type
-    ) || { url: url2regex(url), method, type, mocks: {} };
+    ) || { url: url2regex(url), method, type, mocks: {}, activeStatusCode: 0 };
 
     return { index: state.data.indexOf(data), data: { ...data } };
   }

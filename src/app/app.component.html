@@ -7,7 +7,7 @@
     <mat-toolbar>
       <app-header-button (menu)="drawer.toggle()"></app-header-button>
 
-      <h1>Oh My Mock - {{domain}} </h1>
+      <h1>Oh My Mock v{{version}} - {{domain}} </h1>
       <span class="header-spacer"></span>
       <mat-slide-toggle (change)="onEnableChange($event)" [checked]="enabled" [color]="color"></mat-slide-toggle>
     </mat-toolbar>

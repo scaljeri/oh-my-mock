@@ -3,7 +3,7 @@ window.ohMyMock.xhr = (method, responseType, cb) => {
     const xhr = new XMLHttpRequest();
     xhr.open(method, ohMyMock.urlMap[responseType]);
     xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
-    debugger;
+
     xhr.onreadystatechange = cb;
     xhr.addEventListener("load", (res) => {
       window.ohMyMock.responseFn(xhr.responseText);

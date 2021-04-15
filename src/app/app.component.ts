@@ -33,6 +33,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   color: ThemePalette = 'warn';
   drawerMode: MatDrawerMode = 'over';
   dawerBackdrop = true;
+  version: string;
   page = '';
 
   @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
@@ -47,17 +48,19 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private contentService: ContentService,
     private router: Router,
     public dialog: MatDialog
-  ) { }
+  ) {
+    this.version = this.appStateService.version;
+  }
 
   async ngAfterViewInit(): Promise<void> {
     this.state$.subscribe((state: IState) => {
+      setTimeout(() => this.domain = this.appStateService.domain);
+
       if (!state) {
         return;
       }
 
       this.enabled = state.enabled;
-      this.domain = this.appStateService.domain;
-
       if (this.enabled) {
         if (this.dialogRef) {
           this.dialogRef.close();
@@ -101,5 +104,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     ) {
       this.router.navigate(['../']);
     }
+  }
+
+  @HostListener('window:keydown.enter')
+  onEnable(): void {
+    this.dialogRef?.close(true);
   }
 }

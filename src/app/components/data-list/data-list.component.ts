@@ -96,7 +96,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     if (this.domain) {
       msg += ` on domain ${this.domain}`;
     }
-    this.toast.success(msg);
+    this.toast.success(msg, { duration: 2000, style: {}});
     this.deleteData(rowIndex);
   }
 
