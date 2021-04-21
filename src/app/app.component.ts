@@ -8,12 +8,11 @@ import {
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
-import { EnableDomain } from './store/actions';
+import { Toggle } from './store/actions';
 import { IState } from '../shared/type';
 import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
-import { ThemePalette } from '@angular/material/core';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { ContentService } from './services/content.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -30,13 +29,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   enabled = false;
   domain: string;
 
-  color: ThemePalette = 'warn';
+  color = 'warn';
   drawerMode: MatDrawerMode = 'over';
   dawerBackdrop = true;
   version: string;
   page = '';
 
-  @Dispatch() activate = (enabled: boolean) => new EnableDomain(enabled);
+  @Dispatch() activate = (value: boolean) => new Toggle({ name: 'active', value });
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
@@ -60,7 +59,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      this.enabled = state.enabled;
+      this.enabled = state.toggles.active;
       if (this.enabled) {
         if (this.dialogRef) {
           this.dialogRef.close();

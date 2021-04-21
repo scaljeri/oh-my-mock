@@ -12,6 +12,7 @@ declare let window: any;
 const MEM_XHR_REQUEST = window.XMLHttpRequest;
 const MEM_FETCH = window.fetch;
 
+// create public OhMyMock Object. Used by fetch and Xhr and anyone else
 function setup() {
   const stateChangeSubject = new BehaviorSubject<IState>(null);
   const newMockSubject = new Subject();
@@ -61,12 +62,12 @@ function setup() {
 
     log('Received state update', payload);
 
-    const wasEnabled = window[STORAGE_KEY].state?.enabled;
+    const wasEnabled = window[STORAGE_KEY].state?.toggles.active;
     window[STORAGE_KEY].state = payload.data as IState;
 
-    if (wasEnabled !== window[STORAGE_KEY].state?.enabled) {
+    if (wasEnabled !== window[STORAGE_KEY].state?.toggles.active) {
       // Activity change
-      if (window[STORAGE_KEY].state.enabled) {
+      if (window[STORAGE_KEY].state.toggles.active) {
         log(' *** Activate ***');
         window.XMLHttpRequest = OhMockXhr;
         window.fetch = OhMyFetch;

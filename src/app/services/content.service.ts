@@ -4,12 +4,13 @@ import { Injectable } from '@angular/core';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { ChangeDomain, InitState, UpsertMock } from '../store/actions';
+import { ChangeDomain, InitState, UpsertMock, ViewChangeOrderItems } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
+import { IMock, IOhMyMock, IPacket, IState, IStore, IUpsertMock } from '@shared/type';
 import { appSources, packetTypes } from '@shared/constants';
 import { log } from '../utils/log';
 import { AppStateService } from './app-state.service';
+import { findActiveData } from '@shared/utils/find-mock';
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
@@ -40,7 +41,14 @@ export class ContentService {
             ...payload.context
           });
         } else if (payload.type === packetTypes.HIT) {
-          this.appStateService.hit(payload.context)
+          const state = this.getActiveStateSnapshot();
+          const data = findActiveData(state, payload.context.url, payload.context.method, payload.context.type);
+
+          // Note: First hit appStateService then dispatch change. DataList depends on this order!!
+          this.appStateService.hit(data);
+
+          const from = state.views['hits'].indexOf(state.data.indexOf(data));
+          this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', from, to: 0 }));
         }
       } else {
         if (payload.type === packetTypes.KNOCKKNOCK) {
@@ -81,5 +89,9 @@ export class ContentService {
     // const x = chrome.runtime.onMessage.hasListener(this.listener);
     // chrome.runtime.onMessage.removeListener(this.listener);
     this.send({ ...this.state, enabled: false });
+  }
+
+  private getActiveStateSnapshot(): IState {
+    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 }

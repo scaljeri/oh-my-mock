@@ -20,7 +20,7 @@ export class PageDataListComponent implements OnInit {
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   public showRowAction = false;
-  public data: IData[];
+  public state: IState;
   public domain: string;
 
   constructor(
@@ -32,7 +32,7 @@ export class PageDataListComponent implements OnInit {
 
   ngOnInit(): void {
     this.state$.subscribe((state: IState) => {
-      this.data = state?.data || [];
+      this.state = state;
     });
   }
 

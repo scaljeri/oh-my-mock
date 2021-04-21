@@ -31,7 +31,7 @@ export class JsonImportComponent {
           let addCount = 0;
 
           const migratedState = this.mirgationService.update(
-            { version, domains: { [domain]: { domain, data } } });
+            { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
 
           if (version > migratedState.version) {
             this.toast.error(`Import failed, version of OhMyMock version is too old1`)

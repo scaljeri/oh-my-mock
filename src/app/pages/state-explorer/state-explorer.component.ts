@@ -23,6 +23,7 @@ export class PageStateExplorerComponent implements OnInit {
   public domains: domain[];
   public selectedDomain = '-';
 
+  public state: IState;
   public dataList: IData[];
   public dataItem: IData;
   public showRowAction = true;

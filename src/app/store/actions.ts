@@ -1,18 +1,14 @@
 import {
   IData,
-  IDeleteData,
   IDeleteMock,
   ICreateStatusCode,
   IUpdateDataUrl,
   IUpdateDataStatusCode,
   IUpsertMock,
-  IOhMyMock
+  IOhMyMock,
+  IOhMyViewItemsOrder,
+  IOhMyToggle
 } from '@shared/type';
-
-export class EnableDomain {
-  static readonly type = '[Domain] Enable';
-  constructor(public payload: boolean, public domain?: string) { }
-}
 
 export class InitState {
   static readonly type = '[Domain] Init';
@@ -62,4 +58,14 @@ export class UpdateDataUrl {
 export class UpdateDataStatusCode {
   static readonly type = '[Data] update status code';
   constructor(public payload: IUpdateDataStatusCode, public domain?: string) { }
+}
+
+export class ViewChangeOrderItems {
+  static readonly type = '[ViewList] update order of items';
+  constructor(public payload: IOhMyViewItemsOrder) { }
+}
+
+export class Toggle {
+  static readonly type = '[Toggle] update';
+  constructor(public payload: IOhMyToggle) { }
 }

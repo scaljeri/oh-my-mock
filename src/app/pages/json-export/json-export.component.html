@@ -4,7 +4,7 @@
     <mat-icon>copy_all</mat-icon>
   </button>
 
-  <oh-my-data-list *ngIf="dataList" [data]="dataList" [showExport]="true" (dataExport)="onRowExport($event)">
+  <oh-my-data-list *ngIf="dataList" [showExport]="true" (dataExport)="onRowExport($event)">
   </oh-my-data-list>
 
   <button class="export" mat-raised-button color="primary" (click)="onExport()"
