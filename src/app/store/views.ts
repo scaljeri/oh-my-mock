@@ -13,6 +13,6 @@ export const add = (index: number, view: number[], position = 0): number[] => {
 
 export const remove = (dataPos: number, view: number[]): number[] => {
   const index = view.indexOf(dataPos);
-  return arrayRemoveItem(view.map(v => v >= index ? v - 1 : v), index)[0];
+  return arrayRemoveItem(view, index)[0].map(v => v > dataPos ? v - 1 : v);
 }
 

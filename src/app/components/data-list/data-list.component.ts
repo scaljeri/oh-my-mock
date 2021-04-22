@@ -5,7 +5,6 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
 import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems } from 'src/app/store/actions';
-import { AnimationBuilder } from "@angular/animations";
 import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
@@ -63,7 +62,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
-  public hitsList: number[];
+  public hitcount: number[] = [];
   public disabled = false;
   private timeoutId: number;
   private isBusyAnimating = false;
@@ -78,23 +77,19 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private appState: AppStateService,
-    private animationBuilder: AnimationBuilder,
     private store: Store,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
     this.subscriptions.push(this.appState.hit$.subscribe((data: IData) => {
-      console.log('hit');
       const index = this.data.indexOf(data);
       const hitIndex = this.viewList.indexOf(index);
 
       if (this.state.toggles.hits) {
         this.viewList = arrayMoveItem(this.viewList, hitIndex, 0);
-      } else {
-        const highlightFactory = this.animationBuilder.build(highlightSeq);
-        const highlightPlayer = highlightFactory.create(this.rows.toArray()[index].nativeElement, { params: { color: '#97A8B6' } });
-        highlightPlayer.play();
       }
+
+      this.hitcount[hitIndex] = (this.hitcount[hitIndex] || 0) + 1;
       this.isBusyAnimating = true;
     }));
   }
@@ -106,16 +101,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.isBusyAnimating = false;
       const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'];
 
+      // The hit list has animated its change. Next to support drag&drop it is
+      // important that all that is un-done, so here we put the data in the new order
+      // and build a new viewList. if that is done, drag&drop will work again
       this.data = viewList.map(v => this.state.data[v]);
-      // if (this.state.toggles.hits) {
       this.viewList = this.data.map((v, i) => i);
-      // }
     }, this.isBusyAnimating ? 1000 : 0);
-
-    // TODO: What is this suppose todo???
-    if (this.displayedColumns.indexOf('rowAction') === 0) {
-      this.displayedColumns.shift();
-    }
   }
 
   ngOnDestroy(): void {
@@ -137,12 +128,15 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onDelete(rowIndex: number, event): void {
     event.stopPropagation();
-    let msg = `Deleted mock ${this.data[rowIndex].url}`;
+
+    debugger;
+    const index = this.state.data.indexOf(this.data[rowIndex]);
+    let msg = `Deleted mock ${this.data[index].url}`;
     if (this.state.domain) {
       msg += ` on domain ${this.state.domain}`;
     }
     this.toast.success(msg, { duration: 2000, style: {} });
-    this.deleteData(rowIndex);
+    this.deleteData(index);
   }
 
   onClone(rowIndex: number, event): void {
