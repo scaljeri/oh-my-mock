@@ -14,7 +14,7 @@
     </div>
   </div>
 
-  <ol data-table cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
+  <ol data-table *ngIf="data" cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
     <li class="header">
       <span class="method">Method</span>
       <span class="type">Type</span>

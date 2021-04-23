@@ -65,6 +65,11 @@ export class ViewChangeOrderItems {
   constructor(public payload: IOhMyViewItemsOrder) { }
 }
 
+export class ViewReset {
+  static readonly type = '[ViewList] reset';
+  constructor(public payload: string) { }
+}
+
 export class Toggle {
   static readonly type = '[Toggle] update';
   constructor(public payload: IOhMyToggle) { }

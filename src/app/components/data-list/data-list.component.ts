@@ -4,7 +4,7 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems } from 'src/app/store/actions';
+import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
 import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
@@ -15,8 +15,7 @@ import { Subscription } from 'rxjs';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { arrayMoveItem } from '@shared/utils/array';
 import { UntilDestroy } from '@ngneat/until-destroy';
-
-// import { shuffle, clone } from "lodash";
+import { isViewValidate } from '../../utils/validate-view';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -53,8 +52,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.state.domain);
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Dispatch() dataListReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
-  @Dispatch() hitListReorder = (from: number, to: number) => new ViewChangeOrderItems({ name: 'hits', from, to });
+  @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
+  @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
   @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
     new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.state.domain);
@@ -95,17 +94,33 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(): void {
-    clearTimeout(this.timeoutId);
+    this.timeoutId && clearTimeout(this.timeoutId);
 
     this.timeoutId = setTimeout(() => {
+      // The hit list has animated its change. The problem after the animation  rows
+      // are moved around with css `transform` which doesn't work with Drag&Drop.
+      // So, below we change the order of the data, so no css transformation are needed
+      // anymore
       this.isBusyAnimating = false;
+
+      if (!this.state) { // It happens (Explore-state)
+        return;
+      }
+
       const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'];
 
-      // The hit list has animated its change. Next to support drag&drop it is
-      // important that all that is un-done, so here we put the data in the new order
-      // and build a new viewList. if that is done, drag&drop will work again
-      this.data = viewList.map(v => this.state.data[v]);
-      this.viewList = this.data.map((v, i) => i);
+      // Self healing!!
+      if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
+        this.data = viewList.map(v => this.state.data[v]);
+        this.viewList = this.data.map((v, i) => i);
+      } else {
+        console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
+
+        this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
+        this.data = this.state.data;
+        this.viewList = this.data.map((_, i) => i);
+      }
+
     }, this.isBusyAnimating ? 1000 : 0);
   }
 
@@ -129,7 +144,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onDelete(rowIndex: number, event): void {
     event.stopPropagation();
 
-    debugger;
     const index = this.state.data.indexOf(this.data[rowIndex]);
     let msg = `Deleted mock ${this.data[index].url}`;
     if (this.state.domain) {
@@ -173,16 +187,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.selection.clear();
   }
 
-  onToggleActiveSort(event): void {
-    this.toggleHitList(event.checked);
-  }
-
   trackBy(index, row): string {
     return row.type + row.method + row.url;
   }
 
   drop(event: CdkDragDrop<unknown>): void {
-    this.dataListReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
+    this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
   }
 
   private getActiveStateSnapshot(): IState {

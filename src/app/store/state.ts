@@ -18,7 +18,8 @@ import {
   UpdateDataUrl,
   UpsertData,
   UpsertMock,
-  ViewChangeOrderItems
+  ViewChangeOrderItems,
+  ViewReset
 } from './actions';
 import {
   IData,
@@ -353,6 +354,17 @@ export class OhMyState {
     const state = ctx.getState();
     const domainState = { ...OhMyState.getActiveState(state) };
     domainState.toggles = { ...domainState.toggles, [payload.name]: payload.value };
+
+    const domains = { ...state.domains, [OhMyState.domain]: domainState };
+    ctx.setState({ ...state, domains });
+  }
+
+  @Action(ViewReset)
+  viewReset(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
+    const state = ctx.getState();
+    const domainState = { ...OhMyState.getActiveState(state) };
+    const views = { ...domainState.views, [payload]: domainState.data.map((_, i) => i) };
+    domainState.views = views;
 
     const domains = { ...state.domains, [OhMyState.domain]: domainState };
     ctx.setState({ ...state, domains });
