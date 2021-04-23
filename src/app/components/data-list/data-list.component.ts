@@ -107,7 +107,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         return;
       }
 
-      const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'];
+      const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
 
       // Self healing!!
       if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
@@ -174,7 +174,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onExport(rowIndex: number, event: MouseEvent): void {
     event.stopPropagation()
-    this.dataExport.emit(rowIndex);
+    const data = this.data[rowIndex];
+    const state = this.getActiveStateSnapshot();
+    this.dataExport.emit(state.data.indexOf(data));
+    this.selection.toggle(rowIndex);
   }
 
   public selectAll(): void {

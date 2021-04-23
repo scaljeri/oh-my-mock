@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { IData, IState, IStore } from '@shared/type';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
 import { DeleteData, UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
+@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'oh-my-data-list-page',
   templateUrl: './data-list.component.html',
@@ -22,6 +24,7 @@ export class PageDataListComponent implements OnInit {
   public showRowAction = false;
   public state: IState;
   public domain: string;
+  public subscriptions: Subscription[] = [];
 
   constructor(
     public dialog: MatDialog,
@@ -31,9 +34,9 @@ export class PageDataListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.state$.subscribe((state: IState) => {
+    this.subscriptions.push(this.state$.subscribe((state: IState) => {
       this.state = state;
-    });
+    }));
   }
 
   onDataSelect(index: number): void {

@@ -46,7 +46,7 @@
 
 ol[data-table] {
   @include oh-list-unstyled;
-  background-color: #fff;
+  background-color: $color-light;
   margin-right: 150px;
 
   .header {
@@ -72,8 +72,7 @@ ol[data-table] {
     display: flex;
     padding: $spacer-4 $spacer-4;
     position: relative;
-    transition-property: transform; // 0.8s;
-    // transition-property: transform;
+    transition-property: transform;
     transition-duration: var(--animation-duration, 0.8s);
 
     span {
@@ -81,50 +80,6 @@ ol[data-table] {
     }
   }
 }
-
-
-
-
-// ODL CDK Table
-
-// Animate row movements
-// tr {
-//   transition: transform 0.8s;
-// }
-
-// //
-// th.mat-column-actions {
-//   background-color: var(--bg-color);
-// }
-
-// th {
-//   white-space: nowrap;
-// }
-
-// th,
-// td {
-//   padding-right: 20px !important;
-
-//   &.cdk-column-url {
-//     overflow-wrap: anywhere;
-//   }
-// }
-
-// td.mat-column-actions.mat-column-actions {
-//   background-color: var(--bg-color) !important;
-//   cursor: default !important;
-//   width: 140px;
-
-//   .action-btn-wrapper {
-//     display: flex;
-//     flex-wrap: nowrap;
-//     padding-left: $spacer-2;
-//   }
-
-//   button+button {
-//     margin-left: $spacer-1;
-//   }
-// }
 
 // Drag&drop
 .data-table {
@@ -148,7 +103,6 @@ ol[data-table] {
   justify-content: space-between;
   box-sizing: border-box;
   cursor: move;
-  background: white;
   font-size: 14px;
 }
 
