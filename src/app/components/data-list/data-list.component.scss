@@ -114,7 +114,7 @@ ol[data-table] {
     0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
 
-.example-custom-placeholder {
+.custom-drag-placeholder {
   display: flex;
   background: #ccc;
   border: dotted 3px #999;
@@ -127,10 +127,6 @@ ol[data-table] {
   }
 }
 
-
-// .cdk-drag-animating {
-//   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-// }
 
 [data-table].cdk-drop-list-dragging .data-row:not(.cdk-drag-placeholder) {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);

@@ -1,4 +1,4 @@
-import { ContentChildren, Directive, ElementRef, HostBinding, Input, QueryList, ViewChildren } from '@angular/core';
+import { ContentChildren, Directive, ElementRef, HostBinding, Input, QueryList } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 
 interface IMeta {
@@ -14,15 +14,12 @@ export class AnimatedListDirective {
 
   @ContentChildren('animatedRow', { read: ElementRef }) rowRefs: QueryList<ElementRef>;
 
-  // @HostBinding('style.transitionDuration') duration = '10s';
-  // @HostBinding('style.--') property = 'transform';
   @HostBinding("attr.style")
   public get valueAsStyle(): SafeStyle {
     const duration = this.ohMyAnimatedList ? this.duration : '0';
     return this.sanitizer.bypassSecurityTrustStyle(`--animation-duration: ${duration}`);
   }
 
-  // private items: HTMLElement[];
   private meta: IMeta[];
   private duration = '0.8s';
 
@@ -30,9 +27,7 @@ export class AnimatedListDirective {
   }
 
   ngOnChanges(): void {
-    // this.duration = '0s';
     setTimeout(() => {
-      // this.items = this.element.nativeElement.querySelectorAll('[animatedsortitem');
       this.meta = null;
       this.calcAndSetTransforms();
       setTimeout(() => this.duration = '0.8s');

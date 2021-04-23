@@ -28,7 +28,7 @@
         'is-selected': selection.isSelected(index),
         'is-active': row.activeStatusCode > 0,
         'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
-      <div class="example-custom-placeholder" *cdkDragPlaceholder>
+      <div class="custom-drag-placeholder" *cdkDragPlaceholder>
         <span class="method">{{row.type}}</span>
         <span class="type">{{row.method}}</span>
         <span class="url">{{row.url}}</span>
