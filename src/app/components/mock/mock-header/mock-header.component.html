@@ -3,7 +3,7 @@
   <span>{{ data.type }}</span>
   <input #url [value]="data.url" (keyup)="onUrlUpdate(url.value)" />
   <mat-icon color="primary"
-    matTooltip="Together with the request type and method, the URL is used to map an API call with a mock. To make it more generic you can use regular expression syntax here">
+    matTooltip="The API URL is used, together with the request type and method, to map an API call with a mock. To make this more flexible you can use regular expression syntax here">
     info</mat-icon>
   <span class="spacer"></span>
 </div>
