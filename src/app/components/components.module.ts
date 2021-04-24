@@ -40,6 +40,7 @@ import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
 import { CodeErrorsComponent } from './code-errors/code-errors.component';
 import { AnimatedListDirective } from './animated-list/animated-list.directive';
+import { AnonymizeComponent } from './anonymize/anonymize.component';
 
 @NgModule({
   declarations: [
@@ -58,7 +59,8 @@ import { AnimatedListDirective } from './animated-list/animated-list.directive';
     FileUploaderComponent,
     FileDragDropDirective,
     CodeErrorsComponent,
-    AnimatedListDirective
+    AnimatedListDirective,
+    AnonymizeComponent
   ],
   imports: [
     CommonModule,

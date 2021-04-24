@@ -9,6 +9,7 @@ export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestMethod = 'XHR' | 'FETCH';
 export type statusCode = number;
 export type domain = string;
+export type origin = 'local' | 'cloud' | 'ngapimock';
 
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
@@ -16,6 +17,7 @@ export interface IStore {
 export interface IOhMyMock {
   domains: Record<domain, IState>;
   version: string;
+  origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
 }
 
 export interface IState {
@@ -46,6 +48,7 @@ export interface IMock {
   headersMock?: Record<string, string>;
   delay?: number;
   jsCode?: string;
+  anonymizeCode?: string;
   createdOn?: string;
   modifiedOn?: string;
 }

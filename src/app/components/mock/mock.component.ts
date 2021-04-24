@@ -13,6 +13,7 @@ import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.compon
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
+import { AnonymizeComponent } from '../anonymize/anonymize.component';
 
 @Component({
   selector: 'oh-my-mock',
@@ -137,6 +138,20 @@ export class MockComponent implements OnChanges {
         this.headersRef.update();
       })
     });
+  }
+
+  onAnonymize(): void {
+    const dialogRef = this.dialog.open(AnonymizeComponent, {
+      width: '80%',
+      data: this.mock
+    });
+
+    dialogRef.afterClosed().subscribe((mock: IMock) => {
+      if (mock) {
+        this.upsertMock(mock);
+      }
+    });
+
   }
 
   openCodeDialog(data: IOhMyCodeEditOptions, cb: (update: string) => void): void {
