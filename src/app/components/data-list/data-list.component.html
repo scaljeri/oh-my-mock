@@ -1,68 +1,64 @@
 <ng-container *ngIf="data?.length">
 
   <div class="legenda">
-    <span class="active">Active</span>
+    <div class="labels">
+      <span class="legenda-active">Active</span>
+      <span class="active-modified">Active/modified</span>
+      <span class="inactive">Inactive</span>
+    </div>
 
-    <span class="active-modified">Active/modified</span>
-    <span class="inactive">Inactive</span>
+    <div class="hit-list-toggle">
+      <label for="show-active-list">Order by activity</label>
+      <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
+      </mat-slide-toggle>
+    </div>
   </div>
 
-  <table mat-table [dataSource]="data" class="mat-elevation-z8">
-    <ng-container matColumnDef="type">
-      <th mat-header-cell *matHeaderCellDef>Type </th>
-      <td mat-cell *matCellDef="let element"> {{element.type}} </td>
-    </ng-container>
-
-    <ng-container matColumnDef="url">
-      <th mat-header-cell *matHeaderCellDef>Url</th>
-      <td mat-cell *matCellDef="let element"> {{element.url}} </td>
-    </ng-container>
-
-    <ng-container matColumnDef="method">
-      <th mat-header-cell *matHeaderCellDef> Method </th>
-      <td mat-cell *matCellDef="let element"> {{element.method}} </td>
-    </ng-container>
-
-    <ng-container matColumnDef="activeStatusCode">
-      <th mat-header-cell *matHeaderCellDef> Active statusCode </th>
-      <td mat-cell *matCellDef="let element"> {{element.activeStatusCode === 0 ? 'Off' : element.activeStatusCode }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let element;let i = index">
-        <div class="action-btn-wrapper">
-          <button *ngIf="showActivate" (click)="onActivateToggle(i)" mat-mini-fab color="primary"
-            aria-label="Example icon button with a menu icon">
-            <mat-icon *ngIf="!element.activeStatusCode">play_arrow</mat-icon>
-            <mat-icon *ngIf="element.activeStatusCode">stop</mat-icon>
-          </button>
-          <button *ngIf="showClone" (click)="onClone(i)" mat-mini-fab color="primary"
-            aria-label="Example icon button with a menu icon">
-            <mat-icon>content_copy</mat-icon>
-          </button>
-          <button *ngIf="showDelete" (click)="onDelete(i)" mat-mini-fab color="primary"
-            aria-label="Example icon button with a menu icon">
-            <mat-icon>delete</mat-icon>
-          </button>
-          <button *ngIf="showExport" (click)="onExport(i)" mat-mini-fab color="primary"
-            aria-label="Example icon button with a menu icon">
-            <mat-icon>import_export</mat-icon>
-          </button>
-        </div>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns">
-    </tr>
-    <tr #row mat-row (click)="onDataClick($event, i)" *matRowDef="let row; columns: displayedColumns;let i = index"
-      [ngClass]="{
-        'is-selected': selection.isSelected(i),
+  <ol data-table *ngIf="data" cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
+    <li class="header">
+      <span class="method">Method</span>
+      <span class="type">Type</span>
+      <span class="url">Url</span>
+      <span class="active">Active StatusCode</span>
+    </li>
+    <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
+      *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
+        'is-hit-a': hitcount[index] % 2 === 0,
+        'is-hit-b': hitcount[index] % 2 === 1,
+        'is-selected': selection.isSelected(index),
         'is-active': row.activeStatusCode > 0,
         'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
-    </tr>
-  </table>
+      <div class="custom-drag-placeholder" *cdkDragPlaceholder>
+        <span class="method">{{row.type}}</span>
+        <span class="type">{{row.method}}</span>
+        <span class="url">{{row.url}}</span>
+        <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
+      </div>
+      <span class="method">{{row.type}}</span>
+      <span class="type">{{row.method}}</span>
+      <span class="url">{{row.url}}</span>
+      <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
+      <div class="actions">
+        <button *ngIf="showActivate" (click)="onActivateToggle(index, $event)" mat-mini-fab color="primary"
+          aria-label="Example icon button with a menu icon">
+          <mat-icon *ngIf="!row.activeStatusCode">play_arrow</mat-icon>
+          <mat-icon *ngIf="row.activeStatusCode">stop</mat-icon>
+        </button>
+        <button *ngIf="showClone" (click)="onClone(index, $event)" mat-mini-fab color="primary"
+          aria-label="Example icon button with a menu icon">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+        <button *ngIf="showDelete" (click)="onDelete(index, $event)" mat-mini-fab color="primary"
+          aria-label="Example icon button with a menu icon">
+          <mat-icon>delete</mat-icon>
+        </button>
+        <button *ngIf="showExport" (click)="onExport(index, $event)" mat-mini-fab color="primary"
+          aria-label="Example icon button with a menu icon">
+          <mat-icon>import_export</mat-icon>
+        </button>
+      </div>
+    </li>
+  </ol>
 </ng-container>
 
 <section *ngIf="!data?.length" class="no-data">

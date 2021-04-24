@@ -2,7 +2,6 @@
 
 // @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
-@import '~highlight.js/styles/default.css';
 
 html {
   height: 100%;
@@ -32,4 +31,9 @@ ol.reset ul li {
 
 .spacer {
   flex: 1;
+}
+
+// This in a toaster is not wrapped
+.hot-toast-message dynamic-content > div {
+  overflow-wrap: anywhere;
 }

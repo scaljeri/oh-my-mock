@@ -1,5 +1,7 @@
 @import 'mixins';
 
+@import "legenda";
+
 :host {
   --color: #{$color-light};
   --bg-color: #{$color-dark};
@@ -12,72 +14,6 @@
   &.light {
     --bg-color: #{$color-light};
     --color: #{$color-dark};
-
-    .no-data,
-    .legenda {
-      color: var(--color);
-    }
-  }
-
-  table {
-    width: 100%;
-
-    td {
-      position: relative;
-      cursor: pointer;
-
-      &.mat-column-edit {
-        width: 90px;
-      }
-    }
-
-    td.mat-column-activeStatusCode::after {
-      content: '→';
-      position: absolute;
-      color: #6e6d6d;
-      right: 10px;
-      top: 5px;
-      font-size: 30px;
-    }
-  }
-}
-
-.legenda {
-  display: flex;
-  color: #fff;
-  margin-bottom: 5px;
-
-  span {
-    display: flex;
-    align-items: center;
-
-    &::before {
-      content: '';
-      border: 1px solid lightgrey;
-      border-radius: 3px;
-      display: block;
-      width: 20px;
-      height: 20px;
-      margin-right: 5px;
-    }
-
-    &+span {
-      padding-left: 10px;
-    }
-  }
-
-
-  .active::before {
-    background-color: #99ffcc;
-  }
-
-  .inactive::before {
-    background-color: #fff;
-
-  }
-
-  .active-modified::before {
-    background-color: #ffff99;
   }
 }
 
@@ -108,23 +44,170 @@
   right: 30px;
 }
 
-//
-th.mat-column-actions {
-  background-color: var(--bg-color);
-}
+ol[data-table] {
+  @include oh-list-unstyled;
+  background-color: $color-light;
+  margin-right: 150px;
 
-td.mat-column-actions.mat-column-actions {
-  background-color: var(--bg-color) !important;
-  cursor: default !important;
-  width: 140px;
-
-  .action-btn-wrapper {
+  .header {
     display: flex;
-    flex-wrap: nowrap;
-    padding-left: $spacer-2;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, .54);
+    padding: $spacer-4;
+
+    .active::after {
+      display: none;
+    }
   }
 
+  li {
+    border-top: 5px solid transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+
+  li.data-row {
+    cursor: pointer;
+    display: flex;
+    padding: $spacer-4 $spacer-4;
+    position: relative;
+    transition-property: transform;
+    transition-duration: var(--animation-duration, 0.8s);
+
+    span {
+      user-select: none;
+    }
+  }
+}
+
+// Drag&drop
+.data-table {
+  width: 500px;
+  max-width: 100%;
+  border: solid 1px #ccc;
+  min-height: 60px;
+  display: block;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.data-row {
+  padding: 20px 10px;
+  border-bottom: solid 1px #ccc;
+  color: rgba(0, 0, 0, 0.87);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  cursor: move;
+  font-size: 14px;
+}
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.custom-drag-placeholder {
+  display: flex;
+  background: #ccc;
+  border: dotted 3px #999;
+  padding: $spacer-4 $spacer-4;
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  font-size: 14px;
+
+  span {
+    opacity: 0;
+  }
+}
+
+
+[data-table].cdk-drop-list-dragging .data-row:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+span.method {
+  flex: 0 0 60px;
+}
+
+span.type {
+  flex: 0 0 55px;
+}
+
+span.url {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.active {
+  flex: 0 0 120px;
+  display: inline-flex;
+  justify-content: space-between;
+
+  &.with-arrow::after {
+    content: '➱'
+  }
+}
+
+.actions {
+  @include oh-position(absolute, 0px 0px 0px 0);
+  align-items: center;
+  display: flex;
+  transform: translateX(calc(100% + #{$spacer-2}));
+
   button+button {
-    margin-left: $spacer-1;
+    margin-left: $spacer-2;
+  }
+}
+
+.hit-list-toggle {
+  display: flex;
+  align-items: center;
+
+  label {
+    padding-right: $spacer-2;
+  }
+}
+
+// Highlight
+.is-hit-a {
+  animation: highlight-a 1000ms ease-out;
+}
+
+.is-hit-b {
+  animation: highlight-b 500ms ease-out;
+}
+
+@keyframes highlight-a {
+  0% {
+    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+  }
+
+  30% {
+    background-image: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .5), rgba(0, 0, 0, .5));
+  }
+
+  100% {
+    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+  }
+}
+
+@keyframes highlight-b {
+  0% {
+    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+  }
+
+  30% {
+    background-image: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .5), rgba(0, 0, 0, .5));
+  }
+
+  100% {
+    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
   }
 }

@@ -62,5 +62,4 @@ export class NavListComponent {
 
     this.navigate.emit();
   }
-
 }

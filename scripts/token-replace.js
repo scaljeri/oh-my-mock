@@ -2,6 +2,7 @@ const fs = require('fs');
 const packageJson = require('../package.json');
 
 replaceToken('./dist/oh-my-mock/main.js', 'VERSION', packageJson.version);
+replaceToken('./dist/manifest.json', 'VERSION', packageJson.version);
 
 function replaceToken(file, tokenKey, token) {
   fs.readFile(file, 'utf8', function (err,data) {

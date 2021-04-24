@@ -23,7 +23,8 @@ export class PageStateExplorerComponent implements OnInit {
   public domains: domain[];
   public selectedDomain = '-';
 
-  public dataList: IData[];
+  public state: IState;
+  public selectedState: IState;
   public dataItem: IData;
   public showRowAction = true;
   public mainActionIconName = 'copy_all';
@@ -36,7 +37,7 @@ export class PageStateExplorerComponent implements OnInit {
   constructor(
     private appStateService: AppStateService,
     private store: Store,
-    private toast: HotToastService) {}
+    private toast: HotToastService) { }
 
   ngOnInit(): void {
     this.state$.subscribe((state) => {
@@ -46,13 +47,13 @@ export class PageStateExplorerComponent implements OnInit {
         this.dataItem = state.domains[this.selectedDomain].data[this.dataItemIndex];
       }
 
-      this.dataList = state.domains[this.selectedDomain]?.data;
+      this.selectedState = state.domains[this.selectedDomain];
     });
   }
 
   async onSelectDomain(domain = this.appStateService.domain): Promise<void> {
     this.selectedDomain = domain;
-    this.dataList = this.getStateSnapshot(domain).data;
+    this.selectedState = this.getStateSnapshot(domain);
 
     this.panels.toArray()[1].open();
   }
@@ -61,7 +62,7 @@ export class PageStateExplorerComponent implements OnInit {
     const state = this.getActiveStateSnapshot();
     const data = this.getStateSnapshot(this.selectedDomain).data[rowIndex];
 
-    if (!state.data.some(d => d.url === data.url )) {
+    if (!state.data.some(d => d.url === data.url)) {
       this.upsertData(data);
       this.toast.success('Cloned ' + data.url);
     } else {
@@ -74,7 +75,7 @@ export class PageStateExplorerComponent implements OnInit {
   }
 
   onDataSelect(rowIndex: number): void {
-    this.dataItem = this.dataList[rowIndex];
+    this.dataItem = this.selectedState.data[rowIndex];
     this.dataItemIndex = rowIndex;
     this.panels.toArray()[2].open();
   }

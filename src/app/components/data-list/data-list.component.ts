@@ -3,8 +3,8 @@ import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnD
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
-import { DeleteData, UpdateDataStatusCode, UpsertData } from 'src/app/store/actions';
-import { AnimationBuilder } from "@angular/animations";
+import { trigger, style, animate, transition } from "@angular/animations";
+import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
 import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
@@ -12,7 +12,10 @@ import { findAutoActiveMock } from 'src/app/utils/data';
 import { IContext, IData, IState, IStore, statusCode } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Subscription } from 'rxjs';
-import { animate, style } from '@angular/animations';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { arrayMoveItem } from '@shared/utils/array';
+import { UntilDestroy } from '@ngneat/until-destroy';
+import { isViewValidate } from '../../utils/validate-view';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -20,14 +23,25 @@ export const highlightSeq = [
   animate('1s ease-out', style({ backgroundColor: '*' }))
 ];
 
+@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
+  animations: [
+    trigger("inOutAnimation", [
+      transition(":leave", [
+        style({ height: "*", opacity: 1, paddingTop: "*", paddingBottom: "*" }),
+        animate(
+          ".7s ease-in",
+          style({ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 })
+        )
+      ])
+    ])
+  ]
 })
 export class DataListComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() data: IData[] = [];
-  @Input() domain: string;
+  @Input() state: IState;
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
@@ -36,49 +50,85 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() select = new EventEmitter<number>();
   @Output() dataExport = new EventEmitter<number>();
 
-  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.domain);
+  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.state.domain);
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
+  @Dispatch() viewReset = (name: string) => new ViewReset(name);
+  @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
   @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
-    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.domain);
+    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.state.domain);
 
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
   public selection = new SelectionModel<number>(true);
-  private hitSubscription: Subscription;
-  public hits: boolean[] = [];
+  public defaultList: number[];
+  public hitcount: number[] = [];
+  public disabled = false;
+  private timeoutId: number;
+  private isBusyAnimating = false;
 
-  @ViewChildren('row', { read: ElementRef }) rows: QueryList<ElementRef>;
+  subscriptions: Subscription[] = [];
+
+  public viewList: number[];
+
+  public data: IData[];
+
+  @ViewChildren('animatedRow', { read: ElementRef }) rows: QueryList<ElementRef>;
 
   constructor(
     private appState: AppStateService,
-    private animationBuilder: AnimationBuilder,
     private store: Store,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
-    this.hitSubscription = this.appState.hit$.subscribe((context: IContext) => {
-      const data = findActiveData(this.getActiveStateSnapshot(),
-        context.url, context.method, context.type);
+    this.subscriptions.push(this.appState.hit$.subscribe((data: IData) => {
+      const index = this.data.indexOf(data);
+      const hitIndex = this.viewList.indexOf(index);
 
-      if (data) {
-        const index = this.data.indexOf(data);
-
-        const highlightFactory = this.animationBuilder.build(highlightSeq);
-        const highlightPlayer = highlightFactory.create(this.rows.toArray()[index].nativeElement, { params: { color: '#97A8B6' } });
-        highlightPlayer.play();
+      if (this.state.toggles.hits) {
+        this.viewList = arrayMoveItem(this.viewList, hitIndex, 0);
       }
-    });
+
+      this.hitcount[hitIndex] = (this.hitcount[hitIndex] || 0) + 1;
+      this.isBusyAnimating = true;
+    }));
   }
+
   ngOnChanges(): void {
-    if (this.displayedColumns.indexOf('rowAction') === 0) {
-      this.displayedColumns.shift();
-    }
+    this.timeoutId && clearTimeout(this.timeoutId);
+
+    this.timeoutId = setTimeout(() => {
+      // The hit list has animated its change. The problem after the animation  rows
+      // are moved around with css `transform` which doesn't work with Drag&Drop.
+      // So, below we change the order of the data, so no css transformation are needed
+      // anymore
+      this.isBusyAnimating = false;
+
+      if (!this.state) { // It happens (Explore-state)
+        return;
+      }
+
+      const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
+
+      // Self healing!!
+      if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
+        this.data = viewList.map(v => this.state.data[v]);
+        this.viewList = this.data.map((v, i) => i);
+      } else {
+        console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
+
+        this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
+        this.data = this.state.data;
+        this.viewList = this.data.map((_, i) => i);
+      }
+
+    }, this.isBusyAnimating ? 1000 : 0);
   }
 
   ngOnDestroy(): void {
-    this.hitSubscription.unsubscribe();
   }
 
-  onActivateToggle(rowIndex: number): void {
+  onActivateToggle(rowIndex: number, event: MouseEvent): void {
+    event.stopPropagation();
     const data = this.data[rowIndex];
 
     if (!data.activeStatusCode) {
@@ -91,16 +141,20 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  onDelete(rowIndex: number): void {
-    let msg = `Deleted mock ${this.data[rowIndex].url}`;
-    if (this.domain) {
-      msg += ` on domain ${this.domain}`;
+  onDelete(rowIndex: number, event): void {
+    event.stopPropagation();
+
+    const index = this.state.data.indexOf(this.data[rowIndex]);
+    let msg = `Deleted mock ${this.data[index].url}`;
+    if (this.state.domain) {
+      msg += ` on domain ${this.state.domain}`;
     }
-    this.toast.success(msg);
-    this.deleteData(rowIndex);
+    this.toast.success(msg, { duration: 2000, style: {} });
+    this.deleteData(index);
   }
 
-  onClone(rowIndex: number): void {
+  onClone(rowIndex: number, event): void {
+    event.stopPropagation();
     const data = this.data[rowIndex];
     const state = this.getActiveStateSnapshot();
 
@@ -113,26 +167,35 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  onDataClick(event: MouseEvent, index: number): void {
-    const target = event.target as HTMLElement;
+  onDataClick(data: IData, index: number): void {
     this.selection.toggle(index);
-    if (!target.closest('.mat-column-actions')) {
-      this.select.emit(index);
-    }
+    this.select.emit(this.state.data.indexOf(data));
   }
 
-  onExport(rowIndex: number) {
-    this.dataExport.emit(rowIndex);
+  onExport(rowIndex: number, event: MouseEvent): void {
+    event.stopPropagation()
+    const data = this.data[rowIndex];
+    const state = this.getActiveStateSnapshot();
+    this.dataExport.emit(state.data.indexOf(data));
+    this.selection.toggle(rowIndex);
   }
 
   public selectAll(): void {
-    this.data.forEach((d, i) => {
+    this.state.data.forEach((d, i) => {
       this.selection.select(i);
     });
   }
 
   public deselectAll(): void {
     this.selection.clear();
+  }
+
+  trackBy(index, row): string {
+    return row.type + row.method + row.url;
+  }
+
+  drop(event: CdkDragDrop<unknown>): void {
+    this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
   }
 
   private getActiveStateSnapshot(): IState {
