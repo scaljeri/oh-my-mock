@@ -1,1 +1,74 @@
-<p>anonymize works!</p>
+<h2>Anonymize your data!</h2>
+<h5>Ruls can only be used with JSON data</h5>
+
+<section>
+  <div class="explanation">
+    <h5>How it works</h5>
+    <p>The `<strong>JSON path</strong>` is a dot-seperated string, which defines one or more fields to be modified. For
+      example:</p>
+    <div class="example-path">
+      <div class="example-text">
+        <i><strong>data.items.accounts.*.name</strong></i>
+        <ul>
+          <li><strong>*</strong> will match any string</li>
+          <li>It will automatically traverse arrays</li>
+        </ul>
+      </div>
+      <pre>
+        <code>
+        &#123;
+          data: &#123;
+            items: [
+              &#123;
+                 accounts: &#123;
+                   'o8hujhbhb': &#123;
+                      <span class="highlight">name: 'John'</span>, ..
+                  &#125;,
+                   '908huhkb': &#123;
+                      <span class="highlight">name: 'Bob'</span>, ..
+                  &#125;,
+                   ...
+                &#125;
+              &#125;,
+               ...
+            ]
+          &#125;
+        &#125;
+        </code>
+      </pre>
+
+
+    </div>
+    <ol>
+      <li *ngFor="let rule of rules; let i = index">
+        <mat-form-field class="rule-type">
+          <mat-label>Ryle type</mat-label>
+          <mat-select name="ruleType" (selectionChange)="onTypeChange($event, i)">
+            <mat-option *ngFor="let type of ruleTypes" [value]="type">
+              {{mockTypes[type]}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="rule-value">
+          <mat-label>JSON path</mat-label>
+          <input matInput type="text" (change)="onPathChange($event, i)">
+          <button mat-button *ngIf="newRuleValueCtrl.value" matSuffix mat-icon-button aria-label="Clear"
+            (click)="newRuleValueCtrl.setValue('')">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+        <button *ngIf="i < rules.length - 1" (click)="onDelete(i)" mat-mini-fab color="primary" aria-label="Delete mock rule">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </li>
+    </ol>
+    <button (click)="onAdd()" mat-mini-fab color="primary" aria-label="Save mock rule">
+      <mat-icon>add</mat-icon>
+    </button>
+
+    <footer>
+      <button mat-button color="accent" (click)="onTest()">Test</button>
+      <div class="spacer"></div>
+      <button mat-button color="primary" (click)="onClose()">Cancel</button>
+      <button mat-raised-button color="warn" (click)="onApply()">Apply</button>
+    </footer>

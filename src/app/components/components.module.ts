@@ -16,6 +16,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MatSelectModule } from '@angular/material/select';
 
 import {
   Location,
@@ -82,6 +83,7 @@ import { AnonymizeComponent } from './anonymize/anonymize.component';
     FormsModule,
     MonacoEditorModule,
     DragDropModule,
+    MatSelectModule
   ],
   exports: [
     DataListComponent,

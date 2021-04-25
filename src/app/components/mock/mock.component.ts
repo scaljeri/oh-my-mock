@@ -146,9 +146,13 @@ export class MockComponent implements OnChanges {
       data: this.mock
     });
 
-    dialogRef.afterClosed().subscribe((mock: IMock) => {
-      if (mock) {
-        this.upsertMock(mock);
+    dialogRef.afterClosed().subscribe((responseMock: string) => {
+      if (responseMock) {
+        this.upsertMock({ responseMock });
+
+        setTimeout(() => {
+          this.responseRef?.update();
+        });
       }
     });
 

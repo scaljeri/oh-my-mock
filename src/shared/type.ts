@@ -2,7 +2,8 @@ import {
   appSources,
   packetTypes,
   resetStateOptions,
-  STORAGE_KEY
+  STORAGE_KEY,
+  MOCK_RULE_TYPES
 } from './constants';
 
 export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
@@ -10,6 +11,7 @@ export type requestMethod = 'XHR' | 'FETCH';
 export type statusCode = number;
 export type domain = string;
 export type origin = 'local' | 'cloud' | 'ngapimock';
+export type mockRuleType = keyof typeof MOCK_RULE_TYPES;
 
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
@@ -48,9 +50,14 @@ export interface IMock {
   headersMock?: Record<string, string>;
   delay?: number;
   jsCode?: string;
-  anonymizeCode?: string;
+  rules?: IOhMyMockRule[];
   createdOn?: string;
   modifiedOn?: string;
+}
+
+export interface IOhMyMockRule {
+  type: mockRuleType;
+  path: string;
 }
 
 // actions
