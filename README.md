@@ -6,7 +6,7 @@
 OhMyMock is a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock
 ) that mocks API calls. It can mock XMLHttpRequest and Fetch requests. 
 
-There is an article on medium.com which describes OhMyMock in more detail [here](https://medium.com/p/875ac5d85999/edit).
+There is an article on medium.com which describes OhMyMock in more detail [here](https://calje.medium.com/mock-api-responses-with-a-chrome-extension-called-ohmymock-875ac5d85999).
 
 If you have the extension install you can see how it works with XMLHttpRequest and Fetch request on
 the [demo page](https://scaljeri.github.io/oh-my-mock/). Note that you need OhMyMock for that page,
