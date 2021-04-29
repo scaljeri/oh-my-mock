@@ -1,9 +1,17 @@
 @import "mixins";
 
 header {
-  span {
-    font-size: 18px;
+  display: flex;
+  justify-content: space-between;
+
+  h2 {
+    font-size: 20px;
   }
+}
+
+p {
+  font-size: $oh-font-size;
+  margin-top: 0;
 }
 
 ol {
@@ -12,7 +20,7 @@ ol {
 
 li {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
 
   .rule-value {
     flex: 1;
@@ -49,7 +57,7 @@ footer {
         padding-right: $spacer-3;
       }
 
-      i > strong {
+      i>strong {
         font-size: 18px;
       }
     }

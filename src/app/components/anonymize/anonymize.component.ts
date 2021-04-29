@@ -4,7 +4,8 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { MOCK_RULE_TYPES } from '@shared/constants';
 import { IMock, IOhMyMockRule, mockRuleType } from '@shared/type';
 import { CodeEditComponent } from '../code-edit/code-edit.component';
-import { applyRules } from '../../utils/anonymizer';
+import { generators } from '../../utils/anonymizer';
+import { JSONPath } from 'jsonpath-plus';
 
 @Component({
   selector: 'oh-my-anonymize',
@@ -26,7 +27,7 @@ export class AnonymizeComponent implements OnInit {
 
   ngOnInit(): void {
     this.ruleTypes = Object.keys(MOCK_RULE_TYPES) as mockRuleType[];
-    this.rules = this.mock.rules || [];
+    this.rules = [...this.mock.rules || []];
     this.rules.push({ type: null, path: '' });
   }
 
@@ -48,7 +49,7 @@ export class AnonymizeComponent implements OnInit {
 
   onTest(): void {
     // Apply Rules
-    const resp = this.applyRules();
+    const resp = this.applyRules(this.mock.responseMock);
 
     this.dialog.open(CodeEditComponent, {
       width: '80%',
@@ -61,14 +62,23 @@ export class AnonymizeComponent implements OnInit {
     });
   }
 
-  applyRules(): unknown {
+  applyRules(jsonStr = this.mock.responseMock): unknown {
     const rules = this.rules.filter(r => r.type && r.path);
+    const json = JSON.parse(jsonStr);
 
-    return applyRules(JSON.parse(this.mock.responseMock), rules);
+    rules.forEach(r => {
+      JSONPath({
+        path: r.path, json, parent: true, callback: (a, b, c) => {
+          c.parent[c.parentProperty] = generators[r.type]();
+        }
+      });
+    });
+
+    return json;
   }
 
   onClose(data?: unknown): void {
-    this.dialogRef.close(data);
+    this.dialogRef.close({ data, rules: this.rules.filter(r => r.type && r.path) });
   }
 
   onApply(): void {

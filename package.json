@@ -42,6 +42,7 @@
     "content-type-parser": "^1.0.2",
     "express": "^4.17.1",
     "faker": "^5.5.3",
+    "jsonpath-plus": "^5.0.7",
     "lodash": "^4.17.21",
     "mime-types": "^2.1.28",
     "monaco-editor": "^0.22.3",

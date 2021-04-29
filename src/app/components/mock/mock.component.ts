@@ -8,12 +8,13 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
-import { IData, IDeleteMock, IMock, statusCode } from '@shared/type';
+import { IData, IDeleteMock, IMock, IOhMyMockRule, statusCode } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
+import { HotToastService } from '@ngneat/hot-toast';
 
 @Component({
   selector: 'oh-my-mock',
@@ -44,7 +45,7 @@ export class MockComponent implements OnChanges {
   @ViewChild('response') responseRef: CodeEditComponent;
   @ViewChild('headers') headersRef: CodeEditComponent;
 
-  constructor(public dialog: MatDialog, private cdr: ChangeDetectorRef) { }
+  constructor(public dialog: MatDialog, private toast: HotToastService, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
     this.mock = this.data.mocks[this.data.activeStatusCode];
@@ -140,22 +141,27 @@ export class MockComponent implements OnChanges {
     });
   }
 
-  onAnonymize(): void {
+  onAnonymize() {
+    if (this.mock.subType !== 'json') {
+      return this.toast.error('Content-Type should be JSON');
+    }
+
     const dialogRef = this.dialog.open(AnonymizeComponent, {
       width: '80%',
+      maxHeight: '90hv',
+      panelClass: 'scrollable-dialog',
       data: this.mock
     });
 
-    dialogRef.afterClosed().subscribe((responseMock: string) => {
-      if (responseMock) {
-        this.upsertMock({ responseMock });
+    dialogRef.afterClosed().subscribe((update: { data: string, rules: IOhMyMockRule[] }) => {
+      if (update) {
+        this.upsertMock({ responseMock: update.data, rules: update.rules });
 
         setTimeout(() => {
           this.responseRef?.update();
         });
       }
     });
-
   }
 
   openCodeDialog(data: IOhMyCodeEditOptions, cb: (update: string) => void): void {

@@ -1,17 +1,21 @@
-<h2>Anonymize your data!</h2>
-<h5>Ruls can only be used with JSON data</h5>
+<header>
+  <h2>Anonymize your data!</h2>
+</header>
 
 <section>
   <div class="explanation">
-    <h5>How it works</h5>
-    <p>The `<strong>JSON path</strong>` is a dot-seperated string, which defines one or more fields to be modified. For
-      example:</p>
+    <p><strong>Rule Type</strong>This value describes what the field in question represents.</p>
+    <p><strong>JSON Path</strong> is an expression which describes a field inside JSON. For example:</p>
     <div class="example-path">
       <div class="example-text">
-        <i><strong>data.items.accounts.*.name</strong></i>
+        <i>JSON path: <strong>$..accounts.*.name</strong></i>
         <ul>
-          <li><strong>*</strong> will match any string</li>
-          <li>It will automatically traverse arrays</li>
+          <li><strong>$</strong>The root object/element</li>
+          <li><strong>.</strong>The current object/element</li>
+          <li><strong>..</strong>Recursive descendant operator</li>
+          <li><strong>*</strong>Wildcard matching all objects/elements regardless their names</li>
+          <li>A complete description of the syntax can be found &nbsp;<a target="_blank"
+              href="https://www.npmjs.com/package/jsonpath">here</a></li>
         </ul>
       </div>
       <pre>
@@ -43,7 +47,7 @@
       <li *ngFor="let rule of rules; let i = index">
         <mat-form-field class="rule-type">
           <mat-label>Ryle type</mat-label>
-          <mat-select name="ruleType" (selectionChange)="onTypeChange($event, i)">
+          <mat-select [ngModel]="rule.type" name="ruleType" (selectionChange)="onTypeChange($event, i)">
             <mat-option *ngFor="let type of ruleTypes" [value]="type">
               {{mockTypes[type]}}
             </mat-option>
@@ -51,13 +55,14 @@
         </mat-form-field>
         <mat-form-field class="rule-value">
           <mat-label>JSON path</mat-label>
-          <input matInput type="text" (change)="onPathChange($event, i)">
+          <input matInput type="text" (change)="onPathChange($event, i)" [value]="rule.path">
           <button mat-button *ngIf="newRuleValueCtrl.value" matSuffix mat-icon-button aria-label="Clear"
             (click)="newRuleValueCtrl.setValue('')">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
-        <button *ngIf="i < rules.length - 1" (click)="onDelete(i)" mat-mini-fab color="primary" aria-label="Delete mock rule">
+        <button *ngIf="i < rules.length - 1" (click)="onDelete(i)" mat-mini-fab color="primary"
+          aria-label="Delete mock rule">
           <mat-icon>delete</mat-icon>
         </button>
       </li>

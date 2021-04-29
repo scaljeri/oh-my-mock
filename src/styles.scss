@@ -33,7 +33,11 @@ ol.reset ul li {
   flex: 1;
 }
 
-// This in a toaster is not wrapped
-.hot-toast-message dynamic-content > div {
+// Wrap content in a toaster
+.hot-toast-message dynamic-content>div {
   overflow-wrap: anywhere;
+}
+
+.scrollable-dialog {
+  overflow-y: scroll;
 }
