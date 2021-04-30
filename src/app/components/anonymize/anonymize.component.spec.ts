@@ -1,4 +1,6 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 
 import { AnonymizeComponent } from './anonymize.component';
 
@@ -8,14 +10,19 @@ describe('AnonymizeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AnonymizeComponent ]
+      declarations: [AnonymizeComponent],
+      providers: [
+        { provide: MatDialog, useValue: {} }
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AnonymizeComponent);
     component = fixture.componentInstance;
+    component.mock = {};
     fixture.detectChanges();
   });
 
