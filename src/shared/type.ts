@@ -21,7 +21,8 @@ export interface IOhMyMock {
 export interface IState {
   domain: string;
   data: IData[];
-  enabled?: boolean;
+  views: Record<string, number[]>; // Projections
+  toggles: Record<string, boolean>; // enable toggle and toggles for projections
 }
 
 export interface IContext {
@@ -109,3 +110,15 @@ export interface IOhMyRequest {
 }
 
 export type IOhMockResponse = IMock & { statusCode: statusCode };
+
+export interface IOhMyViewItemsOrder {
+  name: string;
+  from: number;
+  to: number;
+}
+
+export interface IOhMyToggle {
+  name: string;
+  value: boolean;
+}
+

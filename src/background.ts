@@ -13,7 +13,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.browserAction.onClicked.addListener(function (tab) {
   console.log('OhMyMock: Extension clicked', tab.id);
 
-  console.log('YRL = ' + tab.url);
   const domain = (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1];
 
   if (domain) {

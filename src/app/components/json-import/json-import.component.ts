@@ -31,10 +31,10 @@ export class JsonImportComponent {
           let addCount = 0;
 
           const migratedState = this.mirgationService.update(
-            { version, domains: { [domain]: { domain, data } } });
+            { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
 
-          if (version > migratedState.version) {
-            this.toast.error(`Import failed, version of OhMyMock version is too old1`)
+          if (version > migratedState.version && !version.match(/^__/)) { // In development the version starts with __
+            this.toast.error(`Import failed, version of OhMyMock is too old`)
           } else if ((version || '0.0.0') < migratedState.version) {
             if (migratedState.domains[domain]?.data?.length !== 0) {
               return this.toast.warning(`Nothing imported, version of the data is too old!`);

@@ -3,7 +3,7 @@ import { IOhMyMock } from '@shared/type'
 
 export const addTestData = (state: IOhMyMock): IOhMyMock => {
   const domains = { ...state.domains }
-  domains[testDataMock.domain] ??= { ...testDataMock, enabled: true };
+  domains[testDataMock.domain] ??= { ...testDataMock, toggles: { active: true } };
 
   return { ...state, domains };
 }

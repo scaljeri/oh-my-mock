@@ -10,7 +10,6 @@ import { findActiveData } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
 
 const Base = window.XMLHttpRequest;
-
 export class OhMockXhr extends Base {
   private ohData: IData;
   private ohMock: IMock;

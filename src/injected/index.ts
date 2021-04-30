@@ -12,30 +12,43 @@ declare let window: any;
 const MEM_XHR_REQUEST = window.XMLHttpRequest;
 const MEM_FETCH = window.fetch;
 
-
-(function () {
+// create public OhMyMock Object. Used by fetch and Xhr and anyone else
+function setup() {
   const stateChangeSubject = new BehaviorSubject<IState>(null);
-  // Public API and more...
-  window[STORAGE_KEY] = {
+  const newMockSubject = new Subject();
+  const hitSubject = new Subject();
+  const vals = {
     state$: stateChangeSubject.asObservable(),
-    newMockSubject: new Subject(),
-    hitSubject: new Subject(),
+    newMockSubject,
+    hitSubject,
+    newMock$: newMockSubject.asObservable(),
+    hit$: hitSubject.asObservable(),
   };
-  window[STORAGE_KEY].newMock$ = window[STORAGE_KEY].newMockSubject.asObservable();
-  window[STORAGE_KEY].hit$ = window[STORAGE_KEY].hitSubject.asObservable();
-
   let ohState;
-  Object.defineProperty(window[STORAGE_KEY], 'state', {
+  Object.defineProperty(vals, 'state', {
     get: () => ohState,
     set: (state: IState) => {
       ohState = state;
       stateChangeSubject.next(state);
     }
   });
-  Object.freeze(window[STORAGE_KEY]);
+  Object.preventExtensions(vals);
+  Object.freeze(vals);
+
+  // Public API and more...
+  Object.defineProperty(window, STORAGE_KEY, {
+    value: vals,
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
 
   window[STORAGE_KEY].newMock$.subscribe(newMockMessage);
   window[STORAGE_KEY].hit$.subscribe(mockHitMessage);
+}
+
+(function () {
+  setup();
 
   const log = logging(`${STORAGE_KEY} (^*^) | InJecTed`);
   log('XMLHttpRequest Mock is ready (inactive!)');
@@ -49,12 +62,12 @@ const MEM_FETCH = window.fetch;
 
     log('Received state update', payload);
 
-    const wasEnabled = window[STORAGE_KEY].state?.enabled;
+    const wasEnabled = window[STORAGE_KEY].state?.toggles.active;
     window[STORAGE_KEY].state = payload.data as IState;
 
-    if (wasEnabled !== window[STORAGE_KEY].state?.enabled) {
+    if (wasEnabled !== window[STORAGE_KEY].state?.toggles.active) {
       // Activity change
-      if (window[STORAGE_KEY].state.enabled) {
+      if (window[STORAGE_KEY].state.toggles.active) {
         log(' *** Activate ***');
         window.XMLHttpRequest = OhMockXhr;
         window.fetch = OhMyFetch;

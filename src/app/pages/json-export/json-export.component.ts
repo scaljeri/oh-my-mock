@@ -1,28 +1,40 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Store } from '@ngxs/store';
+import { Select, Store } from '@ngxs/store';
 import { IData, IState, IStore } from '@shared/type';
 import { DataListComponent } from 'src/app/components/data-list/data-list.component';
 import { OhMyState } from 'src/app/store/state';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { HotToastService } from '@ngneat/hot-toast';
+import { Observable, Subscription } from 'rxjs';
+import { UntilDestroy } from '@ngneat/until-destroy';
+import { Router } from '@angular/router';
 
+@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'oh-my-json-export',
   templateUrl: './json-export.component.html',
   styleUrls: ['./json-export.component.scss']
 })
 export class JsonExportComponent implements OnInit {
-  dataList: IData[];
-  allSelected = false;
+  state: IState;
   selected: boolean[] = [];
-
+  subscriptions: Subscription[] = [];
   exportList: IData[] = []
+
   @ViewChild(DataListComponent) dataListRef: DataListComponent;
 
-  constructor(private appStateService: AppStateService, private toast: HotToastService, private store: Store) { }
+  @Select(OhMyState.mainState) state$: Observable<IState>;
+
+  constructor(
+    private appStateService: AppStateService,
+    private toast: HotToastService,
+    private store: Store,
+    private router: Router) { }
 
   ngOnInit(): void {
-    this.dataList = this.getActiveStateSnapshot()?.data;
+    this.subscriptions.push(this.state$.subscribe((state: IState) => {
+      this.state = state;
+    }))
   }
 
   getActiveStateSnapshot(): IState {
@@ -35,20 +47,18 @@ export class JsonExportComponent implements OnInit {
   }
 
   onSelectAll(): void {
-    if (this.allSelected) {
-      this.dataListRef.deselectAll();
-    } else {
-      this.dataListRef.selectAll();
-    }
-
-    this.allSelected = !this.allSelected;
+    this.dataListRef.selectAll();
+    this.selected = this.state.data.map(() => true)
   }
 
   onExport() {
-    if (this.dataListRef.selection.selected.length === 0) {
+    if (!this.selected.some(x => x)) {
       return this.toast.warning('Nothing selected');
     }
-    const data = this.dataListRef.selection.selected.map((v) => this.dataList[v]);
+
+    const data = this.selected.map((isSelected, index) => isSelected && this.state.data[index])
+      .filter(Boolean);
+
     const exportObj = {
       data,
       domain: this.appStateService.domain,
@@ -63,7 +73,11 @@ export class JsonExportComponent implements OnInit {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 
-    this.toast.success('Mocks exported as `oh-my-mock-export.json`');
+    this.toast.success(`Exported ${data.length} mocks as 'oh-my-mock-export.json'`);
+
+    setTimeout(() => {
+      this.router.navigate(['../']);
+    }, 500);
   }
 
   get selectionCount(): number {

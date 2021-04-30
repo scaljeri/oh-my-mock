@@ -2,6 +2,11 @@ import { DEMO_TEST_DOMAIN } from './constants';
 import { IState } from './type';
 
 export const testDataMock: IState = {
+  views: {
+    "hits": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "normal": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+  },
+  toggles: {},
   "data": [
     {
       "url": "/users",
@@ -9,7 +14,7 @@ export const testDataMock: IState = {
       "type": "GET",
       "mocks": {
         "200": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "{\n  \"1\": {\n    \"name\": \"king arthur\",\n    \"password\": \"password1\",\n    \"profession\": \"king\",\n    \"id\": 1\n  },\n  \"2\": {\n    \"name\": \"rob kendal\",\n    \"password\": \"password3\",\n    \"profession\": \"code fiddler\",\n    \"id\": 2\n  },\n  \"3\": {\n    \"name\": \"teresa may\",\n    \"password\": \"password2\",\n    \"profession\": \"brexit destroyer\",\n    \"id\": 6\n  }\n}\n",
           "headers": {
@@ -42,7 +47,7 @@ export const testDataMock: IState = {
       "type": "GET",
       "mocks": {
         "200": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<h1>Yolo</h1>\n",
           "headers": {
@@ -73,7 +78,7 @@ export const testDataMock: IState = {
       "type": "POST",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /site</pre>\n</body>\n</html>\n",
           "headers": {
@@ -108,7 +113,7 @@ export const testDataMock: IState = {
       "type": "POST",
       "mocks": {
         "200": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "{\"msg\":\"success\"}",
           "headers": {
@@ -139,7 +144,7 @@ export const testDataMock: IState = {
       "type": "PUT",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /users</pre>\n</body>\n</html>\n",
           "headers": {
@@ -174,7 +179,7 @@ export const testDataMock: IState = {
       "type": "PUT",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /site</pre>\n</body>\n</html>\n",
           "headers": {
@@ -209,7 +214,7 @@ export const testDataMock: IState = {
       "type": "DELETE",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /site</pre>\n</body>\n</html>\n",
           "headers": {
@@ -244,7 +249,7 @@ export const testDataMock: IState = {
       "type": "DELETE",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /users</pre>\n</body>\n</html>\n",
           "headers": {
@@ -279,7 +284,7 @@ export const testDataMock: IState = {
       "type": "GET",
       "mocks": {
         "200": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "{\n  \"1\": {\n    \"name\": \"king arthur\",\n    \"password\": \"password1\",\n    \"profession\": \"king\",\n    \"id\": 1\n  },\n  \"2\": {\n    \"name\": \"rob kendal\",\n    \"password\": \"password3\",\n    \"profession\": \"code fiddler\",\n    \"id\": 2\n  },\n  \"3\": {\n    \"name\": \"teresa may\",\n    \"password\": \"password2\",\n    \"profession\": \"brexit destroyer\",\n    \"id\": 6\n  }\n}\n",
           "headers": {
@@ -312,7 +317,7 @@ export const testDataMock: IState = {
       "type": "GET",
       "mocks": {
         "200": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<h1>Yolo</h1>\n",
           "headers": {
@@ -343,7 +348,7 @@ export const testDataMock: IState = {
       "type": "POST",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /site</pre>\n</body>\n</html>\n",
           "headers": {
@@ -378,7 +383,7 @@ export const testDataMock: IState = {
       "type": "POST",
       "mocks": {
         "200": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "{\"msg\":\"success\"}",
           "headers": {
@@ -409,7 +414,7 @@ export const testDataMock: IState = {
       "type": "PUT",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /users</pre>\n</body>\n</html>\n",
           "headers": {
@@ -444,7 +449,7 @@ export const testDataMock: IState = {
       "type": "PUT",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /site</pre>\n</body>\n</html>\n",
           "headers": {
@@ -479,7 +484,7 @@ export const testDataMock: IState = {
       "type": "DELETE",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /users</pre>\n</body>\n</html>\n",
           "headers": {
@@ -514,7 +519,7 @@ export const testDataMock: IState = {
       "type": "DELETE",
       "mocks": {
         "404": {
-          "jsCode": "response = this.responseMock;\nstatusCode = this.statusCode;\n",
+          "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /site</pre>\n</body>\n</html>\n",
           "headers": {

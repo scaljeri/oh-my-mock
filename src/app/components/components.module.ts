@@ -14,6 +14,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import {
   Location,
@@ -29,7 +31,6 @@ import { CreateStatusCodeComponent } from './create-status-code/create-status-co
 import { AddDataComponent } from './add-data/add-data.component';
 import { NavListComponent } from './nav-list/nav-list.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
-import { EditDataComponent } from './edit-data/edit-data.component';
 import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
 import { HeaderButtonComponent } from './header-button/header-button.component';
 import { MockComponent } from './mock/mock.component';
@@ -38,6 +39,7 @@ import { JsonImportComponent } from './json-import/json-import.component';
 import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
 import { CodeErrorsComponent } from './code-errors/code-errors.component';
+import { AnimatedListDirective } from './animated-list/animated-list.directive';
 
 @NgModule({
   declarations: [
@@ -48,7 +50,6 @@ import { CodeErrorsComponent } from './code-errors/code-errors.component';
     AddDataComponent,
     NavListComponent,
     ResetStateComponent,
-    EditDataComponent,
     DisabledEnabledComponent,
     HeaderButtonComponent,
     MockComponent,
@@ -56,7 +57,8 @@ import { CodeErrorsComponent } from './code-errors/code-errors.component';
     JsonImportComponent,
     FileUploaderComponent,
     FileDragDropDirective,
-    CodeErrorsComponent
+    CodeErrorsComponent,
+    AnimatedListDirective
   ],
   imports: [
     CommonModule,
@@ -69,6 +71,7 @@ import { CodeErrorsComponent } from './code-errors/code-errors.component';
     MatCardModule,
     MatInputModule,
     MatButtonModule,
+    MatTooltipModule,
     MatSlideToggleModule,
     MatExpansionModule,
     MatDialogModule,
@@ -76,18 +79,19 @@ import { CodeErrorsComponent } from './code-errors/code-errors.component';
     ReactiveFormsModule,
     FormsModule,
     MonacoEditorModule,
+    DragDropModule,
   ],
   exports: [
     DataListComponent,
     ConfigComponent,
     CodeEditComponent,
     NavListComponent,
-    EditDataComponent,
     DisabledEnabledComponent,
     HeaderButtonComponent,
     MockComponent,
     MockHeaderComponent,
-    FileUploaderComponent
+    FileUploaderComponent,
+    AnimatedListDirective
   ],
   providers: [
     Location,

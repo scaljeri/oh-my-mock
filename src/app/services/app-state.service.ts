@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { IContext } from '@shared/type';
-import { BehaviorSubject, Subject, Observable } from 'rxjs';
+import { IContext, IData } from '@shared/type';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 export interface IPage {
   title: string;
@@ -12,8 +12,8 @@ export class AppStateService {
   private _domain: string;
   private _tabId: number;
 
-  private hitSubject = new Subject<IContext>();
-  public hit$: Observable<IContext> = this.hitSubject.asObservable();
+  private hitSubject = new Subject<IData>();
+  public hit$ = this.hitSubject.asObservable();
   public version = '__OH_MY_VERSION__';
 
   private domainChangeSubject = new BehaviorSubject<string>(null);
