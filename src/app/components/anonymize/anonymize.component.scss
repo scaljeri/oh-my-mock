@@ -43,33 +43,83 @@ footer {
 }
 
 .explanation {
-  .example-path {
+  background-color: lightgrey;
+  border: 1px solid grey;
+  border-radius: $spacer-2;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: $spacer-4;
+  padding: $spacer-2;
+
+  .badge {
+    flex: 0 0 100px;
+  }
+
+  &>div {
+    align-items: center;
     display: flex;
-    justify-content: center;
+    font-size: $oh-font-size;
 
-    .example-text {
-      align-items: flex-start;
-      justify-content: center;
-      display: flex;
-      flex-direction: column;
+    .badge {
+      margin-right: $spacer-2;
+    }
 
-      strong {
-        padding-right: $spacer-3;
-      }
+    &+div {
+      margin-top: $spacer-2;
+    }
+  }
 
-      i>strong {
-        font-size: 18px;
-      }
+  .cheatsheet {
+    align-items: flex-start;
+    background-color: $color-light;
+    display: flex;
+    flex-direction: column;
+    padding: $spacer-3;
+    margin: 0 $spacer-3;
+
+    h4 {
+      margin-top: 0;
+    }
+
+    p {
+      margin-bottom: 0;
     }
 
     ul {
-      padding: 0;
-      margin: $spacer-3 0 0 0;
+      margin-top: 0;
+
+      li {
+        align-items: flex-start;
+        display: flex;
+        line-height: 20px;
+
+        strong {
+          flex: 0 0 15px;
+          line-height: 20px;
+
+          &.asterisk {
+            line-height: 28px;
+          }
+        }
+      }
     }
+
+    strong {
+      font-size: $oh-font-size + 5px;
+      padding-right: $spacer-1;
+
+    }
+  }
+
+  .badge {
+    @include oh-my-badge;
   }
 }
 
-.highlight {
-  color: green;
-  font-weight: bold;
+.rules-list {
+  padding-top: $spacer-3;
+
+  input, select {
+    font-size: $oh-font-size;
+  }
 }

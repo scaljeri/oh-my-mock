@@ -1,79 +1,62 @@
 <header>
-  <h2>Anonymize your data!</h2>
+  <h2>Anonymize</h2>
 </header>
 
 <section>
   <div class="explanation">
-    <p><strong>Rule Type</strong>This value describes what the field in question represents.</p>
-    <p><strong>JSON Path</strong> is an expression which describes a field inside JSON. For example:</p>
-    <div class="example-path">
-      <div class="example-text">
-        <i>JSON path: <strong>$..accounts.*.name</strong></i>
-        <ul>
-          <li><strong>$</strong>The root object/element</li>
-          <li><strong>.</strong>The current object/element</li>
-          <li><strong>..</strong>Recursive descendant operator</li>
-          <li><strong>*</strong>Wildcard matching all objects/elements regardless their names</li>
-          <li>A complete description of the syntax can be found &nbsp;<a target="_blank"
-              href="https://www.npmjs.com/package/jsonpath">here</a></li>
-        </ul>
-      </div>
-      <pre>
-        <code>
-        &#123;
-          data: &#123;
-            items: [
-              &#123;
-                 accounts: &#123;
-                   'o8hujhbhb': &#123;
-                      <span class="highlight">name: 'John'</span>, ..
-                  &#125;,
-                   '908huhkb': &#123;
-                      <span class="highlight">name: 'Bob'</span>, ..
-                  &#125;,
-                   ...
-                &#125;
-              &#125;,
-               ...
-            ]
-          &#125;
-        &#125;
-        </code>
-      </pre>
-
-
+    <div>
+      <div class="badge">Rule Type</div>
+      <div>is used to anonymise the data with appropriate values </div>
     </div>
-    <ol>
-      <li *ngFor="let rule of rules; let i = index">
-        <mat-form-field class="rule-type">
-          <mat-label>Ryle type</mat-label>
-          <mat-select [ngModel]="rule.type" name="ruleType" (selectionChange)="onTypeChange($event, i)">
-            <mat-option *ngFor="let type of ruleTypes" [value]="type">
-              {{mockTypes[type]}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field class="rule-value">
-          <mat-label>JSON path</mat-label>
-          <input matInput type="text" (change)="onPathChange($event, i)" [value]="rule.path">
-          <button mat-button *ngIf="newRuleValueCtrl.value" matSuffix mat-icon-button aria-label="Clear"
-            (click)="newRuleValueCtrl.setValue('')">
-            <mat-icon>close</mat-icon>
-          </button>
-        </mat-form-field>
-        <button *ngIf="i < rules.length - 1" (click)="onDelete(i)" mat-mini-fab color="primary"
-          aria-label="Delete mock rule">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </li>
-    </ol>
-    <button (click)="onAdd()" mat-mini-fab color="primary" aria-label="Save mock rule">
-      <mat-icon>add</mat-icon>
-    </button>
+    <div>
+      <div class="badge">JSON Path</div>
+      <div>is a syntax for defining parts of a JSON object (like XPATH)</div>
+    </div>
 
-    <footer>
-      <button mat-button color="accent" (click)="onTest()">Test</button>
-      <div class="spacer"></div>
-      <button mat-button color="primary" (click)="onClose()">Cancel</button>
-      <button mat-raised-button color="warn" (click)="onApply()">Apply</button>
-    </footer>
+    <div class="cheatsheet">
+      <h4>Cheat sheet (<a target="_blank" href="https://www.npmjs.com/package/jsonpath">Full description</a>):</h4>
+      <ul>
+        <li><strong>$</strong>The root object/element</li>
+        <li><strong>.</strong>The current object/element</li>
+        <li><strong>..</strong>Recursive descendant operator</li>
+        <li><strong class="asterisk">*</strong>Wildcard matching all objects/elements regardless their names</li>
+      </ul>
+      <p>Example: <strong>$..accounts.*.name</strong></p>
+    </div>
+  </div>
+
+  <ol class="rules-list">
+    <li *ngFor="let rule of rules; let i = index">
+      <mat-form-field class="rule-type">
+        <mat-label>Ryle type</mat-label>
+        <mat-select [ngModel]="rule.type" name="ruleType" (selectionChange)="onTypeChange($event, i)">
+          <mat-option *ngFor="let type of ruleTypes" [value]="type">
+            {{mockTypes[type]}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="rule-value">
+        <mat-label>JSON path</mat-label>
+        <input matInput type="text" (change)="onPathChange($event, i)" [value]="rule.path">
+        <button mat-button *ngIf="newRuleValueCtrl.value" matSuffix mat-icon-button aria-label="Clear"
+          (click)="newRuleValueCtrl.setValue('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+      <button *ngIf="i < rules.length - 1" (click)="onDelete(i)" mat-mini-fab color="primary"
+        aria-label="Delete mock rule">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </li>
+  </ol>
+  <button (click)="onAdd()" mat-mini-fab color="primary" aria-label="Save mock rule">
+    <mat-icon>add</mat-icon>
+  </button>
+</section>
+
+<footer>
+  <button mat-button color="accent" (click)="onTest()">Preview</button>
+  <div class="spacer"></div>
+  <button mat-button color="primary" (click)="onClose()">Cancel</button>
+  <button mat-raised-button color="warn" (click)="onApply()">Apply</button>
+</footer>
