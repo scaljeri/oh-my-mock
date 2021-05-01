@@ -340,6 +340,11 @@ export class OhMyState {
     const domainState = { ...OhMyState.getActiveState(state) };
 
     const views = { ...domainState.views };
+
+    if (!views[payload.name]) { // init
+      views[payload.name] = domainState.data.map((_, i) => i);
+    }
+
     views[payload.name] = arrayMoveItem<number>(views[payload.name], payload.from, payload.to);
     domainState.views = views;
 

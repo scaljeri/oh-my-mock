@@ -62,10 +62,12 @@ function setup() {
 
     log('Received state update', payload);
 
+    const newState = payload.data as IState;
     const wasEnabled = window[STORAGE_KEY].state?.toggles.active;
-    window[STORAGE_KEY].state = payload.data as IState;
+    const isEnabled = newState?.toggles.active;
+    window[STORAGE_KEY].state = newState;
 
-    if (wasEnabled !== window[STORAGE_KEY].state?.toggles.active) {
+    if (wasEnabled !== isEnabled) {
       // Activity change
       if (window[STORAGE_KEY].state.toggles.active) {
         log(' *** Activate ***');
