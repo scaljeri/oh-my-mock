@@ -18,9 +18,9 @@ const OhMyFetch = (url, config: { method?: requestType } = {}) => {
       statusCode: data.activeStatusCode
     });
 
-    return new Promise((resolv, reject) => {
+    return new Promise(async(resolv, reject) => {
       try {
-        const respMock = compileJsCode(mock.jsCode)( {
+        const respMock = await compileJsCode(mock.jsCode)({
           response: mock.responseMock,
           headers: mock.headersMock,
           delay: mock.delay,
