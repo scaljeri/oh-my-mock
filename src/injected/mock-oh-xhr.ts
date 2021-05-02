@@ -32,11 +32,11 @@ export class OhMockXhr extends Base {
       }
     });
 
-    this.addEventListener('load', (...args) => {
+    this.addEventListener('load', async (...args) => {
       this.parseState();
 
       if (this.ohMock) {
-        this.ohOutput = this.mockResponse();
+        this.ohOutput = await this.mockResponse();
       }
 
       setTimeout(() => {
@@ -123,7 +123,7 @@ export class OhMockXhr extends Base {
     return url;
   }
 
-  private mockResponse(): IOhMockResponse {
+  private mockResponse(): Promise<IOhMockResponse> {
     if (!this.ohMock) {
       return this.response;
     }
@@ -138,11 +138,11 @@ export class OhMockXhr extends Base {
         statusCode: this.ohData.activeStatusCode
       }
 
-      return code(context, {
+      return Promise.resolve(code(context, {
         url: this.ohUrl,
         method: this.ohType,
         requestBody: this.ohRequestBody,
-        requestHeaders: this.ohRequestHeaders });
+        requestHeaders: this.ohRequestHeaders }));
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
       return this.ohMock.responseMock || this.response;
