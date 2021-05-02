@@ -16,6 +16,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MatSelectModule } from '@angular/material/select';
 
 import {
   Location,
@@ -40,6 +41,7 @@ import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
 import { CodeErrorsComponent } from './code-errors/code-errors.component';
 import { AnimatedListDirective } from './animated-list/animated-list.directive';
+import { AnonymizeComponent } from './anonymize/anonymize.component';
 
 @NgModule({
   declarations: [
@@ -58,7 +60,8 @@ import { AnimatedListDirective } from './animated-list/animated-list.directive';
     FileUploaderComponent,
     FileDragDropDirective,
     CodeErrorsComponent,
-    AnimatedListDirective
+    AnimatedListDirective,
+    AnonymizeComponent
   ],
   imports: [
     CommonModule,
@@ -80,6 +83,7 @@ import { AnimatedListDirective } from './animated-list/animated-list.directive';
     FormsModule,
     MonacoEditorModule,
     DragDropModule,
+    MatSelectModule
   ],
   exports: [
     DataListComponent,

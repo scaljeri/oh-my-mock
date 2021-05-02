@@ -3,8 +3,10 @@ export type themes = 'vs' | 'vs-dark' | 'hc-black';
 export interface IOhMyCodeEditOptions {
   code: string | Record<string, string>;
   type: string;
-  theme?: themes;
   allowErrors?: boolean;
+  readonly?: boolean;
+  theme?: themes;
+  compare?: string;
 }
 
 export interface IMarker {

@@ -22,12 +22,14 @@ export class CodeEditComponent implements OnInit {
   @HostBinding('class.is-dialog') isDialog = false;
 
   public originalCode: string;
-  public editorOptions = { theme: 'vs-dark', language: 'javascript' };
+  public editorOptions = { theme: 'vs-dark', language: 'javascript', readOnly: false };
   public editMode = 'edit';
   public codeStr: string;
   public control = new FormControl();
   public errors: IMarker[] = [];
   public showErrors = false;
+  public readonly = false;
+  public compare: string;
 
   private changeSub: Subscription;
 
@@ -42,11 +44,17 @@ export class CodeEditComponent implements OnInit {
       this.theme = input.theme || 'vs-dark';
       this.allowErrors = input.allowErrors ?? true;
       this.isDialog = true;
+      this.readonly = input.readonly;
     }
   }
 
   ngOnInit(): void {
     this.update();
+
+    if (this.input?.compare) {
+      this.editMode = 'diff';
+      this.originalCode = this.format(this.input.compare);
+    }
   }
 
   public update(): void {
@@ -74,6 +82,10 @@ export class CodeEditComponent implements OnInit {
 
     if (this.theme) {
       this.editorOptions.theme = this.theme;
+    }
+
+    if (this.readonly) {
+      this.editorOptions.readOnly = true;
     }
   }
 

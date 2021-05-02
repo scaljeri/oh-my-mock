@@ -17,9 +17,15 @@
         </mat-form-field>
       </p>
     </div>
-    <button class="delete-mock" (click)="onDelete()">
-      <mat-icon>delete_forever</mat-icon>
-    </button>
+    <div class="mock-actions">
+      <button mat-stroked-button class="delete-mock" (click)="onDelete()">
+        <mat-icon>delete_forever</mat-icon>
+      </button>
+
+      <button mat-stroked-button class="anonymize-mock" (click)="onAnonymize()">
+        Anonymise your data
+      </button>
+    </div>
   </section>
 
   <section *ngIf="!dialogIsOpen" class="response">

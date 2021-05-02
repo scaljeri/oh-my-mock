@@ -47,7 +47,11 @@ export class ContentService {
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           this.appStateService.hit(data);
 
-          const from = state.views['hits'].indexOf(state.data.indexOf(data));
+          let from = state.data.indexOf(data);
+          if (state.views.hits) {
+            from = state.views.hits.indexOf(from);
+          }
+
           this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', from, to: 0 }));
         }
       } else {
@@ -88,7 +92,7 @@ export class ContentService {
   destroy(): void {
     // const x = chrome.runtime.onMessage.hasListener(this.listener);
     // chrome.runtime.onMessage.removeListener(this.listener);
-    this.send({ ...this.state, enabled: false });
+    this.send({ ...this.state, toggles: { ...this.state.toggles, active: false } });
   }
 
   private getActiveStateSnapshot(): IState {

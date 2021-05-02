@@ -10,11 +10,15 @@
   <mat-error *ngIf="!isDialog && !allowErrors && errors.length > 0">You have errors, cannot auto-save</mat-error>
 
   <div *ngIf="isDialog" class="button-actions">
-    <button mat-raised-button (click)="onReset()">Reset</button>
-    <button mat-raised-button (click)="onToggle()">{{editMode === 'diff' ? 'Edit' : 'Diff'}}</button>
-    <div class="spacer"></div>
-    <button mat-raised-button color="primary" (click)="onCancel()">Cancel</button>
-    <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+    <ng-container *ngIf="!readonly">
+      <button mat-raised-button (click)="onReset()">Reset</button>
+      <button mat-raised-button (click)="onToggle()">{{editMode === 'diff' ? 'Edit' : 'Diff'}}</button>
+      <div class="spacer"></div>
+      <button mat-raised-button color="primary" (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+    </ng-container>
+
+    <button *ngIf="readonly" mat-raised-button color="primary" (click)="onCancel()">Close</button>
   </div>
 </footer>
 

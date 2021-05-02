@@ -24,3 +24,11 @@ export enum resetStateOptions {
   ALL = 'all',
   SELF = 'self'
 }
+
+export const MOCK_RULE_TYPES = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  fullName: 'Full name',
+  password: 'Password',
+  username: 'Username'
+};

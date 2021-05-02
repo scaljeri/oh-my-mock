@@ -21,8 +21,15 @@
   font-size: 15px;
 }
 
-.delete-mock {
+.mock-actions {
+  align-items: flex-end;
   align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+
+  .anonymize-mock {
+    margin-top: $spacer-2;
+  }
 }
 
 section {

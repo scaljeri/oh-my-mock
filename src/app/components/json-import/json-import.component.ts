@@ -7,7 +7,6 @@ import { IData, IState, IStore } from '@shared/type';
 import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 import { MigrationsService } from 'src/app/services/migrations.service';
-import { STORAGE_KEY } from '@shared/constants';
 
 @Component({
   selector: 'oh-my-json-import',
