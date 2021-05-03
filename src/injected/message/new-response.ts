@@ -1,5 +1,6 @@
-import { appSources, packetTypes } from '../../shared/constants';
+import { appSources, packetTypes, STORAGE_KEY } from '../../shared/constants';
 import { IContext, IPacket, statusCode } from '../../shared/type';
+import { findActiveData } from '../../shared/utils/find-mock';
 
 interface INewMockPacket {
   context: IContext & { statusCode: statusCode };
@@ -7,6 +8,11 @@ interface INewMockPacket {
 }
 
 export const newMockMessage = (payload: INewMockPacket): void => {
+  const data = findActiveData(window[STORAGE_KEY].state, payload.context.url, payload.context.method, payload.context.type);
+  if (data?.mocks?.[payload.context.statusCode]) {
+    return;
+  }
+
   window.postMessage(
     {
       source: appSources.INJECTED,
