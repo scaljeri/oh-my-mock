@@ -6,8 +6,8 @@ import {
   MOCK_RULE_TYPES
 } from './constants';
 
-export type requestType = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
-export type requestMethod = 'XHR' | 'FETCH';
+export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
+export type requestType = 'XHR' | 'FETCH';
 export type statusCode = number;
 export type domain = string;
 export type origin = 'local' | 'cloud' | 'ngapimock';
@@ -29,13 +29,16 @@ export interface IState {
   toggles: Record<string, boolean>; // enable toggle and toggles for projections
 }
 
-export interface IContext {
-  url: string; // composite primary key
-  method: requestMethod; //  composite PK
-  type: requestType; // CPK
+// url, method and type are used to map an API request with a mock
+export interface IOhMyContext {
+  url?: string;
+  method?: requestMethod;
+  type?: requestType;
+  id?: string;
+  statusCode?: statusCode;
 }
 
-export interface IData extends IContext {
+export interface IData extends IOhMyContext {
   activeStatusCode?: statusCode;
   enabled?: boolean;
   mocks?: Record<statusCode, IMock>;
@@ -61,32 +64,17 @@ export interface IOhMyMockRule {
 }
 
 // actions
-export interface IUpsertMock {
-  url: string;
-  method: requestMethod;
-  type: requestType;
-  statusCode: number;
+export interface IUpsertMock extends IOhMyContext {
   mock: IMock;
 }
 
-export type IDeleteData = IContext;
-
-export interface IDeleteMock extends IContext {
-  statusCode: statusCode;
-}
-
-export interface ICreateStatusCode extends IContext {
-  statusCode: statusCode;
+export interface ICreateStatusCode extends IOhMyContext {
   activeStatusCode?: statusCode;
   clone?: boolean;
 }
 
-export interface IUpdateDataUrl extends IContext {
+export interface IUpdateDataUrl extends IOhMyContext {
   newUrl: string;
-}
-
-export interface IUpdateDataStatusCode extends IContext {
-  statusCode: statusCode;
 }
 
 export interface IPacket {
@@ -97,7 +85,7 @@ export interface IPacket {
 }
 
 export interface IPacketPayload {
-  context?: IContext & { statusCode: statusCode };
+  context: IOhMyContext;
   type: packetTypes;
   data?: IMock | IState;
 }
@@ -111,13 +99,6 @@ export interface IMockedTmpResponse {
 }
 
 export type ResetStateOptions = resetStateOptions;
-
-export interface IOhMyRequest {
-  url: string;
-  method: requestType;
-  body: unknown;
-  headers: Record<string, string>;
-}
 
 export type IOhMockResponse = IMock & { statusCode: statusCode };
 

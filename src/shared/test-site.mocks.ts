@@ -9,9 +9,10 @@ export const testDataMock: IState = {
   toggles: {},
   "data": [
     {
+      "id": "a",
       "url": "/users",
-      "method": "XHR",
-      "type": "GET",
+      "type": "XHR",
+      "method": "GET",
       "mocks": {
         "200": {
           "jsCode": "\n",
@@ -42,9 +43,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 200
     },
     {
+      "id": "b",
       "url": "/site",
-      "method": "XHR",
-      "type": "GET",
+      "type": "XHR",
+      "method": "GET",
       "mocks": {
         "200": {
           "jsCode": "\n",
@@ -73,9 +75,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 200
     },
     {
+      "id": "c",
       "url": "/site",
-      "method": "XHR",
-      "type": "POST",
+      "type": "XHR",
+      "method": "POST",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -108,9 +111,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "d",
       "url": "/users",
-      "method": "XHR",
-      "type": "POST",
+      "type": "XHR",
+      "method": "POST",
       "mocks": {
         "200": {
           "jsCode": "\n",
@@ -139,9 +143,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 200
     },
     {
+      "id": "e",
       "url": "/users",
-      "method": "XHR",
-      "type": "PUT",
+      "type": "XHR",
+      "method": "PUT",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -174,9 +179,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "f",
       "url": "/site",
-      "method": "XHR",
-      "type": "PUT",
+      "type": "XHR",
+      "method": "PUT",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -209,9 +215,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "g",
       "url": "/site",
-      "method": "XHR",
-      "type": "DELETE",
+      "type": "XHR",
+      "method": "DELETE",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -244,9 +251,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "h",
       "url": "/users",
-      "method": "XHR",
-      "type": "DELETE",
+      "type": "XHR",
+      "method": "DELETE",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -279,9 +287,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "i",
       "url": "/users",
-      "method": "FETCH",
-      "type": "GET",
+      "type": "FETCH",
+      "method": "GET",
       "mocks": {
         "200": {
           "jsCode": "\n",
@@ -312,9 +321,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 200
     },
     {
+      "id": "j",
       "url": "/site",
-      "method": "FETCH",
-      "type": "GET",
+      "type": "FETCH",
+      "method": "GET",
       "mocks": {
         "200": {
           "jsCode": "\n",
@@ -343,9 +353,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 200
     },
     {
+      "id": "k",
       "url": "/site",
-      "method": "FETCH",
-      "type": "POST",
+      "type": "FETCH",
+      "method": "POST",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -378,9 +389,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "l",
       "url": "/users",
-      "method": "FETCH",
-      "type": "POST",
+      "type": "FETCH",
+      "method": "POST",
       "mocks": {
         "200": {
           "jsCode": "\n",
@@ -409,9 +421,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 200
     },
     {
+      "id": "m",
       "url": "/users",
-      "method": "FETCH",
-      "type": "PUT",
+      "type": "FETCH",
+      "method": "PUT",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -444,9 +457,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "n",
       "url": "/site",
-      "method": "FETCH",
-      "type": "PUT",
+      "type": "FETCH",
+      "method": "PUT",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -479,9 +493,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "o",
       "url": "/users",
-      "method": "FETCH",
-      "type": "DELETE",
+      "type": "FETCH",
+      "method": "DELETE",
       "mocks": {
         "404": {
           "jsCode": "\n",
@@ -514,9 +529,10 @@ export const testDataMock: IState = {
       "activeStatusCode": 404
     },
     {
+      "id": "p",
       "url": "/site",
-      "method": "FETCH",
-      "type": "DELETE",
+      "method": "DELETE",
+      "type": "FETCH",
       "mocks": {
         "404": {
           "jsCode": "\n",

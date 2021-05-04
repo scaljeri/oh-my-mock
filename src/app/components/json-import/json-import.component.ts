@@ -2,11 +2,10 @@ import { Component } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
-import { findActiveData } from '../../../shared/utils/find-mock'
-import { IData, IState, IStore } from '@shared/type';
+import { IData, IState } from '@shared/type';
 import { UpsertData } from 'src/app/store/actions';
-import { OhMyState } from 'src/app/store/state';
 import { MigrationsService } from 'src/app/services/migrations.service';
+import { uniqueId } from '@shared/utils/unique-id';
 
 @Component({
   selector: 'oh-my-json-import',
@@ -20,14 +19,11 @@ export class JsonImportComponent {
   constructor(private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
-    const state = this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
-
     Array.from(fileList).forEach(file => {
       const fileReader = new FileReader();
       fileReader.onload = (fileLoadedEvent) => {
         try {
           const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
-          let addCount = 0;
 
           const migratedState = this.mirgationService.update(
             { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
@@ -42,20 +38,11 @@ export class JsonImportComponent {
             }
           }
 
-          // Mocks that already exist are not imported but skipped, this should change!!
-          // TODO: A mock can already exist, but the import can have different status codes!!
           migratedState.domains[domain]?.data.forEach(d => {
-            if (!findActiveData(state, d.url, d.method, d.type)) {
-              addCount++;
-              this.upsertData(d, domain);
-            }
+            this.upsertData({ ...d, id: uniqueId() }, domain);
           });
 
-          if (addCount > 0) {
-            this.toast.success(`Imported mocks from ${file.name} into ${domain} (added ${addCount}/${data.length})`);
-          } else {
-            this.toast.warning(`No mocks where imported, they all exist already!`);
-          }
+          this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${domain}`);
         } catch {
           this.toast.error(`File ${file} does not contain (valid) JSON`);
         }

@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
 })
 export class JsonExportComponent implements OnInit {
   state: IState;
-  selected: boolean[] = [];
+  selected: Record<string, IData> = {};
   subscriptions: Subscription[] = [];
   exportList: IData[] = []
 
@@ -41,23 +41,33 @@ export class JsonExportComponent implements OnInit {
     return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 
-  onRowExport(rowIndex: number): void {
-    this.selected[rowIndex] = !this.selected[rowIndex];
-
+  onRowExport(data: IData): void {
+    this.selected[data.id] = this.selected[data.id] ? null : data;
   }
 
   onSelectAll(): void {
-    this.dataListRef.selectAll();
-    this.selected = this.state.data.map(() => true)
+    const keys = Object.keys(this.selected);
+    const hasSelected = keys.find(k => !!this.selected[k]);
+    const hasUnselected = keys.length === 0 || keys.find(k => !this.selected[k]);
+
+    if (!hasSelected || hasSelected && hasUnselected) { // select all
+      this.dataListRef.selectAll();
+      this.state.data.forEach(d => this.selected[d.id] = d);
+    } else if (hasSelected && !hasUnselected) { // deselect all
+      this.dataListRef.deselectAll();
+      this.state.data.forEach(d => this.selected[d.id] = null);
+    }
   }
 
   onExport() {
-    if (!this.selected.some(x => x)) {
+    const keys = Object.keys(this.selected);
+    const data = keys
+      .filter(k => this.selected[k])
+      .map(k => this.selected[k]);
+
+    if (data.length === 0) {
       return this.toast.warning('Nothing selected');
     }
-
-    const data = this.selected.map((isSelected, index) => isSelected && this.state.data[index])
-      .filter(Boolean);
 
     const exportObj = {
       data,

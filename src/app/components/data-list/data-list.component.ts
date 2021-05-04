@@ -16,6 +16,7 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { arrayMoveItem } from '@shared/utils/array';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { isViewValidate } from '../../utils/validate-view';
+import { uniqueId } from '@shared/utils/unique-id';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -47,16 +48,16 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() showActivate: boolean;
   @Input() showExport: boolean;
   @Input() @HostBinding('class') theme = 'dark';
-  @Output() select = new EventEmitter<number>();
-  @Output() dataExport = new EventEmitter<number>();
+  @Output() select = new EventEmitter<string>();
+  @Output() dataExport = new EventEmitter<IData>();
 
-  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.state.domain);
+  @Dispatch() deleteData = (id: string) => new DeleteData(id, this.state.domain);
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
   @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
-  @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
-    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.state.domain);
+  @Dispatch() updateActiveStatusCode = (id: string, statusCode: statusCode) =>
+    new UpdateDataStatusCode({ id, statusCode }, this.state.domain);
 
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
   public selection = new SelectionModel<number>(true);
@@ -127,56 +128,48 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnDestroy(): void {
   }
 
-  onActivateToggle(rowIndex: number, event: MouseEvent): void {
+  onActivateToggle(id: string, event: MouseEvent): void {
     event.stopPropagation();
-    const data = this.data[rowIndex];
+    const data = findActiveData(this.state, { id });
 
     if (!data.activeStatusCode) {
       const statusCode = findAutoActiveMock(data);
-      this.updateActiveStatusCode(this.data[rowIndex], statusCode as number);
+      this.updateActiveStatusCode(id, statusCode as number);
       this.toast.success(`Mock with status-code ${statusCode} activated`);
     } else {
-      this.updateActiveStatusCode(this.data[rowIndex], 0);
+      this.updateActiveStatusCode(id, 0);
       this.toast.warning('Mock disabled!');
     }
   }
 
-  onDelete(rowIndex: number, event): void {
+  onDelete(id: string, event): void {
     event.stopPropagation();
 
-    const index = this.state.data.indexOf(this.data[rowIndex]);
-    let msg = `Deleted mock ${this.data[index].url}`;
+    const data = findActiveData(this.state, { id });
+    let msg = `Deleted mock ${data.url}`;
     if (this.state.domain) {
       msg += ` on domain ${this.state.domain}`;
     }
     this.toast.success(msg, { duration: 2000, style: {} });
-    this.deleteData(index);
+    this.deleteData(id);
   }
 
   onClone(rowIndex: number, event): void {
     event.stopPropagation();
-    const data = this.data[rowIndex];
-    const state = this.getActiveStateSnapshot();
+    const data = { ...this.data[rowIndex], id: uniqueId() };
 
-    // Cannot clone a mock which already exists
-    if (!findActiveData(state, data.url, data.method, data.type)) {
-      this.upsertData(data);
-      this.toast.success('Cloned ' + data.url);
-    } else {
-      this.toast.error(`Mock already exists (${data.url})`);
-    }
+    this.upsertData(data);
+    this.toast.success('Cloned ' + data.url);
   }
 
   onDataClick(data: IData, index: number): void {
     this.selection.toggle(index);
-    this.select.emit(this.state.data.indexOf(data));
+    this.select.emit(data.id);
   }
 
-  onExport(rowIndex: number, event: MouseEvent): void {
+  onExport(data: IData, rowIndex, event: MouseEvent): void {
     event.stopPropagation()
-    const data = this.data[rowIndex];
-    const state = this.getActiveStateSnapshot();
-    this.dataExport.emit(state.data.indexOf(data));
+    this.dataExport.emit(data);
     this.selection.toggle(rowIndex);
   }
 

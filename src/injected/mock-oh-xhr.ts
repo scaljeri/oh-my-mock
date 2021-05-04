@@ -3,7 +3,7 @@ import {
   IData,
   IMock,
   IOhMockResponse,
-  requestType,
+  requestMethod,
 } from '../shared/type';
 import { compileJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock';
@@ -13,7 +13,7 @@ const Base = window.XMLHttpRequest;
 export class OhMockXhr extends Base {
   private ohData: IData;
   private ohMock: IMock;
-  private ohType: requestType;
+  private ohMethod: requestMethod;
   private ohUrl: string;
   private ohListeners = [];
   private ohRequestBody: unknown;
@@ -66,12 +66,12 @@ export class OhMockXhr extends Base {
     super.setRequestHeader(key, value);
   }
 
-  open(type: requestType, url: string, ...args: unknown[]): void {
-    this.ohType = type; // e.g GET, POST
+  open(method: requestMethod, url: string, ...args: unknown[]): void {
+    this.ohMethod = method; // e.g GET, POST
     this.ohUrl = url;
 
     this.parseState();
-    return super.open.apply(this, [type, this.mockedUrl(url), ...args]);
+    return super.open.apply(this, [method, this.mockedUrl(url), ...args]);
   }
 
   ohMyReady(...args): void {
@@ -90,18 +90,13 @@ export class OhMockXhr extends Base {
         value: (key) => this.ohOutput.headers[key]
       });
 
-      window[STORAGE_KEY].hitSubject.next({
-        url: this.ohUrl,
-        method: 'XHR',
-        type: this.ohType,
-        statusCode: this.status
-      });
+      window[STORAGE_KEY].hitSubject.next({ id: this.ohData.id });
     } else {
       window[STORAGE_KEY].newMockSubject.next({
         context: {
           url: this.ohUrl,
-          method: 'XHR',
-          type: this.ohType,
+          method: this.ohMethod,
+          type: 'XHR',
           statusCode: this.status
         },
         data: {
@@ -140,9 +135,10 @@ export class OhMockXhr extends Base {
 
       return Promise.resolve(code(context, {
         url: this.ohUrl,
-        method: this.ohType,
+        method: this.ohMethod,
         requestBody: this.ohRequestBody,
-        requestHeaders: this.ohRequestHeaders }));
+        requestHeaders: this.ohRequestHeaders
+      }));
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
       return this.ohMock.responseMock || this.response;
@@ -154,15 +150,9 @@ export class OhMockXhr extends Base {
     this.ohMock = null;
 
     this.ohData = findActiveData(
-      window[STORAGE_KEY].state,
-      this.ohUrl,
-      'XHR',
-      this.ohType
-    );
+      window[STORAGE_KEY].state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);
 
-    this.ohMock = this.ohData?.mocks
-      ? this.ohData.mocks[this.ohData.activeStatusCode]
-      : null;
+    this.ohMock = this.ohData?.mocks?.[this.ohData?.activeStatusCode]
   }
 
   private getHeaders(): Record<string, string>;

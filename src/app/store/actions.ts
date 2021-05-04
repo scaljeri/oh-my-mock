@@ -1,13 +1,12 @@
 import {
   IData,
-  IDeleteMock,
   ICreateStatusCode,
   IUpdateDataUrl,
-  IUpdateDataStatusCode,
   IUpsertMock,
   IOhMyMock,
   IOhMyViewItemsOrder,
-  IOhMyToggle
+  IOhMyToggle,
+  IOhMyContext
 } from '@shared/type';
 
 export class InitState {
@@ -37,12 +36,12 @@ export class UpsertMock {
 
 export class DeleteData {
   static readonly type = '[Data] delete';
-  constructor(public payload: number, public domain?: string) { }
+  constructor(public payload: string, public domain?: string) { }
 }
 
 export class DeleteMock {
   static readonly type = '[Mock] delete';
-  constructor(public payload: IDeleteMock, public domain?: string) { }
+  constructor(public payload: IOhMyContext, public domain?: string) { }
 }
 
 export class CreateStatusCode {
@@ -57,7 +56,7 @@ export class UpdateDataUrl {
 
 export class UpdateDataStatusCode {
   static readonly type = '[Data] update status code';
-  constructor(public payload: IUpdateDataStatusCode, public domain?: string) { }
+  constructor(public payload: IOhMyContext, public domain?: string) { }
 }
 
 export class ViewChangeOrderItems {

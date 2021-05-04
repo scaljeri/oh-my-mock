@@ -16,8 +16,8 @@
 
   <ol data-table *ngIf="data" cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
     <li class="header">
-      <span class="method">Method</span>
       <span class="type">Type</span>
+      <span class="method">Method</span>
       <span class="url">Url</span>
       <span class="active">Active StatusCode</span>
     </li>
@@ -39,7 +39,7 @@
       <span class="url">{{row.url}}</span>
       <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
       <div class="actions">
-        <button *ngIf="showActivate" (click)="onActivateToggle(index, $event)" mat-mini-fab color="primary"
+        <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-mini-fab color="primary"
           aria-label="Example icon button with a menu icon">
           <mat-icon *ngIf="!row.activeStatusCode">play_arrow</mat-icon>
           <mat-icon *ngIf="row.activeStatusCode">stop</mat-icon>
@@ -48,11 +48,11 @@
           aria-label="Example icon button with a menu icon">
           <mat-icon>content_copy</mat-icon>
         </button>
-        <button *ngIf="showDelete" (click)="onDelete(index, $event)" mat-mini-fab color="primary"
+        <button *ngIf="showDelete" (click)="onDelete(row.id, $event)" mat-mini-fab color="primary"
           aria-label="Example icon button with a menu icon">
           <mat-icon>delete</mat-icon>
         </button>
-        <button *ngIf="showExport" (click)="onExport(index, $event)" mat-mini-fab color="primary"
+        <button *ngIf="showExport" (click)="onExport(row, index, $event)" mat-mini-fab color="primary"
           aria-label="Example icon button with a menu icon">
           <mat-icon>import_export</mat-icon>
         </button>

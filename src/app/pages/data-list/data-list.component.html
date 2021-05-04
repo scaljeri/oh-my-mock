@@ -1,7 +1,4 @@
-<oh-my-data-list
-  [state]="state"
-  [showActivate]="true"
-  [showDelete]="true"
+<oh-my-data-list [state]="state" [showActivate]="true" [showDelete]="true" [showClone]="true"
   (select)="onDataSelect($event)"></oh-my-data-list>
 
 <button *ngIf="!domain" (click)="onAddData()" class="new-data" mat-fab color="primary"
