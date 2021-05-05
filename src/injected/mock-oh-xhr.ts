@@ -136,8 +136,8 @@ export class OhMockXhr extends Base {
       return Promise.resolve(code(context, {
         url: this.ohUrl,
         method: this.ohMethod,
-        requestBody: this.ohRequestBody,
-        requestHeaders: this.ohRequestHeaders
+        body: this.ohRequestBody,
+        headers: this.ohRequestHeaders
       }));
     } catch (err) {
       console.error('Could not execute jsCode', this.ohData, this.ohMock);

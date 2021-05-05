@@ -22,7 +22,7 @@ const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
           headers: mock.headersMock,
           delay: mock.delay,
           statusCode: data.activeStatusCode
-        }, config);
+        }, { url, headers: {}, ...config });
         const body = new Blob([respMock.response], { type: respMock.headers['content-type'] });
 
         const response = new Response(body, {

@@ -9,6 +9,7 @@ export const MIGRATION_MAP = {
   '0.0.0': { next: '2.0.0', migrate: (_) => null },
   '2.0.0': { next: '2.1.0', migrate: (_) => null },
   '2.1.0': { next: '__OH_MY_VERSION__', migrate: (_) => _ },
+  '2.2.0': { next: '__OH_MY_VERSION__', migrate: (_) => _ },
   '__OH_MY_VERSION__': {}
 }
 
