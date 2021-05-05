@@ -18,7 +18,7 @@ export default function mockToNgApiMock(mock: IData, name: string): Mock {
     responses,
     request: {
       url: mock.url,
-      method: mock.type
+      method: mock.method
     }
   };
 }
