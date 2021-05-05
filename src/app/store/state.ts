@@ -184,6 +184,10 @@ export class OhMyState {
 
     Object.keys(payload).forEach((key) => (data[key] = payload[key]));
 
+    if (index === -1 && !payload.id) {
+      data.url = url2regex(payload.url);
+    }
+
     domainState.data = dataList;
     const domains = { ...state.domains };
     domains[activeDomain] = domainState;
@@ -364,7 +368,7 @@ export class OhMyState {
   ): { index: number; data: IData } {
     const data = findActiveData(state, context) ||
     {
-      url: url2regex(context.url),
+      url: context.url,
       id: uniqueId(),
       method: context.method,
       type: context.type,
