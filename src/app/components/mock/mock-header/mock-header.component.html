@@ -1,7 +1,28 @@
 <div class="main">
-  <span>{{ data.method }}</span>
-  <span>{{ data.type }}</span>
-  <input #url [value]="data.url" (keyup)="onUrlUpdate(url.value)" />
+  <mat-form-field class="type-select">
+    <mat-label>Type</mat-label>
+    <mat-select [formControl]="typeCtrl" name="type">
+      <mat-option *ngFor="let type of ['FETCH', 'XHR']" [value]="type"> {{type}} </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field class="method-select">
+    <mat-label>Method</mat-label>
+    <input (blur)="onMethodBlur()" type="text" placeholder="Method" aria-label="Request method" matInput
+      [formControl]="methodCtrl" [matAutocomplete]="auto">
+    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+      <mat-option *ngFor="let option of filteredMethodOptions | async" [value]="option">
+        {{option}}
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field class="url-input">
+    <mat-label>Url</mat-label>
+    <input #url matInput placeholder="Match API endpiont (regexp)" [formControl]="urlCtrl"
+      (keyup)="onUrlUpdate(url.value)">
+  </mat-form-field>
+
   <mat-icon color="primary"
     matTooltip="The API URL is used, together with the request type and method, to map an API call with a mock. To make this more flexible you can use regular expression syntax here">
     info</mat-icon>

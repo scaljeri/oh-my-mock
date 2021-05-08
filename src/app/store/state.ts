@@ -123,11 +123,11 @@ export class OhMyState {
     if (payload.mock) {
       Object.entries(payload.mock).forEach((i) => (mock[i[0]] = i[1]));
 
-      if (!mock.responseMock) {
+      if (mocks[payload.statusCode]) { // update
+        mock.modifiedOn = new Date().toISOString();
+      } else { // new
         mock.createdOn = new Date().toISOString();
         mock.responseMock = mock.response;
-      } else {
-        mock.modifiedOn = new Date().toISOString();
       }
 
       if (!mock.headersMock) {
@@ -383,11 +383,14 @@ export class OhMyState {
     if (!mock) {
       return { jsCode: MOCK_JS_CODE, delay: 0 };
     } else {
-      return {
+      const output = {
         ...mock,
         headers: { ...mock.headers },
         headersMock: { ...mock.headersMock }
       };
+      delete output.modifiedOn;
+
+      return output;
     }
   }
 }

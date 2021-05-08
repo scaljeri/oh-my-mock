@@ -87,7 +87,9 @@ export class MockComponent implements OnChanges {
   }
 
   onResponseChange(data: string): void {
-    this.upsertMock({ responseMock: data });
+    if (data !== (this.mock.responseMock || '')) {
+      this.upsertMock({ responseMock: data });
+    }
   }
 
   onRevertResponse(): void {
@@ -99,9 +101,12 @@ export class MockComponent implements OnChanges {
   }
 
   onHeadersChange(headersMock: string): void {
-    if (headersMock) {
-      this.upsertMock({ headersMock: JSON.parse(headersMock) });
-      this.cdr.detectChanges();
+    try {
+      if (JSON.parse(headersMock) && headersMock !== JSON.stringify(this.mock.headersMock || {})) {
+        this.upsertMock({ headersMock: JSON.parse(headersMock) });
+        this.cdr.detectChanges();
+      }
+    } catch (err) {
     }
   }
 
