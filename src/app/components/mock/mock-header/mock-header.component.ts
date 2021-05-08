@@ -47,11 +47,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   @Dispatch() updateActiveStatusCode = (statusCode: statusCode) =>
     new UpdateDataStatusCode({
-      url: this.data.url,
-      method: this.data.method,
-      type: this.data.type,
+      id: this.data.id,
       statusCode
-    });
+    }, this.domain);
 
   constructor(public dialog: MatDialog) { }
 

@@ -1,30 +1,28 @@
 import { STORAGE_KEY } from '../shared/constants';
-import { IData, IMock, requestType } from '../shared/type';
+import { IData, IMock, requestMethod } from '../shared/type';
 import { compileJsCode } from '../shared/utils/eval-jscode';
 import { findActiveData } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';
 
 const ORIG_FETCH = window.fetch;
-const OhMyFetch = (url, config: { method?: requestType } = {}) => {
+const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
   const { method = 'GET' } = config;
-  const data: IData = findActiveData(window[STORAGE_KEY].state, url, 'FETCH', method);
+  const data: IData = findActiveData(window[STORAGE_KEY].state, {
+    url, type: 'FETCH', method
+  });
   const mock: IMock = data?.mocks[data?.activeStatusCode];
 
   if (mock) {
-    window[STORAGE_KEY].hitSubject.next({
-      url: url,
-      method: 'FETCH',
-      type: method,
-      statusCode: data.activeStatusCode
-    });
+    window[STORAGE_KEY].hitSubject.next({ id: data.id });
 
-    return new Promise((resolv, reject) => {
+    return new Promise(async (resolv, reject) => {
       try {
-        const respMock = compileJsCode(mock.jsCode)( {
+        const respMock = await compileJsCode(mock.jsCode)({
           response: mock.responseMock,
           headers: mock.headersMock,
           delay: mock.delay,
-          statusCode: data.activeStatusCode }, config);
+          statusCode: data.activeStatusCode
+        }, { url, headers: {}, ...config });
         const body = new Blob([respMock.response], { type: respMock.headers['content-type'] });
 
         const response = new Response(body, {
@@ -46,8 +44,8 @@ const OhMyFetch = (url, config: { method?: requestType } = {}) => {
           window[STORAGE_KEY].newMockSubject.next({
             context: {
               url,
-              method: 'FETCH',
-              type: method,
+              method,
+              type: 'FETCH',
               statusCode: response.status
             },
             data: {

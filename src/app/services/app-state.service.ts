@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { IContext, IData } from '@shared/type';
+import { IData } from '@shared/type';
 import { BehaviorSubject, Subject } from 'rxjs';
 
 export interface IPage {
@@ -53,7 +53,7 @@ export class AppStateService {
     return domain && this._domain === domain;
   }
 
-  hit(data: IContext): void {
+  hit(data: IData): void {
     this.hitSubject.next(data);
   }
 }

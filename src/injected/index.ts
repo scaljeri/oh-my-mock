@@ -23,6 +23,8 @@ function setup() {
     hitSubject,
     newMock$: newMockSubject.asObservable(),
     hit$: hitSubject.asObservable(),
+    XMLHttpRequest: MEM_XHR_REQUEST,
+    fetch: MEM_FETCH
   };
   let ohState;
   Object.defineProperty(vals, 'state', {

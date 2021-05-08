@@ -42,7 +42,7 @@ export class ContentService {
           });
         } else if (payload.type === packetTypes.HIT) {
           const state = this.getActiveStateSnapshot();
-          const data = findActiveData(state, payload.context.url, payload.context.method, payload.context.type);
+          const data = findActiveData(state, payload.context);
 
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           this.appStateService.hit(data);

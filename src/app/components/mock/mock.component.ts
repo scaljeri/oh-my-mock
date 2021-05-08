@@ -8,7 +8,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
-import { IData, IDeleteMock, IMock, IOhMyMockRule, statusCode } from '@shared/type';
+import { IOhMyContext, IData, IMock, IOhMyMockRule, statusCode } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -34,7 +34,7 @@ export class MockComponent implements OnChanges {
       statusCode: this.data.activeStatusCode,
       mock
     }, this.domain);
-  @Dispatch() deleteMockResponse = (response: IDeleteMock) =>
+  @Dispatch() deleteMockResponse = (response: IOhMyContext) =>
     new DeleteMock(response);
 
   public delayFormControl = new FormControl();

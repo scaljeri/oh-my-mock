@@ -1,12 +1,12 @@
 {
   "name": "oh-my-mock",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "start:server": "node ./test-site/server.js",
-    "build": "ng build --output-hashing none --base-href=index.html && yarn build:both",
-    "build:both": "yarn build:content && yarn build:injected && yarn build:background &&  node ./scripts/token-replace.js",
+    "build": "ng build --output-hashing none --base-href=index.html && yarn build:both && node ./scripts/token-replace.js",
+    "build:both": "yarn build:content && yarn build:injected && yarn build:background",
     "build:content": "tsc --build ./tsconfig-content.json && browserify --node dist/content/index.js > dist/content.js && rm -rf dist/content && cp manifest.json dist/",
     "build:injected": "tsc --build ./tsconfig-inject.json && browserify --node ./dist/injected/index.js > ./dist/injected.js && rm -rf dist/injected dist/shared",
     "build:background": "tsc --build ./tsconfig-background.json && browserify --node ./dist/background > ./dist/bg.js && mv dist/bg.js dist/background.js",

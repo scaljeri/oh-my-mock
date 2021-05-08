@@ -7,7 +7,7 @@ import { Select, Store } from '@ngxs/store';
 import { IData, IState, IStore } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
-import { DeleteData, UpsertData } from 'src/app/store/actions';
+import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
@@ -18,13 +18,13 @@ import { OhMyState } from 'src/app/store/state';
 })
 export class PageDataListComponent implements OnInit {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   public showRowAction = false;
   public state: IState;
   public domain: string;
   public subscriptions: Subscription[] = [];
+  public navigateToMock = false;
 
   constructor(
     public dialog: MatDialog,
@@ -36,19 +36,19 @@ export class PageDataListComponent implements OnInit {
   ngOnInit(): void {
     this.subscriptions.push(this.state$.subscribe((state: IState) => {
       this.state = state;
+
+      if (this.navigateToMock) {
+        this.router.navigate(['mocks', state.data[0].id]);
+      }
     }));
   }
 
-  onDataSelect(index: number): void {
-    this.router.navigate(['mocks', index], { relativeTo: this.activatedRoute });
+  onDataSelect(id: string): void {
+    this.router.navigate(['mocks', id], { relativeTo: this.activatedRoute });
   }
 
   onMainAction(): void {
     this.showRowAction = !this.showRowAction;
-  }
-
-  onRowAction(rowIndex: number): void {
-    this.deleteData(rowIndex);
   }
 
   onAddData(): void {
@@ -58,10 +58,8 @@ export class PageDataListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((data: IData) => {
       if (data) {
-        const state = this.stateSnapshot;
-        const newDataIndex = state.data.length;
+        this.navigateToMock = true;
         this.upsertData(data);
-        this.router.navigate(['mocks', newDataIndex]);
       }
     });
   }

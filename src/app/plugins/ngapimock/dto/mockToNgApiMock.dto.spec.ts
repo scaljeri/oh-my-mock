@@ -17,8 +17,8 @@ describe('mockToNgApiMock', () => {
   beforeEach(() => {
     ohMyMockMock = {
       url: 'some/url',
-      method: 'XHR',
-      type: 'GET',
+      type: 'XHR',
+      method: 'GET',
       activeStatusCode: 200,
       mocks: {
         200: {

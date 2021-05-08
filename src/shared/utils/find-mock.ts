@@ -1,21 +1,25 @@
-import { IData, IState, requestMethod, requestType } from '../type';
+import { IData, IState, requestMethod, requestType, statusCode } from '../type';
 import { compareUrls } from './urls';
 
 export const findActiveData = (
   state: IState,
-  url: string,
-  method: requestMethod,
-  type: requestType
+  { url, method, type, id }: {
+    url?: string,
+    method?: requestMethod,
+    type?: requestType,
+    id?: string,
+    statusCode?: statusCode // added to simply interfaces
+  },
+  inactive = true
 ): IData => {
-  const data = (state?.data || []).find((item) => {
-    return (
-      method === item.method && type === item.type && (url === item.url || compareUrls(url, item.url))
-    );
-  });
+  for (let i = 0; i < state?.data?.length; i++) {
+    const item = state.data[i];
 
-  if (!data) {
-    return null;
+    if (id ? id === item.id :
+      method === item.method && type === item.type && (url === item.url || compareUrls(url, item.url))) {
+      if (inactive || item.activeStatusCode > 0) {
+        return item;
+      }
+    }
   }
-
-  return data;
 };

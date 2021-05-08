@@ -1,5 +1,4 @@
-import { LEADING_TRIVIA_CHARS } from '@angular/compiler/src/render3/view/template';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 
@@ -15,7 +14,7 @@ export class AddDataComponent {
     method: new FormControl('GET', [Validators.required])
   });
 
-  constructor(private dialogRef: MatDialogRef<AddDataComponent>) {}
+  constructor(private dialogRef: MatDialogRef<AddDataComponent>) { }
 
   onSave(): void {
     this.formGroup.markAsTouched();

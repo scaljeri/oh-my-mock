@@ -10,7 +10,7 @@
       }
     };
   </script>
-  <script src="get.js"></script>
+  <script src="xhr.js"></script>
   <script src="fetch.js"></script>
   <script src="hammer-time.js"></script>
 </head>
@@ -93,7 +93,6 @@
     };
 
     ohMyMock.durationFn = () => {
-      console.log('dur');
       document.querySelector('.duration span').innerText =
         (Date.now() - ohMyMock.starttime) + 'ms';
     };

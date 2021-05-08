@@ -1,10 +1,10 @@
 /// <reference types="chrome"/>
 import { appSources, packetTypes } from '../shared/constants';
 import { IPacket } from '../shared/type';
+import { logging } from '../shared/utils/log';
 const STORAGE_KEY = 'OhMyMocks'; // TODO
 
-const log = (msg, ...data) =>
-  console.log(`${STORAGE_KEY} (^*^) | ConTeNt: ${msg}`, ...data);
+const log = logging(`${STORAGE_KEY} (^*^) | ConTeNt`);
 log('Script loaded and ready....');
 
 function sendKnockKnock(tabId?: number) {

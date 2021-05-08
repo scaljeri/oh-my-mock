@@ -5,6 +5,8 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { STORAGE_KEY } from '@shared/constants';
 import { domain, IData, IOhMyMock, IState, IStore } from '@shared/type';
+import { findActiveData } from '@shared/utils/find-mock';
+import { uniqueId } from '@shared/utils/unique-id';
 import { Observable } from 'rxjs';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { UpsertData } from 'src/app/store/actions';
@@ -30,8 +32,6 @@ export class PageStateExplorerComponent implements OnInit {
   public mainActionIconName = 'copy_all';
   public rowActionIconName = 'content_copy';
 
-  private dataItemIndex: number;
-
   @ViewChildren(MatExpansionPanel) panels: QueryList<MatExpansionPanel>;
 
   constructor(
@@ -42,10 +42,6 @@ export class PageStateExplorerComponent implements OnInit {
   ngOnInit(): void {
     this.state$.subscribe((state) => {
       this.domains = Object.keys(state.domains).filter(d => d !== this.appStateService.domain);
-
-      if (this.dataItem) {
-        this.dataItem = state.domains[this.selectedDomain].data[this.dataItemIndex];
-      }
 
       this.selectedState = state.domains[this.selectedDomain];
     });
@@ -59,24 +55,24 @@ export class PageStateExplorerComponent implements OnInit {
   }
 
   private cloneData(rowIndex: number): void {
-    const state = this.getActiveStateSnapshot();
-    const data = this.getStateSnapshot(this.selectedDomain).data[rowIndex];
+    const data = {
+      ...this.getStateSnapshot(this.selectedDomain).data[rowIndex],
+      id: uniqueId()
+    };
 
-    if (!state.data.some(d => d.url === data.url)) {
-      this.upsertData(data);
-      this.toast.success('Cloned ' + data.url);
-    } else {
-      this.toast.error(`Mock already exists (${data.url})`);
-    }
+    this.upsertData(data);
+
   }
 
   onCloneAll(): void {
-    this.getStateSnapshot(this.selectedDomain).data.forEach((_, i) => this.cloneData(i));
+    const state = this.getStateSnapshot(this.selectedDomain);
+    state.data.forEach((_, i) => this.cloneData(i));
+
+    this.toast.success(`Cloned ${state.data.length} mocks`);
   }
 
-  onDataSelect(rowIndex: number): void {
-    this.dataItem = this.selectedState.data[rowIndex];
-    this.dataItemIndex = rowIndex;
+  onDataSelect(id: string): void {
+    this.dataItem = findActiveData(this.selectedState, { id });
     this.panels.toArray()[2].open();
   }
 
