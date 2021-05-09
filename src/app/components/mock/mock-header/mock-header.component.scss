@@ -3,13 +3,17 @@
 .main {
   display: flex;
 
-  span {
-    display: inline-flex;
-    font-weight: 900;
-    padding: 5px;
-    border: 1px solid #a9a9a9;
-    border-radius: 5px;
-    margin-right: 10px;
+  .method-select {
+    margin-left: $spacer-2;
+    width: 80px;
+  }
+
+  .type-select {
+    width: 80px;
+  }
+
+  .url-input {
+    margin-left: $spacer-4;
   }
 
   input {
