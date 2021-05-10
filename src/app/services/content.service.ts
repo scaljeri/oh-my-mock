@@ -78,7 +78,7 @@ export class ContentService {
 
   send(data): void {
     log('Sending state to content script', data);
-    chrome.runtime.sendMessage({
+    chrome.tabs.sendMessage(Number(this.appStateService.tabId), {
       tabId: this.appStateService.tabId,
       source: appSources.POPUP,
       domain: this.appStateService.domain,
