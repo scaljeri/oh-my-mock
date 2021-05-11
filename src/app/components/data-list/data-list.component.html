@@ -1,66 +1,59 @@
-<ng-container *ngIf="data?.length">
-
-  <div class="legenda">
-    <div class="labels">
-      <span class="legenda-active">Active</span>
-      <span class="active-modified">Active/modified</span>
-      <span class="inactive">Inactive</span>
-    </div>
-
-    <div class="hit-list-toggle">
-      <label for="show-active-list">Order by activity</label>
-      <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
-      </mat-slide-toggle>
-    </div>
+<div class="legenda">
+  <div class="labels">
+    <span class="legenda-active">Active</span>
+    <span class="active-modified">Active/modified</span>
+    <span class="inactive">Inactive</span>
   </div>
 
-  <ol data-table *ngIf="data" cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
-    <li class="header">
-      <span class="type">Type</span>
-      <span class="method">Method</span>
-      <span class="url">Url</span>
-      <span class="active">Active StatusCode</span>
-    </li>
-    <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
-      *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
+  <div class="hit-list-toggle">
+    <label for="show-active-list">Order by activity</label>
+    <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
+    </mat-slide-toggle>
+  </div>
+</div>
+
+<ol data-table *ngIf="data" cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
+  <li class="header">
+    <span class="type">Type</span>
+    <span class="method">Method</span>
+    <span class="url">Url</span>
+    <span class="active">Active StatusCode</span>
+  </li>
+  <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
+    *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
         'is-hit-a': hitcount[index] % 2 === 0,
         'is-hit-b': hitcount[index] % 2 === 1,
         'is-selected': selection.isSelected(index),
         'is-active': row.activeStatusCode > 0,
         'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
-      <div class="custom-drag-placeholder" *cdkDragPlaceholder>
-        <span class="method">{{row.type}}</span>
-        <span class="type">{{row.method}}</span>
-        <span class="url">{{row.url}}</span>
-        <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
-      </div>
+    <div class="custom-drag-placeholder" *cdkDragPlaceholder>
       <span class="method">{{row.type}}</span>
       <span class="type">{{row.method}}</span>
       <span class="url">{{row.url}}</span>
       <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
-      <div class="actions">
-        <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
-          <mat-icon *ngIf="!row.activeStatusCode">play_arrow</mat-icon>
-          <mat-icon *ngIf="row.activeStatusCode">stop</mat-icon>
-        </button>
-        <button *ngIf="showClone" (click)="onClone(index, $event)" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
-          <mat-icon>content_copy</mat-icon>
-        </button>
-        <button *ngIf="showDelete" (click)="onDelete(row.id, $event)" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
-          <mat-icon>delete</mat-icon>
-        </button>
-        <button *ngIf="showExport" (click)="onExport(row, index, $event)" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
-          <mat-icon>import_export</mat-icon>
-        </button>
-      </div>
-    </li>
-  </ol>
-</ng-container>
-
-<section *ngIf="!data?.length" class="no-data">
-  <h2>No responses available</h2>
-</section>
+    </div>
+    <span class="method">{{row.type}}</span>
+    <span class="type">{{row.method}}</span>
+    <span class="url">{{row.url}}</span>
+    <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
+    <div class="actions">
+      <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-mini-fab color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon *ngIf="!row.activeStatusCode">play_arrow</mat-icon>
+        <mat-icon *ngIf="row.activeStatusCode">stop</mat-icon>
+      </button>
+      <button *ngIf="showClone" (click)="onClone(index, $event)" mat-mini-fab color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button *ngIf="showDelete" (click)="onDelete(row.id, $event)" mat-mini-fab color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon>delete</mat-icon>
+      </button>
+      <button *ngIf="showExport" (click)="onExport(row, index, $event)" mat-mini-fab color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon>import_export</mat-icon>
+      </button>
+    </div>
+  </li>
+</ol>

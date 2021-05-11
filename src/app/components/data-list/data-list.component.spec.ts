@@ -23,6 +23,7 @@ describe('DataListComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(DataListComponent);
     component = fixture.componentInstance;
+    component.state = { toggles: {}} as any;
     fixture.detectChanges();
   });
 

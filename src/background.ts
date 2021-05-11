@@ -4,12 +4,6 @@ import { STORAGE_KEY } from './shared/constants';
 
 console.log(`${STORAGE_KEY}: background script is ready`);
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.tabId) {
-    chrome.tabs.sendMessage(Number(request.tabId), request);
-  }
-});
-
 chrome.browserAction.onClicked.addListener(function (tab) {
   console.log('OhMyMock: Extension clicked', tab.id);
 

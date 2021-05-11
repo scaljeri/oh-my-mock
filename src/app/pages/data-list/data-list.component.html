@@ -1,5 +1,12 @@
-<oh-my-data-list [state]="state" [showActivate]="true" [showDelete]="true" [showClone]="true"
+<oh-my-data-list *ngIf="state?.data?.length" [state]="state" [showActivate]="true" [showDelete]="true" [showClone]="true"
   (select)="onDataSelect($event)"></oh-my-data-list>
+
+<section *ngIf="!state?.data?.length" class="no-data">
+  <h2>No responses available</h2>
+  <p>Cached API calls will automatically show up here!</p>
+
+  <oh-my-arrow></oh-my-arrow>
+</section>
 
 <button *ngIf="!domain" (click)="onAddData()" class="new-data" mat-fab color="primary"
   aria-label="Delete all mocks for a specific URL">
