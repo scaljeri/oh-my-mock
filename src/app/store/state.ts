@@ -253,12 +253,14 @@ export class OhMyState {
     const mock = payload.clone ?
       { ...OhMyState.cloneMock(data.mocks[data.activeStatusCode]), id: uniqueId() } :
       { jsCode: MOCK_JS_CODE, delay: 0, headers: {}, headersMock: {} } as IMock;
+
     mock.statusCode = payload.statusCode;
+    mock.name = payload.name;
     mock.id = uniqueId();
 
     data.mocks = {
       ...data.mocks,
-      [payload.mockId]: mock as IMock
+      [mock.id]: mock as IMock
     };
 
     const dataList = [...domainState.data];

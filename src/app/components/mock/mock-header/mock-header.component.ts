@@ -103,6 +103,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     });
 
     dialogRef.afterClosed().subscribe((newMock: { statusCode: statusCode, clone: boolean, name: string }) => {
+      debugger;
       if (newMock) {
         this.statusCode = newMock.statusCode;
         this.createResponse(newMock);

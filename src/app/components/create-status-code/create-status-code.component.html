@@ -1,5 +1,5 @@
 <h2>Create new Response</h2>
-<form class="example-form">
+<form [formGroup]="form" class="example-form">
   <mat-form-field class="example-full-width">
     <mat-label>Status Code</mat-label>
     <input type="number" matInput [formControl]="codeCtrl">
