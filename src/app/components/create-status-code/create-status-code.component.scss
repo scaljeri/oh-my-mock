@@ -22,3 +22,12 @@ mat-slide-toggle  {
   display: flex;
   justify-content: space-between;
 }
+
+// new
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+mat-form-field {
+}

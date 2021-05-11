@@ -78,6 +78,7 @@ export class OhMockXhr extends Base {
     if (this.ohOutput) {
       const headersString = headers.stringify(this.getHeaders());
 
+      debugger;
       Object.defineProperty(this, 'status', {
         value: this.ohOutput.statusCode
       });
@@ -96,10 +97,10 @@ export class OhMockXhr extends Base {
         context: {
           url: this.ohUrl,
           method: this.ohMethod,
-          type: 'XHR',
-          statusCode: this.status
+          type: 'XHR'
         },
         data: {
+          statusCode: this.status,
           response: this.response,
           headers: headers.parse(this.getAllResponseHeaders())
         }
@@ -148,6 +149,7 @@ export class OhMockXhr extends Base {
   private parseState(): void {
     this.ohData = null;
     this.ohMock = null;
+    debugger;
 
     this.ohData = findActiveData(
       window[STORAGE_KEY].state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);

@@ -4,12 +4,12 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
+import { DeleteData, Toggle, UpdateDataResponse, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
 import { findActiveData } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IState, IStore, statusCode } from 'src/shared/type';
+import { IData, IState, IStore, ohMyMockId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Subscription } from 'rxjs';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
@@ -56,8 +56,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
   @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
-  @Dispatch() updateActiveStatusCode = (id: string, statusCode: statusCode) =>
-    new UpdateDataStatusCode({ id, statusCode }, this.state.domain);
+  @Dispatch() updateActiveResponse = (id: string, mockId: ohMyMockId | void) =>
+    new UpdateDataResponse({ id, mockId }, this.state.domain);
 
   public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
   public selection = new SelectionModel<number>(true);
@@ -133,11 +133,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     const data = findActiveData(this.state, { id });
 
     if (!data.activeStatusCode) {
-      const statusCode = findAutoActiveMock(data);
-      this.updateActiveStatusCode(id, statusCode as number);
-      this.toast.success(`Mock with status-code ${statusCode} activated`);
+      const mockId = findAutoActiveMock(data);
+
+      if (mockId) {
+        this.updateActiveResponse(id, mockId);
+        this.toast.success(`Mock with status-code ${data.mocks[mockId].statusCode} activated`);
+      }
     } else {
-      this.updateActiveStatusCode(id, 0);
+      this.updateActiveResponse(id, null);
       this.toast.warning('Mock disabled!');
     }
   }

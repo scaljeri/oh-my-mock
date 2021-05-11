@@ -36,6 +36,7 @@ export class ContentService {
         }
 
         if (payload.type === packetTypes.MOCK) {
+          debugger;
           this.upsertMock({
             mock: payload.data as IMock,
             ...payload.context

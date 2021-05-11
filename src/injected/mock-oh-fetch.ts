@@ -45,10 +45,10 @@ const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
             context: {
               url,
               method,
-              type: 'FETCH',
-              statusCode: response.status
+              type: 'FETCH'
             },
             data: {
+              statusCode: response.status,
               response: txt,
               headers: fetchUtils.headersToJson(response.headers)
             }

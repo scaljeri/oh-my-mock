@@ -32,14 +32,14 @@
 <div class="codes">
   <div class="label">Mocks</div>
   <div class="codes-wrapper">
-    <button mat-raised-button (click)="onSelectStatusCode(0)" [ngClass]="{ 'is-active': !data.activeStatusCode }">
+    <button mat-raised-button (click)="onSelectStatusCode()" [ngClass]="{ 'is-active': !data.activeStatusCode }">
       Off
     </button>
     <button mat-raised-button *ngFor="let code of codes" (click)="onSelectStatusCode(code)"
       [ngClass]="{ 'is-active': code == data.activeStatusCode }">
       {{ code }}
     </button>
-    <button mat-raised-button (click)="openAddStatusCodeDialog()">+</button>
+    <button mat-raised-button (click)="openAddResponseDialog()">+</button>
   </div>
   <div class="exports">
     <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button>

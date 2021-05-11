@@ -26,6 +26,9 @@ export class CreateStatusCodeComponent {
   public existsError = STATUS_CODE_EXISTS_MSG;
   public invalidError = STATUS_CODE_INVALID_MSG;
 
+  public nameCtrl = new FormControl();
+  public codeCtrl = new FormControl();
+
   constructor(
     private dialogRef: MatDialogRef<CreateStatusCodeComponent>,
     @Inject(MAT_DIALOG_DATA) private input: { existingStatusCodes: string[] }

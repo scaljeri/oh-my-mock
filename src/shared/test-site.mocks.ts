@@ -15,6 +15,8 @@ export const testDataMock: IState = {
       "method": "GET",
       "mocks": {
         "200": {
+          "id": "200",
+          "statusCode": 200,
           "jsCode": "\n",
           "delay": 0,
           "response": "{\n  \"1\": {\n    \"name\": \"king arthur\",\n    \"password\": \"password1\",\n    \"profession\": \"king\",\n    \"id\": 1\n  },\n  \"2\": {\n    \"name\": \"rob kendal\",\n    \"password\": \"password3\",\n    \"profession\": \"code fiddler\",\n    \"id\": 2\n  },\n  \"3\": {\n    \"name\": \"teresa may\",\n    \"password\": \"password2\",\n    \"profession\": \"brexit destroyer\",\n    \"id\": 6\n  }\n}\n",
@@ -40,7 +42,7 @@ export const testDataMock: IState = {
           "subType": "json"
         }
       },
-      "activeStatusCode": 200
+      "activeStatusCode": "200"
     },
     {
       "id": "b",
@@ -49,6 +51,8 @@ export const testDataMock: IState = {
       "method": "GET",
       "mocks": {
         "200": {
+          "statusCode": 200,
+          "id": "200",
           "jsCode": "\n",
           "delay": 0,
           "response": "<h1>Yolo</h1>\n",
@@ -72,7 +76,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 200
+      "activeStatusCode": "200"
     },
     {
       "id": "c",
@@ -81,6 +85,8 @@ export const testDataMock: IState = {
       "method": "POST",
       "mocks": {
         "404": {
+          "id": "404",
+          "statusCode": 200,
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /site</pre>\n</body>\n</html>\n",
@@ -108,7 +114,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "d",
@@ -117,6 +123,8 @@ export const testDataMock: IState = {
       "method": "POST",
       "mocks": {
         "200": {
+          "statusCode": 200,
+          "id": "200",
           "jsCode": "\n",
           "delay": 0,
           "response": "{\"msg\":\"success\"}",
@@ -140,7 +148,7 @@ export const testDataMock: IState = {
           "subType": "json"
         }
       },
-      "activeStatusCode": 200
+      "activeStatusCode": "200"
     },
     {
       "id": "e",
@@ -149,6 +157,8 @@ export const testDataMock: IState = {
       "method": "PUT",
       "mocks": {
         "404": {
+          "statusCode": 404,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /users</pre>\n</body>\n</html>\n",
@@ -176,7 +186,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "f",
@@ -185,6 +195,8 @@ export const testDataMock: IState = {
       "method": "PUT",
       "mocks": {
         "404": {
+          "statusCode": 404,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /site</pre>\n</body>\n</html>\n",
@@ -212,7 +224,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "g",
@@ -221,6 +233,8 @@ export const testDataMock: IState = {
       "method": "DELETE",
       "mocks": {
         "404": {
+          "statusCode": 404,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /site</pre>\n</body>\n</html>\n",
@@ -248,7 +262,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "h",
@@ -257,6 +271,8 @@ export const testDataMock: IState = {
       "method": "DELETE",
       "mocks": {
         "404": {
+          "statusCode": 404,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /users</pre>\n</body>\n</html>\n",
@@ -284,7 +300,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "i",
@@ -293,6 +309,8 @@ export const testDataMock: IState = {
       "method": "GET",
       "mocks": {
         "200": {
+          "statusCode": 200,
+          "id": "200",
           "jsCode": "\n",
           "delay": 0,
           "response": "{\n  \"1\": {\n    \"name\": \"king arthur\",\n    \"password\": \"password1\",\n    \"profession\": \"king\",\n    \"id\": 1\n  },\n  \"2\": {\n    \"name\": \"rob kendal\",\n    \"password\": \"password3\",\n    \"profession\": \"code fiddler\",\n    \"id\": 2\n  },\n  \"3\": {\n    \"name\": \"teresa may\",\n    \"password\": \"password2\",\n    \"profession\": \"brexit destroyer\",\n    \"id\": 6\n  }\n}\n",
@@ -318,7 +336,7 @@ export const testDataMock: IState = {
           "subType": "json"
         }
       },
-      "activeStatusCode": 200
+      "activeStatusCode": "200"
     },
     {
       "id": "j",
@@ -327,6 +345,8 @@ export const testDataMock: IState = {
       "method": "GET",
       "mocks": {
         "200": {
+          "statusCode": 200,
+          "id": "200",
           "jsCode": "\n",
           "delay": 0,
           "response": "<h1>Yolo</h1>\n",
@@ -350,7 +370,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 200
+      "activeStatusCode": "200"
     },
     {
       "id": "k",
@@ -359,6 +379,8 @@ export const testDataMock: IState = {
       "method": "POST",
       "mocks": {
         "404": {
+          "statusCode": 200,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /site</pre>\n</body>\n</html>\n",
@@ -386,7 +408,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "l",
@@ -395,6 +417,8 @@ export const testDataMock: IState = {
       "method": "POST",
       "mocks": {
         "200": {
+          "statusCode": 200,
+          "id": "200",
           "jsCode": "\n",
           "delay": 0,
           "response": "{\"msg\":\"success\"}",
@@ -418,7 +442,7 @@ export const testDataMock: IState = {
           "subType": "json"
         }
       },
-      "activeStatusCode": 200
+      "activeStatusCode": "200"
     },
     {
       "id": "m",
@@ -427,6 +451,8 @@ export const testDataMock: IState = {
       "method": "PUT",
       "mocks": {
         "404": {
+          "statusCode": 200,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /users</pre>\n</body>\n</html>\n",
@@ -454,7 +480,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "n",
@@ -463,6 +489,8 @@ export const testDataMock: IState = {
       "method": "PUT",
       "mocks": {
         "404": {
+          "statusCode": 200,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /site</pre>\n</body>\n</html>\n",
@@ -490,7 +518,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "o",
@@ -499,6 +527,8 @@ export const testDataMock: IState = {
       "method": "DELETE",
       "mocks": {
         "404": {
+          "statusCode": 200,
+          "id": "404",
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /users</pre>\n</body>\n</html>\n",
@@ -526,7 +556,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     },
     {
       "id": "p",
@@ -535,6 +565,8 @@ export const testDataMock: IState = {
       "type": "FETCH",
       "mocks": {
         "404": {
+          "id": "404",
+          "statusCode": 404,
           "jsCode": "\n",
           "delay": 0,
           "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /site</pre>\n</body>\n</html>\n",
@@ -562,7 +594,7 @@ export const testDataMock: IState = {
           "subType": "html"
         }
       },
-      "activeStatusCode": 404
+      "activeStatusCode": "404"
     }
   ],
   "domain": DEMO_TEST_DOMAIN
