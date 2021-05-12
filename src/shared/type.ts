@@ -78,6 +78,7 @@ export interface ICreateResponse extends IOhMyContext {
   statusCode: statusCode;
   name?: string;
   clone?: boolean;
+  makeActive?: boolean;
 }
 
 export interface IUpdateDataUrl extends IOhMyContext {

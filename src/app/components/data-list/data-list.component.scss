@@ -137,7 +137,9 @@ span.type {
 
 span.url {
   flex: 1;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .active {

@@ -57,7 +57,7 @@ export class UpdateDataUrl {
 
 export class UpdateDataResponse {
   static readonly type = '[Data] update status code';
-  constructor(public payload: { id: ohMyDataId, mockId?: ohMyMockId | void }, public domain?: string) { }
+  constructor(public payload: { id: ohMyDataId, mockId?: ohMyMockId | void, makeActive?: boolean }, public domain?: string) { }
 }
 
 export class ViewChangeOrderItems {

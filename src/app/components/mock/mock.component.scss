@@ -8,17 +8,15 @@
   background-color: #fff;
 }
 
-.label {
-  display: inline-flex;
-  font-weight: bold;
-  font-size: 15px;
-  width: 150px;
-  justify-content: flex-end;
-  padding-right: 5px;
-}
+.mock-settings {
+  display: flex;
+  flex-direction: row;
 
-.value {
-  font-size: 15px;
+  oh-my-mock-details  {
+    justify-content: center;
+    flex: 1;
+  }
+
 }
 
 .mock-actions {

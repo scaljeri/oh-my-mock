@@ -30,14 +30,14 @@
 </div>
 
 <div class="codes">
-  <div class="label">Mocks</div>
+  <div class="label">Responses:</div>
   <div class="codes-wrapper">
     <button mat-raised-button (click)="onSelectStatusCode()" [ngClass]="{ 'is-active': !data.activeStatusCode }">
       Off
     </button>
     <button mat-raised-button *ngFor="let code of codes" (click)="onSelectStatusCode(code)"
       [ngClass]="{ 'is-active': code == data.activeStatusCode }">
-      {{ code }}
+      <oh-my-mock-label [mock]="getMock(code)"></oh-my-mock-label>
     </button>
     <button mat-raised-button (click)="openAddResponseDialog()">+</button>
   </div>

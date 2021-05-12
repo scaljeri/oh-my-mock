@@ -1,0 +1,26 @@
+<form [formGroup]="form" *ngIf="form">
+  <p>
+    <mat-form-field>
+      <mat-label>Status Code</mat-label>
+      <input type="number" matInput [formControl]="statusCodeCtrl">
+      <mat-error> {{requiredMsg}} </mat-error>
+    </mat-form-field>
+  </p>
+  <p>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput [formControl]="nameCtrl">
+    </mat-form-field>
+  </p>
+  <p>
+    <mat-form-field class="example-full-width">
+      <mat-label>Response delay (ms)</mat-label>
+      <input matInput [formControl]="delayCtrl" class="value" [value]="mock.delay">
+    </mat-form-field>
+  </p>
+</form>
+<div>
+  <p><span class="label">ContentType:</span><span class="value">{{mock.type}}/{{mock.subType}}</span></p>
+  <p><span class="label">Created:</span><span class="value">{{mock.createdOn}}</span></p>
+  <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn}}</span></p>
+</div>

@@ -109,7 +109,7 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-	debugger;
+    debugger;
 
     const { index, data } = OhMyState.findData(domainState, payload);
 
@@ -164,7 +164,7 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-	debugger;
+    debugger;
 
     const { index, data } = OhMyState.findData(domainState, payload);
 
@@ -199,7 +199,7 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-	debugger;
+    debugger;
 
     const { index, data } = OhMyState.findData(domainState, { id: payload.dataId });
 
@@ -247,7 +247,6 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-    debugger;
 
     const { index, data } = OhMyState.findData(domainState, payload);
     const mock = payload.clone ?
@@ -262,6 +261,10 @@ export class OhMyState {
       ...data.mocks,
       [mock.id]: mock as IMock
     };
+
+    if (payload.makeActive) {
+      data.activeStatusCode = mock.id;
+    }
 
     const dataList = [...domainState.data];
 
@@ -333,7 +336,7 @@ export class OhMyState {
   viewChangeOrderOfItems(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyViewItemsOrder }) {
     const state = ctx.getState();
     const domainState = { ...OhMyState.getActiveState(state) };
-	debugger;
+    debugger;
 
     const views = { ...domainState.views };
 
@@ -354,7 +357,7 @@ export class OhMyState {
   toggle(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyToggle }) {
     const state = ctx.getState();
     const domainState = { ...OhMyState.getActiveState(state) };
-	debugger;
+    debugger;
     domainState.toggles = { ...domainState.toggles, [payload.name]: payload.value };
 
     const domains = { ...state.domains, [OhMyState.domain]: domainState };
@@ -367,7 +370,7 @@ export class OhMyState {
     const domainState = { ...OhMyState.getActiveState(state) };
     const views = { ...domainState.views, [payload]: domainState.data.map((_, i) => i) };
     domainState.views = views;
-	debugger;
+    debugger;
 
     const domains = { ...state.domains, [OhMyState.domain]: domainState };
     ctx.setState({ ...state, domains });

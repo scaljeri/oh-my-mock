@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, ohMyMockId, statusCode } from '@shared/type';
+import { IData, IMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 import { findAutoActiveMock } from '../../../utils/data';
@@ -33,21 +33,18 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   public filteredTypeOptions: Observable<string[]>;
   public urlCtrl = new FormControl();
 
+  public oldResponses: string[];
+
   private availableMethods = METHODS;
 
   @Dispatch() createResponse = (newResponse: { statusCode: statusCode, clone: boolean, name: string }) =>
-    new CreateResponse({
-      id: this.data.id,
-      ...newResponse
-    }, this.domain);
-
+    new CreateResponse({ id: this.data.id, makeActive: true, ...newResponse }, this.domain);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data, this.domain);
   @Dispatch() updateActiveResponse = (mockId: ohMyMockId | void) =>
     new UpdateDataResponse({
       id: this.data.id,
-      mockId
+      mockId,
     }, this.domain);
-
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
 
   constructor(public dialog: MatDialog) { }
 
@@ -80,10 +77,13 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(): void {
-    // TODO
     this.codes = this.data
-      ? Object.keys(this.data.mocks).sort()
-      : [];
+      ? Object.keys(this.data.mocks).sort((a, b) => {
+        const ma = this.data.mocks[a];
+        const mb = this.data.mocks[b];
+
+        return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
+      }) : [];
   }
 
   onUrlUpdate(url: string): void {
@@ -91,7 +91,6 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onSelectStatusCode(mockId: ohMyMockId | void): void {
-    debugger;
     this.updateActiveResponse(mockId);
   }
 
@@ -103,9 +102,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     });
 
     dialogRef.afterClosed().subscribe((newMock: { statusCode: statusCode, clone: boolean, name: string }) => {
-      debugger;
       if (newMock) {
         this.statusCode = newMock.statusCode;
+        this.oldResponses = Object.keys(this.data.mocks);
         this.createResponse(newMock);
       }
     });
@@ -123,5 +122,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     if (method !== this.data.method) {
       this.upsertData({ ...this.data, method });
     }
+  }
+
+  getMock(id: ohMyMockId): IMock {
+    return this.data.mocks[id];
   }
 }

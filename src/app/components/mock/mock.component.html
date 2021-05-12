@@ -3,20 +3,8 @@
 </mat-card>
 
 <mat-card *ngIf="data?.activeStatusCode" class="details">
-  <section>
-    <div>
-      <p><span class="label">Status code:</span><span class="value">{{data.activeStatusCode}}</span></p>
-      <p><span class="label">Created:</span><span class="value">{{mock.createdOn}}</span></p>
-      <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn}}</span></p>
-      <p><span class="label">ContentType:</span><span class="value">{{mock.type}}/{{mock.subType}}</span></p>
-      <p>
-        <span class="label">Delay response:</span>
-        <mat-form-field class="example-full-width">
-          <mat-label>Delay in ms</mat-label>
-          <input matInput [formControl]="delayFormControl" class="value" [value]="mock.delay">
-        </mat-form-field>
-      </p>
-    </div>
+  <section class="mock-settings">
+    <oh-my-mock-details [mock]="mock" [domain]="domain" [dataId]="data.id"></oh-my-mock-details>
     <div class="mock-actions">
       <button mat-stroked-button class="delete-mock" (click)="onDelete()">
         <mat-icon>delete_forever</mat-icon>

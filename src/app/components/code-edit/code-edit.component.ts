@@ -2,11 +2,12 @@ import { Component, EventEmitter, HostBinding, Inject, Input, OnInit, Optional, 
 import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
-import { skip } from 'rxjs/operators';
+import { filter, skip } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { themes, IOhMyCodeEditOptions, IMarker } from './code-edit';
 
 declare let monaco: any;
+
 @Component({
   selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
@@ -67,11 +68,12 @@ export class CodeEditComponent implements OnInit {
         this.changeSub.unsubscribe();
       }
 
-      this.changeSub = this.control.valueChanges.pipe(skip(1)).subscribe(val => {
-        if (this.allowErrors || this.errors.length === 0) {
-          this.codeChange.emit(val);
-        }
-      });
+      this.changeSub = this.control.valueChanges.pipe(
+        skip(1), filter(val => val !== this.originalCode)).subscribe(val => {
+          if (this.allowErrors || this.errors.length === 0) {
+            this.codeChange.emit(val);
+          }
+        });
     }
   }
 

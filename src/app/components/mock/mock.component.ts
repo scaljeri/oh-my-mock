@@ -10,7 +10,6 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
 import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
-import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -34,7 +33,6 @@ export class MockComponent implements OnChanges {
   @Dispatch() deleteMockResponse = (dataId: ohMyDataId, mockId: ohMyMockId) =>
     new DeleteMock({ dataId, mockId });
 
-  public delayFormControl = new FormControl();
   public dialogIsOpen = false;
   private delaySubscription: Subscription;
   private activeMockId: ohMyMockId;
@@ -59,18 +57,6 @@ export class MockComponent implements OnChanges {
     if (this.delaySubscription) {
       this.delaySubscription.unsubscribe();
     }
-    this.delayFormControl.setValue(this.mock?.delay);
-
-    // NOTE: The subscription var is needed because ngOnChanges will trigger each time this.mock changes
-    let delayTimeoutId;
-    this.delaySubscription = this.delayFormControl.valueChanges.subscribe(value => {
-      clearTimeout(delayTimeoutId);
-      if (value !== '') {
-        delayTimeoutId = setTimeout(() => {
-          this.upsertMock({ id: this.mock.id, delay: Number(value) });
-        }, 500);
-      }
-    });
   }
 
   onDelete(): void {
@@ -84,6 +70,7 @@ export class MockComponent implements OnChanges {
   }
 
   onRevertResponse(): void {
+    debugger;
     setTimeout(() => {
       // Make sure that `onResponseChanges` goes first!
       this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
@@ -92,6 +79,7 @@ export class MockComponent implements OnChanges {
   }
 
   onHeadersChange(headersMock: string): void {
+    debugger;
     try {
       if (JSON.parse(headersMock) && headersMock !== JSON.stringify(this.mock.headersMock || {})) {
         this.upsertMock({
@@ -105,6 +93,7 @@ export class MockComponent implements OnChanges {
   }
 
   onRevertHeaders(): void {
+    debugger;
     setTimeout(() => {
       this.upsertMock({ id: this.mock.id, headersMock: this.mock.headers });
       this.cdr.detectChanges();
@@ -121,6 +110,7 @@ export class MockComponent implements OnChanges {
 
   onShowResponseFullscreen(): void {
     const data = { code: this.mock.responseMock, type: this.mock.subType };
+    debugger;
 
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, responseMock: update });
@@ -131,6 +121,7 @@ export class MockComponent implements OnChanges {
   }
 
   onShowHeadersFullscreen(): void {
+    debugger;
     const data = { code: this.mock.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, headersMock: JSON.parse(update) });
