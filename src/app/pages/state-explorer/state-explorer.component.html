@@ -18,18 +18,19 @@
       <p *ngIf="!domains?.length">No domains available!</p>
     </mat-expansion-panel>
     <mat-expansion-panel #panel (closed)="panelOpenState = true">
-      <mat-expansion-panel-header *ngIf="dataItem">
+      <mat-expansion-panel-header *ngIf="dataItem" (click)="dataItem = null">
         <mat-panel-title>
-          {{dataItem.method}} {{dataItem.type}}
+          {{dataItem.type}} {{dataItem.method}}
         </mat-panel-title>
         <mat-panel-description>
           {{dataItem.url}}
         </mat-panel-description>
       </mat-expansion-panel-header>
       <button class="clone-all" *ngIf="selectedState?.data?.length" (click)="onCloneAll()" mat-mini-fab color="warn"
-        aria-label="Clone all"><mat-icon>copy_all</mat-icon>
+        aria-label="Clone all">
+        <mat-icon>copy_all</mat-icon>
       </button>
-      <oh-my-data-list theme="light" [state]="selectedState" [showClone]="true" [showDelete]="true"
+      <oh-my-data-list *ngIf="selectedState" [state]="selectedState" [showClone]="true" [showDelete]="true"
         (select)="onDataSelect($event)"></oh-my-data-list>
     </mat-expansion-panel>
     <mat-expansion-panel>

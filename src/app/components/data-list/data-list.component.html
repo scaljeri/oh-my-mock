@@ -38,7 +38,7 @@
     <span *ngIf="row.activeStatusCode;let code" class="active with-arrow">
       <oh-my-mock-label [mock]="row.mocks[code]"></oh-my-mock-label>
     </span>
-    <span *ngIf="!row.activeStatusCode" class="active with-arrow">'Off'</span>
+    <span *ngIf="!row.activeStatusCode" class="active with-arrow">Off</span>
     <div class="actions">
       <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-mini-fab color="primary"
         aria-label="Example icon button with a menu icon">
