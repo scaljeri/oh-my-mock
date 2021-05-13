@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MockDetailsComponent } from './mock-details.component';
@@ -8,7 +9,8 @@ describe('MockDetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ MockDetailsComponent ]
+      declarations: [ MockDetailsComponent ],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   });
@@ -16,6 +18,7 @@ describe('MockDetailsComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(MockDetailsComponent);
     component = fixture.componentInstance;
+    component.mock = {} as any;
     fixture.detectChanges();
   });
 

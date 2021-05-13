@@ -39,6 +39,7 @@
     "@types/typescript": "^2.0.0",
     "body-parser": "^1.19.0",
     "chokidar": "^3.5.1",
+    "compare-versions": "^3.6.0",
     "content-type-parser": "^1.0.2",
     "express": "^4.17.1",
     "faker": "^5.5.3",

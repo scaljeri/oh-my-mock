@@ -22,7 +22,7 @@ describe('AnonymizeComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(AnonymizeComponent);
     component = fixture.componentInstance;
-    component.mock = {};
+    component.mock = {} as any;
     fixture.detectChanges();
   });
 
