@@ -117,7 +117,6 @@ export class OhMyState {
       jsCode: MOCK_JS_CODE,
       delay: 0,
       ...(payload.mock.id && { ...mocks[payload.mock.id] }),
-      ...payload.mock
     } as IMock;
 
     if (mock.id) {
@@ -132,6 +131,8 @@ export class OhMyState {
       mock.responseMock = mock.response;
       mock.headersMock = mock.headers;
     }
+
+    Object.keys(payload.mock).forEach(k => mock[k] = payload.mock[k]);
 
     if (mock.headersMock) {
       const contentType = contentParser(mock.headersMock['content-type']);
