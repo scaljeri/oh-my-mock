@@ -33,7 +33,7 @@ export class PageMockComponent implements OnInit {
         const mockId = findAutoActiveMock(this.data);
 
         if (mockId) {
-          this.upsertData({ activeMock: mockId });
+          this.upsertData({ enabled: true, activeMock: mockId });
         }
       }
     });

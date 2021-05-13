@@ -152,7 +152,7 @@ export class OhMockXhr extends Base {
     this.ohData = findMocks(
       window[STORAGE_KEY].state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);
 
-    this.ohMock = this.ohData?.mocks?.[this.ohData?.activeMock]
+    this.ohMock = this.ohData?.enabled && this.ohData?.mocks?.[this.ohData?.activeMock]
   }
 
   private getHeaders(): Record<string, string>;

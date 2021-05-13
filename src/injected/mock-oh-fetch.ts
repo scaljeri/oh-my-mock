@@ -10,7 +10,7 @@ const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
   const data: IData = findMocks(window[STORAGE_KEY].state, {
     url, type: 'FETCH', method
   });
-  const mock: IMock = data?.mocks[data?.activeMock];
+  const mock: IMock = data?.enabled && data?.mocks[data?.activeMock];
 
   if (mock) {
     window[STORAGE_KEY].hitSubject.next({ id: data.id });
