@@ -17,6 +17,10 @@
   }
 }
 
+.is-active .mock oh-my-mock-label {
+  opacity: 1;
+}
+
 .is-active:not(.is-selected) {
   background-color: #99ffcc;
 }
@@ -142,13 +146,17 @@ span.url {
   white-space: nowrap;
 }
 
-.active {
+.mock {
   flex: 0 0 120px;
   display: inline-flex;
   justify-content: space-between;
 
   &.with-arrow::after {
     content: '➱'
+  }
+
+  oh-my-mock-label {
+    opacity: .3;
   }
 }
 

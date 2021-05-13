@@ -24,26 +24,27 @@
         'is-hit-a': hitcount[index] % 2 === 0,
         'is-hit-b': hitcount[index] % 2 === 1,
         'is-selected': selection.isSelected(index),
-        'is-active': row.activeStatusCode > 0,
-        'is-modified': row.mocks[row.activeStatusCode]?.modifiedOn}">
+        'is-active': row.enabled,
+        'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
     <div class="custom-drag-placeholder" *cdkDragPlaceholder>
       <span class="method">{{row.type}}</span>
       <span class="type">{{row.method}}</span>
       <span class="url">{{row.url}}</span>
-      <span class="active with-arrow">{{row.activeStatusCode || 'Off'}}</span>
+      <span class="active mock with-arrow">
+        <oh-my-mock-label [mock]="row.mocks[row.activeMock]"></oh-my-mock-label>
+      </span>
     </div>
     <span class="method">{{row.type}}</span>
     <span class="type">{{row.method}}</span>
     <span class="url">{{row.url}}</span>
-    <span *ngIf="row.activeStatusCode;let code" class="active with-arrow">
-      <oh-my-mock-label [mock]="row.mocks[code]"></oh-my-mock-label>
+    <span class="active mock with-arrow">
+      <oh-my-mock-label [mock]="row.mocks[row.activeMock]"></oh-my-mock-label>
     </span>
-    <span *ngIf="!row.activeStatusCode" class="active with-arrow">Off</span>
     <div class="actions">
       <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-mini-fab color="primary"
         aria-label="Example icon button with a menu icon">
-        <mat-icon *ngIf="!row.activeStatusCode">play_arrow</mat-icon>
-        <mat-icon *ngIf="row.activeStatusCode">stop</mat-icon>
+        <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>
+        <mat-icon *ngIf="row.enabled">stop</mat-icon>
       </button>
       <button *ngIf="showClone" (click)="onClone(index, $event)" mat-mini-fab color="primary"
         aria-label="Example icon button with a menu icon">

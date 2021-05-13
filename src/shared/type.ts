@@ -41,7 +41,7 @@ export interface IOhMyContext {
 }
 
 export interface IData extends IOhMyContext {
-  activeStatusCode?: ohMyMockId;
+  activeMock?: ohMyMockId;
   enabled?: boolean;
   mocks?: Record<ohMyMockId, IMock>;
 }
@@ -71,15 +71,17 @@ export interface IOhMyMockRule {
 // actions
 export interface IUpsertMock extends IOhMyUpsertData {
   mock: Partial<IMock>;
-}
-
-export interface ICreateResponse extends IOhMyContext {
-  id: ohMyDataId;
-  statusCode: statusCode;
-  name?: string;
-  clone?: boolean;
+  clone?: boolean | ohMyMockId;
   makeActive?: boolean;
 }
+
+// export interface ICreateResponse extends IOhMyContext {
+//   id: ohMyDataId;
+//   statusCode: statusCode;
+//   name?: string;
+//   clone?: boolean;
+//   makeActive?: boolean;
+// }
 
 export interface IUpdateDataUrl extends IOhMyContext {
   newUrl: string;

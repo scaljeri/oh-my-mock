@@ -8,7 +8,6 @@ import {
 import { Injectable } from '@angular/core';
 import {
   ChangeDomain,
-  CreateResponse,
   DeleteData,
   DeleteMock,
   InitState,
@@ -33,7 +32,7 @@ import {
   IOhMyContext,
   ohMyMockId,
   ohMyDataId,
-  ICreateResponse,
+  IUpsertMock,
 } from '@shared/type';
 import * as view from './views';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
@@ -43,7 +42,7 @@ import * as contentParser from 'content-type-parser';
 import { addTestData } from '../migrations/test-data';
 import { addCurrentDomain } from '../migrations/current-domain';
 import { uniqueId } from '@shared/utils/unique-id';
-import { findActiveData } from '@shared/utils/find-mock';
+import { findMocks } from '@shared/utils/find-mock';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
@@ -105,7 +104,7 @@ export class OhMyState {
   }
 
   @Action(UpsertMock)
-  upsertMock(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: { id: ohMyDataId, mock: IMock }, domain?: string }) {
+  upsertMock(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IUpsertMock, domain?: string }) {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
@@ -115,16 +114,20 @@ export class OhMyState {
 
     const dataList = [...domainState.data];
     const mocks = { ...data.mocks };
-    const mock = {
+    let mock = {
       jsCode: MOCK_JS_CODE,
       delay: 0,
       ...(payload.mock.id && { ...mocks[payload.mock.id] }),
       ...payload.mock
-    };
+    } as IMock;
 
     if (mock.id) {
       mock.modifiedOn = new Date().toISOString();
     } else {
+      if (payload.clone) {
+        mock = { ...(data.mocks[payload.clone as ohMyMockId] || data.mocks[data.activeMock]) };
+      }
+
       mock.id = uniqueId();
       mock.createdOn = new Date().toISOString();
       mock.responseMock = mock.response;
@@ -138,6 +141,10 @@ export class OhMyState {
         mock.type = contentType.type;
         mock.subType = contentType.subtype;
       }
+    }
+
+    if (payload.makeActive) {
+      data.activeMock = mock.id;
     }
 
     data.mocks = { ...mocks, [mock.id]: mock };
@@ -207,8 +214,8 @@ export class OhMyState {
     delete mocks[payload.mockId];
     data.mocks = mocks;
 
-    if (data.activeStatusCode === payload.mockId) {
-      data.activeStatusCode = null;
+    if (data.activeMock === payload.mockId) {
+      data.activeMock = null;
     }
     const dataList = [...domainState.data];
     dataList[index] = data;
@@ -227,7 +234,7 @@ export class OhMyState {
     const domainState = { ...OhMyState.getActiveState(state, domain) };
     debugger;
 
-    const data = findActiveData(domainState, { id: payload });
+    const data = findMocks(domainState, { id: payload });
     const index = domainState.data.indexOf(data);
 
     domainState.views = Object.entries({ ...domainState.views }).reduce((out, [name, data]) => {
@@ -242,44 +249,44 @@ export class OhMyState {
     ctx.setState({ ...state, domains });
   }
 
-  @Action(CreateResponse)
-  createStatusCode(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: ICreateResponse, domain?: string }) {
-    const state = ctx.getState();
-    const activeDomain = domain || OhMyState.domain;
-    const domainState = { ...OhMyState.getActiveState(state, domain) };
+  // @Action(CreateResponse)
+  // createStatusCode(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: ICreateResponse, domain?: string }) {
+  //   const state = ctx.getState();
+  //   const activeDomain = domain || OhMyState.domain;
+  //   const domainState = { ...OhMyState.getActiveState(state, domain) };
 
-    const { index, data } = OhMyState.findData(domainState, payload);
-    const mock = payload.clone ?
-      { ...OhMyState.cloneMock(data.mocks[data.activeStatusCode]), id: uniqueId() } :
-      { jsCode: MOCK_JS_CODE, delay: 0, headers: {}, headersMock: {} } as IMock;
+  //   const { index, data } = OhMyState.findData(domainState, payload);
+  //   const mock = payload.clone ?
+  //     { ...OhMyState.cloneMock(data.mocks[data.activeMock]), id: uniqueId() } :
+  //     { jsCode: MOCK_JS_CODE, delay: 0, headers: {}, headersMock: {} } as IMock;
 
-    mock.statusCode = payload.statusCode;
-    mock.name = payload.name;
-    mock.id = uniqueId();
+  //   mock.statusCode = payload.statusCode;
+  //   mock.name = payload.name;
+  //   mock.id = uniqueId();
 
-    data.mocks = {
-      ...data.mocks,
-      [mock.id]: mock as IMock
-    };
+  //   data.mocks = {
+  //     ...data.mocks,
+  //     [mock.id]: mock as IMock
+  //   };
 
-    if (payload.makeActive) {
-      data.activeStatusCode = mock.id;
-    }
+  //   if (payload.makeActive) {
+  //     data.activeMock = mock.id;
+  //   }
 
-    const dataList = [...domainState.data];
+  //   const dataList = [...domainState.data];
 
-    if (index === -1) {
-      dataList.push(data);
-    } else {
-      dataList[index] = data;
-    }
+  //   if (index === -1) {
+  //     dataList.push(data);
+  //   } else {
+  //     dataList[index] = data;
+  //   }
 
-    domainState.data = dataList;
-    const domains = { ...state.domains };
-    domains[activeDomain] = domainState;
+  //   domainState.data = dataList;
+  //   const domains = { ...state.domains };
+  //   domains[activeDomain] = domainState;
 
-    ctx.setState({ ...state, domains });
-  }
+  //   ctx.setState({ ...state, domains });
+  // }
 
   @Action(UpdateDataUrl)
   updateDataUrl(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IUpdateDataUrl, domain?: string }) {
@@ -312,10 +319,8 @@ export class OhMyState {
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, activeDomain) };
 
-    debugger;
-
     const { index, data } = OhMyState.findData(domainState, { id: payload.id });
-    data.activeStatusCode = payload.mockId;
+    data.activeMock = payload.mockId;
 
     const dataList = [...domainState.data];
 
@@ -380,14 +385,14 @@ export class OhMyState {
     state: IState,
     context: IOhMyContext
   ): { index: number; data: IData } {
-    const data = findActiveData(state, context) ||
+    const data = findMocks(state, context) ||
     {
       url: context.url,
       id: uniqueId(),
       method: context.method,
       type: context.type,
       mocks: {},
-      activeStatusCode: null
+      activeMock: null
     };
 
     return { index: state.data.indexOf(data), data: { ...data } };

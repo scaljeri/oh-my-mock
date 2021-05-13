@@ -9,7 +9,7 @@ export const testDataMock: IState = {
   toggles: {},
   "data": [
     {
-      "activeStatusCode": "GvpQ5ZCIvv",
+      "activeMock": "GvpQ5ZCIvv",
       "id": "SAidn6Y3nP",
       "method": "PUT",
       "mocks": {
@@ -53,7 +53,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "XDuYG9Izod",
+      "activeMock": "XDuYG9Izod",
       "id": "1WHlVDBpDr",
       "method": "DELETE",
       "mocks": {
@@ -97,7 +97,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "Gu2dCpKVza",
+      "activeMock": "Gu2dCpKVza",
       "id": "fmJ5T3KelG",
       "method": "PUT",
       "mocks": {
@@ -141,7 +141,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "tBQaK1pWt0",
+      "activeMock": "tBQaK1pWt0",
       "id": "JInS4zhNeG",
       "method": "POST",
       "mocks": {
@@ -185,7 +185,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "QEBjhs9JQr",
+      "activeMock": "QEBjhs9JQr",
       "id": "sLNg6i25TP",
       "method": "DELETE",
       "mocks": {
@@ -229,7 +229,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "sM8DvpsQfj",
+      "activeMock": "sM8DvpsQfj",
       "id": "3gOmwuERfr",
       "method": "DELETE",
       "mocks": {
@@ -273,7 +273,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "kpGoSp8Se3",
+      "activeMock": "kpGoSp8Se3",
       "id": "Gt2f1QWVIB",
       "method": "GET",
       "mocks": {
@@ -333,7 +333,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "3bWtqtdYzb",
+      "activeMock": "3bWtqtdYzb",
       "id": "nIOtSzAt0R",
       "method": "POST",
       "mocks": {
@@ -377,7 +377,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "BcZgj7ZdVt",
+      "activeMock": "BcZgj7ZdVt",
       "id": "2qTqHAkiBe",
       "method": "PUT",
       "mocks": {
@@ -421,7 +421,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "NB8dUoqAXn",
+      "activeMock": "NB8dUoqAXn",
       "id": "CgGsDhnV64",
       "method": "POST",
       "mocks": {
@@ -465,7 +465,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "sn0czn0nxu",
+      "activeMock": "sn0czn0nxu",
       "id": "QjRexBsGMX",
       "method": "GET",
       "mocks": {
@@ -525,7 +525,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "aeCdeFEgZo",
+      "activeMock": "aeCdeFEgZo",
       "id": "Dexkvkooo1",
       "method": "GET",
       "mocks": {
@@ -585,7 +585,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "XAPkJHrBig",
+      "activeMock": "XAPkJHrBig",
       "id": "AFHCiH9NpQ",
       "method": "POST",
       "mocks": {
@@ -629,7 +629,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "EZGgmnpthv",
+      "activeMock": "EZGgmnpthv",
       "id": "w9qI3Uh6gl",
       "method": "PUT",
       "mocks": {
@@ -673,7 +673,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
-      "activeStatusCode": "WT1NNeyjdc",
+      "activeMock": "WT1NNeyjdc",
       "id": "oD9jyFnbBD",
       "method": "DELETE",
       "mocks": {
@@ -717,7 +717,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
-      "activeStatusCode": "AiS3N1Wqdg",
+      "activeMock": "AiS3N1Wqdg",
       "id": "0ROBw0v0Ne",
       "method": "GET",
       "mocks": {

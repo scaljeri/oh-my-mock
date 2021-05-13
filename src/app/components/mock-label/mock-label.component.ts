@@ -10,10 +10,10 @@ export class MockLabelComponent {
   @Input() mock: IMock;
 
   get code(): statusCode {
-    return this.mock.statusCode;
+    return this.mock?.statusCode;
   }
 
   get name(): string {
-    return this.mock.name;
+    return this.mock?.name;
   }
 }

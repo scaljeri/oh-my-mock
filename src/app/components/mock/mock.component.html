@@ -2,7 +2,7 @@
   <app-mock-header [data]="data" [domain]="domain"></app-mock-header>
 </mat-card>
 
-<mat-card *ngIf="data?.activeStatusCode" class="details">
+<mat-card *ngIf="data?.activeMock" class="details">
   <section class="mock-settings">
     <oh-my-mock-details [mock]="mock" [domain]="domain" [dataId]="data.id"></oh-my-mock-details>
     <div class="mock-actions">

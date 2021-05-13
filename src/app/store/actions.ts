@@ -7,7 +7,6 @@ import {
   IOhMyToggle,
   ohMyMockId,
   ohMyDataId,
-  ICreateResponse
 } from '@shared/type';
 
 export class InitState {
@@ -45,10 +44,10 @@ export class DeleteMock {
   constructor(public payload: { dataId: ohMyDataId, mockId: ohMyMockId }, public domain?: string) { }
 }
 
-export class CreateResponse {
-  static readonly type = '[StatusCode] create';
-  constructor(public payload: ICreateResponse, public domain?: string) { }
-}
+// export class CreateResponse {
+//   static readonly type = '[StatusCode] create';
+//   constructor(public payload: ICreateResponse, public domain?: string) { }
+// }
 
 export class UpdateDataUrl {
   static readonly type = '[Data] update url';

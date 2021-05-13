@@ -43,10 +43,10 @@ export class MockComponent implements OnChanges {
   constructor(public dialog: MatDialog, private toast: HotToastService, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
-    this.mock = this.data.mocks[this.data.activeStatusCode];
+    this.mock = this.data.mocks[this.data.activeMock];
 
-    if (this.activeMockId !== this.data.activeStatusCode) {
-      this.activeMockId = this.data.activeStatusCode;
+    if (this.activeMockId !== this.data.activeMock) {
+      this.activeMockId = this.data.activeMock;
 
       setTimeout(() => {
         this.responseRef?.update();
@@ -70,16 +70,15 @@ export class MockComponent implements OnChanges {
   }
 
   onRevertResponse(): void {
-    debugger;
+    this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
+    this.cdr.detectChanges();
+
     setTimeout(() => {
-      // Make sure that `onResponseChanges` goes first!
-      this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
-      this.cdr.detectChanges();
+      this.responseRef.update();
     });
   }
 
   onHeadersChange(headersMock: string): void {
-    debugger;
     try {
       if (JSON.parse(headersMock) && headersMock !== JSON.stringify(this.mock.headersMock || {})) {
         this.upsertMock({
@@ -93,10 +92,11 @@ export class MockComponent implements OnChanges {
   }
 
   onRevertHeaders(): void {
-    debugger;
+    this.upsertMock({ id: this.mock.id, headersMock: this.mock.headers });
+    this.cdr.detectChanges();
+
     setTimeout(() => {
-      this.upsertMock({ id: this.mock.id, headersMock: this.mock.headers });
-      this.cdr.detectChanges();
+      this.headersRef.update();
     });
   }
 

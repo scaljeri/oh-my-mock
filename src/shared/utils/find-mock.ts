@@ -1,7 +1,7 @@
 import { IData, IMock, IState, ohMyMockId, requestMethod, requestType, statusCode } from '../type';
 import { compareUrls } from './urls';
 
-export const findActiveData = (
+export const findMocks = (
   state: IState,
   { url, method, type, id }: {
     url?: string,
@@ -17,7 +17,7 @@ export const findActiveData = (
 
     if (id ? id === item.id :
       method === item.method && type === item.type && (url === item.url || compareUrls(url, item.url))) {
-      if (inactive || item.activeStatusCode) {
+      if (inactive || item.activeMock) {
         return item;
       }
     }

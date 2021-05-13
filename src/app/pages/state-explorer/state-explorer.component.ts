@@ -5,7 +5,7 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { STORAGE_KEY } from '@shared/constants';
 import { domain, IData, IOhMyMock, IState, IStore } from '@shared/type';
-import { findActiveData } from '@shared/utils/find-mock';
+import { findMocks } from '@shared/utils/find-mock';
 import { uniqueId } from '@shared/utils/unique-id';
 import { Observable } from 'rxjs';
 import { AppStateService } from 'src/app/services/app-state.service';
@@ -72,7 +72,7 @@ export class PageStateExplorerComponent implements OnInit {
   }
 
   onDataSelect(id: string): void {
-    this.dataItem = findActiveData(this.selectedState, { id });
+    this.dataItem = findMocks(this.selectedState, { id });
     this.panels.toArray()[2].open();
   }
 

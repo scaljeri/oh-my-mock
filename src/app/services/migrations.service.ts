@@ -6,11 +6,9 @@ export const MIGRATION_MAP = {
   // This is a token that is replaced in the application by the token-repace.js script. But,
   // during development is not replace (and it should not be replaced here) so we need to take care of it
   ['__OH_MY_' + 'VERSION__']: {}, // for development only
-  '0.0.0': { next: '2.0.0', migrate: (_) => null },
-  '2.0.0': { next: '2.1.0', migrate: (_) => null },
-  '2.1.0': { next: '__OH_MY_VERSION__', migrate: (_) => _ },
-  '2.2.0': { next: '__OH_MY_VERSION__', migrate: (_) => _ },
-  '2.3.0': { next: '__OH_MY_VERSION__', migrate: (_) => _ },
+  '0.0.0': { next: '__OH_MY_VERSION__', migrate: (_) => null },
+  '2.1.0': { next: '__OH_MY_VERSION__', migrate: (_) => null },
+  '2.4.0': { next: '__OH_MY_VERSION__', migrate: (_) => null },
   '__OH_MY_VERSION__': {}
 }
 
@@ -30,8 +28,11 @@ export class MigrationsService {
       return this.reset();
     }
 
-    // Old OhMyMock versions do not have a version. If a version is unknown it is set to '0.0.0'
-    let action = MIGRATION_MAP[version || '0.0.0'] || MIGRATION_MAP['0.0.0'];
+    if (version && !MIGRATION_MAP[version]) {
+      return state;
+    }
+
+    let action = MIGRATION_MAP[version || '0.0.0'];
 
     while (action?.next) {
       state = action.migrate(state) || this.reset();
