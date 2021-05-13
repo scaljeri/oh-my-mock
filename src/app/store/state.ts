@@ -108,7 +108,6 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-    debugger;
 
     const { index, data } = OhMyState.findData(domainState, payload);
 
@@ -171,7 +170,6 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-    debugger;
 
     const { index, data } = OhMyState.findData(domainState, payload);
 
@@ -206,7 +204,6 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-    debugger;
 
     const { index, data } = OhMyState.findData(domainState, { id: payload.dataId });
 
@@ -232,7 +229,6 @@ export class OhMyState {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state, domain) };
-    debugger;
 
     const data = findMocks(domainState, { id: payload });
     const index = domainState.data.indexOf(data);
@@ -249,51 +245,11 @@ export class OhMyState {
     ctx.setState({ ...state, domains });
   }
 
-  // @Action(CreateResponse)
-  // createStatusCode(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: ICreateResponse, domain?: string }) {
-  //   const state = ctx.getState();
-  //   const activeDomain = domain || OhMyState.domain;
-  //   const domainState = { ...OhMyState.getActiveState(state, domain) };
-
-  //   const { index, data } = OhMyState.findData(domainState, payload);
-  //   const mock = payload.clone ?
-  //     { ...OhMyState.cloneMock(data.mocks[data.activeMock]), id: uniqueId() } :
-  //     { jsCode: MOCK_JS_CODE, delay: 0, headers: {}, headersMock: {} } as IMock;
-
-  //   mock.statusCode = payload.statusCode;
-  //   mock.name = payload.name;
-  //   mock.id = uniqueId();
-
-  //   data.mocks = {
-  //     ...data.mocks,
-  //     [mock.id]: mock as IMock
-  //   };
-
-  //   if (payload.makeActive) {
-  //     data.activeMock = mock.id;
-  //   }
-
-  //   const dataList = [...domainState.data];
-
-  //   if (index === -1) {
-  //     dataList.push(data);
-  //   } else {
-  //     dataList[index] = data;
-  //   }
-
-  //   domainState.data = dataList;
-  //   const domains = { ...state.domains };
-  //   domains[activeDomain] = domainState;
-
-  //   ctx.setState({ ...state, domains });
-  // }
-
   @Action(UpdateDataUrl)
   updateDataUrl(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IUpdateDataUrl, domain?: string }) {
     const state = ctx.getState();
     const activeDomain = domain || OhMyState.domain;
     const domainState = { ...OhMyState.getActiveState(state) };
-    debugger;
 
     const { index, data } = OhMyState.findData(domainState, payload);
 
@@ -341,7 +297,6 @@ export class OhMyState {
   viewChangeOrderOfItems(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyViewItemsOrder }) {
     const state = ctx.getState();
     const domainState = { ...OhMyState.getActiveState(state) };
-    debugger;
 
     const views = { ...domainState.views };
 
@@ -362,7 +317,6 @@ export class OhMyState {
   toggle(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyToggle }) {
     const state = ctx.getState();
     const domainState = { ...OhMyState.getActiveState(state) };
-    debugger;
     domainState.toggles = { ...domainState.toggles, [payload.name]: payload.value };
 
     const domains = { ...state.domains, [OhMyState.domain]: domainState };
@@ -375,7 +329,6 @@ export class OhMyState {
     const domainState = { ...OhMyState.getActiveState(state) };
     const views = { ...domainState.views, [payload]: domainState.data.map((_, i) => i) };
     domainState.views = views;
-    debugger;
 
     const domains = { ...state.domains, [OhMyState.domain]: domainState };
     ctx.setState({ ...state, domains });

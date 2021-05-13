@@ -110,7 +110,6 @@ export class MockComponent implements OnChanges {
 
   onShowResponseFullscreen(): void {
     const data = { code: this.mock.responseMock, type: this.mock.subType };
-    debugger;
 
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, responseMock: update });
@@ -121,7 +120,6 @@ export class MockComponent implements OnChanges {
   }
 
   onShowHeadersFullscreen(): void {
-    debugger;
     const data = { code: this.mock.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, headersMock: JSON.parse(update) });
