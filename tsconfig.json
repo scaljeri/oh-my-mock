@@ -16,7 +16,8 @@
     "paths": {
       "@shared/*": ["src/shared/*"]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
   "angularCompilerOptions": {
