@@ -119,20 +119,24 @@ export class OhMyState {
       ...(payload.mock.id && { ...mocks[payload.mock.id] }),
     } as IMock;
 
-    if (mock.id) {
+    if (mock.id) { // update
       mock.modifiedOn = new Date().toISOString();
-    } else {
+    } else { // new mock
       if (payload.clone) {
         mock = { ...(data.mocks[payload.clone as ohMyMockId] || data.mocks[data.activeMock]) };
       }
 
       mock.id = uniqueId();
       mock.createdOn = new Date().toISOString();
-      mock.responseMock = mock.response;
-      mock.headersMock = mock.headers;
     }
 
     Object.keys(payload.mock).forEach(k => mock[k] = payload.mock[k]);
+    if (payload.mock.response && !mock.responseMock) {
+      mock.responseMock = mock.response;
+    }
+    if (payload.mock.headers && !mock.headersMock) {
+      mock.headersMock = mock.headers;
+    }
 
     if (mock.headersMock) {
       const contentType = contentParser(mock.headersMock['content-type']);
