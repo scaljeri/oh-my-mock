@@ -1,27 +1,27 @@
 import {
   IData,
-  ICreateStatusCode,
   IUpdateDataUrl,
   IUpsertMock,
   IOhMyMock,
   IOhMyViewItemsOrder,
   IOhMyToggle,
-  IOhMyContext
+  ohMyMockId,
+  ohMyDataId,
 } from '@shared/type';
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor( public payload: Partial<IOhMyMock> = { domains: {} }) { }
+  constructor(public payload: Partial<IOhMyMock> = { domains: {} }) { }
 }
 
 export class ChangeDomain {
   static readonly type = '[Domain] Change';
-  constructor( public payload: string) { }
+  constructor(public payload: string) { }
 }
 
 export class ResetState {
   static readonly type = '[Domain] Reset';
-  constructor(public payload: string) {}
+  constructor(public payload: string) { }
 }
 
 export class UpsertData {
@@ -41,22 +41,22 @@ export class DeleteData {
 
 export class DeleteMock {
   static readonly type = '[Mock] delete';
-  constructor(public payload: IOhMyContext, public domain?: string) { }
+  constructor(public payload: { dataId: ohMyDataId, mockId: ohMyMockId }, public domain?: string) { }
 }
 
-export class CreateStatusCode {
-  static readonly type = '[StatusCode] create';
-  constructor(public payload: ICreateStatusCode, public domain?: string) { }
-}
+// export class CreateResponse {
+//   static readonly type = '[StatusCode] create';
+//   constructor(public payload: ICreateResponse, public domain?: string) { }
+// }
 
 export class UpdateDataUrl {
   static readonly type = '[Data] update url';
   constructor(public payload: IUpdateDataUrl, public domain?: string) { }
 }
 
-export class UpdateDataStatusCode {
+export class UpdateDataResponse {
   static readonly type = '[Data] update status code';
-  constructor(public payload: IOhMyContext, public domain?: string) { }
+  constructor(public payload: { id: ohMyDataId, mockId?: ohMyMockId | void, makeActive?: boolean }, public domain?: string) { }
 }
 
 export class ViewChangeOrderItems {

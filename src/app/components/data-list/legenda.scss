@@ -1,7 +1,11 @@
+$active: #99ffcc;
+$inactive: #fff;
+$inactiveModified: #FAC3B7;
+$activeModified: #ffff99;
+
 .legenda {
   display: flex;
   margin-bottom: 5px;
-  margin-right: 150px;
   background-color: grey;
   padding: $spacer-2;
   color: $color-light;
@@ -33,15 +37,19 @@
 
 
   .legenda-active::before {
-    background-color: #99ffcc;
+    background-color: $active;
   }
 
   .inactive::before {
-    background-color: #fff;
+    background-color: $inactive
 
   }
 
   .active-modified::before {
-    background-color: #ffff99;
+    background-color: $activeModified;
+  }
+
+  .inactive-modified::before {
+    background-color: $inactiveModified;
   }
 }

@@ -44,6 +44,8 @@ import { CodeErrorsComponent } from './code-errors/code-errors.component';
 import { AnimatedListDirective } from './animated-list/animated-list.directive';
 import { AnonymizeComponent } from './anonymize/anonymize.component';
 import { ArrowComponent } from './arrow/arrow.component';
+import { MockLabelComponent } from './mock-label/mock-label.component';
+import { MockDetailsComponent } from './mock/mock-details/mock-details.component';
 
 @NgModule({
   declarations: [
@@ -64,7 +66,9 @@ import { ArrowComponent } from './arrow/arrow.component';
     CodeErrorsComponent,
     AnimatedListDirective,
     AnonymizeComponent,
-    ArrowComponent
+    ArrowComponent,
+    MockLabelComponent,
+    MockDetailsComponent
   ],
   imports: [
     CommonModule,
@@ -100,7 +104,8 @@ import { ArrowComponent } from './arrow/arrow.component';
     MockHeaderComponent,
     FileUploaderComponent,
     AnimatedListDirective,
-    ArrowComponent
+    ArrowComponent,
+    MockLabelComponent
   ],
   providers: [
     Location,

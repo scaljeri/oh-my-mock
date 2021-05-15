@@ -12,6 +12,8 @@ export type statusCode = number;
 export type domain = string;
 export type origin = 'local' | 'cloud' | 'ngapimock';
 export type mockRuleType = keyof typeof MOCK_RULE_TYPES;
+export type ohMyDataId = string;
+export type ohMyMockId = string;
 
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
@@ -34,17 +36,20 @@ export interface IOhMyContext {
   url?: string;
   method?: requestMethod;
   type?: requestType;
-  id?: string;
-  statusCode?: statusCode;
+  id?: ohMyDataId;
+  mockId?: ohMyMockId;
 }
 
 export interface IData extends IOhMyContext {
-  activeStatusCode?: statusCode;
+  activeMock?: ohMyMockId;
   enabled?: boolean;
-  mocks?: Record<statusCode, IMock>;
+  mocks?: Record<ohMyMockId, IMock>;
 }
 
 export interface IMock {
+  id: ohMyMockId;
+  name?: string;
+  statusCode: statusCode;
   response?: string;
   type?: string;    // In application/json the `type` will be `application`
   subType?: string; // In application/json the `subType` will be `json`
@@ -64,14 +69,19 @@ export interface IOhMyMockRule {
 }
 
 // actions
-export interface IUpsertMock extends IOhMyContext {
-  mock: IMock;
+export interface IUpsertMock extends IOhMyUpsertData {
+  mock: Partial<IMock>;
+  clone?: boolean | ohMyMockId;
+  makeActive?: boolean;
 }
 
-export interface ICreateStatusCode extends IOhMyContext {
-  activeStatusCode?: statusCode;
-  clone?: boolean;
-}
+// export interface ICreateResponse extends IOhMyContext {
+//   id: ohMyDataId;
+//   statusCode: statusCode;
+//   name?: string;
+//   clone?: boolean;
+//   makeActive?: boolean;
+// }
 
 export interface IUpdateDataUrl extends IOhMyContext {
   newUrl: string;
@@ -87,7 +97,7 @@ export interface IPacket {
 export interface IPacketPayload {
   context: IOhMyContext;
   type: packetTypes;
-  data?: IMock | IState;
+  data?: Partial<IMock> | IState;
 }
 
 export interface IMockedTmpResponse {
@@ -113,3 +123,10 @@ export interface IOhMyToggle {
   value: boolean;
 }
 
+
+export interface IOhMyUpsertData {
+  id?: ohMyDataId;
+  url?: string;
+  method?: requestMethod;
+  type?: requestType;
+}

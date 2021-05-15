@@ -4,12 +4,12 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
-import { findActiveData } from '../../../shared/utils/find-mock'
+import { DeleteData, Toggle, UpdateDataResponse, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
+import { findMocks } from '../../../shared/utils/find-mock'
 
 import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IState, IStore, statusCode } from 'src/shared/type';
+import { IData, IState, IStore, ohMyMockId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Subscription } from 'rxjs';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
@@ -56,10 +56,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
   @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
-  @Dispatch() updateActiveStatusCode = (id: string, statusCode: statusCode) =>
-    new UpdateDataStatusCode({ id, statusCode }, this.state.domain);
+  @Dispatch() updateActiveResponse = (id: string, mockId: ohMyMockId | void) =>
+    new UpdateDataResponse({ id, mockId }, this.state.domain);
 
-  public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
+  public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];
@@ -130,22 +130,32 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onActivateToggle(id: string, event: MouseEvent): void {
     event.stopPropagation();
-    const data = findActiveData(this.state, { id });
 
-    if (!data.activeStatusCode) {
-      const statusCode = findAutoActiveMock(data);
-      this.updateActiveStatusCode(id, statusCode as number);
-      this.toast.success(`Mock with status-code ${statusCode} activated`);
-    } else {
-      this.updateActiveStatusCode(id, 0);
+    const data = findMocks(this.state, { id });
+
+    if (data.enabled) {
+      this.upsertData({ id, enabled: false });
       this.toast.warning('Mock disabled!');
+    } else {
+      let mockId = data.activeMock;
+
+      if (!data.activeMock) {
+        mockId = findAutoActiveMock(data) as ohMyMockId;
+      }
+
+      if (mockId) {
+        this.upsertData({ id, enabled: true, ...(mockId && { activeMock: mockId }) });
+        this.toast.success(`Mock with status-code ${data.mocks[mockId].statusCode} activated`);
+      } else {
+        this.toast.error(`Could not activate, there are no responses available`);
+      }
     }
   }
 
   onDelete(id: string, event): void {
     event.stopPropagation();
 
-    const data = findActiveData(this.state, { id });
+    const data = findMocks(this.state, { id });
     let msg = `Deleted mock ${data.url}`;
     if (this.state.domain) {
       msg += ` on domain ${this.state.domain}`;

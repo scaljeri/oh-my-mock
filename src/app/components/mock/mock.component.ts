@@ -8,9 +8,8 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, UpsertMock } from 'src/app/store/actions';
-import { IOhMyContext, IData, IMock, IOhMyMockRule, statusCode } from '@shared/type';
+import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
-import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -26,21 +25,17 @@ export class MockComponent implements OnChanges {
   @Input() domain: string;
   mock: IMock;
 
-  @Dispatch() upsertMock = (mock: IMock) =>
+  @Dispatch() upsertMock = (mock: Partial<IMock>) =>
     new UpsertMock({
-      url: this.data.url,
-      method: this.data.method,
-      type: this.data.type,
-      statusCode: this.data.activeStatusCode,
+      id: this.data.id,
       mock
     }, this.domain);
-  @Dispatch() deleteMockResponse = (response: IOhMyContext) =>
-    new DeleteMock(response);
+  @Dispatch() deleteMockResponse = (dataId: ohMyDataId, mockId: ohMyMockId) =>
+    new DeleteMock({ dataId, mockId });
 
-  public delayFormControl = new FormControl();
   public dialogIsOpen = false;
   private delaySubscription: Subscription;
-  private activeStatusCode: statusCode;
+  private activeMockId: ohMyMockId;
 
   @ViewChild('response') responseRef: CodeEditComponent;
   @ViewChild('headers') headersRef: CodeEditComponent;
@@ -48,10 +43,10 @@ export class MockComponent implements OnChanges {
   constructor(public dialog: MatDialog, private toast: HotToastService, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
-    this.mock = this.data.mocks[this.data.activeStatusCode];
+    this.mock = this.data.mocks[this.data.activeMock];
 
-    if (this.activeStatusCode !== this.data.activeStatusCode) {
-      this.activeStatusCode = this.data.activeStatusCode;
+    if (this.activeMockId !== this.data.activeMock) {
+      this.activeMockId = this.data.activeMock;
 
       setTimeout(() => {
         this.responseRef?.update();
@@ -62,48 +57,34 @@ export class MockComponent implements OnChanges {
     if (this.delaySubscription) {
       this.delaySubscription.unsubscribe();
     }
-    this.delayFormControl.setValue(this.mock?.delay);
-
-    // NOTE: The subscription var is needed because ngOnChanges will trigger each time this.mock changes
-    let delayTimeoutId;
-    this.delaySubscription = this.delayFormControl.valueChanges.subscribe(value => {
-      clearTimeout(delayTimeoutId);
-      if (value !== '') {
-        delayTimeoutId = setTimeout(() => {
-          this.upsertMock({ delay: Number(value) });
-        }, 500);
-      }
-    });
   }
 
   onDelete(): void {
-    const { url, method, type, activeStatusCode } = this.data;
-    this.deleteMockResponse({
-      url,
-      method,
-      type,
-      statusCode: activeStatusCode
-    });
+    this.deleteMockResponse(this.data.id, this.mock.id);
   }
 
   onResponseChange(data: string): void {
     if (data !== (this.mock.responseMock || '')) {
-      this.upsertMock({ responseMock: data });
+      this.upsertMock({ id: this.mock.id, responseMock: data });
     }
   }
 
   onRevertResponse(): void {
+    this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
+    this.cdr.detectChanges();
+
     setTimeout(() => {
-      // Make sure that `onResponseChanges` goes first!
-      this.upsertMock({ responseMock: this.mock.response });
-      this.cdr.detectChanges();
+      this.responseRef.update();
     });
   }
 
   onHeadersChange(headersMock: string): void {
     try {
       if (JSON.parse(headersMock) && headersMock !== JSON.stringify(this.mock.headersMock || {})) {
-        this.upsertMock({ headersMock: JSON.parse(headersMock) });
+        this.upsertMock({
+          id: this.mock.id,
+          headersMock: JSON.parse(headersMock)
+        });
         this.cdr.detectChanges();
       }
     } catch (err) {
@@ -111,9 +92,11 @@ export class MockComponent implements OnChanges {
   }
 
   onRevertHeaders(): void {
+    this.upsertMock({ id: this.mock.id, headersMock: this.mock.headers });
+    this.cdr.detectChanges();
+
     setTimeout(() => {
-      this.upsertMock({ headersMock: this.mock.headers });
-      this.cdr.detectChanges();
+      this.headersRef.update();
     });
   }
 
@@ -121,7 +104,7 @@ export class MockComponent implements OnChanges {
     const data = { code: this.mock.jsCode, type: 'javascript', allowErrors: false };
 
     this.openCodeDialog(data, (update: string) => {
-      this.upsertMock({ jsCode: update });
+      this.upsertMock({ id: this.mock.id, jsCode: update });
     });
   }
 
@@ -129,7 +112,7 @@ export class MockComponent implements OnChanges {
     const data = { code: this.mock.responseMock, type: this.mock.subType };
 
     this.openCodeDialog(data, (update: string) => {
-      this.upsertMock({ responseMock: update });
+      this.upsertMock({ id: this.mock.id, responseMock: update });
       setTimeout(() => {
         this.responseRef.update();
       });
@@ -139,7 +122,7 @@ export class MockComponent implements OnChanges {
   onShowHeadersFullscreen(): void {
     const data = { code: this.mock.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
-      this.upsertMock({ headersMock: JSON.parse(update) });
+      this.upsertMock({ id: this.mock.id, headersMock: JSON.parse(update) });
       setTimeout(() => {
         this.headersRef.update();
       })
@@ -160,7 +143,7 @@ export class MockComponent implements OnChanges {
 
     dialogRef.afterClosed().subscribe((update: { data: string, rules: IOhMyMockRule[] }) => {
       if (update) {
-        this.upsertMock({ responseMock: update.data, rules: update.rules });
+        this.upsertMock({ id: this.mock.id, responseMock: update.data, rules: update.rules });
 
         setTimeout(() => {
           this.responseRef?.update();

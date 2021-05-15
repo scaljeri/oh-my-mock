@@ -1,26 +1,22 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialog } from '@angular/material/dialog';
 
-import { AnonymizeComponent } from './anonymize.component';
+import { MockDetailsComponent } from './mock-details.component';
 
-describe('AnonymizeComponent', () => {
-  let component: AnonymizeComponent;
-  let fixture: ComponentFixture<AnonymizeComponent>;
+describe('MockDetailsComponent', () => {
+  let component: MockDetailsComponent;
+  let fixture: ComponentFixture<MockDetailsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AnonymizeComponent],
-      providers: [
-        { provide: MatDialog, useValue: {} }
-      ],
+      declarations: [ MockDetailsComponent ],
       schemas: [NO_ERRORS_SCHEMA]
     })
-      .compileComponents();
+    .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AnonymizeComponent);
+    fixture = TestBed.createComponent(MockDetailsComponent);
     component = fixture.componentInstance;
     component.mock = {} as any;
     fixture.detectChanges();

@@ -1,12 +1,13 @@
 import { Component, Inject } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {
   REQUIRED_MSG,
   STATUS_CODE_EXISTS_MSG,
   STATUS_CODE_INVALID_MSG
 } from '@shared/constants';
-import { statusCodeValidator } from '../../validators/status-code.validator';
+// TODO: modify validator to check name + code
+// import { statusCodeValidator } from '../../validators/status-code.validator';
 
 @Component({
   selector: 'app-create-status-code',
@@ -15,31 +16,46 @@ import { statusCodeValidator } from '../../validators/status-code.validator';
 })
 export class CreateStatusCodeComponent {
   public error: string;
-  public statusCodeControl = new FormControl('', [
-    Validators.required,
-    // Validators.min(200),
-    // Validators.max(599),
-    statusCodeValidator(this.input.existingStatusCodes)
-  ]);
-  public cloneCtrl = new FormControl('');
+  public form = new FormGroup({
+    statusCode: new FormControl('', [
+      Validators.required
+      // statusCodeValidator(this.input.existingStatusCodes)
+    ]),
+    name: new FormControl(),
+    clone: new FormControl('')
+  })
+
   public requiredError = REQUIRED_MSG;
   public existsError = STATUS_CODE_EXISTS_MSG;
   public invalidError = STATUS_CODE_INVALID_MSG;
 
+
   constructor(
     private dialogRef: MatDialogRef<CreateStatusCodeComponent>,
     @Inject(MAT_DIALOG_DATA) private input: { existingStatusCodes: string[] }
-  ) {}
+  ) { }
 
   onSave(): void {
-    if (this.statusCodeControl.valid) {
-      const clone = this.cloneCtrl.value;
+    this.form.markAllAsTouched();
 
-      this.dialogRef.close({ statusCode: this.statusCodeControl.value, clone });
+    if (this.form.valid) {
+      this.dialogRef.close(this.form.value);
     }
   }
 
   onClose(): void {
     this.dialogRef.close();
+  }
+
+  get codeCtrl(): FormControl {
+    return this.form.get('statusCode') as FormControl;
+  }
+
+  get nameCtrl(): FormControl {
+    return this.form.get('name') as FormControl;
+  }
+
+  get cloneCtrl(): FormControl {
+    return this.form.get('clone') as FormControl;
   }
 }

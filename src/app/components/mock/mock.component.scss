@@ -8,17 +8,25 @@
   background-color: #fff;
 }
 
-.label {
-  display: inline-flex;
-  font-weight: bold;
-  font-size: 15px;
-  width: 150px;
-  justify-content: flex-end;
-  padding-right: 5px;
+.action-wrapper {
+  align-items: center;
+  display: flex;
+  position: relative;
+
+  &>mat-icon {
+    @include oh-position(absolute, 0px -12px 0 0);
+  }
 }
 
-.value {
-  font-size: 15px;
+.mock-settings {
+  display: flex;
+  flex-direction: row;
+
+  oh-my-mock-details {
+    justify-content: center;
+    flex: 1;
+  }
+
 }
 
 .mock-actions {
@@ -42,38 +50,33 @@ mat-card+mat-card {
   margin-top: 10px;
 }
 
-.details {
-  align-items: flex-end;
+.code-wrapper {
+  align-self: center;
   display: flex;
   flex-direction: column;
-  padding-bottom: 10px;
+  position: relative;
+  width: 60%;
 
-  header {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: $spacer-1;
-    width: 100%;
+  .fullscreen {
+    @include oh-position(absolute, -20px -20px 0 0);
+    z-index: 1;
+  }
 
-    h2 {
-      display: flex;
-      flex: 0;
-      justify-content: space-between;
-      margin: 0;
-      width: 49%;
-    }
+  .reset {
+    align-self: flex-end;
   }
 }
 
 .js-code-edit {
   margin-left: $spacer-2;
+  margin-top: $spacer-2;
 }
 
 oh-my-code-edit {
   align-self: center;
   border: 1px solid lightgrey;
   height: 300px;
-  width: 60%;
+  width: 100%;
 }
 
 .data {

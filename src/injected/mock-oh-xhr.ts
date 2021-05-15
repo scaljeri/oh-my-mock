@@ -6,7 +6,7 @@ import {
   requestMethod,
 } from '../shared/type';
 import { compileJsCode } from '../shared/utils/eval-jscode';
-import { findActiveData } from '../shared/utils/find-mock';
+import { findMocks } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
 
 const Base = window.XMLHttpRequest;
@@ -96,10 +96,10 @@ export class OhMockXhr extends Base {
         context: {
           url: this.ohUrl,
           method: this.ohMethod,
-          type: 'XHR',
-          statusCode: this.status
+          type: 'XHR'
         },
         data: {
+          statusCode: this.status,
           response: this.response,
           headers: headers.parse(this.getAllResponseHeaders())
         }
@@ -130,7 +130,7 @@ export class OhMockXhr extends Base {
         response: this.ohMock.responseMock,
         headers: this.ohMock.headersMock,
         delay: this.ohMock.delay,
-        statusCode: this.ohData.activeStatusCode
+        statusCode: this.ohData.mocks[this.ohData.activeMock].statusCode
       }
 
       return Promise.resolve(code(context, {
@@ -149,10 +149,10 @@ export class OhMockXhr extends Base {
     this.ohData = null;
     this.ohMock = null;
 
-    this.ohData = findActiveData(
+    this.ohData = findMocks(
       window[STORAGE_KEY].state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);
 
-    this.ohMock = this.ohData?.mocks?.[this.ohData?.activeStatusCode]
+    this.ohMock = this.ohData?.enabled && this.ohData?.mocks?.[this.ohData?.activeMock]
   }
 
   private getHeaders(): Record<string, string>;

@@ -1,16 +1,11 @@
-import {
-  Component,
-  Input,
-  OnChanges,
-  OnInit
-} from '@angular/core';
+import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, statusCode } from '@shared/type';
+import { IData, IMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 import { findAutoActiveMock } from '../../../utils/data';
-import { CreateStatusCode, UpdateDataStatusCode, UpsertData } from 'src/app/store/actions';
+import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -26,38 +21,26 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() domain: string;
 
   public statusCode: statusCode;
-  public codes: statusCode[];
+  public mockIds: ohMyMockId[];
   public methodCtrl = new FormControl();
   public filteredMethodOptions: Observable<string[]>;
   public typeCtrl = new FormControl();
   public filteredTypeOptions: Observable<string[]>;
   public urlCtrl = new FormControl();
 
+  public oldResponses: string[];
+
   private availableMethods = METHODS;
 
-  @Dispatch() createStatusCode = (statusCode: statusCode, clone: boolean) =>
-    new CreateStatusCode({
-      url: this.data.url,
-      method: this.data.method,
-      type: this.data.type,
-      clone,
-      statusCode,
-      activeStatusCode: statusCode
-    }, this.domain);
-
-  @Dispatch() updateActiveStatusCode = (statusCode: statusCode) =>
-    new UpdateDataStatusCode({
-      id: this.data.id,
-      statusCode
-    }, this.domain);
-
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
+    new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain)
+  @Dispatch() upsertData = (data: IData) => new UpsertData({ ...data, id: this.data.id }, this.domain);
 
   constructor(public dialog: MatDialog) { }
 
   ngOnInit(): void {
     setTimeout(() => {
-      if (this.data.activeStatusCode === undefined && Object.keys(this.data.mocks).length > 0) {
+      if (!this.data.activeMock && Object.keys(this.data.mocks).length > 0) {
         this.onSelectStatusCode(findAutoActiveMock(this.data));
       }
     });
@@ -84,32 +67,41 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(): void {
-    this.codes = this.data
-      ? Object.keys(this.data.mocks).map(Number).sort()
-      : [];
+    this.mockIds = this.data
+      ? Object.keys(this.data.mocks).sort((a, b) => {
+        const ma = this.data.mocks[a];
+        const mb = this.data.mocks[b];
+
+        return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
+      }) : [];
   }
 
   onUrlUpdate(url: string): void {
     this.upsertData({ ...this.data, url });
   }
 
-  onSelectStatusCode(statusCode: statusCode | void): void {
-    if (statusCode >= 0) {
-      this.updateActiveStatusCode(statusCode as statusCode);
+  onSelectStatusCode(mockId: ohMyMockId | void): void {
+    if (mockId) {
+      this.upsertData({ activeMock: mockId, enabled: true })
+    } else {
+      this.upsertData({ enabled: false })
     }
   }
 
-  openAddStatusCodeDialog(): void {
+  openAddResponseDialog(): void {
     const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
       width: '280px',
-      height: '250px',
-      data: { existingStatusCodes: this.codes }
+      height: '280px',
+      data: { existingStatusCodes: this.mockIds }
     });
 
-    dialogRef.afterClosed().subscribe((newMock: { statusCode: number, clone: boolean }) => {
+    dialogRef.afterClosed().subscribe((newMock: { statusCode: statusCode, clone: boolean, name: string }) => {
       if (newMock) {
-        this.statusCode = newMock.statusCode;
-        this.createStatusCode(this.statusCode, newMock.clone);
+        const clone = newMock.clone;
+        delete newMock.clone;
+        this.oldResponses = Object.keys(this.data.mocks);
+
+        this.upsertMock(newMock, clone);
       }
     });
   }
@@ -126,5 +118,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     if (method !== this.data.method) {
       this.upsertData({ ...this.data, method });
     }
+  }
+
+  getMock(id: ohMyMockId): IMock {
+    return this.data.mocks[id];
   }
 }

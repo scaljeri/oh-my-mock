@@ -19,9 +19,11 @@ describe('mockToNgApiMock', () => {
       url: 'some/url',
       type: 'XHR',
       method: 'GET',
-      activeStatusCode: 200,
+      activeMock: '200',
       mocks: {
-        200: {
+        '200': {
+          id: '200',
+          statusCode: 200,
           responseMock: JSON.stringify(aMockResponse)
         }
       }

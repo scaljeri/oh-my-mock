@@ -1,11 +1,14 @@
-<h2>Create a Status code</h2>
-<mat-form-field>
-  <input matInput type="text" [formControl]="statusCodeControl" (keydown.enter)="onSave()">
-  <mat-error *ngIf="statusCodeControl.errors?.required">{{requiredError}}</mat-error>
-  <mat-error *ngIf="statusCodeControl.errors?.exists">{{existsError}}</mat-error>
-  <mat-error *ngIf="statusCodeControl.errors?.min || statusCodeControl.errors?.max ">Value should be between 200 and 599</mat-error>
-  <mat-error *ngIf="statusCodeControl.errors?.invalid">{{invalidError}}</mat-error>
-</mat-form-field>
+<h2>Create new Response</h2>
+<form [formGroup]="form" class="example-form">
+  <mat-form-field class="example-full-width">
+    <mat-label>Status Code</mat-label>
+    <input type="number" matInput [formControl]="codeCtrl">
+  </mat-form-field>
+  <mat-form-field class="example-full-width">
+    <mat-label>Name of the response (optional)</mat-label>
+    <input type="text" matInput [formControl]="nameCtrl">
+  </mat-form-field>
+</form>
 <mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>
 
 <div class="spacer"></div>

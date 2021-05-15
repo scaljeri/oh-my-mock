@@ -1,16 +1,16 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { IData, IMock, requestMethod } from '../shared/type';
 import { compileJsCode } from '../shared/utils/eval-jscode';
-import { findActiveData } from '../shared/utils/find-mock'
+import { findMocks } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';
 
 const ORIG_FETCH = window.fetch;
 const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
   const { method = 'GET' } = config;
-  const data: IData = findActiveData(window[STORAGE_KEY].state, {
+  const data: IData = findMocks(window[STORAGE_KEY].state, {
     url, type: 'FETCH', method
   });
-  const mock: IMock = data?.mocks[data?.activeStatusCode];
+  const mock: IMock = data?.enabled && data?.mocks[data?.activeMock];
 
   if (mock) {
     window[STORAGE_KEY].hitSubject.next({ id: data.id });
@@ -21,7 +21,7 @@ const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
           response: mock.responseMock,
           headers: mock.headersMock,
           delay: mock.delay,
-          statusCode: data.activeStatusCode
+          statusCode: data.mocks[data.activeMock].statusCode
         }, { url, headers: {}, ...config });
         const body = new Blob([respMock.response], { type: respMock.headers['content-type'] });
 
@@ -45,10 +45,10 @@ const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
             context: {
               url,
               method,
-              type: 'FETCH',
-              statusCode: response.status
+              type: 'FETCH'
             },
             data: {
+              statusCode: response.status,
               response: txt,
               headers: fetchUtils.headersToJson(response.headers)
             }
