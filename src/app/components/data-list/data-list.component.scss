@@ -10,11 +10,6 @@
   flex-direction: column;
   padding: 20px;
   position: relative;
-
-  &.light {
-    --bg-color: #{$color-light};
-    --color: #{$color-dark};
-  }
 }
 
 .is-active .mock oh-my-mock-label {
@@ -22,11 +17,19 @@
 }
 
 .is-active:not(.is-selected) {
-  background-color: #99ffcc;
+  background-color: $active;
 }
 
 .is-active.is-modified:not(.is-selected) {
-  background-color: #ffff99;
+  background-color: $activeModified;
+}
+
+.is-modified:not(.is-active) {
+  background-color: $inactiveModified;
+}
+
+li:not(.is-active):not(.is-modified) {
+  background-color: $inactive;
 }
 
 .is-selected {
@@ -37,16 +40,9 @@
   }
 }
 
-.edit-data {
-  position: absolute;
-  top: 27px;
-  right: 30px;
-}
-
 ol[data-table] {
   @include oh-list-unstyled;
   background-color: $color-light;
-  margin-right: 150px;
 
   .header {
     display: flex;
@@ -54,22 +50,19 @@ ol[data-table] {
     font-weight: 500;
     color: rgba(0, 0, 0, .54);
     padding: $spacer-4;
-
-    .active::after {
-      display: none;
-    }
   }
 
   li {
     border-top: 5px solid transparent;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0;
   }
 
 
   li.data-row {
     cursor: pointer;
     display: flex;
-    padding: $spacer-4 $spacer-4;
+    padding: 0 $spacer-4;
     position: relative;
     transition-property: transform;
     transition-duration: var(--animation-duration, 0.8s);
@@ -78,18 +71,6 @@ ol[data-table] {
       user-select: none;
     }
   }
-}
-
-// Drag&drop
-.data-table {
-  width: 500px;
-  max-width: 100%;
-  border: solid 1px #ccc;
-  min-height: 60px;
-  display: block;
-  background: white;
-  border-radius: 4px;
-  overflow: hidden;
 }
 
 .data-row {
@@ -115,11 +96,12 @@ ol[data-table] {
 
 .custom-drag-placeholder {
   display: flex;
-  background: #ccc;
+  background: #ccc !important;
   border: dotted 3px #999;
-  padding: $spacer-4 $spacer-4;
+  padding: 0 $spacer-4;
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   font-size: 14px;
+  height: 46px;
 
   span {
     opacity: 0;
@@ -133,14 +115,17 @@ ol[data-table] {
 
 span.method {
   flex: 0 0 60px;
+  padding-left: $spacer-2;
 }
 
 span.type {
   flex: 0 0 55px;
+  padding-left: $spacer-2;
 }
 
 span.url {
   flex: 1;
+  padding-left: $spacer-2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -151,10 +136,7 @@ span.url {
   display: inline-flex;
   justify-content: space-between;
   overflow: hidden;
-
-  &.with-arrow::after {
-    content: '➱'
-  }
+  padding-left: $spacer-2;
 
   oh-my-mock-label {
     opacity: .3;
@@ -162,10 +144,13 @@ span.url {
 }
 
 .actions {
-  @include oh-position(absolute, 0px 0px 0px 0);
   align-items: center;
   display: flex;
-  transform: translateX(calc(100% + #{$spacer-2}));
+  padding-left: $spacer-2;
+
+  &.btns-3 {
+    flex: 0 0 145px;
+  }
 
   button+button {
     margin-left: $spacer-2;

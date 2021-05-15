@@ -19,7 +19,7 @@ import { AppStateService } from './app-state.service';
  * all data has to be removed.
  */
 export const MIGRATION_MAP = {
-  '2.4.0': (_) => null
+  '2.5.0': (_) => null
 }
 
 @Injectable({
