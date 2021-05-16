@@ -10,6 +10,7 @@ export const testDataMock: IState = {
   "data": [
     {
       "activeMock": "GvpQ5ZCIvv",
+      "enabled": true,
       "id": "SAidn6Y3nP",
       "method": "PUT",
       "mocks": {
@@ -53,6 +54,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "XDuYG9Izod",
       "id": "1WHlVDBpDr",
       "method": "DELETE",
@@ -97,6 +99,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "Gu2dCpKVza",
       "id": "fmJ5T3KelG",
       "method": "PUT",
@@ -141,6 +144,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "tBQaK1pWt0",
       "id": "JInS4zhNeG",
       "method": "POST",
@@ -185,6 +189,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "QEBjhs9JQr",
       "id": "sLNg6i25TP",
       "method": "DELETE",
@@ -229,6 +234,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "sM8DvpsQfj",
       "id": "3gOmwuERfr",
       "method": "DELETE",
@@ -273,6 +279,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "kpGoSp8Se3",
       "id": "Gt2f1QWVIB",
       "method": "GET",
@@ -333,6 +340,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "3bWtqtdYzb",
       "id": "nIOtSzAt0R",
       "method": "POST",
@@ -377,6 +385,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "BcZgj7ZdVt",
       "id": "2qTqHAkiBe",
       "method": "PUT",
@@ -421,6 +430,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "NB8dUoqAXn",
       "id": "CgGsDhnV64",
       "method": "POST",
@@ -465,6 +475,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "sn0czn0nxu",
       "id": "QjRexBsGMX",
       "method": "GET",
@@ -525,6 +536,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "aeCdeFEgZo",
       "id": "Dexkvkooo1",
       "method": "GET",
@@ -585,6 +597,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "XAPkJHrBig",
       "id": "AFHCiH9NpQ",
       "method": "POST",
@@ -629,6 +642,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "EZGgmnpthv",
       "id": "w9qI3Uh6gl",
       "method": "PUT",
@@ -673,6 +687,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "WT1NNeyjdc",
       "id": "oD9jyFnbBD",
       "method": "DELETE",
@@ -717,6 +732,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "AiS3N1Wqdg",
       "id": "0ROBw0v0Ne",
       "method": "GET",
