@@ -35,7 +35,7 @@ import * as view from './views';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
 import { url2regex } from '@shared/utils/urls';
 import { arrayAddItem, arrayMoveItem, arrayRemoveItem } from '@shared/utils/array';
-import * as contentParser from 'content-type-parser';
+import contentParser from 'content-type-parser';
 import { addTestData } from '../migrations/test-data';
 import { addCurrentDomain } from '../migrations/current-domain';
 import { uniqueId } from '@shared/utils/unique-id';
