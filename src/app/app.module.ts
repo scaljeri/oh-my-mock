@@ -37,7 +37,7 @@ import { JsonExportComponent } from './pages/json-export/json-export.component';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(appRoutes, { useHash: true }),
+    RouterModule.forRoot(appRoutes, { useHash: true } ),
     NgxsModule.forRoot([OhMyState], { developmentMode: true }),
     ReactiveFormsModule,
     NgxsDispatchPluginModule.forRoot(),

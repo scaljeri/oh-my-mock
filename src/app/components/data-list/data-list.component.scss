@@ -148,6 +148,12 @@ span.url {
   display: flex;
   padding-left: $spacer-2;
 
+  &.btns-1 {
+    flex: 0 0 65px;
+  }
+  &.btns-2 {
+    flex: 0 0 85px;
+  }
   &.btns-3 {
     flex: 0 0 145px;
   }

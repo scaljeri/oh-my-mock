@@ -6,10 +6,9 @@
 
   <oh-my-data-list *ngIf="state" [state]="state" [showExport]="true" (dataExport)="onRowExport($event)">
   </oh-my-data-list>
-
-  <button class="export" mat-raised-button color="primary" (click)="onExport()"
-    [matBadge]="selectionCount" matBadgePosition="after"
-    matBadgeColor="accent">
-    <mat-icon>import_export</mat-icon><span>Export</span>
-  </button>
 </div>
+
+<button class="export" mat-raised-button color="primary" (click)="onExport()" [matBadge]="selectionCount"
+  matBadgePosition="after" matBadgeColor="accent">
+  <mat-icon>import_export</mat-icon><span>Export</span>
+</button>

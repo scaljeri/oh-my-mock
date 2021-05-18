@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select } from '@ngxs/store';
@@ -21,9 +21,10 @@ export class PageMockComponent implements OnInit {
   @Select(OhMyState.mainState) state$: Observable<IState>;
   @Dispatch() upsertData = (data: IData) => new UpsertData({ id: this.data.id, ...data });
 
-  constructor(private activeRoute: ActivatedRoute) { }
+  constructor(private element: ElementRef, private activeRoute: ActivatedRoute) { }
 
   ngOnInit(): void {
+    this.element.nativeElement.parentNode.scrollTop = 0;
     const dataId = this.activeRoute.snapshot.params.dataId;
 
     this.subscription = this.state$.subscribe((state: IState) => {

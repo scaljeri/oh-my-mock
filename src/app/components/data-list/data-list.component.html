@@ -19,7 +19,7 @@
     <span class="method">Method</span>
     <span class="url">Url</span>
     <span class="mock">Mock</span>
-    <span class="actions btns-3">Actions</span>
+    <span class="actions"  [ngClass]="'btns-' + visibleBtns">Actions</span>
   </li>
   <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
     *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
@@ -52,7 +52,7 @@
 </ol>
 
 <ng-template #actions let-row="row" let-index="index">
-  <div class="actions btns-3">
+  <div class="actions" [ngClass]="'btns-' + visibleBtns">
     <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
       aria-label="Example icon button with a menu icon">
       <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>

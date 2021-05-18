@@ -60,6 +60,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];
+  public visibleBtns = 1;
   public disabled = false;
   private timeoutId: number;
   private isBusyAnimating = false;
@@ -93,6 +94,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     this.timeoutId && clearTimeout(this.timeoutId);
+    this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
 
     this.timeoutId = setTimeout(() => {
       // The hit list has animated its change. The problem after the animation  rows
