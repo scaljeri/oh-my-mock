@@ -47,7 +47,7 @@ export const testDataMock: IState = {
           "jsCode": "/* This is where OhMyMock creates responses.\nInside this sandbox you have access to the following data:\n  * `mock` - object with a cached response, header and status code\n  * request - details of the ongoing request\n  * fetch/XMLHttpRequest - the original objects\n    (Don't use window.fetch or window.XMLHttpRequest)\n\nIf your code is async, make sure to return a Promise which resolves a\nsimilar object as `mock`!! */\n\nreturn mock;\n",
           "response": "<html>\n<head><title>405 Not Allowed</title></head>\n<body bgcolor=\"white\">\n<center><h1>405 Not Allowed</h1></center>\n</body>\n</html>",
           "responseMock": "<html>\n<head><title>405 Not Allowed</title></head>\n<body bgcolor=\"white\">\n<center><h1>405 Not Allowed</h1></center>\n</body>\n</html>",
-          "statusCode": 405
+          "statusCode": 409
         }
       },
       "type": "FETCH",

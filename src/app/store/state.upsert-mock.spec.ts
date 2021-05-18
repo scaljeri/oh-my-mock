@@ -1,7 +1,6 @@
 import { StateContext } from '@ngxs/store';
-import { IOhMyMock, IData } from '@shared/type';
+import { IOhMyMock, IData, IMock, ohMyMockId, IState } from '@shared/type';
 import { MOCK_JS_CODE } from '@shared/constants';
-import { UpsertData } from './actions';
 import { OhMyState } from './state';
 
 import { testDataMock } from '@shared/test-site.mocks';
@@ -10,23 +9,28 @@ describe('Store#upsertMock', () => {
   let state: IOhMyMock;
   let store: OhMyState;
   let ctx: StateContext<IOhMyMock>;
+  let update: IOhMyMock;
+  let data: IData;
+  let mock: IMock;
+  let mockId: ohMyMockId
 
   beforeEach(() => {
     OhMyState.domain = 'localhost';
     store = new OhMyState();
+
+    state = {
+      domains: { 'localhost': { domain: 'test', data: [], views: {}, toggles: {} } }, version: '2.0.0'
+    }
+
+    ctx = {
+      getState: () => state,
+      dispatch: jest.fn(),
+      setState: jest.fn()
+    } as any
   });
 
   describe('new', () => {
     beforeEach(() => {
-      state = {
-        domains: { 'localhost': { domain: 'test', data: [], views: {}, toggles: {} } }, version: '2.0.0'
-      };
-      ctx = {
-        getState: () => state,
-        dispatch: jest.fn(),
-        setState: jest.fn()
-      } as any;
-
       store.upsertMock(ctx, {
         payload: {
           url: 'url', method: 'GET', type: 'XHR',
@@ -77,79 +81,57 @@ describe('Store#upsertMock', () => {
   });
 
   describe('update', () => {
+    beforeEach(() => {
+      ctx.getState = () => ({ version: '2.0.0', domains: { 'localhost': testDataMock } })
+    })
+    it('should set the modifiedOn property', () => {
+      store.upsertMock(ctx, { payload: { id: 'SAidn6Y3nP', mock: { id: 'GvpQ5ZCIvv', responseMock: 'new' } }, domain: 'localhost' })
+      update = (ctx.setState as any).mock.calls[0][0];
+      mock = update.domains.localhost.data[0].mocks['GvpQ5ZCIvv'];
 
+      expect(mock.modifiedOn).toBeDefined();
+      expect(mock.responseMock).toBe('new');
+      expect(mock.responseMock !== mock.response).toBeTruthy();
+    });
+
+    describe('Clone', () => {
+      beforeEach(() => {
+        store.upsertMock(ctx, { payload: { clone: true, id: 'SAidn6Y3nP', mock: { response: 'new' } }, domain: 'localhost' })
+        update = (ctx.setState as any).mock.calls[0][0];
+        data = update.domains.localhost.data[0];
+        mockId = Object.keys(data.mocks).filter(k => k !== 'GvpQ5ZCIvv')[0];
+        mock = data.mocks[mockId];
+      });
+
+      it('should clone the statusCode', () => {
+        expect(mock.statusCode).toBe(data.mocks['GvpQ5ZCIvv'].statusCode);
+      });
+
+      it('should not clone the created date', () => {
+        expect(mock.createdOn).not.toBe(data.mocks['GvpQ5ZCIvv'].createdOn);
+      });
+
+      it('should keep the provided response', () => {
+        expect(mock.response).not.toBe(data.mocks['GvpQ5ZCIvv'].response);
+      });
+
+      it('should not make the cloned mock active', () => {
+        expect(data.activeMock).not.toBe(mockId);
+      });
+    });
+
+    describe('Make active', () => {
+      beforeEach(() => {
+        store.upsertMock(ctx, { payload: { makeActive: true, id: 'SAidn6Y3nP', mock: { response: 'new' } }, domain: 'localhost' })
+        update = (ctx.setState as any).mock.calls[0][0];
+        data = update.domains.localhost.data[0];
+        mockId = Object.keys(data.mocks).filter(k => k !== 'GvpQ5ZCIvv')[0];
+        mock = data.mocks[mockId];
+      });
+
+      it('should update the active mock id', () => {
+        expect(data.activeMock).toBe(mockId);
+      });
+    });
   });
-
-  // beforeEach(() => {
-
-  //   OhMyState.domain = 'test';
-  // });
-
-  // describe('new Data', () => {
-  //   let ctx;
-  //   let arg;
-
-  //   beforeEach(() => {
-  //     ctx = {
-  //       getState: () => state,
-  //       dispatch: jest.fn()
-  //     } as any as StateContext<IOhMyMock>;
-
-
-  //   });
-
-  //   it('should dispatch for upsertData if data is new', () => {
-  //     expect(ctx.dispatch).toHaveBeenCalled();
-  //     expect(arg instanceof UpsertData).toBe(true);
-  //   });
-
-  //   it('should upsert the new Data including its context', () => {
-  //     expect(arg.payload).toEqual({
-  //       url: 'url',
-  //       id: (expect as any).anything(),
-  //       method: 'GET',
-  //       type: 'XHR',
-  //       mocks: (expect as any).anything(),
-  //       activeMock: null
-  //     });
-  //   });
-
-  //   it('should upsert new data with a domain', () => {
-  //     expect(arg.domain).toBe('test');
-  //   });
-
-  //   it('should upsert the new data included the new mock', () => {
-  //     const id = Object.keys(arg.payload.mocks)[0];
-  //     const newMock = arg.payload.mocks[id];
-  //     const start = Date.now() - 1000;
-
-  //     const mock = {
-  //       id,
-  //       createdOn: (expect as any).anything(),
-  //       delay: 0,
-  //       jsCode: MOCK_JS_CODE,
-  //       statusCode: 1
-  //     }
-
-  //     expect(newMock).toEqual(mock);
-  //     expect(new Date(newMock.createdOn).getTime() >= start).toBeTruthy();
-  //   })
-  // });
-
-  // it('should insert new mock state if data is known', () => {
-  //   state.domains.test.data = [{ id: 'id', mocks: {} }] as IData[];
-  //   const ctx = {
-  //     getState: () => state,
-  //     dispatch: jest.fn(),
-  //     setState: jest.fn()
-  //   } as any as StateContext<IOhMyMock>;
-
-  //   store.upsertMock(ctx, { payload: { mock: { id: 'id', statusCode: 1 } }, domain: 'test' });
-  //   expect(ctx.setState).toHaveBeenCalled();
-  // });
-
-  // describe('mock update', () => {
-  //   // clone
-  // });
-
 });
