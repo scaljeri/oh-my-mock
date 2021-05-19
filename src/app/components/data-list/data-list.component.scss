@@ -151,9 +151,11 @@ span.url {
   &.btns-1 {
     flex: 0 0 65px;
   }
+
   &.btns-2 {
     flex: 0 0 85px;
   }
+
   &.btns-3 {
     flex: 0 0 145px;
   }
@@ -163,12 +165,21 @@ span.url {
   }
 }
 
-.hit-list-toggle {
+.toggles {
   display: flex;
   align-items: center;
 
   label {
     padding-right: $spacer-2;
+  }
+
+  .toggle {
+    align-items: center;
+    display: flex;
+
+    &+.toggle {
+      margin-left: $spacer-2;
+    }
   }
 }
 

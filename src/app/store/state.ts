@@ -40,7 +40,7 @@ import { addTestData } from '../migrations/test-data';
 import { addCurrentDomain } from '../migrations/current-domain';
 import { uniqueId } from '@shared/utils/unique-id';
 import { findMocks } from '@shared/utils/find-mock';
-
+import { createNewMock } from './create-mock';
 @State<IOhMyMock>({
   name: STORAGE_KEY,
   defaults: {
@@ -113,44 +113,13 @@ export class OhMyState {
     const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
 
     const { index, data } = OhMyState.findData(state, payload);
+    const mock = createNewMock(payload.mock, data, payload.clone);
     const dataList = [...state.data];
     const mocks = { ...data.mocks };
-    let mock = {
-      jsCode: MOCK_JS_CODE,
-      delay: 0,
-      ...(payload.mock.id && { ...mocks[payload.mock.id] }),
-    } as IMock;
 
-    if (mock.id) { // update
-      mock.modifiedOn = new Date().toISOString();
-    } else { // new mock
-      if (payload.clone) {
-        mock = { ...(data.mocks[payload.clone as ohMyMockId] || data.mocks[data.activeMock]) };
-      }
-
-      mock.id = uniqueId();
-      mock.createdOn = new Date().toISOString();
-    }
-
-    Object.keys(payload.mock).forEach(k => mock[k] = payload.mock[k]);
-    if (payload.mock.response && !mock.responseMock) {
-      mock.responseMock = mock.response;
-    }
-    if (payload.mock.headers && !mock.headersMock) {
-      mock.headersMock = mock.headers;
-    }
-
-    if (mock.headersMock) {
-      const contentType = contentParser(mock.headersMock['content-type']);
-
-      if (contentType) {
-        mock.type = contentType.type;
-        mock.subType = contentType.subtype;
-      }
-    }
-
-    if (payload.makeActive) {
+    if (payload.makeActive || !payload.mock.id && Object.keys(data.mocks).length === 0 && state.toggles.activateNew ) {
       data.activeMock = mock.id;
+      data.enabled = true;
     }
 
     data.mocks = { ...mocks, [mock.id]: mock };
@@ -208,6 +177,7 @@ export class OhMyState {
     const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
     const { index, data } = OhMyState.findData(state, payload)
 
+    debugger;
     const mocks = { ...data.mocks };
     delete mocks[payload.mockId];
     data.mocks = mocks;
@@ -293,7 +263,7 @@ export class OhMyState {
   ): { index: number; data: IData } {
     const data = findMocks(state, context) ||
     {
-      url: context.url,
+      url: url2regex(context.url),
       id: uniqueId(),
       method: context.method,
       type: context.type,

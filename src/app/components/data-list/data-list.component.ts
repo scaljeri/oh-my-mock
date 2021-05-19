@@ -55,6 +55,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
   @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
+  @Dispatch() toggleActivateNew = (value: boolean) => new Toggle({ name: 'activateNew', value });
 
   public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
   public selection = new SelectionModel<number>(true);

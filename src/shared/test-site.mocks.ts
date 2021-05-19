@@ -16,6 +16,7 @@ export const testDataMock: IState = {
       "mocks": {
         "GvpQ5ZCIvv": {
           "createdOn": "2021-05-13T09:43:51.781Z",
+          "modifiedOn": "2021-05-13T09:43:51.781Z",
           "delay": 0,
           "headers": {
             "accept-ranges": "bytes",

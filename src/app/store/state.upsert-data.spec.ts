@@ -31,7 +31,7 @@ describe('Store#upsertData', () => {
   describe('new', () => {
     beforeEach(() => {
       store.upsertData(ctx, {
-        payload: { url: 'a', method: 'PUT', type: 'FETCH', mocks: { x: 10 } }, domain: 'localhost'
+        payload: { url: 'a.b?c', method: 'PUT', type: 'FETCH', mocks: { x: 10 } }, domain: 'localhost'
       } as any);
 
       update = (ctx.setState as any).mock.calls[0][0].domains.localhost;
@@ -50,8 +50,8 @@ describe('Store#upsertData', () => {
       expect(data.method).toBe('PUT');
     });
 
-    it('should have an url', () => {
-      expect(data.url).toBe('a');
+    it('should have an escaped url', () => {
+      expect(data.url).toBe('a\\.b\\?c');
     });
 
     it('should update the views', () => {

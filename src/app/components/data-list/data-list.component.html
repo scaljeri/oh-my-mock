@@ -6,10 +6,19 @@
     <span class="inactive-modified">Inactive/modified</span>
   </div>
 
-  <div class="hit-list-toggle">
-    <label for="show-active-list">Order by activity</label>
-    <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
-    </mat-slide-toggle>
+  <div class="toggles">
+    <div class="toggle">
+      <label for="show-active-list">Activate new</label>
+      <mat-slide-toggle (change)="toggleActivateNew($event.checked)" [checked]="state.toggles.activateNew"
+        color="primary">
+      </mat-slide-toggle>
+    </div>
+
+    <div class="toggle">
+      <label for="show-active-list">Order by activity</label>
+      <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
+      </mat-slide-toggle>
+    </div>
   </div>
 </div>
 
@@ -19,7 +28,7 @@
     <span class="method">Method</span>
     <span class="url">Url</span>
     <span class="mock">Mock</span>
-    <span class="actions"  [ngClass]="'btns-' + visibleBtns">Actions</span>
+    <span class="actions" [ngClass]="'btns-' + visibleBtns">Actions</span>
   </li>
   <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
     *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
