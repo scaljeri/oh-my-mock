@@ -1,6 +1,5 @@
 import {
   IData,
-  IUpdateDataUrl,
   IUpsertMock,
   IOhMyMock,
   IOhMyViewItemsOrder,
@@ -41,22 +40,7 @@ export class DeleteData {
 
 export class DeleteMock {
   static readonly type = '[Mock] delete';
-  constructor(public payload: { dataId: ohMyDataId, mockId: ohMyMockId }, public domain?: string) { }
-}
-
-// export class CreateResponse {
-//   static readonly type = '[StatusCode] create';
-//   constructor(public payload: ICreateResponse, public domain?: string) { }
-// }
-
-export class UpdateDataUrl {
-  static readonly type = '[Data] update url';
-  constructor(public payload: IUpdateDataUrl, public domain?: string) { }
-}
-
-export class UpdateDataResponse {
-  static readonly type = '[Data] update status code';
-  constructor(public payload: { id: ohMyDataId, mockId?: ohMyMockId | void, makeActive?: boolean }, public domain?: string) { }
+  constructor(public payload: { id: ohMyDataId, mockId: ohMyMockId }, public domain?: string) { }
 }
 
 export class ViewChangeOrderItems {

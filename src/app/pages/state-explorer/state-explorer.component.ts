@@ -61,7 +61,6 @@ export class PageStateExplorerComponent implements OnInit {
     };
 
     this.upsertData(data);
-
   }
 
   onCloneAll(): void {

@@ -8,12 +8,12 @@
     <mat-label>Name of the response (optional)</mat-label>
     <input type="text" matInput [formControl]="nameCtrl">
   </mat-form-field>
+  <mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>
+
+  <div class="spacer"></div>
+
+  <div class="actions">
+    <button type="button" mat-button (click)="onClose()">Cancel</button>
+    <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
+  </div>
 </form>
-<mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>
-
-<div class="spacer"></div>
-
-<div class="actions">
-  <button mat-button (click)="onClose()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="onSave()">Save</button>
-</div>

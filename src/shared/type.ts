@@ -75,18 +75,6 @@ export interface IUpsertMock extends IOhMyUpsertData {
   makeActive?: boolean;
 }
 
-// export interface ICreateResponse extends IOhMyContext {
-//   id: ohMyDataId;
-//   statusCode: statusCode;
-//   name?: string;
-//   clone?: boolean;
-//   makeActive?: boolean;
-// }
-
-export interface IUpdateDataUrl extends IOhMyContext {
-  newUrl: string;
-}
-
 export interface IPacket {
   tabId?: number;
   domain?: string;

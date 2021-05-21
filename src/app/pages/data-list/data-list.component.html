@@ -1,4 +1,4 @@
-<oh-my-data-list *ngIf="state?.data?.length" [state]="state" [showActivate]="true" [showDelete]="true" [showClone]="true"
+<oh-my-data-list [state]="state" [showActivate]="true" [showDelete]="true" [showClone]="true"
   (select)="onDataSelect($event)"></oh-my-data-list>
 
 <section *ngIf="!state?.data?.length" class="no-data">

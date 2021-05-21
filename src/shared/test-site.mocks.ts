@@ -10,11 +10,13 @@ export const testDataMock: IState = {
   "data": [
     {
       "activeMock": "GvpQ5ZCIvv",
+      "enabled": true,
       "id": "SAidn6Y3nP",
       "method": "PUT",
       "mocks": {
         "GvpQ5ZCIvv": {
           "createdOn": "2021-05-13T09:43:51.781Z",
+          "modifiedOn": "2021-05-13T09:43:51.781Z",
           "delay": 0,
           "headers": {
             "accept-ranges": "bytes",
@@ -46,13 +48,14 @@ export const testDataMock: IState = {
           "jsCode": "/* This is where OhMyMock creates responses.\nInside this sandbox you have access to the following data:\n  * `mock` - object with a cached response, header and status code\n  * request - details of the ongoing request\n  * fetch/XMLHttpRequest - the original objects\n    (Don't use window.fetch or window.XMLHttpRequest)\n\nIf your code is async, make sure to return a Promise which resolves a\nsimilar object as `mock`!! */\n\nreturn mock;\n",
           "response": "<html>\n<head><title>405 Not Allowed</title></head>\n<body bgcolor=\"white\">\n<center><h1>405 Not Allowed</h1></center>\n</body>\n</html>",
           "responseMock": "<html>\n<head><title>405 Not Allowed</title></head>\n<body bgcolor=\"white\">\n<center><h1>405 Not Allowed</h1></center>\n</body>\n</html>",
-          "statusCode": 405
+          "statusCode": 409
         }
       },
       "type": "FETCH",
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "XDuYG9Izod",
       "id": "1WHlVDBpDr",
       "method": "DELETE",
@@ -97,6 +100,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "Gu2dCpKVza",
       "id": "fmJ5T3KelG",
       "method": "PUT",
@@ -141,6 +145,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "tBQaK1pWt0",
       "id": "JInS4zhNeG",
       "method": "POST",
@@ -185,6 +190,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "QEBjhs9JQr",
       "id": "sLNg6i25TP",
       "method": "DELETE",
@@ -229,6 +235,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "sM8DvpsQfj",
       "id": "3gOmwuERfr",
       "method": "DELETE",
@@ -273,6 +280,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "kpGoSp8Se3",
       "id": "Gt2f1QWVIB",
       "method": "GET",
@@ -333,6 +341,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "3bWtqtdYzb",
       "id": "nIOtSzAt0R",
       "method": "POST",
@@ -377,6 +386,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "BcZgj7ZdVt",
       "id": "2qTqHAkiBe",
       "method": "PUT",
@@ -421,6 +431,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "NB8dUoqAXn",
       "id": "CgGsDhnV64",
       "method": "POST",
@@ -465,6 +476,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "sn0czn0nxu",
       "id": "QjRexBsGMX",
       "method": "GET",
@@ -525,6 +537,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "aeCdeFEgZo",
       "id": "Dexkvkooo1",
       "method": "GET",
@@ -585,6 +598,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "XAPkJHrBig",
       "id": "AFHCiH9NpQ",
       "method": "POST",
@@ -629,6 +643,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "EZGgmnpthv",
       "id": "w9qI3Uh6gl",
       "method": "PUT",
@@ -673,6 +688,7 @@ export const testDataMock: IState = {
       "url": "/site"
     },
     {
+      "enabled": true,
       "activeMock": "WT1NNeyjdc",
       "id": "oD9jyFnbBD",
       "method": "DELETE",
@@ -717,6 +733,7 @@ export const testDataMock: IState = {
       "url": "/users"
     },
     {
+      "enabled": true,
       "activeMock": "AiS3N1Wqdg",
       "id": "0ROBw0v0Ne",
       "method": "GET",

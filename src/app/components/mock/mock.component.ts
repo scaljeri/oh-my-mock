@@ -30,8 +30,8 @@ export class MockComponent implements OnChanges {
       id: this.data.id,
       mock
     }, this.domain);
-  @Dispatch() deleteMockResponse = (dataId: ohMyDataId, mockId: ohMyMockId) =>
-    new DeleteMock({ dataId, mockId });
+  @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) =>
+    new DeleteMock({ id, mockId });
 
   public dialogIsOpen = false;
   private delaySubscription: Subscription;

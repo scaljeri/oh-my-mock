@@ -4,12 +4,11 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, Toggle, UpdateDataResponse, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
+import { DeleteData, Toggle, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
 import { findMocks } from '../../../shared/utils/find-mock'
 
-import { OhMyState } from 'src/app/store/state';
 import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IState, IStore, ohMyMockId } from 'src/shared/type';
+import { IData, IState, ohMyMockId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Subscription } from 'rxjs';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
@@ -56,13 +55,13 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
   @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
-  @Dispatch() updateActiveResponse = (id: string, mockId: ohMyMockId | void) =>
-    new UpdateDataResponse({ id, mockId }, this.state.domain);
+  @Dispatch() toggleActivateNew = (value: boolean) => new Toggle({ name: 'activateNew', value });
 
   public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];
+  public visibleBtns = 1;
   public disabled = false;
   private timeoutId: number;
   private isBusyAnimating = false;
@@ -96,6 +95,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     this.timeoutId && clearTimeout(this.timeoutId);
+    this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
 
     this.timeoutId = setTimeout(() => {
       // The hit list has animated its change. The problem after the animation  rows
@@ -154,14 +154,17 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onDelete(id: string, event): void {
     event.stopPropagation();
-
     const data = findMocks(this.state, { id });
-    let msg = `Deleted mock ${data.url}`;
-    if (this.state.domain) {
-      msg += ` on domain ${this.state.domain}`;
+
+    // If you click delete fast enough, you can hit it twice
+    if (data) {
+      let msg = `Deleted mock ${data.url}`;
+      if (this.state.domain) {
+        msg += ` on domain ${this.state.domain}`;
+      }
+      this.toast.success(msg, { duration: 2000, style: {} });
+      this.deleteData(id);
     }
-    this.toast.success(msg, { duration: 2000, style: {} });
-    this.deleteData(id);
   }
 
   onClone(rowIndex: number, event): void {
@@ -199,10 +202,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   drop(event: CdkDragDrop<unknown>): void {
     this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
-  }
-
-  private getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 }
 
