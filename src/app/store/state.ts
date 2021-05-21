@@ -117,7 +117,7 @@ export class OhMyState {
     const dataList = [...state.data];
     const mocks = { ...data.mocks };
 
-    if (payload.makeActive || !payload.mock.id && Object.keys(data.mocks).length === 0 && state.toggles.activateNew ) {
+    if (payload.makeActive || !payload.mock.id && Object.keys(data.mocks).length === 0 && state.toggles.activateNew) {
       data.activeMock = mock.id;
       data.enabled = true;
     }
@@ -177,7 +177,6 @@ export class OhMyState {
     const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
     const { index, data } = OhMyState.findData(state, payload)
 
-    debugger;
     const mocks = { ...data.mocks };
     delete mocks[payload.mockId];
     data.mocks = mocks;
@@ -261,17 +260,21 @@ export class OhMyState {
     state: IState,
     context: IOhMyContext
   ): { index: number; data: IData } {
-    const data = findMocks(state, context) ||
-    {
-      url: url2regex(context.url),
-      id: uniqueId(),
-      method: context.method,
-      type: context.type,
-      mocks: {},
-      activeMock: null
-    };
-
-    return { index: state.data.indexOf(data), data: { ...data } };
+    if (context.id) {
+      const data = findMocks(state, context);
+      return { index: state.data.indexOf(data), data: { ...data } };
+    } else {
+      return {
+        index: -1, data: {
+          url: url2regex(context.url),
+          id: uniqueId(),
+          method: context.method,
+          type: context.type,
+          mocks: {},
+          activeMock: null
+        }
+      };
+    }
   }
 
   static cloneMock(mock: IMock): Partial<IMock> {

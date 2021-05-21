@@ -28,7 +28,7 @@ describe('Store#upsertData', () => {
     } as any
   });
 
-  describe('new', () => {
+  describe('New', () => {
     beforeEach(() => {
       store.upsertData(ctx, {
         payload: { url: 'a.b?c', method: 'PUT', type: 'FETCH', mocks: { x: 10 } }, domain: 'localhost'
@@ -61,9 +61,27 @@ describe('Store#upsertData', () => {
     describe('update', () => {
       beforeEach(() => {
         ctx.getState = () => ({ version: '2.0.0', domains: { 'localhost': testDataMock } })
-      })
+      });
+
       it('should set the modifiedOn property', () => {
       });
     });
   });
+
+  describe('Update', () => {
+    let newData;
+
+    beforeEach(() => {
+      data = { id: '99', method: 'GET', url: 'a', type: 'FETCH'};
+      data = state.domains.localhost.data[0] = data;
+      store.upsertData(ctx, { payload: {id: '99', method: 'DELETE', type: 'XHR'}});
+
+      update = (ctx.setState as any).mock.calls[0][0].domains.localhost;
+      newData = update.data[0];
+    });
+
+    it('should insert new properties', () => {
+      expect(newData).toEqual({id: '99', method: 'DELETE', url: 'a', type: 'XHR'})
+    });
+  })
 });
