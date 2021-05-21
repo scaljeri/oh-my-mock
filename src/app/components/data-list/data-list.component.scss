@@ -16,23 +16,25 @@
   opacity: 1;
 }
 
-.is-active:not(.is-selected) {
-  background-color: $active;
+li:not(.is-selected) {
+  &.is-active {
+    background-color: $active;
+  }
+
+  &.is-active.is-modified {
+    background-color: $activeModified;
+  }
+
+  &.is-modified:not(.is-active) {
+    background-color: $inactiveModified;
+  }
+
+  &:not(.is-active):not(.is-modified) {
+    background-color: $inactive;
+  }
 }
 
-.is-active.is-modified:not(.is-selected) {
-  background-color: $activeModified;
-}
-
-.is-modified:not(.is-active) {
-  background-color: $inactiveModified;
-}
-
-li:not(.is-active):not(.is-modified) {
-  background-color: $inactive;
-}
-
-.is-selected {
+li.is-selected {
   background-color: grey;
 
   * {
