@@ -53,7 +53,7 @@ export class PageDataListComponent implements OnInit {
 
   onAddData(): void {
     const dialogRef = this.dialog.open(AddDataComponent, {
-      width: '30%'
+      width: '30%',
     });
 
     dialogRef.afterClosed().subscribe((data: IData) => {
