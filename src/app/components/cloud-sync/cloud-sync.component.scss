@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  width: 70%;
+}
+
+:host-context(.is-syncing) {
+  .arrows {
+    animation-play-state: running;
+  }
+}
+
+
+.arrows {
+  transform-origin: 50% 55%;
+  animation: spin 4s linear infinite;
+  animation-play-state: paused;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

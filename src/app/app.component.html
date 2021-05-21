@@ -6,6 +6,9 @@
   <mat-drawer-content>
     <mat-toolbar>
       <app-header-button (menu)="drawer.toggle()"></app-header-button>
+      <a routerLink="cloud-sync" [routerLinkActive]="'is-syncing'" class="cloud-sync" mat-icon-button aria-label="Cloud sync">
+        <oh-my-cloud-sync-svg></oh-my-cloud-sync-svg>
+      </a>
 
       <h1>Oh My Mock v{{version}} - {{domain}} </h1>
       <span class="header-spacer"></span>

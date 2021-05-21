@@ -46,6 +46,7 @@ import { AnonymizeComponent } from './anonymize/anonymize.component';
 import { ArrowComponent } from './arrow/arrow.component';
 import { MockLabelComponent } from './mock-label/mock-label.component';
 import { MockDetailsComponent } from './mock/mock-details/mock-details.component';
+import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
 
 @NgModule({
   declarations: [
@@ -68,7 +69,8 @@ import { MockDetailsComponent } from './mock/mock-details/mock-details.component
     AnonymizeComponent,
     ArrowComponent,
     MockLabelComponent,
-    MockDetailsComponent
+    MockDetailsComponent,
+    CloudSyncComponent
   ],
   imports: [
     CommonModule,
@@ -105,7 +107,8 @@ import { MockDetailsComponent } from './mock/mock-details/mock-details.component
     FileUploaderComponent,
     AnimatedListDirective,
     ArrowComponent,
-    MockLabelComponent
+    MockLabelComponent,
+    CloudSyncComponent,
   ],
   providers: [
     Location,

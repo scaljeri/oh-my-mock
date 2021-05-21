@@ -1,0 +1,9 @@
+@import "mixins";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 20px;
+  font-size: $oh-sub-header;
+}
