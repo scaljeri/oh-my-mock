@@ -1,20 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { CloudSyncComponent } from './cloud-sync.component';
+import { CloudSyncPageComponent } from './cloud-sync-page.component';
 
 describe('CloudSyncComponent', () => {
-  let component: CloudSyncComponent;
-  let fixture: ComponentFixture<CloudSyncComponent>;
+  let component: CloudSyncPageComponent;
+  let fixture: ComponentFixture<CloudSyncPageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CloudSyncComponent ]
+      declarations: [CloudSyncPageComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CloudSyncComponent);
+    fixture = TestBed.createComponent(CloudSyncPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
