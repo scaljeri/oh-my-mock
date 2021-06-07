@@ -17,6 +17,11 @@ responses. Via the OhMyMock UI you have can enable caching and mocking per respo
 
 ![alt text](https://github.com/scaljeri/oh-my-mock/blob/master/images/oh-my-mock-overview.png?raw=true)
 
+## Known limitation
+Unfortunate, OhMyMock needs some time to get ready, so it might happen that API calls that are executed on page
+load happen to early for OhMyMock. The only solution for now is to delay these calls 
+(only in your development environment of course) a bit!
+
 ### Installation
 OhMyMock can be install from the 
 [chrome extension store](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock), 
