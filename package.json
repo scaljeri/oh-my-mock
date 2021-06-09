@@ -13,7 +13,7 @@
     "build:watchng": "ng build  --base-href=index.html --watch",
     "build:custom": "node ./scripts/monitor.js",
     "build:watch": "run-p build:custom build:watchng",
-    "zip": "cd dist && zip -r ../oh-my-mock.zip . && cd ..",
+    "zip": "rm -rf dist && yarn build && cd dist && zip -r ../oh-my-mock.zip . && cd ..",
     "test": "npx jest",
     "lint": "tsc --project tsconfig.json --noEmit && eslint . --ext js,ts,json --quiet --fix",
     "e2e": "ng e2e"
