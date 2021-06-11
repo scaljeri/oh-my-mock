@@ -52,9 +52,10 @@ li:not(.is-selected) {
 }
 
 li.is-selected {
+
   &,
   .btn-wrapper {
-    background-color: grey;
+    background-color: $selected;
   }
 
   * {
@@ -208,14 +209,14 @@ span.type {
 .actions {
   align-items: center;
   display: flex;
-  padding-left: $spacer-2;
+  position: relative;
 
   button+button {
     display: none;
   }
 
   &.btns-1 {
-    flex: 0 0 65px;
+    flex: 0 0 40px;
   }
 
   &.btns-2 {
