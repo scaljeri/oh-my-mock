@@ -26,7 +26,14 @@
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
-    <span class="url">Url</span>
+    <div class="url">
+      <span>Url</span>
+      <div class="filter-field">
+        <mat-form-field [floatLabel]="'never'">
+          <input matInput placeholder="Filter">
+        </mat-form-field>
+      </div>
+    </div>
     <span class="mock">Mock</span>
     <span class="actions" [ngClass]="'btns-' + visibleBtns">Actions</span>
   </li>
