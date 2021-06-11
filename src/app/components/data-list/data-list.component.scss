@@ -17,25 +17,45 @@
 }
 
 li:not(.is-selected) {
+
   &.is-active {
-    background-color: $active;
+
+    &,
+    .btn-wrapper {
+      background-color: $active;
+    }
   }
 
   &.is-active.is-modified {
-    background-color: $activeModified;
+
+    &,
+    .btn-wrapper {
+      background-color: $activeModified;
+    }
   }
 
   &.is-modified:not(.is-active) {
-    background-color: $inactiveModified;
+
+    &,
+    .btn-wrapper {
+      background-color: $inactiveModified;
+    }
   }
 
   &:not(.is-active):not(.is-modified) {
-    background-color: $inactive;
+
+    &,
+    .btn-wrapper {
+      background-color: $inactive;
+    }
   }
 }
 
 li.is-selected {
-  background-color: grey;
+  &,
+  .btn-wrapper {
+    background-color: grey;
+  }
 
   * {
     color: #fff;
@@ -54,6 +74,7 @@ ol[data-table] {
     font-weight: 500;
     color: rgba(0, 0, 0, .54);
     height: 50px;
+    padding: 0 $spacer-4;
 
     .url {
       align-items: center;
@@ -94,9 +115,22 @@ ol[data-table] {
     position: relative;
     transition-property: transform;
     transition-duration: var(--animation-duration, 0.8s);
+    height: 46px;
 
     span {
       user-select: none;
+    }
+
+    &:hover {
+      .btn-wrapper {
+        display: flex;
+        position: absolute;
+        right: 0;
+
+        button+button {
+          display: block;
+        }
+      }
     }
   }
 }
@@ -175,6 +209,10 @@ span.type {
   align-items: center;
   display: flex;
   padding-left: $spacer-2;
+
+  button+button {
+    display: none;
+  }
 
   &.btns-1 {
     flex: 0 0 65px;

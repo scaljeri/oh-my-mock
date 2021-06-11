@@ -192,7 +192,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onClone(rowIndex: number, event): void {
     event.stopPropagation();
-    const data = { ...this.data[rowIndex], id: uniqueId() };
+    const data = {
+      ...this.data[rowIndex], id: uniqueId(),
+      enabled: this.state.toggles.activateNew
+    };
 
     this.upsertData(data);
     this.toast.success('Cloned ' + data.url);
