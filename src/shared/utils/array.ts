@@ -1,7 +1,8 @@
 export const arrayMoveItem = <T>(list: T[], from: number, to: number): T[] => {
 
   if (from >= list.length) {
-    console.log(`Cannot move entry in array. 'from' >= list.length (${from} > ${list.length})`);
+    // eslint-disable-next-line no-console
+    console.warn(`Cannot move entry in array. 'from' >= list.length (${from} > ${list.length})`);
     return list;
   }
 

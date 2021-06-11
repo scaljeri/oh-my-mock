@@ -140,6 +140,7 @@ export class OhMockXhr extends Base {
         headers: this.ohRequestHeaders
       }));
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Could not execute jsCode', this.ohData, this.ohMock);
       return this.ohMock.responseMock || this.response;
     }

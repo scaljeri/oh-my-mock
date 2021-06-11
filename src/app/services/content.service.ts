@@ -78,7 +78,7 @@ export class ContentService {
 
   send(data): void {
     log('Sending state to content script', data);
-    chrome.tabs.sendMessage(Number(this.appStateService.tabId), {
+    const output = {
       tabId: this.appStateService.tabId,
       source: appSources.POPUP,
       domain: this.appStateService.domain,
@@ -86,7 +86,9 @@ export class ContentService {
         type: packetTypes.STATE,
         data
       }
-    });
+    }
+    chrome.tabs.sendMessage(Number(this.appStateService.tabId), output);
+    chrome.runtime.sendMessage(output);
   }
 
   destroy(): void {

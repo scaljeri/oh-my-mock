@@ -6,6 +6,7 @@ import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-setti
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
+import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
 
 const appRoutes: Routes = [
   {
@@ -35,6 +36,10 @@ const appRoutes: Routes = [
       {
         path: 'json-export',
         component: JsonExportComponent
+      },
+      {
+        path: 'cloud-sync',
+        component: CloudSyncPageComponent
       }
     ]
   }

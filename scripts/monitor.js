@@ -42,7 +42,7 @@ chokidar
 function build() {
   console.log("- start build");
   return new Promise((resolve, reject) => {
-    exec("yarn build:both", (error, stdout, stderr) => {
+    exec("yarn build:other", (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         reject();

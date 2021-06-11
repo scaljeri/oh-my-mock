@@ -23,7 +23,6 @@ export class StorageService {
       chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
         state[STORAGE_KEY] = this.migrateService.update(state[STORAGE_KEY]);
 
-        console.log('State from storage', state);
         resolve(state[STORAGE_KEY]);
       });
     });

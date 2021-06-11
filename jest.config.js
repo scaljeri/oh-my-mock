@@ -12,4 +12,8 @@ module.exports = {
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
     prefix: "<rootDir>/",
   }),
+  transform: {
+    '^.+\\.(ts|js|html|svg)$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'js', 'html', 'svg']
 };

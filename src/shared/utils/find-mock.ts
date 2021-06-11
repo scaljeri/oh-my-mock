@@ -17,7 +17,7 @@ export const findMocks = (
 
     if (id ? id === item.id :
       method === item.method && type === item.type && (url === item.url || compareUrls(url, item.url))) {
-      if (inactive || item.activeMock) {
+      if (inactive || item.enabled && item.activeMock) {
         return item;
       }
     }
