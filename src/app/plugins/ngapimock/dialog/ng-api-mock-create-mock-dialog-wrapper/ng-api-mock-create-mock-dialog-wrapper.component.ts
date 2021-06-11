@@ -14,7 +14,6 @@ export class NgApiMockCreateMockDialogWrapperComponent {
   ) {}
 
   closeDialogs(): void {
-	  console.log('closeemall')
     this.dialogService.closeAll();
   }
 }

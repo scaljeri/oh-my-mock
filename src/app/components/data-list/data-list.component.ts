@@ -115,6 +115,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         this.data = viewList.map(v => this.state.data[v]);
         this.viewList = this.data.map((v, i) => i);
       } else {
+        // eslint-disable-next-line no-console
         console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
 
         this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
