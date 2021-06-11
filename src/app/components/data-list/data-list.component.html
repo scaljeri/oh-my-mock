@@ -30,15 +30,19 @@
       <span>Url</span>
       <div class="filter-field">
         <mat-form-field [floatLabel]="'never'">
-          <input matInput placeholder="Filter">
+          <input type="search" matInput placeholder="Filter" [formControl]="filterCtrl">
         </mat-form-field>
+        <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"
+          (click)="filterCtrl.setValue('')">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
     </div>
     <span class="mock">Mock</span>
     <span class="actions" [ngClass]="'btns-' + visibleBtns">Actions</span>
   </li>
   <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
-    *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
+    *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
         'is-hit-a': hitcount[index] % 2 === 0,
         'is-hit-b': hitcount[index] % 2 === 1,
         'is-selected': selection.isSelected(index),

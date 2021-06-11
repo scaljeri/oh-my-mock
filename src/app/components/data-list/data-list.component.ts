@@ -16,6 +16,7 @@ import { arrayMoveItem } from '@shared/utils/array';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { isViewValidate } from '../../utils/validate-view';
 import { uniqueId } from '@shared/utils/unique-id';
+import { FormControl } from '@angular/forms';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -67,8 +68,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   private isBusyAnimating = false;
 
   subscriptions: Subscription[] = [];
+  filterCtrl = new FormControl('');
 
   public viewList: number[];
+
 
   public data: IData[];
 
@@ -124,6 +127,20 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       }
 
     }, this.isBusyAnimating ? 1000 : 0);
+  }
+
+  applyFilter(data: IData[]): IData[] {
+    const v = this.filterCtrl.value.toLowerCase();
+
+    if (!v) {
+      return data;
+    }
+
+    return data?.filter(d => {
+      return d.url.toLowerCase().includes(v) ||
+        d.type.toLowerCase().includes(v) || d.method.toLowerCase().includes(v) ||
+          d.mocks[d.activeMock]?.statusCode.toString().includes(v);
+    });
   }
 
   ngOnDestroy(): void {
@@ -202,7 +219,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   drop(event: CdkDragDrop<unknown>): void {
-    this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
+    if (!this.filterCtrl.value) {
+      this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
+    }
   }
 }
 

@@ -69,7 +69,13 @@ ol[data-table] {
 
         mat-form-field {
           font-size: $oh-font-size;
+          padding-right: 30px;
         }
+
+        button {
+          @include oh-position(absolute, 8px 0px 0 0);
+        }
+
       }
     }
   }
