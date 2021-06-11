@@ -8,9 +8,9 @@ console.log(`${STORAGE_KEY}: background script is ready`);
 chrome.runtime.onMessage.addListener((request) => {
   if (request.payload?.type === packetTypes.STATE) {
     if (request.payload.data.toggles.active) {
-      chrome.browserAction.setIcon({ path: "oh-my-mock/assets/images/icon-128.png", tabId: request.tabId });
+      chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: request.tabId });
     } else {
-      chrome.browserAction.setIcon({ path: "oh-my-mock/assets/images/icon-off-128.png", tabId: request.tabId });
+      chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: request.tabId });
     }
   }
 });
