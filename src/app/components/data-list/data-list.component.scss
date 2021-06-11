@@ -19,9 +19,8 @@
 li:not(.is-selected) {
 
   &.is-active {
-
     &,
-    .btn-wrapper {
+    &:hover .btn-wrapper {
       background-color: $active;
     }
   }
@@ -29,7 +28,7 @@ li:not(.is-selected) {
   &.is-active.is-modified {
 
     &,
-    .btn-wrapper {
+    &:hover .btn-wrapper {
       background-color: $activeModified;
     }
   }
@@ -37,7 +36,7 @@ li:not(.is-selected) {
   &.is-modified:not(.is-active) {
 
     &,
-    .btn-wrapper {
+    &:hover .btn-wrapper {
       background-color: $inactiveModified;
     }
   }
@@ -45,7 +44,7 @@ li:not(.is-selected) {
   &:not(.is-active):not(.is-modified) {
 
     &,
-    .btn-wrapper {
+    &:hover .btn-wrapper {
       background-color: $inactive;
     }
   }
@@ -213,6 +212,10 @@ span.type {
 
   button+button {
     display: none;
+  }
+
+  .btn-wrapper {
+    flex-direction: row-reverse;
   }
 
   &.btns-1 {
