@@ -129,18 +129,23 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     }, this.isBusyAnimating ? 1000 : 0);
   }
 
-  applyFilter(data: IData[]): IData[] {
-    const v = this.filterCtrl.value.toLowerCase();
+  applyFilter(data: IData[] = []): IData[] {
+    const vs = this.filterCtrl.value.toLowerCase().split(' ');
 
-    if (!v) {
+    if (vs.length === 1 && vs[0] === '') {
       return data;
     }
 
-    return data?.filter(d => {
-      return d.url.toLowerCase().includes(v) ||
-        d.type.toLowerCase().includes(v) || d.method.toLowerCase().includes(v) ||
+    let filtered = data;
+    vs.forEach(v => {
+      filtered = filtered.filter(d => {
+        return d.url.toLowerCase().includes(v) ||
+          d.type.toLowerCase().includes(v) || d.method.toLowerCase().includes(v) ||
           d.mocks[d.activeMock]?.statusCode.toString().includes(v);
+      });
     });
+
+    return filtered;
   }
 
   ngOnDestroy(): void {
