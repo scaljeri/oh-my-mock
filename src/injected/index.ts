@@ -38,12 +38,14 @@ function setup() {
   Object.freeze(vals);
 
   // Public API and more...
-  Object.defineProperty(window, STORAGE_KEY, {
-    value: vals,
-    writable: false,
-    configurable: false,
-    enumerable: false,
-  });
+  if (!window[STORAGE_KEY]) {
+    Object.defineProperty(window, STORAGE_KEY, {
+      value: vals,
+      writable: false,
+      configurable: false,
+      enumerable: false,
+    });
+  }
 
   window[STORAGE_KEY].newMock$.subscribe(newMockMessage);
   window[STORAGE_KEY].hit$.subscribe(mockHitMessage);

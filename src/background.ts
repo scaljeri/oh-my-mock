@@ -26,12 +26,11 @@ chrome.browserAction.onClicked.addListener(function (tab) {
   // eslint-disable-next-line no-console
   console.log('OhMyMock: Extension clicked', tab.id);
 
-  const domain = (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1];
+  const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
 
   if (domain) {
-    const url = tab.url.match(/^https?\:\/\/([^/]+)/)[1];
     const popup = open(
-      `/oh-my-mock/index.html?domain=${url}&tabId=${tab.id}`,
+      `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`,
       `oh-my-mock-${tab.id}`,
       'menubar=0,innerWidth=900,innerHeight=800'
     );
