@@ -16,8 +16,6 @@ chrome.runtime.onMessage.addListener((request) => {
 });
 
 chrome.runtime.onInstalled.addListener(function (details) {
-  // eslint-disable-next-line no-debugger
-  debugger;
   open('/splash-screen.html', '_blank');
 })
 

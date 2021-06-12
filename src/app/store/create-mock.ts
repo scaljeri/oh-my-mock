@@ -7,6 +7,7 @@ export const createNewMock = (update: Partial<IMock>, data: IData, clone: boolea
   let mock = {
     jsCode: MOCK_JS_CODE,
     delay: 0,
+    headers: {},
     ...(update.id && { ...data.mocks[update.id] }),
   } as IMock;
 
@@ -27,7 +28,7 @@ export const createNewMock = (update: Partial<IMock>, data: IData, clone: boolea
   if (update.response && !mock.responseMock) {
     mock.responseMock = mock.response;
   }
-  if (update.headers && !mock.headersMock) {
+  if (!mock.headersMock) {
     mock.headersMock = mock.headers;
   }
 
