@@ -52,7 +52,10 @@ export class MockDetailsComponent implements OnInit, OnChanges {
       }),
       name: new FormControl(this.mock.name, { updateOn: 'blur' })
     });
-    this.mimeTypeCtrl.setValue(`${this.mock.type}/${this.mock.subType}`);
+
+    if (this.mock.type && this.mock.subType) {
+      this.mimeTypeCtrl.setValue(`${this.mock.type}/${this.mock.subType}`);
+    }
 
     this.form.valueChanges.subscribe(values => {
       const update: Partial<IMock> = { name: values.name, delay: values.delay || 0 }
@@ -65,7 +68,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
   }
 
   onMimeTypeBlur(): void {
-    this.upsertMock({ headersMock: {...this.mock.headersMock, 'content-type': this.mimeTypeCtrl.value}});
+    this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': this.mimeTypeCtrl.value } });
   }
 
   get nameCtrl(): FormControl {

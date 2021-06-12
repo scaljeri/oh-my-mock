@@ -32,9 +32,6 @@ chrome.browserAction.onClicked.addListener(function (tab) {
       `oh-my-mock-${tab.id}`,
       'menubar=0,innerWidth=900,innerHeight=800'
     );
-  } else {
-    // eslint-disable-next-line no-console
-    console.warn('OhMyMock can only be used with web pages')
   }
 
   // popup.addEventListener("beforeunload", () => {
