@@ -105,7 +105,7 @@ export class OhMockXhr extends Base {
         }
       });
     }
-    this.ohListeners.forEach(l => l.apply(this, args));
+    this.ohListeners.forEach(l => l?.apply(this, args));
   }
 
 
