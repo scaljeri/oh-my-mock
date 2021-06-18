@@ -16,10 +16,14 @@ export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
 
 export enum packetTypes {
+  ACTIVE = 'active',
   MOCK = 'mock',
   STATE = 'state',
   KNOCKKNOCK = 'knockknock',
-  HIT = 'hit'
+  HIT = 'hit',
+  EVAL = 'execute',
+  EVAL_RESULT = 'eval-result'
+
 }
 export enum appSources {
   INJECTED = 'injected',
@@ -39,3 +43,8 @@ export const MOCK_RULE_TYPES = {
   password: 'Password',
   username: 'Username'
 };
+
+export enum ohMyEvalStatus {
+  OK,
+  ERROR
+}

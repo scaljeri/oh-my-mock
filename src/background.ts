@@ -1,13 +1,16 @@
 ///<reference types="chrome"/>
 
 import { packetTypes, STORAGE_KEY } from './shared/constants';
+import { IOhMyPopupActive } from './shared/type';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
 chrome.runtime.onMessage.addListener((request) => {
-  if (request.payload?.type === packetTypes.STATE) {
-    if (request.payload.data.toggles.active) {
+  if (request.payload?.type === packetTypes.ACTIVE) {
+    const data = request.payload.data as IOhMyPopupActive;
+
+    if (data.active) {
       chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: request.tabId });
     } else {
       chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: request.tabId });

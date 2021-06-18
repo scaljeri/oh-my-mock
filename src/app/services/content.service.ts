@@ -56,45 +56,50 @@ export class ContentService {
         }
       } else {
         if (payload.type === packetTypes.KNOCKKNOCK) {
-          this.send(OhMyState.getActiveState(this.store.snapshot()));
+          this.sendActiveState(true);
         }
       }
     };
 
     chrome.runtime.onMessage.addListener(this.listener);
-
-    this.state$.subscribe((state: IState) => {
-      if (!state) {
-        return;
-      }
-
-      this.state = state;
-
-      if (state.domain) {
-        this.send(state);
-      }
-    });
   }
 
-  send(data): void {
-    log('Sending state to content script', data);
-    const output = {
+  sendActiveState(isActive: boolean): void {
+    const msg = {
       tabId: this.appStateService.tabId,
       source: appSources.POPUP,
       domain: this.appStateService.domain,
       payload: {
-        type: packetTypes.STATE,
-        data
+        type: packetTypes.ACTIVE,
+        data: {
+          active: isActive
+        }
       }
     }
-    chrome.tabs.sendMessage(Number(this.appStateService.tabId), output);
-    chrome.runtime.sendMessage(output);
+    chrome.tabs.sendMessage(Number(this.appStateService.tabId), msg);
+    chrome.runtime.sendMessage(msg);
   }
+
+  // send(data): void {
+    // log('Sending state to content script', data);
+    // const output = {
+    //   tabId: this.appStateService.tabId,
+    //   source: appSources.POPUP,
+    //   domain: this.appStateService.domain,
+    //   payload: {
+    //     type: packetTypes.STATE,
+    //     data
+    //   }
+    // }
+    // chrome.tabs.sendMessage(Number(this.appStateService.tabId), output);
+    // chrome.runtime.sendMessage(output);
+  // }
 
   destroy(): void {
     // const x = chrome.runtime.onMessage.hasListener(this.listener);
     // chrome.runtime.onMessage.removeListener(this.listener);
-    this.send({ ...this.state, toggles: { ...this.state.toggles, active: false } });
+    // this.send({ ...this.state, toggles: { ...this.state.toggles, active: false } });
+    this.sendActiveState(false);
   }
 
   private getActiveStateSnapshot(): IState {
