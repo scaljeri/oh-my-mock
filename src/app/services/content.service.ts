@@ -76,7 +76,9 @@ export class ContentService {
         }
       }
     }
+    // Send msg to content script
     chrome.tabs.sendMessage(Number(this.appStateService.tabId), msg);
+    // Send msg to background script
     chrome.runtime.sendMessage(msg);
   }
 

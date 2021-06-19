@@ -34,7 +34,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
     }
 
     return new Promise(async (resolv, reject) => {
-      const body = new Blob([result.response], { type: result.headers['content-type'] });
+      const body = new Blob([result.response ||''], { type: result.headers['content-type'] });
 
       const response = new Response(body, {
         headers: fetchUtils.jsonToHeaders(result.headers),

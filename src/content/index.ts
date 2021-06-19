@@ -6,15 +6,15 @@ import { streamByType$ } from '../shared/utils/messaging';
 import { evalCode } from './eval-code';
 
 const log = logging(`${STORAGE_KEY} (^*^) | ConTeNt`);
-let timeout: number;
 
 log('Script loaded and ready....');
 
 let tabId: number;
 
-function getInactiveDummyState(): IState {
-  return { domain: window.location.host, data: [], views: {}, toggles: { active: false } };
-}
+// function getInactiveDummyState(): IState {
+//   return { domain: window.location.host, data: [], views: {}, toggles: { active: false } };
+// }
+
 function sendMsgToPopup(payload: IPacketPayload) {
   chrome.runtime.sendMessage({
     tabId,
@@ -38,33 +38,22 @@ function sendMsgToInjected(payload: IPacketPayload) {
 
 function sendKnockKnock() {
   sendMsgToPopup({ type: packetTypes.KNOCKKNOCK });
-
-  timeout = window.setTimeout(() => {
-    if (!tabId) {
-      initialize(getInactiveDummyState());
-    }
-  }, 1000);
 }
 
-function initialize(state: IState = null) {
-  if (state) {
-    sendMsgToInjected({ type: packetTypes.STATE, data: state });
-
-  } else {
+function loadState(): Promise<IPacketPayload> {
+  return new Promise(resolve => {
     chrome.storage.local.get([STORAGE_KEY], (state) => {
-      sendMsgToInjected({ type: packetTypes.STATE, data: state[STORAGE_KEY].domains[window.location.host] });
-    });
-  }
+      resolve({ type: packetTypes.STATE, data: state[STORAGE_KEY].domains[window.location.host] });
+    })
+  });
 }
-
 
 // Listen for messages from Popup/Angular
-chrome.runtime.onMessage.addListener((data: IPacket, sender) => {
+chrome.runtime.onMessage.addListener(async (data: IPacket, sender) => {
   if (data.source !== appSources.POPUP) {
     return;
   }
 
-  clearTimeout(timeout);
   tabId = data.tabId;
 
   if (data.domain !== window.location.host) {
@@ -73,7 +62,9 @@ chrome.runtime.onMessage.addListener((data: IPacket, sender) => {
     sendMsgToInjected({ type: packetTypes.STATE, data: data.payload.data });
   } else if (data.payload.type === packetTypes.ACTIVE) {
     const dataActive = data.payload.data as IOhMyPopupActive;
-    initialize(dataActive.active ? null : getInactiveDummyState());
+    const payload = await loadState();
+    (payload.data as IState).toggles.active = dataActive.active;
+    sendMsgToInjected(payload);
   }
 });
 
@@ -111,7 +102,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 // Inject XHR/Fetch mocking code and more
-
 (function () {
   const mockScript = document.createElement('script');
   mockScript.type = 'text/javascript';
@@ -120,7 +110,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     try {
       // Notify Popup that content script is ready
       sendKnockKnock();
-      initialize();
     } catch (e) {
       log('Cannot connect to the OhMyMock tab', e);
     }
