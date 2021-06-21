@@ -44,3 +44,7 @@ chrome.browserAction.onClicked.addListener(function (tab) {
   //    tabId = tab.id;
   // });
 });
+
+chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1MPLpGa5i3VkbMoxAq--TkmIHkqPVqk1cRWFUjE01CRQ/viewform', () => {
+
+});
