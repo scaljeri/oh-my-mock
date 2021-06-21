@@ -2,7 +2,7 @@ import { ohMyEvalStatus } from '../shared/constants';
 import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../shared/type';
 import { compileJsCode } from '../shared/utils/eval-jscode';
 
-export const evalCode = (data: IData, request: IOhMyEvalRequest): Partial<IOhMyEvalResult> => {
+export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<Partial<IOhMyEvalResult>> => {
   const mock = data.mocks[data.activeMock];
 
   let retVal: IOhMyEvalResult;
@@ -15,16 +15,14 @@ export const evalCode = (data: IData, request: IOhMyEvalRequest): Partial<IOhMyE
 
   try {
     const code = compileJsCode(mock.jsCode) as (mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>;
+    const result = await code(context, {
+      url: request.url,
+      method: request.method,
+      body: request.body,
+      headers: request.headers
+    });
 
-    retVal = {
-      status: ohMyEvalStatus.OK,
-      result: code(context, {
-        url: request.url,
-        method: request.method,
-        body: request.body,
-        headers: request.headers
-      })
-    };
+    retVal = { status: ohMyEvalStatus.OK, result };
   } catch (err) {
     // TODO: send message to popup so the error can be reviewed
     // eslint-disable-next-line no-console

@@ -81,10 +81,10 @@ function handlePacketFromInjected(packet: IPacket) {
   } as IPacket)
 }
 
-function handleEvalFromInjected(packet: IPacket) {
+async function handleEvalFromInjected(packet: IPacket) {
   const { data, request } = packet.payload.data as IOhMyEvalContext;
 
-  const result = evalCode(data, request);
+  const result = await evalCode(data, request);
 
   sendMsgToInjected({
     context: { id: packet.payload.context.id },
