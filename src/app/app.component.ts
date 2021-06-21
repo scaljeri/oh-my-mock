@@ -64,6 +64,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         if (this.dialogRef) {
           this.dialogRef.close();
         }
+        this.contentService.sendActiveState(true);
       } else if (!this.dialogRef) {
         this.notifyDisabled();
       }
@@ -72,6 +73,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
     this.activate(checked);
+    this.contentService.sendActiveState(checked);
   }
 
   @HostListener('window:beforeunload')
@@ -86,7 +88,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     this.dialogRef.afterClosed().subscribe((enable) => {
       if (enable) {
-        this.activate(enable);
+        this.onEnableChange({ checked: enable } as any);
       }
       this.dialogRef = null;
     });

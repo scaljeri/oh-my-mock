@@ -26,12 +26,23 @@
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
-    <span class="url">Url</span>
+    <div class="url">
+      <span>Url</span>
+      <div class="filter-field">
+        <mat-form-field [floatLabel]="'never'">
+          <input type="search" matInput placeholder="Filter" [formControl]="filterCtrl">
+        </mat-form-field>
+        <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"
+          (click)="filterCtrl.setValue('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
     <span class="mock">Mock</span>
-    <span class="actions" [ngClass]="'btns-' + visibleBtns">Actions</span>
+    <span class="actions btns-1">Actions</span>
   </li>
   <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
-    *ngFor="let row of data; index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
+    *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
         'is-hit-a': hitcount[index] % 2 === 0,
         'is-hit-b': hitcount[index] % 2 === 1,
         'is-selected': selection.isSelected(index),
@@ -61,23 +72,25 @@
 </ol>
 
 <ng-template #actions let-row="row" let-index="index">
-  <div class="actions" [ngClass]="'btns-' + visibleBtns">
-    <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
-      aria-label="Example icon button with a menu icon">
-      <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>
-      <mat-icon *ngIf="row.enabled">stop</mat-icon>
-    </button>
-    <button *ngIf="showClone" (click)="onClone(index, $event)" mat-icon-button color="primary"
-      aria-label="Example icon button with a menu icon">
-      <mat-icon>content_copy</mat-icon>
-    </button>
-    <button *ngIf="showDelete" (click)="onDelete(row.id, $event)" mat-icon-button color="primary"
-      aria-label="Example icon button with a menu icon">
-      <mat-icon>delete</mat-icon>
-    </button>
-    <button *ngIf="showExport" (click)="onExport(row, index, $event)" mat-icon-button color="primary"
-      aria-label="Example icon button with a menu icon">
-      <mat-icon>import_export</mat-icon>
-    </button>
+  <div class="actions btns-1">
+    <div class="btn-wrapper">
+      <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>
+        <mat-icon *ngIf="row.enabled">stop</mat-icon>
+      </button>
+      <button *ngIf="showClone" (click)="onClone(index, $event)" mat-icon-button color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button *ngIf="showDelete" (click)="onDelete(row.id, $event)" mat-icon-button color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon>delete</mat-icon>
+      </button>
+      <button *ngIf="showExport" (click)="onExport(row, index, $event)" mat-icon-button color="primary"
+        aria-label="Example icon button with a menu icon">
+        <mat-icon>import_export</mat-icon>
+      </button>
+    </div>
   </div>
 </ng-template>

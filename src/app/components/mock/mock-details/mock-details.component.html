@@ -11,9 +11,9 @@
       <mat-label>Name</mat-label>
       <input matInput [formControl]="nameCtrl">
     </mat-form-field>
-    <mat-icon color="primary"
-      matTooltip="Describes the mock's purpose in one or two words. This can be useful
-        if you have multple mocks with the same status code. To export to NgApiMock this field is required!">info</mat-icon>
+    <mat-icon color="primary" matTooltip="Describes the mock's purpose in one or two words. This can be useful
+        if you have multple mocks with the same status code. To export to NgApiMock this field is required!">info
+    </mat-icon>
   </p>
   <p>
     <mat-form-field class="example-full-width">
@@ -23,7 +23,18 @@
   </p>
 </form>
 <div>
-  <p><span class="label">ContentType:</span><span class="value">{{mock.type}}/{{mock.subType}}</span></p>
+  <p><span class="label">ContentType:</span>
+
+      <mat-form-field class="example-full-width">
+        <input (blur)="onMimeTypeBlur()" type="text" placeholder="Content type" aria-label="Content type" matInput [formControl]="mimeTypeCtrl"
+          [matAutocomplete]="auto">
+        <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredMimeTypes$ | async" [value]="option">
+            {{option}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+  </p>
   <p><span class="label">Created:</span><span class="value">{{mock.createdOn}}</span></p>
   <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn}}</span></p>
 </div>

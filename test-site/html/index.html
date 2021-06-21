@@ -112,22 +112,26 @@
     };
 
     window.onSubmit = () => {
-      const form = document.forms[0];
-      const fd = new FormData(form);
+      try {
+        const form = document.forms[0];
+        const fd = new FormData(form);
 
-      ohMyMock.type = fd.get('type');
-      ohMyMock.method = fd.get('method');
-      ohMyMock.response = fd.get('response');
+        ohMyMock.type = fd.get('type');
+        ohMyMock.method = fd.get('method');
+        ohMyMock.response = fd.get('response');
 
-      ohMyMock.starttime = Date.now();
-      const interId = setInterval(() => ohMyMock.durationFn(), 100);
+        ohMyMock.starttime = Date.now();
+        const interId = setInterval(() => ohMyMock.durationFn(), 100);
 
-      const handler = window.ohMyMock[fd.get('type')];
-      ohMyMock.resetFn();
-      handler(fd.get('method'), fd.get('response'), () => {
-        clearInterval(interId);
-        ohMyMock.durationFn();
-      });
+        const handler = window.ohMyMock[fd.get('type')];
+        ohMyMock.resetFn();
+        handler(fd.get('method'), fd.get('response'), () => {
+          clearInterval(interId);
+          ohMyMock.durationFn();
+        });
+      } catch (err) {
+        console.log("Oops something bad happend", err);
+      }
 
       return false;
     };

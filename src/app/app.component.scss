@@ -4,6 +4,22 @@
   background-color: #000;
 }
 
+mat-toolbar {
+  max-width: 100%;
+  overflow: hidden;
+
+  h1 {
+    flex: 1;
+    @include oh-ellipsis;
+    padding-right: $spacer-2;
+
+    .dash {
+      padding: 0 $spacer-2;
+    }
+  }
+
+}
+
 mat-drawer-content {
   background-color: #000;
   height: 100vh;

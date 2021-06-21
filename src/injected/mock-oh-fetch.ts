@@ -1,39 +1,47 @@
-import { STORAGE_KEY } from '../shared/constants';
-import { IData, IMock, requestMethod } from '../shared/type';
-import { compileJsCode } from '../shared/utils/eval-jscode';
+import { MOCK_JS_CODE, STORAGE_KEY } from '../shared/constants';
+import { IData, IMock, IOhMyEvalRequest, requestMethod } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';
+import { dispatchEval } from './message/dispatch-eval';
+import { ohMyState } from './state-manager';
+import { mockHitMessage } from './message/mock-hit';
+import { newMockMessage } from './message/new-response';
 
 const ORIG_FETCH = window.fetch;
-const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
+const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
   const { method = 'GET' } = config;
-  const data: IData = findMocks(window[STORAGE_KEY].state, {
+  const data: IData = findMocks(ohMyState(), {
     url, type: 'FETCH', method
   });
   const mock: IMock = data?.enabled && data?.mocks[data?.activeMock];
 
   if (mock) {
-    window[STORAGE_KEY].hitSubject.next({ id: data.id });
+    mockHitMessage({ id: data.id });
+
+    let result: Partial<IMock> = {
+      ...mock,
+      response: mock.responseMock,
+      headers: mock.headersMock
+    };
+
+    if (mock.jsCode !== MOCK_JS_CODE) {
+      result = await dispatchEval(data, {
+        url,
+        method,
+        headers: {},
+        ...config
+      } as IOhMyEvalRequest);
+    }
 
     return new Promise(async (resolv, reject) => {
-      try {
-        const respMock = await compileJsCode(mock.jsCode)({
-          response: mock.responseMock,
-          headers: mock.headersMock,
-          delay: mock.delay,
-          statusCode: data.mocks[data.activeMock].statusCode
-        }, { url, headers: {}, ...config });
-        const body = new Blob([respMock.response], { type: respMock.headers['content-type'] });
+      const body = new Blob([result.response ||''], { type: result.headers['content-type'] });
 
-        const response = new Response(body, {
-          headers: fetchUtils.jsonToHeaders(respMock.headers),
-          status: respMock.statusCode
-        });
+      const response = new Response(body, {
+        headers: fetchUtils.jsonToHeaders(result.headers),
+        status: result.statusCode
+      });
 
-        setTimeout(() => resolv(response), respMock.delay);
-      } catch (err) {
-        reject(err);
-      }
+      setTimeout(() => resolv(response), result.delay);
     });
   } else {
     return ORIG_FETCH(url, config).then(response => {
@@ -41,7 +49,7 @@ const OhMyFetch = (url, config: { method?: requestMethod } = {}) => {
         const clone = response.clone();
 
         clone.text().then(txt => {
-          window[STORAGE_KEY].newMockSubject.next({
+          newMockMessage({
             context: {
               url,
               method,

@@ -3,7 +3,8 @@ import {
   packetTypes,
   resetStateOptions,
   STORAGE_KEY,
-  MOCK_RULE_TYPES
+  MOCK_RULE_TYPES,
+  ohMyEvalStatus
 } from './constants';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
@@ -75,17 +76,17 @@ export interface IUpsertMock extends IOhMyUpsertData {
   makeActive?: boolean;
 }
 
-export interface IPacket {
+export interface IPacket<T = unknown> {
   tabId?: number;
   domain?: string;
   source: appSources;
-  payload: IPacketPayload;
+  payload: IPacketPayload<T>;
 }
 
-export interface IPacketPayload {
-  context: IOhMyContext;
+export interface IPacketPayload<T = unknown> {
   type: packetTypes;
-  data?: Partial<IMock> | IState;
+  context?: IOhMyContext;
+  data?: T;
 }
 
 export interface IMockedTmpResponse {
@@ -97,8 +98,6 @@ export interface IMockedTmpResponse {
 }
 
 export type ResetStateOptions = resetStateOptions;
-
-export type IOhMockResponse = IMock & { statusCode: statusCode };
 
 export interface IOhMyViewItemsOrder {
   name: string;
@@ -117,4 +116,26 @@ export interface IOhMyUpsertData {
   url?: string;
   method?: requestMethod;
   type?: requestType;
+}
+
+export interface IOhMyEvalContext {
+  data: IData;
+  request: IOhMyEvalRequest;
+}
+
+export interface IOhMyEvalRequest {
+  url: string;
+  method: requestMethod;
+  body: unknown;
+  headers: Record<string, string>;
+}
+
+export interface IOhMyEvalResult {
+  status: ohMyEvalStatus;
+  result: Partial<IMock>;
+}
+
+export interface IOhMyPopupActive {
+  active: boolean;
+  tabId: number;
 }

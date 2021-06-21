@@ -17,25 +17,45 @@
 }
 
 li:not(.is-selected) {
+
   &.is-active {
-    background-color: $active;
+    &,
+    &:hover .btn-wrapper {
+      background-color: $active;
+    }
   }
 
   &.is-active.is-modified {
-    background-color: $activeModified;
+
+    &,
+    &:hover .btn-wrapper {
+      background-color: $activeModified;
+    }
   }
 
   &.is-modified:not(.is-active) {
-    background-color: $inactiveModified;
+
+    &,
+    &:hover .btn-wrapper {
+      background-color: $inactiveModified;
+    }
   }
 
   &:not(.is-active):not(.is-modified) {
-    background-color: $inactive;
+
+    &,
+    &:hover .btn-wrapper {
+      background-color: $inactive;
+    }
   }
 }
 
 li.is-selected {
-  background-color: grey;
+
+  &,
+  .btn-wrapper {
+    background-color: $selected;
+  }
 
   * {
     color: #fff;
@@ -47,11 +67,38 @@ ol[data-table] {
   background-color: $color-light;
 
   .header {
+    border-top: none;
+    align-items: center;
     display: flex;
     font-size: 12px;
     font-weight: 500;
     color: rgba(0, 0, 0, .54);
-    padding: $spacer-4;
+    height: 50px;
+    padding: 0 $spacer-4;
+
+    .url {
+      align-items: center;
+      display: flex;
+      height: 50px;
+      position: relative;
+
+      .filter-field {
+        align-self: center;
+        height: 50px;
+        @include oh-position(absolute, 0 0 0 50%);
+        transform: translateX(-50%);
+
+        mat-form-field {
+          font-size: $oh-font-size;
+          padding-right: 30px;
+        }
+
+        button {
+          @include oh-position(absolute, 8px 0px 0 0);
+        }
+
+      }
+    }
   }
 
   li {
@@ -68,9 +115,22 @@ ol[data-table] {
     position: relative;
     transition-property: transform;
     transition-duration: var(--animation-duration, 0.8s);
+    height: 46px;
 
     span {
       user-select: none;
+    }
+
+    &:hover {
+      .btn-wrapper {
+        display: flex;
+        position: absolute;
+        right: 0;
+
+        button+button {
+          display: block;
+        }
+      }
     }
   }
 }
@@ -125,7 +185,7 @@ span.type {
   padding-left: $spacer-2;
 }
 
-span.url {
+.url {
   flex: 1;
   padding-left: $spacer-2;
   overflow: hidden;
@@ -148,10 +208,18 @@ span.url {
 .actions {
   align-items: center;
   display: flex;
-  padding-left: $spacer-2;
+  position: relative;
+
+  button+button {
+    display: none;
+  }
+
+  .btn-wrapper {
+    flex-direction: row-reverse;
+  }
 
   &.btns-1 {
-    flex: 0 0 65px;
+    flex: 0 0 40px;
   }
 
   &.btns-2 {

@@ -1,6 +1,8 @@
-import { appSources, packetTypes, STORAGE_KEY } from '../../shared/constants';
-import { IMock, IOhMyContext, IPacket } from '../../shared/type';
+import { packetTypes } from '../../shared/constants';
+import { IMock, IOhMyContext } from '../../shared/type';
 import { findMocks, findMockByStatusCode } from '../../shared/utils/find-mock';
+import { ohMyState } from '../state-manager';
+import { send } from './send';
 
 interface INewMockPacket {
   context: IOhMyContext;
@@ -8,20 +10,14 @@ interface INewMockPacket {
 }
 
 export const newMockMessage = (payload: INewMockPacket): void => {
-  const data = findMocks(window[STORAGE_KEY].state, { ...payload.context });
+  const data = findMocks(ohMyState(), { ...payload.context });
   const mock = findMockByStatusCode(payload.data.statusCode, data?.mocks);
   if (mock) {
     return;
   }
 
-  window.postMessage(
-    {
-      source: appSources.INJECTED,
-      payload: {
-        type: packetTypes.MOCK,
-        ...payload
-      }
-    } as IPacket,
-    '*'
-  );
+  send({
+    type: packetTypes.MOCK,
+    ...payload
+  });
 }

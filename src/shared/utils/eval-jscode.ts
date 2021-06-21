@@ -1,9 +1,7 @@
-import { STORAGE_KEY } from '../constants';
-import { IOhMockResponse } from '../type';
+import { IMock, IOhMyEvalRequest } from '../type';
 
-export const compileJsCode = (code: string): ((mock, request) => IOhMockResponse) => {
-  code = `const fetch = window['${STORAGE_KEY}'].fetch;` +
-        `const XMLHttpRequest = window['${STORAGE_KEY}'].XMLHttpRequest;${code}`;
+export const compileJsCode = (code: string): ((mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>) => {
+  code = `'use strict';${code}`;
   // tslint-disable-next
   return eval(new Function('mock', 'request', code) as any);
 };
