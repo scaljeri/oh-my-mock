@@ -1,12 +1,22 @@
 export const STORAGE_KEY = 'OhMyMocks';
 
 export const MOCK_JS_CODE = '/* This is where OhMyMock creates responses.\n' +
-  'Inside this sandbox you have access to the following data:\n' +
-  '  * `mock` - object with a cached response, header and status code\n' +
-  '  * request - details of the ongoing request\n' +
-  '  * fetch/XMLHttpRequest - the original objects\n    (Don\'t use window.fetch or window.XMLHttpRequest)\n\n' +
-  'If your code is async, make sure to return a Promise which resolves a\nsimilar object as `mock`!! */\n\n' +
-  'return mock;\n';
+'Inside this sandbox you have access to the following data:\n' +
+'  * `mock` - object with a cached response, header and status code\n' +
+'  * `request` - details of the ongoing request\n' +
+'  * Feel free to use fetch or XMLHttpRequest, but make sure to\n' +
+'    return a PROMISE in that case!!\n\n' +
+'- Synchronous example:\n\n' +
+'     mock.response[1].name = "Sync example";\n' +
+'     return mock;\n\n' +
+'- Asynchronous example:\n\n' +
+'     return window.fetch("/users")\n' +
+'         .then(r => r.json())\n' +
+'         .then(r => {\n' +
+'         r[1].name = "From custom code";\n' +
+'         mock.response = JSON.stringify(r);\n' +
+'         return mock;\n' +
+'     });*/\n\n return mock;\n';
 
 export const JS_INCORRECT_MSG = 'Javascript contains errors';
 export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';
