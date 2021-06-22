@@ -1,4 +1,4 @@
-import { MOCK_JS_CODE, STORAGE_KEY } from '../shared/constants';
+import { MOCK_JS_CODE } from '../shared/constants';
 import { IData, IMock, IOhMyEvalRequest, requestMethod } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';

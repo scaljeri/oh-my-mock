@@ -97,6 +97,10 @@ ol[data-table] {
           @include oh-position(absolute, 8px 0px 0 0);
         }
 
+        .search-help {
+          @include oh-position(absolute, 8px -10px 0 0);
+        }
+
       }
     }
   }

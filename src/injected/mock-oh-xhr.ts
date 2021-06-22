@@ -5,6 +5,7 @@ import {
   requestMethod,
 } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock';
+import { logging } from '../shared/utils/log';
 import * as headers from '../shared/utils/xhr-headers';
 import { dispatchEval } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
@@ -12,6 +13,9 @@ import { newMockMessage } from './message/new-response';
 import { ohMyState } from './state-manager';
 
 const Base = window.XMLHttpRequest;
+const debug = logging(`${STORAGE_KEY} (^*^) | XhrMock`);
+const log = logging(`${STORAGE_KEY} (^*^) | XhrMock`, true);
+
 export class OhMockXhr extends Base {
   private ohData: IData;
   private ohMock: IMock;
@@ -66,6 +70,7 @@ export class OhMockXhr extends Base {
     this.onload = null;
 
     if (this.ohMock) {
+      log(this.ohUrl);
       this.dispatchEvent(new Event('load'));
     } else {
       super.send(body);
