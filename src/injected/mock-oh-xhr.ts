@@ -44,6 +44,7 @@ export class OhMockXhr extends Base {
 
       if (this.ohMock) {
         this.ohOutput = await this.mockResponse();
+        log(`${this.ohMethod} ${this.ohUrl}`, this.ohOutput);
       }
 
       setTimeout(() => {
@@ -70,7 +71,6 @@ export class OhMockXhr extends Base {
     this.onload = null;
 
     if (this.ohMock) {
-      log(this.ohUrl);
       this.dispatchEvent(new Event('load'));
     } else {
       super.send(body);
