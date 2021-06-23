@@ -13,16 +13,8 @@
   }
 
   .url-input {
-    margin-left: $spacer-4;
-  }
-
-  input {
-    width: 300px;
-  }
-
-  .spacer {
     flex: 1;
-    opacity: 0;
+    margin-left: $spacer-4;
   }
 }
 
@@ -36,6 +28,7 @@
     justify-content: center;
     font-weight: bold;
     margin-right: 20px;
+    margin-top: $spacer-2;
   }
 
   .codes-wrapper {
