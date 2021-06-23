@@ -4,7 +4,7 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
 import { IMock, ohMyDataId } from '@shared/type';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { UpsertMock } from 'src/app/store/actions';
 
 @Component({
@@ -20,6 +20,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
   requiredMsg = REQUIRED_MSG;
   form: FormGroup;
   mimeTypeCtrl = new FormControl();
+  selectedOption;
 
   mimeTypes = [
     'text/css',
@@ -40,8 +41,17 @@ export class MockDetailsComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.filteredMimeTypes$ = this.mimeTypeCtrl.valueChanges.pipe(
-      map(value => this.mimeTypes.filter(mt => mt.includes(value)))
+      map(value => this.mimeTypes.filter(mt => mt.includes(value))),
+      tap(() => {
+        this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': this.mimeTypeCtrl.value } });
+      })
     );
+
+    if (this.mock.type && this.mock.subType) {
+      const sep = this.mock.type && this.mock.subType ? '/' : '';
+      this.mimeTypeCtrl.setValue(`${this.mock.type}${sep}${this.mock.subType}`);
+    }
+
   }
 
   ngOnChanges(): void {
@@ -53,10 +63,6 @@ export class MockDetailsComponent implements OnInit, OnChanges {
       name: new FormControl(this.mock.name, { updateOn: 'blur' })
     });
 
-    if (this.mock.type && this.mock.subType) {
-      this.mimeTypeCtrl.setValue(`${this.mock.type}/${this.mock.subType}`);
-    }
-
     this.form.valueChanges.subscribe(values => {
       const update: Partial<IMock> = { name: values.name, delay: values.delay || 0 }
       if (!this.statusCodeCtrl.hasError('required')) {
@@ -65,10 +71,6 @@ export class MockDetailsComponent implements OnInit, OnChanges {
 
       this.upsertMock(update);
     });
-  }
-
-  onMimeTypeBlur(): void {
-    this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': this.mimeTypeCtrl.value } });
   }
 
   get nameCtrl(): FormControl {

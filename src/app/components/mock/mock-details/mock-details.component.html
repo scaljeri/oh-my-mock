@@ -26,10 +26,10 @@
   <p><span class="label">ContentType:</span>
 
       <mat-form-field class="example-full-width">
-        <input (blur)="onMimeTypeBlur()" type="text" placeholder="Content type" aria-label="Content type" matInput [formControl]="mimeTypeCtrl"
+        <input type="text" placeholder="Content type" aria-label="Content type" matInput [formControl]="mimeTypeCtrl"
           [matAutocomplete]="auto">
         <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-          <mat-option *ngFor="let option of filteredMimeTypes$ | async" [value]="option">
+          <mat-option  style="border: 1px solid red" (click)="selectedOption = option" *ngFor="let option of filteredMimeTypes$ | async" [value]="option">
             {{option}}
           </mat-option>
         </mat-autocomplete>
