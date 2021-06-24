@@ -27,8 +27,6 @@ export class ContentService {
         return;
       }
 
-      log('Recieved a message', payload);
-
       if (tabId === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
           this.appStateService.domain = domain;

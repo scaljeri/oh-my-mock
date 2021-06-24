@@ -130,20 +130,29 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   applyFilter(data: IData[] = []): IData[] {
-    const vs = this.filterCtrl.value.toLowerCase().split(' ');
+    const input = this.filterCtrl.value;
 
-    if (vs.length === 1 && vs[0] === '') {
+    if (input === "") {
       return data;
     }
 
-    let filtered = data;
-    vs.forEach(v => {
-      filtered = filtered.filter(d => {
-        return d.url.toLowerCase().includes(v) ||
-          d.type.toLowerCase().includes(v) || d.method.toLowerCase().includes(v) ||
-          d.mocks[d.activeMock]?.statusCode.toString().includes(v);
-      });
-    });
+    const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
+    const rmQuotedRe = /"[^"]+"\s{0,}/g;
+
+    const qwords = input.match(quotedRe) || [];
+    const words = input.replace(rmQuotedRe, '').split(' ');
+
+    const filtered = data.filter(d =>
+      [...qwords, ...words]
+        .filter(v => v !== undefined && v !== '')
+        .some(v =>
+          d.url.toLowerCase().includes(v) ||
+          d.type.toLowerCase().includes(v) ||
+          d.method.toLowerCase().includes(v) ||
+          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) ||
+          !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.includes(v))
+        )
+    );
 
     return filtered;
   }
