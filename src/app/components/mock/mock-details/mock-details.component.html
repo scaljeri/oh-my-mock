@@ -29,7 +29,7 @@
         <input type="text" placeholder="Content type" aria-label="Content type" matInput [formControl]="mimeTypeCtrl"
           [matAutocomplete]="auto">
         <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-          <mat-option  style="border: 1px solid red" (click)="selectedOption = option" *ngFor="let option of filteredMimeTypes$ | async" [value]="option">
+          <mat-option (click)="selectedOption = option" *ngFor="let option of filteredMimeTypes$ | async" [value]="option">
             {{option}}
           </mat-option>
         </mat-autocomplete>
