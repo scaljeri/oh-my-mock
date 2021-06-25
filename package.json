@@ -38,7 +38,7 @@
     "@ngneat/hot-toast": "^3.1.0",
     "@ngneat/overview": "^1.0.0",
     "@ngneat/until-destroy": "^8.0.4",
-    "@ngxs-labs/dispatch-decorator": "^2.1.0",
+    "@ngxs-labs/dispatch-decorator": "^3.1.0",
     "@ngxs/store": "^3.7.1",
     "@types/typescript": "^2.0.0",
     "body-parser": "^1.19.0",
