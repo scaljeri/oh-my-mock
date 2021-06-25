@@ -23,6 +23,7 @@ export class CodeEditComponent implements OnInit {
   @HostBinding('class.is-dialog') isDialog = false;
 
   public originalCode: string;
+  private previousCode: string;
   public editorOptions = { theme: 'vs-dark', language: 'javascript', readOnly: false };
   public editMode = 'edit';
   public codeStr: string;
@@ -59,9 +60,10 @@ export class CodeEditComponent implements OnInit {
   }
 
   public update(): void {
+    // this value is used for 'reset' and given to the ngControl update directive
     this.originalCode = this.format(this.code);
+    this.previousCode = this.originalCode;
     this.setEditorOptions();
-    this.control.setValue(this.originalCode);
 
     if (!this.input) {
       if (this.changeSub) {
@@ -69,8 +71,10 @@ export class CodeEditComponent implements OnInit {
       }
 
       this.changeSub = this.control.valueChanges.pipe(
-        skip(1), filter(val => val !== this.originalCode)).subscribe(val => {
+        filter(val => val !== this.previousCode)).subscribe(val => {
+
           if (this.allowErrors || this.errors.length === 0) {
+            this.previousCode = val;
             this.codeChange.emit(val);
           }
         });
@@ -78,6 +82,8 @@ export class CodeEditComponent implements OnInit {
   }
 
   private setEditorOptions(): void {
+    this.editorOptions = { ...this.editorOptions };
+
     if (this.type) {
       this.editorOptions.language = this.type;
     }
@@ -115,8 +121,6 @@ export class CodeEditComponent implements OnInit {
     // Format JSON
     return this.prettyPrintPipe.transform(tmp);
   }
-
-
 
   onCancel(): void {
     this.editorOptions = { ...this.editorOptions, theme: 'vs' };

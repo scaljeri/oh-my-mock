@@ -1,5 +1,5 @@
 <div class="editor-wrapper oh-no-backspace-nav">
-  <ngx-monaco-editor *ngIf="editMode === 'edit'" [options]="editorOptions" [formControl]="control"
+  <ngx-monaco-editor [ohMyUpdateInput]="originalCode" *ngIf="editMode === 'edit'" [options]="editorOptions" [formControl]="control"
     (init)="onEditorInit($event)"></ngx-monaco-editor>
   <ngx-monaco-diff-editor *ngIf="editMode === 'diff'" [options]="editorOptions" [original]="originalCode"
     [modified]="control.value">

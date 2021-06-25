@@ -117,9 +117,12 @@ export class OhMyState {
     const dataList = [...state.data];
     const mocks = { ...data.mocks };
 
-    if (payload.makeActive || !payload.mock.id && Object.keys(data.mocks).length === 0 && state.toggles.activateNew) {
+    if (payload.makeActive || !payload.mock.id && Object.keys(data.mocks).length === 0) {
       data.activeMock = mock.id;
-      data.enabled = true;
+
+      if (state.toggles.activateNew) {
+        data.enabled = true;
+      }
     }
 
     data.mocks = { ...mocks, [mock.id]: mock };
@@ -260,8 +263,10 @@ export class OhMyState {
     state: IState,
     context: IOhMyContext
   ): { index: number; data: IData } {
-    if (context.id) {
-      const data = findMocks(state, context);
+    const data = findMocks(state, context);
+    const index = !data ? -1 : state.data.indexOf(data);
+
+    if (index >= 0) {
       return { index: state.data.indexOf(data), data: { ...data } };
     } else {
       return {

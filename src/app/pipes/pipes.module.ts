@@ -4,7 +4,7 @@ import { EncodePipe } from './encode.pipe';
 import { PrettyPrintPipe } from './pretty-print.pipe';
 
 @NgModule({
-  declarations: [EncodePipe, PrettyPrintPipe],
+  declarations: [EncodePipe, PrettyPrintPipe ],
   imports: [CommonModule],
   providers: [PrettyPrintPipe],
   exports: [EncodePipe, PrettyPrintPipe]

@@ -1,7 +1,7 @@
 @import 'mixins';
 
 :host {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
 
   .label,
@@ -18,7 +18,28 @@
 .label {
   display: inline-flex;
   font-weight: bold;
-  width: 150px;
+  width: 120px;
   justify-content: flex-end;
   padding-right: 5px;
+}
+
+.details {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+
+  p {
+    display: flex;
+    width: 100%;
+
+    &.vertical {
+      justify-content: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  oh-my-content-type {
+    align-self: center;
+    margin-top: $spacer-2;
+  }
 }

@@ -45,15 +45,10 @@ export class MockComponent implements OnChanges {
   ngOnChanges(): void {
     this.mock = this.data.mocks[this.data.activeMock];
 
-    const activeInput = document.activeElement;
-    if (this.activeMockId !== this.data.activeMock || !activeInput.closest('ngx-monaco-editor')) {
-      this.activeMockId = this.data.activeMock;
-
-      setTimeout(() => {
-        this.responseRef?.update();
-        this.headersRef?.update();
-      });
-    }
+    setTimeout(() => {
+      this.responseRef?.update();
+      this.headersRef?.update();
+    });
 
     if (this.delaySubscription) {
       this.delaySubscription.unsubscribe();

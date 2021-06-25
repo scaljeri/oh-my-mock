@@ -1,10 +1,9 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
 import { IMock, ohMyDataId } from '@shared/type';
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
 import { UpsertMock } from 'src/app/store/actions';
 
 @Component({
@@ -12,7 +11,7 @@ import { UpsertMock } from 'src/app/store/actions';
   templateUrl: './mock-details.component.html',
   styleUrls: ['./mock-details.component.scss']
 })
-export class MockDetailsComponent implements OnInit, OnChanges {
+export class MockDetailsComponent implements OnChanges {
   @Input() mock: IMock;
   @Input() domain: string;
   @Input() dataId: ohMyDataId;
@@ -20,7 +19,6 @@ export class MockDetailsComponent implements OnInit, OnChanges {
   requiredMsg = REQUIRED_MSG;
   form: FormGroup;
   mimeTypeCtrl = new FormControl();
-  selectedOption;
 
   mimeTypes = [
     'text/css',
@@ -39,21 +37,6 @@ export class MockDetailsComponent implements OnInit, OnChanges {
       mock: { id: this.mock.id, ...update }
     }, this.domain);
 
-  ngOnInit(): void {
-    this.filteredMimeTypes$ = this.mimeTypeCtrl.valueChanges.pipe(
-      map(value => this.mimeTypes.filter(mt => mt.includes(value))),
-      tap(() => {
-        this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': this.mimeTypeCtrl.value } });
-      })
-    );
-
-    if (this.mock.type && this.mock.subType) {
-      const sep = this.mock.type && this.mock.subType ? '/' : '';
-      this.mimeTypeCtrl.setValue(`${this.mock.type}${sep}${this.mock.subType}`);
-    }
-
-  }
-
   ngOnChanges(): void {
     this.form = new FormGroup({
       delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
@@ -71,6 +54,10 @@ export class MockDetailsComponent implements OnInit, OnChanges {
 
       this.upsertMock(update);
     });
+  }
+
+  onContentTypeUpdate(contentType: string): void {
+    this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
   }
 
   get nameCtrl(): FormControl {

@@ -1,5 +1,5 @@
 import { StateContext } from '@ngxs/store';
-import { IOhMyMock, IData, IMock, ohMyMockId, IState } from '@shared/type';
+import { IOhMyMock, IData, IMock, ohMyMockId } from '@shared/type';
 import { OhMyState } from './state';
 
 import { testDataMock } from '@shared/test-site.mocks';
