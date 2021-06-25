@@ -34,6 +34,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   dawerBackdrop = true;
   version: string;
   page = '';
+  dialogDone = false;
 
   @Dispatch() activate = (value: boolean) => new Toggle({ name: 'active', value });
   @Select(OhMyState.mainState) state$: Observable<IState>;
@@ -65,7 +66,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
           this.dialogRef.close();
         }
         this.contentService.sendActiveState(true);
-      } else if (!this.dialogRef) {
+      } else if (!this.dialogRef && !this.dialogDone) {
         this.notifyDisabled();
       }
     });
@@ -90,6 +91,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       if (enable) {
         this.onEnableChange({ checked: enable } as any);
       }
+      this.dialogDone = true;
       this.dialogRef = null;
     });
   }
