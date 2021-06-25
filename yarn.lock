@@ -1938,10 +1938,10 @@
     reflect-metadata "0.1.13"
     uuid "8.3.2"
 
-"@ngneat/hot-toast@^1.0.11":
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/@ngneat/hot-toast/-/hot-toast-1.0.11.tgz#0b0fcf813c7824c635f9cdaf359ab3934628b933"
-  integrity sha512-v3VqcYgKnCMq1ROxBCT1vaNsDvVtlnmra8q82JespnUlMzWYnQMc7vP/ULeKffDIRpnkpRGzka0x+USt9QAw3Q==
+"@ngneat/hot-toast@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@ngneat/hot-toast/-/hot-toast-3.1.0.tgz#1338530c70d77643abf9fc344c1e6f600f2e8683"
+  integrity sha512-lbBEkPf2/I6L7yXFK3bssP/yNwT/uV5P/fuMgWeB8t4gHIPl9aTwF+j2DWhYEJGoDDlztvaXaimV6Yt2C8l0+Q==
   dependencies:
     tslib "^2.0.0"
 
