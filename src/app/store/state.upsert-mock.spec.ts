@@ -49,7 +49,7 @@ describe('Store#upsertMock', () => {
             method: 'GET',
             type: 'XHR',
             mocks: (expect as any).anything(),
-            activeMock: null
+            activeMock: (expect as any).anything()
           }
         });
       });

@@ -34,7 +34,7 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
     PageMockComponent,
     PageDataListComponent,
     JsonExportComponent,
-    CloudSyncPageComponent
+    CloudSyncPageComponent,
   ],
   imports: [
     BrowserModule,

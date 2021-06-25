@@ -47,6 +47,8 @@ import { ArrowComponent } from './arrow/arrow.component';
 import { MockLabelComponent } from './mock-label/mock-label.component';
 import { MockDetailsComponent } from './mock/mock-details/mock-details.component';
 import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
+import { UpdateInputDirective } from './update-input/update-input.directive';
+import { ContentTypeComponent } from './content-type/content-type.component';
 
 @NgModule({
   declarations: [
@@ -70,7 +72,9 @@ import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
     ArrowComponent,
     MockLabelComponent,
     MockDetailsComponent,
-    CloudSyncComponent
+    CloudSyncComponent,
+    UpdateInputDirective,
+    ContentTypeComponent
   ],
   imports: [
     CommonModule,
@@ -109,6 +113,8 @@ import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
     ArrowComponent,
     MockLabelComponent,
     CloudSyncComponent,
+    UpdateInputDirective,
+    ContentTypeComponent,
   ],
   providers: [
     Location,

@@ -1,6 +1,6 @@
 $active: #99ffcc;
 $inactive: #fff;
-$inactiveModified: #FAC3B7;
+$inactiveModified: #fff8ff;
 $activeModified: #ffff99;
 $selected: #6666ff;
 
@@ -43,7 +43,6 @@ $selected: #6666ff;
 
   .inactive::before {
     background-color: $inactive
-
   }
 
   .active-modified::before {
@@ -51,6 +50,6 @@ $selected: #6666ff;
   }
 
   .inactive-modified::before {
-    background-color: $inactiveModified;
+    background-color: darken($inactiveModified, 10);
   }
 }

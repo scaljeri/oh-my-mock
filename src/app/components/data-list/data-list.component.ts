@@ -130,7 +130,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   applyFilter(data: IData[] = []): IData[] {
-    const input = this.filterCtrl.value;
+    const input = this.filterCtrl.value.toLowerCase();
 
     if (input === "") {
       return data;
@@ -150,7 +150,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
           d.type.toLowerCase().includes(v) ||
           d.method.toLowerCase().includes(v) ||
           !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) ||
-          !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.includes(v))
+          !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
         )
     );
 

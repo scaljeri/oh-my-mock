@@ -1,25 +1,25 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MockDetailsComponent } from './mock-details.component';
 
-describe('MockDetailsComponent', () => {
-  let component: MockDetailsComponent;
-  let fixture: ComponentFixture<MockDetailsComponent>;
+import { ContentTypeComponent } from './content-type.component';
+
+describe('ContentTypeComponent', () => {
+  let component: ContentTypeComponent;
+  let fixture: ComponentFixture<ContentTypeComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [MockDetailsComponent],
-      schemas: [NO_ERRORS_SCHEMA],
-      imports: [MatAutocompleteModule]
+      declarations: [ContentTypeComponent],
+      imports: [MatAutocompleteModule],
+      schemas: [NO_ERRORS_SCHEMA]
     })
       .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(MockDetailsComponent);
+    fixture = TestBed.createComponent(ContentTypeComponent);
     component = fixture.componentInstance;
-    component.mock = { headersMock: {}} as any;
     fixture.detectChanges();
   });
 
