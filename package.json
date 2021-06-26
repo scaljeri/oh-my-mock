@@ -8,7 +8,7 @@
     "build": "ng build --output-hashing none --base-href=index.html && yarn build:other && node ./scripts/token-replace.js",
     "build:other": "yarn build:content && yarn build:injected && yarn build:background && yarn build:splash",
     "build:content": "tsc --build ./tsconfig-content.json && browserify --node dist/content/index.js > dist/content.js && rm -rf dist/content && cp manifest.json dist/",
-    "build:injected": "tsc --build ./tsconfig-inject.json && browserify --node ./dist/injected/index.js > ./dist/injected.js && rm -rf dist/injected dist/shared",
+    "build:injected": "tsc --build ./tsconfig-inject.json && browserify --node ./dist/injected/index.js > ./dist/injected.js && rm -rf dist/injected",
     "build:background": "tsc --build ./tsconfig-background.json && browserify --node ./dist/background > ./dist/bg.js && mv dist/bg.js dist/background.js",
     "build:watchng": "ng build  --base-href=index.html --watch",
     "build:custom": "node ./scripts/monitor.js",

@@ -56,7 +56,7 @@ export class AnonymizeComponent implements OnInit {
       data: {
         readonly: true,
         code: resp,
-        compare: this.mock.responseMock,
+        orig: this.mock.responseMock,
         type: 'json',
       }
     });

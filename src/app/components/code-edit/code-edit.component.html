@@ -1,8 +1,8 @@
 <div class="editor-wrapper oh-no-backspace-nav">
-  <ngx-monaco-editor [ohMyUpdateInput]="originalCode" *ngIf="editMode === 'edit'" [options]="editorOptions" [formControl]="control"
-    (init)="onEditorInit($event)"></ngx-monaco-editor>
-  <ngx-monaco-diff-editor *ngIf="editMode === 'diff'" [options]="editorOptions" [original]="originalCode"
-    [modified]="control.value">
+  <ngx-monaco-editor [ohMyUpdateInput]="previousCode" *ngIf="!diffCode" [options]="editorOptions"
+    [formControl]="control" (init)="onInitEditor($event)"></ngx-monaco-editor>
+  <ngx-monaco-diff-editor *ngIf="diffCode" [options]="editorOptions" [original]="originalCode" [modified]="diffCode"
+    (init)="onInitDiffEditor($event)">
   </ngx-monaco-diff-editor>
 </div>
 
@@ -12,7 +12,7 @@
   <div *ngIf="isDialog" class="button-actions">
     <ng-container *ngIf="!readonly">
       <button mat-raised-button (click)="onReset()">Reset</button>
-      <button mat-raised-button (click)="onToggle()">{{editMode === 'diff' ? 'Edit' : 'Diff'}}</button>
+      <button mat-raised-button (click)="onToggle()">{{diffCode ? 'Edit' : 'Diff'}}</button>
       <div class="spacer"></div>
       <button mat-raised-button color="primary" (click)="onCancel()">Cancel</button>
       <button mat-raised-button color="primary" (click)="onSave()">Save</button>

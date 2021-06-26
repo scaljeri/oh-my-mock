@@ -2,7 +2,7 @@ import { Component, EventEmitter, HostBinding, Inject, Input, OnInit, Optional, 
 import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
-import { filter, skip } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { themes, IOhMyCodeEditOptions, IMarker } from './code-edit';
 
@@ -22,16 +22,16 @@ export class CodeEditComponent implements OnInit {
 
   @HostBinding('class.is-dialog') isDialog = false;
 
-  public originalCode: string;
-  private previousCode: string;
+  originalCode: string;
+  previousCode: string;
   public editorOptions = { theme: 'vs-dark', language: 'javascript', readOnly: false };
-  public editMode = 'edit';
+  public diffCode;
   public codeStr: string;
   public control = new FormControl();
   public errors: IMarker[] = [];
   public showErrors = false;
   public readonly = false;
-  public compare: string;
+  public orig: string;
 
   private changeSub: Subscription;
 
@@ -53,9 +53,9 @@ export class CodeEditComponent implements OnInit {
   ngOnInit(): void {
     this.update();
 
-    if (this.input?.compare) {
-      this.editMode = 'diff';
-      this.originalCode = this.format(this.input.compare);
+    if (this.input?.orig) {
+      this.diffCode = this.originalCode;
+      this.originalCode = this.format(this.input.orig) as string;
     }
   }
 
@@ -149,21 +149,36 @@ export class CodeEditComponent implements OnInit {
   }
 
   onToggle(): void {
-    this.editMode = this.editMode === 'diff' ? 'edit' : 'diff';
+    if (this.diffCode) {
+      this.previousCode = this.control.value;
+      this.diffCode = null;
+    } else {
+      this.diffCode = this.control.value;
+    }
   }
 
   onReset(): void {
     this.control.setValue(this.originalCode);
   }
 
-  onEditorInit(editor: any): void {
+  onInitEditor(editor: any): void {
     editor.onDidChangeModelDecorations((...args) => {
       const model = editor.getModel();
       const owner = model.getModeId();
-
-      // TODO: Do we need global monaco?
       this.errors = monaco?.editor.getModelMarkers({ owner });
     });
+  }
+
+  onInitDiffEditor(diffEditor: any): void {
+    if (!diffEditor) {
+      return;
+    }
+
+    diffEditor.getModifiedEditor().onDidChangeModelContent(() => {
+      const content = diffEditor.getModel().modified.getValue();
+      this.control.setValue(content);
+    });
+
   }
 }
 
