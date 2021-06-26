@@ -51,7 +51,6 @@
     "lodash": "^4.17.21",
     "mime-types": "^2.1.28",
     "monaco-editor": "^0.22.3",
-    "node-sass": "^5.0.0",
     "rxjs": "~6.6.0",
     "sass": "^1.32.6",
     "scss-reset": "^1.1.10",
