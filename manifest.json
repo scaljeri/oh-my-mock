@@ -27,5 +27,5 @@
     "48": "oh-my-mock/assets/icons/icon-48.png",
     "128": "oh-my-mock/assets/icons/icon-128.png"
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  "content_security_policy": "script-src 'self' 'unsafe-eval' 'unsafe-hashes'; object-src 'self'"
 }
