@@ -6,7 +6,7 @@ export interface IOhMyCodeEditOptions {
   allowErrors?: boolean;
   readonly?: boolean;
   theme?: themes;
-  compare?: string;
+  orig?: string;
 }
 
 export interface IMarker {
