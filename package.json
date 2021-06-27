@@ -52,13 +52,12 @@
     "mime-types": "^2.1.31",
     "monaco-editor": "^0.25.2",
     "rxjs": "7.1.0",
-    "sass": "1.35.1",
-    "scss-reset": "1.2.0",
+    "sass": "^1.32.6",
+    "scss-reset": "^1.1.10",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "~12.1.0",
     "@angular-devkit/build-angular": "~12.1.0",
     "@angular/cli": "~12.1.0",
     "@angular/compiler-cli": "~12.1.0",
@@ -75,7 +74,7 @@
     "browserify": "^17.0.0",
     "codelyzer": "6.0.2",
     "eslint": "7.29.0",
-    "eslint-config-google": "0.14.0",
+    "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "3.4.0",
     "jest": "^26.6.3",
@@ -90,6 +89,6 @@
     "stryker-cli": "^1.0.2",
     "ts-node": "~10.0.0",
     "tslint": "~6.1.0",
-    "typescript": "4.3.4"
+    "typescript": "~4.3.4"
   }
 }

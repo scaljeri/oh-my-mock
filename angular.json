@@ -15,11 +15,8 @@
       "prefix": "oh-my",
       "architect": {
         "build": {
-          "builder": "@angular-builders/custom-webpack:browser",
+          "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "customWebpackConfig": {
-              "path": "./custom-webpack.config.js"
-            },
             "outputPath": "dist/oh-my-mock",
             "index": "src/index.html",
             "main": "src/main.ts",
