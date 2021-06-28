@@ -53,7 +53,9 @@ chrome.runtime.onMessage.addListener(async (data: IPacket, sender) => {
     return;
   }
 
-  tabId = data.tabId;
+  if (data.tabId) {
+    tabId = data.tabId;
+  }
 
   if (data.source === appSources.BACKGROUND) {
     if (data.payload.type === packetTypes.EVAL_RESULT) {
