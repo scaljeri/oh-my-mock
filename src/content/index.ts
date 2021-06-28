@@ -1,9 +1,8 @@
 /// <reference types="chrome"/>
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IOhMyEvalContext, IOhMyMock, IOhMyPopupActive, IPacket, IPacketPayload, IState } from '../shared/type';
+import { IOhMyMock, IOhMyPopupActive, IPacket, IPacketPayload, IState } from '../shared/type';
 import { logging } from '../shared/utils/log';
 import { streamByType$ } from '../shared/utils/messaging';
-import { evalCode } from './eval-code';
 
 const log = logging(`${STORAGE_KEY} (^*^) | ConTeNt`);
 

@@ -1,6 +1,6 @@
-import { ohMyEvalStatus } from '../shared/constants';
-import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../shared/type';
-import { compileJsCode } from '../shared/utils/eval-jscode';
+import { ohMyEvalStatus } from '../constants';
+import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../type';
+import { compileJsCode } from './eval-jscode';
 
 export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<Partial<IOhMyEvalResult>> => {
   const mock = data.mocks[data.activeMock];

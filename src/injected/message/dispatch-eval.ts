@@ -7,7 +7,7 @@ export const dispatchEval = (data: IData, request: IOhMyEvalRequest): Promise<Pa
   return new Promise(resolve => {
     const id = uniqueId();
     const payload = {
-      context: { id },
+      context: { id, url: window.location.origin },
       type: packetTypes.EVAL,
       data: { data, request }
     }
