@@ -38,7 +38,8 @@ export enum packetTypes {
 export enum appSources {
   INJECTED = 'injected',
   CONTENT = 'content',
-  POPUP = 'popup'
+  POPUP = 'popup',
+  BACKGROUND = 'background'
 }
 
 export enum resetStateOptions {

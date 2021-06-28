@@ -1,12 +1,13 @@
 ///<reference types="chrome"/>
 
-import { packetTypes, STORAGE_KEY } from './shared/constants';
+import { evalCode } from './content/eval-code';
+import { appSources, packetTypes, STORAGE_KEY } from './shared/constants';
 import { IOhMyPopupActive } from './shared/type';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
-chrome.runtime.onMessage.addListener((request) => {
+chrome.runtime.onMessage.addListener(async (request) => {
   if (request.payload?.type === packetTypes.ACTIVE) {
     const data = request.payload.data as IOhMyPopupActive;
 
@@ -15,6 +16,17 @@ chrome.runtime.onMessage.addListener((request) => {
     } else {
       chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: request.tabId });
     }
+  } else if (request.payload.type === packetTypes.EVAL) {
+    const data = await evalCode(request.payload.data.data, request.payload.data.request);
+
+    chrome.tabs.sendMessage(request.tabId, {
+      source: appSources.BACKGROUND,
+      payload: {
+        type: packetTypes.EVAL_RESULT,
+        context: request.payload.context,
+        data
+      }
+    });
   }
 });
 

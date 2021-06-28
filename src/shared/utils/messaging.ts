@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import { appSources, packetTypes } from '../constants';
 import { IPacket } from '../type';
 
@@ -14,7 +14,10 @@ window.addEventListener('message', (ev) => {
 export const stream$ = packetSubject.asObservable();
 
 export const streamBySource$ = (source: appSources): Observable<IPacket> => {
-  return stream$.pipe(filter(packet => packet?.source && (!source || packet.source === source)));
+  return stream$.pipe(tap(s => {
+    // eslint-disable-next-line no-console
+    console.log(s?.source);
+  }), filter(packet => packet?.source && (!source || packet.source === source)));
 }
 
 export const streamByType$ = (type: packetTypes, source?: appSources): Observable<IPacket> => {

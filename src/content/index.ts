@@ -50,21 +50,28 @@ function loadState(): Promise<IPacketPayload> {
 
 // Listen for messages from Popup/Angular
 chrome.runtime.onMessage.addListener(async (data: IPacket, sender) => {
-  if (data.source !== appSources.POPUP) {
+  if (data.source !== appSources.POPUP && data.source !== appSources.BACKGROUND) {
     return;
   }
 
   tabId = data.tabId;
 
-  if (data.domain !== window.location.host) {
-    return sendKnockKnock();
-  } else if (data.payload.type === packetTypes.STATE) {
-    sendMsgToInjected({ type: packetTypes.STATE, data: data.payload.data });
-  } else if (data.payload.type === packetTypes.ACTIVE) {
-    const dataActive = data.payload.data as IOhMyPopupActive;
-    const payload = await loadState();
-    (payload.data as IState).toggles.active = dataActive.active;
-    sendMsgToInjected(payload);
+  if (data.source === appSources.BACKGROUND) {
+    if (data.payload.type === packetTypes.EVAL_RESULT) {
+      handleEvalResult(data);
+    }
+
+  } else if (data.source === appSources.POPUP) {
+    if (data.domain !== window.location.host) {
+      return sendKnockKnock();
+    } else if (data.payload.type === packetTypes.STATE) {
+      sendMsgToInjected({ type: packetTypes.STATE, data: data.payload.data });
+    } else if (data.payload.type === packetTypes.ACTIVE) {
+      const dataActive = data.payload.data as IOhMyPopupActive;
+      const payload = await loadState();
+      (payload.data as IState).toggles.active = dataActive.active;
+      sendMsgToInjected(payload);
+    }
   }
 });
 
@@ -82,14 +89,25 @@ function handlePacketFromInjected(packet: IPacket) {
 }
 
 async function handleEvalFromInjected(packet: IPacket) {
-  const { data, request } = packet.payload.data as IOhMyEvalContext;
+  // const { data, request } = packet.payload.data as IOhMyEvalContext;
 
-  const result = await evalCode(data, request);
+  // Send custom-code to background script
+  chrome.runtime.sendMessage({ ...packet, tabId, source: appSources.CONTENT });
 
+  // const result = await evalCode(data, request);
+  // sendMsgToInjected({
+  //   context: { id: packet.payload.context.id },
+  //   type: packetTypes.EVAL_RESULT,
+  //   data: result
+  // } as IPacketPayload);
+}
+
+function handleEvalResult(packet: IPacket): void {
+  // eslint-disable-next-line no-console
   sendMsgToInjected({
     context: { id: packet.payload.context.id },
     type: packetTypes.EVAL_RESULT,
-    data: result
+    data: packet.payload.data
   } as IPacketPayload);
 }
 
