@@ -22,6 +22,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
   if (mock) {
     mockHitMessage({ id: data.id });
 
+    let output: Partial<IMock>;
     let result: Partial<IMock> = {
       ...mock,
       response: mock.responseMock,
@@ -36,7 +37,8 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
         ...config
       } as IOhMyEvalRequest);
     }
-    log(`${method} ${url}`, result);
+    log(`${method} ${url}`, output);
+
 
     return new Promise(async (resolv, reject) => {
       let body = null;

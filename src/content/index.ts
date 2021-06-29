@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IOhMyMock, IOhMyPopupActive, IPacket, IPacketPayload, IState } from '../shared/type';
+import { IOhMyEvalResult, IOhMyMock, IOhMyPopupActive, IPacket, IPacketPayload, IState } from '../shared/type';
 import { logging } from '../shared/utils/log';
 import { streamByType$ } from '../shared/utils/messaging';
 
@@ -59,7 +59,7 @@ chrome.runtime.onMessage.addListener(async (data: IPacket, sender) => {
 
   if (data.source === appSources.BACKGROUND) {
     if (data.payload.type === packetTypes.EVAL_RESULT) {
-      handleEvalResult(data);
+      handleEvalResult(data as IPacket<IOhMyEvalResult>);
     }
 
   } else if (data.source === appSources.POPUP) {
@@ -103,7 +103,7 @@ async function handleEvalFromInjected(packet: IPacket) {
   // } as IPacketPayload);
 }
 
-function handleEvalResult(packet: IPacket): void {
+function handleEvalResult(packet: IPacket<IOhMyEvalResult>): void {
   // eslint-disable-next-line no-console
   sendMsgToInjected({
     context: { id: packet.payload.context.id },
@@ -134,6 +134,6 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
   };
 
-  mockScript.src = chrome.runtime.getURL('injected.js');
+  mockScript.src = chrome.runtime.getURL('oh-my-mock.js');
   document.head.append(mockScript);
 })();

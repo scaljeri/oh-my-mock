@@ -1,4 +1,4 @@
-import { MOCK_JS_CODE, STORAGE_KEY } from '../shared/constants';
+import { MOCK_JS_CODE, ohMyEvalStatus, STORAGE_KEY } from '../shared/constants';
 import {
   IData,
   IMock,
@@ -137,7 +137,7 @@ export class OhMockXhr extends Base {
     return url;
   }
 
-  private mockResponse(): Promise<Partial<IMock>> {
+  private async mockResponse(): Promise<Partial<IMock>> {
     if (!this.ohMock) {
       return this.response;
     }
@@ -149,7 +149,7 @@ export class OhMockXhr extends Base {
         headers: this.ohMock.headersMock
       });
     } else {
-      return dispatchEval(this.ohData, {
+      return await dispatchEval(this.ohData, {
         url: this.ohUrl,
         method: this.ohMethod,
         body: this.ohRequestBody,
