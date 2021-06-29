@@ -2,7 +2,7 @@
 
 import { evalCode } from '../shared/utils/eval-code';
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IOhMyEvalContext, IOhMyPopupActive, IPacket } from '../shared/type';
+import { IOhMyEvalContext, IOhMyPopupActive, IPacket, IStore } from '../shared/type';
 import { OhMockXhr } from './xhr';
 import { OhMockFetch } from './fetch';
 
@@ -39,7 +39,11 @@ chrome.runtime.onMessage.addListener(async (request: IPacket) => {
 });
 
 chrome.runtime.onInstalled.addListener(function (details) {
-  open('/splash-screen.html', '_blank');
+  chrome.storage.local.get([STORAGE_KEY], (state) => {
+    if (!state[STORAGE_KEY]) {
+      open('/splash-screen.html', '_blank');
+    }
+  });
 })
 
 
