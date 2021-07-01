@@ -6,10 +6,7 @@ import { dispatchEval } from './message/dispatch-eval';
 import { ohMyState } from './state-manager';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
-import { logging } from '../shared/utils/log';
-
-const debug = logging(`${STORAGE_KEY} (^*^) | XhrMock`);
-const log = logging(`${STORAGE_KEY} (^*^) | FetchMock`, true)
+import { log } from './utils';
 
 const ORIG_FETCH = window.fetch;
 const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
@@ -35,7 +32,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
         method,
         headers: {},
         ...config
-      } as IOhMyEvalRequest);
+      } as IOhMyEvalRequest, log);
     }
     log(`${method} ${url}`, output);
 

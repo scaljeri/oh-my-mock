@@ -1,10 +1,13 @@
 const fs = require('fs');
 const packageJson = require('../package.json');
 
-replaceToken('./dist/oh-my-mock/main.js', 'VERSION', packageJson.version);
-replaceToken('./dist/manifest.json', 'VERSION', packageJson.version);
-replaceToken('./dist/injected.js', 'SHOW_DEBUG', 'false');
-replaceToken('./dist/content.js', 'SHOW_DEBUG', 'false');
+const version = determineVersion();
+const isBeta = version.match(/beta/);
+
+replaceToken('./dist/oh-my-mock/main.js', 'VERSION', version);
+replaceToken('./dist/manifest.json', 'VERSION', version);
+replaceToken('./dist/oh-my-mock.js', 'SHOW_DEBUG', String(isBeta));
+replaceToken('./dist/content.js', 'SHOW_DEBUG', String(isBeta));
 
 function replaceToken(file, tokenKey, token) {
   fs.readFile(file, 'utf8', function (err,data) {
@@ -18,5 +21,14 @@ function replaceToken(file, tokenKey, token) {
        if (err) return console.log(err);
     });
   });
+}
+
+function determineVersion() {
+  return process.argv.reduce((v, arg, i) => {
+    if (arg === '--version') {
+      v = process.argv[i + 1];
+    }
+    return v;
+  },  '') || packageJson.version;
 }
 

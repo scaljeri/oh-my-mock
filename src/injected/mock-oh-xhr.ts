@@ -1,20 +1,18 @@
-import { MOCK_JS_CODE, ohMyEvalStatus, STORAGE_KEY } from '../shared/constants';
+import { MOCK_JS_CODE, STORAGE_KEY } from '../shared/constants';
 import {
   IData,
   IMock,
   requestMethod,
 } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock';
-import { logging } from '../shared/utils/log';
 import * as headers from '../shared/utils/xhr-headers';
 import { dispatchEval } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
 import { ohMyState } from './state-manager';
+import { log, logError } from './utils';
 
 const Base = window.XMLHttpRequest;
-const debug = logging(`${STORAGE_KEY} (^*^) | XhrMock`);
-const log = logging(`${STORAGE_KEY} (^*^) | XhrMock`, true);
 
 export class OhMockXhr extends Base {
   private ohData: IData;
@@ -154,7 +152,7 @@ export class OhMockXhr extends Base {
         method: this.ohMethod,
         body: this.ohRequestBody,
         headers: this.ohRequestHeaders
-      });
+      }, logError);
     }
   }
 

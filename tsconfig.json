@@ -18,7 +18,8 @@
     },
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "noEmitHelpers": false
+    "noEmitHelpers": false,
+     "resolveJsonModule": true
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
   "angularCompilerOptions": {
