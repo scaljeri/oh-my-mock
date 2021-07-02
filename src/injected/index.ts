@@ -21,15 +21,15 @@ ohMyState$.subscribe((state: IState) => {
   }
 
   // Did activity change?
-  if (!ohMyState || ohMyState.toggles.active !== state.toggles.active) {
+  if (!ohMyState && state.toggles.active || ohMyState && ohMyState.toggles.active !== state.toggles.active) {
     if (state.toggles.active) {
-      log(' *** Activate ***');
+      log('%c*** Activated ***', 'background: green');
       window.XMLHttpRequest = OhMockXhr;
       window.fetch = OhMyFetch;
     } else {
       window.XMLHttpRequest = MEM_XHR_REQUEST;
       window.fetch = MEM_FETCH;
-      log(' *** Deactivate ***');
+      log('%c*** Deactivated ***', 'background: red');
     }
   }
 

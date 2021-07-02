@@ -10,7 +10,7 @@ import { dispatchEval } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
 import { ohMyState } from './state-manager';
-import { log, logError } from './utils';
+import { logMocked } from './utils';
 
 const Base = window.XMLHttpRequest;
 
@@ -42,12 +42,15 @@ export class OhMockXhr extends Base {
 
       if (this.ohMock) {
         this.ohOutput = await this.mockResponse();
-        log(`${this.ohMethod} ${this.ohUrl}`, this.ohOutput);
+
+        if (this.ohOutput === null) {
+          throw Error();
+        }
       }
 
       setTimeout(() => {
         this.ohMyReady(...args);
-      }, this.ohOutput?.delay || 0);
+      }, (this.ohOutput?.delay ?? this.ohMock?.delay) || 0);
     });
 
     const ael = this.addEventListener.bind(this);
@@ -141,18 +144,22 @@ export class OhMockXhr extends Base {
     }
 
     if (this.ohMock.jsCode === MOCK_JS_CODE) {
-      return Promise.resolve({
-        ...this.ohMock,
+      const output = {
+        statusCode: this.ohMock.statusCode,
         response: this.ohMock.responseMock,
         headers: this.ohMock.headersMock
-      });
+      };
+
+      logMocked(this.ohData, output);
+
+      return Promise.resolve(output);
     } else {
-      return await dispatchEval(this.ohData, {
+      return dispatchEval(this.ohData, {
         url: this.ohUrl,
         method: this.ohMethod,
         body: this.ohRequestBody,
         headers: this.ohRequestHeaders
-      }, logError);
+      }).catch(_ => _);
     }
   }
 

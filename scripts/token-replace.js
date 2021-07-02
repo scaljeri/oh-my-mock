@@ -2,7 +2,7 @@ const fs = require('fs');
 const packageJson = require('../package.json');
 
 const version = determineVersion();
-const isBeta = version.match(/beta/);
+const isBeta = !!version.match(/beta/);
 
 replaceToken('./dist/oh-my-mock/main.js', 'VERSION', version);
 replaceToken('./dist/manifest.json', 'VERSION', version);

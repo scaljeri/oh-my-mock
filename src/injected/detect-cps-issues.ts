@@ -1,11 +1,5 @@
-import { Subject } from 'rxjs';
-import { STORAGE_KEY } from '../shared/constants';
-
-const subject = new Subject();
-
-
 declare let window: any;
-window.OhMyEvalDispatch = true;
+
 document.addEventListener("securitypolicyviolation", (e) => {
 	window.OhMyEvalDispatch = true;
 });
