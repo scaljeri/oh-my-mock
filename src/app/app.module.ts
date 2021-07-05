@@ -40,7 +40,7 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
     BrowserModule,
     BrowserAnimationsModule,
     RouterModule.forRoot(appRoutes, { useHash: true } ),
-    NgxsModule.forRoot([OhMyState], { developmentMode: true }),
+    NgxsModule.forRoot([OhMyState], { developmentMode: false }),
     ReactiveFormsModule,
     NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,

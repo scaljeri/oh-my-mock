@@ -1,12 +1,19 @@
 ///<reference types="chrome"/>
 
-import { packetTypes, STORAGE_KEY } from './shared/constants';
-import { IOhMyPopupActive } from './shared/type';
+import { evalCode } from '../shared/utils/eval-code';
+import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
+import { IOhMyEvalContext, IOhMyPopupActive, IPacket, IStore } from '../shared/type';
+import { OhMockXhr } from './xhr';
+import { OhMockFetch } from './fetch';
 
+declare let window: any;
+window.XMLHttpRequest = OhMockXhr;
+window.fetch = OhMockFetch;
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
-chrome.runtime.onMessage.addListener((request) => {
+// eslint-disable-next-line no-console
+chrome.runtime.onMessage.addListener(async (request: IPacket) => {
   if (request.payload?.type === packetTypes.ACTIVE) {
     const data = request.payload.data as IOhMyPopupActive;
 
@@ -15,11 +22,28 @@ chrome.runtime.onMessage.addListener((request) => {
     } else {
       chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: request.tabId });
     }
+  } else if (request.payload.type === packetTypes.EVAL) {
+    window.ohMyHost = request.payload.context.url;
+    const input = request.payload.data as IOhMyEvalContext;
+    const data = await evalCode(input.data, input.request);
+
+    chrome.tabs.sendMessage(request.tabId, {
+      source: appSources.BACKGROUND,
+      payload: {
+        type: packetTypes.EVAL_RESULT,
+        context: request.payload.context,
+        data
+      }
+    });
   }
 });
 
 chrome.runtime.onInstalled.addListener(function (details) {
-  open('/splash-screen.html', '_blank');
+  chrome.storage.local.get([STORAGE_KEY], (state) => {
+    if (!state[STORAGE_KEY]) {
+      open('/splash-screen.html', '_blank');
+    }
+  });
 })
 
 

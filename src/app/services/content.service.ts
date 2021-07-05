@@ -8,7 +8,6 @@ import { ChangeDomain, InitState, UpsertMock, ViewChangeOrderItems } from '../st
 import { OhMyState } from '../store/state';
 import { IMock, IOhMyMock, IPacket, IState, IStore, IUpsertMock } from '@shared/type';
 import { appSources, packetTypes } from '@shared/constants';
-import { log } from '../utils/log';
 import { AppStateService } from './app-state.service';
 import { findMocks } from '@shared/utils/find-mock';
 @Injectable({ providedIn: 'root' })
@@ -23,7 +22,7 @@ export class ContentService {
 
   constructor(private store: Store, private appStateService: AppStateService) {
     this.listener = ({ payload, tabId, domain, source }: IPacket) => {
-      if (source !== appSources.CONTENT) {
+      if (source !== appSources.CONTENT || !domain) {
         return;
       }
 

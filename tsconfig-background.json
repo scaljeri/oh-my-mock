@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": []
   },
-  "files": ["src/background.ts"]
+  "files": ["src/background/background.ts"]
 }

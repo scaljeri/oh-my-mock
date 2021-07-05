@@ -5,16 +5,14 @@ import {
   requestMethod,
 } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock';
-import { logging } from '../shared/utils/log';
 import * as headers from '../shared/utils/xhr-headers';
 import { dispatchEval } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
 import { ohMyState } from './state-manager';
+import { logMocked } from './utils';
 
 const Base = window.XMLHttpRequest;
-const debug = logging(`${STORAGE_KEY} (^*^) | XhrMock`);
-const log = logging(`${STORAGE_KEY} (^*^) | XhrMock`, true);
 
 export class OhMockXhr extends Base {
   private ohData: IData;
@@ -44,12 +42,15 @@ export class OhMockXhr extends Base {
 
       if (this.ohMock) {
         this.ohOutput = await this.mockResponse();
-        log(`${this.ohMethod} ${this.ohUrl}`, this.ohOutput);
+
+        if (this.ohOutput === null) {
+          throw Error();
+        }
       }
 
       setTimeout(() => {
         this.ohMyReady(...args);
-      }, this.ohOutput?.delay || 0);
+      }, (this.ohOutput?.delay ?? this.ohMock?.delay) || 0);
     });
 
     const ael = this.addEventListener.bind(this);
@@ -137,24 +138,28 @@ export class OhMockXhr extends Base {
     return url;
   }
 
-  private mockResponse(): Promise<Partial<IMock>> {
+  private async mockResponse(): Promise<Partial<IMock>> {
     if (!this.ohMock) {
       return this.response;
     }
 
     if (this.ohMock.jsCode === MOCK_JS_CODE) {
-      return Promise.resolve({
-        ...this.ohMock,
+      const output = {
+        statusCode: this.ohMock.statusCode,
         response: this.ohMock.responseMock,
         headers: this.ohMock.headersMock
-      });
+      };
+
+      logMocked(this.ohData, output);
+
+      return Promise.resolve(output);
     } else {
       return dispatchEval(this.ohData, {
         url: this.ohUrl,
         method: this.ohMethod,
         body: this.ohRequestBody,
         headers: this.ohRequestHeaders
-      });
+      }).catch(_ => _);
     }
   }
 

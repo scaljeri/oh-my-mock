@@ -1,8 +1,8 @@
-import { ohMyEvalStatus } from '../shared/constants';
-import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../shared/type';
-import { compileJsCode } from '../shared/utils/eval-jscode';
+import { ohMyEvalStatus } from '../constants';
+import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../type';
+import { compileJsCode } from './eval-jscode';
 
-export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<Partial<IOhMyEvalResult>> => {
+export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<IOhMyEvalResult> => {
   const mock = data.mocks[data.activeMock];
 
   let retVal: IOhMyEvalResult;
@@ -26,10 +26,9 @@ export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<
   } catch (err) {
     // TODO: send message to popup so the error can be reviewed
     // eslint-disable-next-line no-console
-    console.error('Could not execute jsCode', err, data, mock);
     retVal = {
       status: ohMyEvalStatus.ERROR,
-      result: context
+      result: err.message
     };
   }
 

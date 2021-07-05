@@ -132,7 +132,7 @@ export interface IOhMyEvalRequest {
 
 export interface IOhMyEvalResult {
   status: ohMyEvalStatus;
-  result: Partial<IMock>;
+  result: Partial<IMock> | string;
 }
 
 export interface IOhMyPopupActive {

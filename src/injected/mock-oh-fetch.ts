@@ -1,4 +1,4 @@
-import { MOCK_JS_CODE, STORAGE_KEY } from '../shared/constants';
+import { MOCK_JS_CODE } from '../shared/constants';
 import { IData, IMock, IOhMyEvalRequest, requestMethod } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';
@@ -6,10 +6,7 @@ import { dispatchEval } from './message/dispatch-eval';
 import { ohMyState } from './state-manager';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
-import { logging } from '../shared/utils/log';
-
-const debug = logging(`${STORAGE_KEY} (^*^) | XhrMock`);
-const log = logging(`${STORAGE_KEY} (^*^) | FetchMock`, true)
+import { logMocked } from './utils';
 
 const ORIG_FETCH = window.fetch;
 const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
@@ -23,7 +20,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
     mockHitMessage({ id: data.id });
 
     let result: Partial<IMock> = {
-      ...mock,
+      statusCode: mock.statusCode,
       response: mock.responseMock,
       headers: mock.headersMock
     };
@@ -34,12 +31,17 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
         method,
         headers: {},
         ...config
-      } as IOhMyEvalRequest);
+      } as IOhMyEvalRequest).catch(_ => _);
+    } else {
+      logMocked(data, result);
     }
-    log(`${method} ${url}`, result);
 
     return new Promise(async (resolv, reject) => {
       let body = null;
+
+      if (result === null) {
+        return reject();
+      }
 
       if (result.response !== undefined) { // Otherwise error with statuscode 204 (No content)
         body = new Blob([result.response], { type: result.headers['content-type'] });
@@ -50,7 +52,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
         status: result.statusCode
       });
 
-      setTimeout(() => resolv(response), result.delay);
+      setTimeout(() => resolv(response), result.delay ?? mock.delay);
     });
   } else {
     return ORIG_FETCH(url, config).then(response => {
