@@ -5,10 +5,17 @@ import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
 import { IOhMyEvalContext, IOhMyPopupActive, IPacket, IStore } from '../shared/type';
 import { OhMockXhr } from './xhr';
 import { OhMockFetch } from './fetch';
+import { dispatchRemote } from './dispatch-remote';
 
 declare let window: any;
+declare let open: any;
+declare let console: any;
+
 window.XMLHttpRequest = OhMockXhr;
 window.fetch = OhMockFetch;
+
+dispatchRemote();
+
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
@@ -22,12 +29,13 @@ chrome.runtime.onMessage.addListener(async (request: IPacket) => {
     } else {
       chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: request.tabId });
     }
-  } else if (request.payload.type === packetTypes.EVAL) {
-    window.ohMyHost = request.payload.context.url;
+  } else if (request.payload?.type === packetTypes.EVAL) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    window.ohMyHost = request.payload.context!.url;
     const input = request.payload.data as IOhMyEvalContext;
     const data = await evalCode(input.data, input.request);
 
-    chrome.tabs.sendMessage(request.tabId, {
+    chrome.tabs.sendMessage(request.tabId as number, {
       source: appSources.BACKGROUND,
       payload: {
         type: packetTypes.EVAL_RESULT,

@@ -7,7 +7,7 @@ const Base = window.XMLHttpRequest;
 export class OhMockXhr extends Base {
   static ohHost: string;
 
-  open(method: string, url: string, ...args): void {
+  open(method: string, url: string, ...args: unknown[]): void {
     return super.open(method, patchUrl(url, window.ohMyHost), ...args);
   }
 }

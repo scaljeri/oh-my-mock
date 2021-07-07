@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // this is where we'll handle our various routes from
-const routes = require("./routes/routes.js")(app, fs);
+const routes = require("./routes/routes.js")(app);
 
 // finally, launch our server on port 3001.
 const server = app.listen(8000, () => {

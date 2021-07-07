@@ -3,7 +3,13 @@ import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../type';
 import { compileJsCode } from './eval-jscode';
 
 export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<IOhMyEvalResult> => {
-  const mock = data.mocks[data.activeMock];
+  if (!data.mocks || !data.mocks[data.activeMock || '']) {
+    return {
+      status: ohMyEvalStatus.ERROR,
+      result: 'No mock available'
+    };
+  }
+  const mock = data.mocks[data.activeMock as string];
 
   let retVal: IOhMyEvalResult;
   const context = {
@@ -14,7 +20,7 @@ export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<
   } as Partial<IMock>;
 
   try {
-    const code = compileJsCode(mock.jsCode) as (mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>;
+    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>;
     const result = await code(context, {
       url: request.url,
       method: request.method,
