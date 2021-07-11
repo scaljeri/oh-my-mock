@@ -38,7 +38,8 @@ export enum packetTypes {
   KNOCKKNOCK = 'knockknock',
   HIT = 'hit',
   EVAL = 'execute',
-  EVAL_RESULT = 'eval-result'
+  EVAL_RESULT = 'eval-result',
+  DATA = 'data'
 
 }
 export enum appSources {

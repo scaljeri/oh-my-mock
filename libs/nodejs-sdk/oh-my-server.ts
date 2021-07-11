@@ -8,9 +8,13 @@ export interface IOhServerConfig {
 }
 
 export class OhMyServer {
-  constructor(public app: express.Application, private server: http.Server, private config: { local: IOhMyLocalConfig }) { }
+  private _local: OhMyLocal;
+
+  constructor(public app: express.Application, private server: http.Server, private config: { local: IOhMyLocalConfig }) {
+    this._local = new OhMyLocal({ ...this.config.local });
+   }
 
   get local(): OhMyLocal {
-    return new OhMyLocal({ ...this.config.local });
+    return this._local;
   }
 }

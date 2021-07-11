@@ -59,7 +59,6 @@ chrome.runtime.onMessage.addListener(async (data: IPacket, sender) => {
     if (data.payload.type === packetTypes.EVAL_RESULT) {
       handleEvalResult(data as IPacket<IOhMyEvalResult>);
     }
-
   } else if (data.source === appSources.POPUP) {
     if (data.domain !== window.location.host) {
       return sendKnockKnock();
@@ -76,7 +75,7 @@ chrome.runtime.onMessage.addListener(async (data: IPacket, sender) => {
 
 streamByType$(packetTypes.MOCK, appSources.INJECTED).subscribe(handlePacketFromInjected);
 streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
-streamByType$(packetTypes.EVAL, appSources.INJECTED).subscribe(handleEvalFromInjected);
+streamByType$(packetTypes.DATA, appSources.INJECTED).subscribe(handleEvalFromInjected);
 
 function handlePacketFromInjected(packet: IPacket) {
   chrome.runtime.sendMessage({

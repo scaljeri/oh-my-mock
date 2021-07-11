@@ -3,24 +3,24 @@ import * as socketio from "socket.io";
 import * as path from "path";
 import { appRouter } from './routes/routes';
 import { createServer } from '../libs/nodejs-sdk';
+import { IData, IMock, IOhMyEvalRequest } from '../src/shared/type';
 
 const ohMyServer = createServer({
   port: 8000, listenHandler: () => {
     console.log('Server up and running');
-  }
+  },
+  local: { basePath: 'test-server/data'}
 });
 const app = ohMyServer.app;
 
 ohMyServer.local.add({ // settings
   url: '/users',
-  method: 'FETCH',
-  type: 'GET',
-  mock: {
-    response: 'yolo',
-    headers: {}
-  },
-  handler: (request: any, mock: any, settings: any): void => {
-
+  method: 'GET',
+  type: 'FETCH',
+  statusCode: 200,
+  path: './users.json',
+  handler: (data: IData, request: IOhMyEvalRequest, mock: IMock): void => {
+    console.log('handler called');
   }
 } as any);
 
