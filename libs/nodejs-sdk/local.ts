@@ -53,10 +53,20 @@ export class OhMyLocal {
   }
 
   static async loadFile(filename: string): Promise<string | null> {
-    const buffer = await fsPromise.readFile(filename)
-      // eslint-disable-next-line no-console
-      .catch((err) => console.error('Failed to read file', err));
+    try {
+      if (fs.existsSync(filename)) {
+        const buffer = await fsPromise.readFile(filename)
+          // eslint-disable-next-line no-console
+          .catch((err) => console.error('Failed to read file', err));
 
-    return buffer ? (buffer as Buffer).toString('utf8') : null;
+        return buffer ? (buffer as Buffer).toString('utf8') : null;
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`Oooops, the fie ${filename} does not exist`);
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+    }
   }
 }
