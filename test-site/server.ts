@@ -5,22 +5,29 @@ import { appRouter } from './routes/routes';
 import { createServer } from '../libs/nodejs-sdk';
 import { IData, IMock, IOhMyEvalRequest } from '../src/shared/type';
 
+const filedir = path.dirname(process.argv[1]).replace(/^\./, '');
+const basePath = __dirname.replace(filedir, '');
+
 const ohMyServer = createServer({
   port: 8000, listenHandler: () => {
     console.log('Server up and running');
   },
-  local: { basePath: 'test-server/data'}
+  local: { basePath: path.join(basePath, 'test-site/data') }
 });
 const app = ohMyServer.app;
 
 ohMyServer.local.add({ // settings
   url: '/users',
   method: 'GET',
-  type: 'FETCH',
+  type: 'XHR',
   statusCode: 200,
   path: './users.json',
   handler: (data: IData, request: IOhMyEvalRequest, mock: IMock): void => {
-    console.log('handler called');
+    if (data) {
+      const resp = JSON.parse(mock.responseMock);
+      resp['1'] = 'Lucas Calje';
+      mock.responseMock = JSON.stringify(resp);
+    }
   }
 } as any);
 

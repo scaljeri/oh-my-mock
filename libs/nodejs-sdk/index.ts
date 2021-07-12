@@ -24,7 +24,7 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyEvalContext>) {
       // eslint-disable-next-line no-console
-      console.log(payload);
+      console.log(`Received request: ${payload.data.data.url} - ${payload.data.data.type} `);
       const data = payload.data.data;
 
       const mock = await myServer.local.updateMock(data, payload.data.request);

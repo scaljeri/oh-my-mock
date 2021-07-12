@@ -23,7 +23,6 @@ export class OhMyLocal {
 
   add(context: IOhFileContext): void {
     // eslint-disable-next-line no-console
-    console.log('adding context', context);
     this.contexts.push(context);
   }
 
@@ -40,7 +39,13 @@ export class OhMyLocal {
     const mock = data.mocks[data.activeMock];
 
     if (!context) {
+      // eslint-disable-next-line no-console
+      console.log(`     no response defined`);
+
       return mock;
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`     serving response from disk`);
     }
 
     const responseMock = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
