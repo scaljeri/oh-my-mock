@@ -4,7 +4,7 @@ import { IData, IMock, IOhMyEvalContext, IOhMyEvalRequest, IPacket, IPacketPaylo
 import { uniqueId } from '../shared/utils/unique-id';
 
 let isConnected = false;
-const socket = io("http://localhost:8000", { query: { source: 'ohmymock' } });
+const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' } });
 
 export const connectWithLocalServer = (): void => {
 
@@ -24,6 +24,7 @@ export const connectWithLocalServer = (): void => {
 
   socket.on("connect", () => {
     // eslint-disable-next-line no-console
+    console.log('Transport:' + socket.io.engine.transport.name);
     if (!isConnected) {
       isConnected = true;
       // eslint-disable-next-line no-console

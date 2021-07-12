@@ -20,6 +20,8 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
   io.on("connection", function (socket: Socket) {
     // eslint-disable-next-line no-console
+    // console.log(io.engine.transport.name);
+    console.log(socket.conn.transport.name);
     console.log("Client connected", socket.handshake.query.source);
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyEvalContext>) {
