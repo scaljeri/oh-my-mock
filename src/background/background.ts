@@ -45,7 +45,10 @@ chrome.runtime.onMessage.addListener(async (request: IPacket) => {
     const payload = request.payload as IPacketPayload<IOhMyEvalContext>;
     const data = (payload.data as IOhMyEvalContext).data;
     const mock = await dispatchRemote(payload);
-    data.mocks[data.activeMock] = mock;
+
+    if (mock) {
+      data.mocks[data.activeMock] = mock;
+    }
 
     const update = await evalCode(data, payload.data.request);
 
