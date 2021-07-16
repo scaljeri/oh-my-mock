@@ -10,7 +10,6 @@ import { sendMessage2Content } from './messag';
 import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
 
 declare let window: any;
-declare let open: any;
 declare let console: any;
 
 window.XMLHttpRequest = OhMockXhr;
@@ -59,41 +58,6 @@ async function handleDispatch(packet: IPacket<IOhMyEvalContext>): Promise<void> 
 streamByType$(packetTypes.ACTIVE, appSources.POPUP).subscribe(handleActivityChanges);
 streamByType$(packetTypes.EVAL, appSources.CONTENT).subscribe(handleEval);
 streamByType$(packetTypes.DATA_DISPATCH, appSources.CONTENT).subscribe(handleDispatch);
-
-// eslint-disable-next-line no-console
-// chrome.runtime.onMessage.addListener(async (request: IPacket) => {
-//   // if (request.payload?.type === packetTypes.ACTIVE) {
-//   //   const data = request.payload.data as IOhMyPopupActive;
-
-//   //   if (data.active) {
-//   //     chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: request.tabId });
-//   //   } else {
-//   //     chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: request.tabId });
-//   //   }
-//   // } else
-//   if (request.payload?.type === packetTypes.EVAL) {
-//     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-//     // window.ohMyHost = request.payload.context!.url;
-//     // const input = request.payload.data as IOhMyEvalContext;
-//     // const data = await evalCode(input.data, input.request);
-
-//     // sendMessage2Content(request.tabId as number, request.payload.context, data, packetTypes.EVAL_RESULT);
-
-//   } else if (request.payload?.type === packetTypes.DATA_DISPATCH) {
-//     // const data = request.payload.data as IOhMyEvalContext;
-//     const payload = request.payload as IPacketPayload<IOhMyEvalContext>;
-//     const data = (payload.data as IOhMyEvalContext).data;
-//     const mock = await dispatchRemote(payload);
-
-//     if (mock) {
-//       data.mocks[data.activeMock] = mock;
-//     }
-
-//     const update = await evalCode(data, payload.data.request);
-
-//     sendMessage2Content(request.tabId as number, request.payload.context, update, packetTypes.EVAL_RESULT);
-//   }
-// });
 
 chrome.runtime.onInstalled.addListener(function (details) {
   chrome.storage.local.get([STORAGE_KEY], (state) => {
