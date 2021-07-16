@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { appSources, packetTypes } from '../shared/constants';
 import { IPacket, IState } from '../shared/type';
-import { streamByType$ } from '../shared/utils/messaging';
+import { streamByType$ } from '../shared/utils/message-bus';
 
 let state: IState;
 const update = new BehaviorSubject<IState>(state);

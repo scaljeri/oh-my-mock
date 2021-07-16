@@ -1,8 +1,7 @@
-import { MOCK_JS_CODE } from '../shared/constants';
 import { IData, IMock, IOhMyEvalRequest, requestMethod } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock'
 import * as fetchUtils from '../shared/utils/fetch';
-import { dispatchEval } from './message/dispatch-eval';
+import { dispatchData } from './message/dispatch-eval';
 import { ohMyState } from './state-manager';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
@@ -25,16 +24,13 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
       headers: mock.headersMock
     };
 
-    if (mock.jsCode !== MOCK_JS_CODE) {
-      result = await dispatchEval(data, {
-        url,
-        method,
-        headers: {},
-        ...config
-      } as IOhMyEvalRequest).catch(_ => _);
-    } else {
-      logMocked(data, result);
-    }
+    result = await dispatchData(data, {
+      url,
+      method,
+      headers: {},
+      ...config
+    } as IOhMyEvalRequest).catch(_ => _);
+    logMocked(data, result);
 
     return new Promise(async (resolv, reject) => {
       let body = null;

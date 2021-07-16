@@ -1,4 +1,4 @@
-import { MOCK_JS_CODE, STORAGE_KEY } from '../shared/constants';
+import { STORAGE_KEY } from '../shared/constants';
 import {
   IData,
   IMock,
@@ -6,11 +6,10 @@ import {
 } from '../shared/type';
 import { findMocks } from '../shared/utils/find-mock';
 import * as headers from '../shared/utils/xhr-headers';
-import { dispatchEval } from './message/dispatch-eval';
+import { dispatchData } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
 import { newMockMessage } from './message/new-response';
 import { ohMyState } from './state-manager';
-import { logMocked } from './utils';
 
 const Base = window.XMLHttpRequest;
 
@@ -143,24 +142,12 @@ export class OhMockXhr extends Base {
       return this.response;
     }
 
-    if (this.ohMock.jsCode === MOCK_JS_CODE) {
-      const output = {
-        statusCode: this.ohMock.statusCode,
-        response: this.ohMock.responseMock,
-        headers: this.ohMock.headersMock
-      };
-
-      logMocked(this.ohData, output);
-
-      return Promise.resolve(output);
-    } else {
-      return dispatchEval(this.ohData, {
-        url: this.ohUrl,
-        method: this.ohMethod,
-        body: this.ohRequestBody,
-        headers: this.ohRequestHeaders
-      }).catch(_ => _);
-    }
+    return dispatchData(this.ohData, {
+      url: this.ohUrl,
+      method: this.ohMethod,
+      body: this.ohRequestBody,
+      headers: this.ohRequestHeaders
+    }).catch(_ => _);
   }
 
   private parseState(): void {

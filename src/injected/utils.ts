@@ -12,7 +12,7 @@ export const error = (msg) => {
 }
 
 export const logMocked = (data: IData, result: Partial<IMock>): void => {
-  if (result.headers['content-type']?.includes('application/json')) {
+  if (result?.headers['content-type']?.includes('application/json')) {
     result = {
       ...result,
       response: result.response ? JSON.parse(result.response) : ''
