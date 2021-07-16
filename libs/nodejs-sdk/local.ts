@@ -34,6 +34,8 @@ export class OhMyLocal {
     }) || [])[0];
   }
 
+  // If a context is defined for `data`, it will update and return `mock`. If not, the
+  // original `mock` object is returned
   async updateMock(data: IData, request: IOhMyEvalRequest): Promise<IMock> {
     const context = this.findContext(data);
     const mock = data.mocks[data.activeMock];

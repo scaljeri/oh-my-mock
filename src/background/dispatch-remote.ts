@@ -1,10 +1,8 @@
 import { io } from 'socket.io-client';
-import { packetTypes } from '../shared/constants';
-import { IData, IMock, IOhMyEvalContext, IOhMyEvalRequest, IPacket, IPacketPayload } from '../shared/type';
-import { uniqueId } from '../shared/utils/unique-id';
+import { IData, IMock, IOhMyEvalContext, IOhMyEvalRequest, IPacketPayload } from '../shared/type';
 
 let isConnected = false;
-const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' } });
+const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transports: ['websocket'] });
 
 export const connectWithLocalServer = (): void => {
 

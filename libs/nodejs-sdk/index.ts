@@ -15,13 +15,14 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
   // app.set("port", process.env.PORT || config.port || 9999);
 
   const server = new http.Server(app);
-  const io = new Server(server, {});
+  // const io = new Server(server);
+  const io = new Server(server, { transports: ['websocket']});
   const myServer = new OhMyServer(app, server, { local: config.local })
 
   io.on("connection", function (socket: Socket) {
-    // eslint-disable-next-line no-console
     // console.log(io.engine.transport.name);
-    console.log(socket.conn.transport.name);
+    // console.log(socket.conn.transport.name);
+    // eslint-disable-next-line no-console
     console.log("Client connected", socket.handshake.query.source);
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyEvalContext>) {

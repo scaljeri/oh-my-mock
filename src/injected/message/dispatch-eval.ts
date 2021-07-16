@@ -1,8 +1,9 @@
 import { appSources, ohMyEvalStatus, packetTypes } from '../../shared/constants';
 import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult, IPacket } from '../../shared/type';
 import { evalCode } from '../../shared/utils/eval-code';
-import { streamById$, uniqueId } from '../../shared/utils/messaging';
+import { streamById$ } from '../../shared/utils/message-bus';
 import { error, log, logMocked } from '../utils';
+import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 
 declare let window: any;
