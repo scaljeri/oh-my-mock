@@ -4,6 +4,8 @@ import * as http from 'http';
 import { IOhServerConfig, OhMyServer } from './oh-my-server';
 import { IOhMyEvalContext, IPacketPayload } from '../../src/shared/type';
 
+export * from '../../src/shared/type';
+
 export interface IOhMyServerConfig extends IOhServerConfig {
   port?: number
   listenHandler?: () => void;
@@ -16,7 +18,7 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
   const server = new http.Server(app);
   // const io = new Server(server);
-  const io = new Server(server, { transports: ['websocket']});
+  const io = new Server(server, { transports: ['websocket'] });
   const myServer = new OhMyServer(app, server, { local: config.local })
 
   io.on("connection", function (socket: Socket) {
@@ -27,12 +29,17 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyEvalContext>) {
       // eslint-disable-next-line no-console
-      console.log(`Received request: ${payload.data.data.url} - ${payload.data.data.type} `);
-      const data = payload.data.data;
+      if (payload.data) {
+        // eslint-disable-next-line no-console
+        console.log(`Received request: ${payload.data.data.url} - ${payload.data.data.type} `);
+        const data = payload.data.data;
 
-      const mock = await myServer.local.updateMock(data, payload.data.request);
+        const mock = await myServer.local.updateMock(data, payload.data.request);
 
-      socket.emit(payload.context.id, mock);
+        if (payload?.context?.id) {
+          socket.emit(payload.context.id, mock);
+        }
+      }
     });
   });
 

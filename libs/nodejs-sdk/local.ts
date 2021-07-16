@@ -30,7 +30,7 @@ export class OhMyLocal {
     return (this.contexts.filter(c => {
       // eslint-disable-next-line no-console
 
-      return c.method === input.method && c.type === input.type && compareUrls(input.url, c.url);
+      return c.method === input.method && c.type === input.type && compareUrls(input.url!, c.url!);
     }) || [])[0];
   }
 
@@ -38,13 +38,13 @@ export class OhMyLocal {
   // original `mock` object is returned
   async updateMock(data: IData, request: IOhMyEvalRequest): Promise<IMock> {
     const context = this.findContext(data);
-    const mock = data.mocks[data.activeMock];
+    const mock = data.mocks?.[data.activeMock!];
 
     if (!context) {
       // eslint-disable-next-line no-console
       console.log(`     no response defined`);
 
-      return mock;
+      return mock!;
     } else {
       // eslint-disable-next-line no-console
       console.log(`     serving response from disk`);
@@ -53,10 +53,10 @@ export class OhMyLocal {
     const responseMock = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
 
     if (responseMock) {
-      mock.responseMock = responseMock;
+      mock!.responseMock = responseMock;
     }
 
-    return context?.handler(data, request, mock) || mock;
+    return context?.handler(data, request, mock!) || mock;
   }
 
   static async loadFile(filename: string): Promise<string | null> {
@@ -75,5 +75,7 @@ export class OhMyLocal {
       // eslint-disable-next-line no-console
       console.error(err)
     }
+
+    return null;
   }
 }
