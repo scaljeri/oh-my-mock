@@ -22,7 +22,7 @@ export const streamBySource$ = (source: appSources): Observable<IPacket> => {
     filter(packet => packet?.source && (!source || packet.source === source), share()));
 }
 
-export const streamByType$ = (type: packetTypes, source?: appSources): Observable<IPacket> => {
+export const streamByType$ = (type: packetTypes, source?: appSources): Observable<IPacket<any>> => {
   return streamBySource$(source).pipe(filter(packet => packet.payload.type === type));
 }
 

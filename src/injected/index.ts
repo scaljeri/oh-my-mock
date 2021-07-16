@@ -2,7 +2,7 @@ import { IState } from '../shared/type';
 import { OhMockXhr } from './mock-oh-xhr';
 import { OhMyFetch } from './mock-oh-fetch';
 import { ohMyState$ } from './state-manager';
-import { hasCSPIssues } from './detect-cps-issues';
+import { hasCSPIssues } from './detect-csp-issues';
 import { log } from './utils';
 
 declare let window: any;

@@ -52,7 +52,7 @@ export const dispatchData = async (data: IData, request: IOhMyEvalRequest): Prom
     const id = uniqueId();
     const payload = {
       context: { id, url: window.location.origin },
-      type: packetTypes.DATA,
+      type: packetTypes.DATA_DISPATCH,
       data: { data, request }
     }
 

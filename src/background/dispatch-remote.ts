@@ -22,25 +22,23 @@ export const connectWithLocalServer = (): void => {
 
   socket.on("connect", () => {
     // eslint-disable-next-line no-console
-    console.log('Transport:' + socket.io.engine.transport.name);
+    console.log('Socket-io Transport:' + socket.io.engine.transport.name);
     if (!isConnected) {
       isConnected = true;
       // eslint-disable-next-line no-console
-      console.log('Connected with server');
+      console.log('Found server, websocket connected');
     }
   });
 }
 
 export const dispatchRemote = async (payload: IPacketPayload<IOhMyEvalContext>): Promise<IMock> => {
-  const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
+//   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
 
   if (isConnected) {
 
-    return new Promise(resolve => {
+    return new Promise<IMock>(resolve => {
       socket.on(payload.context.id, (result: IMock) => {
         socket.off(payload.context.id);
-        // eslint-disable-next-line no-console
-        console.log('YES, received', result);
 
         resolve(result);
       });

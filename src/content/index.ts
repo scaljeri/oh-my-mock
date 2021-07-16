@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IOhMyEvalResult, IOhMyMock, IOhMyPopupActive, IPacket, IPacketPayload } from '../shared/type';
+import { IOhMyMock, IPacket, IPacketPayload } from '../shared/type';
 import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
 import { debug } from './utils';
 
@@ -110,8 +110,8 @@ async function handlePacketFromPopup(packet: IPacket): Promise<void> {
 
 streamByType$(packetTypes.MOCK, appSources.INJECTED).subscribe(handlePacketFromInjected);
 streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
-streamByType$(packetTypes.DATA, appSources.INJECTED).subscribe(handlePacketFromInjected);
-streamByType$(packetTypes.EVAL_RESULT, appSources.BACKGROUND).subscribe(handlePacketFromBg);
+streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
+streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
 streamByType$(packetTypes.ACTIVE, appSources.POPUP).subscribe(handlePacketFromPopup);
 // streamByType$(packetTypes.STATE, appSources.POPUP).subscribe(handlePacketFromPopup);
 

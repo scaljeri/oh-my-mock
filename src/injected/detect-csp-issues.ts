@@ -1,5 +1,7 @@
 declare let window: any;
 
+/* Due to CSP restrictions it might not be possible to `eval` code and use Fetch or XMLHttpRequest */
+/* This code detects if the current site has CSP restrictions */
 document.addEventListener("securitypolicyviolation", (e) => {
 	window.OhMyEvalDispatch = true;
 });
