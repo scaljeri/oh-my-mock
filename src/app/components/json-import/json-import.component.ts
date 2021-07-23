@@ -6,6 +6,7 @@ import { IData, IState } from '@shared/type';
 import { UpsertData } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
 import { uniqueId } from '@shared/utils/unique-id';
+import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'oh-my-json-import',
@@ -14,14 +15,17 @@ import { uniqueId } from '@shared/utils/unique-id';
 })
 export class JsonImportComponent {
 
-  @Dispatch() upsertData = (data: IData, domain: string) => new UpsertData(data, domain);
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
 
-  constructor(private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
+  constructor(
+    public dialogRef: MatDialogRef<JsonImportComponent>,
+    private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
     Array.from(fileList).forEach(file => {
       const fileReader = new FileReader();
       fileReader.onload = (fileLoadedEvent) => {
+
         try {
           const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
 
@@ -39,13 +43,15 @@ export class JsonImportComponent {
           }
 
           migratedState.domains[domain]?.data.forEach(d => {
-            this.upsertData({ ...d, id: uniqueId() }, domain);
+            this.upsertData({ ...d, id: uniqueId() });
           });
 
           this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${domain}`);
         } catch {
           this.toast.error(`File ${file} does not contain (valid) JSON`);
         }
+
+        this.dialogRef.close();
       };
 
       fileReader.readAsText(file, "UTF-8");

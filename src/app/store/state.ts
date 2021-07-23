@@ -62,11 +62,15 @@ export class OhMyState {
   }
 
   static getActiveState(state: IStore | IOhMyMock, domain = OhMyState.domain): IState {
+    let output;
+
     if (state[STORAGE_KEY]) {
-      return state[STORAGE_KEY].domains[domain];
+      output = state[STORAGE_KEY].domains[domain];
     } else {
-      return (state as IOhMyMock).domains[domain];
+      output = (state as IOhMyMock).domains[domain];
     }
+
+    return output || { domain, views: {}, toggles: {}, data: [] };
   }
 
   static getMyState(ctx: StateContext<IOhMyMock>, domain: string): [IState, string] {
