@@ -11,7 +11,8 @@ export interface IOhMyLocalConfig {
 
 export type IOhFileContext = Omit<IOhMyContext, 'id' | 'mockId'> &
 {
-  statusCode: statusCode;
+  statusCode?: statusCode;
+  headers?: Record<string, string>;
   path: string
   handler: (data: IData, request: IOhMyEvalRequest, mock: IMock) => IMock;
 };
@@ -54,6 +55,8 @@ export class OhMyLocal {
 
     if (responseMock) {
       mock!.responseMock = responseMock;
+      mock.statusCode = context.statusCode || mock.statusCode;
+      mock.headersMock = context.headers || mock.headersMock;
     }
 
     return context?.handler(data, request, mock!) || mock;
