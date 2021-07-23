@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
@@ -18,7 +18,7 @@ export class JsonImportComponent {
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
 
   constructor(
-    public dialogRef: MatDialogRef<JsonImportComponent>,
+    @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,
     private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
@@ -51,7 +51,7 @@ export class JsonImportComponent {
           this.toast.error(`File ${file} does not contain (valid) JSON`);
         }
 
-        this.dialogRef.close();
+        this.dialogRef?.close();
       };
 
       fileReader.readAsText(file, "UTF-8");
