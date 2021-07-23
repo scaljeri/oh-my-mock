@@ -61,7 +61,6 @@ export class JsonImportComponent {
           this.dialogRef?.close();
         }, 500);
 
-
       };
 
       fileReader.readAsText(file, "UTF-8");
