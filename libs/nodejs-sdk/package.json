@@ -1,6 +1,6 @@
 {
   "name": "@scaljeri/ohmymock-sdk",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "SDK for OhMyMock node server",
   "main": "libs/nodejs-sdk/index.js",
   "types": "libs/nodejs-sdk/index.d.ts",

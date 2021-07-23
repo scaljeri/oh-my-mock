@@ -55,8 +55,8 @@ export class OhMyLocal {
 
     if (responseMock) {
       mock!.responseMock = responseMock;
-      mock.statusCode = context.statusCode || mock.statusCode;
-      mock.headersMock = context.headers || mock.headersMock;
+      mock!.statusCode = context.statusCode || mock!.statusCode;
+      mock!.headersMock = context.headers || mock!.headersMock;
     }
 
     return context?.handler(data, request, mock!) || mock;
