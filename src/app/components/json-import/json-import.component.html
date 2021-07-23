@@ -1,2 +1,5 @@
 
-<oh-my-file-uploader (filesChanged)="onUploadFile($event)"></oh-my-file-uploader>
+<oh-my-file-uploader [ngClass]="{'is-busy': isUploading}" (filesChanged)="onUploadFile($event)"></oh-my-file-uploader>
+
+<oh-my-spinner *ngIf="isUploading" mode="dark"></oh-my-spinner>
+

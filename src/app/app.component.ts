@@ -35,6 +35,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version: string;
   page = '';
   dialogDone = false;
+  isInitializing = true;
 
   @Dispatch() activate = (value: boolean) => new Toggle({ name: 'active', value });
   @Select(OhMyState.mainState) state$: Observable<IState>;
@@ -57,10 +58,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.state$.subscribe((state: IState) => {
       setTimeout(() => this.domain = this.appStateService.domain);
 
-      if (!state) {
+      if (!state || !state.domain) {
         return;
       }
 
+      this.isInitializing = false;
       this.enabled = state.toggles.active;
       if (this.enabled) {
         if (this.dialogRef) {
