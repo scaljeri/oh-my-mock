@@ -2,6 +2,7 @@
 
 :host {
   display: flex;
+  flex-direction: column;
   position: relative;
 }
 
@@ -12,4 +13,8 @@
 oh-my-spinner {
   @include oh-position(absolute, 50% 0 0 50%);
   transform: translate(-50%, -50%);
+}
+
+mat-checkbox {
+	margin-top: $spacer-2;
 }

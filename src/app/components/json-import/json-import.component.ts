@@ -7,6 +7,9 @@ import { UpsertData } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
 import { uniqueId } from '@shared/utils/unique-id';
 import { MatDialogRef } from '@angular/material/dialog';
+import compareVersions from 'compare-versions';
+import { FormControl } from '@angular/forms';
+import { AppStateService } from 'src/app/services/app-state.service';
 
 @Component({
   selector: 'oh-my-json-import',
@@ -15,12 +18,14 @@ import { MatDialogRef } from '@angular/material/dialog';
 })
 export class JsonImportComponent {
 
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() upsertData = (data: IData, domain: string) => new UpsertData(data, domain || this.appState.domain);
 
   isUploading = false;
+  ctrl = new FormControl(true);
 
   constructor(
     @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,
+    private appState: AppStateService,
     private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
@@ -33,25 +38,24 @@ export class JsonImportComponent {
         setTimeout(() => {
           try {
             const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
-
             const migratedState = this.mirgationService.update(
               { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
 
-            if (version > migratedState.version && !version.match(/^__/)) { // In development the version starts with __
-              this.toast.error(`Import failed, version of OhMyMock is too old`)
-            } else if ((version || '0.0.0') < migratedState.version) {
-              if (migratedState.domains[domain]?.data?.length !== 0) {
+            if (compareVersions(version, migratedState.version) === 1) {
+              this.toast.error(`Import failed, your version of OhMyMock is too old`)
+            } else {
+              if (migratedState.domains[domain]?.data?.length !== data.length) {
                 return this.toast.warning(`Nothing imported, version of the data is too old!`);
-              } else {
-                this.toast.warning(`Data was migrated to version ${migratedState.version} before import!`);
+              } else if (migratedState.version !== version) {
+                this.toast.warning(`Data was migrated from version ${version} to ${migratedState.version} before import!`);
               }
+
+              migratedState.domains[domain]?.data.forEach(d => {
+                this.upsertData({ ...d, id: uniqueId() }, this.ctrl.value ? null : domain);
+              });
+
+              this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${this.ctrl.value ? this.appState.domain : domain}`);
             }
-
-            migratedState.domains[domain]?.data.forEach(d => {
-              this.upsertData({ ...d, id: uniqueId() });
-            });
-
-            this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${domain}`);
           } catch {
             this.toast.error(`File ${file} does not contain (valid) JSON`);
           } finally {
