@@ -17,6 +17,8 @@ export class JsonImportComponent {
 
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
 
+  isUploading = false;
+
   constructor(
     @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,
     private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
@@ -26,32 +28,39 @@ export class JsonImportComponent {
       const fileReader = new FileReader();
       fileReader.onload = (fileLoadedEvent) => {
 
-        try {
-          const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
+        this.isUploading = true;
 
-          const migratedState = this.mirgationService.update(
-            { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
+        setTimeout(() => {
+          try {
+            const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
 
-          if (version > migratedState.version && !version.match(/^__/)) { // In development the version starts with __
-            this.toast.error(`Import failed, version of OhMyMock is too old`)
-          } else if ((version || '0.0.0') < migratedState.version) {
-            if (migratedState.domains[domain]?.data?.length !== 0) {
-              return this.toast.warning(`Nothing imported, version of the data is too old!`);
-            } else {
-              this.toast.warning(`Data was migrated to version ${migratedState.version} before import!`);
+            const migratedState = this.mirgationService.update(
+              { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
+
+            if (version > migratedState.version && !version.match(/^__/)) { // In development the version starts with __
+              this.toast.error(`Import failed, version of OhMyMock is too old`)
+            } else if ((version || '0.0.0') < migratedState.version) {
+              if (migratedState.domains[domain]?.data?.length !== 0) {
+                return this.toast.warning(`Nothing imported, version of the data is too old!`);
+              } else {
+                this.toast.warning(`Data was migrated to version ${migratedState.version} before import!`);
+              }
             }
+
+            migratedState.domains[domain]?.data.forEach(d => {
+              this.upsertData({ ...d, id: uniqueId() });
+            });
+
+            this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${domain}`);
+          } catch {
+            this.toast.error(`File ${file} does not contain (valid) JSON`);
+          } finally {
+            this.isUploading = false;
           }
 
-          migratedState.domains[domain]?.data.forEach(d => {
-            this.upsertData({ ...d, id: uniqueId() });
-          });
+          this.dialogRef?.close();
+        }, 500);
 
-          this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${domain}`);
-        } catch {
-          this.toast.error(`File ${file} does not contain (valid) JSON`);
-        }
-
-        this.dialogRef?.close();
       };
 
       fileReader.readAsText(file, "UTF-8");

@@ -49,6 +49,7 @@ import { MockDetailsComponent } from './mock/mock-details/mock-details.component
 import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
 import { UpdateInputDirective } from './update-input/update-input.directive';
 import { ContentTypeComponent } from './content-type/content-type.component';
+import { SpinnerComponent } from './spinner/spinner.component';
 
 @NgModule({
   declarations: [
@@ -74,7 +75,8 @@ import { ContentTypeComponent } from './content-type/content-type.component';
     MockDetailsComponent,
     CloudSyncComponent,
     UpdateInputDirective,
-    ContentTypeComponent
+    ContentTypeComponent,
+    SpinnerComponent
   ],
   imports: [
     CommonModule,
@@ -115,6 +117,7 @@ import { ContentTypeComponent } from './content-type/content-type.component';
     CloudSyncComponent,
     UpdateInputDirective,
     ContentTypeComponent,
+    SpinnerComponent
   ],
   providers: [
     Location,

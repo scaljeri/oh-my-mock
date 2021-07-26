@@ -1,14 +1,14 @@
 @use '~@angular/material'as *;
 
-$primary: define-palette($indigo-palette, 500);
-$accent: define-palette($pink-palette, A200, A100, A400);
+$app-primary: define-palette($indigo-palette, 500);
+$app-accent: define-palette($pink-palette, A200, A100, A400);
 
 // The "warn" palette is optional and defaults to red if not specified.
-$warn: define-palette($red-palette);
+$app-warn: define-palette($red-palette);
 
-$theme: define-light-theme((color: (primary: $primary,
-      accent: $accent,
-    )));
+$theme: define-light-theme((color: (primary: $app-primary,
+      accent: $app-accent,
+      warn: $app-warn)));
 
 // @include core-theme($theme);
 @include all-component-themes($theme);
@@ -23,6 +23,10 @@ $theme: define-light-theme((color: (primary: $primary,
 // $warn: mat-color($warnPalette);
 
 // colors
+$primary: map_get($app-primary, 900);
+$accent: map_get($app-accent, 900);
+$warn: map_get($app-warn, 900);
+
 $color-light: #fff;
 $color-dark: #000;
 
