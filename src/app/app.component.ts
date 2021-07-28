@@ -50,8 +50,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private router: Router,
     public dialog: MatDialog
   ) {
-    // this.version = this.appStateService.version;
-    this.version = chrome.runtime.getManifest().version;
+    this.version = this.appStateService.version;
   }
 
   async ngAfterViewInit(): Promise<void> {

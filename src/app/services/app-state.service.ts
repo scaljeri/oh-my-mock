@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { IData } from '@shared/type';
 import { BehaviorSubject, Subject } from 'rxjs';
 
+const manifest = chrome.runtime.getManifest();
+
+const VERSION = '__OH_MY_VERSION__'; // For development only
+
 export interface IPage {
   title: string;
 }
@@ -14,8 +18,9 @@ export class AppStateService {
 
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
-  public version = '__OH_MY_VERSION__';
-
+  public get version(): string {
+    return VERSION.match(/^__/) ? manifest.version : VERSION;
+  }
   private domainChangeSubject = new BehaviorSubject<string>(null);
   public domain$ = this.domainChangeSubject.asObservable();
 
