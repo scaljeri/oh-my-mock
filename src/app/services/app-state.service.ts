@@ -1,3 +1,5 @@
+/// <reference types="chrome"/>
+
 import { Injectable } from '@angular/core';
 import { IData } from '@shared/type';
 import { BehaviorSubject, Subject } from 'rxjs';
