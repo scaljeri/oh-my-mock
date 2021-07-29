@@ -7,7 +7,6 @@ const { exec } = require('child_process');
 const semver = require('semver');
 const packageJson = require('../package.json');
 
-
 const PATH_TO_TASKS = {
   'src/content': 'yarn build:content',
   'src/injected': 'yarn build:injected',
@@ -15,60 +14,62 @@ const PATH_TO_TASKS = {
   'src/shared': 'yarn run-p build:*',
   'src/app': 'yarn build:ng'
 }
-let version = packageJson.version;
 
-let promise;
+let version = packageJson.version;
 let timeoutId;
+let promise;
 const commands = new Set<string>()
 // One-liner for current directory
+
 chokidar
-  .watch([
-    "./src/content",
-    "./src/injected",
-    "./src/background.ts",
-    "./src/shared",
-    "./src/app"
-  ])
+  .watch(Object.keys(PATH_TO_TASKS))
   .on("all", (event, path) => {
     commands.add(path2command(path));
 
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
+
+    if (promise) {
+      return;
+    }
+
     timeoutId = setTimeout(() => {
       timeoutId = null;
 
-      if (promise) {
-        promise.then(() => {
-          promise = build(Array.from(commands))
-            .catch(() => { })
-            .finally(() => {
-              promise = null;
-              console.log("- finished delayed build");
-            });
-        });
-      } else {
-        promise = build(Array.from(commands))
-          .catch(() => { })
-          .finally(() => {
-            promise = null;
-            console.log("-finished build");
-          });
-      }
-      commands.clear();
+      scheduleBuild();
     }, 500);
   });
 
+function scheduleBuild(): Promise<void> {
+  const input = Array.from(commands)
+  commands.clear();
+
+  promise = build(input)
+    .catch(() => { })
+    .finally(() => {
+      console.log("- finished build", timeoutId, commands.size);
+      promise = null;
+
+      if (!timeoutId && commands.size > 0) {
+        scheduleBuild();
+      }
+    });
+
+    return promise;
+}
+
 function build(cmds: string[]): Promise<void> {
   createVersion();
-  console.log('VERSION=' + version);
+
   if (cmds.some(c => c.match(/src\/shared/))) {
-    cmds = ['src/shared'];
+    cmds = ['src/shared']; // rebuild everything
   }
+
   console.log("- start build", cmds);
   return new Promise<void>((resolve, reject) => {
-    console.log(`${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')} && yarn replace --version ${version}`);
-    exec(`${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')} && yarn replace --version ${version}`, (error, stdout, stderr) => {
+    console.log(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')};wait) && yarn replace-tokens --version ${version}`);
+    exec(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' & ')}; wait) && yarn replace-tokens --version ${version}`, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         reject();
@@ -87,7 +88,8 @@ function build(cmds: string[]): Promise<void> {
 }
 
 function createVersion() {
-  version = semver.inc(version, 'prerelease', 'beta')
+  version = semver.inc(version, 'prerelease', 'beta');
+  //version = semver.inc(version, 'patch');
 }
 
 function path2command(path): string {

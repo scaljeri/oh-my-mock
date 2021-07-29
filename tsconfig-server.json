@@ -8,7 +8,9 @@
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "dist/server",
-        "baseUrl": "."
+        "baseUrl": ".",
+        "types": [ "node"],
+        "resolveJsonModule": true
     },
     "include": [
         "test-site/server.ts"

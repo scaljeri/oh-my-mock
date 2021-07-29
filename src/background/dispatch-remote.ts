@@ -2,9 +2,10 @@ import { io } from 'socket.io-client';
 import { IData, IMock, IOhMyEvalContext, IOhMyEvalRequest, IPacketPayload } from '../shared/type';
 
 let isConnected = false;
+
 const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transports: ['websocket'] });
 
-export const connectWithLocalServer = (): void => {
+  export const connectWithLocalServer = (): void => {
 
   socket.io.on("error", (error) => {
     // eslint-disable-next-line no-console
@@ -32,7 +33,7 @@ export const connectWithLocalServer = (): void => {
 }
 
 export const dispatchRemote = async (payload: IPacketPayload<IOhMyEvalContext>): Promise<IMock> => {
-//   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
+  //   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
 
   if (isConnected) {
 

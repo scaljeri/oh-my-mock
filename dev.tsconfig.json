@@ -1,0 +1,5 @@
+{
+  "extends": "./prd.tsconfig.json",
+  "compilerOptions": {
+  }
+}

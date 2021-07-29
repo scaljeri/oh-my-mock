@@ -100,7 +100,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.timeoutId && clearTimeout(this.timeoutId);
     this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
 
-    this.timeoutId = setTimeout(() => {
+    this.timeoutId = window.setTimeout(() => {
       // The hit list has animated its change. The problem after the animation  rows
       // are moved around with css `transform` which doesn't work with Drag&Drop.
       // So, below we change the order of the data, so no css transformation are needed
