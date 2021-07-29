@@ -12,7 +12,7 @@ const PATH_TO_TASKS = {
   'src/injected': 'yarn build:injected',
   'src/background': 'yarn build:background',
   'src/shared': 'yarn run-p build:*',
-  'src/app': 'yarn dev:build'
+  'src/app': 'yarn build:ng'
 }
 
 let version = packageJson.version;
@@ -68,8 +68,8 @@ function build(cmds: string[]): Promise<void> {
 
   console.log("- start build", cmds);
   return new Promise<void>((resolve, reject) => {
-    console.log(`${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')} && yarn replace --version ${version}`);
-    exec(`${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')} && yarn replace --version ${version}`, (error, stdout, stderr) => {
+    console.log(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')};wait) && yarn replace-tokens --version ${version}`);
+    exec(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' & ')}; wait) && yarn replace-tokens --version ${version}`, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         reject();
