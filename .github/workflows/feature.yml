@@ -20,10 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
+      - run: node -v
       - run: yarn
       - run: yarn lint
       - run: yarn test
-      - run: node -v
+
       - run: echo 'pass!!'
 
  #   steps:
