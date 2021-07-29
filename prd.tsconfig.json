@@ -1,9 +1,30 @@
 {
-  "extends": "./tsconfig.json",
+  "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./out-tsc/app",
-    "types": []
+    "baseUrl": "./",
+    "outDir": "./dist/",
+    "sourceMap": false,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "lib": [
+      "es6",
+      "es2017",
+      "dom"
+    ],
+    "types": [],
+    "skipLibCheck": true,
+    "noEmitOnError": true,
+    "strict": false,
+    "esModuleInterop": false
   },
-  "files": ["src/main.ts", "src/polyfills.ts"],
-  "include": ["src/**/*.d.ts"]
+  "files": [
+    "src/content/index.ts",
+    "src/background/background.ts",
+    "src/injected/index.ts"
+  ]
 }
