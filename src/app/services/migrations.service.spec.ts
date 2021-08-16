@@ -1,15 +1,16 @@
 import { MigrationsService } from './migrations.service';
+import { IOhMyMock } from '@shared/type';
 
 const CURRENT_VERSION = '200.6.0';
 
 describe('MigrationsService', () => {
   let service: MigrationsService;
-  let state: any;
+  let state: IOhMyMock;
 
   beforeEach(() => {
     state = {
       version: CURRENT_VERSION,
-      data: 'data'
+      domains: {}
     };
     service = new MigrationsService({ version: CURRENT_VERSION } as any)
   });
