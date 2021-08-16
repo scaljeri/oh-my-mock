@@ -13,7 +13,7 @@ export class MockLabelComponent {
     return this.mock?.statusCode;
   }
 
-  get name(): string {
-    return this.mock?.name;
+  get scenario(): string {
+    return this.mock?.scenario;
   }
 }

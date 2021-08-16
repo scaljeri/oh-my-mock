@@ -43,11 +43,11 @@ export class MockDetailsComponent implements OnChanges {
       statusCode: new FormControl(this.mock.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      name: new FormControl(this.mock.name, { updateOn: 'blur' })
+      scenario: new FormControl(this.mock.scenario, { updateOn: 'blur' })
     });
 
     this.form.valueChanges.subscribe(values => {
-      const update: Partial<IMock> = { name: values.name, delay: values.delay || 0 }
+      const update: Partial<IMock> = { scenario: values.scenario, delay: values.delay || 0 }
       if (!this.statusCodeCtrl.hasError('required')) {
         update.statusCode = values.statusCode;
       }
@@ -57,11 +57,13 @@ export class MockDetailsComponent implements OnChanges {
   }
 
   onContentTypeUpdate(contentType: string): void {
-    this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
+	  if (contentType !== this.mock.headersMock['content-type']) {
+    		this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
+	  }
   }
 
-  get nameCtrl(): FormControl {
-    return this.form.get('name') as FormControl;
+  get scenarioCtrl(): FormControl {
+    return this.form.get('scenario') as FormControl;
   }
 
   get statusCodeCtrl(): FormControl {

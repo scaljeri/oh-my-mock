@@ -49,7 +49,7 @@ export interface IData extends IOhMyContext {
 
 export interface IMock {
   id: ohMyMockId;
-  name?: string;
+  scenario?: string;
   statusCode: statusCode;
   response?: string;
   type?: string;    // In application/json the `type` will be `application`
