@@ -32,7 +32,7 @@ export class MigrationsService {
   versions: string[];
 
   constructor(private appState: AppStateService) {
-    this.versions = Object.keys(migrations).sort();
+    this.versions = Object.keys(migrations).sort(compareVersions);
   }
 
   update(state: IOhMyMock = this.reset()): IOhMyMock {
@@ -44,7 +44,7 @@ export class MigrationsService {
       return state;
     }
 
-    if (version > this.appState.version) { // Can only happen with manual JSON imports
+    if (compareVersions(version, this.appState.version) === 1) { // Can only happen with manual JSON imports
       return this.reset();
     }
 

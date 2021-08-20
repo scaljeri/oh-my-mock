@@ -6,6 +6,7 @@ import {
   IOhMyToggle,
   ohMyMockId,
   ohMyDataId,
+  ohMyScenarioId,
 } from '@shared/type';
 
 export class InitState {
@@ -56,4 +57,9 @@ export class ViewReset {
 export class Toggle {
   static readonly type = '[Toggle] update';
   constructor(public payload: IOhMyToggle) { }
+}
+
+export class UpsertScenarios {
+  static readonly type = 'Scenario upsert';
+  constructor(public payload: Record<ohMyScenarioId, string>, public domain?: string) { }
 }

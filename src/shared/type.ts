@@ -15,6 +15,7 @@ export type origin = 'local' | 'cloud' | 'ngapimock';
 export type mockRuleType = keyof typeof MOCK_RULE_TYPES;
 export type ohMyDataId = string;
 export type ohMyMockId = string;
+export type ohMyScenarioId = string;
 
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
@@ -30,6 +31,7 @@ export interface IState {
   data: IData[];
   views: Record<string, number[]>; // Projections
   toggles: Record<string, boolean>; // enable toggle and toggles for projections
+  scenarios: Record<ohMyScenarioId, string>
 }
 
 // url, method and type are used to map an API request with a mock

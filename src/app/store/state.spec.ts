@@ -80,6 +80,7 @@ describe('State', () => {
             data: [],
             domain: 'a',
             toggles: {},
+            scenarios: {},
             views: {
               hits: [],
               normal: [],

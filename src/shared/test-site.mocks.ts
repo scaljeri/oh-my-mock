@@ -2,6 +2,7 @@ import { DEMO_TEST_DOMAIN } from './constants';
 import { IState } from './type';
 
 export const testDataMock: IState = {
+  scenarios: { 'xyz': 'my scenario' },
   views: {
     "hits": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     "normal": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
@@ -49,7 +50,7 @@ export const testDataMock: IState = {
           "response": "<html>\n<head><title>405 Not Allowed</title></head>\n<body bgcolor=\"white\">\n<center><h1>405 Not Allowed</h1></center>\n</body>\n</html>",
           "responseMock": "<html>\n<head><title>405 Not Allowed</title></head>\n<body bgcolor=\"white\">\n<center><h1>405 Not Allowed</h1></center>\n</body>\n</html>",
           "statusCode": 409,
-          "scenario": 'name'
+          "scenario": 'xyz'
         }
       },
       "type": "FETCH",

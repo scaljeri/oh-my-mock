@@ -4,6 +4,7 @@ import { migrate } from './v2.12.1';
 
 describe('Migrate to v2.12.1', () => {
   let state: IOhMyMock;
+
   beforeEach(() => {
     const clone = JSON.parse(JSON.stringify(testDataMock));
     const mock = clone.data[0].mocks[clone.data[0].activeMock];
@@ -15,6 +16,7 @@ describe('Migrate to v2.12.1', () => {
 
   it('should migrate name to scenario', () => {
     const updated = migrate(state);
+
     const data = updated.domains.a.data;
     const mock = data[0].mocks[data[0].activeMock];
 

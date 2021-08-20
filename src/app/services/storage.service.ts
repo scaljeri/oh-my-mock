@@ -22,7 +22,6 @@ export class StorageService {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
         state[STORAGE_KEY] = this.migrateService.update(state[STORAGE_KEY]);
-
         resolve(state[STORAGE_KEY]);
       });
     });
@@ -35,7 +34,7 @@ export class StorageService {
   }
 
   update(update: IOhMyMock, key = STORAGE_KEY): void {
-    const updated = this.migrateService.update(update);
+    const updated = this.migrateService.update(update); // TODO: Is this needed?
     return chrome.storage.local.set({ [key]: updated });
   }
 
