@@ -15,6 +15,7 @@ import {
   Toggle,
   UpsertData,
   UpsertMock,
+  UpsertScenarios,
   ViewChangeOrderItems,
   ViewReset
 } from './actions';
@@ -30,6 +31,7 @@ import {
   ohMyMockId,
   ohMyDataId,
   IUpsertMock,
+  ohMyScenarioId,
 } from '@shared/type';
 import * as view from './views';
 import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
@@ -70,7 +72,7 @@ export class OhMyState {
       output = (state as IOhMyMock).domains[domain];
     }
 
-    return output || { domain, views: {}, toggles: {}, data: [] };
+    return output || { domain, views: {}, toggles: {}, data: [], scenarios: {} };
   }
 
   static getMyState(ctx: StateContext<IOhMyMock>, domain: string): [IState, string] {
@@ -105,7 +107,7 @@ export class OhMyState {
 
     // TODO: unclear what `domain` argument is doing here, is it needed, don't think so?
     if (payload) {
-      domains[payload] = { domain: payload, data: [], toggles: {}, views: { normal: [], hits: [] } };
+      domains[payload] = { domain: payload, data: [], toggles: {}, views: { normal: [], hits: [] }, scenarios: {} };
       ctx.setState({ ...state, domains });
     } else {
       ctx.setState(addCurrentDomain(addTestData({ domains: {}, version: state.version }), OhMyState.domain));
@@ -173,6 +175,19 @@ export class OhMyState {
     }
 
     state.data = dataList;
+    const domains = { ...ctx.getState().domains };
+    domains[activeDomain] = state;
+
+    ctx.setState({ ...ctx.getState(), domains });
+  }
+
+  @Action(UpsertScenarios)
+  upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Record<ohMyScenarioId, string>, domain?: string }) {
+    const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
+
+    // TODO: check for duplicate name values (replace old one???)
+    state.scenarios = { ...state.scenarios, ...payload };
+    
     const domains = { ...ctx.getState().domains };
     domains[activeDomain] = state;
 

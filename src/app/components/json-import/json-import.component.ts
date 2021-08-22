@@ -2,8 +2,8 @@ import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
-import { IData, IState } from '@shared/type';
-import { UpsertData } from 'src/app/store/actions';
+import { IData, IState, ohMyScenarioId } from '@shared/type';
+import { UpsertData, UpsertScenarios } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
 import { uniqueId } from '@shared/utils/unique-id';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -18,8 +18,10 @@ import { AppStateService } from 'src/app/services/app-state.service';
 })
 export class JsonImportComponent {
 
-  @Dispatch() upsertData = (data: IData, domain: string) => new UpsertData(data, domain || this.appState.domain);
-
+  @Dispatch() upsertData = 
+    (data: IData, domain: string) => new UpsertData(data, domain || this.appState.domain);
+  @Dispatch() upsertScenarios = 
+    (scenarios: Record<ohMyScenarioId, string>, domain: string) => new UpsertScenarios(scenarios, domain || this.appState.domain)
   isUploading = false;
   ctrl = new FormControl(true);
 
@@ -37,10 +39,9 @@ export class JsonImportComponent {
 
         setTimeout(() => {
           try {
-            const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
+            const { domain, version, data, scenarios } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
             const migratedState = this.mirgationService.update(
-              { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
-
+              { version, domains: { [domain]: { domain, data, views: {}, toggles: {}, scenarios } } });
             if (compareVersions(version, migratedState.version) === 1) {
               this.toast.error(`Import failed, your version of OhMyMock is too old`)
             } else {
@@ -49,7 +50,8 @@ export class JsonImportComponent {
               } else if (migratedState.version !== version) {
                 this.toast.warning(`Data was migrated from version ${version} to ${migratedState.version} before import!`);
               }
-
+              // Success
+              this.upsertScenarios(migratedState.domains[domain].scenarios, this.ctrl.value ? null : domain);
               migratedState.domains[domain]?.data.forEach(d => {
                 this.upsertData({ ...d, id: uniqueId() }, this.ctrl.value ? null : domain);
               });

@@ -34,7 +34,7 @@ export class UpdateInputDirective {
 
   ngOnChanges(): void {
     if (this.canUpdate()) {
-      (this.control as FormControlDirective).form.setValue(this.input);
+      setTimeout(() => (this.control as FormControlDirective).form.setValue(this.input));
     }
   }
 

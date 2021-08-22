@@ -22,7 +22,8 @@
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",
 			"disableOptimisticBPs": true,
-			"protocol": "inspector"
+			"protocol": "inspector",
+     	"runtimeExecutable": "/usr/local/bin/node"
 		},
 		{
 			"type": "node",

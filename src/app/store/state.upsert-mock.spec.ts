@@ -18,7 +18,7 @@ describe('Store#upsertMock', () => {
     store = new OhMyState();
 
     state = {
-      domains: { 'localhost': { domain: 'test', data: [], views: {}, toggles: {} } }, version: '2.0.0'
+      domains: { 'localhost': { domain: 'test', data: [], views: {}, toggles: {}, scenarios: {} } }, version: '2.0.0'
     }
 
     ctx = {

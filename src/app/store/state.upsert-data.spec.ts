@@ -18,7 +18,7 @@ describe('Store#upsertData', () => {
     store = new OhMyState();
 
     state = {
-      domains: { 'localhost': { domain: 'test', data: [], views: { test: [1, 0, 2, 3] }, toggles: {} } }, version: '2.0.0'
+      domains: { 'localhost': { domain: 'test', scenarios: {}, data: [], views: { test: [1, 0, 2, 3] }, toggles: {} } }, version: '2.0.0'
     }
 
     ctx = {

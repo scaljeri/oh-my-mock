@@ -41,6 +41,6 @@ export class ContentTypeComponent implements OnInit {
   }
 
   ngOnChanges(): void {
-    [this.input, this.rest] = (this.contentType || '').match(/^([^;]+)(;?.*)$/).slice(1, 3);
+    [this.input, this.rest] = this.contentType?.match(/^([^;]+)(;?.*)$/)?.slice(1, 3) || [];
   }
 }
