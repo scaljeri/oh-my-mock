@@ -32,7 +32,7 @@
         <mat-icon>fullscreen</mat-icon>
       </button>
       <oh-my-code-edit #response [code]="mock.responseMock" (codeChange)="onResponseChange($event)" theme="vs"
-        [type]="mock.subType">
+        [type]="mock.mimeSubType">
       </oh-my-code-edit>
       <button class="reset" mat-button (click)="onRevertResponse()">Reset</button>
     </div>

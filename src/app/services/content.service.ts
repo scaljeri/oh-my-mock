@@ -6,12 +6,15 @@ import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { ChangeDomain, InitState, UpsertMock, ViewChangeOrderItems } from '../store/actions';
 import { OhMyState } from '../store/state';
-import { IMock, IOhMyMock, IPacket, IState, IStore, IUpsertMock } from '@shared/type';
-import { appSources, packetTypes } from '@shared/constants';
+import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
+import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
 import { AppStateService } from './app-state.service';
-import { findMocks } from '@shared/utils/find-mock';
+import { DataUtils } from '@shared/utils/data';
+
 @Injectable({ providedIn: 'root' })
 export class ContentService {
+  static DataUtils = DataUtils;
+
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
   @Dispatch() changeDomain = (domain: string) => new ChangeDomain(domain);
@@ -39,17 +42,12 @@ export class ContentService {
           });
         } else if (payload.type === packetTypes.HIT) {
           const state = this.getActiveStateSnapshot();
-          const data = findMocks(state, payload.context);
+          const data = ContentService.DataUtils.find(state, payload.context);
 
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           this.appStateService.hit(data);
 
-          let from = state.data.indexOf(data);
-          if (state.views.hits) {
-            from = state.views.hits.indexOf(from);
-          }
-
-          this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', from, to: 0 }));
+          this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
         }
       } else {
         if (payload.type === packetTypes.KNOCKKNOCK) {
@@ -80,18 +78,18 @@ export class ContentService {
   }
 
   // send(data): void {
-    // log('Sending state to content script', data);
-    // const output = {
-    //   tabId: this.appStateService.tabId,
-    //   source: appSources.POPUP,
-    //   domain: this.appStateService.domain,
-    //   payload: {
-    //     type: packetTypes.STATE,
-    //     data
-    //   }
-    // }
-    // chrome.tabs.sendMessage(Number(this.appStateService.tabId), output);
-    // chrome.runtime.sendMessage(output);
+  // log('Sending state to content script', data);
+  // const output = {
+  //   tabId: this.appStateService.tabId,
+  //   source: appSources.POPUP,
+  //   domain: this.appStateService.domain,
+  //   payload: {
+  //     type: packetTypes.STATE,
+  //     data
+  //   }
+  // }
+  // chrome.tabs.sendMessage(Number(this.appStateService.tabId), output);
+  // chrome.runtime.sendMessage(output);
   // }
 
   destroy(): void {
@@ -102,6 +100,6 @@ export class ContentService {
   }
 
   private getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+    return this.store.selectSnapshot<IState>((store: IOhMyMock) => store[STORAGE_KEY].domains[OhMyState.domain]);
   }
 }

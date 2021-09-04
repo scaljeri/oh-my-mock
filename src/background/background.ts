@@ -46,7 +46,7 @@ async function handleDispatch(packet: IPacket<IOhMyEvalContext>): Promise<void> 
   const mock = await dispatchRemote(payload);
 
   if (mock) {
-    data.mocks[data.activeMock] = mock;
+    // data.mocks[data.activeMock] = mock;
   }
 
   const update = await evalCode(data, payload.data.request);
@@ -65,7 +65,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
       open('/splash-screen.html', '_blank');
     }
   });
-})
+});
 
 
 chrome.browserAction.onClicked.addListener(function (tab) {

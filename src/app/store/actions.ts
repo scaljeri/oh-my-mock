@@ -11,7 +11,7 @@ import {
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: Partial<IOhMyMock> = { domains: {} }) { }
+  constructor(public payload: Partial<IOhMyMock> = { domains: [] }) { }
 }
 
 export class ChangeDomain {
@@ -62,4 +62,9 @@ export class Toggle {
 export class UpsertScenarios {
   static readonly type = 'Scenario upsert';
   constructor(public payload: Record<ohMyScenarioId, string>, public domain?: string) { }
+}
+
+export class LoadData {
+  static readonly type = '[Data] load';
+  constructor(public payload: ohMyDataId, public domain: string) {}
 }

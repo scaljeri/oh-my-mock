@@ -5,7 +5,6 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
 import { DeleteData, Toggle, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
-import { findMocks } from '../../../shared/utils/find-mock'
 
 import { findAutoActiveMock } from 'src/app/utils/data';
 import { IData, IState, ohMyMockId } from 'src/shared/type';
@@ -53,7 +52,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   @Dispatch() deleteData = (id: string) => new DeleteData(id, this.state.domain);
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
+  @Dispatch() viewReorder = (name: string, id: string, to: number) => new ViewChangeOrderItems({ name, id, to });
   @Dispatch() viewReset = (name: string) => new ViewReset(name);
   @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
   @Dispatch() toggleActivateNew = (value: boolean) => new Toggle({ name: 'activateNew', value });
@@ -97,106 +96,107 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(): void {
-    this.timeoutId && clearTimeout(this.timeoutId);
-    this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
+    // this.timeoutId && clearTimeout(this.timeoutId);
+    // this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
 
-    this.timeoutId = window.setTimeout(() => {
-      // The hit list has animated its change. The problem after the animation  rows
-      // are moved around with css `transform` which doesn't work with Drag&Drop.
-      // So, below we change the order of the data, so no css transformation are needed
-      // anymore
-      this.isBusyAnimating = false;
+    // this.timeoutId = window.setTimeout(() => {
+    //   // The hit list has animated its change. The problem after the animation  rows
+    //   // are moved around with css `transform` which doesn't work with Drag&Drop.
+    //   // So, below we change the order of the data, so no css transformation are needed
+    //   // anymore
+    //   this.isBusyAnimating = false;
 
-      if (!this.state) { // It happens (Explore-state)
-        return;
-      }
+    //   if (!this.state) { // It happens (Explore-state)
+    //     return;
+    //   }
 
-      const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
+    //   const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
 
-      // Self healing!!
-      if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
-        this.data = viewList.map(v => this.state.data[v]);
-        this.viewList = this.data.map((v, i) => i);
-      } else {
-        // eslint-disable-next-line no-console
-        console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
+    //   // Self healing!!
+    //   if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
+    //     this.data = viewList.map(v => this.state.data[v]);
+    //     this.viewList = this.data.map((v, i) => i);
+    //   } else {
+    //     // eslint-disable-next-line no-console
+    //     console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
 
-        this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
-        this.data = this.state.data;
-        this.viewList = this.data.map((_, i) => i);
-      }
+    //     this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
+    //     this.data = this.state.data;
+    //     this.viewList = this.data.map((_, i) => i);
+    //   }
 
-    }, this.isBusyAnimating ? 1000 : 0);
+    // }, this.isBusyAnimating ? 1000 : 0);
   }
 
   applyFilter(data: IData[] = []): IData[] {
-    const input = this.filterCtrl.value.toLowerCase();
+    // const input = this.filterCtrl.value.toLowerCase();
 
-    if (input === "") {
-      return data;
-    }
+    // if (input === "") {
+    //   return data;
+    // }
 
-    const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
-    const rmQuotedRe = /"[^"]+"\s{0,}/g;
+    // const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
+    // const rmQuotedRe = /"[^"]+"\s{0,}/g;
 
-    const qwords = input.match(quotedRe) || [];
-    const words = input.replace(rmQuotedRe, '').split(' ');
+    // const qwords = input.match(quotedRe) || [];
+    // const words = input.replace(rmQuotedRe, '').split(' ');
 
-    const filtered = data.filter(d =>
-      [...qwords, ...words]
-        .filter(v => v !== undefined && v !== '')
-        .some(v =>
-          d.url.toLowerCase().includes(v) ||
-          d.type.toLowerCase().includes(v) ||
-          d.method.toLowerCase().includes(v) ||
-          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) ||
-          !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
-        )
-    );
+    // const filtered = data.filter(d =>
+    //   [...qwords, ...words]
+    //     .filter(v => v !== undefined && v !== '')
+    //     .some(v =>
+    //       d.url.toLowerCase().includes(v) ||
+    //       d.type.toLowerCase().includes(v) ||
+    //       d.method.toLowerCase().includes(v) ||
+    //       !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) ||
+    //       !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
+    //     )
+    // );
 
-    return filtered;
+    // return filtered;
+    return null;
   }
 
   ngOnDestroy(): void {
   }
 
   onActivateToggle(id: string, event: MouseEvent): void {
-    event.stopPropagation();
+    // event.stopPropagation();
 
-    const data = findMocks(this.state, { id });
+    // const data = findMocks(this.state, { id });
 
-    if (data.enabled) {
-      this.upsertData({ id, enabled: false });
-      this.toast.warning('Mock disabled!');
-    } else {
-      let mockId = data.activeMock;
+    // if (data.enabled) {
+    //   this.upsertData({ id, enabled: false });
+    //   this.toast.warning('Mock disabled!');
+    // } else {
+    //   let mockId = data.activeMock;
 
-      if (!data.activeMock) {
-        mockId = findAutoActiveMock(data) as ohMyMockId;
-      }
+    //   if (!data.activeMock) {
+    //     mockId = findAutoActiveMock(data) as ohMyMockId;
+    //   }
 
-      if (mockId) {
-        this.upsertData({ id, enabled: true, ...(mockId && { activeMock: mockId }) });
-        this.toast.success(`Mock with status-code ${data.mocks[mockId].statusCode} activated`);
-      } else {
-        this.toast.error(`Could not activate, there are no responses available`);
-      }
-    }
+    //   if (mockId) {
+    //     this.upsertData({ id, enabled: true, ...(mockId && { activeMock: mockId }) });
+    //     this.toast.success(`Mock with status-code ${data.mocks[mockId].statusCode} activated`);
+    //   } else {
+    //     this.toast.error(`Could not activate, there are no responses available`);
+    //   }
+    // }
   }
 
   onDelete(id: string, event): void {
-    event.stopPropagation();
-    const data = findMocks(this.state, { id });
+    // event.stopPropagation();
+    // const data = findMocks(this.state, { id });
 
-    // If you click delete fast enough, you can hit it twice
-    if (data) {
-      let msg = `Deleted mock ${data.url}`;
-      if (this.state.domain) {
-        msg += ` on domain ${this.state.domain}`;
-      }
-      this.toast.success(msg, { duration: 2000, style: {} });
-      this.deleteData(id);
-    }
+    // // If you click delete fast enough, you can hit it twice
+    // if (data) {
+    //   let msg = `Deleted mock ${data.url}`;
+    //   if (this.state.domain) {
+    //     msg += ` on domain ${this.state.domain}`;
+    //   }
+    //   this.toast.success(msg, { duration: 2000, style: {} });
+    //   this.deleteData(id);
+    // }
   }
 
   onClone(rowIndex: number, event): void {
@@ -222,9 +222,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public selectAll(): void {
-    this.state.data.forEach((d, i) => {
-      this.selection.select(i);
-    });
+    // this.state.data.forEach((d, i) => {
+    //   this.selection.select(i);
+    // });
   }
 
   public deselectAll(): void {
@@ -237,7 +237,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   drop(event: CdkDragDrop<unknown>): void {
     if (!this.filterCtrl.value) {
-      this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
+      // this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
     }
   }
 }

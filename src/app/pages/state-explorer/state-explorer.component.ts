@@ -5,7 +5,7 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { STORAGE_KEY } from '@shared/constants';
 import { domain, IData, IOhMyMock, IState, IStore } from '@shared/type';
-import { findMocks } from '@shared/utils/find-mock';
+
 import { uniqueId } from '@shared/utils/unique-id';
 import { Observable } from 'rxjs';
 import { AppStateService } from 'src/app/services/app-state.service';
@@ -18,7 +18,7 @@ import { OhMyState } from 'src/app/store/state';
   styleUrls: ['./state-explorer.component.scss']
 })
 export class PageStateExplorerComponent implements OnInit {
-  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
+  @Select(OhMyState.getStore) state$: Observable<IOhMyMock>;
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
 
   public panelOpenState = true;
@@ -65,13 +65,13 @@ export class PageStateExplorerComponent implements OnInit {
 
   onCloneAll(): void {
     const state = this.getStateSnapshot(this.selectedDomain);
-    state.data.forEach((_, i) => this.cloneData(i));
+    //state.data.forEach((_, i) => this.cloneData(i));
 
     this.toast.success(`Cloned ${state.data.length} mocks`);
   }
 
   onDataSelect(id: string): void {
-    this.dataItem = findMocks(this.selectedState, { id });
+    // this.dataItem = findMocks(this.selectedState, { id });
     this.panels.toArray()[2].open();
   }
 
@@ -81,6 +81,6 @@ export class PageStateExplorerComponent implements OnInit {
   }
 
   getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+    return null; // this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 }

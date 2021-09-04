@@ -65,8 +65,9 @@ export class PageDataListComponent implements OnInit {
   }
 
   get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) =>
-      OhMyState.getActiveState(state)
-    );
+    return null;
+    // return this.store.selectSnapshot<IState>((state: IStore) =>
+    //   OhMyState.getActiveState(state)
+    // );
   }
 }

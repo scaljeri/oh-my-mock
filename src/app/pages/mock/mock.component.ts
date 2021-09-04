@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select } from '@ngxs/store';
 import { IData, IState } from '@shared/type';
-import { findMocks } from '@shared/utils/find-mock';
 import { Observable, Subscription } from 'rxjs';
 import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
@@ -28,14 +27,14 @@ export class PageMockComponent implements OnInit {
     const dataId = this.activeRoute.snapshot.params.dataId;
 
     this.subscription = this.state$.subscribe((state: IState) => {
-      this.data = findMocks(state, { id: dataId });
+      // this.data = findMocks(state, { id: dataId });
 
       if (!this.data.activeMock && Object.keys(this.data.mocks).length) {
         const mockId = findAutoActiveMock(this.data);
 
-        if (mockId) {
-          this.upsertData({ enabled: true, activeMock: mockId });
-        }
+        // if (mockId) {
+        //   this.upsertData({ enabled: true, activeMock: mockId });
+        // }
       }
     });
   }

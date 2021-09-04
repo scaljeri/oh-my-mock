@@ -43,7 +43,7 @@ export class MockComponent implements OnChanges {
   constructor(public dialog: MatDialog, private toast: HotToastService, private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(): void {
-    this.mock = this.data.mocks[this.data.activeMock];
+    // this.mock = this.data.mocks[this.data.activeMock];
 
     setTimeout(() => {
       this.responseRef?.update();
@@ -105,7 +105,7 @@ export class MockComponent implements OnChanges {
   }
 
   onShowResponseFullscreen(): void {
-    const data = { code: this.mock.responseMock, type: this.mock.subType };
+    const data = { code: this.mock.responseMock, type: this.mock.mimeSubType };
 
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, responseMock: update });
@@ -126,7 +126,7 @@ export class MockComponent implements OnChanges {
   }
 
   onAnonymize() {
-    if (this.mock.subType !== 'json') {
+    if (this.mock.mimeSubType !== 'json') {
       return this.toast.error('Content-Type should be JSON');
     }
 

@@ -67,13 +67,13 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(): void {
-    this.mockIds = this.data
-      ? Object.keys(this.data.mocks).sort((a, b) => {
-        const ma = this.data.mocks[a];
-        const mb = this.data.mocks[b];
+    // this.mockIds = this.data
+    //   ? Object.keys(this.data.mocks).sort((a, b) => {
+    //     const ma = this.data.mocks[a];
+    //     const mb = this.data.mocks[b];
 
-        return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
-      }) : [];
+    //     return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
+    //   }) : [];
   }
 
   onUrlUpdate(url: string): void {
@@ -82,9 +82,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   onSelectStatusCode(mockId: ohMyMockId | void): void {
     if (mockId) {
-      this.upsertData({ activeMock: mockId, enabled: true })
+      // this.upsertData({ activeMock: mockId, enabled: true })
     } else {
-      this.upsertData({ enabled: false })
+      // this.upsertData({ enabled: false })
     }
   }
 
@@ -121,6 +121,6 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   getMock(id: ohMyMockId): IMock {
-    return this.data.mocks[id];
+    return null; //this.data.mocks[id];
   }
 }

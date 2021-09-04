@@ -13,22 +13,22 @@ export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<
 
   let retVal: IOhMyEvalResult;
   const context = {
-    response: mock.responseMock,
-    headers: mock.headersMock,
-    delay: mock.delay,
-    statusCode: mock.statusCode
+    // response: mock.responseMock,
+    // headers: mock.headersMock,
+    // delay: mock.delay,
+    // statusCode: mock.statusCode
   } as Partial<IMock>;
 
   try {
-    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>;
-    const result = await code(context, {
-      url: request.url,
-      method: request.method,
-      body: request.body,
-      headers: request.headers
-    });
+    // const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>;
+    // const result = await code(context, {
+    //   url: request.url,
+    //   method: request.method,
+    //   body: request.body,
+    //   headers: request.headers
+    // });
 
-    retVal = { status: ohMyEvalStatus.OK, result };
+    retVal = null; // { status: ohMyEvalStatus.OK, result };
   } catch (err) {
     // TODO: send message to popup so the error can be reviewed
     // eslint-disable-next-line no-console

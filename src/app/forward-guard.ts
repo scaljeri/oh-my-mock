@@ -3,16 +3,23 @@ import { CanActivate } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './services/app-state.service';
+import { MigrationsService } from './services/migrations.service';
 import { StorageService } from './services/storage.service';
 import { InitState } from './store/actions';
-import { OhMyState } from './store/state';
+import { StateUtils } from '@shared/utils/state';
+import { StoreUtils } from '@shared/utils/store';
+
 
 @Injectable({ providedIn: 'root' })
 export class forwarderGuard implements CanActivate {
+  static StateUtils = StateUtils;
+  static StoreUtils = StoreUtils;
+
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
 
   constructor(
     private appStateService: AppStateService,
+    private migrationService: MigrationsService,
     private storageService: StorageService) { }
 
   async canActivate(): Promise<boolean> {
@@ -26,12 +33,24 @@ export class forwarderGuard implements CanActivate {
       this.appStateService.tabId = Number(tabId);
     }
 
-    OhMyState.domain = this.appStateService.domain;
-
     // Load and initialize state
-    const globalState = await this.storageService.initialize();
-    this.initState(globalState);
-    this.storageService.monitorStateChanges();
+    const origStore = await this.storageService.initialize();
+
+    let store = this.migrationService.update(origStore);
+
+    if (!store) {
+      if (origStore) {
+        this.storageService.reset();
+      }
+
+      store = await forwarderGuard.StoreUtils.init(this.appStateService.domain);
+    }
+
+    if (store.version !== origStore?.version) { // Something happend
+      this.storageService.updateState(store);
+    }
+
+    this.initState(store);
 
     return true;
   }

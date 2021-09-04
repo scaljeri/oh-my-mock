@@ -10,7 +10,7 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 import { Toggle } from './store/actions';
 import { IState } from '../shared/type';
-import { Select } from '@ngxs/store';
+import { Select, Store } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { Observable } from 'rxjs';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
@@ -43,19 +43,29 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
-
+animals$: Observable<any>;
   constructor(
     private appStateService: AppStateService,
     private contentService: ContentService,
     private router: Router,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    public store: Store
   ) {
     this.version = this.appStateService.version;
+
+    this.animals$ = this.store.select(state => {
+      return state;
+    });
+    this.animals$.subscribe(x => {
+      debugger;
+    })
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.state$.subscribe((state: IState) => {
+    this.state$.subscribe((state: any) => {
       setTimeout(() => this.domain = this.appStateService.domain);
+
+        debugger;
 
       if (!state || !state.domain) {
         return;

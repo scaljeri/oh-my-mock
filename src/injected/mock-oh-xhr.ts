@@ -4,7 +4,7 @@ import {
   IMock,
   requestMethod,
 } from '../shared/type';
-import { findMocks } from '../shared/utils/find-mock';
+
 import * as headers from '../shared/utils/xhr-headers';
 import { dispatchData } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
@@ -112,7 +112,7 @@ export class OhMockXhr extends Base {
         context: {
           url: this.ohUrl,
           method: this.ohMethod,
-          type: 'XHR'
+          requestType: 'XHR'
         },
         data: {
           statusCode: this.status,
@@ -156,8 +156,8 @@ export class OhMockXhr extends Base {
     this.ohData = null;
     this.ohMock = null;
 
-    this.ohData = findMocks(state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);
-    this.ohMock = this.ohData?.enabled && this.ohData?.mocks?.[this.ohData?.activeMock]
+    this.ohData = null; // findMocks(state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);
+    this.ohMock = null; //this.ohData?.enabled && this.ohData?.mocks?.[this.ohData?.activeMock]
   }
 
   private getHeaders(): Record<string, string>;

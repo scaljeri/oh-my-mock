@@ -1,4 +1,5 @@
 export const STORAGE_KEY = 'OhMyMocks';
+export const OH_MY_TICK = 'tick';
 
 export const MOCK_JS_CODE = `/* This is where OhMyMock creates responses.
 Inside this sandbox you have access to the following data:
@@ -31,6 +32,11 @@ export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
 
+export enum objectTypes {
+  DOMAIN = 'DOMAIN',
+  DATA = 'DATA',
+  MOCK = 'MOCK'
+}
 export enum packetTypes {
   ACTIVE = 'active',
   MOCK = 'mock',

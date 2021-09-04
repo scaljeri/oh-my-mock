@@ -31,7 +31,7 @@ export class OhMyLocal {
     return (this.contexts.filter(c => {
       // eslint-disable-next-line no-console
 
-      return c.method === input.method && c.type === input.type && compareUrls(input.url!, c.url!);
+      return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url, c.url);
     }) || [])[0];
   }
 
@@ -45,7 +45,7 @@ export class OhMyLocal {
       // eslint-disable-next-line no-console
       console.log(`     no response defined`);
 
-      return mock!;
+      return mock! as any;
     } else {
       // eslint-disable-next-line no-console
       console.log(`     serving response from disk`);
@@ -54,12 +54,12 @@ export class OhMyLocal {
     const responseMock = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
 
     if (responseMock) {
-      mock!.responseMock = responseMock;
-      mock!.statusCode = context.statusCode || mock!.statusCode;
-      mock!.headersMock = context.headers || mock!.headersMock;
+      // (mock! as any).responseMock = responseMock as any;
+      // (mock! as any).statusCode = (context.statusCode || mock!.statusCode) as any;
+      // mock!.headersMock = (context.headers || mock!.headersMock) as any;
     }
 
-    return context?.handler(data, request, mock!) || mock;
+    return null; // (context?.handler(data, request, mock! as any) || mock) as any;
   }
 
   static async loadFile(filename: string): Promise<string | null> {

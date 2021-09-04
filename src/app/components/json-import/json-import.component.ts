@@ -5,11 +5,12 @@ import { Store } from '@ngxs/store';
 import { IData, IState, ohMyScenarioId } from '@shared/type';
 import { UpsertData, UpsertScenarios } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
-import { uniqueId } from '@shared/utils/unique-id';
 import { MatDialogRef } from '@angular/material/dialog';
 import compareVersions from 'compare-versions';
 import { FormControl } from '@angular/forms';
 import { AppStateService } from 'src/app/services/app-state.service';
+import { StateUtils } from '@shared/utils/state';
+import { StoreUtils } from '@shared/utils/store';
 
 @Component({
   selector: 'oh-my-json-import',
@@ -18,9 +19,9 @@ import { AppStateService } from 'src/app/services/app-state.service';
 })
 export class JsonImportComponent {
 
-  @Dispatch() upsertData = 
+  @Dispatch() upsertData =
     (data: IData, domain: string) => new UpsertData(data, domain || this.appState.domain);
-  @Dispatch() upsertScenarios = 
+  @Dispatch() upsertScenarios =
     (scenarios: Record<ohMyScenarioId, string>, domain: string) => new UpsertScenarios(scenarios, domain || this.appState.domain)
   isUploading = false;
   ctrl = new FormControl(true);
@@ -37,11 +38,11 @@ export class JsonImportComponent {
 
         this.isUploading = true;
 
-        setTimeout(() => {
+        setTimeout(async () => {
           try {
             const { domain, version, data, scenarios } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
-            const migratedState = this.mirgationService.update(
-              { version, domains: { [domain]: { domain, data, views: {}, toggles: {}, scenarios } } });
+            const migratedState = this.mirgationService.update(await StoreUtils.init());
+
             if (compareVersions(version, migratedState.version) === 1) {
               this.toast.error(`Import failed, your version of OhMyMock is too old`)
             } else {
@@ -52,9 +53,10 @@ export class JsonImportComponent {
               }
               // Success
               this.upsertScenarios(migratedState.domains[domain].scenarios, this.ctrl.value ? null : domain);
-              migratedState.domains[domain]?.data.forEach(d => {
-                this.upsertData({ ...d, id: uniqueId() }, this.ctrl.value ? null : domain);
-              });
+              // TODO
+              // migratedState.domains[domain]?.data.forEach(d => {
+              //   this.upsertData({ ...d, id: uniqueId() }, this.ctrl.value ? null : domain);
+              // });
 
               this.toast.success(`Imported ${migratedState.domains[domain]?.data?.length || 0} mocks from ${file.name} into ${this.ctrl.value ? this.appState.domain : domain}`);
             }

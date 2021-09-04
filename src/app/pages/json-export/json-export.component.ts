@@ -38,7 +38,7 @@ export class JsonExportComponent implements OnInit {
   }
 
   getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+    return null;//this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
   }
 
   onRowExport(data: IData): void {
@@ -52,10 +52,10 @@ export class JsonExportComponent implements OnInit {
 
     if (!hasSelected || hasSelected && hasUnselected) { // select all
       this.dataListRef.selectAll();
-      this.state.data.forEach(d => this.selected[d.id] = d);
+      // this.state.data.forEach(d => this.selected[d.id] = d);
     } else if (hasSelected && !hasUnselected) { // deselect all
       this.dataListRef.deselectAll();
-      this.state.data.forEach(d => this.selected[d.id] = null);
+      // this.state.data.forEach(d => this.selected[d.id] = null);
     }
   }
 

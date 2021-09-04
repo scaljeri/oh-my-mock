@@ -11,6 +11,7 @@ import {
   DeleteData,
   DeleteMock,
   InitState,
+  LoadData,
   ResetState,
   Toggle,
   UpsertData,
@@ -19,300 +20,311 @@ import {
   ViewChangeOrderItems,
   ViewReset
 } from './actions';
+import { DeleteMockStorage, UpdateMockStorage } from './storage-actions';
+
 import {
   IData,
   IState,
   IOhMyMock,
-  IStore,
-  IMock,
   IOhMyViewItemsOrder,
   IOhMyToggle,
-  IOhMyContext,
   ohMyMockId,
   ohMyDataId,
   IUpsertMock,
   ohMyScenarioId,
+  ohMyDomain,
 } from '@shared/type';
-import * as view from './views';
-import { MOCK_JS_CODE, STORAGE_KEY } from '@shared/constants';
-import { url2regex } from '@shared/utils/urls';
-import { arrayAddItem, arrayMoveItem, arrayRemoveItem } from '@shared/utils/array';
-import contentParser from 'content-type-parser';
-import { addTestData } from '../migrations/test-data';
-import { addCurrentDomain } from '../migrations/current-domain';
-import { uniqueId } from '@shared/utils/unique-id';
-import { findMocks } from '@shared/utils/find-mock';
-import { createNewMock } from './create-mock';
+import { patch } from '@ngxs/store/operators';
+
+
+import { STORAGE_KEY } from '@shared/constants';
+
+import * as stateUtils from '@shared/utils/state';
+import * as dataUtils from '@shared/utils/data';
+import * as mockUtils from '../../shared/utils/mock';
+import * as view from '@shared/utils/view';
+import { StoreUtils } from '@shared/utils/store';
+import { AppStateService } from '../services/app-state.service';
+import { StorageService } from '../services/storage.service';
+import { StateUtils } from '@shared/utils/state';
+import { DataUtils } from '@shared/utils/data';
+import { StorageUtils } from '@shared/utils/storage';
+
 @State<IOhMyMock>({
   name: STORAGE_KEY,
   defaults: {
-    domains: {},
-    version: ''
+    domains: [],
+    version: '',
+    content: { mocks: { }, domains: { } }
   }
 })
 @Injectable()
 export class OhMyState {
   static domain: string;
+  static StorageUtils = StorageUtils;
+  static StoreUtils = StoreUtils;
+  static StateUtils = StateUtils;
+  static DataUtils = DataUtils;
+
+  constructor(appStateService: AppStateService, private storageService: StorageService) {
+    appStateService.domain$.subscribe(domain => OhMyState.domain = domain);
+  }
 
   @Selector()
-  static mainState(store: IStore): IState {
-    return this.getActiveState(store);
+  static mainState(store: IOhMyMock): IState {
+    return store.content.domains[OhMyState.domain];
   }
 
-  static getState(state: IStore): IOhMyMock {
-    return state[STORAGE_KEY];
+  static getStore(ctx: StateContext<IOhMyMock>): IOhMyMock {
+    return { ...ctx.getState()[STORAGE_KEY] };
   }
 
-  static getActiveState(state: IStore | IOhMyMock, domain = OhMyState.domain): IState {
-    let output;
-
-    if (state[STORAGE_KEY]) {
-      output = state[STORAGE_KEY].domains[domain];
-    } else {
-      output = (state as IOhMyMock).domains[domain];
-    }
-
-    return output || { domain, views: {}, toggles: {}, data: [], scenarios: {} };
+  static async getActiveState(state: IOhMyMock, domain = OhMyState.domain): Promise<IState> {
+    return await this.StoreUtils.getDomain(state, domain);
   }
 
-  static getMyState(ctx: StateContext<IOhMyMock>, domain: string): [IState, string] {
-    const state = ctx.getState();
+  static async getMyState(ctx: StateContext<IOhMyMock>, domain?: string): Promise<[IState, string]> {
+    const state = this.getStore(ctx);
     const activeDomain = domain || OhMyState.domain;
-    const domainState = { ...OhMyState.getActiveState(state, domain) };
+    const domainState = { ...await OhMyState.getActiveState(state, domain) };
 
     return [domainState, activeDomain];
   }
 
   @Action(InitState)
-  init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
+  async init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
+
     const activeDomain = domain || OhMyState.domain;
-    const state = addCurrentDomain(addTestData({ ...ctx.getState(), ...payload }), activeDomain);
+    const store = { ...(payload || await OhMyState.StoreUtils.init()) };
 
-    ctx.setState(state);
-  }
+    if (!store.content.domains[activeDomain]) {
+      if (store.domains.indexOf(activeDomain) === 1) {
+        store.domains = [activeDomain, ...store.domains];
+      }
 
-  @Action(ChangeDomain)
-  changeDomain(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
-    OhMyState.domain = payload;
-    const state = addCurrentDomain(ctx.getState(), payload);
-
-    ctx.setState(state);
-  }
-
-  @Action(ResetState) // payload === domain string (optional)
-  reset(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: string, domain?: string }) {
-    const state = ctx.getState();
-    // const activeDomain = domain || OhMyState.domain;
-    const domains = { ...state.domains };
-
-    // TODO: unclear what `domain` argument is doing here, is it needed, don't think so?
-    if (payload) {
-      domains[payload] = { domain: payload, data: [], toggles: {}, views: { normal: [], hits: [] }, scenarios: {} };
-      ctx.setState({ ...state, domains });
-    } else {
-      ctx.setState(addCurrentDomain(addTestData({ domains: {}, version: state.version }), OhMyState.domain));
-    }
-  }
-
-  @Action(UpsertMock)
-  upsertMock(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IUpsertMock, domain?: string }) {
-    const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
-
-    const { index, data } = OhMyState.findData(state, payload);
-    const mock = createNewMock(payload.mock, data, payload.clone);
-    const dataList = [...state.data];
-    const mocks = { ...data.mocks };
-
-    if (payload.makeActive || !payload.mock.id && Object.keys(data.mocks).length === 0) {
-      data.activeMock = mock.id;
-
-      if (state.toggles.activateNew) {
-        data.enabled = true;
+      store.content = {
+        ...store.content,
+        domains: { ...store.content.domains, [activeDomain]: await OhMyState.StoreUtils.getDomain(store, activeDomain) }
       }
     }
 
-    data.mocks = { ...mocks, [mock.id]: mock };
+    // TODO: Init with test data somehow
 
-    if (index === -1) {
-      dataList.push(data);
-    } else {
-      dataList[index] = data;
+    ctx.setState(store);
+  }
+
+  @Action(ChangeDomain)
+  async changeDomain(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyDomain }) {
+    OhMyState.domain = payload;
+    const store = OhMyState.getStore(ctx);
+
+    store.content = {
+      ...store.content,
+      domains: { ...store.content.domains, [payload]: await OhMyState.StoreUtils.getDomain(store, payload) }
+    };
+
+    if (store.domains.indexOf(payload) === -1) {
+      store.domains = [payload, ...store.domains]
     }
-    state.data = dataList;
 
-    const domains = { ...ctx.getState().domains };
-    domains[activeDomain] = state;
+    ctx.setState(store);
+  }
 
-    if (index === -1) {
-      ctx.dispatch(new UpsertData(data, domain));
-    } else {
-      ctx.setState({ ...ctx.getState(), domains });
+  @Action(ResetState)
+  async reset(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyDomain }) {
+    const store = await OhMyState.StoreUtils.reset(OhMyState.getStore(ctx), payload);
+
+    ctx.setState(store);
+  }
+
+  // @Action(LoadData)
+  // async loadData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: ohMyDataId, domain?: string }) {
+  //   const store = OhMyState.getState(ctx);
+
+  //   const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
+  //   const mocks = { ...store.mocks };
+
+  //   Object.keys(state.data[payload].mocks).forEach(async (id: ohMyMockId) => {
+  //     mocks[id] ??= await mockUtils.get(store, id);
+  //   });
+
+  //   ctx.setState(patch({ mocks }))
+  // }
+
+
+  @Action(UpsertMock)
+  @Action(UpdateMockStorage)
+  async upsertMock(ctx: StateContext<IOhMyMock>, action: UpsertMock | UpdateMockStorage) {
+    const { payload, domain } = action;
+    //{ payload, domain }: { payload: IUpsertMock, domain?: string }) {
+    const store = OhMyState.getStore(ctx);
+
+    let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
+
+    let data = OhMyState.DataUtils.find(state, payload);
+
+    if (!data) {
+      data = OhMyState.DataUtils.init({
+        url: payload.url,
+        method: payload.method,
+        requestType: payload.requestType
+      });
     }
+
+    state = OhMyState.StateUtils.setData(state, data);
+
+    if (action instanceof UpdateMockStorage) {
+      await OhMyState.StorageUtils.set(activeDomain, state);
+    }
+
+    store.content = {
+      ...store.content,
+      domains: { ...store.content.domains, [activeDomain]: state }
+    };
+
+    ctx.setState(store);
   }
 
   @Action(UpsertData)
-  upsertData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IData, domain?: string }) {
-    const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
-    const { index, data } = OhMyState.findData(state, payload);
+  async upsertData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Partial<IData>, domain?: string }) {
+    const store = OhMyState.getStore(ctx);
+    let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
-    let dataList;
+    const data = OhMyState.DataUtils.find(state, payload) || OhMyState.DataUtils.init(payload);
+    state = OhMyState.StateUtils.setData(state, data);
 
-    if (index === -1) { // new
-      state.views = Object.entries({ ...state.views }).reduce((out, [name, list]) => {
-        out[name] = view.add(0, list);
-        return out;
-      }, {});
-      dataList = arrayAddItem(state.data, data, 0);
-    } else {
-      dataList = [...state.data];
-      dataList[index] = data;
-    }
+    // if (!payload.id) {
+    //   state.views = Object.entries(state.views).reduce((acc, [k, v]) => {
+    //     acc[k] = [data.id, ...v];
 
-    Object.keys(payload).forEach((key) => (data[key] = payload[key]));
+    //     return acc;
+    //   }, { });
+    // }
 
-    if (index === -1 && !payload.id) {
-      data.url = url2regex(payload.url);
-    }
+    store.content = {
+      ...store.content,
+      domains: { ...store.content.domains, [activeDomain]: state }
+    };
 
-    state.data = dataList;
-    const domains = { ...ctx.getState().domains };
-    domains[activeDomain] = state;
-
-    ctx.setState({ ...ctx.getState(), domains });
+    ctx.setState(store);
   }
 
   @Action(UpsertScenarios)
-  upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Record<ohMyScenarioId, string>, domain?: string }) {
-    const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
+  async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Record<ohMyScenarioId, string>, domain?: string }) {
+    const store = OhMyState.getStore(ctx);
+    const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
     // TODO: check for duplicate name values (replace old one???)
     state.scenarios = { ...state.scenarios, ...payload };
-    
-    const domains = { ...ctx.getState().domains };
-    domains[activeDomain] = state;
 
-    ctx.setState({ ...ctx.getState(), domains });
+    const domains = { ...store.domains, [activeDomain]: state };
+    ctx.setState({ ...store, domains });
   }
 
   @Action(DeleteMock)
-  deleteMock(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: { id: ohMyDataId, mockId: ohMyMockId }, domain?: string }) {
-    const [state, activeDomain] = OhMyState.getMyState(ctx, domain);
-    const { index, data } = OhMyState.findData(state, payload)
+  @Action(DeleteMockStorage)
+  async deleteMock(ctx: StateContext<IOhMyMock>, action: { payload: { id: ohMyDataId, mockId: ohMyMockId }, domain?: string }) {
+    const { payload, domain } = action;
+    const store = OhMyState.getStore(ctx);
+    const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
-    const mocks = { ...data.mocks };
-    delete mocks[payload.mockId];
-    data.mocks = mocks;
+    const data = OhMyState.DataUtils.get(state, payload.id);
+    delete data.mocks[payload.mockId];
 
-    if (data.activeMock === payload.mockId) {
-      data.activeMock = null;
+    if (action instanceof DeleteMock) {
+      // TODO
     }
-    const dataList = [...state.data];
-    dataList[index] = data;
 
-    state.data = dataList;
-    const domains = { ...ctx.getState().domains };
-    domains[activeDomain] = state;
+    state.data = { ...state.data, [data.id]: data };
+    const domains = { ...store.domains, [activeDomain]: state };
 
-    ctx.setState({ ...ctx.getState(), domains });
+    ctx.setState({ ...store, domains });
   }
 
   @Action(DeleteData)
-  deleteData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: string, domain?: string }) {
-    const state = ctx.getState();
-    const activeDomain = domain || OhMyState.domain;
-    const domainState = { ...OhMyState.getActiveState(state, domain) };
+  async deleteData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: ohMyDataId, domain?: string }) {
+    const store = OhMyState.getStore(ctx);
+    const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
-    const data = findMocks(domainState, { id: payload });
-    const index = domainState.data.indexOf(data);
+    state.views = Object.entries(state.views).reduce((acc, [k, v]) => {
+      acc[k] = view.remove(v, payload);
+      return acc;
+    }, { });
 
-    domainState.views = Object.entries({ ...domainState.views }).reduce((out, [name, data]) => {
-      out[name] = view.remove(index, data);
-      return out;
-    }, {});
-    domainState.data = arrayRemoveItem<IData>(domainState.data, index)[0];
-
-    const domains = { ...state.domains };
-    domains[activeDomain] = domainState;
-
-    ctx.setState({ ...state, domains });
+    const domains = { ...store.domains, [activeDomain]: state };
+    ctx.setState({ ...store, domains });
   }
 
   @Action(ViewChangeOrderItems)
-  viewChangeOrderOfItems(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyViewItemsOrder }) {
-    const state = ctx.getState();
-    const domainState = { ...OhMyState.getActiveState(state) };
+  async viewChangeOrderOfItems(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyViewItemsOrder }) {
+    const store = OhMyState.getStore(ctx);
+    const [state, activeDomain] = await OhMyState.getMyState(ctx);
 
-    const views = { ...domainState.views };
+    const id = state.views[payload.name][payload.id];
+    state.views = { ...state.views, [payload.name]: view.move(state.views[payload.name], id, payload.to) };
 
-    if (!views[payload.name]) { // init
-      views[payload.name] = domainState.data.map((_, i) => i);
-    }
+    const domains = { ...store.domains, [activeDomain]: state };
 
-    views[payload.name] = arrayMoveItem<number>(views[payload.name], payload.from, payload.to);
-    domainState.views = views;
-
-    const domains = { ...state.domains };
-    domains[OhMyState.domain] = domainState;
-
-    ctx.setState({ ...state, domains });
+    ctx.setState({ ...store, domains });
   }
 
   @Action(Toggle)
-  toggle(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyToggle }) {
-    const state = ctx.getState();
-    const domainState = { ...OhMyState.getActiveState(state) };
-    domainState.toggles = { ...domainState.toggles, [payload.name]: payload.value };
+  async toggle(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyToggle }) {
+    const store = OhMyState.getStore(ctx);
+    const [state, activeDomain] = await OhMyState.getMyState(ctx);
 
-    const domains = { ...state.domains, [OhMyState.domain]: domainState };
-    ctx.setState({ ...state, domains });
+    state.toggles = { ...state.toggles, [payload.name]: payload.value };
+
+    const domains = { ...store.domains, [activeDomain]: state };
+    ctx.setState({ ...store, domains });
   }
 
   @Action(ViewReset)
-  viewReset(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
-    const state = ctx.getState();
-    const domainState = { ...OhMyState.getActiveState(state) };
-    const views = { ...domainState.views, [payload]: domainState.data.map((_, i) => i) };
-    domainState.views = views;
+  async viewReset(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
+    const store = OhMyState.getStore(ctx);
+    const [state, activeDomain] = await OhMyState.getMyState(ctx);
 
-    const domains = { ...state.domains, [OhMyState.domain]: domainState };
-    ctx.setState({ ...state, domains });
+    state.views = { ...state.views, [payload]: Object.keys(state.data) };
+
+    const domains = { ...store.domains, [activeDomain]: state };
+    ctx.setState({ ...store, domains });
   }
 
-  static findData(
-    state: IState,
-    context: IOhMyContext
-  ): { index: number; data: IData } {
-    const data = findMocks(state, context);
-    const index = !data ? -1 : state.data.indexOf(data);
+  // static findData(
+  //   state: IState,
+  //   context: IOhMyContext
+  // ): { index: number; data: IData } {
+  //   const data = findMocks(state, context);
+  //   const index = !data ? -1 : state.data.indexOf(data);
 
-    if (index >= 0) {
-      return { index: state.data.indexOf(data), data: { ...data } };
-    } else {
-      return {
-        index: -1, data: {
-          url: url2regex(context.url),
-          id: uniqueId(),
-          method: context.method,
-          type: context.type,
-          mocks: {},
-          activeMock: null
-        }
-      };
-    }
-  }
+  //   if (index >= 0) {
+  //     return { index: state.data.indexOf(data), data: { ...data } };
+  //   } else {
+  //     return {
+  //       index: -1, data: {
+  //         url: url2regex(context.url),
+  //         id: uniqueId(),
+  //         method: context.method,
+  //         type: context.type,
+  //         mocks: { },
+  //         activeMock: null
+  //       }
+  //     };
+  //   }
+  // }
 
-  static cloneMock(mock: IMock): Partial<IMock> {
-    if (!mock) {
-      return { jsCode: MOCK_JS_CODE, delay: 0 };
-    } else {
-      const output = {
-        ...mock,
-        headers: { ...mock.headers },
-        headersMock: { ...mock.headersMock }
-      };
-      delete output.modifiedOn;
+  // static cloneMock(mock: IMock): Partial<IMock> {
+  //   if (!mock) {
+  //     return { jsCode: MOCK_JS_CODE, delay: 0 };
+  //   } else {
+  //     const output = {
+  //       ...mock,
+  //       headers: { ...mock.headers },
+  //       headersMock: { ...mock.headersMock }
+  //     };
+  //     delete output.modifiedOn;
 
-      return output;
-    }
-  }
+  //     return output;
+  //   }
+  // }
 }

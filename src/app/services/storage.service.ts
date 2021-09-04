@@ -1,44 +1,55 @@
 import { Injectable } from '@angular/core';
-import { Select } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { OhMyState } from '../store/state';
-import { MigrationsService } from './migrations.service';
-import { IOhMyMock, IStore } from '../../shared/type';
+
+import { IMock, IOhMyMock, IState, IStore, ohMyDomain, ohMyMockId } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 import { AppStateService } from './app-state.service';
 
+import { IOhMyStorageUpdate, StorageUtils}  from '@shared/utils/storage';
+import * as stateUtils from '@shared/utils/state';
+
+const OH_MY_TICK = 'tick';
+
 @Injectable({
-  providedIn: 'root'
+	providedIn: 'root'
 })
 export class StorageService {
-  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
+  static StorageUtils = StorageUtils;
+	tick: number;
 
-  constructor(private appState: AppStateService, private migrateService: MigrationsService) {
-    // this.reset();
+	constructor(private appState: AppStateService) {
+		// this.reset();
+		StorageService.StorageUtils.updates$.subscribe((changes: IOhMyStorageUpdate) => {
+			console.log(changes);
+		});
+	}
 
-  }
+	async initialize(): Promise<IOhMyMock> {
+		return Promise.all<IOhMyMock, number>([
+			StorageService.StorageUtils.get<IOhMyMock>(STORAGE_KEY),
+      StorageService.StorageUtils.get<number>('TICK')
+		]).then(([state, tick]: [IOhMyMock, number]) => {
+			this.tick = tick;
+			return state;
+		});
+	}
 
-  async initialize(): Promise<IOhMyMock> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
-        state[STORAGE_KEY] = this.migrateService.update(state[STORAGE_KEY]);
-        resolve(state[STORAGE_KEY]);
-      });
-    });
-  }
+	updateState(update: IOhMyMock, key = STORAGE_KEY): void {
+		chrome.storage.local.set({ [key]: update, [OH_MY_TICK]: this.tick });
+	}
 
-  monitorStateChanges(): void {
-    this.state$.subscribe((state) => {
-      this.update(state);
-    });
-  }
+	updateDomain(update: IState): Promise<void> {
+    return StorageService.StorageUtils.set(update.domain, update);
+	}
 
-  update(update: IOhMyMock, key = STORAGE_KEY): void {
-    const updated = this.migrateService.update(update); // TODO: Is this needed?
-    return chrome.storage.local.set({ [key]: updated });
-  }
+	updateMock(update: IMock): Promise<void> {
+    return StorageService.StorageUtils.set(update.id, update);
+	}
 
-  reset(): void {
-    this.update(this.migrateService.reset()[STORAGE_KEY]);
-  }
+	reset(key?: ohMyDomain | ohMyMockId): void {
+		if (key) {
+			chrome.storage.local.remove(key);
+		} else {
+			chrome.storage.local.clear();
+		}
+	}
 }

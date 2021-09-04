@@ -1,5 +1,5 @@
 import { IData, IMock, IOhMyEvalRequest, requestMethod } from '../shared/type';
-import { findMocks } from '../shared/utils/find-mock'
+
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchData } from './message/dispatch-eval';
 import { ohMyState } from './state-manager';
@@ -10,10 +10,10 @@ import { logMocked } from './utils';
 const ORIG_FETCH = window.fetch;
 const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
   const { method = 'GET' } = config;
-  const data: IData = findMocks(ohMyState(), {
+  const data: IData = null; /*findMocks(ohMyState(), {
     url, type: 'FETCH', method
-  });
-  const mock: IMock = data?.enabled && data?.mocks[data?.activeMock];
+  });*/
+  const mock: IMock = null; // data?.enabled && data?.mocks[data?.activeMock];
 
   if (mock) {
     mockHitMessage({ id: data.id });
@@ -60,7 +60,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
             context: {
               url,
               method,
-              type: 'FETCH'
+              requestType: 'FETCH'
             },
             data: {
               statusCode: response.status,
