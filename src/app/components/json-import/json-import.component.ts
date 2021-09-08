@@ -9,7 +9,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import compareVersions from 'compare-versions';
 import { FormControl } from '@angular/forms';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { StateUtils } from '@shared/utils/state';
+import { StateUtils } from '@shared/utils/store';
 import { StoreUtils } from '@shared/utils/store';
 
 @Component({

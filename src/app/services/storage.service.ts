@@ -5,7 +5,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { AppStateService } from './app-state.service';
 
 import { IOhMyStorageUpdate, StorageUtils}  from '@shared/utils/storage';
-import * as stateUtils from '@shared/utils/state';
+import * as stateUtils from '@shared/utils/store';
 
 const OH_MY_TICK = 'tick';
 

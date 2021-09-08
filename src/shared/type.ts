@@ -1,4 +1,6 @@
+import { objectTypes } from './constants';
 import {
+import { requestMethod } from '@shared/type';
   appSources,
   packetTypes,
   resetStateOptions,
@@ -32,13 +34,14 @@ export interface IOhMyMockStorage {
 
 export interface IOhMyMockContent {
   mocks: Record<ohMyMockId, IMock>,
-  domains: Record<ohMyDomain, IState>
+  states: Record<ohMyDomain, IState>
 }
 export interface IOhMyMock extends IOhMyMockStorage {
   content: IOhMyMockContent;
 }
 
 export interface IState {
+  version: string;
   domain: string;
   data: Record<ohMyDataId, IData>;
   views: Record<string, ohMyDataId[]>; // Projections
@@ -66,9 +69,17 @@ export interface IData extends IOhMyContext {
 
 export interface IOhMyShallowMock {
   scenario: ohMyScenarioId | null;
+  statusCode: ohMyStatusCode;
+}
+
+export interface IOhMyMockSearch {
+  id?: ohMyMockId;
+  scenario?: ohMyScenarioId;
+  statusCode?: ohMyStatusCode;
 }
 
 export interface IMock {
+  version: string;
   type: objectTypes.MOCK;
   id: ohMyMockId;
   scenario?: ohMyScenarioId;

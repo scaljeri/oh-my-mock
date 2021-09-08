@@ -1,5 +1,5 @@
-import { OH_MY_TICK } from '@shared/constants';
-import { ohMyDomain, ohMyMockId } from '@shared/type';
+import { OH_MY_TICK, STORAGE_KEY } from '../constants';
+import { IOhMyMock, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 
 
@@ -33,6 +33,13 @@ export class StorageUtils {
         resolve(data[key]);
       });
     });
+  }
+
+  static setStore(store: IOhMyMock): Promise<void> {
+    store = { ...store };
+    delete store.content;
+
+    return this.set(STORAGE_KEY, store)
   }
 
   static set(key: string, value: unknown): Promise<void> {

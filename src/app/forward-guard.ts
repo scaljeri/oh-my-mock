@@ -6,7 +6,7 @@ import { AppStateService } from './services/app-state.service';
 import { MigrationsService } from './services/migrations.service';
 import { StorageService } from './services/storage.service';
 import { InitState } from './store/actions';
-import { StateUtils } from '@shared/utils/state';
+import { StateUtils } from '@shared/utils/store';
 import { StoreUtils } from '@shared/utils/store';
 
 

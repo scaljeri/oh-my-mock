@@ -5,7 +5,7 @@ import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './app-state.service';
 
 import { migrations, IOhMygrations } from '../migrations/'
-import * as stateUtils from '@shared/utils/state';
+import * as stateUtils from '@shared/utils/store';
 
 /**
  * Each new version might require the data of the previous version to be modified.

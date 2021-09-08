@@ -4,8 +4,6 @@ import { Injectable } from '@angular/core';
 import { IData } from '@shared/type';
 import { BehaviorSubject, Subject } from 'rxjs';
 
-const manifest = chrome.runtime.getManifest();
-
 const VERSION = '__OH_MY_VERSION__'; // For development only
 
 export interface IPage {

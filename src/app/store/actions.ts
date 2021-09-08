@@ -7,11 +7,12 @@ import {
   ohMyMockId,
   ohMyDataId,
   ohMyScenarioId,
+  ohMyDomain,
 } from '@shared/type';
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: Partial<IOhMyMock> = { domains: [] }) { }
+  constructor(public payload: Partial<IOhMyMock> = {}, domain?: ohMyDomain) { }
 }
 
 export class ChangeDomain {
