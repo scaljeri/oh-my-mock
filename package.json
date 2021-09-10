@@ -1,6 +1,6 @@
 {
   "name": "oh-my-mock",
-  "version": "2.12.1",
+  "version": "2.12.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
