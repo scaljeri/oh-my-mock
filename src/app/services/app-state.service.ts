@@ -1,8 +1,9 @@
 /// <reference types="chrome"/>
 
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { IData } from '@shared/type';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { APP_VERSION } from '../tokens';
 
 const VERSION = '__OH_MY_VERSION__'; // For development only
 
@@ -18,13 +19,13 @@ export class AppStateService {
 
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
-  public get version(): string {
-    return VERSION.match(/^__/) ? manifest.version : VERSION;
-  }
+  // public get version(): string {
+    // return VERSION.match(/^__/) ? manifest.version : VERSION;
+  // }
   private domainChangeSubject = new BehaviorSubject<string>(null);
   public domain$ = this.domainChangeSubject.asObservable();
 
-  constructor() {
+  constructor(@Inject(APP_VERSION) public version: string) {
     this._domain = sessionStorage.getItem('domain');
     const tabId = sessionStorage.getItem('tabId');
 

@@ -73,7 +73,7 @@ export class StoreUtils {
 
     if (state) {
       Object.keys(state.data)
-        .forEach(async (dataId) => store = await this.removeData(store, dataId, domain));
+        .forEach(async (dataId) => store = await this.removeData(store, domain, dataId));
 
       delete store.content.states[domain];
       // await this.StorageUtils.reset(domain);
@@ -83,18 +83,19 @@ export class StoreUtils {
     return { ...store, domains };
   }
 
-  static removeData(store: IOhMyMock, state: IState, dataId: ohMyDataId): IOhMyMock {
-    const data = state.data[dataId];
-    state = this.StateUtils.removeData(state, dataId);
+  static removeData(store: IOhMyMock, state: IState | ohMyDomain, dataId: ohMyDataId): IOhMyMock {
+    const domain = typeof state === 'string' ? state : state.domain;
+    state = { ...store.content.states[domain] };
+    const data = this.StateUtils.removeData(state, dataId);
+
+    store.content = {
+      ...store.content,
+      states: { ...store.content.states, [domain]: state }
+    };
 
     store = this.removeMocks(store, Object.keys(data.mocks));
 
-    // await this.StorageUtils.reset(domain);
-
-    // const domains = { ...clone.content.states, [domain]: state };
-    // const content = { ...store.content, domains };
-
-    return store; // { ...store, content };
+    return store;
   }
 
   static removeMocks(store: IOhMyMock, mocks: ohMyMockId[] | ohMyMockId): IOhMyMock {

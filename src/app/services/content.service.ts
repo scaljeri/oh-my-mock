@@ -10,10 +10,12 @@ import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
 import { appSources, packetTypes, STORAGE_KEY } from '@shared/constants';
 import { AppStateService } from './app-state.service';
 import { DataUtils } from '@shared/utils/data';
+import { StateUtils } from '@shared/utils/state';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   static DataUtils = DataUtils;
+  static StateUtils = StateUtils;
 
   @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
   @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
@@ -42,7 +44,7 @@ export class ContentService {
           });
         } else if (payload.type === packetTypes.HIT) {
           const state = this.getActiveStateSnapshot();
-          const data = ContentService.DataUtils.find(state, payload.context);
+          const data = ContentService.StateUtils.findData(state, payload.context);
 
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           this.appStateService.hit(data);

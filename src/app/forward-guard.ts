@@ -42,7 +42,8 @@ export class forwarderGuard implements CanActivate {
         this.storageService.reset();
       }
 
-      store = await forwarderGuard.StoreUtils.init(forwarderGuard.StateUtils.init({ domain: this.appStateService.domain });
+      store = await forwarderGuard.StoreUtils.init(
+        forwarderGuard.StateUtils.init({ domain: this.appStateService.domain }));
       
     }
 
