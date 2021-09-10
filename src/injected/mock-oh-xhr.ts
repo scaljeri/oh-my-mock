@@ -105,6 +105,9 @@ export class OhMockXhr extends Base {
       Object.defineProperty(this, 'getResponseHeader', {
         value: (key) => this.ohOutput.headers[key]
       });
+      Object.defineProperty(this, 'readyState', { value: 4 });
+      Object.defineProperty(this, 'responseText', { value: this.ohOutput.response });
+
 
       mockHitMessage({ id: this.ohData.id });
     } else {
