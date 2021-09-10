@@ -97,6 +97,7 @@ export class OhMockXhr extends Base {
       Object.defineProperty(this, 'status', {
         value: this.ohOutput.statusCode
       });
+      Object.defineProperty(this, 'readyState', { value: 4 });
       Object.defineProperty(this, 'responseText', { value: this.ohOutput.response });
       Object.defineProperty(this, 'response', { value: this.ohOutput.response });
       Object.defineProperty(this, 'getAllResponseHeaders', {
