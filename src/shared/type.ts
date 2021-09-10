@@ -1,14 +1,4 @@
-import { objectTypes } from './constants';
-import {
-import { requestMethod } from '@shared/type';
-  appSources,
-  packetTypes,
-  resetStateOptions,
-  STORAGE_KEY,
-  MOCK_RULE_TYPES,
-  ohMyEvalStatus,
-  objectTypes
-} from './constants';
+import { appSources, MOCK_RULE_TYPES, objectTypes, ohMyEvalStatus, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';

@@ -48,10 +48,13 @@ export class StorageUtils {
     });
   }
 
-  static remove(key: string | number): Promise<void> {
-    return new Promise(resolve => {
-      chrome.storage.local.remove(key + '', resolve);
-    });
+  static remove(key: string | number | string[] | number[]): Promise<void[]> {
+    if (!Array.isArray(key)) {
+      key = [key as string];
+    }
+
+    return Promise.all(key.map(k => 
+      new Promise<void>(resolve => chrome.storage.local.remove(k + '', resolve))));
   }
 
   static reset(key?: ohMyDomain | ohMyMockId): Promise<void> {

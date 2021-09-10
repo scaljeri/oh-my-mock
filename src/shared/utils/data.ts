@@ -26,7 +26,11 @@ export class DataUtils {
     return mocks[data.activeScenarioMock || data.activeMock || ''];
   }
 
-  static findMock(data: IData, search: IOhMyMockSearch, mocks: IMock[]): IMock | null {
+  static findMock(data: IData, search: IOhMyMockSearch, mocks: Record<ohMyMockId, IMock>): IMock | null {
+    if (search.id) {
+      return mocks[search.id];
+    }
+
     const [id,] = Object.entries(data.mocks).find(([k, v]) =>
       (!search.id || k === search.id) &&
       (!search.statusCode || search.statusCode === v.statusCode) &&

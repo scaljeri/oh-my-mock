@@ -17,7 +17,7 @@ export class StoreUtils {
   }
 
   static init(state?: IState, origin: origin = 'local'): IOhMyMock {
-    const store = { domains: [], version: '', origin, content: { states: { }, mocks: { } } } as IOhMyMock;
+    const store = { domains: [], version: '', origin, content: { states: {}, mocks: {} } } as IOhMyMock;
 
     if (state) {
       store.domains.push(state.domain);
@@ -43,6 +43,20 @@ export class StoreUtils {
     // await this.StorageUtils.set(domain, state)
     // }
     // return state;
+  }
+
+  static setState(store: IOhMyMock, state: IState): IOhMyMock {
+    if (store.content.states[state.domain]) {
+      return store;
+    }
+
+    store.content.states = { ...store.content.states, [state.domain]: state };
+
+    if (store.domains.indexOf(state.domain) === -1) {
+      store.domains = [state.domain, ...store.domains];
+    }
+
+    return store;
   }
 
   // static async getState(store: IOhMyMock, domain: ohMyDomain): Promise<IState | null> {
@@ -98,7 +112,7 @@ export class StoreUtils {
 
   static removeDomain(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
     const index = store.domains.indexOf(domain);
-    if ( index >= 0) {
+    if (index >= 0) {
       store.domains = [...store.domains.slice(0, index), ...store.domains.slice(index + 1)];
     }
 
@@ -122,7 +136,7 @@ export class StoreUtils {
         store.domains.push(domain);
       }
 
-      store.content = { ...store.content, states: { ...store.content.states, [domain]: this.StateUtils.init({ domain }) }};
+      store.content = { ...store.content, states: { ...store.content.states, [domain]: this.StateUtils.init({ domain }) } };
     } else {
       store = this.init();
     }

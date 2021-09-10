@@ -11,18 +11,20 @@ export class StateUtils {
   }
 
   static getData(state: IState, id: ohMyDataId): IData {
-    return state.data[id];
+    return { ...state.data[id] };
   }
 
   static setData(state: IState, data: IData): IState {
     return { ...state, data: { ...state.data, [data.id]: data } };
   }
 
-  static removeData(state: IState, id: ohMyDataId): IState | null {
-    const update = { ...state, data: { ...state.data } };
-    delete update.data[id];
+  static removeData(state: IState, id: ohMyDataId): IData {
+    const data = state.data[id];
 
-    return update;
+    state.data = { ...state.data };
+    delete state.data[id];
+
+    return data;
   }
 
   // static removeMock(state: IState, mockId: ohMyMockId, dataId: ohMyDataId): IState {

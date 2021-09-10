@@ -6,9 +6,8 @@ import { AppStateService } from './services/app-state.service';
 import { MigrationsService } from './services/migrations.service';
 import { StorageService } from './services/storage.service';
 import { InitState } from './store/actions';
-import { StateUtils } from '@shared/utils/store';
+import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
-
 
 @Injectable({ providedIn: 'root' })
 export class forwarderGuard implements CanActivate {
@@ -43,7 +42,8 @@ export class forwarderGuard implements CanActivate {
         this.storageService.reset();
       }
 
-      store = await forwarderGuard.StoreUtils.init(this.appStateService.domain);
+      store = await forwarderGuard.StoreUtils.init(forwarderGuard.StateUtils.init({ domain: this.appStateService.domain });
+      
     }
 
     if (store.version !== origStore?.version) { // Something happend
