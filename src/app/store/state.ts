@@ -34,6 +34,7 @@ import {
   ohMyScenarioId,
   ohMyDomain,
   IOhMyShallowMock,
+  IMock,
 } from '@shared/type';
 import { patch } from '@ngxs/store/operators';
 
@@ -145,7 +146,7 @@ export class OhMyState {
   @Action(ResetState)
   async reset(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyDomain }) {
     let store = OhMyState.getStore(ctx);
-debugger;
+
     if (payload) {
       const state = store.content.states[payload] || await OhMyState.StorageUtils.get(payload);
 
@@ -195,39 +196,49 @@ debugger;
   @Action(UpdateMockStorage)
   async upsertMock(ctx: StateContext<IOhMyMock>, action: UpsertMock | UpdateMockStorage) {
     const { payload, domain } = action;
-    //{ payload, domain }: { payload: IUpsertMock, domain?: string }) {
-    const store = OhMyState.getStore(ctx);
+
+    let store = OhMyState.getStore(ctx);
     let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
     let mock = payload.mock;
+    let sourceMock = {};
+    const data = OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init({
+      url: payload.url,
+      method: payload.method,
+      requestType: payload.requestType
+    });
+    state.data = { ...state.data, [data.id]: data };
 
     if (mock.id) {
-      const oldMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
-      mock = OhMyState.MockUtils.clone(oldMock, mock);
+      sourceMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
+      mock = OhMyState.MockUtils.clone(sourceMock, mock);
     } else { // new
-      mock = OhMyState.MockUtils.init(mock);
-      const data = OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init({
-        url: payload.url,
-        method: payload.method,
-        requestType: payload.requestType
-      });
+      sourceMock = payload.clone ?
+        (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) : null;
+    }
 
+    if (sourceMock) {
+      store.content = { ...store.content, mocks: { ...store.content.mocks, [data.activeMock]: sourceMock as IMock } };
+    }
+
+    mock = OhMyState.MockUtils.init(sourceMock || {}, mock);
+
+    if (payload.makeActive) {
+      data.activeMock = mock.id;
+    }
+
+    if (!data.mocks[mock.id]) {
       data.mocks = {
         ...data.mocks, [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
       }
-
-      state.data = { ...state.data, [data.id]: data };
     }
 
     if (action instanceof UpsertMock) {
       await OhMyState.StorageUtils.set(activeDomain, state);
+      await OhMyState.StorageUtils.set(mock.id, mock);
     }
 
-    store.content = {
-      ...store.content,
-      states: { ...store.content.states, [activeDomain]: state }
-    };
-
+    store = OhMyState.StoreUtils.setState(store, state);
     ctx.setState(store);
   }
 
@@ -235,7 +246,7 @@ debugger;
   async upsertData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Partial<IData>, domain?: string }) {
     let [state] = await OhMyState.getMyState(ctx, domain);
 
-    const data = OhMyState.StateUtils.findData(state, payload, false) || OhMyState.DataUtils.init(payload);
+    const data = { ...(OhMyState.StateUtils.findData(state, payload, false) || OhMyState.DataUtils.init(payload)), ...payload };
     state = OhMyState.StateUtils.setData(state, data);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
 

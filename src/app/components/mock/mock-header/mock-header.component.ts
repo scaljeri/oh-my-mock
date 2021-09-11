@@ -46,11 +46,19 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     });
 
     this.filteredMethodOptions = this.methodCtrl.valueChanges.pipe(
-      map(value => this.filter(value, this.availableMethods)),
+      map(value => this.filter(value, this.availableMethods))
     );
+
+    this.methodCtrl.valueChanges.subscribe(val => {
+      const method = (val || '').toUpperCase();
+      if (METHODS.includes(val)) {
+        this.upsertData({ ...this.data, method });
+      }
+    });
 
     this.typeCtrl.valueChanges.subscribe(type => {
       if (type !== this.data.type) {
+
         this.upsertData({ ...this.data, type });
       }
     });
@@ -115,12 +123,16 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   onMethodBlur(): void {
     const method = (this.methodCtrl.value || '').toUpperCase();
 
-    if (method !== this.data.method) {
-      this.upsertData({ ...this.data, method });
-    }
+    // if (method !== this.data.method) {
+    //   this.upsertData({ ...this.data, method });
+    // }
   }
 
   getMock(id: ohMyMockId): IMock {
     return null; //this.data.mocks[id];
+  }
+
+  onMethodChange(event): void {
+    debugger;
   }
 }

@@ -43,7 +43,7 @@ export class MockUtils {
     return mock;
   }
 
-  static clone(source: IMock, updates?: Partial<IMock>): IMock {
+  static clone(source: Partial<IMock>, updates?: Partial<IMock>): IMock {
     return this.init(source, updates);
   }
 

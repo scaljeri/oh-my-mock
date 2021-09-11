@@ -38,6 +38,7 @@ export class MockDetailsComponent implements OnChanges {
     }, this.domain);
 
   ngOnChanges(): void {
+    debugger;
     this.form = new FormGroup({
       delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
       statusCode: new FormControl(this.mock.statusCode, {

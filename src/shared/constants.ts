@@ -30,7 +30,7 @@ export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';
 export const STATUS_CODE_INVALID_MSG = 'Invalid status code';
 export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
-export const METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
+export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
 
 export enum objectTypes {
   DOMAIN = 'DOMAIN',

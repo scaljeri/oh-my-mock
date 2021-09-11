@@ -8,7 +8,7 @@
 
   <mat-form-field class="method-select">
     <mat-label>Method</mat-label>
-    <input (blur)="onMethodBlur()" type="text" placeholder="Method" aria-label="Request method" matInput
+    <input (blur)="onMethodBlur()" (change)="onMethodChange($event)" type="text" placeholder="Method" aria-label="Request method" matInput
       [formControl]="methodCtrl" [matAutocomplete]="auto">
     <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
       <mat-option *ngFor="let option of filteredMethodOptions | async" [value]="option">
