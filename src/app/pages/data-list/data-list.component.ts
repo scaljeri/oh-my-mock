@@ -3,8 +3,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select, Store } from '@ngxs/store';
-import { IData, IState, IStore } from '@shared/type';
+import { Select } from '@ngxs/store';
+import { IData, IOhMyContext, IState } from '@shared/type';
+import { StateUtils } from '@shared/utils/state';
 import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
 import { UpsertData } from 'src/app/store/actions';
@@ -17,6 +18,8 @@ import { OhMyState } from 'src/app/store/state';
   styleUrls: ['./data-list.component.scss'],
 })
 export class PageDataListComponent implements OnInit {
+  static StateUtils = StateUtils;
+
   @Dispatch() upsertData = (data: IData) => new UpsertData(data);
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
@@ -24,11 +27,10 @@ export class PageDataListComponent implements OnInit {
   public state: IState;
   public domain: string;
   public subscriptions: Subscription[] = [];
-  public navigateToMock = false;
+  public navigateToData: IOhMyContext;
 
   constructor(
     public dialog: MatDialog,
-    private store: Store,
     private router: Router,
     private activatedRoute: ActivatedRoute,
   ) { }
@@ -37,8 +39,8 @@ export class PageDataListComponent implements OnInit {
     this.subscriptions.push(this.state$.subscribe((state: IState) => {
       this.state = state;
 
-      if (this.navigateToMock) {
-        this.router.navigate(['mocks', state.data[0].id]);
+      if (this.navigateToData) {
+        this.router.navigate(['mocks', PageDataListComponent.StateUtils.findData(state, this.navigateToData).id]);
       }
     }));
   }
@@ -58,7 +60,7 @@ export class PageDataListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((data: IData) => {
       if (data) {
-        this.navigateToMock = true;
+        this.navigateToData = data;
         this.upsertData(data);
       }
     });

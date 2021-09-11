@@ -4,7 +4,7 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IData, IMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
-import { findAutoActiveMock } from '../../../utils/data';
+// import { findAutoActiveMock } from '../../../utils/data';
 import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
@@ -41,7 +41,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     setTimeout(() => {
       if (!this.data.activeMock && Object.keys(this.data.mocks).length > 0) {
-        this.onSelectStatusCode(findAutoActiveMock(this.data));
+        // this.onSelectStatusCode(findAutoActiveMock(this.data));
       }
     });
 

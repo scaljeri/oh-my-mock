@@ -2,8 +2,9 @@ import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId } from '../type'
 import { compareUrls } from './urls';
 
 export class StateUtils {
-  static init(base: Partial<IState> = { }): IState {
-    return { version: '-', views: { }, toggles: { }, data: { }, scenarios: { }, ...base } as IState;
+  static version = '-'
+  static init(base: Partial<IState> = {}): IState {
+    return { version: this.version, views: {}, toggles: {}, data: {}, scenarios: {}, ...base } as IState;
   }
 
   static isState<V = IData>(input: IState | V): input is IState {
@@ -36,15 +37,15 @@ export class StateUtils {
 
   static findData(state: IState, search: IOhMyUpsertData, onlyActive = false): IData | null {
     const result = Object.entries(state.data).find(([k, v]: [ohMyDataId, IData]) => {
-      return k === search.id || (
-        (search.method && search === v.method) &&
-        (search.requestType && search.requestType === v.requestType) &&
-        (search.url && search.url === v.url || compareUrls(search.url, v.url))
+      return (
+        (!search.id || k === search.id) &&
+        (!search.method || search.method === v.method) &&
+        (!search.requestType || search.requestType === v.requestType) &&
+        (!search.url || search.url === v.url || compareUrls(search.url, v.url))
       ) && (!onlyActive || v.enabled && (v.activeMock || v.activeScenarioMock))
     });
 
     return result ? { ...state.data[result[0]] } : null;
-
   }
 
   static getAllMockIds(state: IState): ohMyMockId[] {

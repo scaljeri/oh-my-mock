@@ -14,7 +14,7 @@ export class forwarderGuard implements CanActivate {
   static StateUtils = StateUtils;
   static StoreUtils = StoreUtils;
 
-  @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
+  @Dispatch() initState = (state?: IOhMyMock) => new InitState(state);
 
   constructor(
     private appStateService: AppStateService,
@@ -33,25 +33,25 @@ export class forwarderGuard implements CanActivate {
     }
 
     // Load and initialize state
-    const origStore = await this.storageService.initialize();
+    // const origStore = await this.storageService.initialize();
 
-    let store = this.migrationService.update(origStore);
+    // let store = this.migrationService.update(origStore);
 
-    if (!store) {
-      if (origStore) {
-        this.storageService.reset();
-      }
+    // if (!store) {
+    //   if (origStore) {
+    //     this.storageService.reset();
+    //   }
 
-      store = await forwarderGuard.StoreUtils.init(
-        forwarderGuard.StateUtils.init({ domain: this.appStateService.domain }));
+    //   store = await forwarderGuard.StoreUtils.init(
+    //     forwarderGuard.StateUtils.init({ domain: this.appStateService.domain }));
       
-    }
+    // }
 
-    if (store.version !== origStore?.version) { // Something happend
-      this.storageService.updateState(store);
-    }
+    // if (store.version !== origStore?.version) { // Something happend
+    //   this.storageService.updateState(store);
+    // }
 
-    this.initState(store);
+    this.initState();
 
     return true;
   }

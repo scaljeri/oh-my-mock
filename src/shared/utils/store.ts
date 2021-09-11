@@ -5,6 +5,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { DataUtils } from './data';
 
 export class StoreUtils {
+  static version = '-';
   static StorageUtils = StorageUtils;
   static StateUtils = StateUtils;
   static DataUtils = DataUtils;
@@ -17,7 +18,7 @@ export class StoreUtils {
   }
 
   static init(state?: IState, origin: origin = 'local'): IOhMyMock {
-    const store = { domains: [], version: '', origin, content: { states: {}, mocks: {} } } as IOhMyMock;
+    const store = { domains: [], version: this.version, origin, content: { states: {}, mocks: {} } } as IOhMyMock;
 
     if (state) {
       store.domains.push(state.domain);
@@ -46,10 +47,6 @@ export class StoreUtils {
   }
 
   static setState(store: IOhMyMock, state: IState): IOhMyMock {
-    if (store.content.states[state.domain]) {
-      return store;
-    }
-
     store.content.states = { ...store.content.states, [state.domain]: state };
 
     if (store.domains.indexOf(state.domain) === -1) {

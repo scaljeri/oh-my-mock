@@ -60,6 +60,7 @@ export interface IData extends IOhMyContext {
 export interface IOhMyShallowMock {
   scenario: ohMyScenarioId | null;
   statusCode: ohMyStatusCode;
+  id: ohMyMockId;
 }
 
 export interface IOhMyMockSearch {

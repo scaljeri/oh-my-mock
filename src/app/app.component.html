@@ -17,7 +17,7 @@
       <mat-slide-toggle (change)="onEnableChange($event)" [checked]="enabled" [color]="color"></mat-slide-toggle>
     </mat-toolbar>
 
-    <section>
+    <section *ngIf="!isInitializing">
       <router-outlet></router-outlet>
     </section>
   </mat-drawer-content>

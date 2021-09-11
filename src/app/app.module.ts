@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NgModule } from '@angular/core';
+import { Inject, NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
@@ -28,6 +28,10 @@ import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
 import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
+import { APP_VERSION } from './tokens';
+import { StateUtils } from '@shared/utils/state';
+import { StoreUtils } from '@shared/utils/store';
+import { MigrationUtils } from './utils/migration';
 
 @NgModule({
   declarations: [
@@ -61,4 +65,11 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule { 
+  constructor( @Inject(APP_VERSION) version: string) {
+    StateUtils.version = version;
+    StoreUtils.version = version;
+    MigrationUtils.version = version;
+  }
+
+}

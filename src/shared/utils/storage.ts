@@ -1,7 +1,9 @@
 import { OH_MY_TICK, STORAGE_KEY } from '../constants';
 import { IOhMyMock, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
+import { uniqueId } from './unique-id';
 
+const ID = uniqueId();
 
 export interface IOhMyStorageChange {
   newValue: unknown, oldValue?: unknown;
@@ -20,8 +22,7 @@ export class StorageUtils {
 
   static listen(): void {
     this.chrome.storage.onChanged.addListener((changes: Record<string, IOhMyStorageChange>, namespace: string) => {
-      if (changes[OH_MY_TICK]?.newValue !== this.tick) {
-        this.tick = changes[OH_MY_TICK]?.newValue as number;
+      if (changes[OH_MY_TICK]?.newValue !== ID) {
         Object.keys(changes).forEach(key => this.updatesSubject.next({ key, change: changes[key] }));
       }
     });
@@ -36,15 +37,16 @@ export class StorageUtils {
   }
 
   static setStore(store: IOhMyMock): Promise<void> {
-    store = { ...store };
-    delete store.content;
+    store.content = { mocks: {}, states: {} };
 
     return this.set(STORAGE_KEY, store)
   }
 
   static set(key: string, value: unknown): Promise<void> {
+debugger;
+
     return new Promise(resolve => {
-      this.chrome.storage.local.set({ [key]: value, [OH_MY_TICK]: ++this.tick }, resolve);
+      this.chrome.storage.local.set({ [key]: value, [OH_MY_TICK]: ID }, resolve);
     });
   }
 

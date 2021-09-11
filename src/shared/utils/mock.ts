@@ -1,6 +1,6 @@
 import contentParser from 'content-type-parser';
 
-import { IMock, ohMyMockId, ohMyStatusCode } from '../type'
+import { IMock, IOhMyShallowMock, ohMyMockId, ohMyStatusCode } from '../type'
 import { MOCK_JS_CODE } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
@@ -12,12 +12,12 @@ export interface IOhMyMockSearchOptions {
 }
 
 export class MockUtils {
-  static init(base: Partial<IMock> = { }, update: Partial<IMock> = { }): IMock {
+  static init(base: Partial<IMock> = {}, update: Partial<IMock> = {}): IMock {
     const mock = {
       jsCode: MOCK_JS_CODE,
       delay: 0,
-      headers: { },
-      response: { },
+      headers: {},
+      response: {},
       scenario: null,
       rules: [],
       statusCode: null,
@@ -54,6 +54,14 @@ export class MockUtils {
       return Object.values(mocks).find(mock =>
         (!searchOptions.statusCode || searchOptions.statusCode === mock.statusCode) &&
         (!searchOptions.scenario || searchOptions.scenario === mock.scenario));
+    }
+  }
+
+  static createShallowMock(mock: IOhMyShallowMock & Partial<IMock>): IOhMyShallowMock {
+    return {
+      id: mock.id,
+      scenario: mock.scenario,
+      statusCode: mock.statusCode
     }
   }
 }

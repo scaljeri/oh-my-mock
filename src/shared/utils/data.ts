@@ -15,7 +15,7 @@ export class DataUtils {
 
   static init(data: Partial<IData>): IData {
     return {
-      id: uniqueId,
+      id: uniqueId(),
       mocks: { },
       type: objectTypes.DATA,
       ...data
@@ -42,6 +42,7 @@ export class DataUtils {
   static addMock = (data: IData, mock: IMock): IData => {
     data.mocks = {
       ...data.mocks, [mock.id]: {
+        id: mock.id,
         statusCode: mock.statusCode,
         scenario: mock.scenario
       }
