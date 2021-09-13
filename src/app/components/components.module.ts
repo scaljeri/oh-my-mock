@@ -51,6 +51,7 @@ import { UpdateInputDirective } from './update-input/update-input.directive';
 import { ContentTypeComponent } from './content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 @NgModule({
   declarations: [
@@ -77,7 +78,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     CloudSyncComponent,
     UpdateInputDirective,
     ContentTypeComponent,
-    SpinnerComponent
+    SpinnerComponent,
+    AutocompleteDropdownComponent
   ],
   imports: [
     CommonModule,
@@ -119,7 +121,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     CloudSyncComponent,
     UpdateInputDirective,
     ContentTypeComponent,
-    SpinnerComponent
+    SpinnerComponent,
+    AutocompleteDropdownComponent
   ],
   providers: [
     Location,

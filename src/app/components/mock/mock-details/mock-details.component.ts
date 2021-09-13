@@ -38,23 +38,22 @@ export class MockDetailsComponent implements OnChanges {
     }, this.domain);
 
   ngOnChanges(): void {
-    debugger;
-    this.form = new FormGroup({
-      delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
-      statusCode: new FormControl(this.mock.statusCode, {
-        validators: [Validators.required], updateOn: 'blur'
-      }),
-      scenario: new FormControl(this.mock.scenario, { updateOn: 'blur' })
-    });
+    // this.form = new FormGroup({
+    //   delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
+    //   statusCode: new FormControl(this.mock.statusCode, {
+    //     validators: [Validators.required], updateOn: 'blur'
+    //   }),
+    //   scenario: new FormControl(this.mock.scenario, { updateOn: 'blur' })
+    // });
 
-    this.form.valueChanges.subscribe(values => {
-      const update: Partial<IMock> = { scenario: values.scenario, delay: values.delay || 0 }
-      if (!this.statusCodeCtrl.hasError('required')) {
-        update.statusCode = values.statusCode;
-      }
+    // this.form.valueChanges.subscribe(values => {
+    //   const update: Partial<IMock> = { scenario: values.scenario, delay: values.delay || 0 }
+    //   if (!this.statusCodeCtrl.hasError('required')) {
+    //     update.statusCode = values.statusCode;
+    //   }
 
-      this.upsertMock(update);
-    });
+    //   this.upsertMock(update);
+    // });
   }
 
   onContentTypeUpdate(contentType: string): void {

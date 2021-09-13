@@ -43,8 +43,6 @@ export class StorageUtils {
   }
 
   static set(key: string, value: unknown): Promise<void> {
-debugger;
-
     return new Promise(resolve => {
       this.chrome.storage.local.set({ [key]: value, [OH_MY_TICK]: ID }, resolve);
     });

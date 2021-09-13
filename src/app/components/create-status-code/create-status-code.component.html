@@ -4,6 +4,9 @@
     <mat-label>Status Code</mat-label>
     <input type="number" matInput [formControl]="codeCtrl">
   </mat-form-field>
+  <oh-my-autocomplete-dropdown 
+    [options]="scenarioValues"
+    label="Scenario (optional)"></oh-my-autocomplete-dropdown>
   <mat-form-field class="example-full-width">
     <mat-label>Scenario TODO (dropdown) (optional)</mat-label>
     <input type="text" matInput [formControl]="nameCtrl">

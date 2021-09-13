@@ -6,16 +6,10 @@
     </mat-select>
   </mat-form-field>
 
-  <mat-form-field class="method-select">
-    <mat-label>Method</mat-label>
-    <input (blur)="onMethodBlur()" (change)="onMethodChange($event)" type="text" placeholder="Method" aria-label="Request method" matInput
-      [formControl]="methodCtrl" [matAutocomplete]="auto">
-    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-      <mat-option *ngFor="let option of filteredMethodOptions | async" [value]="option">
-        {{option}}
-      </mat-option>
-    </mat-autocomplete>
-  </mat-form-field>
+    <oh-my-autocomplete-dropdown label="Method" 
+      [formControl]="methodCtrl"
+      [selected]="data.method"
+      [options]="availableMethods"></oh-my-autocomplete-dropdown>
 
   <mat-form-field class="url-input">
     <mat-label>Url</mat-label>

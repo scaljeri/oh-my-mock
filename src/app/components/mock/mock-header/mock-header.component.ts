@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, IMock, ohMyMockId, statusCode } from '@shared/type';
+import { IData, IMock, IOhMyShallowMock, IState, IStore, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
@@ -9,7 +9,9 @@ import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { METHODS } from '@shared/constants';
+import { METHODS, STORAGE_KEY } from '@shared/constants';
+import { Store } from '@ngxs/store';
+import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'app-mock-header',
@@ -30,13 +32,13 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   public oldResponses: string[];
 
-  private availableMethods = METHODS;
+  public availableMethods = METHODS;
 
   @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
     new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain)
   @Dispatch() upsertData = (data: IData) => new UpsertData({ ...data, id: this.data.id }, this.domain);
 
-  constructor(public dialog: MatDialog) { }
+  constructor(public dialog: MatDialog, private store: Store) { }
 
   ngOnInit(): void {
     setTimeout(() => {
@@ -45,15 +47,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
       }
     });
 
-    this.filteredMethodOptions = this.methodCtrl.valueChanges.pipe(
-      map(value => this.filter(value, this.availableMethods))
-    );
-
     this.methodCtrl.valueChanges.subscribe(val => {
       const method = (val || '').toUpperCase();
-      if (METHODS.includes(val)) {
-        this.upsertData({ ...this.data, method });
-      }
+      this.upsertData({ ...this.data, method });
     });
 
     this.typeCtrl.valueChanges.subscribe(type => {
@@ -68,20 +64,14 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     this.urlCtrl.setValue(this.data.url);
   }
 
-  private filter(value: string, options: string[]): string[] {
-    const filterValue = value.toLowerCase();
-
-    return options.filter(option => option.toLowerCase().indexOf(filterValue) === 0);
-  }
-
   ngOnChanges(): void {
-    // this.mockIds = this.data
-    //   ? Object.keys(this.data.mocks).sort((a, b) => {
-    //     const ma = this.data.mocks[a];
-    //     const mb = this.data.mocks[b];
+    this.mockIds = this.data
+      ? Object.keys(this.data.mocks).sort((a, b) => {
+        const ma = this.data.mocks[a];
+        const mb = this.data.mocks[b];
 
-    //     return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
-    //   }) : [];
+        return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
+      }) : [];
   }
 
   onUrlUpdate(url: string): void {
@@ -121,18 +111,27 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onMethodBlur(): void {
+    console.log('received: ' + this.methodCtrl.value);
     const method = (this.methodCtrl.value || '').toUpperCase();
 
+    console.log('onMethodBlur');
     // if (method !== this.data.method) {
     //   this.upsertData({ ...this.data, method });
     // }
   }
 
-  getMock(id: ohMyMockId): IMock {
-    return null; //this.data.mocks[id];
+  getMock(id: ohMyMockId): IOhMyShallowMock {
+   
+    return this.data.mocks[id];
   }
 
   onMethodChange(event): void {
-    debugger;
+    console.log('onMethodChage', event);
+  }
+
+  get stateSnapshot(): IState {
+    return this.store.selectSnapshot<IState>((state: IStore) => {
+      return state[STORAGE_KEY].content.states[OhMyState.domain];
+    });
   }
 }

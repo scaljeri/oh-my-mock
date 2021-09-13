@@ -137,7 +137,6 @@ export class OhMyState {
     }
 
     store.content.states[activeDomain] = state;
-    debugger;
     // TODO: Init with test data somehow
     console.log('setState', store);
     ctx.setState(store);

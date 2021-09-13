@@ -15,18 +15,18 @@
         can be activated by scenario (TODO).">info
     </mat-icon>
   </p>
-  <p>
+  <!-- <p>
     <mat-form-field class="example-full-width">
       <mat-label>Response delay (ms)</mat-label>
       <input matInput [formControl]="delayCtrl" class="value" [value]="mock.delay">
     </mat-form-field>
-  </p>
+  </p> -->
 </form>
 <div class="details">
   <p class="vertical">
-    <oh-my-content-type [contentType]="mock.headersMock['content-type']"
-      (update)="onContentTypeUpdate($event)"></oh-my-content-type>
+    <!-- <oh-my-content-type [contentType]="mock.headersMock['content-type']"
+      (update)="onContentTypeUpdate($event)"></oh-my-content-type> -->
   </p>
-  <p><span class="label">Created:</span><span class="value">{{mock.createdOn | date:'d/M/YYYY, H:mm'}}</span></p>
-  <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn | date:'d/M/YYYY, H:mm'}}</span></p>
+  <!-- <p><span class="label">Created:</span><span class="value">{{mock.createdOn | date:'d/M/YYYY, H:mm'}}</span></p>
+  <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn | date:'d/M/YYYY, H:mm'}}</span></p> -->
 </div>
