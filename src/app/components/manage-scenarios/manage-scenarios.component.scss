@@ -1,8 +1,17 @@
 @import 'mixins';
 
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100%;
+}
+
 ol {
     @include oh-list-unstyled;
+    flex: 1;
     padding: 0;
+    overflow: scroll;
 }
 
 h2 {
@@ -18,11 +27,13 @@ li {
     margin: $spacer-1 0;
     padding: 0 $spacer-1;
     
-    button {
+    button { // delete
         margin-left: spacer-3;
     }
    
 }
-li:last-child {
-    background-color: #fff;
+
+.actions {
+    display: flex;
+    justify-content: space-between;
 }
