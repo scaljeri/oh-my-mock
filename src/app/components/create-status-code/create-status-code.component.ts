@@ -8,7 +8,7 @@ import {
   STATUS_CODE_INVALID_MSG,
   STORAGE_KEY
 } from '@shared/constants';
-import { IState, IStore, ohMyScenarioId } from '@shared/type';
+import { IOhMyScenarios, IState, IStore, ohMyScenarioId } from '@shared/type';
 import { OhMyState } from 'src/app/store/state';
 // TODO: modify validator to check name + code
 // import { statusCodeValidator } from '../../validators/status-code.validator';
@@ -25,15 +25,17 @@ export class CreateStatusCodeComponent implements OnInit {
       Validators.required
       // statusCodeValidator(this.input.existingStatusCodes)
     ]),
-    name: new FormControl(),
+    scenario: new FormControl(),
     clone: new FormControl('')
   })
 
   public requiredError = REQUIRED_MSG;
   public existsError = STATUS_CODE_EXISTS_MSG;
   public invalidError = STATUS_CODE_INVALID_MSG;
-  private scenarios: Record<ohMyScenarioId, string>;
+  public scenarios: Record<ohMyScenarioId, string>;
   public scenarioValues: string[] = [];
+
+  public manageScenarios = false;
 
   constructor(
     private dialogRef: MatDialogRef<CreateStatusCodeComponent>,
@@ -58,12 +60,20 @@ export class CreateStatusCodeComponent implements OnInit {
     this.dialogRef.close();
   }
 
+  onManageScenarios(): void {
+    this.manageScenarios = true;
+  }
+
+  onScenariosUpdate(scenarios: IOhMyScenarios): void {
+    this.manageScenarios = false;
+  }
+
   get codeCtrl(): FormControl {
     return this.form.get('statusCode') as FormControl;
   }
 
-  get nameCtrl(): FormControl {
-    return this.form.get('name') as FormControl;
+  get scenarioCtrl(): FormControl {
+    return this.form.get('scenario') as FormControl;
   }
 
   get cloneCtrl(): FormControl {

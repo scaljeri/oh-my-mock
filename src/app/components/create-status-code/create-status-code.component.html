@@ -1,22 +1,35 @@
-<h2>Create new Response</h2>
-<form [formGroup]="form" class="example-form">
-  <mat-form-field class="example-full-width">
-    <mat-label>Status Code</mat-label>
-    <input type="number" matInput [formControl]="codeCtrl">
-  </mat-form-field>
-  <oh-my-autocomplete-dropdown 
-    [options]="scenarioValues"
-    label="Scenario (optional)"></oh-my-autocomplete-dropdown>
-  <mat-form-field class="example-full-width">
-    <mat-label>Scenario TODO (dropdown) (optional)</mat-label>
-    <input type="text" matInput [formControl]="nameCtrl">
-  </mat-form-field>
-  <mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>
+<ng-container *ngIf="!manageScenarios">
+  <h2>Create new Response</h2>
+  <form [formGroup]="form">
+    <mat-form-field>
+      <mat-label>Status Code</mat-label>
+      <input type="number" matInput [formControl]="codeCtrl">
+    </mat-form-field>
 
-  <div class="spacer"></div>
+    <div class="scenario">
+      <oh-my-autocomplete-dropdown [options]="scenarioValues" [formControl]="scenarioCtrl" label="Scenario (optional)">
+      </oh-my-autocomplete-dropdown>
 
-  <div class="actions">
-    <button type="button" mat-button (click)="onClose()">Cancel</button>
-    <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
-  </div>
-</form>
+      <button mat-mini-fab (click)="onManageScenarios()" alt="Create new scenario">+</button>
+      <mat-icon color="primary"
+        matTooltip="Scenario's are used to distinguish mocks having the same status code. Scenario's are also used to activate a group of mocks which all belong to a specific scenario (scenario testing).">
+        info</mat-icon>
+    </div>
+    <!-- <mat-form-field class="example-full-width"> -->
+    <!-- <mat-label>Scenario TODO (dropdown) (optional)</mat-label> -->
+    <!-- <input type="text" matInput [formControl]="nameCtrl"> -->
+    <!-- </mat-form-field> -->
+    <mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>
+
+    <div class="spacer"></div>
+
+    <div class="actions">
+      <button type="button" mat-button (click)="onClose()">Cancel</button>
+      <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
+    </div>
+  </form>
+</ng-container>
+
+<ng-container *ngIf="manageScenarios">
+  <oh-my-manage-scenarios (update)="onScenariosUpdate($event)" [scenarios]="scenarios"></oh-my-manage-scenarios>
+</ng-container>

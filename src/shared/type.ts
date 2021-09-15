@@ -30,13 +30,15 @@ export interface IOhMyMock extends IOhMyMockStorage {
   content: IOhMyMockContent;
 }
 
+export type IOhMyScenarios = Record<ohMyScenarioId, string>
+
 export interface IState {
   version: string;
   domain: string;
   data: Record<ohMyDataId, IData>;
   views: Record<string, ohMyDataId[]>; // Projections
   toggles: Record<string, boolean>; // enable toggle and toggles for projections
-  scenarios: Record<ohMyScenarioId, string>
+  scenarios: IOhMyScenarios;
   activeScenario?: ohMyScenarioId;
 }
 

@@ -52,6 +52,9 @@ import { ContentTypeComponent } from './content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
+import { ManageScenariosComponent } from './manage-scenarios/manage-scenarios.component';
+
+import { OhMyDirectivesModule } from '../directives/directives.module';
 
 @NgModule({
   declarations: [
@@ -79,7 +82,8 @@ import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/auto
     UpdateInputDirective,
     ContentTypeComponent,
     SpinnerComponent,
-    AutocompleteDropdownComponent
+    AutocompleteDropdownComponent,
+    ManageScenariosComponent
   ],
   imports: [
     CommonModule,
@@ -88,6 +92,7 @@ import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/auto
     MatIconModule,
     PipesModule,
     RouterModule,
+    OhMyDirectivesModule,
     MatFormFieldModule,
     MatCardModule,
     MatInputModule,

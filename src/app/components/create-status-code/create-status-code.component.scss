@@ -27,7 +27,14 @@ mat-slide-toggle  {
 form {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
-mat-form-field {
+.scenario {
+  display: flex;
+  justify-content: space-between;
+
+  oh-my-autocomplete-dropdown {
+    margin-right: $spacer-2;
+  }
 }

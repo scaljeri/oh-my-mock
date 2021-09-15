@@ -1,0 +1,23 @@
+<h2>List of available scenarios:</h2>
+<ol>
+    <li *ngFor="let id of scenarioIds empty noScenarios">
+        <mat-form-field class="full-width">
+            <input matInput [value]="scenariosCopy[id]">
+        </mat-form-field>
+        <button (click)="onDelete(id)" mat-mini-fab>
+            <mat-icon>delete</mat-icon>
+        </button>
+    </li>
+    <li>
+        <span></span>
+        <button (click)="onCreate()" mat-mini-fab color="secondary">+</button>
+    </li>
+</ol>
+<div class="actions">
+    <button type="button" mat-button (click)="onClose()">Cancel</button>
+    <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
+</div>
+
+<ng-template #noScenarios>
+    No scenarios!
+</ng-template>

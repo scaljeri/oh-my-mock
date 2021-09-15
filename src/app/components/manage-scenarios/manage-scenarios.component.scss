@@ -1,0 +1,28 @@
+@import 'mixins';
+
+ol {
+    @include oh-list-unstyled;
+    padding: 0;
+}
+
+h2 {
+    white-space: nowrap;
+}
+
+li {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    background-color: lightgrey;
+    border-radius: $spacer-1;
+    margin: $spacer-1 0;
+    padding: 0 $spacer-1;
+    
+    button {
+        margin-left: spacer-3;
+    }
+   
+}
+li:last-child {
+    background-color: #fff;
+}

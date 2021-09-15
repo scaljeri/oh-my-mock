@@ -89,7 +89,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   openAddResponseDialog(): void {
     const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
       width: '280px',
-      height: '280px',
+      height: '380px',
       data: { existingStatusCodes: this.mockIds }
     });
 
