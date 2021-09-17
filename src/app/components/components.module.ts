@@ -55,6 +55,7 @@ import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/auto
 import { ManageScenariosComponent } from './manage-scenarios/manage-scenarios.component';
 
 import { OhMyDirectivesModule } from '../directives/directives.module';
+import { LinkComponent } from './link/link.component';
 
 @NgModule({
   declarations: [
@@ -83,7 +84,8 @@ import { OhMyDirectivesModule } from '../directives/directives.module';
     ContentTypeComponent,
     SpinnerComponent,
     AutocompleteDropdownComponent,
-    ManageScenariosComponent
+    ManageScenariosComponent,
+    LinkComponent
   ],
   imports: [
     CommonModule,
@@ -127,7 +129,8 @@ import { OhMyDirectivesModule } from '../directives/directives.module';
     UpdateInputDirective,
     ContentTypeComponent,
     SpinnerComponent,
-    AutocompleteDropdownComponent
+    AutocompleteDropdownComponent,
+    LinkComponent
   ],
   providers: [
     Location,

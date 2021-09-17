@@ -1,13 +1,25 @@
-import { Component, Input } from '@angular/core';
-import { IMock, IOhMyShallowMock, statusCode } from '@shared/type';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Store } from '@ngxs/store';
+import { STORAGE_KEY } from '@shared/constants';
+import { IMock, IOhMyShallowMock, IState, IStore, statusCode } from '@shared/type';
+import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'oh-my-mock-label',
   templateUrl: './mock-label.component.html',
-  styleUrls: ['./mock-label.component.scss']
+  styleUrls: ['./mock-label.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MockLabelComponent {
   @Input() mock: IOhMyShallowMock | IMock;
+
+  scenarioName: string;
+
+  constructor(private store: Store) {}
+
+  ngOnChanges(): void {
+    this.scenarioName = this.stateSnapshot.scenarios[this.mock.scenario];
+  }
 
   get code(): statusCode {
     return this.mock?.statusCode;
@@ -15,5 +27,11 @@ export class MockLabelComponent {
 
   get scenario(): string {
     return this.mock?.scenario;
+  }
+
+  get stateSnapshot(): IState {
+    return this.store.selectSnapshot<IState>((state: IStore) => {
+      return state[STORAGE_KEY].content.states[OhMyState.domain];
+    });
   }
 }

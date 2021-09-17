@@ -36,18 +36,17 @@ export class PageMockComponent implements OnInit {
     const dataId = this.activeRoute.snapshot.params.dataId;
     const state = this.storeSnapshotService.stateSnapshot;
 
-    // this.subscription = this.state$.subscribe((state: IState) => {
-    this.data = PageMockComponent.StateUtils.findData(state, { id: dataId });
+    this.subscription = this.state$.subscribe((state: IState) => {
+      this.data = PageMockComponent.StateUtils.findData(state, { id: dataId });
       // this.data = findMocks(state, { id: dataId });
-      // debugger;
-      //       if (!this.data.activeMock && Object.keys(this.data.mocks).length) {
-      //         const mockId = findAutoActiveMock(this.data);
+      // if (!this.data.activeMock && Object.keys(this.data.mocks).length) {
+        // const mockId = findAutoActiveMock(this.data);
 
-      //         // if (mockId) {
-      //         //   this.upsertData({ enabled: true, activeMock: mockId });
-      //         // }
-      //       }
-    // });
+        // if (mockId) {
+        //   this.upsertData({ enabled: true, activeMock: mockId });
+        // }
+      // }
+    });
   }
 
   ngOnDestroy(): void {

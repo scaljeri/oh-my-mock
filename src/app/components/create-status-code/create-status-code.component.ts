@@ -1,6 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import {
   REQUIRED_MSG,
@@ -8,7 +9,8 @@ import {
   STATUS_CODE_INVALID_MSG,
   STORAGE_KEY
 } from '@shared/constants';
-import { IOhMyScenarios, IState, IStore, ohMyScenarioId } from '@shared/type';
+import { IMock, IOhMyMockRule, IOhMyScenarios, IState, IStore, IUpsertMock, ohMyScenarioId } from '@shared/type';
+import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 // TODO: modify validator to check name + code
 // import { statusCodeValidator } from '../../validators/status-code.validator';
@@ -19,14 +21,13 @@ import { OhMyState } from 'src/app/store/state';
   styleUrls: ['./create-status-code.component.scss']
 })
 export class CreateStatusCodeComponent implements OnInit {
+  @Input() mock: IMock;
+
   public error: string;
   public form = new FormGroup({
-    statusCode: new FormControl('', [
-      Validators.required
-      // statusCodeValidator(this.input.existingStatusCodes)
-    ]),
+    statusCode: new FormControl(),
     scenario: new FormControl(),
-    clone: new FormControl('')
+    clone: new FormControl()
   })
 
   public requiredError = REQUIRED_MSG;
@@ -35,24 +36,31 @@ export class CreateStatusCodeComponent implements OnInit {
   public scenarios: Record<ohMyScenarioId, string>;
   public scenarioValues: string[] = [];
 
-  public manageScenarios = false;
+  scenariosUpdated = false;
+  manageScenarios = false;
 
   constructor(
     private dialogRef: MatDialogRef<CreateStatusCodeComponent>,
-    private store: Store,
-    @Inject(MAT_DIALOG_DATA) private input: { existingStatusCodes: string[] }
+    @Inject(MAT_DIALOG_DATA) private state: IState
   ) { }
 
   ngOnInit(): void {
-    this.scenarios = this.stateSnapshot.scenarios;
-    this.scenarioValues = ['aasd ', 'fwef wfe']; //  Object.values(this.stateSnapshot.scenarios);
+    this.scenarios = this.state.scenarios;
+    this.scenarioValues = Object.values(this.scenarios);
+
+    // this.scenarioCtrl.valueChanges.subscribe(value => {
+    // });
   }
 
   onSave(): void {
+    this.codeCtrl.setValidators([Validators.required]);
     this.form.markAllAsTouched();
 
     if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
+      const data = this.form.value;
+      // Convert scenario to ohScenarioId
+      data.scenario = Object.entries(this.scenarios).find(([k, v]) => v === data.scenario)[0];
+      this.dialogRef.close(data);
     }
   }
 
@@ -66,6 +74,12 @@ export class CreateStatusCodeComponent implements OnInit {
 
   onScenariosUpdate(scenarios: IOhMyScenarios): void {
     this.manageScenarios = false;
+
+    if (scenarios !== null) {
+      this.scenariosUpdated = true;
+      this.scenarios = scenarios;
+      this.scenarioValues = Object.values(scenarios);
+    }
   }
 
   get codeCtrl(): FormControl {
@@ -80,9 +94,9 @@ export class CreateStatusCodeComponent implements OnInit {
     return this.form.get('clone') as FormControl;
   }
 
-  get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => {
-      return state[STORAGE_KEY].content.states[OhMyState.domain];
-    });
-  }
+  // get stateSnapshot(): IState {
+  //   return this.store.selectSnapshot<IState>((state: IStore) => {
+  //     return state[STORAGE_KEY].content.states[OhMyState.domain];
+  //   });
+  // }
 }

@@ -1,5 +1,5 @@
 <mat-card *ngIf="data" class="header">
-  <app-mock-header [data]="data" [domain]="domain"></app-mock-header>
+  <app-mock-header  (mockActivated)="onMockActivated($event)" [data]="data" [domain]="domain"></app-mock-header>
 </mat-card>
 
 <mat-card *ngIf="data?.activeMock" class="details">

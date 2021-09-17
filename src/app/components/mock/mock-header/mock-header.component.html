@@ -30,7 +30,7 @@
     </button>
     <button mat-raised-button *ngFor="let mockId of mockIds" (click)="onSelectStatusCode(mockId)"
       [ngClass]="{ 'is-active': mockId == data.activeMock }">
-      <oh-my-mock-label [mock]="getMock(mockId)"></oh-my-mock-label>
+      <oh-my-mock-label [mock]="data.mocks[mockId]"></oh-my-mock-label>
     </button>
     <button mat-raised-button (click)="openAddResponseDialog()">+</button>
   </div>

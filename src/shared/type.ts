@@ -12,6 +12,8 @@ export type ohMyDataId = string;
 export type ohMyMockId = string;
 export type ohMyScenarioId = string;
 
+export type IOhMyScenarios = Record<ohMyScenarioId, string>
+
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
 }
@@ -30,7 +32,6 @@ export interface IOhMyMock extends IOhMyMockStorage {
   content: IOhMyMockContent;
 }
 
-export type IOhMyScenarios = Record<ohMyScenarioId, string>
 
 export interface IState {
   version: string;

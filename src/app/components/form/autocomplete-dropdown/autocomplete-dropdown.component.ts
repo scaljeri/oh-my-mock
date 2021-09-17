@@ -1,17 +1,23 @@
-import { Component, EventEmitter, forwardRef, HostListener, Input, OnInit, Output } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, merge, Observable, Subject } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'oh-my-autocomplete-dropdown',
   templateUrl: './autocomplete-dropdown.component.html',
   styleUrls: ['./autocomplete-dropdown.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => AutocompleteDropdownComponent),
+      multi: true
+    },
+    {
+      provide: NG_VALIDATORS,
+      useExisting: AutocompleteDropdownComponent,
       multi: true
     }
   ]
@@ -20,6 +26,7 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
   @Input() options: string[];
   @Input() label: string;
   @Input() selected: string;
+  @Input() freeInput: string | boolean = true;
   @Input() formControl: FormControl;
 
   @Output() change = new EventEmitter<string>();
@@ -27,29 +34,36 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
 
   internalValue = '';
   ctrl: FormControl;
-  updateTimeoutId: number;
-
   lastEmitted: string;
-  public filteredMethodOptions$: Observable<string[]>;
+  filteredMethodOptions$: Observable<string[]>;
+  private updateSubject = new BehaviorSubject<string>('');
 
   ngOnInit(): void {
     this.ctrl = new FormControl(this.selected);
 
-    this.ctrl.valueChanges.subscribe(v => {
-      console.log('custon ' + v);
-    })
-    this.filteredMethodOptions$ = this.ctrl.valueChanges.pipe(
-      startWith(this.selected),
+    console.log('----------------------------');
+    this.filteredMethodOptions$ = merge(
+      this.ctrl.valueChanges,
+      this.updateSubject
+    ).pipe(
+      // startWith(''),
       map(value => this.filter(value, this.options as string[]))
     );
   }
 
-  onInputBlur(): void {
-    if (!this.options.includes(this.ctrl.value)) {
-      // revert 
-      this.updateTimeoutId = setTimeout(() => {
-        this.ctrl.setValue(this.selected);
-      }, 300);
+  ngOnChanges(): void {
+    if (typeof this.freeInput === 'string') {
+      this.freeInput = this.freeInput === 'true' ? true : false;
+    }
+  }
+
+  onBlur(): void {
+    this.writeValue(this.ctrl.value);
+  }
+
+  onAutoCompleteClose(): void {
+    if (!this.options.includes(this.ctrl.value) && !this.freeInput) { // revert 
+      this.ctrl.setValue(this.selected);
     } else {
       this.selected = this.ctrl.value;
       this.writeValue(this.ctrl.value);
@@ -57,23 +71,8 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
   }
 
   onOptionSelected(event: MatAutocompleteSelectedEvent): void {
-    clearTimeout(this.updateTimeoutId);
-
     this.selected = event.option.value;
     this.writeValue(event.option.value);
-  }
-
-  onInputChange(event): void {
-  }
-
-  private filter(value: string, options: string[]): string[] {
-    if (value === undefined || value === null || value === '') {
-      return this.options;
-    }
-
-    const filterValue = value.toLowerCase();
-
-    return options.filter(option => option.toLowerCase().indexOf(filterValue) === 0);
   }
 
   // 
@@ -86,6 +85,7 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
       this.internalValue = val
       this.onChange(val)
       this.onTouch(val)
+      this.updateSubject.next(val);
     }
   }
 
@@ -103,10 +103,33 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
   }
 
   onFocus(e, t): void {
-    // e.stopPropagation();
-    // setTimeout(() => {
-    //   t.openPanel();
+  }
 
-    // });
+  validate({ value }: FormControl) {
+    if (value === '' || value === null || value === undefined) {
+      return null;
+    }
+
+    if (!this.options || this.options.length === 0) {
+      return { noOptionsAvailable: true };
+    } else if (!this.options.includes(value) && !this.freeInput) {
+      return {
+        invalid: true
+      }
+    }
+
+    return null;
+  }
+
+  private filter(value: string, options: string[]): string[] {
+    console.log('determine options', value);
+    if (value === undefined || value === null || value === '') {
+      console.log('show default ioptiosn list');
+      return this.options;
+    }
+
+    const filterValue = value.toLowerCase();
+
+    return options.filter(option => option.toLowerCase().includes(filterValue));
   }
 }

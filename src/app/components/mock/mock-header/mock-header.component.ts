@@ -1,14 +1,13 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, IMock, IOhMyShallowMock, IState, IStore, ohMyMockId, statusCode } from '@shared/type';
+import { IData, IMock, IOhMyScenarios, IOhMyShallowMock, IState, IStore, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
-import { UpsertData, UpsertMock } from 'src/app/store/actions';
+import { UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { METHODS, STORAGE_KEY } from '@shared/constants';
 import { Store } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
@@ -22,21 +21,23 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
   @Input() domain: string;
 
+  @Output() mockActivated = new EventEmitter();
+
   public statusCode: statusCode;
   public mockIds: ohMyMockId[];
-  public methodCtrl = new FormControl();
+  public methodCtrl = new FormControl(null, { updateOn: 'blur' });
   public filteredMethodOptions: Observable<string[]>;
-  public typeCtrl = new FormControl();
+  public typeCtrl = new FormControl(null, { updateOn: 'blur' });
   public filteredTypeOptions: Observable<string[]>;
-  public urlCtrl = new FormControl();
+  public urlCtrl = new FormControl(null, { updateOn: 'blur' });
 
   public oldResponses: string[];
 
   public availableMethods = METHODS;
+  scenarios: IOhMyScenarios;
 
   @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
-    new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain)
-  @Dispatch() upsertData = (data: IData) => new UpsertData({ ...data, id: this.data.id }, this.domain);
+    new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
 
   constructor(public dialog: MatDialog, private store: Store) { }
 
@@ -49,13 +50,15 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
     this.methodCtrl.valueChanges.subscribe(val => {
       const method = (val || '').toUpperCase();
-      this.upsertData({ ...this.data, method });
+      if (method !== this.data.method) {
+        // this.upsertData({ ...this.data, method });
+      }
     });
 
     this.typeCtrl.valueChanges.subscribe(type => {
       if (type !== this.data.type) {
 
-        this.upsertData({ ...this.data, type });
+        // this.upsertData({ ...this.data, type });
       }
     });
 
@@ -75,13 +78,15 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onUrlUpdate(url: string): void {
-    this.upsertData({ ...this.data, url });
+    // this.upsertData({ ...this.data, url });
   }
 
   onSelectStatusCode(mockId: ohMyMockId | void): void {
     if (mockId) {
+      this.mockActivated.emit(mockId);
       // this.upsertData({ activeMock: mockId, enabled: true })
     } else {
+      this.mockActivated.emit();
       // this.upsertData({ enabled: false })
     }
   }
@@ -90,17 +95,20 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
       width: '280px',
       height: '380px',
-      data: { existingStatusCodes: this.mockIds }
+      data: this.stateSnapshot
     });
 
-    dialogRef.afterClosed().subscribe((newMock: { statusCode: statusCode, clone: boolean, name: string }) => {
-      if (newMock) {
-        const clone = newMock.clone;
-        delete newMock.clone;
-        this.oldResponses = Object.keys(this.data.mocks);
-
-        this.upsertMock(newMock, clone);
+    dialogRef.afterClosed().subscribe((update: IUpsertMock) => {
+      if (!update) {
+        return;
       }
+
+      const clone = update.clone as boolean; // only boolean supported right now
+      delete update.clone;
+
+      this.oldResponses = Object.keys(this.data.mocks); // ??
+
+      this.upsertMock(update, clone);
     });
   }
 
@@ -121,7 +129,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   getMock(id: ohMyMockId): IOhMyShallowMock {
-   
+
     return this.data.mocks[id];
   }
 

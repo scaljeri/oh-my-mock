@@ -11,7 +11,7 @@ import {
   DeleteData,
   DeleteMock,
   InitState,
-  LoadData,
+  LoadMock,
   ResetState,
   Toggle,
   UpsertData,
@@ -206,6 +206,7 @@ export class OhMyState {
       method: payload.method,
       requestType: payload.requestType
     });
+
     state.data = { ...state.data, [data.id]: data };
 
     if (mock.id) {
@@ -263,12 +264,14 @@ export class OhMyState {
   }
 
   // Scenarios are per IState and can be used in every IMock (referenced by scanarioId)
+  // TODO: Need Storage action here too
   @Action(UpsertScenarios)
   async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Record<ohMyScenarioId, string>, domain?: string }) {
     const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
     state.scenarios = OhMyState.ScenarioUtils.add(state.scenarios, payload);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
+    await OhMyState.StorageUtils.set(state.domain, state);
 
     ctx.setState(store);
   }
@@ -351,5 +354,18 @@ export class OhMyState {
     const content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
 
     ctx.setState({ ...store, content });
+  }
+
+  @Action(LoadMock)
+  async loadMock(ctx: StateContext<IOhMyMock>, { payload }: { payload: { id: ohMyMockId } & Partial<IOhMyShallowMock> }) {
+    const store = OhMyState.getStore(ctx);
+    store.content.mocks = { ...store.content.mocks };
+
+    if (!store.content.mocks[payload.id]) {
+      store.content.mocks[payload.id] = await OhMyState.StorageUtils.get<IMock>(payload.id) ||
+        OhMyState.MockUtils.init(payload);
+    }
+
+    ctx.setState(store)
   }
 }

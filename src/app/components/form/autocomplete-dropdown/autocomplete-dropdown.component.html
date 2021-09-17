@@ -1,14 +1,14 @@
 <mat-form-field class="method-select">
     <mat-label>{{label}}</mat-label>
     <input 
-        (blur)="onInputBlur()" 
-        (input)="onInputChange($event)" 
+        (blur)="onBlur()"
         (focus)="onFocus($event, trigger)"
         type="text" matInput 
         [formControl]="ctrl"
         #trigger="matAutocompleteTrigger" 
         [matAutocomplete]="auto">
     <mat-autocomplete  autoActiveFirstOption #auto="matAutocomplete"
+        (closed)="onAutoCompleteClose()"
         (optionSelected)="onOptionSelected($event)">
         <mat-option *ngFor="let option of filteredMethodOptions$ | async" [value]="option">
             {{option}}

@@ -2,7 +2,7 @@
 <ol>
     <li *ngFor="let id of scenarioIds empty noScenarios">
         <mat-form-field class="full-width">
-            <input matInput [value]="scenariosCopy[id]">
+            <input #input matInput [(ngModel)]="scenariosCopy[id]">
         </mat-form-field>
         <button (click)="onDelete(id)" mat-mini-fab>
             <mat-icon>delete</mat-icon>
@@ -11,10 +11,11 @@
 </ol>
 <div class="actions">
     <button type="button" mat-button (click)="onClose()">Cancel</button>
-    <button (click)="onCreate()" mat-mini-fab color="secondary">+</button>
+    <button type="button" class="add-scenario" (click)="onCreate()" mat-mini-fab color="secondary">+</button>
     <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
 </div>
 
 <ng-template #noScenarios>
-    No scenarios!
+    <p>No scenarios!</p>
+    <p>Click the + button to create a scenario</p>
 </ng-template>

@@ -7,14 +7,19 @@ import {
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { DeleteMock, UpsertMock } from 'src/app/store/actions';
-import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId } from '@shared/type';
+import { DeleteMock, LoadMock, UpsertData, UpsertMock } from 'src/app/store/actions';
+import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock } from '@shared/type';
 import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngneat/hot-toast';
+import { Select, Store } from '@ngxs/store';
+import { OhMyState } from 'src/app/store/state';
+import { UntilDestroy } from '@ngneat/until-destroy';
+import { STORAGE_KEY } from '@shared/constants';
 
+// @UntilDestroy({ arrayName: 'subscriptions' }
 @Component({
   selector: 'oh-my-mock',
   templateUrl: './mock.component.html',
@@ -25,11 +30,15 @@ export class MockComponent implements OnChanges {
   @Input() domain: string;
   mock: IMock;
 
+  // @Select(OhMyState.mock) state$: Observable<IState>;
+
+  @Dispatch() loadMock = (smock: IOhMyShallowMock) => new LoadMock(smock);
   @Dispatch() upsertMock = (mock: Partial<IMock>) =>
     new UpsertMock({
       id: this.data.id,
       mock
     }, this.domain);
+  @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data);
   @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) =>
     new DeleteMock({ id, mockId });
 
@@ -37,13 +46,29 @@ export class MockComponent implements OnChanges {
   private delaySubscription: Subscription;
   private activeMockId: ohMyMockId;
 
+
+  activeMock$: Observable<IMock>;
+
   @ViewChild('response') responseRef: CodeEditComponent;
   @ViewChild('headers') headersRef: CodeEditComponent;
 
-  constructor(public dialog: MatDialog, private toast: HotToastService, private cdr: ChangeDetectorRef) { }
+  constructor(
+    private store: Store,
+    public dialog: MatDialog,
+    private toast: HotToastService,
+    private cdr: ChangeDetectorRef) {
+    this.activeMock$ = this.store.select(state => {
+      return this.activeMockId ? state[STORAGE_KEY].content.mocks[this.activeMockId] : null
+    });
+  }
 
   ngOnChanges(): void {
-    // this.mock = this.data.mocks[this.data.activeMock];
+    this.activeMock$.subscribe(mock => {
+      console.log('new moc', mock);
+      this.mock = mock;
+    });
+
+    this.onMockActivated(this.data.activeMock, true);
 
     setTimeout(() => {
       this.responseRef?.update();
@@ -94,6 +119,21 @@ export class MockComponent implements OnChanges {
     setTimeout(() => {
       this.headersRef.update();
     });
+  }
+
+  onMockActivated(mockId: ohMyMockId, isInit = false) {
+    this.activeMockId = mockId;
+
+    if (!mockId) {
+      this.mock = null;
+      return this.upsertData({ id: this.data.id, enabled: false });
+    } 
+    
+    if (mockId !== this.data.activeMock || !this.data.enabled && !isInit) {
+      this.upsertData({ id: this.data.id, enabled: true, activeMock: mockId });
+    } 
+
+    this.loadMock(this.data.mocks[mockId]);
   }
 
   openShowMockCode(): void {
