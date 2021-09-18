@@ -37,23 +37,31 @@ export class MockDetailsComponent implements OnChanges {
       mock: { id: this.mock.id, ...update }
     }, this.domain);
 
+  ngOnInit(): void {
+    this.form = new FormGroup({
+      delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
+      statusCode: new FormControl(this.mock.statusCode, {
+        validators: [Validators.required], updateOn: 'blur'
+      }),
+      scenario: new FormControl(this.mock.scenario, { updateOn: 'blur' })
+    });
+
+    this.form.valueChanges.subscribe(values => {
+      const update: Partial<IMock> = { scenario: values.scenario, delay: values.delay || 0 }
+      if (!this.statusCodeCtrl.hasError('required')) {
+        update.statusCode = values.statusCode;
+      }
+
+      this.upsertMock(update);
+    });
+  }
+
   ngOnChanges(): void {
-    // this.form = new FormGroup({
-    //   delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
-    //   statusCode: new FormControl(this.mock.statusCode, {
-    //     validators: [Validators.required], updateOn: 'blur'
-    //   }),
-    //   scenario: new FormControl(this.mock.scenario, { updateOn: 'blur' })
-    // });
-
-    // this.form.valueChanges.subscribe(values => {
-    //   const update: Partial<IMock> = { scenario: values.scenario, delay: values.delay || 0 }
-    //   if (!this.statusCodeCtrl.hasError('required')) {
-    //     update.statusCode = values.statusCode;
-    //   }
-
-    //   this.upsertMock(update);
-    // });
+    this.form?.patchValue({
+      delay: this.mock.delay,
+      statusCode: this.mock.statusCode,
+      scenario: this.mock.scenario
+    }, {  emitEvent: false });
   }
 
   onContentTypeUpdate(contentType: string): void {

@@ -361,7 +361,9 @@ export class OhMyState {
     const store = OhMyState.getStore(ctx);
     store.content.mocks = { ...store.content.mocks };
 
-    if (!store.content.mocks[payload.id]) {
+    if (store.content.mocks[payload.id]) {
+      store.content.mocks[payload.id] = { ...store.content.mocks[payload.id] };
+    } else  {
       store.content.mocks[payload.id] = await OhMyState.StorageUtils.get<IMock>(payload.id) ||
         OhMyState.MockUtils.init(payload);
     }

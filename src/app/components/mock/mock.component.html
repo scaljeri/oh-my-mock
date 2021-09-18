@@ -1,8 +1,8 @@
 <mat-card *ngIf="data" class="header">
-  <app-mock-header  (mockActivated)="onMockActivated($event)" [data]="data" [domain]="domain"></app-mock-header>
+  <app-mock-header (mockActivated)="onMockActivated($event)" [data]="data" [domain]="domain"></app-mock-header>
 </mat-card>
 
-<mat-card *ngIf="data?.activeMock" class="details">
+<mat-card *ngIf="data?.activeMock && data?.enabled && mock; else nodata" class="details">
   <section class="mock-settings">
     <oh-my-mock-details [mock]="mock" [domain]="domain" [dataId]="data.id"></oh-my-mock-details>
     <div class="mock-actions">
@@ -22,7 +22,8 @@
     </div>
   </section>
 
-  <!-- <section *ngIf="!dialogIsOpen" class="response">
+  <!--
+  <section *ngIf="!dialogIsOpen" class="response">
     <header>
       <h2>Response</h2>
     </header>
@@ -54,3 +55,16 @@
     </div>
   </section> -->
 </mat-card>
+
+<ng-template #nodata>
+  <section class="no-data">
+    <p>This mock is not active.</p>
+    <p>To activate and serve mock data for <strong>{{data?.url}} </strong>
+      <span *ngIf="data?.activeMock">select a response or </span>
+    </p>
+    <ol>
+      <li>Create a response with the + button or</li>
+      <li>just make the API in your app, because OhMyMock will automatically cache server responses (make sure OhMyMock is active)</li>
+    </ol>
+  </section>
+</ng-template>

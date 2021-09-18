@@ -102,3 +102,13 @@ oh-my-code-edit {
     align-self: flex-end;
   }
 }
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  padding: $spacer-4;
+
+  ol {
+    max-width: 500px;
+  }
+}

@@ -5,7 +5,7 @@ import { IData, IMock, IOhMyScenarios, IOhMyShallowMock, IState, IStore, IUpsert
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
-import { UpsertMock } from 'src/app/store/actions';
+import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { METHODS, STORAGE_KEY } from '@shared/constants';
@@ -38,27 +38,28 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
     new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
+  @Dispatch() upsertData = (data: Partial<IData>) =>
+    new UpsertData({...this.data, ...data}, this.domain);
 
   constructor(public dialog: MatDialog, private store: Store) { }
 
   ngOnInit(): void {
-    setTimeout(() => {
-      if (!this.data.activeMock && Object.keys(this.data.mocks).length > 0) {
-        // this.onSelectStatusCode(findAutoActiveMock(this.data));
-      }
-    });
+    // setTimeout(() => {
+    //   if (!this.data.activeMock && Object.keys(this.data.mocks).length > 0) {
+    //     // this.onSelectStatusCode(findAutoActiveMock(this.data));
+    //   }
+    // });
 
     this.methodCtrl.valueChanges.subscribe(val => {
       const method = (val || '').toUpperCase();
       if (method !== this.data.method) {
-        // this.upsertData({ ...this.data, method });
+        this.upsertData({ method });
       }
     });
 
     this.typeCtrl.valueChanges.subscribe(type => {
       if (type !== this.data.type) {
-
-        // this.upsertData({ ...this.data, type });
+        this.upsertData({ type });
       }
     });
 
@@ -78,7 +79,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onUrlUpdate(url: string): void {
-    // this.upsertData({ ...this.data, url });
+    this.upsertData({ url });
   }
 
   onSelectStatusCode(mockId: ohMyMockId | void): void {

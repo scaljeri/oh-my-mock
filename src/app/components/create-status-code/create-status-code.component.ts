@@ -59,7 +59,7 @@ export class CreateStatusCodeComponent implements OnInit {
     if (this.form.valid) {
       const data = this.form.value;
       // Convert scenario to ohScenarioId
-      data.scenario = Object.entries(this.scenarios).find(([k, v]) => v === data.scenario)[0];
+      data.scenario = Object.entries(this.scenarios).find(([k, v]) => v === data.scenario)?.[0];
       this.dialogRef.close(data);
     }
   }

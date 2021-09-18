@@ -19,7 +19,7 @@ import { OhMyState } from 'src/app/store/state';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { STORAGE_KEY } from '@shared/constants';
 
-// @UntilDestroy({ arrayName: 'subscriptions' }
+@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'oh-my-mock',
   templateUrl: './mock.component.html',
@@ -43,9 +43,9 @@ export class MockComponent implements OnChanges {
     new DeleteMock({ id, mockId });
 
   public dialogIsOpen = false;
-  private delaySubscription: Subscription;
   private activeMockId: ohMyMockId;
 
+  subscriptions: Subscription[] = [];
 
   activeMock$: Observable<IMock>;
 
@@ -58,26 +58,39 @@ export class MockComponent implements OnChanges {
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) {
     this.activeMock$ = this.store.select(state => {
-      return this.activeMockId ? state[STORAGE_KEY].content.mocks[this.activeMockId] : null
+      return this.activeMockId ? state[STORAGE_KEY].content.mocks[this.activeMockId] : null;
     });
   }
 
-  ngOnChanges(): void {
-    this.activeMock$.subscribe(mock => {
+  ngOnInit(): void {
+    this.subscriptions.push(this.activeMock$.subscribe(mock => {
       console.log('new moc', mock);
       this.mock = mock;
-    });
+    }));
+  }
 
-    this.onMockActivated(this.data.activeMock, true);
+  ngOnChanges(): void {
+    this.activeMockId = this.data.activeMock;
 
-    setTimeout(() => {
-      this.responseRef?.update();
-      this.headersRef?.update();
-    });
-
-    if (this.delaySubscription) {
-      this.delaySubscription.unsubscribe();
+    if (this.activeMockId && this.data.enabled) {
+      this.loadMock(this.data.mocks[this.activeMockId]);
     }
+
+    // this.activeMock$.subscribe(mock => {
+    //   console.log('new moc', mock);
+    //   this.mock = mock;
+    // });
+
+    // this.onMockActivated(this.data.activeMock, true);
+
+    // setTimeout(() => {
+    //   this.responseRef?.update();
+    //   this.headersRef?.update();
+    // });
+
+    // if (this.delaySubscription) {
+    //   this.delaySubscription.unsubscribe();
+    // }
   }
 
   onDelete(): void {
