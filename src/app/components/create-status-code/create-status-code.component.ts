@@ -57,9 +57,17 @@ export class CreateStatusCodeComponent implements OnInit {
     this.form.markAllAsTouched();
 
     if (this.form.valid) {
-      const data = this.form.value;
-      // Convert scenario to ohScenarioId
-      data.scenario = Object.entries(this.scenarios).find(([k, v]) => v === data.scenario)?.[0];
+      const data = {
+        mock: { 
+          statusCode: this.form.value.statusCode,
+          scenario: Object.entries(this.scenarios).find(([k, v]) => v === this.form.value.scenario)?.[0] },
+        clone: !!this.form.value.clone
+      };
+
+      if (!data.mock.scenario) {
+        delete data.mock.scenario;
+      }
+
       this.dialogRef.close(data);
     }
   }

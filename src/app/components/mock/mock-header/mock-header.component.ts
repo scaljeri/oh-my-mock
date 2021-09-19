@@ -36,7 +36,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   public availableMethods = METHODS;
   scenarios: IOhMyScenarios;
 
-  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
+  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) => 
     new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
   @Dispatch() upsertData = (data: Partial<IData>) =>
     new UpsertData({...this.data, ...data}, this.domain);
@@ -109,7 +109,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
       this.oldResponses = Object.keys(this.data.mocks); // ??
 
-      this.upsertMock(update, clone);
+      this.upsertMock(update.mock, clone);
     });
   }
 

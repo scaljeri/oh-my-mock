@@ -37,6 +37,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
   lastEmitted: string;
   filteredMethodOptions$: Observable<string[]>;
   private updateSubject = new BehaviorSubject<string>('');
+  private autoCompleteActive = false;
 
   ngAfterViewInit(): void {
     this.filteredMethodOptions$ = merge(
@@ -59,7 +60,14 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
   }
 
   onBlur(): void {
-    this.writeValue(this.ctrl.value);
+    if (!this.autoCompleteActive && this.ctrl.value !== this.internalValue) {
+      this.internalValue = this.ctrl.value;
+      this.writeValue(this.ctrl.value);
+    }
+  }
+
+  onAutoCompleteOpened(): void {
+    this.autoCompleteActive = true;
   }
 
   onAutoCompleteClose(): void {
@@ -67,8 +75,11 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
       this.ctrl.setValue(this.selected);
     } else {
       this.selected = this.ctrl.value;
-      this.writeValue(this.ctrl.value);
+      this.onChange(this.selected);
+      this.onTouch(this.selected);
     }
+
+    this.internalValue = this.selected;
   }
 
   onOptionSelected(event: MatAutocompleteSelectedEvent): void {
@@ -80,19 +91,11 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
   onChange: any = () => { }
   onTouch: any = () => { }
 
-  set value(val) {  // this value is updated by programmatic changes if( val !== undefined && this.val !== val){
-    if (val !== this.internalValue) {
-      this.ctrl.setValue(val);
-      this.internalValue = val
-      this.onChange(val)
-      this.onTouch(val)
-      this.updateSubject.next(val);
-    }
-  }
-
   // this method sets the value programmatically
   writeValue(value: any) {
-    this.value = value;
+    this.internalValue = value;
+    this.ctrl.setValue(value);
+    this.updateSubject.next(value);
   }
   // upon UI element value changes, this method gets triggered
   registerOnChange(fn: any) {

@@ -8,6 +8,7 @@
         #trigger="matAutocompleteTrigger" 
         [matAutocomplete]="auto">
     <mat-autocomplete  autoActiveFirstOption #auto="matAutocomplete"
+        (opened)="onAutoCompleteOpened()"
         (closed)="onAutoCompleteClose()"
         (optionSelected)="onOptionSelected($event)">
         <mat-option *ngFor="let option of filteredMethodOptions$ | async" [value]="option">
