@@ -1,9 +1,12 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Inject, Input, Output, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Inject, Input, Optional, Output, QueryList, ViewChildren } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { domain, IOhMyScenarios, ohMyScenarioId } from '@shared/type';
+import { Store } from '@ngxs/store';
+import { STORAGE_KEY } from '@shared/constants';
+import { domain, IOhMyScenarios, IStore, ohMyScenarioId } from '@shared/type';
 import { uniqueId } from '@shared/utils/unique-id';
 import { UpsertScenarios } from 'src/app/store/actions';
+import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'oh-my-manage-scenarios',
@@ -21,43 +24,46 @@ export class ManageScenariosComponent implements AfterViewInit {
     return new UpsertScenarios(scenarios, this.domain);
   }
 
-  scenarioIds: ohMyScenarioId[];
-  scenariosCopy: IOhMyScenarios;
+  scenarioIds: ohMyScenarioId[] = [];
+  scenariosObj: IOhMyScenarios = {};
 
   @ViewChildren('input') inputsEl: QueryList<ElementRef>;
 
   constructor(
-    private dialogRef: MatDialogRef<ManageScenariosComponent>,
-    @Inject(MAT_DIALOG_DATA) private dialogScenarios: { scenarios: IOhMyScenarios, domain: domain },
+    private store: Store,
+    @Optional() private dialogRef: MatDialogRef<ManageScenariosComponent>,
+    @Inject(MAT_DIALOG_DATA) private dialogScenarios: { scenarios?: IOhMyScenarios, domain?: domain },
     private cdr: ChangeDetectorRef) { }
 
   ngAfterViewInit(): void {
-    this.domain ??= this.dialogScenarios.domain;
-    this.scenariosCopy = { ... this.scenarios || this.dialogScenarios?.scenarios };
-    this.scenarioIds = Object.keys(this.scenariosCopy || {});
+    this.domain ??= this.dialogScenarios?.domain || OhMyState.domain;
+    this.scenarios ??= this.dialogScenarios?.scenarios || this.scenariosSnapshot || {};
+
+    if (this.scenarios) {
+      this.scenariosObj = { ... this.scenarios };
+      this.scenarioIds = Object.keys(this.scenariosObj);
+    }
 
     this.cdr.detectChanges();
   }
 
   onClose(): void {
     this.update.emit(null);
+    this.dialogRef?.close(null);
   }
 
   onSave(): void {
-    this.updateScenarios(this.scenariosCopy);
+    this.updateScenarios(this.scenariosObj);
 
-    if (this.scenarios) {
-      this.update.emit(this.scenariosCopy);
-    } else {
-      this.dialogRef.close(this.scenariosCopy);
-    }
+    this.dialogRef?.close(this.scenariosObj);
+    this.update.emit(this.scenariosObj);
   }
 
   onCreate(): void {
     const id = uniqueId();
 
     this.scenarioIds = [...this.scenarioIds, id];
-    this.scenariosCopy[id] = '';
+    this.scenariosObj[id] = '';
 
     setTimeout(() => {
       this.inputsEl.last.nativeElement.focus();
@@ -69,6 +75,12 @@ export class ManageScenariosComponent implements AfterViewInit {
 
   onDelete(id: ohMyScenarioId): void {
     this.scenarioIds = this.scenarioIds.filter(sid => sid !== id);
-    delete this.scenariosCopy[id];
+    delete this.scenariosObj[id];
+  }
+
+  get scenariosSnapshot(): IOhMyScenarios {
+    return this.store.selectSnapshot<IOhMyScenarios>((state: IStore) => {
+      return state[STORAGE_KEY].content.states[this.domain]?.scenarios;
+    });
   }
 }

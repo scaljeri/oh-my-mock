@@ -60,6 +60,7 @@ export class MockComponent implements OnChanges {
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) {
     this.activeMock$ = this.store.select(state => {
+      // TODO: is `unsubscribe` needed?
       return this.activeMockId ? state[STORAGE_KEY].content.mocks[this.activeMockId] : null;
     });
   }

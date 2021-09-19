@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { BehaviorSubject, merge, Observable, Subject } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { BehaviorSubject, merge, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'oh-my-autocomplete-dropdown',
@@ -22,7 +22,7 @@ import { map, startWith } from 'rxjs/operators';
     }
   ]
 })
-export class AutocompleteDropdownComponent implements OnInit, ControlValueAccessor {
+export class AutocompleteDropdownComponent implements AfterViewInit, ControlValueAccessor {
   @Input() options: string[];
   @Input() label: string;
   @Input() selected: string;
@@ -33,15 +33,12 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
   @Output() blur = new EventEmitter<string>();
 
   internalValue = '';
-  ctrl: FormControl;
+  _ctrl: FormControl;
   lastEmitted: string;
   filteredMethodOptions$: Observable<string[]>;
   private updateSubject = new BehaviorSubject<string>('');
 
-  ngOnInit(): void {
-    this.ctrl = new FormControl(this.selected);
-
-    console.log('----------------------------');
+  ngAfterViewInit(): void {
     this.filteredMethodOptions$ = merge(
       this.ctrl.valueChanges,
       this.updateSubject
@@ -54,6 +51,10 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
   ngOnChanges(): void {
     if (typeof this.freeInput === 'string') {
       this.freeInput = this.freeInput === 'true' ? true : false;
+    }
+
+    if (this.ctrl) {
+      this.updateSubject.next(this.ctrl.value);
     }
   }
 
@@ -121,15 +122,21 @@ export class AutocompleteDropdownComponent implements OnInit, ControlValueAccess
     return null;
   }
 
-  private filter(value: string, options: string[]): string[] {
-    console.log('determine options', value);
+  private filter(value: string, options: string[] = []): string[] {
     if (value === undefined || value === null || value === '') {
-      console.log('show default ioptiosn list');
       return this.options;
     }
 
     const filterValue = value.toLowerCase();
 
     return options.filter(option => option.toLowerCase().includes(filterValue));
+  }
+
+  get ctrl(): FormControl {
+    if (!this._ctrl) {
+      this._ctrl = new FormControl(this.selected);
+    }
+
+    return this._ctrl;
   }
 }

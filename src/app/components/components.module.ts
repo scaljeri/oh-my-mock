@@ -56,6 +56,7 @@ import { ManageScenariosComponent } from './manage-scenarios/manage-scenarios.co
 
 import { OhMyDirectivesModule } from '../directives/directives.module';
 import { LinkComponent } from './link/link.component';
+import { ScenarioDropdownComponent } from './form/scenario-dropdown/scenario-dropdown.component';
 
 @NgModule({
   declarations: [
@@ -85,7 +86,8 @@ import { LinkComponent } from './link/link.component';
     SpinnerComponent,
     AutocompleteDropdownComponent,
     ManageScenariosComponent,
-    LinkComponent
+    LinkComponent,
+    ScenarioDropdownComponent
   ],
   imports: [
     CommonModule,
@@ -130,7 +132,8 @@ import { LinkComponent } from './link/link.component';
     ContentTypeComponent,
     SpinnerComponent,
     AutocompleteDropdownComponent,
-    LinkComponent
+    LinkComponent,
+    ScenarioDropdownComponent
   ],
   providers: [
     Location,

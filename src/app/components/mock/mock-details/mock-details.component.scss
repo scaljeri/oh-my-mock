@@ -1,4 +1,4 @@
-@import 'mixins';
+@import "mixins";
 
 :host {
   align-items: flex-start;
@@ -9,9 +9,8 @@
     font-size: $oh-font-size;
   }
 
-  div+div {
+  div + div {
     margin: $spacer-4 0 0 $spacer-4 * 2;
-
   }
 }
 
@@ -41,5 +40,15 @@
   oh-my-content-type {
     align-self: center;
     margin-top: $spacer-2;
+  }
+}
+
+.scenario-dropdown {
+  display: flex;
+
+  p {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
   }
 }

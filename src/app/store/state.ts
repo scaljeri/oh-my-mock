@@ -53,6 +53,7 @@ import { APP_VERSION } from '../tokens';
 import { MockUtils } from '@shared/utils/mock';
 import { ScenarioUtils } from '@shared/utils/scenario';
 import { contentType } from 'mime-types';
+import { timestamp } from '@shared/utils/timestamp';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
@@ -196,11 +197,13 @@ export class OhMyState {
   async upsertMock(ctx: StateContext<IOhMyMock>, action: UpsertMock | UpdateMockStorage) {
     const { payload, domain } = action;
 
+    debugger;
+
     let store = OhMyState.getStore(ctx);
     let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
-    let mock = payload.mock;
-    let sourceMock = {};
+    let mock = { ...payload.mock };
+    // let sourceMock = {};
     const data = OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init({
       url: payload.url,
       method: payload.method,
@@ -209,19 +212,19 @@ export class OhMyState {
 
     state.data = { ...state.data, [data.id]: data };
 
+    let sourceMock: IMock;
     if (mock.id) {
       sourceMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
-      mock = OhMyState.MockUtils.clone(sourceMock, mock);
+      mock.modifiedOn = timestamp();
     } else { // new
       sourceMock = payload.clone ?
-        (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) : null;
+        (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) : 
+        OhMyState.MockUtils.init();
     }
-
     if (sourceMock) {
-      store.content = { ...store.content, mocks: { ...store.content.mocks, [data.activeMock]: sourceMock as IMock } };
+      mock = OhMyState.MockUtils.clone(sourceMock, mock);
+      store.content = { ...store.content, mocks: { ...store.content.mocks, [data.activeMock]: mock as IMock } };
     }
-
-    mock = OhMyState.MockUtils.init(sourceMock || {}, mock);
 
     if (payload.makeActive) {
       data.activeMock = mock.id;
@@ -270,8 +273,9 @@ export class OhMyState {
   async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Record<ohMyScenarioId, string>, domain?: string }) {
     const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
-    state.scenarios = OhMyState.ScenarioUtils.add(state.scenarios, payload);
+    state.scenarios = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
+
     await OhMyState.StorageUtils.set(state.domain, state);
 
     ctx.setState(store);

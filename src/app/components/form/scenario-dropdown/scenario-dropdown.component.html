@@ -1,0 +1,6 @@
+<oh-my-autocomplete-dropdown [options]="options" [formControl]="ctrl" freeInput="false" label="Scenario">
+</oh-my-autocomplete-dropdown>
+
+<mat-error *ngIf="ctrl.hasError('noOptionsAvailable')">There are no scenarios available!<br />You can create new
+    scenarios below with the `manage scenarios` link!</mat-error>
+<mat-error *ngIf="ctrl.hasError('invalid')">This scenario does not exist</mat-error>

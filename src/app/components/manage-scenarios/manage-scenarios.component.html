@@ -2,7 +2,7 @@
 <ol>
     <li *ngFor="let id of scenarioIds empty noScenarios">
         <mat-form-field class="full-width">
-            <input #input matInput [(ngModel)]="scenariosCopy[id]">
+            <input #input matInput [(ngModel)]="scenariosObj[id]">
         </mat-form-field>
         <button (click)="onDelete(id)" mat-mini-fab>
             <mat-icon>delete</mat-icon>

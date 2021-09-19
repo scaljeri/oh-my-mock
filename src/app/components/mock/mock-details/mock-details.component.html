@@ -6,15 +6,18 @@
       <mat-error> {{requiredMsg}} </mat-error>
     </mat-form-field>
   </p>
-  <p>
-    <mat-form-field>
-      <mat-label>Scenario</mat-label>
-      <input matInput [formControl]="scenarioCtrl">
-    </mat-form-field>
+  <div class="scenario-dropdown">
+    <p>
+        <oh-my-scenario-dropdown [formControl]="scenarioCtrl"></oh-my-scenario-dropdown>
+      <!-- <mat-form-field> -->
+        <!-- <mat-label>Scenario</mat-label> -->
+        <!-- <input matInput [formControl]="scenarioCtrl"> -->
+      <!-- </mat-form-field> -->
+      <oh-my-link (click)="onManageScenarios()">Manage scenarios</oh-my-link>
+    </p>
     <mat-icon color="primary" matTooltip="With scenario's you can distinguish mocks with the same status code and mocks
-        can be activated by scenario (TODO).">info
-    </mat-icon>
-  </p>
+        can be activated by scenario.">info</mat-icon>
+  </div>
   <p>
     <mat-form-field class="example-full-width">
       <mat-label>Response delay (ms)</mat-label>
@@ -24,8 +27,8 @@
 </form>
 <div class="details">
   <p class="vertical">
-    <oh-my-content-type [contentType]="mock.headersMock['content-type']"
-      (update)="onContentTypeUpdate($event)"></oh-my-content-type>
+    <oh-my-content-type [contentType]="mock.headersMock['content-type']" (update)="onContentTypeUpdate($event)">
+    </oh-my-content-type>
   </p>
   <p><span class="label">Created:</span><span class="value">{{mock.createdOn | date:'d/M/YYYY, H:mm'}}</span></p>
   <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn | date:'d/M/YYYY, H:mm'}}</span></p>

@@ -1,10 +1,13 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IMock, ohMyDataId } from '@shared/type';
+import { IMock, IOhMyScenarios, ohMyDataId, ohMyScenarioId } from '@shared/type';
 import { Observable } from 'rxjs';
-import { UpsertMock } from 'src/app/store/actions';
+import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
+import { AutocompleteDropdownComponent } from '../../form/autocomplete-dropdown/autocomplete-dropdown.component';
+import { ManageScenariosComponent } from '../../manage-scenarios/manage-scenarios.component';
 
 @Component({
   selector: 'oh-my-mock-details',
@@ -37,13 +40,18 @@ export class MockDetailsComponent implements OnChanges {
       mock: { id: this.mock.id, ...update }
     }, this.domain);
 
+  @Dispatch() updateScenarios = (scenarios: IOhMyScenarios) => new UpsertScenarios(scenarios, this.domain);
+
+  constructor(public dialog: MatDialog) {}
+
   ngOnInit(): void {
+    debugger;
     this.form = new FormGroup({
       delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
       statusCode: new FormControl(this.mock.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      scenario: new FormControl(this.mock.scenario, { updateOn: 'blur' })
+      scenario: new FormControl(this.mock.scenario)
     });
 
     this.form.valueChanges.subscribe(values => {
@@ -68,6 +76,20 @@ export class MockDetailsComponent implements OnChanges {
 	  if (contentType !== this.mock.headersMock['content-type']) {
     		this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
 	  }
+  }
+
+  onManageScenarios(): void {
+    const dialogRef = this.dialog.open(ManageScenariosComponent, {
+      width: '280px',
+      height: '380px'
+    });
+
+    dialogRef.afterClosed().subscribe((scenarios: IOhMyScenarios) => {
+      if (scenarios !== null) {
+        console.log('received', scenarios);
+        this.updateScenarios(scenarios);
+      }
+    });
   }
 
   get scenarioCtrl(): FormControl {
