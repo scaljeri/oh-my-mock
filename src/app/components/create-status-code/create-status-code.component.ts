@@ -25,7 +25,7 @@ export class CreateStatusCodeComponent implements OnInit {
 
   public error: string;
   public form = new FormGroup({
-    statusCode: new FormControl(),
+    statusCode: new FormControl('', Validators.required),
     scenario: new FormControl(),
     clone: new FormControl()
   })

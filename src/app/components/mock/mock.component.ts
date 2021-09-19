@@ -36,11 +36,13 @@ export class MockComponent implements OnChanges {
   @Dispatch() upsertMock = (mock: Partial<IMock>) =>
     new UpsertMock({
       id: this.data.id,
+      makeActive: true,
       mock
     }, this.domain);
   @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data);
-  @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) =>
-    new DeleteMock({ id, mockId });
+  @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) => {
+    return new DeleteMock({ id, mockId });
+  }
 
   public dialogIsOpen = false;
   private activeMockId: ohMyMockId;
@@ -71,6 +73,7 @@ export class MockComponent implements OnChanges {
 
   ngOnChanges(): void {
     this.activeMockId = this.data.activeMock;
+    this.mock = null;
 
     if (this.activeMockId && this.data.enabled) {
       this.loadMock(this.data.mocks[this.activeMockId]);

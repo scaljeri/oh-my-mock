@@ -73,3 +73,5 @@ export class AppModule {
   }
 
 }
+
+chrome.storage.local.get(null, function(data) {console.log('ALL DATA: ', data);})

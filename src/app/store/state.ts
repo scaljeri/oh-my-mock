@@ -225,6 +225,7 @@ export class OhMyState {
 
     if (payload.makeActive) {
       data.activeMock = mock.id;
+      data.enabled = true;
     }
 
     if (!data.mocks[mock.id]) {
@@ -280,21 +281,34 @@ export class OhMyState {
   @Action(DeleteMockStorage)
   async deleteMock(ctx: StateContext<IOhMyMock>, action: { payload: { id: ohMyDataId, mockId: ohMyMockId }, domain?: string }) {
     const { payload, domain } = action;
+
     const store = OhMyState.getStore(ctx);
     const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
-
     const data = OhMyState.StateUtils.getData(state, payload.id);
+
     data.mocks = { ...data.mocks };
     delete data.mocks[payload.mockId];
-    state.data = { ...state.data, [data.id]: data };
 
-    if (action instanceof DeleteMock) {
-      // TODO: Write to storage
+    if (data.activeMock === payload.mockId) {
+      data.activeMock = Object.keys(data.mocks)?.[0] || null; // TODO: Add sorting onn StatusCode
+      data.enabled = false;
     }
 
-    const domains = { ...store.domains, [activeDomain]: state };
+    state.data = { ...state.data, [data.id]: data };
 
-    ctx.setState({ ...store, domains });
+    const content = { 
+      ...store.content, 
+      mocks: { ...store.content.mocks },
+      states: { ...store.content.states, [activeDomain]: state }
+    };
+    delete content.mocks[payload.mockId]; 
+
+    if (action instanceof DeleteMock) {
+      await OhMyState.StorageUtils.reset(payload.mockId);
+      await OhMyState.StorageUtils.set(state.domain, state);
+    }
+
+    ctx.setState({ ...store, content });
   }
 
   @Action(DeleteData)
@@ -364,8 +378,14 @@ export class OhMyState {
     if (store.content.mocks[payload.id]) {
       store.content.mocks[payload.id] = { ...store.content.mocks[payload.id] };
     } else  {
-      store.content.mocks[payload.id] = await OhMyState.StorageUtils.get<IMock>(payload.id) ||
-        OhMyState.MockUtils.init(payload);
+      let mock = await OhMyState.StorageUtils.get<IMock>(payload.id);
+      
+      if (!mock) {
+        mock = OhMyState.MockUtils.init(null, payload);
+        OhMyState.StorageUtils.set(mock.id, mock);
+      }
+
+      store.content.mocks[payload.id] = mock;
     }
 
     ctx.setState(store)

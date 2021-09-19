@@ -5,6 +5,7 @@
 <mat-card *ngIf="data?.activeMock && data?.enabled && mock; else nodata" class="details">
   <section class="mock-settings">
     <oh-my-mock-details [mock]="mock" [domain]="domain" [dataId]="data.id"></oh-my-mock-details>
+
     <div class="mock-actions">
       <button mat-stroked-button class="delete-mock" (click)="onDelete()">
         <mat-icon>delete_forever</mat-icon>
