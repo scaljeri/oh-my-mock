@@ -51,7 +51,7 @@ import { StateUtils } from '@shared/utils/state';
 import { MigrationUtils } from '../utils/migration';
 import { APP_VERSION } from '../tokens';
 import { MockUtils } from '@shared/utils/mock';
-import { ScenarioUtils } from '@shared/utils/scenario';
+import { OhMyScenarios, ScenarioUtils } from '@shared/utils/scenario';
 import { contentType } from 'mime-types';
 import { timestamp } from '@shared/utils/timestamp';
 
@@ -218,7 +218,7 @@ export class OhMyState {
       mock.modifiedOn = timestamp();
     } else { // new
       sourceMock = payload.clone ?
-        (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) : 
+        (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) :
         OhMyState.MockUtils.init();
     }
     if (sourceMock) {
@@ -231,11 +231,8 @@ export class OhMyState {
       data.enabled = true;
     }
 
-    if (!data.mocks[mock.id]) {
-      data.mocks = {
-        ...data.mocks, [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
-      }
-    }
+    data.mocks = { ...data.mocks, 
+      [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock) };
 
     if (action instanceof UpsertMock) {
       await OhMyState.StorageUtils.set(activeDomain, state);
@@ -270,7 +267,7 @@ export class OhMyState {
   // Scenarios are per IState and can be used in every IMock (referenced by scanarioId)
   // TODO: Need Storage action here too
   @Action(UpsertScenarios)
-  async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Record<ohMyScenarioId, string>, domain?: string }) {
+  async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: OhMyScenarios, domain?: string }) {
     const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
     state.scenarios = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
@@ -300,12 +297,12 @@ export class OhMyState {
 
     state.data = { ...state.data, [data.id]: data };
 
-    const content = { 
-      ...store.content, 
+    const content = {
+      ...store.content,
       mocks: { ...store.content.mocks },
       states: { ...store.content.states, [activeDomain]: state }
     };
-    delete content.mocks[payload.mockId]; 
+    delete content.mocks[payload.mockId];
 
     if (action instanceof DeleteMock) {
       await OhMyState.StorageUtils.reset(payload.mockId);
@@ -381,9 +378,9 @@ export class OhMyState {
 
     if (store.content.mocks[payload.id]) {
       store.content.mocks[payload.id] = { ...store.content.mocks[payload.id] };
-    } else  {
+    } else {
       let mock = await OhMyState.StorageUtils.get<IMock>(payload.id);
-      
+
       if (!mock) {
         mock = OhMyState.MockUtils.init(null, payload);
         OhMyState.StorageUtils.set(mock.id, mock);

@@ -12,13 +12,14 @@ import { OhMyState } from 'src/app/store/state';
 })
 export class MockLabelComponent {
   @Input() mock: IOhMyShallowMock | IMock;
+  @Input() state: IState;
 
   scenarioName: string;
 
   constructor(private store: Store) {}
 
   ngOnChanges(): void {
-    this.scenarioName = this.stateSnapshot.scenarios[this.mock.scenario];
+    this.scenarioName = this.state.scenarios[this.mock.scenario];
   }
 
   get code(): statusCode {
@@ -29,9 +30,9 @@ export class MockLabelComponent {
     return this.mock?.scenario;
   }
 
-  get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => {
-      return state[STORAGE_KEY].content.states[OhMyState.domain];
-    });
-  }
+  // get stateSnapshot(): IState {
+  //   return this.store.selectSnapshot<IState>((state: IStore) => {
+  //     return state[STORAGE_KEY].content.states[OhMyState.domain];
+  //   });
+  // }
 }

@@ -79,8 +79,6 @@ export interface IMock {
   scenario?: ohMyScenarioId;
   statusCode: statusCode;
   response?: string;
-  mimeType?: string;    // In application/json the `type` will be `application`
-  mimeSubType?: string; // In application/json the `subType` will be `json`
   responseMock?: string;
   headers?: Record<string, string>;
   headersMock?: Record<string, string>;

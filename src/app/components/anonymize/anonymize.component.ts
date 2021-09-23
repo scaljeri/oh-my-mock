@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MOCK_RULE_TYPES } from '@shared/constants';
 import { IMock, IOhMyMockRule, mockRuleType } from '@shared/type';
-import { CodeEditComponent } from '../code-edit/code-edit.component';
+import { CodeEditComponent } from '../form/code-edit/code-edit.component';
 import { generators } from '../../utils/anonymizer';
 import { JSONPath } from 'jsonpath-plus';
 

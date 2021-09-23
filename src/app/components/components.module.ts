@@ -25,7 +25,7 @@ import {
   PathLocationStrategy
 } from '@angular/common';
 
-import { CodeEditComponent } from './code-edit/code-edit.component';
+import { CodeEditComponent } from './form/code-edit/code-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
@@ -48,7 +48,7 @@ import { MockLabelComponent } from './mock-label/mock-label.component';
 import { MockDetailsComponent } from './mock/mock-details/mock-details.component';
 import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
 import { UpdateInputDirective } from './update-input/update-input.directive';
-import { ContentTypeComponent } from './content-type/content-type.component';
+import { ContentTypeComponent } from './form/content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
@@ -57,6 +57,7 @@ import { ManageScenariosComponent } from './manage-scenarios/manage-scenarios.co
 import { OhMyDirectivesModule } from '../directives/directives.module';
 import { LinkComponent } from './link/link.component';
 import { ScenarioDropdownComponent } from './form/scenario-dropdown/scenario-dropdown.component';
+import { CodeEditorComponent } from './dialog/code-editor/code-editor.component';
 
 @NgModule({
   declarations: [
@@ -87,7 +88,8 @@ import { ScenarioDropdownComponent } from './form/scenario-dropdown/scenario-dro
     AutocompleteDropdownComponent,
     ManageScenariosComponent,
     LinkComponent,
-    ScenarioDropdownComponent
+    ScenarioDropdownComponent,
+    CodeEditorComponent
   ],
   imports: [
     CommonModule,

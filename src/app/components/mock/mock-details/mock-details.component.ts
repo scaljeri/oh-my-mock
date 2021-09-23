@@ -3,10 +3,9 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IMock, IOhMyScenarios, ohMyDataId, ohMyScenarioId } from '@shared/type';
+import { IMock, IOhMyScenarios, ohMyDataId } from '@shared/type';
 import { Observable } from 'rxjs';
 import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
-import { AutocompleteDropdownComponent } from '../../form/autocomplete-dropdown/autocomplete-dropdown.component';
 import { ManageScenariosComponent } from '../../manage-scenarios/manage-scenarios.component';
 
 @Component({
@@ -21,7 +20,6 @@ export class MockDetailsComponent implements OnChanges {
 
   requiredMsg = REQUIRED_MSG;
   form: FormGroup;
-  mimeTypeCtrl = new FormControl();
 
   mimeTypes = [
     'text/css',
@@ -34,49 +32,61 @@ export class MockDetailsComponent implements OnChanges {
   ];
   filteredMimeTypes$: Observable<string[]>;
 
-  @Dispatch() upsertMock = (update: Partial<IMock>) =>
-    new UpsertMock({
+  @Dispatch() upsertMock = (update: Partial<IMock & { contentType?: string }> ) => {
+    const contentType = update.contentType;
+    delete update.contentType;
+
+    debugger;
+    return new UpsertMock({
       id: this.dataId,
-      mock: { id: this.mock.id, ...update }
-    }, this.domain);
+      mock: { id: this.mock.id, ...update, headersMock: 
+        { ...this.mock.headersMock, ['content-type']: contentType } }
+    }, this.domain)
+  };
 
   @Dispatch() updateScenarios = (scenarios: IOhMyScenarios) => new UpsertScenarios(scenarios, this.domain);
 
-  constructor(public dialog: MatDialog) {}
+  constructor(public dialog: MatDialog) { }
 
   ngOnInit(): void {
-    debugger;
     this.form = new FormGroup({
       delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
       statusCode: new FormControl(this.mock.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      scenario: new FormControl(this.mock.scenario)
+      scenario: new FormControl(this.mock.scenario),
+      contentType: new FormControl(this.mock.headersMock['content-type'] || '')
     });
 
-    this.form.valueChanges.subscribe(values => {
-      const update: Partial<IMock> = { scenario: values.scenario, delay: values.delay || 0 }
-      if (!this.statusCodeCtrl.hasError('required')) {
-        update.statusCode = values.statusCode;
+    this.form.valueChanges.subscribe((values: Partial<IMock>) => {
+      debugger;
+      if (this.statusCodeCtrl.hasError('required')) {
+        delete values.statusCode;
       }
 
-      this.upsertMock(update);
+      this.upsertMock(values);
     });
   }
 
   ngOnChanges(): void {
-    this.form?.patchValue({
-      delay: this.mock.delay,
-      statusCode: this.mock.statusCode,
-      scenario: this.mock.scenario
-    }, {  emitEvent: false });
+    if (!this.form) {
+      return;
+    }
+
+    this.form
+
+    this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
+    this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });
+
+    // this.scenarioCtrl.setValue(this.mock.scenario,  { emitEvent: false, onlySelf: true });
+    // this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'] || '',  { emitEvent: false, onlySelf: true });
   }
 
-  onContentTypeUpdate(contentType: string): void {
-	  if (contentType !== this.mock.headersMock['content-type']) {
-    		this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
-	  }
-  }
+  // onContentTypeUpdate(contentType: string): void {
+  //   if (contentType !== this.mock.headersMock['content-type']) {
+  //     this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
+  //   }
+  // }
 
   onManageScenarios(): void {
     const dialogRef = this.dialog.open(ManageScenariosComponent, {
@@ -85,7 +95,7 @@ export class MockDetailsComponent implements OnChanges {
     });
 
     dialogRef.afterClosed().subscribe((scenarios: IOhMyScenarios) => {
-      if (scenarios !== null) {
+      if (scenarios !== null && scenarios !== undefined) {
         console.log('received', scenarios);
         this.updateScenarios(scenarios);
       }
@@ -102,5 +112,9 @@ export class MockDetailsComponent implements OnChanges {
 
   get delayCtrl(): FormControl {
     return this.form.get('delay') as FormControl;
+  }
+
+  get contentTypeCtrl(): FormControl {
+    return this.form.get('contentType') as FormControl;
   }
 }

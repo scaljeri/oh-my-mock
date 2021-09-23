@@ -7,11 +7,13 @@ import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapi
 // import { findAutoActiveMock } from '../../../utils/data';
 import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { METHODS, STORAGE_KEY } from '@shared/constants';
 import { Store } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
+import { UntilDestroy } from '@ngneat/until-destroy';
 
+@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'app-mock-header',
   templateUrl: './mock-header.component.html',
@@ -35,13 +37,21 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   public availableMethods = METHODS;
   scenarios: IOhMyScenarios;
+  subscriptions: Subscription[] = [];
+  state: IState;
 
-  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) => 
+  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
     new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
   @Dispatch() upsertData = (data: Partial<IData>) =>
-    new UpsertData({...this.data, ...data}, this.domain);
+    new UpsertData({ ...this.data, ...data }, this.domain);
 
-  constructor(public dialog: MatDialog, private store: Store) { }
+  constructor(public dialog: MatDialog, private store: Store) {
+    this.subscriptions.push(this.store.select(store => {
+      return store[STORAGE_KEY].content.states[this.domain || OhMyState.domain];
+    }).subscribe(state => {
+      this.state = state;
+    }));
+  }
 
   ngOnInit(): void {
     // setTimeout(() => {
@@ -96,7 +106,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
       width: '280px',
       height: '380px',
-      data: this.stateSnapshot
+      data: this.state
     });
 
     dialogRef.afterClosed().subscribe((update: IUpsertMock) => {
@@ -138,9 +148,9 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     console.log('onMethodChage', event);
   }
 
-  get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => {
-      return state[STORAGE_KEY].content.states[OhMyState.domain];
-    });
-  }
+  // get stateSnapshot(): IState {
+  //   return this.store.selectSnapshot<IState>((state: IStore) => {
+  //     return state[STORAGE_KEY].content.states[OhMyState.domain];
+  //   });
+  // }
 }

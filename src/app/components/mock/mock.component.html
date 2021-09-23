@@ -23,38 +23,35 @@
     </div>
   </section>
 
-  <!--
-  <section *ngIf="!dialogIsOpen" class="response">
-    <header>
-      <h2>Response</h2>
-    </header>
-    <div class="code-wrapper">
-      <button class="fullscreen" (click)="onShowResponseFullscreen()" mat-mini-fab color="primary"
-        aria-label="Example icon button with a menu icon">
-        <mat-icon>fullscreen</mat-icon>
-      </button>
-      <oh-my-code-edit #response [code]="mock.responseMock" (codeChange)="onResponseChange($event)" theme="vs"
-        [type]="mock.mimeSubType">
-      </oh-my-code-edit>
-      <button class="reset" mat-button (click)="onRevertResponse()">Reset</button>
+  <section class="editors">
+    <div *ngIf="!dialogIsOpen" class="response">
+      <header>
+        <h2>Response</h2>
+      </header>
+      <div class="code-wrapper">
+        <button class="fullscreen" (click)="onShowResponseFullscreen()" mat-mini-fab color="primary"
+          aria-label="Example icon button with a menu icon">
+          <mat-icon>fullscreen</mat-icon>
+        </button>
+        <oh-my-code-edit [formControl]="responseCtrl"></oh-my-code-edit>
+        <button class="reset" mat-button (click)="onRevertResponse()">Reset</button>
+      </div>
+    </div>
+
+    <div *ngIf="!dialogIsOpen" class="headers">
+      <header>
+        <h2>Headers</h2>
+      </header>
+      <div class="code-wrapper">
+        <button class="fullscreen" (click)="onShowHeadersFullscreen()" mat-mini-fab color="primary"
+          aria-label="Example icon button with a menu icon">
+          <mat-icon>fullscreen</mat-icon>
+        </button>
+        <oh-my-code-edit [formControl]="headersCtrl"></oh-my-code-edit>
+        <button class="reset" mat-button (click)="onRevertHeaders()">Reset</button>
+      </div>
     </div>
   </section>
-
-  <section *ngIf="!dialogIsOpen" class="headers">
-    <header>
-      <h2>Headers</h2>
-    </header>
-    <div class="code-wrapper">
-      <button class="fullscreen" (click)="onShowHeadersFullscreen()" mat-mini-fab color="primary"
-        aria-label="Example icon button with a menu icon">
-        <mat-icon>fullscreen</mat-icon>
-      </button>
-      <oh-my-code-edit #headers [code]="mock.headersMock" [allowErrors]="false" (codeChange)="onHeadersChange($event)"
-        type="json">
-      </oh-my-code-edit>
-      <button class="reset" mat-button (click)="onRevertHeaders()">Reset</button>
-    </div>
-  </section> -->
 </mat-card>
 
 <ng-template #nodata>
@@ -65,7 +62,8 @@
     </p>
     <ol>
       <li>Create a response with the + button or</li>
-      <li>just make the API in your app, because OhMyMock will automatically cache server responses (make sure OhMyMock is active)</li>
+      <li>just make the API in your app, because OhMyMock will automatically cache server responses (make sure OhMyMock
+        is active)</li>
     </ol>
   </section>
 </ng-template>

@@ -1,4 +1,4 @@
-<mat-form-field>
+<!-- <mat-form-field>
   <input [ohMyUpdateInput]="input" type="text" placeholder="Content type"
     aria-label="Content type" matInput [formControl]="ctrl" [matAutocomplete]="auto">
   <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
@@ -6,4 +6,9 @@
       {{option}}
     </mat-option>
   </mat-autocomplete>
-</mat-form-field>
+</mat-form-field> -->
+
+<oh-my-autocomplete-dropdown 
+  label="Content type"
+  [options]="options" 
+  [formControl]="ctrl"></oh-my-autocomplete-dropdown>

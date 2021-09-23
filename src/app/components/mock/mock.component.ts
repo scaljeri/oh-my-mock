@@ -9,15 +9,18 @@ import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, LoadMock, UpsertData, UpsertMock } from 'src/app/store/actions';
 import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock } from '@shared/type';
-import { CodeEditComponent } from 'src/app/components/code-edit/code-edit.component';
+import { CodeEditComponent } from 'src/app/components/form/code-edit/code-edit.component';
 import { Observable, Subscription } from 'rxjs';
-import { IOhMyCodeEditOptions } from '../code-edit/code-edit';
+import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Select, Store } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { STORAGE_KEY } from '@shared/constants';
+import { isMimeTypeJSON } from '@shared/utils/mime-type';
+import { FormControl } from '@angular/forms';
+import { filter, skip } from 'rxjs/operators';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -50,9 +53,12 @@ export class MockComponent implements OnChanges {
   subscriptions: Subscription[] = [];
 
   activeMock$: Observable<IMock>;
+  responseType: string;
 
-  @ViewChild('response') responseRef: CodeEditComponent;
-  @ViewChild('headers') headersRef: CodeEditComponent;
+  // @ViewChild('response') responseRef: CodeEditComponent;
+  // @ViewChild('headers') headersRef: CodeEditComponent;
+  responseCtrl = new FormControl(null, { updateOn: 'blur' });
+  headersCtrl = new FormControl(null, { updateOn: 'blur' });
 
   constructor(
     private store: Store,
@@ -69,7 +75,19 @@ export class MockComponent implements OnChanges {
     this.subscriptions.push(this.activeMock$.subscribe(mock => {
       console.log('new moc', mock);
       this.mock = mock;
+
+      this.responseCtrl.setValue(mock?.responseMock, { emitEvent: false });
+      this.headersCtrl.setValue(mock?.headersMock, { emitEvent: false });
     }));
+
+
+    this.responseCtrl.valueChanges.subscribe(val => {
+      debugger;
+    });
+
+    this.headersCtrl.valueChanges.subscribe(val => {
+      debugger;
+    });
   }
 
   ngOnChanges(): void {
@@ -79,6 +97,7 @@ export class MockComponent implements OnChanges {
     if (this.activeMockId && this.data.enabled) {
       this.loadMock(this.data.mocks[this.activeMockId]);
     }
+    this.responseType = isMimeTypeJSON(this.mock?.headersMock?.['content-type']) ? 'json' : '';
 
     // this.activeMock$.subscribe(mock => {
     //   console.log('new moc', mock);
@@ -111,9 +130,9 @@ export class MockComponent implements OnChanges {
     this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
     this.cdr.detectChanges();
 
-    setTimeout(() => {
-      this.responseRef.update();
-    });
+    // setTimeout(() => {
+    //   this.responseRef.update();
+    // });
   }
 
   onHeadersChange(headersMock: string): void {
@@ -133,9 +152,9 @@ export class MockComponent implements OnChanges {
     this.upsertMock({ id: this.mock.id, headersMock: this.mock.headers });
     this.cdr.detectChanges();
 
-    setTimeout(() => {
-      this.headersRef.update();
-    });
+    // setTimeout(() => {
+    //   this.headersRef.update();
+    // });
   }
 
   onMockActivated(mockId: ohMyMockId, isInit = false) {
@@ -144,11 +163,11 @@ export class MockComponent implements OnChanges {
     if (!mockId) {
       this.mock = null;
       return this.upsertData({ id: this.data.id, enabled: false });
-    } 
-    
+    }
+
     if (mockId !== this.data.activeMock || !this.data.enabled && !isInit) {
       this.upsertData({ id: this.data.id, enabled: true, activeMock: mockId });
-    } 
+    }
 
     this.loadMock(this.data.mocks[mockId]);
   }
@@ -162,13 +181,16 @@ export class MockComponent implements OnChanges {
   }
 
   onShowResponseFullscreen(): void {
-    const data = { code: this.mock.responseMock, type: this.mock.mimeSubType };
+    const data = {
+      code: this.mock.responseMock,
+      type: isMimeTypeJSON(this.mock.headersMock?.['content-type']) ? 'json' : ''
+    };
 
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, responseMock: update });
-      setTimeout(() => {
-        this.responseRef.update();
-      });
+      // setTimeout(() => {
+      //   this.responseRef.update();
+      // });
     });
   }
 
@@ -176,14 +198,14 @@ export class MockComponent implements OnChanges {
     const data = { code: this.mock.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
       this.upsertMock({ id: this.mock.id, headersMock: JSON.parse(update) });
-      setTimeout(() => {
-        this.headersRef.update();
-      })
+      // setTimeout(() => {
+      //   this.headersRef.update();
+      // });
     });
   }
 
   onAnonymize() {
-    if (this.mock.mimeSubType !== 'json') {
+    if (!isMimeTypeJSON(this.mock.headersMock?.['content-type'])) {
       return this.toast.error('Content-Type should be JSON');
     }
 
@@ -202,9 +224,9 @@ export class MockComponent implements OnChanges {
           rules: update.rules
         });
 
-        setTimeout(() => {
-          this.responseRef?.update();
-        });
+        // setTimeout(() => {
+        //   this.responseRef?.update();
+        // });
       }
     });
   }

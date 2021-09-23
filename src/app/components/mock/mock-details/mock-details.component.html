@@ -1,35 +1,38 @@
 <form [formGroup]="form" *ngIf="form">
-  <p>
-    <mat-form-field>
-      <mat-label>Status Code</mat-label>
-      <input type="number" matInput [formControl]="statusCodeCtrl">
-      <mat-error> {{requiredMsg}} </mat-error>
-    </mat-form-field>
-  </p>
-  <div class="scenario-dropdown">
+  <div>
     <p>
+      <mat-form-field>
+        <mat-label>Status Code</mat-label>
+        <input type="number" matInput [formControl]="statusCodeCtrl">
+        <mat-error> {{requiredMsg}} </mat-error>
+      </mat-form-field>
+    </p>
+    <div class="scenario-dropdown">
+      <p>
         <oh-my-scenario-dropdown [formControl]="scenarioCtrl"></oh-my-scenario-dropdown>
-      <!-- <mat-form-field> -->
+        <!-- <mat-form-field> -->
         <!-- <mat-label>Scenario</mat-label> -->
         <!-- <input matInput [formControl]="scenarioCtrl"> -->
-      <!-- </mat-form-field> -->
-      <oh-my-link (click)="onManageScenarios()">Manage scenarios</oh-my-link>
-    </p>
-    <mat-icon color="primary" matTooltip="With scenario's you can distinguish mocks with the same status code and mocks
+        <!-- </mat-form-field> -->
+        <oh-my-link (click)="onManageScenarios()">Manage scenarios</oh-my-link>
+      </p>
+      <mat-icon color="primary" matTooltip="With scenario's you can distinguish mocks with the same status code and mocks
         can be activated by scenario.">info</mat-icon>
+    </div>
+    <p>
+      <mat-form-field class="example-full-width">
+        <mat-label>Response delay (ms)</mat-label>
+        <input matInput [formControl]="delayCtrl" class="value" [value]="mock.delay">
+      </mat-form-field>
+    </p>
   </div>
-  <p>
-    <mat-form-field class="example-full-width">
-      <mat-label>Response delay (ms)</mat-label>
-      <input matInput [formControl]="delayCtrl" class="value" [value]="mock.delay">
-    </mat-form-field>
-  </p>
+
+  <div class="details">
+    <p class="vertical">
+      <oh-my-content-type [formControl]="contentTypeCtrl"></oh-my-content-type>
+    </p>
+    <p><span class="label">Created:</span><span class="value">{{mock.createdOn | date:'d/M/YYYY, H:mm'}}</span></p>
+    <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn | date:'d/M/YYYY, H:mm'}}</span>
+    </p>
+  </div>
 </form>
-<div class="details">
-  <p class="vertical">
-    <oh-my-content-type [contentType]="mock.headersMock['content-type']" (update)="onContentTypeUpdate($event)">
-    </oh-my-content-type>
-  </p>
-  <p><span class="label">Created:</span><span class="value">{{mock.createdOn | date:'d/M/YYYY, H:mm'}}</span></p>
-  <p><span class="label">Last modified:</span><span class="value">{{mock.modifiedOn | date:'d/M/YYYY, H:mm'}}</span></p>
-</div>

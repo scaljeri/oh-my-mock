@@ -60,8 +60,8 @@ export class MockUtils {
   static createShallowMock(mock: IOhMyShallowMock & Partial<IMock>): IOhMyShallowMock {
     return {
       id: mock.id,
-      scenario: mock.scenario,
-      statusCode: mock.statusCode
+      statusCode: mock.statusCode,
+      ...(mock.scenario !== undefined && {scenario: mock.scenario})
     }
   }
 }
