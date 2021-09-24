@@ -32,7 +32,7 @@ const MIME_TYPES = [
 export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor {
   @Input() contentType: string;
 
-  ctrl = new FormControl();
+  ctrl = new FormControl(null, { updateOn: 'blur' });
   options = MIME_TYPES;
   private internalValue: string;
 

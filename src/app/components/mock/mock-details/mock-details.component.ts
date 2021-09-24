@@ -36,7 +36,6 @@ export class MockDetailsComponent implements OnChanges {
     const contentType = update.contentType;
     delete update.contentType;
 
-    debugger;
     return new UpsertMock({
       id: this.dataId,
       mock: { id: this.mock.id, ...update, headersMock: 
@@ -54,12 +53,11 @@ export class MockDetailsComponent implements OnChanges {
       statusCode: new FormControl(this.mock.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      scenario: new FormControl(this.mock.scenario),
-      contentType: new FormControl(this.mock.headersMock['content-type'] || '')
+      scenario: new FormControl(this.mock.scenario, { updateOn: 'blur'}),
+      contentType: new FormControl(this.mock.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
     this.form.valueChanges.subscribe((values: Partial<IMock>) => {
-      debugger;
       if (this.statusCodeCtrl.hasError('required')) {
         delete values.statusCode;
       }
@@ -72,8 +70,6 @@ export class MockDetailsComponent implements OnChanges {
     if (!this.form) {
       return;
     }
-
-    this.form
 
     this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
     this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });

@@ -6,7 +6,6 @@ import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state'
 import { Observable, Subscription } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { ThisReceiver } from '@angular/compiler';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -34,7 +33,7 @@ export class ScenarioDropdownComponent implements OnChanges, ControlValueAccesso
   subscriptions: Subscription[] = [];
 
   options: string[]
-  ctrl = new FormControl();
+  ctrl = new FormControl(null, { updateOn: 'blur' });
   scenariosUpdate$: Observable<IOhMyScenarios>;
   stateScenarios: IOhMyScenarios;
   value: string = undefined;
