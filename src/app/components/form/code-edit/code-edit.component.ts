@@ -12,7 +12,7 @@ declare let monaco: any;
   selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
   styleUrls: ['./code-edit.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -30,27 +30,29 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   @Input() type: string;
   @Input() theme: themes = 'vs';
   @Input() base: string;
+  @Output() errors = new EventEmitter<IMarker[]>();
 
   originalCode: string;
   previousCode: string;
+  updatedCode: string;
 
   // vs, vs-dark
   public editorOptions = { theme: 'vs', language: 'json', readOnly: false };
 
   public diffCode;
-  public errors: IMarker[] = [];
 
   public readonly = false;
   public orig: string;
 
   value: string;
-  editorCtrl = new FormControl('', { updateOn: 'blur'});
+  editorCtrl = new FormControl('', { updateOn: 'blur' });
   onChange: any = () => { }
   onTouch: any = () => { }
 
   constructor(private prettyPrintPipe: PrettyPrintPipe) { }
 
   async ngOnInit() {
+    debugger;
     if (this.base) {
       this.base = this.format(this.base);
     }
@@ -63,22 +65,32 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
       this.onTouch(value);
     });
 
-    // this.editorCtrl.setValue(this.format(this.formCtrl.value), { emitEvent: false });
-
+    this.updatedCode = this.editorCtrl.value;
     this.setEditorOptions()
   }
 
-  // Wait for monaco to load
-  checkMonacoLoaded(): Promise<void> {
-    return new Promise(r => {
-      const id = window.setInterval(() => {
-        if (window.monaco) {
-          window.clearInterval(id);
-          r();
-        }
-      }, 100);
-    });
+  ngOnChanges(): void {
+    debugger;
+    if (this.base) {
+      if (typeof this.base === 'object') {
+        this.base = this.format(this.base);
+      }
+
+      this.updatedCode = this.editorCtrl.value;
+    }
   }
+
+    // Wait for monaco to load
+    checkMonacoLoaded(): Promise < void> {
+      return new Promise(r => {
+        const id = window.setInterval(() => {
+          if (window.monaco) {
+            window.clearInterval(id);
+            r();
+          }
+        }, 100);
+      });
+    }
 
   private setEditorOptions(): void {
     this.editorOptions = { ...this.editorOptions };
@@ -118,7 +130,8 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     editor.onDidChangeModelDecorations((...args) => {
       const model = editor.getModel();
       const owner = model.getModeId();
-      this.errors = monaco?.editor.getModelMarkers({ owner });
+
+      this.errors.emit(monaco?.editor.getModelMarkers({ owner }));
     });
   }
 
@@ -133,10 +146,10 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     });
   }
 
-   // new values
-   writeValue(value: string) {
+  // new values
+  writeValue(value: string) {
     this.value = this.format(value);
-    this.editorCtrl.setValue(this.value);
+    this.editorCtrl.setValue(this.value, { emitEvent: false });
   }
 
   registerOnChange(fn: any) {

@@ -1,8 +1,14 @@
-export const splitMimeType = (contentType: string) => {
+export const splitMimeType = (contentType: string): {mimeType: string, mimeSubType: string} => {
     const [ mimeType, mimeSubType ] = contentType?.match(/^([^;]+)(;?.*)$/)?.slice(1, 3) || [];
 
     return { mimeType, mimeSubType };
 
 }
 
-export const isMimeTypeJSON = (contentType: string) => !!contentType?.match(/json$/);
+export function isMimeTypeJSON(contentType: string): boolean  {
+    return !!contentType?.match(/json$/);
+}
+
+export function extractMimeType(contentType: string): string {
+    return (splitMimeType(contentType) || {}).mimeSubType;
+}

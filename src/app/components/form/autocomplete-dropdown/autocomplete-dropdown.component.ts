@@ -1,8 +1,8 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component,Input, Self } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, Input, Self } from '@angular/core';
 import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { BehaviorSubject, merge, Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { filter, map, startWith, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'oh-my-autocomplete-dropdown',
@@ -25,12 +25,7 @@ import { map, tap } from 'rxjs/operators';
 export class AutocompleteDropdownComponent implements AfterViewInit, ControlValueAccessor {
   @Input() options: string[];
   @Input() label: string;
-  @Input() selected: string;
-  @Input() allowFreeInput: string | boolean = true;
   @Input() formControl: FormControl;
-
-  // @Output() change = new EventEmitter<string>();
-  // @Output() blur = new EventEmitter<string>();
 
   internalValue = '';
   _ctrl: FormControl;
@@ -45,33 +40,26 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
 
   ngAfterViewInit(): void {
     const control = this.ngControl.control;
-    // control.setValidators();
-    // control.updateValueAndValidity();
-    this.filteredMethodOptions$ = merge(
-      this.ctrl.valueChanges.pipe(tap(value => {
+
+    this.filteredMethodOptions$ = this.ctrl.valueChanges.pipe(
+      tap(() => {
         if (this.ngControl.control.updateOn === 'change') {
-          this.onChange(value);
-          this.onTouch(value);
+          this.emitChange();
         }
-      })),
-      this.updateSubject
-    ).pipe(
-      map(value => this.filter(value, this.options as string[]))
+      }), 
+      startWith(''),
+      map(() => this.filter(this.ctrl.value, this.options as string[]))
     );
   }
 
-  ngOnChanges(): void {
-    if (typeof this.allowFreeInput === 'string') {
-      this.allowFreeInput = this.allowFreeInput === 'true' ? true : false;
-    }
-
-    if (this.ctrl) {
-      this.updateSubject.next(this.ctrl.value);
+  onBlur(): void {
+    if (!this.autoCompleteActive) {
+      this.emitChange();
     }
   }
 
-  onBlur(): void {
-    if (!this.autoCompleteActive && this.ctrl.value !== this.internalValue) {
+  emitChange(): void {
+    if (this.ctrl.value !== this.internalValue) {
       this.internalValue = this.ctrl.value;
       this.onChange(this.ctrl.value);
       this.onTouch(this.ctrl.value);
@@ -83,30 +71,23 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
   }
 
   onAutoCompleteClose(): void {
-    if (!this.options.includes(this.ctrl.value) && !this.allowFreeInput) { // revert 
-      this.ctrl.setValue(this.selected);
-    } else {
-      this.selected = this.ctrl.value;
-      this.onChange(this.selected);
-      this.onTouch(this.selected);
-    }
-
-    this.internalValue = this.selected;
+    // if (!this.options.includes(this.ctrl.value) && !this.allowFreeInput) { // revert 
+    // this.ctrl.setValue(this.selected);
+    // } else {
+    this.emitChange();
+    // }
   }
 
   onOptionSelected(event: MatAutocompleteSelectedEvent): void {
-    this.selected = event.option.value;
+    // this.selected = event.option.value;
   }
 
-  // 
   onChange: any = () => { }
   onTouch: any = () => { }
 
   writeValue(value: any) {
-    debugger;
     this.internalValue = value;
-    this.ctrl.setValue(value, { emitEvent: false });
-    this.updateSubject.next(value);
+    this.ctrl.setValue(value);
   }
 
   registerOnChange(fn: any) {
@@ -154,7 +135,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
 
   get ctrl(): FormControl {
     if (!this._ctrl) {
-      this._ctrl = new FormControl(this.selected);
+      this._ctrl = new FormControl(this.internalValue);
     }
 
     return this._ctrl;

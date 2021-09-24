@@ -3,8 +3,8 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IMock, IOhMyScenarios, ohMyDataId } from '@shared/type';
-import { Observable } from 'rxjs';
+import { IData, IMock, IOhMyScenarios } from '@shared/type';
+import { Observable, Subscription } from 'rxjs';
 import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
 import { ManageScenariosComponent } from '../../manage-scenarios/manage-scenarios.component';
 
@@ -16,8 +16,9 @@ import { ManageScenariosComponent } from '../../manage-scenarios/manage-scenario
 export class MockDetailsComponent implements OnChanges {
   @Input() mock: IMock;
   @Input() domain: string;
-  @Input() dataId: ohMyDataId;
+  @Input() data: IData;
 
+  private subscriptions = new Subscription();
   requiredMsg = REQUIRED_MSG;
   form: FormGroup;
 
@@ -37,13 +38,14 @@ export class MockDetailsComponent implements OnChanges {
     delete update.contentType;
 
     return new UpsertMock({
-      id: this.dataId,
+      id: this.data.id,
       mock: { id: this.mock.id, ...update, headersMock: 
         { ...this.mock.headersMock, ['content-type']: contentType } }
     }, this.domain)
   };
 
   @Dispatch() updateScenarios = (scenarios: IOhMyScenarios) => new UpsertScenarios(scenarios, this.domain);
+  // @Select(OhMyState.mainState) state$: Observable<IState>;
 
   constructor(public dialog: MatDialog) { }
 
@@ -57,13 +59,17 @@ export class MockDetailsComponent implements OnChanges {
       contentType: new FormControl(this.mock.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
-    this.form.valueChanges.subscribe((values: Partial<IMock>) => {
+    this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IMock>) => {
       if (this.statusCodeCtrl.hasError('required')) {
         delete values.statusCode;
       }
 
       this.upsertMock(values);
-    });
+    }));
+
+    // this.subscription.add(this.state$.subscribe(state => {
+// 
+    // }));
   }
 
   ngOnChanges(): void {
@@ -73,9 +79,9 @@ export class MockDetailsComponent implements OnChanges {
 
     this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
     this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });
+    this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'], { emitEvent: false });
 
     // this.scenarioCtrl.setValue(this.mock.scenario,  { emitEvent: false, onlySelf: true });
-    // this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'] || '',  { emitEvent: false, onlySelf: true });
   }
 
   // onContentTypeUpdate(contentType: string): void {
@@ -112,5 +118,9 @@ export class MockDetailsComponent implements OnChanges {
 
   get contentTypeCtrl(): FormControl {
     return this.form.get('contentType') as FormControl;
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

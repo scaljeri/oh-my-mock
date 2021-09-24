@@ -3,24 +3,21 @@ import {
   Component,
   Input,
   OnChanges,
-  ViewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, LoadMock, UpsertData, UpsertMock } from 'src/app/store/actions';
 import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock } from '@shared/type';
-import { CodeEditComponent } from 'src/app/components/form/code-edit/code-edit.component';
 import { Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Select, Store } from '@ngxs/store';
-import { OhMyState } from 'src/app/store/state';
+import { Store } from '@ngxs/store';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { STORAGE_KEY } from '@shared/constants';
-import { isMimeTypeJSON } from '@shared/utils/mime-type';
+import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
-import { filter, skip } from 'rxjs/operators';
+import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -36,12 +33,13 @@ export class MockComponent implements OnChanges {
   // @Select(OhMyState.mock) state$: Observable<IState>;
 
   @Dispatch() loadMock = (smock: IOhMyShallowMock) => new LoadMock(smock);
-  @Dispatch() upsertMock = (mock: Partial<IMock>) =>
-    new UpsertMock({
+  @Dispatch() upsertMock = (mock: Partial<IMock>) => {
+    return new UpsertMock({
       id: this.data.id,
       makeActive: true,
       mock
-    }, this.domain);
+    }, this.domain); 
+  };
   @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data);
   @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) => {
     return new DeleteMock({ id, mockId });
@@ -82,11 +80,11 @@ export class MockComponent implements OnChanges {
 
 
     this.responseCtrl.valueChanges.subscribe(val => {
-      debugger;
+      this.upsertMock({ id: this.mock.id, responseMock: val });
     });
 
     this.headersCtrl.valueChanges.subscribe(val => {
-      debugger;
+      this.onHeadersChange(val);
     });
   }
 
@@ -120,11 +118,11 @@ export class MockComponent implements OnChanges {
     this.deleteMockResponse(this.data.id, this.mock.id);
   }
 
-  onResponseChange(data: string): void {
-    if (data !== (this.mock.responseMock || '')) {
-      this.upsertMock({ id: this.mock.id, responseMock: data });
-    }
-  }
+  // onResponseChange(data: string): void {
+  //   if (data !== (this.mock.responseMock || '')) {
+  //     this.upsertMock({ id: this.mock.id, responseMock: data });
+  //   }
+  // }
 
   onRevertResponse(): void {
     this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
@@ -183,7 +181,7 @@ export class MockComponent implements OnChanges {
   onShowResponseFullscreen(): void {
     const data = {
       code: this.mock.responseMock,
-      type: isMimeTypeJSON(this.mock.headersMock?.['content-type']) ? 'json' : ''
+      type: extractMimeType(this.mock.headersMock?.['content-type'])
     };
 
     this.openCodeDialog(data, (update: string) => {
@@ -209,6 +207,8 @@ export class MockComponent implements OnChanges {
       return this.toast.error('Content-Type should be JSON');
     }
 
+    this.dialogIsOpen = true;
+
     const dialogRef = this.dialog.open(AnonymizeComponent, {
       width: '80%',
       maxHeight: '90hv',
@@ -217,6 +217,8 @@ export class MockComponent implements OnChanges {
     });
 
     dialogRef.afterClosed().subscribe((update: { data: string, rules: IOhMyMockRule[] }) => {
+      this.dialogIsOpen = false;
+
       if (update) {
         this.upsertMock({
           id: this.mock.id,
@@ -233,7 +235,7 @@ export class MockComponent implements OnChanges {
 
   openCodeDialog(data: IOhMyCodeEditOptions, cb: (update: string) => void): void {
     this.dialogIsOpen = true;
-    const dialogRef = this.dialog.open(CodeEditComponent, {
+    const dialogRef = this.dialog.open(DialogCodeEditorComponent, {
       width: '80%',
       data
     });

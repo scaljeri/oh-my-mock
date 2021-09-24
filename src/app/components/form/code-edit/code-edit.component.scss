@@ -3,15 +3,12 @@
 :host {
   display: flex;
   flex-direction: column;
+  height: 100%;
   position: relative;
-
-  &.is-dialog {
-    height: 80vh;
-  }
 }
 
 .editor-wrapper {
-  background-color: rgba(0, 0, 0, .87);
+  background-color: rgba(0, 0, 0, 0.87);
   display: block;
   padding: 5px 0;
   height: 100%;
@@ -23,7 +20,7 @@
   margin-top: 10px;
   width: 100%;
 
-  button+button {
+  button + button {
     margin-left: 10px;
   }
 }
@@ -42,7 +39,7 @@ footer {
 
 .close-with-errors {
   @include oh-position(absolute, 0px 0px 0px 0px);
-  background-color: rgba(0, 0, 0, .7);
+  background-color: rgba(0, 0, 0, 0.7);
   align-items: center;
   display: flex;
   justify-content: center;

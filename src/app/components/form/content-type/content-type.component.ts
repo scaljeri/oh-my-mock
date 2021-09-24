@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, forwardRef, Input } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 const MIME_TYPES = [
   'text/css',
@@ -22,11 +22,11 @@ const MIME_TYPES = [
       useExisting: forwardRef(() => ContentTypeComponent),
       multi: true
     },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: ContentTypeComponent,
-      multi: true
-    }
+    // {
+    //   provide: NG_VALIDATORS,
+    //   useExisting: ContentTypeComponent,
+    //   multi: true
+    // }
   ]
 })
 export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor {
@@ -34,14 +34,10 @@ export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor
 
   ctrl = new FormControl(null, { updateOn: 'blur' });
   options = MIME_TYPES;
-  private internalValue: string;
 
   ngAfterViewInit(): void {
     this.ctrl.valueChanges.pipe(
-      // map(value => MIME_TYPES.filter(mt => mt.includes(value)))
     ).subscribe(value => {
-      // const [.input, this.rest] = this.contentType?.match(/^([^;]+)(;?.*)$/)?.slice(1, 3) || [];
-      debugger;
       this.onChange(value);
       this.onTouch(value);
     });
@@ -51,8 +47,7 @@ export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor
   onTouch: any = () => { }
 
   writeValue(value: any) {
-    this.internalValue = value;
-    this.ctrl.setValue(value);
+    this.ctrl.setValue(value, { emitEvent: false });
   }
 
   registerOnChange(fn: any) {
@@ -64,9 +59,5 @@ export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor
   }
 
   onFocus(e, t): void {
-  }
-
-  validate({ value }: FormControl) {
-    return null;
   }
 }

@@ -44,7 +44,7 @@ import { MigrationUtils } from './utils/migration';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(appRoutes, { useHash: true } ),
+    RouterModule.forRoot(appRoutes, { useHash: true, scrollPositionRestoration: 'enabled' } ),
     NgxsModule.forRoot([OhMyState], { developmentMode: false }),
     ReactiveFormsModule,
     NgxsDispatchPluginModule.forRoot(),

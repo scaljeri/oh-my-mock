@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR, Validators } from '@angular/forms';
 import { Store } from '@ngxs/store'
 import { IOhMyScenarios, IStore, ohMyScenarioId } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state'
 import { Observable, Subscription } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { exactOptionMatchValidator } from 'src/app/validators/exact-match-validator';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -72,6 +73,8 @@ export class ScenarioDropdownComponent implements OnChanges, ControlValueAccesso
 
   ngOnChanges(): void {
     this.options = Object.values(this.scenarios || this.stateScenarios);
+    this.ctrl.setValidators(exactOptionMatchValidator(this.options));
+    this.ctrl.setValue(this.getScenarioLabel(this.value), { emitEvent: false });
   }
 
   private getScenarioLabel(id: ohMyScenarioId): string {
