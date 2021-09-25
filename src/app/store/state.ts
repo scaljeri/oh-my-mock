@@ -253,14 +253,15 @@ export class OhMyState {
     const data = { ...(OhMyState.StateUtils.findData(state, payload, false) || OhMyState.DataUtils.init(payload)), ...payload };
     state = OhMyState.StateUtils.setData(state, data);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
+    state.views = { ...state.views };
 
-    if (!payload.id) {
-      state.views.activity ??= [];
-      state.views.activity = [data.id, ...state.views.activity];
-    }
+    Object.entries(state.views).forEach(([name, list]) => {
+      if (!list.includes(data.id)) {
+        state.views[name] = [data.id, ...state.views[name]];
+      }
+    });
 
     await OhMyState.StorageUtils.set(state.domain, state);
-
     ctx.setState(store);
   }
 

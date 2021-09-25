@@ -4,7 +4,11 @@ import { compareUrls } from './urls';
 export class StateUtils {
   static version = '-'
   static init(base: Partial<IState> = {}): IState {
-    return { version: this.version, views: {}, toggles: {}, data: {}, scenarios: {}, ...base } as IState;
+    return {
+      version: this.version, views: {
+        activity: []
+      }, toggles: {}, data: {}, scenarios: {}, ...base
+    } as IState;
   }
 
   static isState<V = IData>(input: IState | V): input is IState {

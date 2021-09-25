@@ -53,14 +53,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() select = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
-  // @Dispatch() deleteData = (id: string) => {
-  //   debugger;
-  //   return new DeleteData(id, this.state.domain);
-  // }
-  // @Dispatch() upsertData = (data: IData) => {
-  //   debugger;
-  //   return new UpsertData(data);
-  // }
+  @Dispatch() deleteData = (id: string) => {
+    return new DeleteData(id, this.state.domain);
+  }
+  @Dispatch() upsertData = (data: Partial<IData>) => {
+    return new UpsertData(data);
+  }
   // @Dispatch() viewReorder = (name: string, id: string, to: number) => {
   //   debugger;
   //   return new ViewChangeOrderItems({ name, id, to });
@@ -84,13 +82,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   public hitcount: number[] = [];
   public visibleBtns = 1;
   public disabled = false;
-  private timeoutId: number;
-  private isBusyAnimating = false;
 
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
 
-  public viewList: number[];
+  public viewList: ohMyDataId[];
 
 
   public data: Record<ohMyDataId, IData>;
@@ -110,10 +106,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit(): void {
     this.subscriptions.add(this.state$.subscribe(state => {
       this.state = state;
-
-      if (this.state) {
-        
-      }
+      this.viewList = state.views.activity;
     }));
 
     if (!this.state) {
@@ -171,7 +164,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getFilteredList(): IData[] {
-    return this.state.views.activity.map(id => this.state.data[id]);
+    return this.state.views.activity?.map(id => this.state.data[id]) || [];
     // const input = this.filterCtrl.value.toLowerCase();
 
     // if (input === "") {
@@ -203,53 +196,44 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnDestroy(): void {
   }
 
-  onActivateToggle(id: string, event: MouseEvent): void {
-    // event.stopPropagation();
-
-    // const data = findMocks(this.state, { id });
-
-    // if (data.enabled) {
-    //   this.upsertData({ id, enabled: false });
-    //   this.toast.warning('Mock disabled!');
-    // } else {
-    //   let mockId = data.activeMock;
-
-    //   if (!data.activeMock) {
-    //     mockId = findAutoActiveMock(data) as ohMyMockId;
-    //   }
-
-    //   if (mockId) {
-    //     this.upsertData({ id, enabled: true, ...(mockId && { activeMock: mockId }) });
-    //     this.toast.success(`Mock with status-code ${data.mocks[mockId].statusCode} activated`);
-    //   } else {
-    //     this.toast.error(`Could not activate, there are no responses available`);
-    //   }
-    // }
-  }
-
-  onDelete(id: string, event): void {
-    // event.stopPropagation();
-    // const data = findMocks(this.state, { id });
-
-    // // If you click delete fast enough, you can hit it twice
-    // if (data) {
-    //   let msg = `Deleted mock ${data.url}`;
-    //   if (this.state.domain) {
-    //     msg += ` on domain ${this.state.domain}`;
-    //   }
-    //   this.toast.success(msg, { duration: 2000, style: {} });
-    //   this.deleteData(id);
-    // }
-  }
-
-  onClone(rowIndex: number, event): void {
+  onActivateToggle(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
+    const data = this.state.data[id];
+
+    if (!Object.keys(data.mocks).length) {
+      this.toast.error(`Could not activate, there are no responses available`);
+    } else {
+      this.upsertData({ id, enabled: !data.enabled });
+    }
+  }
+
+  onDelete(id: ohMyDataId, event): void {
+    event.stopPropagation();
+
+    const data = this.state.data[id];
+
+    // If you click delete fast enough, you can hit it twice
+    if (data) {
+      this.deleteData(id);
+
+      let msg = `Deleted mock ${data.url}`;
+      if (this.state.domain) {
+        msg += ` in domain ${this.state.domain}`;
+      }
+      this.toast.success(msg, { duration: 2000, style: {} });
+    }
+  }
+
+  onClone(id: ohMyDataId, event): void {
+    event.stopPropagation();
+
     const data = {
-      ...this.data[rowIndex], id: uniqueId(),
-      enabled: this.state.toggles.activateNew
+      ...this.state.data[id],
+      enabled: this.state.toggles.activateNew,
+      id: uniqueId()
     };
 
-    // this.upsertData(data);
+    this.upsertData(data);
     this.toast.success('Cloned ' + data.url);
   }
 

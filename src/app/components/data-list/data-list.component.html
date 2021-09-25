@@ -81,7 +81,7 @@
         <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>
         <mat-icon *ngIf="row.enabled">stop</mat-icon>
       </button>
-      <button *ngIf="showClone" (click)="onClone(index, $event)" mat-icon-button color="primary"
+      <button *ngIf="showClone" (click)="onClone(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">
         <mat-icon>content_copy</mat-icon>
       </button>
