@@ -38,7 +38,7 @@ export class MockComponent implements OnChanges {
       id: this.data.id,
       makeActive: true,
       mock
-    }, this.domain); 
+    }, this.domain);
   };
   @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data);
   @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) => {
@@ -90,47 +90,21 @@ export class MockComponent implements OnChanges {
 
   ngOnChanges(): void {
     this.activeMockId = this.data.activeMock;
-    this.mock = null;
 
-    if (this.activeMockId && this.data.enabled) {
+    if (this.activeMockId !== this.mock?.id) {
+      this.mock = null;
       this.loadMock(this.data.mocks[this.activeMockId]);
+      this.responseType = isMimeTypeJSON(this.mock?.headersMock?.['content-type']) ? 'json' : '';
     }
-    this.responseType = isMimeTypeJSON(this.mock?.headersMock?.['content-type']) ? 'json' : '';
-
-    // this.activeMock$.subscribe(mock => {
-    //   console.log('new moc', mock);
-    //   this.mock = mock;
-    // });
-
-    // this.onMockActivated(this.data.activeMock, true);
-
-    // setTimeout(() => {
-    //   this.responseRef?.update();
-    //   this.headersRef?.update();
-    // });
-
-    // if (this.delaySubscription) {
-    //   this.delaySubscription.unsubscribe();
-    // }
   }
 
   onDelete(): void {
     this.deleteMockResponse(this.data.id, this.mock.id);
   }
 
-  // onResponseChange(data: string): void {
-  //   if (data !== (this.mock.responseMock || '')) {
-  //     this.upsertMock({ id: this.mock.id, responseMock: data });
-  //   }
-  // }
-
   onRevertResponse(): void {
     this.upsertMock({ id: this.mock.id, responseMock: this.mock.response });
     this.cdr.detectChanges();
-
-    // setTimeout(() => {
-    //   this.responseRef.update();
-    // });
   }
 
   onHeadersChange(headersMock: string): void {
@@ -149,13 +123,9 @@ export class MockComponent implements OnChanges {
   onRevertHeaders(): void {
     this.upsertMock({ id: this.mock.id, headersMock: this.mock.headers });
     this.cdr.detectChanges();
-
-    // setTimeout(() => {
-    //   this.headersRef.update();
-    // });
   }
 
-  onMockActivated(mockId: ohMyMockId, isInit = false) {
+  onMockActivated(mockId: ohMyMockId) {
     this.activeMockId = mockId;
 
     if (!mockId) {
@@ -163,11 +133,9 @@ export class MockComponent implements OnChanges {
       return this.upsertData({ id: this.data.id, enabled: false });
     }
 
-    if (mockId !== this.data.activeMock || !this.data.enabled && !isInit) {
+    if (mockId !== this.data.activeMock || !this.data.enabled) {
       this.upsertData({ id: this.data.id, enabled: true, activeMock: mockId });
     }
-
-    this.loadMock(this.data.mocks[mockId]);
   }
 
   openShowMockCode(): void {

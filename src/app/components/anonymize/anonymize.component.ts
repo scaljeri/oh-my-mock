@@ -51,7 +51,6 @@ export class AnonymizeComponent implements OnInit {
     // Apply Rules
     const resp = this.applyRules(this.mock.responseMock);
 
-    debugger;
     this.dialog.open(DialogCodeEditorComponent, {
       width: '80%',
       data: {

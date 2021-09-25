@@ -52,7 +52,6 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   constructor(private prettyPrintPipe: PrettyPrintPipe) { }
 
   async ngOnInit() {
-    debugger;
     if (this.base) {
       this.base = this.format(this.base);
     }
@@ -70,7 +69,6 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   }
 
   ngOnChanges(): void {
-    debugger;
     if (this.base) {
       if (typeof this.base === 'object') {
         this.base = this.format(this.base);

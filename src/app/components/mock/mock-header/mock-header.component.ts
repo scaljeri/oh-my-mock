@@ -40,10 +40,12 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   subscriptions: Subscription[] = [];
   state: IState;
 
-  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) =>
-    new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
-  @Dispatch() upsertData = (data: Partial<IData>) =>
-    new UpsertData({ ...this.data, ...data }, this.domain);
+  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: boolean) => {
+    return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
+  }
+  @Dispatch() upsertData = (data: Partial<IData>) => {
+    return new UpsertData({ ...this.data, ...data }, this.domain);
+  }
 
   constructor(public dialog: MatDialog, private store: Store) {
     this.subscriptions.push(this.store.select(store => {

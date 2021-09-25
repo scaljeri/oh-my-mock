@@ -197,8 +197,6 @@ export class OhMyState {
   async upsertMock(ctx: StateContext<IOhMyMock>, action: UpsertMock | UpdateMockStorage) {
     const { payload, domain } = action;
 
-    debugger;
-
     let store = OhMyState.getStore(ctx);
     let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
 
@@ -223,7 +221,7 @@ export class OhMyState {
     }
     if (sourceMock) {
       mock = OhMyState.MockUtils.clone(sourceMock, mock);
-      store.content = { ...store.content, mocks: { ...store.content.mocks, [data.activeMock]: mock as IMock } };
+      store.content = { ...store.content, mocks: { ...store.content.mocks, [mock.id]: mock as IMock } };
     }
 
     if (payload.makeActive) {

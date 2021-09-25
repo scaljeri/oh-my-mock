@@ -80,15 +80,8 @@ export class MockDetailsComponent implements OnChanges {
     this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
     this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });
     this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'], { emitEvent: false });
-
-    // this.scenarioCtrl.setValue(this.mock.scenario,  { emitEvent: false, onlySelf: true });
+    this.scenarioCtrl.setValue(this.mock.scenario,  { emitEvent: false, onlySelf: true });
   }
-
-  // onContentTypeUpdate(contentType: string): void {
-  //   if (contentType !== this.mock.headersMock['content-type']) {
-  //     this.upsertMock({ headersMock: { ...this.mock.headersMock, 'content-type': contentType } });
-  //   }
-  // }
 
   onManageScenarios(): void {
     const dialogRef = this.dialog.open(ManageScenariosComponent, {
