@@ -326,8 +326,13 @@ export class OhMyState {
     OhMyState.StorageUtils.remove(Object.keys(data.mocks));
     OhMyState.StorageUtils.set(state.domain, state);
 
-    const index = state.views.activity.indexOf(data.id);
-    state.views.activity = arrayRemoveItem(state.views.activity, index)[0];
+    Object.entries(state.views).forEach(([name, list]) => {
+      if (list.includes(data.id)) {
+        const index = state.views[name].indexOf(data.id);
+        state.views[name] = arrayRemoveItem(state.views[name], index)[0];
+      }
+    });
+    await OhMyState.StorageUtils.set(state.domain, state);
 
     const states = { ...store.content.states, [state.domain]: state };
     ctx.setState({ ...store, content: { ...store.content, states } });
