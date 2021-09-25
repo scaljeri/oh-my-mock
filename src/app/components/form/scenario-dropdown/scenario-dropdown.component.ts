@@ -1,14 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnDestroy } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR, Validators } from '@angular/forms';
 import { Store } from '@ngxs/store'
 import { IOhMyScenarios, IStore, ohMyScenarioId } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state'
 import { Observable, Subscription } from 'rxjs';
-import { UntilDestroy } from '@ngneat/until-destroy';
 import { exactOptionMatchValidator } from 'src/app/validators/exact-match-validator';
 
-@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'oh-my-scenario-dropdown',
   templateUrl: './scenario-dropdown.component.html',
@@ -27,11 +25,11 @@ import { exactOptionMatchValidator } from 'src/app/validators/exact-match-valida
     }
   ]
 })
-export class ScenarioDropdownComponent implements OnChanges, ControlValueAccessor {
+export class ScenarioDropdownComponent implements OnChanges, OnDestroy, ControlValueAccessor {
   @Input() domain: string = OhMyState.domain;
   @Input() scenarios: IOhMyScenarios;
 
-  subscriptions: Subscription[] = [];
+  subscriptions = new Subscription();
 
   options: string[]
   ctrl = new FormControl(null, { updateOn: 'blur' });
@@ -46,7 +44,7 @@ export class ScenarioDropdownComponent implements OnChanges, ControlValueAccesso
   }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.scenariosUpdate$.subscribe(scenarios => {
+    this.subscriptions.add(this.scenariosUpdate$.subscribe(scenarios => {
       this.stateScenarios = scenarios;
       this.ngOnChanges();
       this.cdr.detectChanges();
@@ -114,4 +112,8 @@ export class ScenarioDropdownComponent implements OnChanges, ControlValueAccesso
   //     return state[STORAGE_KEY].content.states[this.domain || OhMyState.domain]?.scenarios;
   //   });
   // }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
 }

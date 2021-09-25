@@ -1,4 +1,4 @@
-<!-- <div class="legenda">
+<div class="legenda">
   <div class="labels">
     <span class="legenda-active">Active</span>
     <span class="active-modified">Active/modified</span>
@@ -6,23 +6,21 @@
     <span class="inactive-modified">Inactive/modified</span>
   </div>
 
+
   <div class="toggles">
-    <div class="toggle">
-      <label for="show-active-list">Activate new</label>
-      <mat-slide-toggle (change)="toggleActivateNew($event.checked)" [checked]="state.toggles.activateNew"
-        color="primary">
-      </mat-slide-toggle>
-    </div>
+
+    <oh-my-scenario-dropdown></oh-my-scenario-dropdown>
 
     <div class="toggle">
-      <label for="show-active-list">Order by activity</label>
-      <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
+      <label for="show-active-list">Activate new</label>
+      <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="state.toggles.activateNew"
+        color="primary">
       </mat-slide-toggle>
     </div>
   </div>
 </div>
 
-<ol data-table cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
+<ol data-table>
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
@@ -44,26 +42,27 @@
     <span class="mock">Mock</span>
     <span class="actions btns-1">Actions</span>
   </li>
-  <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
-    *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
-        'is-hit-a': hitcount[index] % 2 === 0,
-        'is-hit-b': hitcount[index] % 2 === 1,
+
+  <li class="data-row" *ngFor="let row of getFilteredList(); index as index; trackBy: trackBy" (click)="onDataClick(row, index)"
+    [ngClass]="{
+    'is-selected': selection.isSelected(index),
+    'is-active': row.enabled,
+    'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
+    <span class="method">{{row.type}}</span>
+    <span class="type">{{row.method}}</span>
+    <span class="url">{{row.url}}</span>
+    <span class="mock">
+      <oh-my-mock-label *ngIf="row.activeMock" [mock]="row.mocks[row.activeMock]" [state]="state"></oh-my-mock-label>
+    </span>
+    <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
+  </li>
+</ol>
+<!-- 
+<ol data-table>
+  <li *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
         'is-selected': selection.isSelected(index),
         'is-active': row.enabled,
         'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
-    <div class="custom-drag-placeholder" *cdkDragPlaceholder [ngClass]="{
-        'is-hit-a': hitcount[index] % 2 === 0,
-        'is-hit-b': hitcount[index] % 2 === 1,
-        'is-selected': selection.isSelected(index),
-        'is-active': row.enabled,
-        'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
-      <span class="method">{{row.type}}</span>
-      <span class="type">{{row.method}}</span>
-      <span class="url">{{row.url}}</span>
-      <span class="active">
-        <oh-my-mock-label [mock]="row.mocks[row.activeMock]"></oh-my-mock-label>
-      </span>
-    </div>
     <span class="method">{{row.type}}</span>
     <span class="type">{{row.method}}</span>
     <span class="url">{{row.url}}</span>
@@ -72,7 +71,7 @@
     </span>
     <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
   </li>
-</ol>
+</ol> -->
 
 <ng-template #actions let-row="row" let-index="index">
   <div class="actions btns-1">
@@ -96,4 +95,4 @@
       </button>
     </div>
   </div>
-</ng-template> -->
+</ng-template>

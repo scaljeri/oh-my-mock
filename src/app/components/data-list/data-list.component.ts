@@ -4,18 +4,20 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, Toggle, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
+import { DeleteData, LoadState, Toggle, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IState, ohMyMockId } from 'src/shared/type';
+import { domain, IData, IState, IStore, ohMyDataId, ohMyMockId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { arrayMoveItem } from '@shared/utils/array';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { isViewValidate } from '../../utils/validate-view';
 import { uniqueId } from '@shared/utils/unique-id';
 import { FormControl } from '@angular/forms';
+import { STORAGE_KEY } from '@shared/constants';
+import { OhMyState } from 'src/app/store/state';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -23,41 +25,60 @@ export const highlightSeq = [
   animate('1s ease-out', style({ backgroundColor: '*' }))
 ];
 
-@UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
-  animations: [
-    trigger("inOutAnimation", [
-      transition(":leave", [
-        style({ height: "*", opacity: 1, paddingTop: "*", paddingBottom: "*" }),
-        animate(
-          ".7s ease-in",
-          style({ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 })
-        )
-      ])
-    ])
-  ]
+  // animations: [
+  //   trigger("inOutAnimation", [
+  //     transition(":leave", [
+  //       style({ height: "*", opacity: 1, paddingTop: "*", paddingBottom: "*" }),
+  //       animate(
+  //         ".7s ease-in",
+  //         style({ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 })
+  //       )
+  //     ])
+  //   ])
+  // ]
 })
 export class DataListComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() domain: domain = OhMyState.domain;
   @Input() state: IState;
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
   @Input() showExport: boolean;
   @Input() @HostBinding('class') theme = 'dark';
+
   @Output() select = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
-  @Dispatch() deleteData = (id: string) => new DeleteData(id, this.state.domain);
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Dispatch() viewReorder = (name: string, id: string, to: number) => new ViewChangeOrderItems({ name, id, to });
-  @Dispatch() viewReset = (name: string) => new ViewReset(name);
-  @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
-  @Dispatch() toggleActivateNew = (value: boolean) => new Toggle({ name: 'activateNew', value });
+  // @Dispatch() deleteData = (id: string) => {
+  //   debugger;
+  //   return new DeleteData(id, this.state.domain);
+  // }
+  // @Dispatch() upsertData = (data: IData) => {
+  //   debugger;
+  //   return new UpsertData(data);
+  // }
+  // @Dispatch() viewReorder = (name: string, id: string, to: number) => {
+  //   debugger;
+  //   return new ViewChangeOrderItems({ name, id, to });
+  // }
+  // @Dispatch() viewReset = (name: string) => {
+  //   return new ViewReset(name);
+  // }
 
-  public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
+  @Dispatch() loadState = () => new LoadState(this.domain);
+  @Dispatch() toggleActivityList = (value: boolean) => {
+    return new Toggle({ name: 'activityList', value });
+  }
+
+  @Dispatch() toggleActivateNew = (value: boolean) => {
+    return new Toggle({ name: 'activateNew', value });
+  }
+
+  // public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];
@@ -66,33 +87,54 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   private timeoutId: number;
   private isBusyAnimating = false;
 
-  subscriptions: Subscription[] = [];
+  subscriptions = new Subscription();
   filterCtrl = new FormControl('');
 
   public viewList: number[];
 
 
-  public data: IData[];
+  public data: Record<ohMyDataId, IData>;
+  private state$: Observable<IState>;
 
   @ViewChildren('animatedRow', { read: ElementRef }) rows: QueryList<ElementRef>;
 
   constructor(
     private appState: AppStateService,
     private store: Store,
-    private toast: HotToastService) { }
+    private toast: HotToastService) {
+    this.state$ = this.store.select<IState>((store: IStore) => {
+      return store[STORAGE_KEY].content.states[this.domain];
+    })
+  }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.appState.hit$.subscribe((data: IData) => {
-      const index = this.data.indexOf(data);
-      const hitIndex = this.viewList.indexOf(index);
+    this.subscriptions.add(this.state$.subscribe(state => {
+      this.state = state;
 
-      if (this.state.toggles.hits) {
-        this.viewList = arrayMoveItem(this.viewList, hitIndex, 0);
+      if (this.state) {
+        
       }
-
-      this.hitcount[hitIndex] = (this.hitcount[hitIndex] || 0) + 1;
-      this.isBusyAnimating = true;
     }));
+
+    if (!this.state) {
+      this.loadState();
+    }
+
+    // this.subscriptions.push(this.appState.hit$.subscribe((data: IData) => {
+    // const index = this.data.indexOf(data);
+    // const hitIndex = this.viewList.indexOf(index);
+
+    // if (this.state.toggles.hits) {
+    //   this.viewList = arrayMoveItem(this.viewList, hitIndex, 0);
+    // }
+
+    // this.hitcount[hitIndex] = (this.hitcount[hitIndex] || 0) + 1;
+    // this.isBusyAnimating = true;
+    // }));
+  }
+
+  onToggleActivateNew(toggle: boolean): void {
+    this.toggleActivateNew(toggle);
   }
 
   ngOnChanges(): void {
@@ -113,22 +155,23 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     //   const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
 
     //   // Self healing!!
-    //   if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
-    //     this.data = viewList.map(v => this.state.data[v]);
-    //     this.viewList = this.data.map((v, i) => i);
+    //   if (isViewValidate(viewList as any, this.state.data as any)) { // It happens too, super weird
+    //     // this.data = viewList.map(v => this.state.data[v]);
+    //     // this.viewList = this.data.map((v, i) => i);
     //   } else {
     //     // eslint-disable-next-line no-console
     //     console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
 
     //     this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
     //     this.data = this.state.data;
-    //     this.viewList = this.data.map((_, i) => i);
+    //     // this.viewList = this.data.map((_, i) => i);
     //   }
 
     // }, this.isBusyAnimating ? 1000 : 0);
   }
 
-  applyFilter(data: IData[] = []): IData[] {
+  getFilteredList(): IData[] {
+    return this.state.views.activity.map(id => this.state.data[id]);
     // const input = this.filterCtrl.value.toLowerCase();
 
     // if (input === "") {
@@ -206,7 +249,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       enabled: this.state.toggles.activateNew
     };
 
-    this.upsertData(data);
+    // this.upsertData(data);
     this.toast.success('Cloned ' + data.url);
   }
 
@@ -235,10 +278,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     return row.type + row.method + row.url;
   }
 
-  drop(event: CdkDragDrop<unknown>): void {
-    if (!this.filterCtrl.value) {
-      // this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
-    }
-  }
+  // drop(event: CdkDragDrop<unknown>): void {
+  //   if (!this.filterCtrl.value) {
+  //     // this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
+  //   }
+  // }
 }
 

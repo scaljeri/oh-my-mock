@@ -64,6 +64,7 @@ export interface IOhMyShallowMock {
   scenario: ohMyScenarioId | null;
   statusCode: ohMyStatusCode;
   id: ohMyMockId;
+  modifiedOn?: string;
 }
 
 export interface IOhMyMockSearch {

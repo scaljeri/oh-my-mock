@@ -12,6 +12,7 @@ import {
   DeleteMock,
   InitState,
   LoadMock,
+  LoadState,
   ResetState,
   Toggle,
   UpsertData,
@@ -35,6 +36,7 @@ import {
   ohMyDomain,
   IOhMyShallowMock,
   IMock,
+  domain,
 } from '@shared/type';
 import { patch } from '@ngxs/store/operators';
 
@@ -54,6 +56,7 @@ import { MockUtils } from '@shared/utils/mock';
 import { OhMyScenarios, ScenarioUtils } from '@shared/utils/scenario';
 import { contentType } from 'mime-types';
 import { timestamp } from '@shared/utils/timestamp';
+import { arrayRemoveItem } from '@shared/utils/array';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
@@ -229,8 +232,10 @@ export class OhMyState {
       data.enabled = true;
     }
 
-    data.mocks = { ...data.mocks, 
-      [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock) };
+    data.mocks = {
+      ...data.mocks,
+      [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
+    };
 
     if (action instanceof UpsertMock) {
       await OhMyState.StorageUtils.set(activeDomain, state);
@@ -249,15 +254,12 @@ export class OhMyState {
     state = OhMyState.StateUtils.setData(state, data);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
 
+    if (!payload.id) {
+      state.views.activity ??= [];
+      state.views.activity = [data.id, ...state.views.activity];
+    }
+
     await OhMyState.StorageUtils.set(state.domain, state);
-
-    // if (!payload.id) {
-    //   state.views = Object.entries(state.views).reduce((acc, [k, v]) => {
-    //     acc[k] = [data.id, ...v];
-
-    //     return acc;
-    //   }, { });
-    // }
 
     ctx.setState(store);
   }
@@ -315,7 +317,7 @@ export class OhMyState {
     let store = OhMyState.getStore(ctx);
     const [state] = await OhMyState.getMyState(ctx, domain);
 
-    // NOTE: state is updated by reference!!
+    // NOTE: `state` is updated by reference!!
     const data = OhMyState.StateUtils.removeData(state, payload);
     store = OhMyState.StoreUtils.removeMocks(store, Object.keys(data.mocks));
 
@@ -323,10 +325,8 @@ export class OhMyState {
     OhMyState.StorageUtils.remove(Object.keys(data.mocks));
     OhMyState.StorageUtils.set(state.domain, state);
 
-    // state.views = Object.entries(state.views).reduce((acc, [k, v]) => {
-    // acc[k] = view.remove(v, payload);
-    // return acc;
-    // }, {});
+    const index = state.views.activity.indexOf(data.id);
+    state.views.activity = arrayRemoveItem(state.views.activity, index)[0];
 
     const states = { ...store.content.states, [state.domain]: state };
     ctx.setState({ ...store, content: { ...store.content, states } });
@@ -385,6 +385,27 @@ export class OhMyState {
       }
 
       store.content.mocks[payload.id] = mock;
+    }
+
+    ctx.setState(store)
+  }
+
+  @Action(LoadState)
+  async loadState(ctx: StateContext<IOhMyMock>, { payload }: { payload: domain }) {
+    const store = OhMyState.getStore(ctx);
+    store.content = { ...store.content, states: { ...store.content.states } };
+
+    if (store.content.states[payload]) {
+      store.content.states[payload] = { ...store.content.states[payload] };
+    } else {
+      let state = await OhMyState.StorageUtils.get<IState>(payload);
+
+      if (!state) {
+        state = OhMyState.StateUtils.init({ domain: payload });
+        await OhMyState.StorageUtils.set(payload, state);
+      }
+
+      store.content.states[payload] = state;
     }
 
     ctx.setState(store)

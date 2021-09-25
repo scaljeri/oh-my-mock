@@ -6,10 +6,10 @@ import {
   IOhMyToggle,
   ohMyMockId,
   ohMyDataId,
-  ohMyScenarioId,
   ohMyDomain,
   IOhMyScenarios,
   IOhMyShallowMock,
+  domain,
 } from '@shared/type';
 
 export class InitState {
@@ -70,4 +70,9 @@ export class UpsertScenarios {
 export class LoadMock {
   static readonly type = '[Mock] load';
   constructor(public payload: Partial<IOhMyShallowMock>) {}
+}
+
+export class LoadState {
+  static readonly type = '[State] load';
+  constructor(public payload: domain) {}
 }
