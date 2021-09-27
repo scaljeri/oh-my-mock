@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, Input, Self } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnChanges, Self, SimpleChanges, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { BehaviorSubject, merge, Observable } from 'rxjs';
@@ -22,33 +22,50 @@ import { filter, map, startWith, tap } from 'rxjs/operators';
     // }
   ]
 })
-export class AutocompleteDropdownComponent implements AfterViewInit, ControlValueAccessor {
+export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, ControlValueAccessor {
   @Input() options: string[];
   @Input() label: string;
+  @Input() showAllOnFocus = false;
+  @Input() clearOnFocus = false;
 
   internalValue = '';
   _ctrl: FormControl;
-  filteredMethodOptions$: Observable<string[]>;
+  filteredMethodOptions: string[] = [];
 
-  private updateSubject = new BehaviorSubject<string>('');
   private autoCompleteActive = false;
+
+  @ViewChild('input') inputRef: ElementRef;
 
   constructor(@Self() public ngControl: NgControl) {
     ngControl.valueAccessor = this;
   }
 
-  ngAfterViewInit(): void {
-    const control = this.ngControl.control;
+  ngOnChanges(): void {
+    if (this.options) {
+      if (this.showAllOnFocus) {
+        this.filteredMethodOptions = [...this.options].sort();
+      } else {
+        this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+      }
+    }
+  }
 
-    this.filteredMethodOptions$ = this.ctrl.valueChanges.pipe(
-      tap(() => {
-        if (this.ngControl.control.updateOn === 'change') {
-          this.emitChange();
-        }
-      }),
-      startWith(''),
-      map(() => this.filter(this.ctrl.value, this.options as string[]))
-    );
+  ngAfterViewInit(): void {
+    this.ctrl.valueChanges.subscribe(value => {
+      this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+    });
+    // 
+    // const control = this.ngControl.control;
+
+    // this.filteredMethodOptions$ = this.ctrl.valueChanges.pipe(
+    //   tap(() => {
+    //     if (this.ngControl.control.updateOn === 'change') {
+    //       this.emitChange();
+    //     }
+    //   }),
+    //   startWith(''),
+    //   map(() => this.filter(this.ctrl.value, this.options as string[]))
+    // );
   }
 
   onBlur(el): void {
@@ -80,7 +97,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
   }
 
   onOptionSelected(event: MatAutocompleteSelectedEvent): void {
-    // this.selected = event.option.value;
+    this.inputRef.nativeElement.blur();
   }
 
   onChange: any = () => { }
@@ -100,6 +117,9 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
   }
 
   onFocus(e, t): void {
+    if (this.clearOnFocus && !this.autoCompleteActive) {
+      this.ctrl.setValue('');
+    }
   }
 
   // validate({ value }: FormControl) {
