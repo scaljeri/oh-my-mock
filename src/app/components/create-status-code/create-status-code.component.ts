@@ -1,4 +1,4 @@
-import { Component, Inject, Input, OnInit } from '@angular/core';
+import { Component, Host, Inject, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
@@ -47,9 +47,6 @@ export class CreateStatusCodeComponent implements OnInit {
   ngOnInit(): void {
     this.scenarios = this.state.scenarios;
     this.scenarioValues = Object.values(this.scenarios);
-
-    // this.scenarioCtrl.valueChanges.subscribe(value => {
-    // });
   }
 
   onSave(): void {

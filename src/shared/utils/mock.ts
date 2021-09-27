@@ -1,6 +1,6 @@
 import contentParser from 'content-type-parser';
 
-import { IMock, IOhMyShallowMock, ohMyMockId, ohMyStatusCode } from '../type'
+import { IData, IMock, IOhMyShallowMock, ohMyMockId, ohMyStatusCode } from '../type'
 import { MOCK_JS_CODE } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
@@ -61,7 +61,17 @@ export class MockUtils {
     return {
       id: mock.id,
       statusCode: mock.statusCode,
-      ...(mock.scenario !== undefined && {scenario: mock.scenario})
+      ...(mock.scenario !== undefined && { scenario: mock.scenario })
     }
+  }
+
+  static findActive(data: IData): IOhMyShallowMock | null {
+    if (data.activeScenarioMock) {
+      return data.mocks[data.activeScenarioMock];
+    } else if (data.activeMock) {
+      return data.mocks[data.activeMock];
+    }
+
+    return null;
   }
 }

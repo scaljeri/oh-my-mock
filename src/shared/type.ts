@@ -32,13 +32,19 @@ export interface IOhMyMock extends IOhMyMockStorage {
   content: IOhMyMockContent;
 }
 
+export interface IOhMyAux {
+  filterKeywords?: string;
+  filterScenario?: string;
+  appActive?: boolean;
+  newAutoActivate?: boolean;
+}
 
 export interface IState {
   version: string;
   domain: string;
   data: Record<ohMyDataId, IData>;
   views: Record<string, ohMyDataId[]>; // Projections
-  toggles: Record<string, boolean>; // enable toggle and toggles for projections
+  aux: IOhMyAux;
   scenarios: IOhMyScenarios;
   activeScenario?: ohMyScenarioId;
 }
@@ -136,11 +142,6 @@ export interface IOhMyViewItemsOrder {
   name: string;
   id: string;
   to: number;
-}
-
-export interface IOhMyToggle {
-  name: string;
-  value: boolean;
 }
 
 export interface IOhMyEvalContext {

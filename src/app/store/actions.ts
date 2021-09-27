@@ -3,13 +3,15 @@ import {
   IUpsertMock,
   IOhMyMock,
   IOhMyViewItemsOrder,
-  IOhMyToggle,
   ohMyMockId,
   ohMyDataId,
   ohMyDomain,
   IOhMyScenarios,
   IOhMyShallowMock,
   domain,
+  IState,
+  ohMyScenarioId,
+  IOhMyAux,
 } from '@shared/type';
 
 export class InitState {
@@ -25,6 +27,11 @@ export class ChangeDomain {
 export class ResetState {
   static readonly type = '[Domain] Reset';
   constructor(public payload: string) { }
+}
+
+export class UpdateState {
+  static readonly type = '[State] Update';
+  constructor(public payload: IState) { }
 }
 
 export class UpsertData {
@@ -57,9 +64,9 @@ export class ViewReset {
   constructor(public payload: string) { }
 }
 
-export class Toggle {
-  static readonly type = '[Toggle] update';
-  constructor(public payload: IOhMyToggle) { }
+export class Aux {
+  static readonly type = '[Aux] update';
+  constructor(public payload: IOhMyAux) { }
 }
 
 export class UpsertScenarios {
@@ -75,4 +82,9 @@ export class LoadMock {
 export class LoadState {
   static readonly type = '[State] load';
   constructor(public payload: domain) {}
+}
+
+export class ScenarioFilter {
+  static readonly type = '[Filter] scenario';
+  constructor(public payload: ohMyScenarioId) {}
 }

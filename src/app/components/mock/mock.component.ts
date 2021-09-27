@@ -53,8 +53,6 @@ export class MockComponent implements OnChanges {
   activeMock$: Observable<IMock>;
   responseType: string;
 
-  // @ViewChild('response') responseRef: CodeEditComponent;
-  // @ViewChild('headers') headersRef: CodeEditComponent;
   responseCtrl = new FormControl(null, { updateOn: 'blur' });
   headersCtrl = new FormControl(null, { updateOn: 'blur' });
 
@@ -91,7 +89,7 @@ export class MockComponent implements OnChanges {
   ngOnChanges(): void {
     this.activeMockId = this.data.activeMock;
 
-    if (this.activeMockId !== this.mock?.id) {
+    if (this.activeMockId && this.activeMockId !== this.mock?.id) {
       this.mock = null;
       this.loadMock(this.data.mocks[this.activeMockId]);
       this.responseType = isMimeTypeJSON(this.mock?.headersMock?.['content-type']) ? 'json' : '';

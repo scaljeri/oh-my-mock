@@ -14,12 +14,14 @@ import {
   LoadMock,
   LoadState,
   ResetState,
-  Toggle,
+  Aux,
+  UpdateState,
   UpsertData,
   UpsertMock,
   UpsertScenarios,
   ViewChangeOrderItems,
-  ViewReset
+  ViewReset,
+  ScenarioFilter
 } from './actions';
 import { DeleteMockStorage, UpdateMockStorage } from './storage-actions';
 
@@ -28,18 +30,15 @@ import {
   IState,
   IOhMyMock,
   IOhMyViewItemsOrder,
-  IOhMyToggle,
   ohMyMockId,
   ohMyDataId,
-  IUpsertMock,
-  ohMyScenarioId,
   ohMyDomain,
   IOhMyShallowMock,
   IMock,
   domain,
+  ohMyScenarioId,
 } from '@shared/type';
 import { patch } from '@ngxs/store/operators';
-
 
 import { STORAGE_KEY } from '@shared/constants';
 
@@ -218,7 +217,7 @@ export class OhMyState {
       sourceMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
       mock.modifiedOn = timestamp();
     } else { // new
-      sourceMock = payload.clone ?
+      sourceMock = payload.clone && data.activeMock ?
         (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) :
         OhMyState.MockUtils.init();
     }
@@ -236,6 +235,10 @@ export class OhMyState {
       ...data.mocks,
       [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
     };
+
+    if (state.aux.filterScenario && mock.scenario === state.aux.filterScenario) {
+      data.activeScenarioMock = mock.id
+    }
 
     if (action instanceof UpsertMock) {
       await OhMyState.StorageUtils.set(activeDomain, state);
@@ -351,12 +354,16 @@ export class OhMyState {
     ctx.setState({ ...store, content });
   }
 
-  @Action(Toggle)
-  async toggle(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyToggle }) {
+  @Action(Aux)
+  async aux(ctx: StateContext<IOhMyMock>, { payload }: { payload: Record<string, unknown> }) {
     const store = OhMyState.getStore(ctx);
     const [state] = await OhMyState.getMyState(ctx);
 
-    state.toggles = { ...state.toggles, [payload.name]: payload.value };
+    state.aux = { ...state.aux };
+    Object.entries(payload).forEach(([k, v]) => {
+      state.aux[k] = v;
+    });
+
     await OhMyState.StorageUtils.set(state.domain, state);
     const content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
 
@@ -396,6 +403,18 @@ export class OhMyState {
     ctx.setState(store)
   }
 
+  // `state` should always be present!
+  @Action(UpdateState)
+  async updateState(ctx: StateContext<IOhMyMock>, { payload }: { payload: IState }) {
+    const store = OhMyState.getStore(ctx);
+    const state = { ...store.content.states[payload.domain], ...payload };
+
+    await OhMyState.StorageUtils.set(state.domain, state);
+
+    store.content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
+    ctx.setState(store)
+  }
+
   @Action(LoadState)
   async loadState(ctx: StateContext<IOhMyMock>, { payload }: { payload: domain }) {
     const store = OhMyState.getStore(ctx);
@@ -415,5 +434,26 @@ export class OhMyState {
     }
 
     ctx.setState(store)
+  }
+
+  @Action(ScenarioFilter)
+  async scenarioFilter(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyScenarioId }) {
+    const store = OhMyState.getStore(ctx);
+    let [state] = await OhMyState.getMyState(ctx);
+
+    state = OhMyState.StateUtils.activateScenario(state, payload);
+
+    store.content = {
+      ...store.content, states: {
+        ...store.content.states,
+        [state.domain]: state
+      }
+    };
+
+    await OhMyState.StorageUtils.set(state.domain, state);
+    // ctx.patchState({content: })
+    ctx.setState(store)
+
+    return ctx.dispatch(new Aux({ filterScenario: payload }));
   }
 }

@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { STORAGE_KEY } from '@shared/constants';
-import { domain, IOhMyScenarios, IStore, ohMyScenarioId } from '@shared/type';
+import { domain, IOhMyScenarios, IState, IStore, ohMyScenarioId } from '@shared/type';
 import { uniqueId } from '@shared/utils/unique-id';
 import { UpsertScenarios } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
@@ -32,7 +32,7 @@ export class ManageScenariosComponent implements AfterViewInit {
   constructor(
     private store: Store,
     @Optional() private dialogRef: MatDialogRef<ManageScenariosComponent>,
-    @Inject(MAT_DIALOG_DATA) private dialogScenarios: { scenarios?: IOhMyScenarios, domain?: domain },
+    @Optional() @Inject(MAT_DIALOG_DATA) private dialogScenarios: { scenarios?: IOhMyScenarios, domain?: domain },
     private cdr: ChangeDetectorRef) { }
 
   ngAfterViewInit(): void {
@@ -55,8 +55,11 @@ export class ManageScenariosComponent implements AfterViewInit {
   onSave(): void {
     this.updateScenarios(this.scenariosObj);
 
-    this.dialogRef?.close(this.scenariosObj);
-    this.update.emit(this.scenariosObj);
+    if (!this.isInDialog()) {
+      this.dialogRef?.close(this.scenariosObj);
+    } else {
+      this.update.emit(this.scenariosObj);
+    }
   }
 
   onCreate(): void {
@@ -76,6 +79,11 @@ export class ManageScenariosComponent implements AfterViewInit {
   onDelete(id: ohMyScenarioId): void {
     this.scenarioIds = this.scenarioIds.filter(sid => sid !== id);
     delete this.scenariosObj[id];
+  }
+
+  isInDialog(): boolean {
+    return (this.dialogScenarios && (this.dialogScenarios as IState).aux &&
+     typeof (this.dialogScenarios as IState).aux === 'object');
   }
 
   get scenariosSnapshot(): IOhMyScenarios {

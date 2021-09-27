@@ -9,11 +9,11 @@
 
   <div class="toggles">
 
-    <oh-my-scenario-dropdown></oh-my-scenario-dropdown>
+    <oh-my-autocomplete-dropdown [formControl]="scenarioCtrl" [options]="scenarioOptions" label="Scenario"></oh-my-autocomplete-dropdown>
 
     <div class="toggle">
       <label for="show-active-list">Activate new</label>
-      <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="state.toggles.activateNew"
+      <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="$any(state.aux.newAutoActivate)"
         color="primary">
       </mat-slide-toggle>
     </div>
@@ -43,7 +43,7 @@
     <span class="actions btns-1">Actions</span>
   </li>
 
-  <li class="data-row" *ngFor="let row of getFilteredList(); index as index; trackBy: trackBy" (click)="onDataClick(row, index)"
+  <li class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy" (click)="onDataClick(row, index)"
     [ngClass]="{
     'is-selected': selection.isSelected(index),
     'is-active': row.enabled,

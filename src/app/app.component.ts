@@ -9,7 +9,7 @@ import {
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
-import { Toggle } from './store/actions';
+import { Aux } from './store/actions';
 import { IState } from '../shared/type';
 import { Select, Store } from '@ngxs/store';
 import { OhMyState } from './store/state';
@@ -40,13 +40,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   dialogDone = false;
   isInitializing = true;
 
-  @Dispatch() activate = (value: boolean) => new Toggle({ name: 'active', value });
+  @Dispatch() activate = (value: boolean) => new Aux({ appActive: value });
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
-// animals$: Observable<any>;
+  // animals$: Observable<any>;
   constructor(
     private appStateService: AppStateService,
     private contentService: ContentService,
@@ -75,7 +75,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       // }
 
       this.isInitializing = false;
-      this.enabled = state.toggles.active;
+      this.enabled = state.aux.appActive;
+
       if (this.enabled) {
         if (this.dialogRef) {
           this.dialogRef.close();
@@ -87,7 +88,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  onEnableChange({ checked }: MatSlideToggleChange): void {  
+  onEnableChange({ checked }: MatSlideToggleChange): void {
     this.activate(checked);
     this.contentService.sendActiveState(checked);
   }

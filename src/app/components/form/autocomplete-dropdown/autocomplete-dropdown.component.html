@@ -1,7 +1,7 @@
 <mat-form-field class="method-select">
     <mat-label>{{label}}</mat-label>
     <input 
-        (blur)="onBlur()"
+        (blur)="onBlur(auto)"
         (focus)="onFocus($event, trigger)"
         type="text" matInput 
         [formControl]="ctrl"

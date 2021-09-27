@@ -1,4 +1,4 @@
-import { IOhMyMock, IState, IMock, ohMyDomain, IUpsertMock } from '@shared/type';
+import { IOhMyMock, IState, ohMyDomain, IUpsertMock } from '@shared/type';
 
 export class UpdateDomainsStorage {
   static readonly type = '[Storage] update Domains';

@@ -1,12 +1,10 @@
 import { objectTypes } from '@shared/constants';
-import { IData, IMock, IOhMyMockSearch, IState, ohMyDataId, ohMyMockId } from '../type';
-import { StateUtils } from './state';
+import { IData, IMock, IOhMyMockSearch, ohMyMockId, ohMyScenarioId } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
 
 export class DataUtils {
-  static StateUtils = StateUtils;
   static StorageUtils = StorageUtils;
 
   // static get(state: IState, id: ohMyDataId): IData {
@@ -16,7 +14,7 @@ export class DataUtils {
   static init(data: Partial<IData>): IData {
     return {
       id: uniqueId(),
-      mocks: { },
+      mocks: {},
       type: objectTypes.DATA,
       ...data
     } as IData;
@@ -79,6 +77,17 @@ export class DataUtils {
     return data;
   }
 
+  static activeMockByScenario(data: IData, scenario: ohMyScenarioId): IData {
+    const copy = { ...data };
+    const result = Object.entries(data.mocks).find(([k, v]) => {
+      return v.scenario === scenario
+    }) || [];
+
+    copy.activeScenarioMock = result[0]
+
+    return copy;
+  }
+
   static deactivateMock(data: IData, isScenario = false): IData {
     if (isScenario) {
       data.activeScenarioMock = null;
@@ -95,7 +104,7 @@ export class DataUtils {
     const output = {
       id: uniqueId(),
       enabled: false,
-      mocks: { },
+      mocks: {},
       ...data
     } as IData;
 

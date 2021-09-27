@@ -1,3 +1,4 @@
+import { map } from 'rxjs/operators';
 import { ohMyScenarioId } from '../type';
 import { uniqueId } from './unique-id';
 
@@ -16,6 +17,11 @@ export class ScenarioUtils {
         }, {});
 
         return { ...scenarios, ...nonDupsObj };
+    }
+
+    static findByLabel(label: string, scenarios: OhMyScenarios): ohMyScenarioId {
+        return Object.entries(scenarios)
+            .find(([k, v]) => v.toLowerCase() === label.toLowerCase())?.[0];
     }
 
     static create(scenarios: OhMyScenarios, value: string): ohMyScenarioId {

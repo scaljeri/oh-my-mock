@@ -1,4 +1,5 @@
-import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId } from '../type';
+import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyScenarioId } from '../type';
+import { DataUtils } from './data';
 import { compareUrls } from './urls';
 
 export class StateUtils {
@@ -7,7 +8,7 @@ export class StateUtils {
     return {
       version: this.version, views: {
         activity: []
-      }, toggles: {}, data: {}, scenarios: {}, ...base
+      }, aux: {}, data: {}, scenarios: {}, ...base
     } as IState;
   }
 
@@ -55,5 +56,19 @@ export class StateUtils {
   static getAllMockIds(state: IState): ohMyMockId[] {
     return Object.values(state.data).map(d => Object.keys(d.mocks))
       .reduce((acc, mocks) => [...acc, ...mocks])
+  }
+
+  static activateScenario(state: IState, scenario: ohMyScenarioId): IState {
+    state = {
+      ...state,
+      aux: { ...state.aux, filterScenario: scenario },
+      data: { ...state.data }
+    };
+
+    Object.entries(state.data).forEach(([id, data]) => {
+      state.data[id] = DataUtils.activeMockByScenario(data, scenario);
+    });
+
+    return state;
   }
 }

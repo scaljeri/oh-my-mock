@@ -21,8 +21,8 @@ ohMyState$.subscribe((state: IState) => {
   }
 
   // Did activity change?
-  if (!ohMyState && state.toggles.active || ohMyState && ohMyState.toggles.active !== state.toggles.active) {
-    if (state.toggles.active) {
+  if (!ohMyState && state.aux.appActive || ohMyState && ohMyState.aux.appActive !== state.aux.appActive) {
+    if (state.aux.appActive) {
       log('%c*** Activated ***', 'background: green');
       window.XMLHttpRequest = OhMockXhr;
       window.fetch = OhMyFetch;

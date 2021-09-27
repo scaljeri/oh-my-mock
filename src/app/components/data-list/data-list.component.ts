@@ -4,20 +4,18 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, LoadState, Toggle, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
+import { DeleteData, LoadState, Aux, UpdateState, UpsertData, ViewChangeOrderItems, ViewReset, ScenarioFilter } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IState, IStore, ohMyDataId, ohMyMockId } from 'src/shared/type';
+import { domain, IData, IOhMyAux, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { Observable, Subscription } from 'rxjs';
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { arrayMoveItem } from '@shared/utils/array';
-import { UntilDestroy } from '@ngneat/until-destroy';
-import { isViewValidate } from '../../utils/validate-view';
+import { combineLatest, merge, Observable, Subscription, zip } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
 import { FormControl } from '@angular/forms';
 import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state';
+import { ScenarioUtils } from '@shared/utils/scenario';
+import { filter, startWith } from 'rxjs/operators';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -53,6 +51,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() select = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
+  @Dispatch() updateScenarioFilter = (id: ohMyScenarioId) => new ScenarioFilter(id);
+  @Dispatch() updateAux = (values: IOhMyAux) => new Aux(values);
+  @Dispatch() updateState = (state: IState) => new UpdateState(state);
   @Dispatch() deleteData = (id: string) => {
     return new DeleteData(id, this.state.domain);
   }
@@ -68,12 +69,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   // }
 
   @Dispatch() loadState = () => new LoadState(this.domain);
-  @Dispatch() toggleActivityList = (value: boolean) => {
-    return new Toggle({ name: 'activityList', value });
-  }
+  // @Dispatch() toggleActivityList = (value: boolean) => {
+  //   return new Aux({ activityList: value });
+  // }
 
   @Dispatch() toggleActivateNew = (value: boolean) => {
-    return new Toggle({ name: 'activateNew', value });
+    return new Aux({ newAutoActivate: value });
   }
 
   // public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
@@ -85,8 +86,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
+  scenarioCtrl = new FormControl('', { updateOn: 'blur' });
+  filteredDataList: IData[];
 
   public viewList: ohMyDataId[];
+  scenarioOptions: string[] = [];
 
 
   public data: Record<ohMyDataId, IData>;
@@ -104,9 +108,22 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.scenarioCtrl.valueChanges.subscribe(scenario => {
+      this.updateScenarioFilter(ScenarioUtils.findByLabel(scenario, this.state.scenarios));
+    });
+    this.filterCtrl.valueChanges.subscribe(filter => {
+      this.updateAux({ filterKeywords: filter.toLowerCase() });
+    });
+
     this.subscriptions.add(this.state$.subscribe(state => {
       this.state = state;
       this.viewList = state.views.activity;
+      this.scenarioOptions = Object.values(state.scenarios);
+      this.filteredDataList = this.filterListByKeywords();
+
+      this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
+      this.filterCtrl.setValue(state.aux.filterKeywords, { emitEvent: false });
+      this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.aux.filterScenario);
     }));
 
     if (!this.state) {
@@ -163,37 +180,68 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     // }, this.isBusyAnimating ? 1000 : 0);
   }
 
-  getFilteredList(): IData[] {
-    return this.state.views.activity?.map(id => this.state.data[id]) || [];
-    // const input = this.filterCtrl.value.toLowerCase();
 
-    // if (input === "") {
-    //   return data;
+  onScenarioUpdate(scenario): void {
+    const scenarioId = ScenarioUtils.findByLabel(scenario, this.state.scenarios);
+
+    this.updateAux({ filterScenario: scenarioId });
+
+    // if (!scenarioId) {
+    //   this.scenarioCtrl.setValue('', { emitEvent: false });
+    // } else {
+    //   const state = { ...this.state, data: { ...this.state.data } };
+
+    //   Object.entries(this.state.data).forEach(([id, data]) => {
+    //     const result = Object.entries(data.mocks).find(([, mock]) => mock.scenario === scenarioId);
+
+    //     data = { ...data, activeScenarioMock: result ? result[0] : null };
+    //     state.data[id] = data;
+    //   });
+
+    //   this.updateState(state);
     // }
+  }
 
-    // const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
-    // const rmQuotedRe = /"[^"]+"\s{0,}/g;
+  onFilterUpdate(): void {
+    this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
+  }
 
-    // const qwords = input.match(quotedRe) || [];
-    // const words = input.replace(rmQuotedRe, '').split(' ');
+  filterListByScenario(list: IData[], scenarioId: ohMyScenarioId): IData[] {
+    return list.filter(data => data.mocks[data.activeScenarioMock]?.scenario === scenarioId);
+  }
 
-    // const filtered = data.filter(d =>
-    //   [...qwords, ...words]
-    //     .filter(v => v !== undefined && v !== '')
-    //     .some(v =>
-    //       d.url.toLowerCase().includes(v) ||
-    //       d.type.toLowerCase().includes(v) ||
-    //       d.method.toLowerCase().includes(v) ||
-    //       !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) ||
-    //       !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
-    //     )
-    // );
+  filterListByKeywords(): IData[] {
+    const data = this.state.views.activity?.map(id => this.state.data[id]) || [];
+    const input = this.state.aux.filterKeywords as string;
 
-    // return filtered;
-    return null;
+    if (input === '' || input === undefined || input === null) {
+      return data;
+    }
+
+    const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
+    const rmQuotedRe = /"[^"]+"\s{0,}/g;
+
+    const qwords = input.match(quotedRe) || [];
+    const words = input.replace(rmQuotedRe, '').split(' ');
+    const terms = [...qwords, ...words];
+
+    const filtered = data.filter((d: IData) =>
+      terms
+        .filter(v => v !== undefined && v !== '')
+        .some(v =>
+          d.url.toLowerCase().includes(v) ||
+          d.type.toLowerCase().includes(v) ||
+          d.method.toLowerCase().includes(v) ||
+          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v)
+          // || !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
+        )
+    );
+
+    return filtered;
   }
 
   ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   onActivateToggle(id: ohMyDataId, event: MouseEvent): void {
@@ -229,7 +277,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
     const data = {
       ...this.state.data[id],
-      enabled: this.state.toggles.activateNew,
+      enabled: !!this.state.aux.newAutoActivate,
       id: uniqueId()
     };
 

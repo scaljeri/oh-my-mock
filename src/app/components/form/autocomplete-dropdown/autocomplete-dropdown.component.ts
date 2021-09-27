@@ -25,7 +25,6 @@ import { filter, map, startWith, tap } from 'rxjs/operators';
 export class AutocompleteDropdownComponent implements AfterViewInit, ControlValueAccessor {
   @Input() options: string[];
   @Input() label: string;
-  @Input() formControl: FormControl;
 
   internalValue = '';
   _ctrl: FormControl;
@@ -46,16 +45,18 @@ export class AutocompleteDropdownComponent implements AfterViewInit, ControlValu
         if (this.ngControl.control.updateOn === 'change') {
           this.emitChange();
         }
-      }), 
+      }),
       startWith(''),
       map(() => this.filter(this.ctrl.value, this.options as string[]))
     );
   }
 
-  onBlur(): void {
+  onBlur(el): void {
     if (!this.autoCompleteActive) {
       this.emitChange();
     }
+
+    el?.closePanel?.();
   }
 
   emitChange(): void {
