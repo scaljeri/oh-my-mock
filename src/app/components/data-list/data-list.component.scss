@@ -97,9 +97,9 @@ ol[data-table] {
           padding-right: 30px;
         }
 
-        button {
-          @include oh-position(absolute, 8px 0px 0 0);
-        }
+        // button {
+        //   @include oh-position(absolute, 8px 0px 0 0);
+        // }
 
         .search-help {
           @include oh-position(absolute, 8px -10px 0 0);
@@ -253,6 +253,11 @@ span.type {
     & + .toggle {
       margin-left: $spacer-2;
     }
+  }
+
+  .scenario-help {
+    margin-left: -$spacer-5;
+    margin-right: $spacer-2;
   }
 }
 
