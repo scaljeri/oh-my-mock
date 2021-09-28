@@ -16,4 +16,7 @@
             {{option}}
         </mat-option>
     </mat-autocomplete>
+    <button mat-button *ngIf="ctrl.value" matSuffix mat-icon-button aria-label="Clear" (click)="ctrl.setValue('');trigger.openPanel()">
+        <mat-icon>close</mat-icon>
+    </button>
 </mat-form-field>

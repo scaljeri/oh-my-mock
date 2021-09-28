@@ -109,7 +109,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.scenarioCtrl.valueChanges.subscribe(scenario => {
-      this.updateScenarioFilter(ScenarioUtils.findByLabel(scenario, this.state.scenarios));
+      // this.updateScenarioFilter(ScenarioUtils.findByLabel(scenario, this.state.scenarios));
+      this.updateScenarioFilter(scenario);
     });
     this.filterCtrl.valueChanges.subscribe(filter => {
       this.updateAux({ filterKeywords: filter.toLowerCase() });
@@ -121,7 +122,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.scenarioOptions = Object.values(state.scenarios);
       this.filteredDataList = this.filterListByKeywords();
 
-      this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
+      this.scenarioCtrl.setValue(state.aux.filterScenario, { emitEvent: false });
+      // this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
       this.filterCtrl.setValue(state.aux.filterKeywords, { emitEvent: false });
       this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.aux.filterScenario);
     }));

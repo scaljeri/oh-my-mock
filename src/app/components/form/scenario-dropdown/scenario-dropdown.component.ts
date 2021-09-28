@@ -89,7 +89,7 @@ export class ScenarioDropdownComponent implements OnChanges, OnDestroy, ControlV
 
   writeValue(id: ohMyScenarioId): void {
     this.value = id;
-    this.ctrl.setValue(this.getScenarioLabel(id));
+    this.ctrl.setValue(this.getScenarioLabel(id), { emitEvent: false });
   }
 
   registerOnChange(fn: any) {

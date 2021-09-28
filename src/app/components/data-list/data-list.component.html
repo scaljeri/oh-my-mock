@@ -8,8 +8,7 @@
 
 
   <div class="toggles">
-
-    <oh-my-autocomplete-dropdown [showAllOnFocus]="true" [formControl]="scenarioCtrl" [options]="scenarioOptions" label="Scenario"></oh-my-autocomplete-dropdown>
+    <oh-my-scenario-dropdown class="scenario-selector" [formControl]="scenarioCtrl" [scenarios]="state?.scenarios"></oh-my-scenario-dropdown>
 
     <div class="toggle">
       <label for="show-active-list">Activate new</label>
