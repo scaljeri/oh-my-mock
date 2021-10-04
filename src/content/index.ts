@@ -111,5 +111,5 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   };
 
   mockScript.src = chrome.runtime.getURL('oh-my-mock.js');
-  document.head.append(mockScript);
+  document.documentElement.append(mockScript);
 })();
