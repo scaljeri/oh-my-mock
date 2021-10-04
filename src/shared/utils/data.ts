@@ -1,5 +1,5 @@
-import { objectTypes } from '@shared/constants';
-import { IData, IMock, IOhMyMockSearch, ohMyMockId, ohMyScenarioId } from '../type';
+import { objectTypes } from '../constants';
+import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId, ohMyScenarioId } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -20,8 +20,14 @@ export class DataUtils {
     } as IData;
   }
 
-  static getActiveMock(data: IData, mocks: IMock[]): IMock | null {
-    return mocks[data.activeScenarioMock || data.activeMock || ''];
+  static getActiveMock(data: IData, mocks?: IMock[]): IMock | IOhMyShallowMock | null {
+    const list = mocks || data.mocks;
+
+    return mocks[data.activeScenarioMock || data.activeMock || ''] as IMock;
+  }
+
+  static hasActiveMock(data: IData): boolean {
+    return !!(data.activeScenarioMock || data.activeMock);
   }
 
   static findMock(data: IData, search: IOhMyMockSearch, mocks: Record<ohMyMockId, IMock>): IMock | null {

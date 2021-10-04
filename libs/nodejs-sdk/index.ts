@@ -2,7 +2,7 @@ import express from 'express';
 import { Server, Socket } from 'socket.io';
 import * as http from 'http';
 import { IOhServerConfig, OhMyServer } from './oh-my-server';
-import { IOhMyEvalContext, IPacketPayload } from '../../src/shared/type';
+import { IPacketPayload } from '../../src/shared/type';
 
 export * from '../../src/shared/type';
 
@@ -27,7 +27,7 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
     // eslint-disable-next-line no-console
     console.log("Client connected", socket.handshake.query.source);
 
-    socket.on("data", async function (payload: IPacketPayload<IOhMyEvalContext>) {
+    socket.on("data", async function (payload: IPacketPayload<any>) {
       // eslint-disable-next-line no-console
       if (payload.data) {
         // eslint-disable-next-line no-console

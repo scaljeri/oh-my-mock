@@ -45,7 +45,6 @@ import { STORAGE_KEY } from '@shared/constants';
 import * as view from '@shared/utils/view';
 import { StoreUtils } from '@shared/utils/store';
 import { AppStateService } from '../services/app-state.service';
-import { StorageService } from '../services/storage.service';
 import { DataUtils } from '@shared/utils/data';
 import { StorageUtils } from '@shared/utils/storage';
 import { StateUtils } from '@shared/utils/state';
@@ -53,7 +52,6 @@ import { MigrationUtils } from '../utils/migration';
 import { APP_VERSION } from '../tokens';
 import { MockUtils } from '@shared/utils/mock';
 import { OhMyScenarios, ScenarioUtils } from '@shared/utils/scenario';
-import { contentType } from 'mime-types';
 import { timestamp } from '@shared/utils/timestamp';
 import { arrayRemoveItem } from '@shared/utils/array';
 
@@ -77,8 +75,7 @@ export class OhMyState {
   static MigrationUtils = MigrationUtils;
   constructor(
     @Inject(APP_VERSION) public version: string,
-    appStateService: AppStateService,
-    private storageService: StorageService) {
+    appStateService: AppStateService) {
     appStateService.domain$.subscribe(domain => OhMyState.domain = domain);
     OhMyState.MigrationUtils.version = version;
   }

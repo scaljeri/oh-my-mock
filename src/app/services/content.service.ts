@@ -62,6 +62,7 @@ export class ContentService {
   }
 
   sendActiveState(isActive: boolean): void {
+    debugger;
     const msg = {
       tabId: this.appStateService.tabId,
       source: appSources.POPUP,

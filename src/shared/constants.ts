@@ -46,8 +46,10 @@ export enum packetTypes {
   EVAL = 'execute',
   EVAL_RESULT = 'eval-result',
   DATA = 'data',
-  DATA_DISPATCH = 'data-dispatch'
-
+  DATA_DISPATCH = 'data-dispatch',
+  DISPATCH_API_REQUEST = 'dispatch-request',
+  DISPATCH_API_RESPONSE = 'api-response',
+  MOCK_RESPONSE = 'mock-response'
 }
 export enum appSources {
   INJECTED = 'injected',
@@ -69,7 +71,8 @@ export const MOCK_RULE_TYPES = {
   username: 'Username'
 };
 
-export enum ohMyEvalStatus {
+export enum ohMyMockStatus {
   OK,
-  ERROR
+  ERROR,
+  NO_CONTENT
 }

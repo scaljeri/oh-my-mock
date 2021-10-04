@@ -1,32 +1,33 @@
 import { ohMyEvalStatus } from '../constants';
-import { IData, IMock, IOhMyEvalRequest, IOhMyEvalResult } from '../type';
+import { IMock, IOhMyRequest } from '../type';
 import { compileJsCode } from './eval-jscode';
 
-export const evalCode = async (data: IData, request: IOhMyEvalRequest): Promise<IOhMyEvalResult> => {
-  if (!data.mocks || !data.mocks[data.activeMock || '']) {
+export const evalCode = async (mock: IMock, request: IOhMyRequest): Promise<any> => {
+  // TODO: Shouldn't here and shouldn't be an error just no-content for example
+  if (!mock) {
     return {
       status: ohMyEvalStatus.ERROR,
       result: 'No mock available'
     };
   }
-  const mock = data.mocks[data.activeMock as string];
 
-  let retVal: IOhMyEvalResult;
+  let retVal: any;
   const context = {
-    // response: mock.responseMock,
-    // headers: mock.headersMock,
-    // delay: mock.delay,
-    // statusCode: mock.statusCode
+    response: mock.responseMock,
+    headers: mock.headersMock,
+    delay: mock.delay,
+    statusCode: mock.statusCode
   } as Partial<IMock>;
 
   try {
-    // const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyEvalRequest) => Partial<IMock>;
-    // const result = await code(context, {
-    //   url: request.url,
-    //   method: request.method,
-    //   body: request.body,
-    //   headers: request.headers
-    // });
+    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyRequest) => Partial<IMock>;
+    const result = await code(context, {
+      type: request.type,
+      url: request.url,
+      method: request.method,
+      body: request.body,
+      headers: request.headers
+    });
 
     retVal = null; // { status: ohMyEvalStatus.OK, result };
   } catch (err) {

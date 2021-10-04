@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { IData, IMock, IOhMyContext, IOhMyEvalRequest, statusCode } from '../../src/shared/type';
+import { IData, IMock, IOhMyContext, statusCode } from '../../src/shared/type';
 import { compareUrls } from '../../src/shared/utils/urls';
 
 const fsPromise = fs.promises;
@@ -14,7 +14,7 @@ export type IOhFileContext = Omit<IOhMyContext, 'id' | 'mockId'> &
   statusCode?: statusCode;
   headers?: Record<string, string>;
   path: string
-  handler: (data: IData, request: IOhMyEvalRequest, mock: IMock) => IMock;
+  handler: (data: IData, request: any, mock: IMock) => IMock;
 };
 
 export class OhMyLocal {
@@ -37,7 +37,7 @@ export class OhMyLocal {
 
   // If a context is defined for `data`, it will update and return `mock`. If not, the
   // original `mock` object is returned
-  async updateMock(data: IData, request: IOhMyEvalRequest): Promise<IMock> {
+  async updateMock(data: IData, request: any): Promise<IMock> {
     const context = this.findContext(data);
     const mock = data.mocks?.[data.activeMock!];
 

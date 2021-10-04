@@ -2,7 +2,6 @@ import { IState } from '../shared/type';
 import { OhMockXhr } from './mock-oh-xhr';
 import { OhMyFetch } from './mock-oh-fetch';
 import { ohMyState$ } from './state-manager';
-import { hasCSPIssues } from './detect-csp-issues';
 import { log } from './utils';
 
 declare let window: any;
@@ -13,7 +12,7 @@ const MEM_FETCH = window.fetch;
 
 let ohMyState: IState;
 
-hasCSPIssues();
+// hasCSPIssues();
 
 ohMyState$.subscribe((state: IState) => {
   if (!state) {
@@ -21,7 +20,7 @@ ohMyState$.subscribe((state: IState) => {
   }
 
   // Did activity change?
-  if (!ohMyState && state.aux.appActive || ohMyState && ohMyState.aux.appActive !== state.aux.appActive) {
+  if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
     if (state.aux.appActive) {
       log('%c*** Activated ***', 'background: green');
       window.XMLHttpRequest = OhMockXhr;

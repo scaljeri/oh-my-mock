@@ -28,7 +28,7 @@ export class StorageUtils {
     });
   }
 
-  static get<T = unknown>(key: string): Promise<T> {
+  static get<T = unknown>(key: string = STORAGE_KEY): Promise<T> {
     return new Promise<T>((resolve) => {
       chrome.storage.local.get(key, (data: { [key: string]: T }) => {
         resolve(data[key]);

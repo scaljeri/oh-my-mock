@@ -1,4 +1,4 @@
-import { appSources, MOCK_RULE_TYPES, objectTypes, ohMyEvalStatus, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
+import { appSources, MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';
@@ -115,7 +115,7 @@ export interface IUpsertMock extends IOhMyUpsertData {
   makeActive?: boolean;
 }
 
-export interface IPacket<T = unknown> {
+export interface IPacket<T = any> {
   tabId?: number;
   domain?: string;
   source: appSources;
@@ -144,21 +144,34 @@ export interface IOhMyViewItemsOrder {
   to: number;
 }
 
-export interface IOhMyEvalContext {
-  data: IData;
-  request: IOhMyEvalRequest;
-}
+// export interface IOhMyEvalContext {
+//   data: IData;
+  // request: IOhMyEvalRequest;
+// }
 
-export interface IOhMyEvalRequest {
+export interface IOhMyRequest {
   url: string;
   method: requestMethod;
+  type: requestType;
   body: unknown;
   headers: Record<string, string>;
 }
 
-export interface IOhMyEvalResult {
-  status: ohMyEvalStatus;
-  result: Partial<IMock> | string;
+export interface IOhMyMockResponse {
+  status: ohMyMockStatus;
+  statusCode?: statusCode;
+  headers?: Record<string, string>;
+  response?: unknown;
+}
+
+export interface IOhMyAPIResponse {
+  data: Partial<IData>;
+  mock: Partial<IMock>;
+}
+
+export interface IDispatchApiResponsePacket {
+  context?: IOhMyContext;
+  data: IOhMyContext
 }
 
 export interface IOhMyPopupActive {

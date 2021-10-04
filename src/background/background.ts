@@ -2,7 +2,7 @@
 
 import { evalCode } from '../shared/utils/eval-code';
 import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IOhMyEvalContext, IOhMyPopupActive, IPacket } from '../shared/type';
+import { IOhMyPopupActive, IPacket } from '../shared/type';
 import { OhMockXhr } from './xhr';
 import { OhMockFetch } from './fetch';
 import { connectWithLocalServer, dispatchRemote } from './dispatch-remote';
@@ -32,17 +32,17 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   }
 }
 
-async function handleEval(packet: IPacket<IOhMyEvalContext>): Promise<void> {
+async function handleEval(packet: IPacket<any>): Promise<void> {
   window.ohMyHost = packet.payload.context.url;
-  const input = packet.payload.data as IOhMyEvalContext;
+  const input = packet.payload.data as any;
   const data = await evalCode(input.data, input.request);
 
   sendMessage2Content(packet.tabId as number, packet.payload.context, data, packetTypes.EVAL_RESULT);
 }
 
-async function handleDispatch(packet: IPacket<IOhMyEvalContext>): Promise<void> {
+async function handleDispatch(packet: IPacket<any>): Promise<void> {
   const payload = packet.payload;
-  const data = (payload.data as IOhMyEvalContext).data;
+  const data = (payload.data as any).data;
   const mock = await dispatchRemote(payload);
 
   if (mock) {

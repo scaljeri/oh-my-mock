@@ -53,7 +53,6 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
 
   ngAfterViewInit(): void {
     this.ctrl.valueChanges.subscribe(value => {
-      debugger;
       this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
     });
   }

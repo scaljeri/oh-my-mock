@@ -4,7 +4,6 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './services/app-state.service';
 import { MigrationsService } from './services/migrations.service';
-import { StorageService } from './services/storage.service';
 import { InitState } from './store/actions';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
@@ -18,8 +17,7 @@ export class forwarderGuard implements CanActivate {
 
   constructor(
     private appStateService: AppStateService,
-    private migrationService: MigrationsService,
-    private storageService: StorageService) { }
+    private migrationService: MigrationsService) { }
 
   async canActivate(): Promise<boolean> {
     const urlParams = new URLSearchParams(window.location.search);

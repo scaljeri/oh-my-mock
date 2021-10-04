@@ -6,9 +6,7 @@ import {
 } from '../shared/type';
 
 import * as headers from '../shared/utils/xhr-headers';
-import { dispatchData } from './message/dispatch-eval';
 import { mockHitMessage } from './message/mock-hit';
-import { newMockMessage } from './message/new-response';
 import { ohMyState } from './state-manager';
 
 const Base = window.XMLHttpRequest;
@@ -109,18 +107,18 @@ export class OhMockXhr extends Base {
 
       mockHitMessage({ id: this.ohData.id });
     } else {
-      newMockMessage({
-        context: {
-          url: this.ohUrl,
-          method: this.ohMethod,
-          requestType: 'XHR'
-        },
-        data: {
-          statusCode: this.status,
-          response: this.response,
-          headers: headers.parse(this.getAllResponseHeaders())
-        }
-      });
+      // newMockMessage({
+      //   context: {
+      //     url: this.ohUrl,
+      //     method: this.ohMethod,
+      //     requestType: 'XHR'
+      //   },
+      //   data: {
+      //     statusCode: this.status,
+      //     response: this.response,
+      //     headers: headers.parse(this.getAllResponseHeaders())
+      //   }
+      // });
     }
     this.ohListeners.forEach(l => l?.apply(this, args));
     if (this.ohMyOnload) {
@@ -143,12 +141,12 @@ export class OhMockXhr extends Base {
       return this.response;
     }
 
-    return dispatchData(this.ohData, {
-      url: this.ohUrl,
-      method: this.ohMethod,
-      body: this.ohRequestBody,
-      headers: this.ohRequestHeaders
-    }).catch(_ => _);
+    // return dispatchData(this.ohData, {
+    //   url: this.ohUrl,
+    //   method: this.ohMethod,
+    //   body: this.ohRequestBody,
+    //   headers: this.ohRequestHeaders
+    // }).catch(_ => _);
   }
 
   private parseState(): void {
