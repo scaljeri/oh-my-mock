@@ -9,21 +9,21 @@ const ORIG_FETCH = window.fetch;
 
 const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
   // TODO: wat komt er uit eval, een IMock?? dan moet dit anders
-  const { data, response, headers, mock, status } =
+  const { response, headers, status } =
     await dispatchApiRequest({
       url,
       method: 'GET',
       ...config
     } as IOhMyRequest, 'FETCH');
 
-  if (status === ohMyEvalStatus.NOT_FOUND) {
+  if (status === ohMyMockStatus.NO_CONTENT) {
     return fecthApi(url, config);
   }
 
   return new Promise(async (resolv, reject) => {
     let body = null;
 
-    if (status === ohMyEvalStatus.ERROR) {
+    if (status === ohMyMockStatus.ERROR) {
       return reject();
     }
 
@@ -31,12 +31,12 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
       body = new Blob([response as any], { type: headers['content-type'] });
     }
 
-    const rsp = new Response(body, {
-      headers: fetchUtils.jsonToHeaders(headers),
-      status: mock.statusCode
-    });
+    // const rsp = new Response(body, {
+    //   headers: fetchUtils.jsonToHeaders(headers),
+    //   status: mock.statusCode
+    // });
 
-    setTimeout(() => resolv(rsp), mock.delay ?? mock.delay);
+    // setTimeout(() => resolv(rsp), mock.delay ?? mock.delay);
   });
 }
 

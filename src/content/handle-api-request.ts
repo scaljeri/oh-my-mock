@@ -1,9 +1,9 @@
-import { IMock, IOhMyMock, IOhMyMockResponse, IOhMyRequest, IOhMyResponse, IOhMyShallowMock } from "../shared/type";
+import { IMock, IOhMyMockResponse, IOhMyRequest, IOhMyShallowMock } from "../shared/type";
 import { DataUtils } from "../shared/utils/data";
 import { StateUtils } from '../shared/utils/state';
 import { OhMyContentState } from "./content-state";
 import { evalCode } from '../shared/utils/eval-code';
-import { ohMyEvalStatus } from "../shared/constants";
+import { ohMyMockStatus } from "../shared/constants";
 
 export async function handleApiRequest(request: IOhMyRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
     /*
@@ -30,7 +30,7 @@ export async function handleApiRequest(request: IOhMyRequest, contentState: OhMy
         // TODO: What to return?
     } else {
         return {
-            status: ohMyEvalStatus.NOT_FOUND
+            status: ohMyMockStatus.NO_CONTENT
         }
     }
 }

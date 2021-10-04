@@ -1,4 +1,4 @@
-import { ohMyEvalStatus } from '../constants';
+import { ohMyMockStatus } from '../constants';
 import { IMock, IOhMyRequest } from '../type';
 import { compileJsCode } from './eval-jscode';
 
@@ -6,7 +6,7 @@ export const evalCode = async (mock: IMock, request: IOhMyRequest): Promise<any>
   // TODO: Shouldn't here and shouldn't be an error just no-content for example
   if (!mock) {
     return {
-      status: ohMyEvalStatus.ERROR,
+      status: ohMyMockStatus.ERROR,
       result: 'No mock available'
     };
   }
@@ -34,7 +34,7 @@ export const evalCode = async (mock: IMock, request: IOhMyRequest): Promise<any>
     // TODO: send message to popup so the error can be reviewed
     // eslint-disable-next-line no-console
     retVal = {
-      status: ohMyEvalStatus.ERROR,
+      status: ohMyMockStatus.ERROR,
       result: err.message
     };
   }
