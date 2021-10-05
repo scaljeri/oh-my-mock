@@ -97,19 +97,31 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 // Inject XHR/Fetch mocking code and more
-(function () {
-  const mockScript = document.createElement('script');
-  mockScript.type = 'text/javascript';
-  mockScript.onload = function () {
-    (this as HTMLScriptElement).remove();
-    try {
-      // Notify Popup that content script is ready
-      sendKnockKnock();
-    } catch (e) {
-      // error('Cannot connect to the OhMyMock tab', e);
-    }
-  };
+// setTimeout(() => {
+  (async function () {
+    const state = JSON.stringify(await loadState());
+    var actualCode = '(' + function (state) {
+      console.log('xxxxxxx');
+    } + ')(' + state + ');';
+    var script = document.createElement('script');
+    script.textContent = actualCode;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
 
-  mockScript.src = chrome.runtime.getURL('oh-my-mock.js');
-  document.head.append(mockScript);
-})();
+    // const mockScript = document.createElement('script');
+    // mockScript.type = 'text/javascript';
+    // mockScript.onload = function () {
+    //   (this as HTMLScriptElement).remove();
+    //   try {
+    //     // Notify Popup that content script is ready
+    //     sendKnockKnock();
+    //   } catch (e) {
+    //     // error('Cannot connect to the OhMyMock tab', e);
+    //   }
+    // };
+
+    // mockScript.src = chrome.runtime.getURL('oh-my-mock.js');
+    // document.head.append(mockScript);
+  })();
+
+// }, 1000);

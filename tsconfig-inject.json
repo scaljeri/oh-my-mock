@@ -10,7 +10,7 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2017",
+    "target": "es3",
     "module": "commonjs",
     "lib": ["es6", "es2017", "dom"],
     "types": []
