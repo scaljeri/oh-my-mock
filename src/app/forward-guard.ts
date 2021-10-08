@@ -15,9 +15,7 @@ export class forwarderGuard implements CanActivate {
 
   @Dispatch() initState = (state?: IOhMyMock) => new InitState(state);
 
-  constructor(
-    private appStateService: AppStateService,
-    private migrationService: MigrationsService) { }
+  constructor(private appStateService: AppStateService) {}
 
   async canActivate(): Promise<boolean> {
     const urlParams = new URLSearchParams(window.location.search);

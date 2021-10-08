@@ -72,12 +72,11 @@ export class OhMyState {
   static DataUtils = DataUtils;
   static MockUtils = MockUtils;
   static ScenarioUtils = ScenarioUtils;
-  static MigrationUtils = MigrationUtils;
+
   constructor(
     @Inject(APP_VERSION) public version: string,
     appStateService: AppStateService) {
     appStateService.domain$.subscribe(domain => OhMyState.domain = domain);
-    OhMyState.MigrationUtils.version = version;
   }
 
   @Selector()
@@ -117,19 +116,10 @@ export class OhMyState {
 
     if (!store || Object.keys(store).length === 0) {
       store = OhMyState.StoreUtils.init(OhMyState.StateUtils.init({ domain: activeDomain }));
-    }
-
-    if (OhMyState.MigrationUtils.requireUpdate(store)) {
-      store = OhMyState.MigrationUtils.update<IOhMyMock>(store);
-      await OhMyState.StorageUtils.setStore(store);
+      await OhMyState.StorageUtils.set(STORAGE_KEY, store);
     }
 
     let state = await OhMyState.StorageUtils.get<IState>(activeDomain) || OhMyState.StateUtils.init({ domain: activeDomain });
-
-    if (OhMyState.MigrationUtils.requireUpdate(state)) {
-      state = OhMyState.MigrationUtils.update<IState>(state);
-      OhMyState.StorageUtils.set(activeDomain, state);
-    }
 
     if (store.domains.indexOf(activeDomain) === -1) {
       store.domains = [activeDomain, ...store.domains];
@@ -175,11 +165,6 @@ export class OhMyState {
     const store = OhMyState.getStore(ctx);
     if (!store.content.states[payload]) {
       let state = await OhMyState.StorageUtils.get<IState>(payload) || OhMyState.StateUtils.init({ domain: payload });
-
-      if (OhMyState.MigrationUtils.requireUpdate(state)) {
-        state = OhMyState.MigrationUtils.update<IState>(state);
-        OhMyState.StorageUtils.set(payload, state);
-      }
 
       store.content = { ...store.content, states: { ...store.content.states, [payload]: state } };
 

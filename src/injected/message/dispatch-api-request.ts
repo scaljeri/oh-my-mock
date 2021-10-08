@@ -4,7 +4,7 @@ import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IData, IOhMyAPIResponse, IOhMyMockResponse, IOhMyRequest, IPacket, requestType } from '../../shared/type';
+import { IData, IOhMyAPIResponse, IOhMyMockResponse, IOhMyAPIRequest, IPacket, requestType } from '../../shared/type';
 
 declare let window: any;
 
@@ -47,7 +47,7 @@ declare let window: any;
 //   });
 // }
 
-export const dispatchApiRequest = async (request: IOhMyRequest, requestType: requestType): Promise<IOhMyMockResponse> => {
+export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyMockResponse> => {
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
     const payload = {

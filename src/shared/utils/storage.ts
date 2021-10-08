@@ -1,7 +1,8 @@
 import { OH_MY_TICK, STORAGE_KEY } from '../constants';
-import { IOhMyMock, ohMyDomain, ohMyMockId } from '../type';
+import { IMock, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { uniqueId } from './unique-id';
+import { MigrateUtils } from './migrate';
 
 const ID = uniqueId();
 
@@ -15,6 +16,7 @@ export interface IOhMyStorageUpdate {
 }
 
 export class StorageUtils {
+  static appVersion: string;
   static tick = 0;
   static updatesSubject = new Subject<IOhMyStorageUpdate>();
   static updates$ = StorageUtils.updatesSubject.asObservable();
@@ -28,10 +30,15 @@ export class StorageUtils {
     });
   }
 
-  static get<T = unknown>(key: string = STORAGE_KEY): Promise<T> {
+  static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY, skipMigrate = false): Promise<T> {
     return new Promise<T>((resolve) => {
-      chrome.storage.local.get(key, (data: { [key: string]: T }) => {
-        resolve(data[key]);
+      chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
+        if (!skipMigrate && MigrateUtils.shouldMigrate(data[key])) {
+          data[key] = MigrateUtils.migrate(data[key]) as T;
+          await this.set(key, data[key]); // persist migrated data
+        }
+
+        resolve(data[key] as T);
       });
     });
   }
@@ -53,7 +60,7 @@ export class StorageUtils {
       key = [key as string];
     }
 
-    return Promise.all(key.map(k => 
+    return Promise.all(key.map(k =>
       new Promise<void>(resolve => chrome.storage.local.remove(k + '', resolve))));
   }
 

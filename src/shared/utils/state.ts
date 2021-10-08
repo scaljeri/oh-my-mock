@@ -3,7 +3,8 @@ import { DataUtils } from './data';
 import { compareUrls } from './urls';
 
 export class StateUtils {
-  static version = '-'
+  static version = '__OH_MY_VERSION__';
+
   static init(base: Partial<IState> = {}): IState {
     return {
       version: this.version, views: {

@@ -1,11 +1,11 @@
-import { IMock, IOhMyMockResponse, IOhMyRequest, IOhMyShallowMock } from "../shared/type";
+import { IMock, IOhMyMockResponse, IOhMyAPIRequest, IOhMyShallowMock } from "../shared/type";
 import { DataUtils } from "../shared/utils/data";
 import { StateUtils } from '../shared/utils/state';
 import { OhMyContentState } from "./content-state";
 import { evalCode } from '../shared/utils/eval-code';
 import { ohMyMockStatus } from "../shared/constants";
 
-export async function handleApiRequest(request: IOhMyRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
+export async function handleApiRequest(request: IOhMyAPIRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
     /*
         1) pass to server
         2) check state

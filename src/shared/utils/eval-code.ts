@@ -1,8 +1,8 @@
 import { ohMyMockStatus } from '../constants';
-import { IMock, IOhMyRequest } from '../type';
+import { IMock, IOhMyAPIRequest } from '../type';
 import { compileJsCode } from './eval-jscode';
 
-export const evalCode = async (mock: IMock, request: IOhMyRequest): Promise<any> => {
+export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<any> => {
   // TODO: Shouldn't here and shouldn't be an error just no-content for example
   if (!mock) {
     return {
@@ -20,7 +20,7 @@ export const evalCode = async (mock: IMock, request: IOhMyRequest): Promise<any>
   } as Partial<IMock>;
 
   try {
-    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyRequest) => Partial<IMock>;
+    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyAPIRequest) => Partial<IMock>;
     const result = await code(context, {
       type: request.type,
       url: request.url,

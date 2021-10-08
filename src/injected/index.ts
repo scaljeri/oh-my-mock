@@ -1,18 +1,17 @@
+import { STORAGE_KEY } from '../shared/constants';
 import { IState } from '../shared/type';
-import { OhMockXhr } from './mock-oh-xhr';
-import { OhMyFetch } from './mock-oh-fetch';
+import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { ohMyState$ } from './state-manager';
 import { log } from './utils';
 
 declare let window: any;
+declare let state: IState;
 
-// Persist original objects
-const MEM_XHR_REQUEST = window.XMLHttpRequest;
-const MEM_FETCH = window.fetch;
-
-let ohMyState: IState;
+window[STORAGE_KEY] = { state };
 
 // hasCSPIssues();
+console.log('YES, patch', state);
+patchXmlHttpRequest();
 
 ohMyState$.subscribe((state: IState) => {
   if (!state) {
@@ -20,17 +19,17 @@ ohMyState$.subscribe((state: IState) => {
   }
 
   // Did activity change?
-  if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
+  // if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
     if (state.aux.appActive) {
       log('%c*** Activated ***', 'background: green');
-      window.XMLHttpRequest = OhMockXhr;
-      window.fetch = OhMyFetch;
+      patchXmlHttpRequest();
+      // window.fetch = OhMyFetch;
     } else {
-      window.XMLHttpRequest = MEM_XHR_REQUEST;
-      window.fetch = MEM_FETCH;
+      unpatchXmlHttpRequest();
+      // window.fetch = MEM_FETCH;
       log('%c*** Deactivated ***', 'background: red');
     }
-  }
+  // }
 
-  ohMyState = state;
+  // ohMyState = state;
 });

@@ -149,7 +149,7 @@ export interface IOhMyViewItemsOrder {
   // request: IOhMyEvalRequest;
 // }
 
-export interface IOhMyRequest {
+export interface IOhMyAPIRequest {
   url: string;
   method: requestMethod;
   type: requestType;

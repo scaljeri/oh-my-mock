@@ -30,9 +30,9 @@ export class DataUtils {
     return !!(data.activeScenarioMock || data.activeMock);
   }
 
-  static findMock(data: IData, search: IOhMyMockSearch, mocks: Record<ohMyMockId, IMock>): IMock | null {
+  static findMock(data: IData, search: IOhMyMockSearch, mocks?: Record<ohMyMockId, IMock>): IMock | IOhMyShallowMock | null {
     if (search.id) {
-      return mocks[search.id];
+      return mocks ? mocks[search.id] : data.mocks[search.id];
     }
 
     const [id,] = Object.entries(data.mocks).find(([k, v]) =>
@@ -40,7 +40,7 @@ export class DataUtils {
       (!search.statusCode || search.statusCode === v.statusCode) &&
       (!search.scenario || search.scenario === v.scenario));
 
-    return id ? mocks[id] : null;
+    return id ? (mocks ? mocks[id] : data.mocks[id]) : null;
   }
 
   static addMock = (data: IData, mock: IMock): IData => {
@@ -103,7 +103,6 @@ export class DataUtils {
     }
 
     return data
-
   }
 
   static create(data: Partial<IData>): IData {

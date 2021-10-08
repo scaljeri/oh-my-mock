@@ -31,7 +31,7 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
 import { APP_VERSION } from './tokens';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
-import { MigrationUtils } from './utils/migration';
+import { MigrateUtils } from '@shared/utils/migrate';
 
 @NgModule({
   declarations: [
@@ -69,7 +69,7 @@ export class AppModule {
   constructor( @Inject(APP_VERSION) version: string) {
     StateUtils.version = version;
     StoreUtils.version = version;
-    MigrationUtils.version = version;
+    MigrateUtils.version = version;
   }
 
 }
