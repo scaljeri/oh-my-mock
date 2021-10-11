@@ -137,12 +137,12 @@ async function handleApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
   let data = StateUtils.findData(state, { ...payload.data.data }) || DataUtils.init(payload.data.data);
 
   debugger;
-  const scenario = state.aux.filterScenario;
-  const smock = DataUtils.findMock(data, { ...payload.data.mock, scenario });
+  const scenario = state.context.scenario;
+  const smock = DataUtils.findMock(data, { ...payload.data.mock });
 
   if (!smock) {
     const mock = MockUtils.init(payload.data.mock);
-    data = DataUtils.addMock(data, mock);
+    data = DataUtils.addMock(state.context, data, mock);
     state = StateUtils.setData(state, data);
 
     await StorageUtils.set(state.domain, state);

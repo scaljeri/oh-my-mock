@@ -34,19 +34,22 @@ export interface IOhMyMock extends IOhMyMockStorage {
 
 export interface IOhMyAux {
   filterKeywords?: string;
-  filterScenario?: string;
   appActive?: boolean;
   newAutoActivate?: boolean;
 }
 
+export interface IOhMyStateContext {
+  scenario: ohMyScenarioId;
+}
+
 export interface IState {
   version: string;
+  type: objectTypes.STATE;
   domain: string;
   data: Record<ohMyDataId, IData>;
-  views: Record<string, ohMyDataId[]>; // Projections
   aux: IOhMyAux;
-  scenarios: IOhMyScenarios;
-  activeScenario?: ohMyScenarioId;
+  scenarios: Record<ohMyScenarioId, string>;
+  context: IOhMyStateContext;
 }
 
 // url, method and type are used to map an API request with a mock
@@ -59,31 +62,30 @@ export interface IOhMyContext {
 }
 
 export interface IData extends IOhMyContext {
-  type: objectTypes.DATA;
-  activeMock?: ohMyMockId;
-  activeScenarioMock?: ohMyMockId;
-  enabled?: boolean;
+  scenarios: Record<ohMyScenarioId, ohMyMockId>;
+  enabled: Record<ohMyScenarioId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
 }
 
 export interface IOhMyShallowMock {
-  scenario: ohMyScenarioId | null;
-  statusCode: ohMyStatusCode;
   id: ohMyMockId;
+  label: string;
   modifiedOn?: string;
+  statusCode: ohMyStatusCode;
 }
 
 export interface IOhMyMockSearch {
   id?: ohMyMockId;
-  scenario?: ohMyScenarioId;
+  label?: ohMyScenarioId;
   statusCode?: ohMyStatusCode;
 }
 
 export interface IMock {
+  id: ohMyMockId;
   version: string;
   type: objectTypes.MOCK;
-  id: ohMyMockId;
-  scenario?: ohMyScenarioId;
+
+  label?: string;
   statusCode: statusCode;
   response?: string;
   responseMock?: string;

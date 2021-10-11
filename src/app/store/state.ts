@@ -183,6 +183,7 @@ export class OhMyState {
 
     let store = OhMyState.getStore(ctx);
     let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
+    const scenario = state.context.scenario;
 
     let mock = { ...payload.mock };
     // let sourceMock = {};
@@ -195,32 +196,29 @@ export class OhMyState {
     state.data = { ...state.data, [data.id]: data };
 
     let sourceMock: IMock;
-    if (mock.id) {
+    if (mock.id) { // update
       sourceMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
       mock.modifiedOn = timestamp();
     } else { // new
-      sourceMock = payload.clone && data.activeMock ?
-        (store.content.mocks[data.activeMock] || await OhMyState.StorageUtils.get<IMock>(data.activeMock)) :
-        OhMyState.MockUtils.init();
+      sourceMock = payload.clone && data.scenarios[scenario] ?
+        (store.content.mocks[data.scenarios[scenario]] ||
+          await OhMyState.StorageUtils.get<IMock>(data.scenarios[scenario])) : OhMyState.MockUtils.init();
     }
+
     if (sourceMock) {
       mock = OhMyState.MockUtils.clone(sourceMock, mock);
       store.content = { ...store.content, mocks: { ...store.content.mocks, [mock.id]: mock as IMock } };
     }
 
     if (payload.makeActive) {
-      data.activeMock = mock.id;
-      data.enabled = true;
+      data.scenarios[scenario] = mock.id;
+      data.enabled[scenario] = true;
     }
 
     data.mocks = {
       ...data.mocks,
       [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
     };
-
-    if (state.aux.filterScenario && mock.scenario === state.aux.filterScenario) {
-      data.activeScenarioMock = mock.id
-    }
 
     if (action instanceof UpsertMock) {
       await OhMyState.StorageUtils.set(activeDomain, state);
@@ -235,16 +233,16 @@ export class OhMyState {
   async upsertData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Partial<IData>, domain?: string }) {
     let [state] = await OhMyState.getMyState(ctx, domain);
 
-    const data = { ...(OhMyState.StateUtils.findData(state, payload, false) || OhMyState.DataUtils.init(payload)), ...payload };
+    const data = { ...(OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init(payload)), ...payload };
     state = OhMyState.StateUtils.setData(state, data);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
-    state.views = { ...state.views };
+    // state.views = { ...state.views };
 
-    Object.entries(state.views).forEach(([name, list]) => {
-      if (!list.includes(data.id)) {
-        state.views[name] = [data.id, ...state.views[name]];
-      }
-    });
+    // Object.entries(state.views).forEach(([name, list]) => {
+    //   if (!list.includes(data.id)) {
+    //     state.views[name] = [data.id, ...state.views[name]];
+    //   }
+    // });
 
     await OhMyState.StorageUtils.set(state.domain, state);
     ctx.setState(store);
@@ -271,15 +269,8 @@ export class OhMyState {
 
     const store = OhMyState.getStore(ctx);
     const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
-    const data = OhMyState.StateUtils.getData(state, payload.id);
-
-    data.mocks = { ...data.mocks };
-    delete data.mocks[payload.mockId];
-
-    if (data.activeMock === payload.mockId) {
-      data.activeMock = Object.keys(data.mocks)?.[0] || null; // TODO: Add sorting onn StatusCode
-      data.enabled = false;
-    }
+    const data = OhMyState.DataUtils.removeMock(state.context,
+      OhMyState.StateUtils.getData(state, payload.id), payload.mockId);
 
     state.data = { ...state.data, [data.id]: data };
 
@@ -311,12 +302,12 @@ export class OhMyState {
     OhMyState.StorageUtils.remove(Object.keys(data.mocks));
     OhMyState.StorageUtils.set(state.domain, state);
 
-    Object.entries(state.views).forEach(([name, list]) => {
-      if (list.includes(data.id)) {
-        const index = state.views[name].indexOf(data.id);
-        state.views[name] = arrayRemoveItem(state.views[name], index)[0];
-      }
-    });
+    // Object.entries(state.views).forEach(([name, list]) => {
+    //   if (list.includes(data.id)) {
+    //     const index = state.views[name].indexOf(data.id);
+    //     state.views[name] = arrayRemoveItem(state.views[name], index)[0];
+    //   }
+    // });
     await OhMyState.StorageUtils.set(state.domain, state);
 
     const states = { ...store.content.states, [state.domain]: state };
@@ -328,8 +319,8 @@ export class OhMyState {
     const store = OhMyState.getStore(ctx);
     const [state] = await OhMyState.getMyState(ctx);
 
-    const id = state.views[payload.name][payload.id];
-    state.views = { ...state.views, [payload.name]: view.move(state.views[payload.name], id, payload.to) };
+    // const id = state.views[payload.name][payload.id];
+    // state.views = { ...state.views, [payload.name]: view.move(state.views[payload.name], id, payload.to) };
 
     const content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
 
@@ -357,7 +348,7 @@ export class OhMyState {
     const store = OhMyState.getStore(ctx);
     const [state] = await OhMyState.getMyState(ctx);
 
-    state.views = { ...state.views, [payload]: Object.keys(state.data) };
+    // state.views = { ...state.views, [payload]: Object.keys(state.data) };
 
     const content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
 
@@ -418,24 +409,24 @@ export class OhMyState {
     ctx.setState(store)
   }
 
-  @Action(ScenarioFilter)
-  async scenarioFilter(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyScenarioId }) {
-    const store = OhMyState.getStore(ctx);
-    let [state] = await OhMyState.getMyState(ctx);
+  // @Action(ScenarioFilter)
+  // async scenarioFilter(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyScenarioId }) {
+  //   const store = OhMyState.getStore(ctx);
+  //   let [state] = await OhMyState.getMyState(ctx);
 
-    state = OhMyState.StateUtils.activateScenario(state, payload);
+  //   state = OhMyState.StateUtils.activateScenario(state, payload);
 
-    store.content = {
-      ...store.content, states: {
-        ...store.content.states,
-        [state.domain]: state
-      }
-    };
+  //   store.content = {
+  //     ...store.content, states: {
+  //       ...store.content.states,
+  //       [state.domain]: state
+  //     }
+  //   };
 
-    await OhMyState.StorageUtils.set(state.domain, state);
-    // ctx.patchState({content: })
-    ctx.setState(store)
+  //   await OhMyState.StorageUtils.set(state.domain, state);
+  //   // ctx.patchState({content: })
+  //   ctx.setState(store)
 
-    return ctx.dispatch(new Aux({ filterScenario: payload }));
-  }
+  //   return ctx.dispatch(new Aux({ filterScenario: payload }));
+  // }
 }

@@ -33,9 +33,8 @@ export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
 
 export enum objectTypes {
-  DOMAIN = 'DOMAIN',
-  DATA = 'DATA',
-  MOCK = 'MOCK'
+  MOCK = 'MOCK',
+  STATE = 'STATE'
 }
 export enum packetTypes {
   ACTIVE = 'active',

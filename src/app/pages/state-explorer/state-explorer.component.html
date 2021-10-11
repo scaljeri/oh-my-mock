@@ -20,7 +20,7 @@
     <mat-expansion-panel #panel (closed)="panelOpenState = true">
       <mat-expansion-panel-header *ngIf="dataItem" (click)="dataItem = null">
         <mat-panel-title>
-          {{dataItem.type}} {{dataItem.method}}
+          {{dataItem.requestType}} {{dataItem.method}}
         </mat-panel-title>
         <mat-panel-description>
           {{dataItem.url}}

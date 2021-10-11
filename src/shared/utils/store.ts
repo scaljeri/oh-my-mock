@@ -122,7 +122,7 @@ export class StoreUtils {
     delete content.mocks[mockId];
 
     const state = { ...content.states[domain], data: { ...content.states[domain].data } };
-    state.data[dataId] = StoreUtils.DataUtils.removeMock(state.data[dataId], mockId)
+    state.data[dataId] = StoreUtils.DataUtils.removeMock(state.context, state.data[dataId], mockId)
     content.states[domain] = state;
 
     return { ...store, content };

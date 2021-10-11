@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, IMock, IOhMyScenarios, IOhMyShallowMock, IState, IStore, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
+import { IData, IMock, IOhMyScenarios, IOhMyShallowMock, IState, IStore, IUpsertMock, ohMyMockId, ohMyScenarioId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
@@ -21,6 +21,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 })
 export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
+  @Input() scenario: ohMyScenarioId;
   @Input() domain: string;
 
   @Output() mockActivated = new EventEmitter();
@@ -70,13 +71,13 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     });
 
     this.typeCtrl.valueChanges.subscribe(type => {
-      if (type !== this.data.type) {
-        this.upsertData({ type });
+      if (type !== this.data.requestType) {
+        this.upsertData({ requestType: type });
       }
     });
 
     this.methodCtrl.setValue(this.data.method);
-    this.typeCtrl.setValue(this.data.type);
+    this.typeCtrl.setValue(this.data.requestType);
     this.urlCtrl.setValue(this.data.url);
   }
 

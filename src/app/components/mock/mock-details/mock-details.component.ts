@@ -55,7 +55,7 @@ export class MockDetailsComponent implements OnChanges {
       statusCode: new FormControl(this.mock.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      scenario: new FormControl(this.mock.scenario, { updateOn: 'blur'}),
+      scenario: new FormControl(this.mock.label, { updateOn: 'blur'}),
       contentType: new FormControl(this.mock.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
@@ -80,7 +80,7 @@ export class MockDetailsComponent implements OnChanges {
     this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
     this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });
     this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'], { emitEvent: false });
-    this.scenarioCtrl.setValue(this.mock.scenario,  { emitEvent: false, onlySelf: true });
+    this.scenarioCtrl.setValue(this.mock.label,  { emitEvent: false, onlySelf: true });
   }
 
   onManageScenarios(): void {

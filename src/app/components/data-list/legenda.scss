@@ -16,13 +16,20 @@ $selected: #6666ff;
     flex: 1;
   }
 
+  .group {
+    span + span {
+      margin-top: 5px;
+    }
+  }
+
   span {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    margin-right: 10px;
 
     &::before {
-      content: '';
+      content: "";
       border: 1px solid lightgrey;
       border-radius: 3px;
       display: block;
@@ -30,19 +37,14 @@ $selected: #6666ff;
       height: 20px;
       margin-right: 5px;
     }
-
-    &+span {
-      padding-left: 10px;
-    }
   }
-
 
   .legenda-active::before {
     background-color: $active;
   }
 
   .inactive::before {
-    background-color: $inactive
+    background-color: $inactive;
   }
 
   .active-modified::before {

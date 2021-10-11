@@ -81,7 +81,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         if (this.dialogRef) {
           this.dialogRef.close();
         }
-        this.contentService.sendActiveState(true);
+        // this.contentService.sendActiveState(true);
       } else if (!this.dialogRef && !this.dialogDone) {
         this.notifyDisabled();
       }

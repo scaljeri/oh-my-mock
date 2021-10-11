@@ -1,22 +1,18 @@
 <mat-form-field class="method-select">
     <mat-label>{{label}}</mat-label>
-    <input 
-        #input
-        (blur)="onBlur(auto)"
-        (focus)="onFocus($event, trigger)"
-        type="text" matInput 
-        [formControl]="ctrl"
-        #trigger="matAutocompleteTrigger" 
-        [matAutocomplete]="auto">
-    <mat-autocomplete  autoActiveFirstOption #auto="matAutocomplete"
-        (opened)="onAutoCompleteOpened()"
-        (closed)="onAutoCompleteClose()"
-        (optionSelected)="onOptionSelected($event)">
+    <input #input (blur)="onBlur(auto)" (focus)="onFocus($event, trigger)" type="text" matInput [formControl]="ctrl"
+        #trigger="matAutocompleteTrigger" [matAutocomplete]="auto">
+    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (opened)="onAutoCompleteOpened()"
+        (closed)="onAutoCompleteClose()" (optionSelected)="onOptionSelected($event)">
         <mat-option *ngFor="let option of filteredMethodOptions" [value]="option">
             {{option}}
         </mat-option>
     </mat-autocomplete>
-    <button mat-button *ngIf="ctrl.value" matSuffix mat-icon-button aria-label="Clear" (click)="ctrl.setValue('');trigger.openPanel()">
+    <button mat-button *ngIf="ctrl.value" matSuffix mat-icon-button aria-label="Clear"
+        (click)="ctrl.setValue('');trigger.openPanel()">
         <mat-icon>close</mat-icon>
+    </button>
+    <button *ngIf="showEdit" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit()">
+        <mat-icon>edit</mat-icon>
     </button>
 </mat-form-field>

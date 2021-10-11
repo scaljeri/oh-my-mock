@@ -2,7 +2,7 @@
   <app-mock-header (mockActivated)="onMockActivated($event)" [data]="data" [domain]="domain"></app-mock-header>
 </mat-card>
 
-<mat-card *ngIf="data?.activeMock && data?.enabled && mock; else nodata" class="details">
+<mat-card *ngIf="mock; else nodata" class="details">
   <section class="mock-settings">
     <oh-my-mock-details [mock]="mock" [domain]="domain" [data]="data"></oh-my-mock-details>
 
@@ -58,7 +58,7 @@
   <section class="no-data">
     <p>This mock is not active.</p>
     <p>To activate and serve mock data for <strong>{{data?.url}} </strong>
-      <span *ngIf="data?.activeMock">select a response or </span>
+      <span *ngIf="hasMocks">select a response or </span>
     </p>
     <ol>
       <li>Create a response with the + button or</li>

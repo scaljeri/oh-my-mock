@@ -7,7 +7,7 @@ import { trigger, style, animate, transition } from "@angular/animations";
 import { DeleteData, LoadState, Aux, UpdateState, UpsertData, ViewChangeOrderItems, ViewReset, ScenarioFilter } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IOhMyAux, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
+import { domain, IData, IOhMyAux, IOhMyStateContext, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { combineLatest, merge, Observable, Subscription, zip } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
@@ -53,6 +53,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   @Dispatch() updateScenarioFilter = (id: ohMyScenarioId) => new ScenarioFilter(id);
   @Dispatch() updateAux = (values: IOhMyAux) => new Aux(values);
+  @Dispatch() updateContext = (value: IOhMyStateContext) => new UpdateState({ context: value });
   @Dispatch() updateState = (state: IState) => new UpdateState(state);
   @Dispatch() deleteData = (id: string) => {
     return new DeleteData(id, this.state.domain);
@@ -89,6 +90,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   scenarioCtrl = new FormControl('', { updateOn: 'blur' });
   filteredDataList: IData[];
 
+  presets = ['a', 'b', 'c'];
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
 
@@ -118,14 +120,13 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
     this.subscriptions.add(this.state$.subscribe(state => {
       this.state = state;
-      this.viewList = state.views.activity;
       this.scenarioOptions = Object.values(state.scenarios);
       this.filteredDataList = this.filterListByKeywords();
 
-      this.scenarioCtrl.setValue(state.aux.filterScenario, { emitEvent: false });
+      this.scenarioCtrl.setValue(state.context.scenario, { emitEvent: false });
       // this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
       this.filterCtrl.setValue(state.aux.filterKeywords, { emitEvent: false });
-      this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.aux.filterScenario);
+      // this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.context.scenario);
     }));
 
     if (!this.state) {
@@ -186,7 +187,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onScenarioUpdate(scenario): void {
     const scenarioId = ScenarioUtils.findByLabel(scenario, this.state.scenarios);
 
-    this.updateAux({ filterScenario: scenarioId });
+    this.updateContext({ scenario });
 
     // if (!scenarioId) {
     //   this.scenarioCtrl.setValue('', { emitEvent: false });
@@ -209,11 +210,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   filterListByScenario(list: IData[], scenarioId: ohMyScenarioId): IData[] {
-    return list.filter(data => data.mocks[data.activeScenarioMock]?.scenario === scenarioId);
+    return null; // list.filter(data => data.mocks[data.activeScenarioMock]?.scenario === scenarioId);
   }
 
   filterListByKeywords(): IData[] {
-    const data = this.state.views.activity?.map(id => this.state.data[id]) || [];
+    const data = Object.values(this.state.data);
     const input = this.state.aux.filterKeywords as string;
 
     if (input === '' || input === undefined || input === null) {
@@ -232,9 +233,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         .filter(v => v !== undefined && v !== '')
         .some(v =>
           d.url.toLowerCase().includes(v) ||
-          d.type.toLowerCase().includes(v) ||
-          d.method.toLowerCase().includes(v) ||
-          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v)
+          d.requestType.toLowerCase().includes(v) ||
+          d.method.toLowerCase().includes(v) /*||
+          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) TODO */
           // || !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
         )
     );
@@ -253,7 +254,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     if (!Object.keys(data.mocks).length) {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
-      this.upsertData({ id, enabled: !data.enabled });
+      // this.upsertData({ id, enabled: !data.enabled });
     }
   }
 
@@ -279,7 +280,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
     const data = {
       ...this.state.data[id],
-      enabled: !!this.state.aux.newAutoActivate,
       id: uniqueId()
     };
 

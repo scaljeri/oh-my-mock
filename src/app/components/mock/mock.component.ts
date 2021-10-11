@@ -7,7 +7,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, LoadMock, UpsertData, UpsertMock } from 'src/app/store/actions';
-import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock } from '@shared/type';
+import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock, ohMyScenarioId } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -18,6 +18,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
+import { OhMyState } from 'src/app/store/state';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -28,6 +29,7 @@ import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.com
 export class MockComponent implements OnChanges {
   @Input() data: IData;
   @Input() domain: string;
+  @Input() sccenario: ohMyScenarioId;
   mock: IMock;
 
   // @Select(OhMyState.mock) state$: Observable<IState>;
@@ -55,6 +57,7 @@ export class MockComponent implements OnChanges {
 
   responseCtrl = new FormControl(null, { updateOn: 'blur' });
   headersCtrl = new FormControl(null, { updateOn: 'blur' });
+  hasMocks = false;
 
   constructor(
     private store: Store,
@@ -87,13 +90,13 @@ export class MockComponent implements OnChanges {
   }
 
   ngOnChanges(): void {
-    this.activeMockId = this.data.activeMock;
-
     if (this.activeMockId && this.activeMockId !== this.mock?.id) {
       this.mock = null;
       this.loadMock(this.data.mocks[this.activeMockId]);
       this.responseType = isMimeTypeJSON(this.mock?.headersMock?.['content-type']) ? 'json' : '';
     }
+
+    this.hasMocks = Object.keys(this.data.mocks).length > 0;
   }
 
   onDelete(): void {
@@ -128,11 +131,11 @@ export class MockComponent implements OnChanges {
 
     if (!mockId) {
       this.mock = null;
-      return this.upsertData({ id: this.data.id, enabled: false });
-    }
-
-    if (mockId !== this.data.activeMock || !this.data.enabled) {
-      this.upsertData({ id: this.data.id, enabled: true, activeMock: mockId });
+      return this.upsertData({ 
+        id: this.data.id,
+        enabled: { ...this.data.enabled, [this.sccenario]: false }});
+    } else {
+      this.upsertData({ id: this.data.id, enabled: { ...this.data.enabled, [this.sccenario]: false }});
     }
   }
 

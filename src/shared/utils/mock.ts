@@ -1,15 +1,15 @@
 import contentParser from 'content-type-parser';
 
-import { IData, IMock, IOhMyShallowMock, ohMyMockId, ohMyStatusCode } from '../type'
+import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId, ohMyStatusCode } from '../type'
 import { MOCK_JS_CODE } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
 
-export interface IOhMyMockSearchOptions {
-  statusCode?: ohMyStatusCode;
-  scenario?: string;
-  id?: ohMyMockId;
-}
+// export interface IOhMyMockSearchOptions {
+//   statusCode?: ohMyStatusCode;
+//   label?: string;
+//   id?: ohMyMockId;
+// }
 
 export class MockUtils {
   static init(base: Partial<IMock> = {}, update: Partial<IMock> = {}): IMock {
@@ -47,13 +47,13 @@ export class MockUtils {
     return this.init(source, updates);
   }
 
-  static find(mocks: Record<ohMyMockId, IMock>, searchOptions: IOhMyMockSearchOptions): IMock | void {
+  static find(mocks: Record<ohMyMockId, IMock>, searchOptions: IOhMyMockSearch): IMock | void {
     if (searchOptions.id) {
       return mocks[searchOptions.id];
     } else {
       return Object.values(mocks).find(mock =>
         (!searchOptions.statusCode || searchOptions.statusCode === mock.statusCode) &&
-        (!searchOptions.scenario || searchOptions.scenario === mock.scenario));
+        (!searchOptions.label || searchOptions.label === mock.label));
     }
   }
 
@@ -61,17 +61,17 @@ export class MockUtils {
     return {
       id: mock.id,
       statusCode: mock.statusCode,
-      ...(mock.scenario !== undefined && { scenario: mock.scenario })
+      ...(mock.label !== undefined && { label: mock.label })
     }
   }
 
-  static findActive(data: IData): IOhMyShallowMock | null {
-    if (data.activeScenarioMock) {
-      return data.mocks[data.activeScenarioMock];
-    } else if (data.activeMock) {
-      return data.mocks[data.activeMock];
-    }
+  // static findActive(data: IData, scenar): IOhMyShallowMock | null {
+  //   if (data.activeScenarioMock) {
+  //     return data.mocks[data.activeScenarioMock];
+  //   } else if (data.activeMock) {
+  //     return data.mocks[data.activeMock];
+  //   }
 
-    return null;
-  }
+  //   return null;
+  // }
 }

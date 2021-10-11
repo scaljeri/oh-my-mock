@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, Input, OnChanges, Self, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 
@@ -25,6 +25,8 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() label: string;
   @Input() showAllOnFocus = false;
   @Input() clearOnFocus = false;
+  @Input() showEdit = false;
+  @Output() edit = new EventEmitter();
 
   internalValue = '';
   _ctrl: FormControl;
@@ -83,6 +85,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
 
   onOptionSelected(event: MatAutocompleteSelectedEvent): void {
     this.inputRef.nativeElement.blur();
+  }
+
+  onClickEdit(): void {
+    this.edit.emit();
   }
 
   writeValue(value: any) {

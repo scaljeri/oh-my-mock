@@ -9,7 +9,7 @@ export class StateUtils {
     return {
       version: this.version, views: {
         activity: []
-      }, aux: {}, data: {}, scenarios: {}, ...base
+      }, aux: {}, data: {}, scenarios: {}, context: {}, ...base
     } as IState;
   }
 
@@ -41,17 +41,17 @@ export class StateUtils {
   //   return { ...state, data: { ...state.data, [dataId]: data } };
   // }
 
-  static findData(state: IState, search: IOhMyUpsertData, onlyActive = false): IData | null {
-    const result = Object.entries(state.data).find(([k, v]: [ohMyDataId, IData]) => {
+  static findData(state: IState, search: IOhMyUpsertData): IData | undefined {
+    const result = Object.values(state.data).find(v => {
       return (
-        (!search.id || k === search.id) &&
+        (!search.id || v.id === search.id) &&
         (!search.method || search.method === v.method) &&
         (!search.requestType || search.requestType === v.requestType) &&
         (!search.url || search.url === v.url || compareUrls(search.url, v.url))
-      ) && (!onlyActive || v.enabled && (v.activeMock || v.activeScenarioMock))
+      )
     });
 
-    return result ? { ...state.data[result[0]] } : null;
+    return result ? { ...result } : undefined;
   }
 
   static getAllMockIds(state: IState): ohMyMockId[] {
@@ -62,13 +62,8 @@ export class StateUtils {
   static activateScenario(state: IState, scenario: ohMyScenarioId): IState {
     state = {
       ...state,
-      aux: { ...state.aux, filterScenario: scenario },
-      data: { ...state.data }
+      context: { ...state.context, scenario }
     };
-
-    Object.entries(state.data).forEach(([id, data]) => {
-      state.data[id] = DataUtils.activeMockByScenario(data, scenario);
-    });
 
     return state;
   }

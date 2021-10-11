@@ -31,7 +31,7 @@ export class ResetState {
 
 export class UpdateState {
   static readonly type = '[State] Update';
-  constructor(public payload: IState) { }
+  constructor(public payload: Partial<IState>) { }
 }
 
 export class UpsertData {
