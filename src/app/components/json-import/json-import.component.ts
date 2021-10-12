@@ -40,7 +40,7 @@ export class JsonImportComponent {
 
         setTimeout(async () => {
           try {
-            const { domain, version, data, scenarios } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
+            const { domain, version, data, presets } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
             const migratedState = this.mirgationService.update(await StoreUtils.init());
 
             if (compareVersions(version, migratedState.version) === 1) {

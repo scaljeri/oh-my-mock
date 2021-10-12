@@ -48,7 +48,7 @@ export interface IState {
   domain: string;
   data: Record<ohMyDataId, IData>;
   aux: IOhMyAux;
-  scenarios: Record<ohMyScenarioId, string>;
+  presets: Record<ohMyScenarioId, string>;
   context: IOhMyStateContext;
 }
 

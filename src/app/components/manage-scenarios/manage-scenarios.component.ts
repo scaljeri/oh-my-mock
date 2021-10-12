@@ -88,7 +88,7 @@ export class ManageScenariosComponent implements AfterViewInit {
 
   get scenariosSnapshot(): IOhMyScenarios {
     return this.store.selectSnapshot<IOhMyScenarios>((state: IStore) => {
-      return state[STORAGE_KEY].content.states[this.domain]?.scenarios;
+      return state[STORAGE_KEY].content.states[this.domain]?.presets;
     });
   }
 }

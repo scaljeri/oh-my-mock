@@ -19,7 +19,7 @@ export class MockLabelComponent {
   constructor(private store: Store) {}
 
   ngOnChanges(): void {
-    this.scenarioName = this.state.scenarios[this.mock.label];
+    this.scenarioName = this.state.presets[this.mock.label];
   }
 
   get code(): statusCode {

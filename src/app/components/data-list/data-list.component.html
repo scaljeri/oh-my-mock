@@ -12,7 +12,12 @@
 
 
   <div class="toggles">
-    <oh-my-autocomplete-dropdown class="preset" [options]="presets" [formControl]="scenarioCtrl" label="preset">
+    <oh-my-autocomplete-dropdown 
+      [showEdit]="true"
+      class="preset" 
+      [options]="presets" 
+      [formControl]="scenarioCtrl" 
+      label="preset">
     </oh-my-autocomplete-dropdown>
     <!-- <oh-my-scenario-dropdown class="scenario-selector" [formControl]="scenarioCtrl" [scenarios]="state?.scenarios">
     </oh-my-scenario-dropdown> -->

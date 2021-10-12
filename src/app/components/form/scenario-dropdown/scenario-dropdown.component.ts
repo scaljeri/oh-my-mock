@@ -39,7 +39,7 @@ export class ScenarioDropdownComponent implements OnChanges, OnDestroy, ControlV
 
   constructor(private store: Store, private cdr: ChangeDetectorRef) {
     this.scenariosUpdate$ = this.store.select<IOhMyScenarios>((store: IStore) => {
-      return store[STORAGE_KEY].content.states[this.domain]?.scenarios;
+      return store[STORAGE_KEY].content.states[this.domain]?.presets;
     });
   }
 

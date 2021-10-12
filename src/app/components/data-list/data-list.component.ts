@@ -16,6 +16,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state';
 import { ScenarioUtils } from '@shared/utils/scenario';
 import { filter, startWith } from 'rxjs/operators';
+import { exactOptionMatchValidator } from 'src/app/validators/exact-match-validator';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -118,10 +119,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.updateAux({ filterKeywords: filter.toLowerCase() });
     });
 
-    this.subscriptions.add(this.state$.subscribe(state => {
+    this.subscriptions.add(this.state$.subscribe((state: IState) => {
       this.state = state;
-      this.scenarioOptions = Object.values(state.scenarios);
+      this.presets = ['a', 'b', 'c']; // Object.values(state.presets) ;
       this.filteredDataList = this.filterListByKeywords();
+
+      this.scenarioCtrl.setValidators([exactOptionMatchValidator(this.presets)]);
 
       this.scenarioCtrl.setValue(state.context.scenario, { emitEvent: false });
       // this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
@@ -185,7 +188,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
 
   onScenarioUpdate(scenario): void {
-    const scenarioId = ScenarioUtils.findByLabel(scenario, this.state.scenarios);
+    const scenarioId = ScenarioUtils.findByLabel(scenario, this.state.presets);
 
     this.updateContext({ scenario });
 
