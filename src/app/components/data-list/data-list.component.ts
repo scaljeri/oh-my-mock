@@ -7,7 +7,7 @@ import { trigger, style, animate, transition } from "@angular/animations";
 import { DeleteData, LoadState, Aux, UpdateState, UpsertData, ViewChangeOrderItems, ViewReset, ScenarioFilter } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IOhMyAux, IOhMyStateContext, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
+import { domain, IData, IOhMyAux, IOhMyContext, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { combineLatest, merge, Observable, Subscription, zip } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
@@ -17,6 +17,8 @@ import { OhMyState } from 'src/app/store/state';
 import { ScenarioUtils } from '@shared/utils/scenario';
 import { filter, startWith } from 'rxjs/operators';
 import { exactOptionMatchValidator } from 'src/app/validators/exact-match-validator';
+import { ManageScenariosComponent } from '../manage-scenarios/manage-scenarios.component';
+import { MatDialog } from '@angular/material/dialog';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -54,7 +56,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   @Dispatch() updateScenarioFilter = (id: ohMyScenarioId) => new ScenarioFilter(id);
   @Dispatch() updateAux = (values: IOhMyAux) => new Aux(values);
-  @Dispatch() updateContext = (value: IOhMyStateContext) => new UpdateState({ context: value });
+  @Dispatch() updateContext = (value: Partial<IOhMyContext>) => new UpdateState({ context: value as IOhMyContext });
   @Dispatch() updateState = (state: IState) => new UpdateState(state);
   @Dispatch() deleteData = (id: string) => {
     return new DeleteData(id, this.state.domain);
@@ -102,6 +104,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChildren('animatedRow', { read: ElementRef }) rows: QueryList<ElementRef>;
 
   constructor(
+    public dialog: MatDialog,
     private appState: AppStateService,
     private store: Store,
     private toast: HotToastService) {
@@ -126,7 +129,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
       this.scenarioCtrl.setValidators([exactOptionMatchValidator(this.presets)]);
 
-      this.scenarioCtrl.setValue(state.context.scenario, { emitEvent: false });
+      this.scenarioCtrl.setValue(state.context.preset, { emitEvent: false });
       // this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
       this.filterCtrl.setValue(state.aux.filterKeywords, { emitEvent: false });
       // this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.context.scenario);
@@ -187,10 +190,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
 
-  onScenarioUpdate(scenario): void {
-    const scenarioId = ScenarioUtils.findByLabel(scenario, this.state.presets);
+  onScenarioUpdate(preset): void {
+    const scenarioId = ScenarioUtils.findByLabel(preset, this.state.presets);
 
-    this.updateContext({ scenario });
+    this.updateContext({ preset });
 
     // if (!scenarioId) {
     //   this.scenarioCtrl.setValue('', { emitEvent: false });
@@ -320,5 +323,18 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   //     // this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
   //   }
   // }
+  onPresetEdit(): void {
+    const dialogRef = this.dialog.open(ManageScenariosComponent, {
+      width: '280px',
+      height: '380px'
+    });
+
+    dialogRef.afterClosed().subscribe((scenarios: any) => {
+      if (scenarios !== null && scenarios !== undefined) {
+        console.log('received', scenarios);
+        // this.updateScenarios(scenarios);
+      }
+    });
+  }
 }
 

@@ -1,4 +1,4 @@
-import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyStateContext, ohMyMockId, ohMyScenarioId } from '../type';
+import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyScenarioId } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -43,7 +43,7 @@ export class DataUtils {
     return id ? data.mocks[id] : null;
   }
 
-  static addMock = (context: IOhMyStateContext, data: IData, mock: IMock, autoActivate = true): IData => {
+  static addMock = (context: IOhMyContext, data: IData, mock: IMock, autoActivate = true): IData => {
     data = {
       ...data, mocks:
       {
@@ -52,14 +52,14 @@ export class DataUtils {
           statusCode: mock.statusCode,
           label: mock.label
         }
-      }, scenarios: { ...data.scenarios, [context.scenario]: mock.id },
-      enabled: { ...data.enabled, [context.scenario]: autoActivate }
+      }, scenarios: { ...data.scenarios, [context.preset]: mock.id },
+      enabled: { ...data.enabled, [context.preset]: autoActivate }
     };
 
     return data;
   }
 
-  static removeMock(context: IOhMyStateContext, data: IData, mockId: ohMyMockId): IData {
+  static removeMock(context: IOhMyContext, data: IData, mockId: ohMyMockId): IData {
     data = {
       ...data,
       scenarios: { ...data.scenarios },
@@ -68,20 +68,20 @@ export class DataUtils {
     };
     const mock = data.mocks[mockId];
     delete data.mocks[mockId];
-    delete data.scenarios[context.scenario];
-    delete data.enabled[context.scenario];
+    delete data.scenarios[context.preset];
+    delete data.enabled[context.preset];
 
     const nextActiveMock = Object.values(data.mocks).sort(this.statusCodeSort)?.[0]
 
     if (nextActiveMock) {
-      data.scenarios[context.scenario] = nextActiveMock.id;
-      data.enabled[context.scenario] = false;
+      data.scenarios[context.preset] = nextActiveMock.id;
+      data.enabled[context.preset] = false;
     }
 
     return data;
   }
 
-  static activateMock(context: IOhMyStateContext, data: IData, mockId: ohMyMockId, scenario = null): IData {
+  static activateMock(context: IOhMyContext, data: IData, mockId: ohMyMockId, scenario = null): IData {
     data = { ...data, scenarios: { ...data.scenarios }, enabled: { ...data.enabled } };
 
     data.scenarios[scenario] = mockId;
@@ -102,8 +102,8 @@ export class DataUtils {
   //   return copy;
   // }
 
-  static deactivateMock(context: IOhMyStateContext, data: IData): IData {
-    data = { ...data, enabled: { ...data.enabled, [context.scenario]: false } };
+  static deactivateMock(context: IOhMyContext, data: IData): IData {
+    data = { ...data, enabled: { ...data.enabled, [context.preset]: false } };
 
     return data
   }

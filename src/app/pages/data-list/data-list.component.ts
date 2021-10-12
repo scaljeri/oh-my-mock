@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select } from '@ngxs/store';
-import { IData, IOhMyContext, IState } from '@shared/type';
+import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
@@ -26,7 +26,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   public showRowAction = false;
   public state: IState;
   public domain: string;
-  public navigateToData: IOhMyContext;
+  public navigateToData: IOhMyMockContext;
   hasData = false;
 
   constructor(

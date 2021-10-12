@@ -2,13 +2,12 @@ import { Component, ElementRef, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
-import { STORAGE_KEY } from '@shared/constants';
-import { IData, IState, IStore } from '@shared/type';
+import { IData, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Observable, Subscription } from 'rxjs';
 import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
-import { StoreSnapshotService } from 'src/app/services/store-snapshot.service';
+import { StateStreamService } from 'src/app/services/state-stream.service';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
 
@@ -27,14 +26,13 @@ export class PageMockComponent implements OnInit {
 
   constructor(private element: ElementRef,
     private activeRoute: ActivatedRoute,
-    private storeSnapshotService: StoreSnapshotService,
+    private stateStream: StateStreamService,
     private store: Store) { }
 
   ngOnInit(): void {
-
     this.element.nativeElement.parentNode.scrollTop = 0;
     const dataId = this.activeRoute.snapshot.params.dataId;
-    const state = this.storeSnapshotService.stateSnapshot;
+    const state = this.stateStream.state;
 
     this.subscription = this.state$.subscribe((state: IState) => {
       this.data = PageMockComponent.StateUtils.findData(state, { id: dataId });

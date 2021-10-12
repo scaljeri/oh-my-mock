@@ -38,8 +38,9 @@ export interface IOhMyAux {
   newAutoActivate?: boolean;
 }
 
-export interface IOhMyStateContext {
-  scenario: ohMyScenarioId;
+export interface IOhMyContext {
+  preset?: ohMyScenarioId;
+  domain: ohMyDomain;
 }
 
 export interface IState {
@@ -49,11 +50,11 @@ export interface IState {
   data: Record<ohMyDataId, IData>;
   aux: IOhMyAux;
   presets: Record<ohMyScenarioId, string>;
-  context: IOhMyStateContext;
+  context: IOhMyContext;
 }
 
 // url, method and type are used to map an API request with a mock
-export interface IOhMyContext {
+export interface IOhMyMockContext {
   url?: string;
   method?: requestMethod;
   requestType?: requestType;
@@ -61,7 +62,7 @@ export interface IOhMyContext {
   mockId?: ohMyMockId;
 }
 
-export interface IData extends IOhMyContext {
+export interface IData extends IOhMyMockContext {
   scenarios: Record<ohMyScenarioId, ohMyMockId>;
   enabled: Record<ohMyScenarioId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
@@ -126,7 +127,7 @@ export interface IPacket<T = any> {
 
 export interface IPacketPayload<T = unknown> {
   type: packetTypes;
-  context?: IOhMyContext;
+  context?: IOhMyMockContext;
   data?: T;
 }
 
@@ -172,8 +173,8 @@ export interface IOhMyAPIResponse {
 }
 
 export interface IDispatchApiResponsePacket {
-  context?: IOhMyContext;
-  data: IOhMyContext
+  context?: IOhMyMockContext;
+  data: IOhMyMockContext
 }
 
 export interface IOhMyPopupActive {

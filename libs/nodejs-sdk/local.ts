@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { IData, IMock, IOhMyContext, statusCode } from '../../src/shared/type';
+import { IData, IMock, IOhMyMockContext, statusCode } from '../../src/shared/type';
 import { compareUrls } from '../../src/shared/utils/urls';
 
 const fsPromise = fs.promises;
@@ -9,7 +9,7 @@ export interface IOhMyLocalConfig {
   basePath?: string;
 }
 
-export type IOhFileContext = Omit<IOhMyContext, 'id' | 'mockId'> &
+export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
 {
   statusCode?: statusCode;
   headers?: Record<string, string>;
@@ -39,7 +39,7 @@ export class OhMyLocal {
   // original `mock` object is returned
   async updateMock(data: IData, request: any): Promise<IMock> {
     const context = this.findContext(data);
-    const mock = data.mocks?.[data.activeMock!];
+    const mock: IMock = null; // data.mocks?.[data.activeMock];
 
     if (!context) {
       // eslint-disable-next-line no-console

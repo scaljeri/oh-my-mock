@@ -20,8 +20,11 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 import { Router } from '@angular/router';
 import { AppStateService } from './services/app-state.service';
-import { APP_VERSION } from './tokens';
 import { filter } from 'rxjs/operators';
+import { StateStreamService } from './services/state-stream.service';
+import { ContextService } from './services/context.service';
+
+const VERSION = '__OH_MY_VERSION__';
 
 @Component({
   selector: 'app-root',
@@ -48,27 +51,25 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
   // animals$: Observable<any>;
   constructor(
-    private appStateService: AppStateService,
-    private contentService: ContentService,
+    public context: ContextService,
+    private stateStream: StateStreamService,
     private router: Router,
-    public dialog: MatDialog,
-    public store: Store,
-    @Inject(APP_VERSION) public version: string
-  ) {
+    public dialog: MatDialog) {
     // this.version = this.appStateService.version;
 
-    // this.animals$ = this.store.select(state => {
+    // this.store.select(state => state).
     //   return state;
     // });
     // this.animals$.subscribe(x => {
 
     //   debugger;
     // })
-    this.appStateService.domain$.subscribe(domain => this.domain = domain);
+    // this.appStateService.domain$.subscribe(domain => this.domain = domain);
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.state$.pipe(filter(state => !!state)).subscribe((state: IState) => {
+    this.stateStream.state$.subscribe((state: IState) => {
+      debugger;
       // setTimeout(() => this.domain = this.appStateService.domain);
       // if (!state || !state.domain) {
       //   return;
@@ -90,12 +91,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
     this.activate(checked);
-    this.contentService.sendActiveState(checked);
+    // this.contentService.sendActiveState(checked);
   }
 
   @HostListener('window:beforeunload')
   ngOnDestroy(): void {
-    this.contentService.destroy();
+    // this.contentService.destroy();
+    console.log('TODO');
   }
 
   notifyDisabled(): void {

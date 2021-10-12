@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 import { appSources, packetTypes } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyAPIResponse, IOhMyContext, IOhMyMockResponse, IPacket, IPacketPayload, IState } from '../shared/type';
+import { IOhMyAPIRequest, IOhMyAPIResponse, IOhMyMockContext, IOhMyMockResponse, IPacket, IPacketPayload, IState } from '../shared/type';
 import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
@@ -137,7 +137,7 @@ async function handleApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
   let data = StateUtils.findData(state, { ...payload.data.data }) || DataUtils.init(payload.data.data);
 
   debugger;
-  const scenario = state.context.scenario;
+  const scenario = state.context.preset;
   const smock = DataUtils.findMock(data, { ...payload.data.mock });
 
   if (!smock) {

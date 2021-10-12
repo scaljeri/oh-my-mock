@@ -10,18 +10,19 @@
     </div>
   </div>
 
-
   <div class="toggles">
     <oh-my-autocomplete-dropdown 
       [showEdit]="true"
       class="preset" 
       [options]="presets" 
       [formControl]="scenarioCtrl" 
+      (edit)="onPresetEdit()"
       label="preset">
     </oh-my-autocomplete-dropdown>
     <!-- <oh-my-scenario-dropdown class="scenario-selector" [formControl]="scenarioCtrl" [scenarios]="state?.scenarios">
     </oh-my-scenario-dropdown> -->
-    <mat-icon class="scenario-help" color="primary" matTooltip="Select a group of mocks with a specific scenario.">
+    <mat-icon class="scenario-help" color="primary" matTooltip="
+    Enable a whole group of mocks by selecting a preset. To edit or delete presets click the edit icon">
       info</mat-icon>
 
     <div class="toggle">

@@ -39,6 +39,7 @@ import {
   ohMyScenarioId,
 } from '@shared/type';
 import { patch } from '@ngxs/store/operators';
+import { ContextService } from '../services/context.service';
 
 import { STORAGE_KEY } from '@shared/constants';
 
@@ -73,62 +74,60 @@ export class OhMyState {
   static MockUtils = MockUtils;
   static ScenarioUtils = ScenarioUtils;
 
-  constructor(
-    @Inject(APP_VERSION) public version: string,
-    appStateService: AppStateService) {
-    appStateService.domain$.subscribe(domain => OhMyState.domain = domain);
-  }
+  constructor(private context: ContextService) {}
 
   @Selector()
   static mainState(store: IOhMyMock): IState {
-    return store.content.states[OhMyState.domain];
+    return null; // store.content.states[this.context.domain];
   }
 
   static getStore(ctx: StateContext<IOhMyMock>): IOhMyMock {
     return { ...ctx.getState() };
   }
 
-  static async getActiveState(store: IOhMyMock, domain = OhMyState.domain): Promise<IState> {
-    let state = this.StoreUtils.getState(store, domain) || await OhMyState.StorageUtils.get(domain);
+  async getActiveState(store: IOhMyMock, domain = this.context.domain): Promise<IState> {
+    let state = OhMyState.StoreUtils.getState(store, domain) || 
+      await OhMyState.StorageUtils.get(domain);
 
-    if (!state || Object.keys(state).length === 0) { // TODO: Is object.keys needed?
+      // TODO: check if Object.keys is needed here
+    if (!state || Object.keys(state).length === 0) {
       state = OhMyState.StateUtils.init({ domain });
     }
 
     return { ...state };
   }
 
-  static async getMyState(ctx: StateContext<IOhMyMock>, domain?: string): Promise<[IState, string]> {
-    const store = this.getStore(ctx);
-    const activeDomain = domain || OhMyState.domain;
-    const domainState = { ...await OhMyState.getActiveState(store, domain) };
+  async getMyState(ctx: StateContext<IOhMyMock>, domain?: string): Promise<[IState, string]> {
+    const store = OhMyState.getStore(ctx);
+    const activeDomain = domain || this.context.domain;
+    const domainState = { ...await this.getActiveState(store, domain) };
 
     return [domainState, activeDomain];
   }
 
-  /* No states/domains are present yet */
-  @Action(InitState) // TODO: Rename InitState to InitStore
+  @Action(InitState) 
   async init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
     let store: IOhMyMock;
-    const activeDomain = domain || OhMyState.domain;
 
-    store = payload?.domains ? payload : await OhMyState.StorageUtils.get(STORAGE_KEY);
+    debugger;
+    store = payload?.domains ? payload : await OhMyState.StorageUtils.get();
 
     if (!store || Object.keys(store).length === 0) {
-      store = OhMyState.StoreUtils.init(OhMyState.StateUtils.init({ domain: activeDomain }));
+      store = OhMyState.StoreUtils.init(OhMyState.StateUtils.init({ domain }));
       await OhMyState.StorageUtils.set(STORAGE_KEY, store);
     }
 
-    let state = await OhMyState.StorageUtils.get<IState>(activeDomain) || OhMyState.StateUtils.init({ domain: activeDomain });
+    let state = await OhMyState.StorageUtils.get<IState>(domain) || OhMyState.StateUtils.init({ domain });
 
-    if (store.domains.indexOf(activeDomain) === -1) {
-      store.domains = [activeDomain, ...store.domains];
+    if (store.domains.indexOf(domain) === -1) {
+      store.domains = [domain, ...store.domains];
       await OhMyState.StorageUtils.setStore(store);
     }
 
-    store.content.states[activeDomain] = state;
+    store.content.states[domain] = state;
     // TODO: Init with test data somehow
     console.log('setState', store);
+    this.context.update(state.context);
     ctx.setState(store);
   }
 
@@ -152,6 +151,8 @@ export class OhMyState {
       OhMyState.StorageUtils.set(STORAGE_KEY, store);
     } else { // reset everything
       await OhMyState.StorageUtils.reset();
+      // TODO: add domain
+      debugger;
       ctx.dispatch(new InitState(null, payload))
     }
 
@@ -182,8 +183,8 @@ export class OhMyState {
     const { payload, domain } = action;
 
     let store = OhMyState.getStore(ctx);
-    let [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
-    const scenario = state.context.scenario;
+    let [state, activeDomain] = await this.getMyState(ctx, domain);
+    const scenario = state.context.preset;
 
     let mock = { ...payload.mock };
     // let sourceMock = {};
@@ -231,7 +232,7 @@ export class OhMyState {
 
   @Action(UpsertData)
   async upsertData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: Partial<IData>, domain?: string }) {
-    let [state] = await OhMyState.getMyState(ctx, domain);
+    let [state] = await this.getMyState(ctx, domain);
 
     const data = { ...(OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init(payload)), ...payload };
     state = OhMyState.StateUtils.setData(state, data);
@@ -252,9 +253,9 @@ export class OhMyState {
   // TODO: Need Storage action here too
   @Action(UpsertScenarios)
   async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: OhMyScenarios, domain?: string }) {
-    const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
+    const [state, activeDomain] = await this.getMyState(ctx, domain);
 
-    state.scenarios = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
+    state.presets = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
     const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
 
     await OhMyState.StorageUtils.set(state.domain, state);
@@ -268,7 +269,7 @@ export class OhMyState {
     const { payload, domain } = action;
 
     const store = OhMyState.getStore(ctx);
-    const [state, activeDomain] = await OhMyState.getMyState(ctx, domain);
+    const [state, activeDomain] = await this.getMyState(ctx, domain);
     const data = OhMyState.DataUtils.removeMock(state.context,
       OhMyState.StateUtils.getData(state, payload.id), payload.mockId);
 
@@ -292,7 +293,7 @@ export class OhMyState {
   @Action(DeleteData)
   async deleteData(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: ohMyDataId, domain?: string }) {
     let store = OhMyState.getStore(ctx);
-    const [state] = await OhMyState.getMyState(ctx, domain);
+    const [state] = await this.getMyState(ctx, domain);
 
     // NOTE: `state` is updated by reference!!
     const data = OhMyState.StateUtils.removeData(state, payload);
@@ -317,7 +318,7 @@ export class OhMyState {
   @Action(ViewChangeOrderItems)
   async viewChangeOrderOfItems(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyViewItemsOrder }) {
     const store = OhMyState.getStore(ctx);
-    const [state] = await OhMyState.getMyState(ctx);
+    const [state] = await this.getMyState(ctx);
 
     // const id = state.views[payload.name][payload.id];
     // state.views = { ...state.views, [payload.name]: view.move(state.views[payload.name], id, payload.to) };
@@ -330,7 +331,7 @@ export class OhMyState {
   @Action(Aux)
   async aux(ctx: StateContext<IOhMyMock>, { payload }: { payload: Record<string, unknown> }) {
     const store = OhMyState.getStore(ctx);
-    const [state] = await OhMyState.getMyState(ctx);
+    const [state] = await this.getMyState(ctx);
 
     state.aux = { ...state.aux };
     Object.entries(payload).forEach(([k, v]) => {
@@ -346,7 +347,7 @@ export class OhMyState {
   @Action(ViewReset)
   async viewReset(ctx: StateContext<IOhMyMock>, { payload }: { payload: string }) {
     const store = OhMyState.getStore(ctx);
-    const [state] = await OhMyState.getMyState(ctx);
+    const [state] = await this.getMyState(ctx);
 
     // state.views = { ...state.views, [payload]: Object.keys(state.data) };
 

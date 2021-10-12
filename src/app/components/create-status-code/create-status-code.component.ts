@@ -45,7 +45,7 @@ export class CreateStatusCodeComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.scenarios = this.state.scenarios;
+    this.scenarios = this.state.presets;
     this.scenarioValues = Object.values(this.scenarios);
   }
 

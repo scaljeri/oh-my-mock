@@ -20,7 +20,7 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
     const state = await contentState.getState();
     const data = StateUtils.findData(state, request);
 
-    if (data && DataUtils.hasActiveMock(data, state.context.scenario)) {
+    if (data && DataUtils.hasActiveMock(data, state.context.preset)) {
         // yes
 
         const mockShallow = DataUtils.getActiveMock(data) as IOhMyShallowMock;

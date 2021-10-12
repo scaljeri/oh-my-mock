@@ -1,6 +1,7 @@
 <mat-form-field class="method-select">
     <mat-label>{{label}}</mat-label>
-    <input #input (blur)="onBlur(auto)" (focus)="onFocus($event, trigger)" type="text" matInput [formControl]="ctrl"
+    <input [ngClass]="{'has-errors': ngControl.hasError('noExactOptionMatch')}"
+        #input (blur)="onBlur(auto)" (focus)="onFocus($event, trigger)" type="text" matInput [formControl]="ctrl"
         #trigger="matAutocompleteTrigger" [matAutocomplete]="auto">
     <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (opened)="onAutoCompleteOpened()"
         (closed)="onAutoCompleteClose()" (optionSelected)="onOptionSelected($event)">
@@ -12,7 +13,7 @@
         (click)="ctrl.setValue('');trigger.openPanel()">
         <mat-icon>close</mat-icon>
     </button>
-    <button *ngIf="showEdit" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit()">
+    <button *ngIf="showEdit" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit($event)">
         <mat-icon>edit</mat-icon>
     </button>
 </mat-form-field>

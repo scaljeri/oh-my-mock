@@ -16,7 +16,7 @@ import {
 
 export class InitState {
   static readonly type = '[Domain] Init';
-  constructor(public payload: Partial<IOhMyMock> = {}, domain?: ohMyDomain) { }
+  constructor(public payload: Partial<IOhMyMock> = {}, public domain?: ohMyDomain) { }
 }
 
 export class ChangeDomain {

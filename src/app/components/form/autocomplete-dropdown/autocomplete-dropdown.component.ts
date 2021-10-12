@@ -1,6 +1,7 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { EventManager } from '@angular/platform-browser';
 
 @Component({
   selector: 'oh-my-autocomplete-dropdown',
@@ -87,7 +88,8 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     this.inputRef.nativeElement.blur();
   }
 
-  onClickEdit(): void {
+  onClickEdit(event): void {
+    event.stopPropagation();
     this.edit.emit();
   }
 

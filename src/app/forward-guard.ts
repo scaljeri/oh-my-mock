@@ -1,21 +1,27 @@
 import { Injectable } from '@angular/core';
 import { CanActivate } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IOhMyMock } from '@shared/type';
+import { IOhMyMock, ohMyDomain } from '@shared/type';
 import { AppStateService } from './services/app-state.service';
 import { MigrationsService } from './services/migrations.service';
 import { InitState } from './store/actions';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
+import { ContextService } from './services/context.service';
 
 @Injectable({ providedIn: 'root' })
 export class forwarderGuard implements CanActivate {
   static StateUtils = StateUtils;
   static StoreUtils = StoreUtils;
 
-  @Dispatch() initState = (state?: IOhMyMock) => new InitState(state);
+  @Dispatch() initState = (domain: ohMyDomain) => {
+    debugger;
+    return new InitState(null, domain)
+  };
 
-  constructor(private appStateService: AppStateService) {}
+  constructor(
+    private context: ContextService,
+    private appStateService: AppStateService) { }
 
   async canActivate(): Promise<boolean> {
     const urlParams = new URLSearchParams(window.location.search);
@@ -27,6 +33,8 @@ export class forwarderGuard implements CanActivate {
       this.appStateService.domain = domain;
       this.appStateService.tabId = Number(tabId);
     }
+
+    this.context.domain = this.appStateService.domain;
 
     // Load and initialize state
     // const origStore = await this.storageService.initialize();
@@ -40,14 +48,15 @@ export class forwarderGuard implements CanActivate {
 
     //   store = await forwarderGuard.StoreUtils.init(
     //     forwarderGuard.StateUtils.init({ domain: this.appStateService.domain }));
-      
+
     // }
 
     // if (store.version !== origStore?.version) { // Something happend
     //   this.storageService.updateState(store);
     // }
 
-    this.initState();
+    debugger;
+    this.initState(this.context.domain);
 
     return true;
   }

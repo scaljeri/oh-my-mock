@@ -9,7 +9,7 @@ export class StateUtils {
     return {
       version: this.version, views: {
         activity: []
-      }, aux: {}, data: {}, scenarios: {}, context: {}, ...base
+      }, aux: {}, data: {}, presets: {}, context: {}, ...base
     } as IState;
   }
 
@@ -59,10 +59,10 @@ export class StateUtils {
       .reduce((acc, mocks) => [...acc, ...mocks])
   }
 
-  static activateScenario(state: IState, scenario: ohMyScenarioId): IState {
+  static activateScenario(state: IState, preset: ohMyScenarioId): IState {
     state = {
       ...state,
-      context: { ...state.context, scenario }
+      context: { ...state.context, preset }
     };
 
     return state;

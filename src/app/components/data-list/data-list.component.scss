@@ -11,9 +11,9 @@
   position: relative;
 
   .preset {
-    margin-top: -5px;
+    margin-top: -15px;
     margin-bottom: -20px;
-    margin-right: $spacer-4;
+    margin-right: 2 * $spacer-4;
 
     ::ng-deep mat-label {
       color: #fff;
@@ -256,8 +256,9 @@ span.type {
   }
 
   .scenario-help {
-    margin-left: -$spacer-5;
+    margin-top: -$spacer-4;
     margin-right: $spacer-2;
+    margin-left: -$spacer-7;
   }
 }
 
