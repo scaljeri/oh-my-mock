@@ -45,6 +45,7 @@ export interface IOhMyContext {
 
 export interface IState {
   version: string;
+  name?: string;
   type: objectTypes.STATE;
   domain: string;
   data: Record<ohMyDataId, IData>;
@@ -180,4 +181,8 @@ export interface IDispatchApiResponsePacket {
 export interface IOhMyPopupActive {
   active: boolean;
   tabId: number;
+}
+
+export interface IOhMyPresetCreate {
+  id: string, value: string, sourceId: string;
 }

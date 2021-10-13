@@ -15,7 +15,6 @@ export class forwarderGuard implements CanActivate {
   static StoreUtils = StoreUtils;
 
   @Dispatch() initState = (domain: ohMyDomain) => {
-    debugger;
     return new InitState(null, domain)
   };
 
@@ -55,7 +54,6 @@ export class forwarderGuard implements CanActivate {
     //   this.storageService.updateState(store);
     // }
 
-    debugger;
     this.initState(this.context.domain);
 
     return true;

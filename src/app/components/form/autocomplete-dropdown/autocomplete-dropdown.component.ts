@@ -26,8 +26,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() label: string;
   @Input() showAllOnFocus = false;
   @Input() clearOnFocus = false;
-  @Input() showEdit = false;
-  @Output() edit = new EventEmitter();
+  @Input() showCopy = false;
+  @Input() showDelete = false;
+  @Input() copyInfo;
+  @Output() copy = new EventEmitter<string>();
 
   internalValue = '';
   _ctrl: FormControl;
@@ -90,7 +92,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
 
   onClickEdit(event): void {
     event.stopPropagation();
-    this.edit.emit();
+    this.copy.emit(this.ctrl.value);
   }
 
   writeValue(value: any) {

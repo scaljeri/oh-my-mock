@@ -109,7 +109,6 @@ export class OhMyState {
   async init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
     let store: IOhMyMock;
 
-    debugger;
     store = payload?.domains ? payload : await OhMyState.StorageUtils.get();
 
     if (!store || Object.keys(store).length === 0) {
@@ -126,7 +125,7 @@ export class OhMyState {
 
     store.content.states[domain] = state;
     // TODO: Init with test data somehow
-    console.log('setState', store);
+    console.log('setState', domain, state,store);
     this.context.update(state.context);
     ctx.setState(store);
   }
@@ -147,13 +146,12 @@ export class OhMyState {
         });
       }
 
+      OhMyState.StorageUtils.remove(state.domain);
       store = OhMyState.StoreUtils.removeDomain(store, payload)
       OhMyState.StorageUtils.set(STORAGE_KEY, store);
     } else { // reset everything
       await OhMyState.StorageUtils.reset();
-      // TODO: add domain
-      debugger;
-      ctx.dispatch(new InitState(null, payload))
+      ctx.dispatch(new InitState(null, this.context.domain));
     }
 
     ctx.setState(store);

@@ -4,20 +4,17 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, LoadState, Aux, UpdateState, UpsertData, ViewChangeOrderItems, ViewReset, ScenarioFilter } from 'src/app/store/actions';
+import { DeleteData, LoadState, Aux, UpdateState, UpsertData, ViewChangeOrderItems, ViewReset, ScenarioFilter, PresetCreate } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IOhMyAux, IOhMyContext, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
+import { domain, IData, IOhMyAux, IOhMyContext, IOhMyPresetCreate, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { combineLatest, merge, Observable, Subscription, zip } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
 import { FormControl } from '@angular/forms';
 import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state';
 import { ScenarioUtils } from '@shared/utils/scenario';
-import { filter, startWith } from 'rxjs/operators';
-import { exactOptionMatchValidator } from 'src/app/validators/exact-match-validator';
-import { ManageScenariosComponent } from '../manage-scenarios/manage-scenarios.component';
 import { MatDialog } from '@angular/material/dialog';
 
 export const highlightSeq = [
@@ -81,6 +78,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     return new Aux({ newAutoActivate: value });
   }
 
+  @Dispatch() updatePresets = (updates: IOhMyPresetCreate[]) => {
+    return new PresetCreate(updates);
+  }
+
   // public displayedColumns = ['type', 'method', 'url', 'activeMock', 'actions'];
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
@@ -93,9 +94,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   scenarioCtrl = new FormControl('', { updateOn: 'blur' });
   filteredDataList: IData[];
 
-  presets = ['a', 'b', 'c'];
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
+  presets: string[];
 
 
   public data: Record<ohMyDataId, IData>;
@@ -114,30 +115,38 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.scenarioCtrl.valueChanges.subscribe(scenario => {
-      // this.updateScenarioFilter(ScenarioUtils.findByLabel(scenario, this.state.scenarios));
-      this.updateScenarioFilter(scenario);
+    this.scenarioCtrl.valueChanges.subscribe(preset => {
+      if (preset !== this.state.context.preset) {
+        this.updateScenarioFilter(preset);
+      }
     });
+
+    let filterDebounceId;
     this.filterCtrl.valueChanges.subscribe(filter => {
-      this.updateAux({ filterKeywords: filter.toLowerCase() });
+      // TODO: filter data
+
+      clearTimeout(filterDebounceId);
+      filterDebounceId = window.setTimeout(() => {
+        this.updateAux({ filterKeywords: filter.toLowerCase() });
+      }, 500);
     });
 
-    this.subscriptions.add(this.state$.subscribe((state: IState) => {
-      this.state = state;
-      this.presets = ['a', 'b', 'c']; // Object.values(state.presets) ;
-      this.filteredDataList = this.filterListByKeywords();
+    // this.subscriptions.add(this.state$.subscribe((state: IState) => {
+    //   this.state = state;
+    //   this.presets = ['a', 'b', 'c']; // Object.values(state.presets) ;
+    //   this.filteredDataList = this.filterListByKeywords();
 
-      this.scenarioCtrl.setValidators([exactOptionMatchValidator(this.presets)]);
+    //   this.scenarioCtrl.setValidators([exactOptionMatchValidator(this.presets)]);
 
-      this.scenarioCtrl.setValue(state.context.preset, { emitEvent: false });
-      // this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
-      this.filterCtrl.setValue(state.aux.filterKeywords, { emitEvent: false });
-      // this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.context.scenario);
-    }));
+    //   this.scenarioCtrl.setValue(state.context.preset, { emitEvent: false });
+    //   // this.scenarioCtrl.setValue(state.scenarios[state.aux.filterScenario], { emitEvent: false });
+    //   this.filterCtrl.setValue(state.aux.filterKeywords, { emitEvent: false });
+    //   // this.filteredDataList = this.filterListByScenario(this.filterListByKeywords(), this.state.context.scenario);
+    // }));
 
-    if (!this.state) {
-      this.loadState();
-    }
+    // if (!this.state) {
+    //   this.loadState();
+    // }
 
     // this.subscriptions.push(this.appState.hit$.subscribe((data: IData) => {
     // const index = this.data.indexOf(data);
@@ -151,43 +160,47 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     // this.isBusyAnimating = true;
     // }));
   }
+  ngOnChanges(): void {
+    this.scenarioCtrl.setValue(this.state.presets[this.state.context.preset]);
+    this.presets = Object.values(this.state.presets)
+  }
 
   onToggleActivateNew(toggle: boolean): void {
     this.toggleActivateNew(toggle);
   }
 
-  ngOnChanges(): void {
-    // this.timeoutId && clearTimeout(this.timeoutId);
-    // this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
+  // ngOnChanges(): void {
+  // this.timeoutId && clearTimeout(this.timeoutId);
+  // this.visibleBtns = (this.showActivate ? 1 : 0) + (this.showClone ? 1 : 0) + (this.showDelete ? 1 : 0) + (this.showExport ? 1 : 0);
 
-    // this.timeoutId = window.setTimeout(() => {
-    //   // The hit list has animated its change. The problem after the animation  rows
-    //   // are moved around with css `transform` which doesn't work with Drag&Drop.
-    //   // So, below we change the order of the data, so no css transformation are needed
-    //   // anymore
-    //   this.isBusyAnimating = false;
+  // this.timeoutId = window.setTimeout(() => {
+  //   // The hit list has animated its change. The problem after the animation  rows
+  //   // are moved around with css `transform` which doesn't work with Drag&Drop.
+  //   // So, below we change the order of the data, so no css transformation are needed
+  //   // anymore
+  //   this.isBusyAnimating = false;
 
-    //   if (!this.state) { // It happens (Explore-state)
-    //     return;
-    //   }
+  //   if (!this.state) { // It happens (Explore-state)
+  //     return;
+  //   }
 
-    //   const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
+  //   const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
 
-    //   // Self healing!!
-    //   if (isViewValidate(viewList as any, this.state.data as any)) { // It happens too, super weird
-    //     // this.data = viewList.map(v => this.state.data[v]);
-    //     // this.viewList = this.data.map((v, i) => i);
-    //   } else {
-    //     // eslint-disable-next-line no-console
-    //     console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
+  //   // Self healing!!
+  //   if (isViewValidate(viewList as any, this.state.data as any)) { // It happens too, super weird
+  //     // this.data = viewList.map(v => this.state.data[v]);
+  //     // this.viewList = this.data.map((v, i) => i);
+  //   } else {
+  //     // eslint-disable-next-line no-console
+  //     console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
 
-    //     this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
-    //     this.data = this.state.data;
-    //     // this.viewList = this.data.map((_, i) => i);
-    //   }
+  //     this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
+  //     this.data = this.state.data;
+  //     // this.viewList = this.data.map((_, i) => i);
+  //   }
 
-    // }, this.isBusyAnimating ? 1000 : 0);
-  }
+  // }, this.isBusyAnimating ? 1000 : 0);
+  // }
 
 
   onScenarioUpdate(preset): void {
@@ -323,18 +336,29 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   //     // this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
   //   }
   // }
-  onPresetEdit(): void {
-    const dialogRef = this.dialog.open(ManageScenariosComponent, {
-      width: '280px',
-      height: '380px'
+  onPresetEdit(preset: string): void {
+    let presetId = Object.entries(this.state.presets).find(([k, v]) => v === preset)?.[0];
+
+    const updates = [];
+
+    if (!presetId) {
+      presetId = this.state.context.preset;
+
+      updates.push({
+        id: presetId, value: preset
+      });
+    }
+
+    const copyId = uniqueId();
+    updates.push({
+      id: copyId, value: `${preset} copy`,
+      clone: presetId
     });
 
-    dialogRef.afterClosed().subscribe((scenarios: any) => {
-      if (scenarios !== null && scenarios !== undefined) {
-        console.log('received', scenarios);
-        // this.updateScenarios(scenarios);
-      }
-    });
+    this.updatePresets(updates);
+
+    // TODO: activate new preset
+    // this.updateState({context: { ...this.state.context, preset: copyId}})
   }
 }
 

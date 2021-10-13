@@ -6,7 +6,7 @@ import { REQUIRED_MSG } from '@shared/constants';
 import { IData, IMock, IOhMyScenarios } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
-import { ManageScenariosComponent } from '../../manage-scenarios/manage-scenarios.component';
+import { ManageScenariosComponent } from '../../manage-presets/manage-scenarios.component';
 
 @Component({
   selector: 'oh-my-mock-details',

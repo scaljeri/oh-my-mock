@@ -7,6 +7,7 @@ import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
+import { StateStreamService } from 'src/app/services/state-stream.service';
 import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 
@@ -18,7 +19,7 @@ import { OhMyState } from 'src/app/store/state';
 export class PageDataListComponent implements OnInit, OnDestroy {
   static StateUtils = StateUtils;
 
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+  @Dispatch() upsertRequest = (data: IData) => new UpsertData(data);
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   private subscriptions = new Subscription();
@@ -30,13 +31,14 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   hasData = false;
 
   constructor(
+    private stateStream: StateStreamService,
     public dialog: MatDialog,
     private router: Router,
     private activatedRoute: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.state$.subscribe((state: IState) => {
+    this.subscriptions.add(this.stateStream.state$.subscribe((state: IState) => {
       this.state = state;
       this.hasData = Object.keys(this.state.data).length > 0;
 
@@ -61,8 +63,10 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((data: IData) => {
       if (data) {
+        // To be able to navigate to the requests mocks page, it first needs to be created,
+        // which is why the request information is stored in a tmp variable for later processing
         this.navigateToData = data;
-        this.upsertData(data);
+        this.upsertRequest(data);
       }
     });
   }

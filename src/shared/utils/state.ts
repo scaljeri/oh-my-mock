@@ -1,5 +1,4 @@
 import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyScenarioId } from '../type';
-import { DataUtils } from './data';
 import { compareUrls } from './urls';
 
 export class StateUtils {
@@ -9,7 +8,9 @@ export class StateUtils {
     return {
       version: this.version, views: {
         activity: []
-      }, aux: {}, data: {}, presets: {}, context: {}, ...base
+      }, aux: {}, data: {}, presets: { default: '' }, context: {
+        preset: 'default'
+      }, ...base
     } as IState;
   }
 

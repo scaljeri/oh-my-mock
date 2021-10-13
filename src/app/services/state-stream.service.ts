@@ -16,10 +16,11 @@ export class StateStreamService {
   public state: IState;
 
   constructor(private context: ContextService, store: Store) {
-    this.state$ = store.select(store => store).pipe(
-      filter(() => this.context.domain !== undefined), 
-      map(store => { debugger; return store[STORAGE_KEY].content.states[this.context.domain]}), 
-      filter(s => !!s), share());
+    this.state$ = store.select(store => {
+      const state = store[STORAGE_KEY]?.content.states[this.context.domain]
+      return state;
+    })
+      .pipe(filter((state) => !!state));
 
     this.state$.subscribe(state => this.state = state);
   }

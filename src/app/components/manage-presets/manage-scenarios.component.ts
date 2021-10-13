@@ -32,12 +32,15 @@ export class ManageScenariosComponent implements AfterViewInit {
   constructor(
     private store: Store,
     @Optional() private dialogRef: MatDialogRef<ManageScenariosComponent>,
-    @Optional() @Inject(MAT_DIALOG_DATA) private dialogScenarios: { scenarios?: IOhMyScenarios, domain?: domain },
-    private cdr: ChangeDetectorRef) { }
+    @Inject(MAT_DIALOG_DATA) private dialogScenarios: IOhMyScenarios,
+    private cdr: ChangeDetectorRef) { 
+      debugger;
+    }
 
   ngAfterViewInit(): void {
     this.domain ??= this.dialogScenarios?.domain || OhMyState.domain;
-    this.scenarios ??= this.dialogScenarios?.scenarios || this.scenariosSnapshot || {};
+    this.scenarios ??= this.dialogScenarios;
+    debugger;
 
     if (this.scenarios) {
       this.scenariosObj = { ... this.scenarios };
@@ -82,8 +85,8 @@ export class ManageScenariosComponent implements AfterViewInit {
   }
 
   isInDialog(): boolean {
-    return (this.dialogScenarios && (this.dialogScenarios as IState).aux &&
-     typeof (this.dialogScenarios as IState).aux === 'object');
+    return true; /*(this.dialogScenarios && (this.dialogScenarios as IState).aux &&
+     typeof (this.dialogScenarios as IState).aux === 'object'); */
   }
 
   get scenariosSnapshot(): IOhMyScenarios {

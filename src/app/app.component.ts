@@ -69,11 +69,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     this.stateStream.state$.subscribe((state: IState) => {
-      debugger;
-      // setTimeout(() => this.domain = this.appStateService.domain);
-      // if (!state || !state.domain) {
-      //   return;
-      // }
+      this.domain = this.context.domain;
 
       this.isInitializing = false;
       this.enabled = state.aux.appActive;
@@ -82,7 +78,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         if (this.dialogRef) {
           this.dialogRef.close();
         }
-        // this.contentService.sendActiveState(true);
+
+        // TODO: update state with toggle true for active window
+        // Without this informtion the content/injected scripts cannot start early mocking!!!
       } else if (!this.dialogRef && !this.dialogDone) {
         this.notifyDisabled();
       }
