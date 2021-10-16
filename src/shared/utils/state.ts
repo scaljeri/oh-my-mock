@@ -8,7 +8,7 @@ export class StateUtils {
     return {
       version: this.version, views: {
         activity: []
-      }, aux: {}, data: {}, presets: { default: 'Default' }, context: {
+      }, aux: { newAutoActivate: true }, data: {}, presets: { default: 'Default' }, context: {
         preset: 'default'
       }, ...base
     } as IState;
@@ -57,7 +57,7 @@ export class StateUtils {
 
   static getAllMockIds(state: IState): ohMyMockId[] {
     return Object.values(state.data).map(d => Object.keys(d.mocks))
-      .reduce((acc, mocks) => [...acc, ...mocks])
+      .reduce((acc, mocks) => [...acc, ...mocks], []);
   }
 
   static activateScenario(state: IState, preset: ohMyPresetId): IState {

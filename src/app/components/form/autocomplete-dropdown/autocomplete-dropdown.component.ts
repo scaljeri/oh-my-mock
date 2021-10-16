@@ -1,7 +1,6 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { EventManager } from '@angular/platform-browser';
+import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'oh-my-autocomplete-dropdown',
@@ -45,8 +44,9 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   private autoCompleteActive = false;
 
   @ViewChild('input') inputRef: ElementRef;
+  @ViewChild('trigger', { read: MatAutocompleteTrigger }) trigger: MatAutocompleteTrigger;
 
-  constructor(@Self() public ngControl: NgControl) {
+  constructor(@Self() public ngControl: NgControl, private cdr: ChangeDetectorRef) {
     ngControl.valueAccessor = this;
   }
 
@@ -79,6 +79,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   }
 
   emitChange(): void {
+    console.log('emit???' + this.ctrl.value + ' vs ' + this.internalValue);
     if (this.ctrl.value !== this.internalValue) {
       this.internalValue = this.ctrl.value;
       this.onChange(this.ctrl.value);
@@ -111,7 +112,11 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
 
   writeValue(value: any) {
     this.internalValue = value;
-    this.ctrl.setValue(value);
+    this.ctrl.setValue(value, { emitEvent: false });
+
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    });
   }
 
   registerOnChange(fn: any) {

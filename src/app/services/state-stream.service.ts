@@ -18,11 +18,15 @@ export class StateStreamService {
   constructor(private context: ContextService, store: Store) {
     this.state$ = store.select(store => {
       const state = store[STORAGE_KEY]?.content.states[this.context.domain]
+      console.log('new state???', state?.presets.default, state);
       return state;
     })
       .pipe(filter((state) => !!state));
 
-    this.state$.subscribe(state => this.state = state);
+    this.state$.subscribe(state => {
+      console.log('....new sdfsdfsd')
+      this.state = state;
+    });
   }
 
   // get stateSnapshot(): IState {

@@ -140,17 +140,20 @@ export class OhMyState {
       if (state) {
         store.content = { ...store.content, mocks: { ...store.content.mocks } };
 
-        OhMyState.StateUtils.getAllMockIds(state).forEach(mockId => {
-          OhMyState.StorageUtils.remove(mockId);
+        OhMyState.StateUtils.getAllMockIds(state).forEach(async mockId => {
+          await OhMyState.StorageUtils.remove(mockId);
           delete store.content.mocks[mockId];
         });
       }
 
-      OhMyState.StorageUtils.remove(state.domain);
       store = OhMyState.StoreUtils.removeDomain(store, payload)
-      OhMyState.StorageUtils.set(STORAGE_KEY, store);
+      await OhMyState.StorageUtils.remove(state.domain);
+      await OhMyState.StorageUtils.set(STORAGE_KEY, store);
     } else { // reset everything
       await OhMyState.StorageUtils.reset();
+    }
+
+    if (!payload || payload === this.context.domain) {
       ctx.dispatch(new InitState(null, this.context.domain));
     }
 
@@ -249,17 +252,17 @@ export class OhMyState {
 
   // Scenarios are per IState and can be used in every IMock (referenced by scanarioId)
   // TODO: Need Storage action here too
-  @Action(UpsertScenarios)
-  async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: OhMyScenarios, domain?: string }) {
-    const [state, activeDomain] = await this.getMyState(ctx, domain);
+  // @Action(UpsertScenarios)
+  // async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: OhMyScenarios, domain?: string }) {
+  //   const [state, activeDomain] = await this.getMyState(ctx, domain);
 
-    state.presets = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
-    const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
+  //   state.presets = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
+  //   const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
 
-    await OhMyState.StorageUtils.set(state.domain, state);
+  //   await OhMyState.StorageUtils.set(state.domain, state);
 
-    ctx.setState(store);
-  }
+  //   ctx.setState(store);
+  // }
 
   @Action(DeleteMock)
   @Action(DeleteMockStorage)
@@ -408,32 +411,32 @@ export class OhMyState {
     ctx.setState(store)
   }
 
-  @Action(PresetCreate)
-  async updatePresets(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyPresetChange[] | IOhMyPresetChange }) {
-    if (!Array.isArray(payload)) {
-      payload = [payload];
-    }
+  // @Action(PresetCreate)
+  // async updatePresets(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyPresetChange[] | IOhMyPresetChange }) {
+  //   if (!Array.isArray(payload)) {
+  //     payload = [payload];
+  //   }
 
-    const store = OhMyState.getStore(ctx);
-    let [state] = await this.getMyState(ctx);
+  //   const store = OhMyState.getStore(ctx);
+  //   let [state] = await this.getMyState(ctx);
 
-    payload.forEach(p => {
-      state = OhMyState.StateUtils.updatePreset(state, p);
-    });
+  //   payload.forEach(p => {
+  //     state = OhMyState.StateUtils.updatePreset(state, p);
+  //   });
 
-    // state = OhMyState.StateUtils.activateScenario(state, payload);
+  //   // state = OhMyState.StateUtils.activateScenario(state, payload);
 
-    // store.content = {
-    //   ...store.content, states: {
-    //     ...store.content.states,
-    //     [state.domain]: state
-    //   }
-    // };
+  //   // store.content = {
+  //   //   ...store.content, states: {
+  //   //     ...store.content.states,
+  //   //     [state.domain]: state
+  //   //   }
+  //   // };
 
-    await OhMyState.StorageUtils.set(state.domain, state);
-    // ctx.patchState({content: })
-    ctx.setState(store)
-  }
+  //   await OhMyState.StorageUtils.set(state.domain, state);
+  //   // ctx.patchState({content: })
+  //   ctx.setState(store)
+  // }
 
   @Action(PresetCreate)
   async presetChange(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyPresetChange | IOhMyPresetChange[] }) {
@@ -442,7 +445,6 @@ export class OhMyState {
     state.presets = { ...state.presets };
     state.data = { ...state.data };
 
-    debugger;
     if (!Array.isArray(payload)) {
       payload = [payload];
     }
@@ -455,12 +457,8 @@ export class OhMyState {
           delete data.presets[change.id];
           delete data.enabled[change.id];
         })
-
-
-      } else if (state.presets[change.id]) { // update
-
-      } else { // new
-
+      } else { // new or update
+        state.presets[change.id] = change.value;
       }
     });
 

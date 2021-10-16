@@ -19,8 +19,6 @@ import { ContentService } from './services/content.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 import { Router } from '@angular/router';
-import { AppStateService } from './services/app-state.service';
-import { filter } from 'rxjs/operators';
 import { StateStreamService } from './services/state-stream.service';
 import { ContextService } from './services/context.service';
 

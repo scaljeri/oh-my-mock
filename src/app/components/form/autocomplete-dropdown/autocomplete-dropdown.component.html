@@ -5,12 +5,13 @@
         #trigger="matAutocompleteTrigger" [matAutocomplete]="auto">
     <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (opened)="onAutoCompleteOpened()"
         (closed)="onAutoCompleteClose()" (optionSelected)="onOptionSelected($event)">
-        <mat-option *ngFor="let option of filteredMethodOptions" [value]="option">
+        <mat-option *ngFor="let option of filteredMethodOptions || []" [value]="option">
             {{option}}
         </mat-option>
     </mat-autocomplete>
+
     <button mat-button *ngIf="ctrl.value" matSuffix mat-icon-button aria-label="Clear"
-        matTooltip="Clear input" (click)="onClear($event); input.focus(); trigger.openPanel();">
+       (click)="onClear($event); input.focus(); trigger.openPanel();">
         <mat-icon>close</mat-icon>
     </button>
     <button *ngIf="showCopy" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit($event)">

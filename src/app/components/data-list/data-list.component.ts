@@ -51,9 +51,15 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() select = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
-  @Dispatch() updateAux = (values: IOhMyAux) => new Aux(values);
-  @Dispatch() updateContext = (value: Partial<IOhMyContext>) => new UpdateState({ context: value as IOhMyContext });
-  @Dispatch() updateState = (state: IState) => new UpdateState(state);
+  @Dispatch() updateAux = (values: IOhMyAux) => {
+    return new Aux(values);
+  }
+  @Dispatch() updateContext = (value: Partial<IOhMyContext>) => {
+    return new UpdateState({ context: value as IOhMyContext });
+  }
+  @Dispatch() updateState = (state: IState) => {
+    return new UpdateState(state);
+  }
   @Dispatch() deleteData = (id: string) => {
     return new DeleteData(id, this.state.domain);
   }
@@ -68,7 +74,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   //   return new ViewReset(name);
   // }
 
-  @Dispatch() loadState = () => new LoadState(this.domain);
+  @Dispatch() loadState = () => {
+    return new LoadState(this.domain);
+  }
   // @Dispatch() toggleActivityList = (value: boolean) => {
   //   return new Aux({ activityList: value });
   // }
@@ -115,12 +123,15 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.scenarioCtrl.valueChanges.subscribe(preset => {
-      debugger;
       const id = this.state.presets
       const oldPresetValue = this.state.presets[this.state.context.preset];
 
       if (preset !== oldPresetValue) {
-        this.updatePresets({ id: this.state.context.preset, value: preset });
+        if (preset === '') {
+          this.scenarioCtrl.setValue(oldPresetValue, { emitEvent: false });
+        } else {
+          this.updatePresets({ id: this.state.context.preset, value: preset });
+        }
       }
     });
 
@@ -371,7 +382,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     if (!presetId) {
       this.scenarioCtrl.setValue(this.state.context.preset);
     } else {
-    debugger;
+      debugger;
       this.updatePresets({ id: presetId, delete: true })
     }
   }
