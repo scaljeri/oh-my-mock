@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IData, IMock, IOhMyScenarios } from '@shared/type';
+import { IData, IMock, IOhMyPresets } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
 import { ManageScenariosComponent } from '../../manage-presets/manage-scenarios.component';
@@ -39,12 +39,12 @@ export class MockDetailsComponent implements OnChanges {
 
     return new UpsertMock({
       id: this.data.id,
-      mock: { id: this.mock.id, ...update, headersMock: 
+      mock: { id: this.mock.id, ...update, headersMock:
         { ...this.mock.headersMock, ['content-type']: contentType } }
     }, this.domain)
   };
 
-  @Dispatch() updateScenarios = (scenarios: IOhMyScenarios) => new UpsertScenarios(scenarios, this.domain);
+  @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => new UpsertScenarios(scenarios, this.domain);
   // @Select(OhMyState.mainState) state$: Observable<IState>;
 
   constructor(public dialog: MatDialog) { }
@@ -68,7 +68,7 @@ export class MockDetailsComponent implements OnChanges {
     }));
 
     // this.subscription.add(this.state$.subscribe(state => {
-// 
+//
     // }));
   }
 
@@ -89,7 +89,7 @@ export class MockDetailsComponent implements OnChanges {
       height: '380px'
     });
 
-    dialogRef.afterClosed().subscribe((scenarios: IOhMyScenarios) => {
+    dialogRef.afterClosed().subscribe((scenarios: IOhMyPresets) => {
       if (scenarios !== null && scenarios !== undefined) {
         console.log('received', scenarios);
         this.updateScenarios(scenarios);

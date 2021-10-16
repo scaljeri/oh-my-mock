@@ -2,14 +2,13 @@ import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
-import { IData, IState, ohMyScenarioId } from '@shared/type';
+import { IData, IState, ohMyPresetId } from '@shared/type';
 import { UpsertData, UpsertScenarios } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import compareVersions from 'compare-versions';
 import { FormControl } from '@angular/forms';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
 
 @Component({
@@ -22,7 +21,7 @@ export class JsonImportComponent {
   @Dispatch() upsertData =
     (data: IData, domain: string) => new UpsertData(data, domain || this.appState.domain);
   @Dispatch() upsertScenarios =
-    (scenarios: Record<ohMyScenarioId, string>, domain: string) => new UpsertScenarios(scenarios, domain || this.appState.domain)
+    (scenarios: Record<ohMyPresetId, string>, domain: string) => new UpsertScenarios(scenarios, domain || this.appState.domain)
   isUploading = false;
   ctrl = new FormControl(true);
 

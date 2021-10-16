@@ -56,7 +56,6 @@ import { ManageScenariosComponent } from './manage-presets/manage-scenarios.comp
 
 import { OhMyDirectivesModule } from '../directives/directives.module';
 import { LinkComponent } from './link/link.component';
-import { ScenarioDropdownComponent } from './form/scenario-dropdown/scenario-dropdown.component';
 import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.component';
 
 @NgModule({
@@ -88,7 +87,6 @@ import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.comp
     AutocompleteDropdownComponent,
     ManageScenariosComponent,
     LinkComponent,
-    ScenarioDropdownComponent,
     DialogCodeEditorComponent,
   ],
   imports: [
@@ -135,7 +133,6 @@ import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.comp
     SpinnerComponent,
     AutocompleteDropdownComponent,
     LinkComponent,
-    ScenarioDropdownComponent,
     DialogCodeEditorComponent,
   ],
   providers: [

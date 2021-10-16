@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, IMock, IOhMyScenarios, IOhMyShallowMock, IState, IStore, IUpsertMock, ohMyMockId, ohMyScenarioId, statusCode } from '@shared/type';
+import { IData, IMock, IOhMyPresets, IOhMyShallowMock, IState, IStore, IUpsertMock, ohMyMockId, ohMyPresetId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-status-code/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
@@ -21,7 +21,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 })
 export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
-  @Input() scenario: ohMyScenarioId;
+  @Input() scenario: ohMyPresetId;
   @Input() domain: string;
 
   @Output() mockActivated = new EventEmitter();
@@ -37,7 +37,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   public oldResponses: string[];
 
   public availableMethods = METHODS;
-  scenarios: IOhMyScenarios;
+  scenarios: IOhMyPresets;
   subscriptions: Subscription[] = [];
   state: IState;
 
@@ -133,10 +133,8 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onMethodBlur(): void {
-    console.log('received: ' + this.methodCtrl.value);
     const method = (this.methodCtrl.value || '').toUpperCase();
 
-    console.log('onMethodBlur');
     // if (method !== this.data.method) {
     //   this.upsertData({ ...this.data, method });
     // }
@@ -148,7 +146,6 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   }
 
   onMethodChange(event): void {
-    console.log('onMethodChage', event);
   }
 
   // get stateSnapshot(): IState {

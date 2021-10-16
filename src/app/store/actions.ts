@@ -6,13 +6,13 @@ import {
   ohMyMockId,
   ohMyDataId,
   ohMyDomain,
-  IOhMyScenarios,
+  IOhMyPresets,
   IOhMyShallowMock,
   domain,
   IState,
-  ohMyScenarioId,
+  ohMyPresetId,
   IOhMyAux,
-  IOhMyPresetCreate,
+  IOhMyPresetChange,
 } from '@shared/type';
 
 export class InitState {
@@ -72,7 +72,7 @@ export class Aux {
 
 export class UpsertScenarios {
   static readonly type = 'Scenario upsert';
-  constructor(public payload: IOhMyScenarios, public domain?: string) { }
+  constructor(public payload: IOhMyPresets, public domain?: string) { }
 }
 
 export class LoadMock {
@@ -87,10 +87,10 @@ export class LoadState {
 
 export class ScenarioFilter {
   static readonly type = '[Filter] scenario';
-  constructor(public payload: ohMyScenarioId) { }
+  constructor(public payload: ohMyPresetId) { }
 }
 
 export class PresetCreate {
   static readonly type = '[Preset] create';
-  constructor(public payload: IOhMyPresetCreate[]) { }
+  constructor(public payload: IOhMyPresetChange[] | IOhMyPresetChange) { }
 }

@@ -7,7 +7,7 @@ import { EventManager } from '@angular/platform-browser';
   selector: 'oh-my-autocomplete-dropdown',
   templateUrl: './autocomplete-dropdown.component.html',
   styleUrls: ['./autocomplete-dropdown.component.scss'],
-  // changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     // {
     //   provide: NG_VALUE_ACCESSOR,
@@ -29,7 +29,11 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() showCopy = false;
   @Input() showDelete = false;
   @Input() copyInfo;
+
   @Output() copy = new EventEmitter<string>();
+  @Output() delete = new EventEmitter<string>();
+  @Output() blur = new EventEmitter<string>();
+  @Output() clear = new EventEmitter<void>();
 
   internalValue = '';
   _ctrl: FormControl;
@@ -70,12 +74,18 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     el?.closePanel?.();
   }
 
+  emitBlur(): void {
+    this.blur.emit(this.ctrl.value);
+  }
+
   emitChange(): void {
     if (this.ctrl.value !== this.internalValue) {
       this.internalValue = this.ctrl.value;
       this.onChange(this.ctrl.value);
       this.onTouch(this.ctrl.value);
     }
+
+    this.emitBlur();
   }
 
   onAutoCompleteOpened(): void {
@@ -93,6 +103,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   onClickEdit(event): void {
     event.stopPropagation();
     this.copy.emit(this.ctrl.value);
+  }
+
+  onClickDelete(event): void {
+    this.delete.emit(this.ctrl.value);
   }
 
   writeValue(value: any) {
@@ -116,6 +130,12 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     }
   }
 
+  onClear(event): void {
+    event.stopPropagation()
+
+    this.ctrl.setValue('');
+    this.clear.emit();
+  }
   // validate({ value }: FormControl) {
   //   if (value === '' || value === null || value === undefined) {
   //     return null;

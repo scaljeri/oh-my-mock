@@ -3,19 +3,19 @@ import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnD
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
-import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, LoadState, Aux, UpdateState, UpsertData, ViewChangeOrderItems, ViewReset, ScenarioFilter, PresetCreate } from 'src/app/store/actions';
+import { style, animate } from "@angular/animations";
+import { DeleteData, LoadState, Aux, UpdateState, UpsertData, PresetCreate } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IOhMyAux, IOhMyContext, IOhMyPresetCreate, IState, IStore, ohMyDataId, ohMyMockId, ohMyScenarioId } from 'src/shared/type';
+import { domain, IData, IOhMyAux, IOhMyContext, IOhMyPresetChange, IState, IStore, ohMyDataId, ohMyPresetId } from 'src/shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Observable, Subscription } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
 import { FormControl } from '@angular/forms';
 import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state';
-import { ScenarioUtils } from '@shared/utils/scenario';
 import { MatDialog } from '@angular/material/dialog';
+import { PresetUtils } from '@shared/utils/preset';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -51,7 +51,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() select = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
-  @Dispatch() updateScenarioFilter = (id: ohMyScenarioId) => new ScenarioFilter(id);
   @Dispatch() updateAux = (values: IOhMyAux) => new Aux(values);
   @Dispatch() updateContext = (value: Partial<IOhMyContext>) => new UpdateState({ context: value as IOhMyContext });
   @Dispatch() updateState = (state: IState) => new UpdateState(state);
@@ -78,7 +77,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     return new Aux({ newAutoActivate: value });
   }
 
-  @Dispatch() updatePresets = (updates: IOhMyPresetCreate[]) => {
+  @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
     return new PresetCreate(updates);
   }
 
@@ -116,8 +115,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.scenarioCtrl.valueChanges.subscribe(preset => {
-      if (preset !== this.state.context.preset) {
-        this.updateScenarioFilter(preset);
+      debugger;
+      const id = this.state.presets
+      const oldPresetValue = this.state.presets[this.state.context.preset];
+
+      if (preset !== oldPresetValue) {
+        this.updatePresets({ id: this.state.context.preset, value: preset });
       }
     });
 
@@ -204,7 +207,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
 
   onScenarioUpdate(preset): void {
-    const scenarioId = ScenarioUtils.findByLabel(preset, this.state.presets);
+    const scenarioId = PresetUtils.findId(this.state.presets, preset);
 
     this.updateContext({ preset });
 
@@ -228,7 +231,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
   }
 
-  filterListByScenario(list: IData[], scenarioId: ohMyScenarioId): IData[] {
+  filterListByScenario(list: IData[], scenarioId: ohMyPresetId): IData[] {
     return null; // list.filter(data => data.mocks[data.activeScenarioMock]?.scenario === scenarioId);
   }
 
@@ -336,12 +339,16 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   //     // this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
   //   }
   // }
-  onPresetEdit(preset: string): void {
-    let presetId = Object.entries(this.state.presets).find(([k, v]) => v === preset)?.[0];
+  onPresetCopy(preset: string) {
+    const updates = [PresetUtils.create(this.state.presets, preset)];
 
-    const updates = [];
+    this.state.context.preset = updates[0].id;
+    this.state.presets[updates[0].id] = updates[0].value;
+    this.scenarioCtrl.setValue('New preset');
 
-    if (!presetId) {
+    let presetId = Object.entries(this.state.presets).find(([, v]) => v === preset)?.[0];
+
+    if (!presetId) { // Update existing preset value
       presetId = this.state.context.preset;
 
       updates.push({
@@ -349,16 +356,24 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
 
-    const copyId = uniqueId();
-    updates.push({
-      id: copyId, value: `${preset} copy`,
-      clone: presetId
-    });
-
     this.updatePresets(updates);
+  }
 
-    // TODO: activate new preset
-    // this.updateState({context: { ...this.state.context, preset: copyId}})
+  onPresetDelete(preset: string) {
+    if (preset === '') {
+      return this.toast.warning('Delete failed: no preset selected');
+    } else if (Object.keys(this.state.presets).length === 1) {
+      return this.toast.warning('Delete failed: cannot delete the last preset');
+    }
+
+    const presetId = Object.entries(this.state.presets).find(([, v]) => v === preset)?.[0];
+
+    if (!presetId) {
+      this.scenarioCtrl.setValue(this.state.context.preset);
+    } else {
+    debugger;
+      this.updatePresets({ id: presetId, delete: true })
+    }
   }
 }
 

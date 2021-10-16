@@ -1,4 +1,4 @@
-import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyScenarioId } from '../type';
+import { IData, IOhMyPresetChange, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
 import { compareUrls } from './urls';
 
 export class StateUtils {
@@ -8,7 +8,7 @@ export class StateUtils {
     return {
       version: this.version, views: {
         activity: []
-      }, aux: {}, data: {}, presets: { default: '' }, context: {
+      }, aux: {}, data: {}, presets: { default: 'Default' }, context: {
         preset: 'default'
       }, ...base
     } as IState;
@@ -60,11 +60,58 @@ export class StateUtils {
       .reduce((acc, mocks) => [...acc, ...mocks])
   }
 
-  static activateScenario(state: IState, preset: ohMyScenarioId): IState {
+  static activateScenario(state: IState, preset: ohMyPresetId): IState {
     state = {
       ...state,
       context: { ...state.context, preset }
     };
+
+    return state;
+  }
+
+  static updatePreset(state: IState, update: IOhMyPresetChange): IState {
+    if (!update.value) {
+      return state;
+    }
+
+    state.presets = { ...state.presets };
+    state.data = { ...state.data };
+
+    if (update.delete) {
+      // Cannot delete last preset
+      if (Object.keys(state.presets).length === 1) {
+        return state;
+      }
+
+      delete state.presets[update.id];
+      Object.values(state.data).map(d => ({ ...d })).forEach(data => {
+        delete data.enabled[update.id]
+        delete data.presets[update.id];
+
+        state.data[data.id] = data;
+      });
+
+      if (state.context.preset === update.id) {
+        state.context.preset = 'default';
+      }
+    } else {
+      state.presets[update.id] = update.value;
+
+      if (!state.presets[update.id]) { // new preset
+        Object.values(state.data).map(d => ({ ...d })).forEach(data => {
+          delete data.enabled[update.id]
+          delete data.presets[update.id];
+
+          state.data[data.id] = data;
+        });
+      } else {
+        state.presets[update.id] = update.value;
+      }
+
+      if (update.activate) {
+        state.context.preset = update.id;
+      }
+    }
 
     return state;
   }

@@ -9,7 +9,7 @@ import {
   STATUS_CODE_INVALID_MSG,
   STORAGE_KEY
 } from '@shared/constants';
-import { IMock, IOhMyMockRule, IOhMyScenarios, IState, IStore, IUpsertMock, ohMyScenarioId } from '@shared/type';
+import { IMock, IOhMyMockRule, IOhMyPresets, IState, IStore, IUpsertMock, ohMyPresetId } from '@shared/type';
 import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
 // TODO: modify validator to check name + code
@@ -33,7 +33,7 @@ export class CreateStatusCodeComponent implements OnInit {
   public requiredError = REQUIRED_MSG;
   public existsError = STATUS_CODE_EXISTS_MSG;
   public invalidError = STATUS_CODE_INVALID_MSG;
-  public scenarios: Record<ohMyScenarioId, string>;
+  public scenarios: Record<ohMyPresetId, string>;
   public scenarioValues: string[] = [];
 
   scenariosUpdated = false;
@@ -55,7 +55,7 @@ export class CreateStatusCodeComponent implements OnInit {
 
     if (this.form.valid) {
       const data = {
-        mock: { 
+        mock: {
           statusCode: this.form.value.statusCode,
           scenario: Object.entries(this.scenarios).find(([k, v]) => v === this.form.value.scenario)?.[0] },
         clone: !!this.form.value.clone
@@ -77,7 +77,7 @@ export class CreateStatusCodeComponent implements OnInit {
     this.manageScenarios = true;
   }
 
-  onScenariosUpdate(scenarios: IOhMyScenarios): void {
+  onScenariosUpdate(scenarios: IOhMyPresets): void {
     this.manageScenarios = false;
 
     if (scenarios !== null) {

@@ -11,14 +11,16 @@
   </div>
 
   <div class="toggles">
-    <oh-my-autocomplete-dropdown 
+    <oh-my-autocomplete-dropdown
+      [showAllOnFocus]="true"
       [showCopy]="true"
       [showDelete]="true"
-      copyInfo="Clone/create preset"
-      class="preset" 
-      [options]="presets" 
-      [formControl]="scenarioCtrl" 
-      (copy)="onPresetEdit($event)"
+      copyInfo="Clone/createn new preset"
+      class="preset"
+      [options]="presets"
+      [formControl]="scenarioCtrl"
+      (copy)="onPresetCopy($event)"
+      (delete)="onPresetDelete($event)"
       label="preset">
     </oh-my-autocomplete-dropdown>
     <!-- <oh-my-scenario-dropdown class="scenario-selector" [formControl]="scenarioCtrl" [scenarios]="state?.scenarios">
@@ -73,7 +75,7 @@
     <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
   </li>
 </ol>
-<!-- 
+<!--
 <ol data-table>
   <li *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
         'is-selected': selection.isSelected(index),

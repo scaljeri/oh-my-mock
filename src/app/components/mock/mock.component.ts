@@ -7,7 +7,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, LoadMock, UpsertData, UpsertMock } from 'src/app/store/actions';
-import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock, ohMyScenarioId } from '@shared/type';
+import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock, ohMyPresetId } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -18,7 +18,6 @@ import { STORAGE_KEY } from '@shared/constants';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
-import { OhMyState } from 'src/app/store/state';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -29,7 +28,7 @@ import { OhMyState } from 'src/app/store/state';
 export class MockComponent implements OnChanges {
   @Input() data: IData;
   @Input() domain: string;
-  @Input() sccenario: ohMyScenarioId;
+  @Input() sccenario: ohMyPresetId;
   mock: IMock;
 
   // @Select(OhMyState.mock) state$: Observable<IState>;
@@ -72,7 +71,6 @@ export class MockComponent implements OnChanges {
 
   ngOnInit(): void {
     this.subscriptions.push(this.activeMock$.subscribe(mock => {
-      console.log('new moc', mock);
       this.mock = mock;
 
       this.responseCtrl.setValue(mock?.responseMock, { emitEvent: false });
@@ -131,7 +129,7 @@ export class MockComponent implements OnChanges {
 
     if (!mockId) {
       this.mock = null;
-      return this.upsertData({ 
+      return this.upsertData({
         id: this.data.id,
         enabled: { ...this.data.enabled, [this.sccenario]: false }});
     } else {

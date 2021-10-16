@@ -10,13 +10,13 @@
         </mat-option>
     </mat-autocomplete>
     <button mat-button *ngIf="ctrl.value" matSuffix mat-icon-button aria-label="Clear"
-        matTooltip="Clear input" (click)="ctrl.setValue('');trigger.openPanel()">
+        matTooltip="Clear input" (click)="onClear($event); input.focus(); trigger.openPanel();">
         <mat-icon>close</mat-icon>
     </button>
     <button *ngIf="showCopy" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit($event)">
         <mat-icon [matTooltip]="copyInfo" >content_copy</mat-icon>
     </button>
-    <button *ngIf="showDelete" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit($event)">
+    <button *ngIf="showDelete" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickDelete($event)">
         <mat-icon>delete</mat-icon>
     </button>
 </mat-form-field>

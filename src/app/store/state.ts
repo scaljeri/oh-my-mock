@@ -21,7 +21,8 @@ import {
   UpsertScenarios,
   ViewChangeOrderItems,
   ViewReset,
-  ScenarioFilter
+  ScenarioFilter,
+  PresetCreate
 } from './actions';
 import { DeleteMockStorage, UpdateMockStorage } from './storage-actions';
 
@@ -36,7 +37,7 @@ import {
   IOhMyShallowMock,
   IMock,
   domain,
-  ohMyScenarioId,
+  IOhMyPresetChange,
 } from '@shared/type';
 import { patch } from '@ngxs/store/operators';
 import { ContextService } from '../services/context.service';
@@ -52,7 +53,7 @@ import { StateUtils } from '@shared/utils/state';
 import { MigrationUtils } from '../utils/migration';
 import { APP_VERSION } from '../tokens';
 import { MockUtils } from '@shared/utils/mock';
-import { OhMyScenarios, ScenarioUtils } from '@shared/utils/scenario';
+import { OhMyScenarios, PresetUtils } from '@shared/utils/preset';
 import { timestamp } from '@shared/utils/timestamp';
 import { arrayRemoveItem } from '@shared/utils/array';
 
@@ -72,9 +73,9 @@ export class OhMyState {
   static StateUtils = StateUtils;
   static DataUtils = DataUtils;
   static MockUtils = MockUtils;
-  static ScenarioUtils = ScenarioUtils;
+  static PresetUtils = PresetUtils;
 
-  constructor(private context: ContextService) {}
+  constructor(private context: ContextService) { }
 
   @Selector()
   static mainState(store: IOhMyMock): IState {
@@ -86,10 +87,10 @@ export class OhMyState {
   }
 
   async getActiveState(store: IOhMyMock, domain = this.context.domain): Promise<IState> {
-    let state = OhMyState.StoreUtils.getState(store, domain) || 
+    let state = OhMyState.StoreUtils.getState(store, domain) ||
       await OhMyState.StorageUtils.get(domain);
 
-      // TODO: check if Object.keys is needed here
+    // TODO: check if Object.keys is needed here
     if (!state || Object.keys(state).length === 0) {
       state = OhMyState.StateUtils.init({ domain });
     }
@@ -105,7 +106,7 @@ export class OhMyState {
     return [domainState, activeDomain];
   }
 
-  @Action(InitState) 
+  @Action(InitState)
   async init(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: IOhMyMock, domain?: string }) {
     let store: IOhMyMock;
 
@@ -116,7 +117,7 @@ export class OhMyState {
       await OhMyState.StorageUtils.set(STORAGE_KEY, store);
     }
 
-    let state = await OhMyState.StorageUtils.get<IState>(domain) || OhMyState.StateUtils.init({ domain });
+    const state = await OhMyState.StorageUtils.get<IState>(domain) || OhMyState.StateUtils.init({ domain });
 
     if (store.domains.indexOf(domain) === -1) {
       store.domains = [domain, ...store.domains];
@@ -125,7 +126,6 @@ export class OhMyState {
 
     store.content.states[domain] = state;
     // TODO: Init with test data somehow
-    console.log('setState', domain, state,store);
     this.context.update(state.context);
     ctx.setState(store);
   }
@@ -163,7 +163,7 @@ export class OhMyState {
 
     const store = OhMyState.getStore(ctx);
     if (!store.content.states[payload]) {
-      let state = await OhMyState.StorageUtils.get<IState>(payload) || OhMyState.StateUtils.init({ domain: payload });
+      const state = await OhMyState.StorageUtils.get<IState>(payload) || OhMyState.StateUtils.init({ domain: payload });
 
       store.content = { ...store.content, states: { ...store.content.states, [payload]: state } };
 
@@ -181,7 +181,7 @@ export class OhMyState {
     const { payload, domain } = action;
 
     let store = OhMyState.getStore(ctx);
-    let [state, activeDomain] = await this.getMyState(ctx, domain);
+    const [state, activeDomain] = await this.getMyState(ctx, domain);
     const scenario = state.context.preset;
 
     let mock = { ...payload.mock };
@@ -199,9 +199,9 @@ export class OhMyState {
       sourceMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
       mock.modifiedOn = timestamp();
     } else { // new
-      sourceMock = payload.clone && data.scenarios[scenario] ?
-        (store.content.mocks[data.scenarios[scenario]] ||
-          await OhMyState.StorageUtils.get<IMock>(data.scenarios[scenario])) : OhMyState.MockUtils.init();
+      sourceMock = payload.clone && data.presets[scenario] ?
+        (store.content.mocks[data.presets[scenario]] ||
+          await OhMyState.StorageUtils.get<IMock>(data.presets[scenario])) : OhMyState.MockUtils.init();
     }
 
     if (sourceMock) {
@@ -210,7 +210,7 @@ export class OhMyState {
     }
 
     if (payload.makeActive) {
-      data.scenarios[scenario] = mock.id;
+      data.presets[scenario] = mock.id;
       data.enabled[scenario] = true;
     }
 
@@ -408,24 +408,65 @@ export class OhMyState {
     ctx.setState(store)
   }
 
-  // @Action(ScenarioFilter)
-  // async scenarioFilter(ctx: StateContext<IOhMyMock>, { payload }: { payload: ohMyScenarioId }) {
-  //   const store = OhMyState.getStore(ctx);
-  //   let [state] = await OhMyState.getMyState(ctx);
+  @Action(PresetCreate)
+  async updatePresets(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyPresetChange[] | IOhMyPresetChange }) {
+    if (!Array.isArray(payload)) {
+      payload = [payload];
+    }
 
-  //   state = OhMyState.StateUtils.activateScenario(state, payload);
+    const store = OhMyState.getStore(ctx);
+    let [state] = await this.getMyState(ctx);
 
-  //   store.content = {
-  //     ...store.content, states: {
-  //       ...store.content.states,
-  //       [state.domain]: state
-  //     }
-  //   };
+    payload.forEach(p => {
+      state = OhMyState.StateUtils.updatePreset(state, p);
+    });
 
-  //   await OhMyState.StorageUtils.set(state.domain, state);
-  //   // ctx.patchState({content: })
-  //   ctx.setState(store)
+    // state = OhMyState.StateUtils.activateScenario(state, payload);
 
-  //   return ctx.dispatch(new Aux({ filterScenario: payload }));
-  // }
+    // store.content = {
+    //   ...store.content, states: {
+    //     ...store.content.states,
+    //     [state.domain]: state
+    //   }
+    // };
+
+    await OhMyState.StorageUtils.set(state.domain, state);
+    // ctx.patchState({content: })
+    ctx.setState(store)
+  }
+
+  @Action(PresetCreate)
+  async presetChange(ctx: StateContext<IOhMyMock>, { payload }: { payload: IOhMyPresetChange | IOhMyPresetChange[] }) {
+    const store = OhMyState.getStore(ctx);
+    const [state] = await this.getMyState(ctx);
+    state.presets = { ...state.presets };
+    state.data = { ...state.data };
+
+    debugger;
+    if (!Array.isArray(payload)) {
+      payload = [payload];
+    }
+
+    payload.forEach(change => {
+      if (change.delete) {
+        delete state.presets[change.id];
+        Object.values(state.data).map(d => {
+          const data = { ...d, presets: { ...d.presets }, enabled: { ...d.enabled } };
+          delete data.presets[change.id];
+          delete data.enabled[change.id];
+        })
+
+
+      } else if (state.presets[change.id]) { // update
+
+      } else { // new
+
+      }
+    });
+
+    OhMyState.StorageUtils.set(state.domain, state);
+
+    store.content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
+    ctx.setState(store)
+  }
 }

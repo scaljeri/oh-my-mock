@@ -10,9 +10,9 @@ export type origin = 'local' | 'cloud' | 'ngapimock';
 export type mockRuleType = keyof typeof MOCK_RULE_TYPES;
 export type ohMyDataId = string;
 export type ohMyMockId = string;
-export type ohMyScenarioId = string;
+export type ohMyPresetId = string;
 
-export type IOhMyScenarios = Record<ohMyScenarioId, string>
+export type IOhMyPresets = Record<ohMyPresetId, string>
 
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
@@ -39,7 +39,7 @@ export interface IOhMyAux {
 }
 
 export interface IOhMyContext {
-  preset?: ohMyScenarioId;
+  preset?: ohMyPresetId;
   domain: ohMyDomain;
 }
 
@@ -50,7 +50,7 @@ export interface IState {
   domain: string;
   data: Record<ohMyDataId, IData>;
   aux: IOhMyAux;
-  presets: Record<ohMyScenarioId, string>;
+  presets: Record<ohMyPresetId, string>;
   context: IOhMyContext;
 }
 
@@ -64,8 +64,8 @@ export interface IOhMyMockContext {
 }
 
 export interface IData extends IOhMyMockContext {
-  scenarios: Record<ohMyScenarioId, ohMyMockId>;
-  enabled: Record<ohMyScenarioId, boolean>;
+  presets: Record<ohMyPresetId, ohMyMockId>;
+  enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
 }
 
@@ -78,7 +78,7 @@ export interface IOhMyShallowMock {
 
 export interface IOhMyMockSearch {
   id?: ohMyMockId;
-  label?: ohMyScenarioId;
+  label?: ohMyPresetId;
   statusCode?: ohMyStatusCode;
 }
 
@@ -150,7 +150,7 @@ export interface IOhMyViewItemsOrder {
 
 // export interface IOhMyEvalContext {
 //   data: IData;
-  // request: IOhMyEvalRequest;
+// request: IOhMyEvalRequest;
 // }
 
 export interface IOhMyAPIRequest {
@@ -183,6 +183,10 @@ export interface IOhMyPopupActive {
   tabId: number;
 }
 
-export interface IOhMyPresetCreate {
-  id: string, value: string, sourceId: string;
+export interface IOhMyPresetChange {
+  id: string,
+  value?: string,
+  sourceId?: string; // preset to be cloned
+  delete?: boolean;
+  activate?: boolean;
 }
