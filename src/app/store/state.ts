@@ -119,6 +119,11 @@ export class OhMyState {
 
     const state = await OhMyState.StorageUtils.get<IState>(domain) || OhMyState.StateUtils.init({ domain });
 
+    // Integrity check: Where does this belong?
+    if (!state.context.preset) {
+      state.context.preset = Object.keys(state.presets)[0];
+    }
+
     if (store.domains.indexOf(domain) === -1) {
       store.domains = [domain, ...store.domains];
       await OhMyState.StorageUtils.setStore(store);
@@ -444,6 +449,7 @@ export class OhMyState {
     const [state] = await this.getMyState(ctx);
     state.presets = { ...state.presets };
     state.data = { ...state.data };
+    state.context = { ...state.context };
 
     if (!Array.isArray(payload)) {
       payload = [payload];
@@ -452,6 +458,11 @@ export class OhMyState {
     payload.forEach(change => {
       if (change.delete) {
         delete state.presets[change.id];
+        // state.context.preset = OhMyState.PresetUtils.findId(state.presets, Object.values(state.presets).sort()[0]);
+        if (change.id === state.context.preset) {
+          delete state.context.preset;
+        }
+
         Object.values(state.data).map(d => {
           const data = { ...d, presets: { ...d.presets }, enabled: { ...d.enabled } };
           delete data.presets[change.id];
@@ -459,6 +470,10 @@ export class OhMyState {
         })
       } else { // new or update
         state.presets[change.id] = change.value;
+
+        if (change.activate) {
+          state.context.preset = change.id;
+        }
       }
     });
 

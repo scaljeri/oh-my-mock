@@ -23,26 +23,23 @@ export class PresetUtils {
 
   static create(presets: IOhMyPresets, cloneFrom: string): IOhMyPresetChange {
     let newValue = '';
+    let count = 0;
 
     if (!cloneFrom) {
-      newValue = 'New preset';
+      return { id: uniqueId(), value: 'New preset' };
+    }
+
+    if (cloneFrom.match(IS_COPY_RE)) {
+      count = Number(RegExp.$1 || 0) + 1;
+      newValue = cloneFrom.replace(IS_COPY_RE, 'copy');
     } else {
-      if (cloneFrom.match(IS_COPY_RE)) {
-        const count = Number(RegExp.$1 || 0) + 1;
-        newValue = cloneFrom.replace(IS_COPY_RE, `copy ${count}`);
-      } else {
-        newValue = `${cloneFrom} copy`;
-      }
+      newValue = `${cloneFrom} copy`;
     }
 
-    if (this.findId(presets, newValue)) {
-      let count = 1;
-      while (this.findId(presets, `${newValue} ${count}`)) {
-        count++;
-      }
-
-      newValue += ` ${newValue}`;
+    while (this.findId(presets, `${newValue}${count === 0 ? '' : ` ${count}`}`)) {
+      count++;
     }
+    newValue += `${count === 0 ? '' : ` ${count}`}`;
 
     return { id: uniqueId(), value: newValue };
   }

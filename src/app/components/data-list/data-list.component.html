@@ -20,6 +20,7 @@
       [options]="presets"
       [formControl]="scenarioCtrl"
       (copy)="onPresetCopy($event)"
+      (blur)="onBlur()"
       (delete)="onPresetDelete($event)"
       label="preset">
     </oh-my-autocomplete-dropdown>

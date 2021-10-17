@@ -123,14 +123,15 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.scenarioCtrl.valueChanges.subscribe(preset => {
-      const id = this.state.presets
       const oldPresetValue = this.state.presets[this.state.context.preset];
 
       if (preset !== oldPresetValue) {
         if (preset === '') {
           this.scenarioCtrl.setValue(oldPresetValue, { emitEvent: false });
         } else {
-          this.updatePresets({ id: this.state.context.preset, value: preset });
+          const id = PresetUtils.findId(this.state.presets, preset);
+          this.state.context.preset = id;
+          this.updatePresets({ id: id || this.state.context.preset, value: preset, activate: true });
         }
       }
     });
@@ -352,10 +353,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   // }
   onPresetCopy(preset: string) {
     const updates = [PresetUtils.create(this.state.presets, preset)];
-
     this.state.context.preset = updates[0].id;
     this.state.presets[updates[0].id] = updates[0].value;
-    this.scenarioCtrl.setValue('New preset');
+    this.scenarioCtrl.setValue(updates[0].value, { emitEvent: false});
 
     let presetId = Object.entries(this.state.presets).find(([, v]) => v === preset)?.[0];
 
@@ -382,8 +382,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     if (!presetId) {
       this.scenarioCtrl.setValue(this.state.context.preset);
     } else {
-      debugger;
       this.updatePresets({ id: presetId, delete: true })
+    }
+  }
+
+  onBlur(): void {
+    if (!this.state.context.preset) {
+      const [id, value] = Object.entries(this.state.presets)[0];
+      this.updatePresets({ id, value, activate: true });
     }
   }
 }
