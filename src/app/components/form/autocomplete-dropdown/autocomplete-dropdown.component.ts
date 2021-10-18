@@ -127,6 +127,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     this.onTouch = fn
   }
 
+  focus(): void {
+    this.inputRef.nativeElement.focus();
+  }
+
   onFocus(e, t): void {
     if (this.clearOnFocus && !this.autoCompleteActive) {
       this.ctrl.setValue('');

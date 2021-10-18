@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
@@ -16,6 +16,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { OhMyState } from 'src/app/store/state';
 import { MatDialog } from '@angular/material/dialog';
 import { PresetUtils } from '@shared/utils/preset';
+import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -104,12 +105,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
   presets: string[];
+  isPresetCopy = false;
 
 
   public data: Record<ohMyDataId, IData>;
   private state$: Observable<IState>;
 
-  @ViewChildren('animatedRow', { read: ElementRef }) rows: QueryList<ElementRef>;
+  // @ViewChildren('animatedRow', { read: ElementRef }) rows: QueryList<ElementRef>;
+  @ViewChild('input', { read: AutocompleteDropdownComponent }) presetEl: AutocompleteDropdownComponent;
 
   constructor(
     public dialog: MatDialog,
@@ -178,6 +181,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(): void {
     this.scenarioCtrl.setValue(this.state.presets[this.state.context.preset]);
     this.presets = Object.values(this.state.presets)
+
+    if (this.isPresetCopy) {
+      this.presetEl.focus();
+      this.isPresetCopy = false;
+    }
   }
 
   onToggleActivateNew(toggle: boolean): void {
@@ -352,19 +360,23 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   //   }
   // }
   onPresetCopy(preset: string) {
+    this.isPresetCopy = true;
+
     const updates = [PresetUtils.create(this.state.presets, preset)];
     this.state.context.preset = updates[0].id;
     this.state.presets[updates[0].id] = updates[0].value;
-    this.scenarioCtrl.setValue(updates[0].value, { emitEvent: false});
+    this.scenarioCtrl.setValue(updates[0].value, { emitEvent: false });
 
-    let presetId = Object.entries(this.state.presets).find(([, v]) => v === preset)?.[0];
+    if (preset !== '') {
+      let presetId = Object.entries(this.state.presets).find(([, v]) => v === preset)?.[0];
 
-    if (!presetId) { // Update existing preset value
-      presetId = this.state.context.preset;
+      if (!presetId) { // Update existing preset value
+        presetId = this.state.context.preset;
 
-      updates.push({
-        id: presetId, value: preset
-      });
+        updates.push({
+          id: presetId, value: preset
+        });
+      }
     }
 
     this.updatePresets(updates);

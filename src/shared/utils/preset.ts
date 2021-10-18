@@ -26,10 +26,12 @@ export class PresetUtils {
     let count = 0;
 
     if (!cloneFrom) {
-      return { id: uniqueId(), value: 'New preset' };
-    }
-
-    if (cloneFrom.match(IS_COPY_RE)) {
+      newValue = 'New Preset'
+      if (!this.findId(presets, newValue)) {
+        return { id: uniqueId(), value: newValue, activate: true };
+      }
+      newValue += ' copy';
+    } else if (cloneFrom.match(IS_COPY_RE)) {
       count = Number(RegExp.$1 || 0) + 1;
       newValue = cloneFrom.replace(IS_COPY_RE, 'copy');
     } else {
