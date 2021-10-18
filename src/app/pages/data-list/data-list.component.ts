@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select } from '@ngxs/store';
-import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
+import { IData, IOhMyMockContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
@@ -39,12 +39,15 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.add(this.stateStream.state$.subscribe((state: IState) => {
-      this.state = state;
-      this.hasData = Object.keys(this.state.data).length > 0;
+      console.log('YES YESY ', state);
+      setTimeout(() => {
+        this.state = state;
+        this.hasData = Object.keys(this.state.data).length > 0;
 
-      if (this.navigateToData) {
-        this.router.navigate(['mocks', PageDataListComponent.StateUtils.findData(state, this.navigateToData).id]);
-      }
+        if (this.navigateToData) {
+          this.router.navigate(['mocks', PageDataListComponent.StateUtils.findData(state, this.navigateToData).id]);
+        }
+      });
     }));
   }
 
@@ -72,10 +75,10 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   }
 
   // get stateSnapshot(): IState {
-    // return null;
-    // return this.store.selectSnapshot<IState>((state: IStore) =>
-    //   OhMyState.getActiveState(state)
-    // );
+  // return null;
+  // return this.store.selectSnapshot<IState>((state: IStore) =>
+  //   OhMyState.getActiveState(state)
+  // );
   // }
 
   ngOnDestroy(): void {

@@ -179,12 +179,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     // }));
   }
   ngOnChanges(): void {
-    this.scenarioCtrl.setValue(this.state.presets[this.state.context.preset]);
-    this.presets = Object.values(this.state.presets)
+    if (this.state) {
+      this.scenarioCtrl.setValue(this.state.presets[this.state.context.preset]);
+      this.presets = Object.values(this.state.presets)
 
-    if (this.isPresetCopy) {
-      this.presetEl.focus();
-      this.isPresetCopy = false;
+      if (this.isPresetCopy) {
+        this.presetEl.focus();
+        this.isPresetCopy = false;
+      }
     }
   }
 
@@ -362,12 +364,13 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onPresetCopy(preset: string) {
     this.isPresetCopy = true;
 
+    debugger;
     const updates = [PresetUtils.create(this.state.presets, preset)];
     this.state.context.preset = updates[0].id;
     this.state.presets[updates[0].id] = updates[0].value;
     this.scenarioCtrl.setValue(updates[0].value, { emitEvent: false });
 
-    if (preset !== '') {
+    if (preset !== '' && preset !== undefined) {
       let presetId = Object.entries(this.state.presets).find(([, v]) => v === preset)?.[0];
 
       if (!presetId) { // Update existing preset value
