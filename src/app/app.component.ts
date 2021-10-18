@@ -13,9 +13,8 @@ import { Aux } from './store/actions';
 import { IState } from '../shared/type';
 import { Select, Store } from '@ngxs/store';
 import { OhMyState } from './store/state';
-import { Observable } from 'rxjs';
+import { filter, Observable } from 'rxjs';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
-import { ContentService } from './services/content.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 import { Router } from '@angular/router';
@@ -35,7 +34,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   color = 'warn';
   drawerMode: MatDrawerMode = 'over';
-  dawerBackdrop = true;
+  drawerBackdrop = true;
 
   page = '';
   dialogDone = false;
@@ -66,22 +65,22 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.stateStream.state$.subscribe((state: IState) => {
-      this.domain = this.context.domain;
+    this.stateStream.state$.pipe(filter(s => !!s)).subscribe((state: IState) => {
+        this.domain = this.context.domain;
 
-      this.isInitializing = false;
-      this.enabled = state.aux.appActive;
+        this.isInitializing = false;
+        this.enabled = state.aux.appActive;
 
-      if (this.enabled) {
-        if (this.dialogRef) {
-          this.dialogRef.close();
+        if (this.enabled) {
+          if (this.dialogRef) {
+            this.dialogRef.close();
+          }
+
+          // TODO: update state with toggle true for active window
+          // Without this informtion the content/injected scripts cannot start early mocking!!!
+        } else if (!this.dialogRef && !this.dialogDone) {
+          this.notifyDisabled();
         }
-
-        // TODO: update state with toggle true for active window
-        // Without this informtion the content/injected scripts cannot start early mocking!!!
-      } else if (!this.dialogRef && !this.dialogDone) {
-        this.notifyDisabled();
-      }
     });
   }
 

@@ -49,7 +49,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() showExport: boolean;
   @Input() @HostBinding('class') theme = 'dark';
 
-  @Output() select = new EventEmitter<string>();
+  @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
   @Dispatch() updateAux = (values: IOhMyAux) => {
@@ -333,7 +333,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onDataClick(data: IData, index: number): void {
     this.selection.toggle(index);
-    this.select.emit(data.id);
+    this.selectRow.emit(data.id);
   }
 
   onExport(data: IData, rowIndex, event: MouseEvent): void {
@@ -364,7 +364,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onPresetCopy(preset: string) {
     this.isPresetCopy = true;
 
-    debugger;
     const updates = [PresetUtils.create(this.state.presets, preset)];
     this.state.context.preset = updates[0].id;
     this.state.presets[updates[0].id] = updates[0].value;

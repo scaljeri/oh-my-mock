@@ -129,6 +129,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
 
   focus(): void {
     this.inputRef.nativeElement.focus();
+
+    // Move catet to the end of the input text
+    const strLength = this.internalValue.length;
+    this.inputRef.nativeElement.setSelectionRange(strLength, strLength);
   }
 
   onFocus(e, t): void {

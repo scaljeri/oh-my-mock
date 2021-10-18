@@ -3,7 +3,7 @@
   [showActivate]="true"
   [showClone]="true"
   [showDelete]="true"
-  (select)="onDataSelect($event)">
+  (selectRow)="onDataSelect($event)">
 </oh-my-data-list>
 
 <section *ngIf="!hasData" class="no-data">

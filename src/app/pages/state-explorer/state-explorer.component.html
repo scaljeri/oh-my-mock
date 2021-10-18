@@ -31,7 +31,7 @@
         <mat-icon>copy_all</mat-icon>
       </button>
       <oh-my-data-list *ngIf="selectedState" [state]="selectedState" [showClone]="true" [showDelete]="true"
-        (select)="onDataSelect($event)"></oh-my-data-list>
+        (selectRow)="onDataSelect($event)"></oh-my-data-list>
     </mat-expansion-panel>
     <mat-expansion-panel>
       <oh-my-mock *ngIf="dataItem" [data]="dataItem" [domain]="selectedDomain"></oh-my-mock>

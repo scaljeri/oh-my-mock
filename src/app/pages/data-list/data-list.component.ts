@@ -39,13 +39,12 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.add(this.stateStream.state$.subscribe((state: IState) => {
-      console.log('YES YESY ', state);
       setTimeout(() => {
         this.state = state;
         this.hasData = Object.keys(this.state.data).length > 0;
 
         if (this.navigateToData) {
-          this.router.navigate(['mocks', PageDataListComponent.StateUtils.findData(state, this.navigateToData).id]);
+          // this.router.navigate(['mocks', PageDataListComponent.StateUtils.findData(state, this.navigateToData).id]);
         }
       });
     }));
