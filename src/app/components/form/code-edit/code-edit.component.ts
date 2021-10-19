@@ -1,9 +1,7 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, forwardRef, HostBinding, Inject, Input, OnChanges, OnInit, Optional, Output } from '@angular/core';
+import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
-import { Subscription } from 'rxjs';
-import { themes, IOhMyCodeEditOptions, IMarker } from './code-edit';
+import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
 
 declare let monaco: any;

@@ -51,7 +51,8 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   }
 
   onDataSelect(id: string): void {
-    this.router.navigate(['mocks', id], { relativeTo: this.activatedRoute });
+    debugger;
+    this.router.navigate(['request', id], { relativeTo: this.activatedRoute });
   }
 
   onMainAction(): void {

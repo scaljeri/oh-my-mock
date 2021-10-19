@@ -12,27 +12,12 @@ import { OhMyState } from 'src/app/store/state';
 })
 export class MockLabelComponent {
   @Input() mock: IOhMyShallowMock | IMock;
-  @Input() state: IState;
-
-  scenarioName: string;
-
-  constructor(private store: Store) {}
-
-  ngOnChanges(): void {
-    this.scenarioName = this.state.presets[this.mock.label];
-  }
 
   get code(): statusCode {
     return this.mock?.statusCode;
   }
 
-  get scenario(): string {
+  get label(): string {
     return this.mock?.label;
   }
-
-  // get stateSnapshot(): IState {
-  //   return this.store.selectSnapshot<IState>((state: IStore) => {
-  //     return state[STORAGE_KEY].content.states[OhMyState.domain];
-  //   });
-  // }
 }

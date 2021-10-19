@@ -79,7 +79,6 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   }
 
   emitChange(): void {
-    console.log('emit???' + this.ctrl.value + ' vs ' + this.internalValue);
     if (this.ctrl.value !== this.internalValue) {
       this.internalValue = this.ctrl.value;
       this.onChange(this.ctrl.value);

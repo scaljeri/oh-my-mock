@@ -1,4 +1,3 @@
-<ng-container *ngIf="!manageScenarios">
   <h2>Create new Response</h2>
   <form [formGroup]="form">
     <mat-form-field>
@@ -6,22 +5,17 @@
       <input type="number" matInput [formControl]="codeCtrl">
     </mat-form-field>
 
-    <div class="scenario">
-      <oh-my-autocomplete-dropdown 
-        [options]="scenarioValues"
-        [formControl]="scenarioCtrl" 
-        allowFreeInput="false"
-        label="Scenario (optional)">
-      </oh-my-autocomplete-dropdown>
+    <div class="label">
+      <mat-form-field>
+        <mat-label>Label (optional)</mat-label>
+        <input matInput [formControl]="labelCtrl">
+      </mat-form-field>
 
       <mat-icon color="primary"
-        matTooltip="Scenario's are used to distinguish mocks having the same status code. Scenario's are also used to activate a group of mocks which all belong to a specific scenario (scenario testing).">
+        matTooltip="Labels are handy when there are multiple responses with the same status code.">
         info</mat-icon>
     </div>
-    <mat-error *ngIf="scenarioCtrl.hasError('noOptionsAvailable')">There are no scenarios available!<br/>You can create new scenarios below with the `manage scenarios` link!</mat-error>
-    <mat-error *ngIf="scenarioCtrl.hasError('invalid')">This scenario does not exist</mat-error>
-    <oh-my-link (click)="onManageScenarios()">Manage scenarios</oh-my-link>
-    <mat-slide-toggle [formControl]="cloneCtrl">Clone current mock?</mat-slide-toggle>
+    <mat-slide-toggle [formControl]="cloneCtrl">Clone current response?</mat-slide-toggle>
 
     <div class="spacer"></div>
 
@@ -30,8 +24,3 @@
       <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
     </div>
   </form>
-</ng-container>
-
-<ng-container *ngIf="manageScenarios">
-  <oh-my-manage-scenarios (update)="onScenariosUpdate($event)" [scenarios]="scenarios"></oh-my-manage-scenarios>
-</ng-container>

@@ -22,7 +22,7 @@ const appRoutes: Routes = [
         component: ConfigComponent
       },
       {
-        path: 'mocks/:dataId',
+        path: 'request/:dataId',
         component: PageMockComponent
       },
       {

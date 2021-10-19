@@ -12,6 +12,7 @@ import { METHODS, STORAGE_KEY } from '@shared/constants';
 import { Store } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { StateStreamService } from 'src/app/services/state-stream.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -48,10 +49,8 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     return new UpsertData({ ...this.data, ...data }, this.domain);
   }
 
-  constructor(public dialog: MatDialog, private store: Store) {
-    this.subscriptions.push(this.store.select(store => {
-      return store[STORAGE_KEY].content.states[this.domain || OhMyState.domain];
-    }).subscribe(state => {
+  constructor(public dialog: MatDialog, private stateStream: StateStreamService) {
+    this.subscriptions.push(this.stateStream.state$.subscribe(state => {
       this.state = state;
     }));
   }
@@ -147,10 +146,4 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   onMethodChange(event): void {
   }
-
-  // get stateSnapshot(): IState {
-  //   return this.store.selectSnapshot<IState>((state: IStore) => {
-  //     return state[STORAGE_KEY].content.states[OhMyState.domain];
-  //   });
-  // }
 }

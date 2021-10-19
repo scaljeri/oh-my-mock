@@ -1,10 +1,18 @@
 <mat-card *ngIf="data" class="header">
-  <app-mock-header (mockActivated)="onMockActivated($event)" [data]="data" [domain]="domain"></app-mock-header>
+  <app-mock-header
+    (mockActivated)="onMockActivated($event)"
+    [data]="data"
+    [domain]="domain"
+  ></app-mock-header>
 </mat-card>
 
 <mat-card *ngIf="mock; else nodata" class="details">
   <section class="mock-settings">
-    <oh-my-mock-details [mock]="mock" [domain]="domain" [data]="data"></oh-my-mock-details>
+    <oh-my-mock-details
+      [mock]="mock"
+      [domain]="domain"
+      [data]="data"
+    ></oh-my-mock-details>
 
     <div class="mock-actions">
       <button mat-stroked-button class="delete-mock" (click)="onDelete()">
@@ -15,10 +23,19 @@
         Anonymise your data
       </button>
       <div class="action-wrapper">
-        <button class="js-code-edit" (click)="openShowMockCode()" mat-stroked-button>Mocking with code</button>
-        <mat-icon color="primary"
-          matTooltip="This is the place where OhMyMock creates responses. You can write code in here to change the default mocking behaviour. You can make Fetch/XHR request and/or change the cached responses/headers.">
-          info</mat-icon>
+        <button
+          class="js-code-edit"
+          (click)="openShowMockCode()"
+          mat-stroked-button
+        >
+          Mocking with code
+        </button>
+        <mat-icon
+          color="primary"
+          matTooltip="This is the place where OhMyMock creates responses. You can write code in here to change the default mocking behaviour. You can make Fetch/XHR request and/or change the cached responses/headers."
+        >
+          info</mat-icon
+        >
       </div>
     </div>
   </section>
@@ -29,12 +46,19 @@
         <h2>Response</h2>
       </header>
       <div class="code-wrapper">
-        <button class="fullscreen" (click)="onShowResponseFullscreen()" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
+        <button
+          class="fullscreen"
+          (click)="onShowResponseFullscreen()"
+          mat-mini-fab
+          color="primary"
+          aria-label="Example icon button with a menu icon"
+        >
           <mat-icon>fullscreen</mat-icon>
         </button>
         <oh-my-code-edit [formControl]="responseCtrl"></oh-my-code-edit>
-        <button class="reset" mat-button (click)="onRevertResponse()">Reset</button>
+        <button class="reset" mat-button (click)="onRevertResponse()">
+          Reset
+        </button>
       </div>
     </div>
 
@@ -43,12 +67,19 @@
         <h2>Headers</h2>
       </header>
       <div class="code-wrapper">
-        <button class="fullscreen" (click)="onShowHeadersFullscreen()" mat-mini-fab color="primary"
-          aria-label="Example icon button with a menu icon">
+        <button
+          class="fullscreen"
+          (click)="onShowHeadersFullscreen()"
+          mat-mini-fab
+          color="primary"
+          aria-label="Example icon button with a menu icon"
+        >
           <mat-icon>fullscreen</mat-icon>
         </button>
         <oh-my-code-edit [formControl]="headersCtrl"></oh-my-code-edit>
-        <button class="reset" mat-button (click)="onRevertHeaders()">Reset</button>
+        <button class="reset" mat-button (click)="onRevertHeaders()">
+          Reset
+        </button>
       </div>
     </div>
   </section>
@@ -56,14 +87,13 @@
 
 <ng-template #nodata>
   <section class="no-data">
-    <p>This mock is not active.</p>
-    <p>To activate and serve mock data for <strong>{{data?.url}} </strong>
-      <span *ngIf="hasMocks">select a response or </span>
+    <p>For this request no responses are served.</p>
+    <p>
+      To serve responses for <strong>{{ data?.url }} </strong>
+      <span *ngIf="hasMocks"
+        >select a different `preset` or select a response</span
+      >.
     </p>
-    <ol>
-      <li>Create a response with the + button or</li>
-      <li>just make the API in your app, because OhMyMock will automatically cache server responses (make sure OhMyMock
-        is active)</li>
-    </ol>
+    <p>New responses can be created with the + button</p>
   </section>
 </ng-template>

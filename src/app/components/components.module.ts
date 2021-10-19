@@ -57,6 +57,7 @@ import { ManageScenariosComponent } from './manage-presets/manage-scenarios.comp
 import { OhMyDirectivesModule } from '../directives/directives.module';
 import { LinkComponent } from './link/link.component';
 import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.component';
+import { PresetComponent } from './preset/preset.component';
 
 @NgModule({
   declarations: [
@@ -88,6 +89,7 @@ import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.comp
     ManageScenariosComponent,
     LinkComponent,
     DialogCodeEditorComponent,
+    PresetComponent,
   ],
   imports: [
     CommonModule,

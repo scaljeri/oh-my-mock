@@ -1,39 +1,68 @@
-<div class="main">
-  <mat-form-field class="type-select">
-    <mat-label>Type</mat-label>
-    <mat-select [formControl]="typeCtrl" name="type">
-      <mat-option *ngFor="let type of ['FETCH', 'XHR']" [value]="type"> {{type}} </mat-option>
-    </mat-select>
-  </mat-form-field>
+<div class="request">
+  <h3>Request:</h3>
+  <section>
+    <mat-form-field class="type-select">
+      <mat-label>Type</mat-label>
+      <mat-select [formControl]="typeCtrl" name="type">
+        <mat-option *ngFor="let type of ['FETCH', 'XHR']" [value]="type">
+          {{ type }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
 
-    <oh-my-autocomplete-dropdown label="Method" 
+    <oh-my-autocomplete-dropdown
+      label="Method"
       [formControl]="methodCtrl"
-      [options]="availableMethods"></oh-my-autocomplete-dropdown>
+      [options]="availableMethods"
+    ></oh-my-autocomplete-dropdown>
 
-  <mat-form-field class="url-input">
-    <mat-label>Url</mat-label>
-    <input #url matInput placeholder="Match API endpiont (regexp)" [formControl]="urlCtrl"
-      (keyup)="onUrlUpdate(url.value)">
-  </mat-form-field>
+    <mat-form-field class="url-input">
+      <mat-label>Url</mat-label>
+      <input
+        #url
+        matInput
+        placeholder="Match API endpiont (regexp)"
+        [formControl]="urlCtrl"
+        (keyup)="onUrlUpdate(url.value)"
+      />
 
-  <mat-icon color="primary"
-    matTooltip="The API URL is used, together with the request type and method, to map an API call with a mock. To make this more flexible you can use regular expression syntax here">
-    info</mat-icon>
+      <mat-icon
+        color="primary"
+        matTooltip="The request URL is used together with the type and method to map incoming API call with a response. This field can also contain regular expression!"
+      >
+        info</mat-icon
+      >
+    </mat-form-field>
+  </section>
 </div>
 
-<div *ngIf="state" class="codes" [ngClass]="{ 'is-active': true }">
-  <div class="label">Responses:</div>
-  <div class="codes-wrapper">
-    <button class="inactive" mat-raised-button (click)="onSelectStatusCode()">
-      Off
-    </button>
-    <button mat-raised-button *ngFor="let mockId of mockIds" (click)="onSelectStatusCode(mockId)"
-      [ngClass]="{ 'is-active': true }">
-      <oh-my-mock-label [mock]="data.mocks[mockId]" [state]="state"></oh-my-mock-label>
-    </button>
-    <button mat-raised-button (click)="openAddResponseDialog()">+</button>
+<section class="responses-wrapper">
+  <div *ngIf="state" class="responses" [ngClass]="{ 'is-active': true }">
+    <h3>
+      Responses:
+      <mat-icon
+        color="primary"
+        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!"
+      >
+        info</mat-icon
+      >
+    </h3>
+    <div class="codes-wrapper">
+      <button class="inactive" mat-raised-button (click)="onSelectStatusCode()">
+        Off
+      </button>
+      <button
+        mat-raised-button
+        *ngFor="let mockId of mockIds"
+        (click)="onSelectStatusCode(mockId)"
+        [ngClass]="{ 'is-active': true }"
+      >
+        <oh-my-mock-label [mock]="data.mocks[mockId]"></oh-my-mock-label>
+      </button>
+      <button mat-raised-button (click)="openAddResponseDialog()">+</button>
+    </div>
+    <div class="exports">
+      <!-- <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button> -->
+    </div>
   </div>
-  <div class="exports">
-    <!-- <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button> -->
-  </div>
-</div>
+</section>

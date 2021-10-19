@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
@@ -7,7 +7,7 @@ import { style, animate } from "@angular/animations";
 import { DeleteData, LoadState, Aux, UpdateState, UpsertData, PresetCreate } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IOhMyAux, IOhMyContext, IOhMyPresetChange, IState, IStore, ohMyDataId, ohMyPresetId } from 'src/shared/type';
+import { domain, IData, IOhMyAux, IOhMyContext, IOhMyPresetChange, IState, IStore, ohMyDataId, ohMyPresetId } from '@shared/type';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { Observable, Subscription } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
@@ -28,6 +28,7 @@ export const highlightSeq = [
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   // animations: [
   //   trigger("inOutAnimation", [
   //     transition(":leave", [
@@ -152,7 +153,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     // this.subscriptions.add(this.state$.subscribe((state: IState) => {
     //   this.state = state;
     //   this.presets = ['a', 'b', 'c']; // Object.values(state.presets) ;
-    //   this.filteredDataList = this.filterListByKeywords();
+      // this.filteredDataList = this.filterListByKeywords();
 
     //   this.scenarioCtrl.setValidators([exactOptionMatchValidator(this.presets)]);
 
@@ -187,6 +188,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         this.presetEl.focus();
         this.isPresetCopy = false;
       }
+
+      this.filteredDataList = this.filterListByKeywords();
     }
   }
 
@@ -385,7 +388,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onPresetDelete(preset: string) {
-    if (preset === '') {
+    if (preset === '' || preset === undefined) {
       return this.toast.warning('Delete failed: no preset selected');
     } else if (Object.keys(this.state.presets).length === 1) {
       return this.toast.warning('Delete failed: cannot delete the last preset');

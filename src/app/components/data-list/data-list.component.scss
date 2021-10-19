@@ -102,7 +102,7 @@ ol[data-table] {
         // }
 
         .search-help {
-          @include oh-position(absolute, 8px -10px 0 0);
+          @include oh-position(absolute, 8px 10px 0 0);
         }
       }
     }
