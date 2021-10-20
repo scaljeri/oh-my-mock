@@ -37,10 +37,19 @@ h3 {
   }
 }
 
+.responses-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.preset-selector {
+  display: flex;
+  flex-direction: column;
+}
+
 .responses {
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
 
   // .label {
   //   display: flex;

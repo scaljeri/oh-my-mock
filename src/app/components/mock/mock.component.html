@@ -87,13 +87,10 @@
 
 <ng-template #nodata>
   <section class="no-data">
-    <p>For this request no responses are served.</p>
-    <p>
-      To serve responses for <strong>{{ data?.url }} </strong>
-      <span *ngIf="hasMocks"
-        >select a different `preset` or select a response</span
-      >.
+    <p>This request is not active and OhMyMock will not serve any data.</p>
+    <p *ngIf="hasMocks">
+      To start serving data, select a response, create a new response or change the preset.
     </p>
-    <p>New responses can be created with the + button</p>
+    <p *ngIf="!hasMocks">New responses can be created with the + button</p>
   </section>
 </ng-template>

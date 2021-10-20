@@ -11,23 +11,9 @@
   </div>
 
   <div class="toggles">
-    <oh-my-autocomplete-dropdown
-      #input
-      [showAllOnFocus]="true"
-      [showCopy]="true"
-      [showDelete]="true"
-      copyInfo="Clone/createn new preset"
-      class="preset"
-      [options]="presets"
-      [formControl]="scenarioCtrl"
-      (copy)="onPresetCopy($event)"
-      (blur)="onBlur()"
-      (delete)="onPresetDelete($event)"
-      label="preset">
-    </oh-my-autocomplete-dropdown>
-    <mat-icon class="info info-contrast scenario-help" color="primary" matTooltip="
-    Enable a whole group of mocks by selecting a preset. To edit or delete presets click the edit icon">
-      info</mat-icon>
+    <oh-my-preset class="preset" [presets]="state?.presets"></oh-my-preset>
+    <mat-icon class="info info-contrast scenario-help" color="primary"
+    [matTooltip]="presetInfo">info</mat-icon>
 
     <div class="toggle">
       <label for="show-active-list">Activate new</label>

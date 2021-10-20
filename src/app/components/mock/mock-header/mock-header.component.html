@@ -65,4 +65,14 @@
       <!-- <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button> -->
     </div>
   </div>
+  <div class="preset-selector">
+    <h3>
+      <span>Presets</span>
+      <mat-icon
+        class="info info-contrast scenario-help"
+        color="primary"
+        [matTooltip]="presetInfo">info</mat-icon>
+    </h3>
+    <oh-my-preset class="preset" [presets]="state?.presets"></oh-my-preset>
+  </div>
 </section>

@@ -16,7 +16,7 @@ export class ContextService implements IOhMyContext {
   private subject = new BehaviorSubject<IOhMyContext>(this);
   public stream$ = this.subject.asObservable().pipe(share());
 
-  update(context: IOhMyContext): void {
+  update(context: Partial<IOhMyContext>): void {
     if (context) {
       Object.entries(context).forEach(([k, v]) => this[k] = v);
       this.subject.next(this);

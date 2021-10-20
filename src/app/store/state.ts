@@ -461,6 +461,7 @@ export class OhMyState {
         // state.context.preset = OhMyState.PresetUtils.findId(state.presets, Object.values(state.presets).sort()[0]);
         if (change.id === state.context.preset) {
           delete state.context.preset;
+          this.context.update({ preset: undefined });
         }
 
         Object.values(state.data).map(d => {
@@ -473,6 +474,7 @@ export class OhMyState {
 
         if (change.activate) {
           state.context.preset = change.id;
+          this.context.update({ preset: change.id });
         }
       }
     });

@@ -13,6 +13,7 @@ import { Store } from '@ngxs/store';
 import { OhMyState } from 'src/app/store/state';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { StateStreamService } from 'src/app/services/state-stream.service';
+import { presetInfo } from '../../../constants';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -22,7 +23,7 @@ import { StateStreamService } from 'src/app/services/state-stream.service';
 })
 export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
-  @Input() scenario: ohMyPresetId;
+  @Input() presets: IOhMyPresets;
   @Input() domain: string;
 
   @Output() mockActivated = new EventEmitter();
@@ -34,6 +35,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   public typeCtrl = new FormControl(null, { updateOn: 'blur' });
   public filteredTypeOptions: Observable<string[]>;
   public urlCtrl = new FormControl(null, { updateOn: 'blur' });
+  public presetInfo = presetInfo;
 
   public oldResponses: string[];
 
