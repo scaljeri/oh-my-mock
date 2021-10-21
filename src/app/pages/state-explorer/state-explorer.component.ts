@@ -1,13 +1,13 @@
-import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select, Store } from '@ngxs/store';
 import { STORAGE_KEY } from '@shared/constants';
-import { domain, IData, IOhMyMock, IState, IStore } from '@shared/type';
+import { domain, IData, IOhMyContext, IOhMyMock, IState, IStore } from '@shared/type';
 
 import { uniqueId } from '@shared/utils/unique-id';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { UpsertData } from 'src/app/store/actions';
 import { OhMyState } from 'src/app/store/state';
@@ -17,9 +17,9 @@ import { OhMyState } from 'src/app/store/state';
   templateUrl: './state-explorer.component.html',
   styleUrls: ['./state-explorer.component.scss']
 })
-export class PageStateExplorerComponent implements OnInit {
-  @Select(OhMyState.getStore) state$: Observable<IOhMyMock>;
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+export class PageStateExplorerComponent implements OnInit, OnDestroy {
+  @Select(OhMyState.ohMyStore) state$: Observable<IOhMyMock>;
+  @Dispatch() upsertData = (data: IData) => new UpsertData(data, this.state.context);
 
   public panelOpenState = true;
   public domains: domain[];
@@ -31,6 +31,8 @@ export class PageStateExplorerComponent implements OnInit {
   public showRowAction = true;
   public mainActionIconName = 'copy_all';
   public rowActionIconName = 'content_copy';
+  public subscriptions = new Subscription();
+  public context: IOhMyContext;
 
   @ViewChildren(MatExpansionPanel) panels: QueryList<MatExpansionPanel>;
 
@@ -40,11 +42,11 @@ export class PageStateExplorerComponent implements OnInit {
     private toast: HotToastService) { }
 
   ngOnInit(): void {
-    this.state$.subscribe((state) => {
+    this.subscriptions.add(this.state$.subscribe((state) => {
       this.domains = Object.keys(state.domains).filter(d => d !== this.appStateService.domain);
 
       this.selectedState = state.domains[this.selectedDomain];
-    });
+    }));
   }
 
   async onSelectDomain(domain = this.appStateService.domain): Promise<void> {
@@ -82,5 +84,9 @@ export class PageStateExplorerComponent implements OnInit {
 
   getActiveStateSnapshot(): IState {
     return null; // this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

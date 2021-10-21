@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, forwardRef, Input, OnChanges, OnIni
 import { FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IOhMyPresetChange, IOhMyPresets } from '@shared/type';
+import { IOhMyContext, IOhMyPresetChange, IOhMyPresets } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
+import { Subscription } from 'rxjs';
 import { ContextService } from 'src/app/services/context.service';
+import { StateStreamService } from 'src/app/services/state-stream.service';
 import { PresetCreate } from 'src/app/store/actions';
 
 
@@ -22,19 +24,29 @@ import { PresetCreate } from 'src/app/store/actions';
   ]
 })
 export class PresetComponent implements OnInit, OnChanges {
-  @Input() presets: IOhMyPresets;
-
   @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
-    return new PresetCreate(updates);
+    return new PresetCreate(updates, this.context);
   }
 
   presetCtrl = new FormControl();
   options: string[] = [];
   isPresetCopy = false;
+  subscriptions = new Subscription();
+  presets: IOhMyPresets;
+  context: IOhMyContext;
 
-  constructor(private toast: HotToastService, private context: ContextService) { }
+  constructor(private toast: HotToastService, private stateStream: StateStreamService) {
+  }
 
   ngOnInit(): void {
+    this.subscriptions.add(this.stateStream.state$.subscribe(state => {
+      this.context = state.context;
+      this.presets = state.presets;
+
+      this.options = Object.values(this.presets)
+      this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
+    }));
+
     this.presetCtrl.valueChanges.subscribe(preset => {
       const oldPresetValue = this.presets[this.context.preset];
 
@@ -48,13 +60,8 @@ export class PresetComponent implements OnInit, OnChanges {
       }
     });
   }
-  ngOnChanges(): void {
-    if (!this.presets) {
-      return;
-    }
 
-    this.options = Object.values(this.presets)
-    this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
+  ngOnChanges(): void {
   }
 
   onPresetCopy(preset: string) {

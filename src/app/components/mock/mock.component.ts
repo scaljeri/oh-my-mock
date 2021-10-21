@@ -7,17 +7,16 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { DeleteMock, LoadMock, UpsertData, UpsertMock } from 'src/app/store/actions';
-import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock, ohMyPresetId } from '@shared/type';
+import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock, ohMyPresetId, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Store } from '@ngxs/store';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { STORAGE_KEY } from '@shared/constants';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
+import { StateStreamService } from 'src/app/services/state-stream.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -27,8 +26,7 @@ import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.com
 })
 export class MockComponent implements OnChanges {
   @Input() data: IData;
-  @Input() domain: string;
-  @Input() sccenario: ohMyPresetId;
+  @Input() context: IOhMyContext;
   mock: IMock;
 
   // @Select(OhMyState.mock) state$: Observable<IState>;
@@ -39,11 +37,11 @@ export class MockComponent implements OnChanges {
       id: this.data.id,
       makeActive: true,
       mock
-    }, this.domain);
+    }, this.context);
   };
-  @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data);
+  @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data, this.context);
   @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) => {
-    return new DeleteMock({ id, mockId });
+    return new DeleteMock({ id, mockId }, this.context);
   }
 
   public dialogIsOpen = false;
@@ -59,23 +57,23 @@ export class MockComponent implements OnChanges {
   hasMocks = false;
 
   constructor(
-    private store: Store,
+    private stateStream: StateStreamService,
     public dialog: MatDialog,
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) {
-    this.activeMock$ = this.store.select(state => {
-      // TODO: is `unsubscribe` needed?
-      return this.activeMockId ? state[STORAGE_KEY].content.mocks[this.activeMockId] : null;
-    });
   }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.activeMock$.subscribe(mock => {
-      this.mock = mock;
-
-      this.responseCtrl.setValue(mock?.responseMock, { emitEvent: false });
-      this.headersCtrl.setValue(mock?.headersMock, { emitEvent: false });
+    this.subscriptions.push(this.stateStream.state$.subscribe(state => {
+      this.context = state.context;
     }));
+
+    // this.subscriptions.push(this.activeMock$.subscribe(mock => {
+    //   this.mock = mock;
+
+    //   this.responseCtrl.setValue(mock?.responseMock, { emitEvent: false });
+    //   this.headersCtrl.setValue(mock?.headersMock, { emitEvent: false });
+    // }));
 
 
     this.responseCtrl.valueChanges.subscribe(val => {
@@ -127,14 +125,15 @@ export class MockComponent implements OnChanges {
   onMockActivated(mockId: ohMyMockId) {
     this.activeMockId = mockId;
 
-    if (!mockId) {
-      this.mock = null;
-      return this.upsertData({
-        id: this.data.id,
-        enabled: { ...this.data.enabled, [this.sccenario]: false }});
-    } else {
-      this.upsertData({ id: this.data.id, enabled: { ...this.data.enabled, [this.sccenario]: false }});
-    }
+    // TODO
+    // if (!mockId) {
+    //   this.mock = null;
+    //   return this.upsertData({
+    //     id: this.data.id,
+    //     enabled: { ...this.data.enabled, [this.sccenario]: false }});
+    // } else {
+    //   this.upsertData({ id: this.data.id, enabled: { ...this.data.enabled, [this.sccenario]: false }});
+    // }
   }
 
   openShowMockCode(): void {

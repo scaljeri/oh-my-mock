@@ -37,7 +37,7 @@
 </div>
 
 <section class="responses-wrapper">
-  <div *ngIf="state" class="responses" [ngClass]="{ 'is-active': true }">
+  <div *ngIf="state" class="responses" [ngClass]="{ 'is-active': data.enabled[context.preset] }">
     <h3>
       Responses:
       <mat-icon
@@ -48,14 +48,14 @@
       >
     </h3>
     <div class="codes-wrapper">
-      <button class="inactive" mat-raised-button (click)="onSelectStatusCode()">
+      <button class="inactive" mat-raised-button (click)="onDisableRequest()">
         Off
       </button>
       <button
         mat-raised-button
         *ngFor="let mockId of mockIds"
         (click)="onSelectStatusCode(mockId)"
-        [ngClass]="{ 'is-active': true }"
+        [ngClass]="{ 'is-active': data.selected[context.preset] === mockId }"
       >
         <oh-my-mock-label [mock]="data.mocks[mockId]"></oh-my-mock-label>
       </button>
@@ -73,6 +73,6 @@
         color="primary"
         [matTooltip]="presetInfo">info</mat-icon>
     </h3>
-    <oh-my-preset class="preset" [presets]="state?.presets"></oh-my-preset>
+    <oh-my-preset class="preset"></oh-my-preset>
   </div>
 </section>

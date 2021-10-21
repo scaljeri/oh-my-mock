@@ -1,4 +1,4 @@
-import { IOhMyMock, IState, ohMyDataId, ohMyDomain, ohMyMockId, origin } from '../type';
+import { IOhMyContext, IOhMyMock, IState, ohMyDataId, ohMyDomain, ohMyMockId, origin } from '../type';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
 import { STORAGE_KEY } from '@shared/constants';
@@ -17,13 +17,13 @@ export class StoreUtils {
     return { ...store, content, domains };
   }
 
-  static init(state?: IState, origin: origin = 'local'): IOhMyMock {
+  static init(context?: IOhMyContext, origin: origin = 'local'): IOhMyMock {
     const store = { domains: [], version: this.version, origin, content: { states: {}, mocks: {} } } as IOhMyMock;
 
-    if (state) {
-      store.domains.push(state.domain);
+    if (context) {
+      store.domains.push(context.domain);
       // store.content.states[domain] = await this.getState(store, domain);
-      store.content.states[state.domain] = state
+      // store.content.states[state.domain] = state
       // await this.persistStore(store);
     }
 

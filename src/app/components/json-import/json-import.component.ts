@@ -2,7 +2,7 @@ import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Store } from '@ngxs/store';
-import { IData, IState, ohMyPresetId } from '@shared/type';
+import { IData, IOhMyContext, IState, ohMyPresetId } from '@shared/type';
 import { UpsertData, UpsertScenarios } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -19,11 +19,12 @@ import { StoreUtils } from '@shared/utils/store';
 export class JsonImportComponent {
 
   @Dispatch() upsertData =
-    (data: IData, domain: string) => new UpsertData(data, domain || this.appState.domain);
+    (data: IData, domain: string) => new UpsertData(data, this.context);
   @Dispatch() upsertScenarios =
-    (scenarios: Record<ohMyPresetId, string>, domain: string) => new UpsertScenarios(scenarios, domain || this.appState.domain)
+    (scenarios: Record<ohMyPresetId, string>, domain: string) => new UpsertScenarios(scenarios, { domain })
   isUploading = false;
   ctrl = new FormControl(true);
+  context: IOhMyContext;
 
   constructor(
     @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,

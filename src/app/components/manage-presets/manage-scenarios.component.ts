@@ -21,7 +21,7 @@ export class ManageScenariosComponent implements AfterViewInit {
   @Output() update = new EventEmitter<IOhMyPresets>();
 
   @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => {
-    return new UpsertScenarios(scenarios, this.domain);
+    return new UpsertScenarios(scenarios, { domain: this.domain });
   }
 
   scenarioIds: ohMyPresetId[] = [];

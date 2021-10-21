@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { Select } from '@ngxs/store';
-import { IData, IOhMyMockContext, IState } from '@shared/type';
+import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Observable, Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
@@ -19,7 +19,7 @@ import { OhMyState } from 'src/app/store/state';
 export class PageDataListComponent implements OnInit, OnDestroy {
   static StateUtils = StateUtils;
 
-  @Dispatch() upsertRequest = (data: IData) => new UpsertData(data);
+  @Dispatch() upsertRequest = (data: IData) => new UpsertData(data, this.context);
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   private subscriptions = new Subscription();
@@ -28,6 +28,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   public state: IState;
   public domain: string;
   public navigateToData: IOhMyMockContext;
+  context: IOhMyContext;
   hasData = false;
 
   constructor(
@@ -39,6 +40,8 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.add(this.stateStream.state$.subscribe((state: IState) => {
+      this.context = state.context;
+
       setTimeout(() => {
         this.state = state;
         this.hasData = Object.keys(this.state.data).length > 0;

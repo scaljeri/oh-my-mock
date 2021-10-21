@@ -34,7 +34,7 @@
         (selectRow)="onDataSelect($event)"></oh-my-data-list>
     </mat-expansion-panel>
     <mat-expansion-panel>
-      <oh-my-mock *ngIf="dataItem" [data]="dataItem" [domain]="selectedDomain"></oh-my-mock>
+      <oh-my-mock *ngIf="dataItem" [data]="dataItem" [context]="context"></oh-my-mock>
     </mat-expansion-panel>
   </mat-accordion>
 </mat-card>

@@ -40,7 +40,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   dialogDone = false;
   isInitializing = true;
 
-  @Dispatch() activate = (value: boolean) => new Aux({ appActive: value });
+  @Dispatch() activate = (value: boolean) => new Aux({ appActive: value }, this.context);
   @Select(OhMyState.mainState) state$: Observable<IState>;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;

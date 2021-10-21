@@ -8,6 +8,7 @@ import { InitState } from './store/actions';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
 import { ContextService } from './services/context.service';
+import { StateStreamService } from './services/state-stream.service';
 
 @Injectable({ providedIn: 'root' })
 export class forwarderGuard implements CanActivate {
@@ -15,11 +16,12 @@ export class forwarderGuard implements CanActivate {
   static StoreUtils = StoreUtils;
 
   @Dispatch() initState = (domain: ohMyDomain) => {
-    return new InitState(null, domain)
+    return new InitState(null, { domain })
   };
 
   constructor(
     private context: ContextService,
+    private stateStream: StateStreamService,
     private appStateService: AppStateService) { }
 
   async canActivate(): Promise<boolean> {
@@ -34,6 +36,7 @@ export class forwarderGuard implements CanActivate {
     }
 
     this.context.domain = this.appStateService.domain;
+    this.stateStream.domain = this.appStateService.domain;
 
     // Load and initialize state
     // const origStore = await this.storageService.initialize();

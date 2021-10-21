@@ -22,7 +22,7 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
 export class NavListComponent {
   @Output() navigate = new EventEmitter<void>();
 
-  @Dispatch() stateReset = (domain?: string) => new ResetState(domain);
+  @Dispatch() stateReset = (domain?: string) => new ResetState(domain, { domain: this.appStateService.domain});
 
   constructor(
     private appStateService: AppStateService,

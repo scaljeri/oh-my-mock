@@ -1,21 +1,18 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IData, IMock, IOhMyPresets, IOhMyShallowMock, IState, IStore, IUpsertMock, ohMyMockId, ohMyPresetId, statusCode } from '@shared/type';
+import { IData, IMock, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-response/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
 import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
-import { METHODS, STORAGE_KEY } from '@shared/constants';
-import { Store } from '@ngxs/store';
-import { OhMyState } from 'src/app/store/state';
+import { METHODS } from '@shared/constants';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { StateStreamService } from 'src/app/services/state-stream.service';
 import { presetInfo } from '../../../constants';
 import { DataUtils } from '@shared/utils/data';
-import { ContextService } from 'src/app/services/context.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -25,8 +22,7 @@ import { ContextService } from 'src/app/services/context.service';
 })
 export class MockHeaderComponent implements OnInit, OnChanges {
   @Input() data: IData;
-  @Input() presets: IOhMyPresets;
-  @Input() domain: string;
+  @Input() context: IOhMyContext;
 
   @Output() mockActivated = new EventEmitter();
 
@@ -42,20 +38,17 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   public oldResponses: string[];
 
   public availableMethods = METHODS;
-  scenarios: IOhMyPresets;
   subscriptions: Subscription[] = [];
   state: IState;
 
   @Dispatch() upsertMock = (mock: Partial<IMock>, clone: ohMyMockId | undefined) => {
-    debugger;
-    return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.domain);
+    return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.state.context);
   }
   @Dispatch() upsertData = (data: Partial<IData>) => {
-    return new UpsertData({ ...this.data, ...data }, this.domain);
+    return new UpsertData({ ...this.data, ...data }, this.context);
   }
 
   constructor(
-    private context: ContextService,
     public dialog: MatDialog,
     private stateStream: StateStreamService) {
     this.subscriptions.push(this.stateStream.state$.subscribe(state => {
@@ -102,14 +95,19 @@ export class MockHeaderComponent implements OnInit, OnChanges {
     this.upsertData({ url });
   }
 
-  onSelectStatusCode(mockId: ohMyMockId | void): void {
-    if (mockId) {
-      this.mockActivated.emit(mockId);
-      // this.upsertData({ activeMock: mockId, enabled: true })
-    } else {
-      this.mockActivated.emit();
-      // this.upsertData({ enabled: false })
-    }
+  onSelectStatusCode(mockId: ohMyMockId): void {
+    this.upsertData({
+      id: this.data.id,
+      enabled: { ...this.data.enabled, [this.context.preset]: true },
+      selected: { ...this.data.selected, [this.context.preset]: mockId }
+    });
+  }
+
+  onDisableRequest(): void {
+    this.upsertData({
+      id: this.data.id,
+      enabled: { ...this.data.enabled, [this.context.preset]: false }
+    });
   }
 
   openAddResponseDialog(): void {
@@ -124,7 +122,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
         return;
       }
 
-      this.upsertMock(update.mock, DataUtils.getSelectedResponse(this.data, this.context)?.id);
+      this.upsertMock(update.mock, update.clone && DataUtils.getSelectedResponse(this.data, this.context)?.id);
     });
   }
 

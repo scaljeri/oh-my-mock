@@ -41,7 +41,6 @@ export const highlightSeq = [
   // ]
 })
 export class DataListComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() domain: domain = OhMyState.domain;
   @Input() state: IState;
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
@@ -53,7 +52,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() dataExport = new EventEmitter<IData>();
 
   @Dispatch() updateAux = (values: IOhMyAux) => {
-    return new Aux(values);
+    return new Aux(values, this.state.context);
   }
   @Dispatch() updateContext = (value: Partial<IOhMyContext>) => {
     return new UpdateState({ context: value as IOhMyContext });
@@ -62,25 +61,25 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     return new UpdateState(state);
   }
   @Dispatch() deleteData = (id: string) => {
-    return new DeleteData(id, this.state.domain);
+    return new DeleteData(id, this.state.context);
   }
   @Dispatch() upsertData = (data: Partial<IData>) => {
-    return new UpsertData(data);
+    return new UpsertData(data, this.state.context);
   }
 
   @Dispatch() loadState = () => {
-    return new LoadState(this.domain);
+    return new LoadState(this.state.context.domain);
   }
   // @Dispatch() toggleActivityList = (value: boolean) => {
   //   return new Aux({ activityList: value });
   // }
 
   @Dispatch() toggleActivateNew = (value: boolean) => {
-    return new Aux({ newAutoActivate: value });
+    return new Aux({ newAutoActivate: value }, this.state.context);
   }
 
   @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
-    return new PresetCreate(updates);
+    return new PresetCreate(updates, this.state.context);
   }
 
   public selection = new SelectionModel<number>(true);
@@ -99,7 +98,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   scenarioOptions: string[] = [];
   presets: string[];
   isPresetCopy = false;
-
 
   public data: Record<ohMyDataId, IData>;
 

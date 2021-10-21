@@ -3,10 +3,9 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IData, IMock, IOhMyPresets } from '@shared/type';
+import { IData, IMock, IOhMyContext, IOhMyPresets } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
-import { ManageScenariosComponent } from '../../manage-presets/manage-scenarios.component';
 
 @Component({
   selector: 'oh-my-mock-details',
@@ -15,7 +14,7 @@ import { ManageScenariosComponent } from '../../manage-presets/manage-scenarios.
 })
 export class MockDetailsComponent implements OnChanges {
   @Input() mock: IMock;
-  @Input() domain: string;
+  @Input() context: IOhMyContext;
   @Input() data: IData;
 
   private subscriptions = new Subscription();
@@ -41,10 +40,10 @@ export class MockDetailsComponent implements OnChanges {
       id: this.data.id,
       mock: { id: this.mock.id, ...update, headersMock:
         { ...this.mock.headersMock, ['content-type']: contentType } }
-    }, this.domain)
+    }, this.context)
   };
 
-  @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => new UpsertScenarios(scenarios, this.domain);
+  // @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => new UpsertScenarios(scenarios, this.domain);
   // @Select(OhMyState.mainState) state$: Observable<IState>;
 
   constructor(public dialog: MatDialog) { }
@@ -84,17 +83,17 @@ export class MockDetailsComponent implements OnChanges {
   }
 
   onManageScenarios(): void {
-    const dialogRef = this.dialog.open(ManageScenariosComponent, {
-      width: '280px',
-      height: '380px'
-    });
+    // const dialogRef = this.dialog.open(ManageScenariosComponent, {
+    //   width: '280px',
+    //   height: '380px'
+    // });
 
-    dialogRef.afterClosed().subscribe((scenarios: IOhMyPresets) => {
-      if (scenarios !== null && scenarios !== undefined) {
-        console.log('received', scenarios);
-        this.updateScenarios(scenarios);
-      }
-    });
+    // dialogRef.afterClosed().subscribe((scenarios: IOhMyPresets) => {
+    //   if (scenarios !== null && scenarios !== undefined) {
+    //     console.log('received', scenarios);
+    //     this.updateScenarios(scenarios);
+    //   }
+    // });
   }
 
   get scenarioCtrl(): FormControl {
