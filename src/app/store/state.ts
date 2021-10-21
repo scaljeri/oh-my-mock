@@ -56,6 +56,7 @@ import { MockUtils } from '@shared/utils/mock';
 import { OhMyScenarios, PresetUtils } from '@shared/utils/preset';
 import { timestamp } from '@shared/utils/timestamp';
 import { arrayRemoveItem } from '@shared/utils/array';
+import { uniqueId } from '@shared/utils/unique-id';
 
 @State<IOhMyMock>({
   name: STORAGE_KEY,
@@ -187,45 +188,52 @@ export class OhMyState {
   @Action(UpdateMockStorage)
   async upsertMock(ctx: StateContext<IOhMyMock>, action: UpsertMock | UpdateMockStorage) {
     const { payload, domain } = action;
-
     let store = OhMyState.getStore(ctx);
     const [state, activeDomain] = await this.getMyState(ctx, domain);
-    const scenario = state.context.preset;
 
-    let mock = { ...payload.mock };
-    // let sourceMock = {};
     const data = OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init({
       url: payload.url,
       method: payload.method,
       requestType: payload.requestType
     });
 
-    state.data = { ...state.data, [data.id]: data };
+    let mock: IMock;
+    let mockId: ohMyMockId;
 
-    let sourceMock: IMock;
-    if (mock.id) { // update
-      sourceMock = store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id);
-      mock.modifiedOn = timestamp();
-    } else { // new
-      sourceMock = payload.clone && data.presets[scenario] ?
-        (store.content.mocks[data.presets[scenario]] ||
-          await OhMyState.StorageUtils.get<IMock>(data.presets[scenario])) : OhMyState.MockUtils.init();
+    if (payload.mock.id) {
+      mockId = mock.id;
+    } else if (payload.clone) {
+
+      if (payload.clone === true) {
+        mockId = data.selected[state.context.preset];
+      } else {
+        mockId = payload.clone;
+      }
     }
 
-    if (sourceMock) {
-      mock = OhMyState.MockUtils.clone(sourceMock, mock);
-      store.content = { ...store.content, mocks: { ...store.content.mocks, [mock.id]: mock as IMock } };
+    if (mockId) {
+      mock = { ...(store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id)), ...payload.mock };
+
+      if (payload.clone) {
+        mock.id = uniqueId();
+        mock.createdOn =  timestamp();
+        delete mock.modifiedOn;
+      }
+    } else {
+      mock = OhMyState.MockUtils.init(payload.mock);
     }
 
     if (payload.makeActive) {
-      data.presets[scenario] = mock.id;
-      data.enabled[scenario] = true;
+      data.selected[state.context.preset] = mock.id;
+      data.enabled[state.context.preset] = true;
     }
 
     data.mocks = {
       ...data.mocks,
       [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
     };
+
+    state.data = { ...state.data, [data.id]: data };
 
     if (action instanceof UpsertMock) {
       await OhMyState.StorageUtils.set(activeDomain, state);
@@ -465,7 +473,7 @@ export class OhMyState {
         }
 
         Object.values(state.data).map(d => {
-          const data = { ...d, presets: { ...d.presets }, enabled: { ...d.enabled } };
+          const data = { ...d, presets: { ...d.selected }, enabled: { ...d.enabled } };
           delete data.presets[change.id];
           delete data.enabled[change.id];
         })

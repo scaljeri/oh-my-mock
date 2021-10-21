@@ -86,7 +86,7 @@ export class StateUtils {
       delete state.presets[update.id];
       Object.values(state.data).map(d => ({ ...d })).forEach(data => {
         delete data.enabled[update.id]
-        delete data.presets[update.id];
+        delete data.selected[update.id];
 
         state.data[data.id] = data;
       });
@@ -100,7 +100,7 @@ export class StateUtils {
       if (!state.presets[update.id]) { // new preset
         Object.values(state.data).map(d => ({ ...d })).forEach(data => {
           delete data.enabled[update.id]
-          delete data.presets[update.id];
+          delete data.selected[update.id];
 
           state.data[data.id] = data;
         });

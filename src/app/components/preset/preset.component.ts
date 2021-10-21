@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, forwardRef, Input, OnChanges, OnIni
 import { FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IOhMyPresetChange, IOhMyPresets, ohMyPresetId } from '@shared/type';
+import { IOhMyPresetChange, IOhMyPresets } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
 import { ContextService } from 'src/app/services/context.service';
 import { PresetCreate } from 'src/app/store/actions';
@@ -61,7 +61,6 @@ export class PresetComponent implements OnInit, OnChanges {
     this.isPresetCopy = true;
 
     const updates = [PresetUtils.create(this.presets, preset)];
-    this.presetCtrl.setValue(updates[0].id);
     this.presets[updates[0].id] = updates[0].value;
     this.presetCtrl.setValue(updates[0].value, { emitEvent: false });
 

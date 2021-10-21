@@ -23,7 +23,8 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
     if (data && DataUtils.hasActiveMock(data, state.context)) {
         // yes
 
-        const mockShallow = DataUtils.getActiveMock(data) as IOhMyShallowMock;
+        // TODO: do we need enabled or selected. And where is context
+        const mockShallow = DataUtils.getSelectedResponse(data, state.context) as IOhMyShallowMock;
         const mock = await contentState.get<IMock>(mockShallow.id);
 
         const response = await evalCode(mock, request);

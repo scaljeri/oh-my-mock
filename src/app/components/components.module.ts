@@ -29,7 +29,7 @@ import { CodeEditComponent } from './form/code-edit/code-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
-import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
+import { CreateStatusCodeComponent } from './create-response/create-status-code.component';
 import { AddDataComponent } from './add-data/add-data.component';
 import { NavListComponent } from './nav-list/nav-list.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';

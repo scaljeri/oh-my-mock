@@ -1,6 +1,6 @@
 import contentParser from 'content-type-parser';
 
-import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId, ohMyStatusCode } from '../type'
+import { IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId } from '../type'
 import { MOCK_JS_CODE } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
@@ -18,7 +18,6 @@ export class MockUtils {
       delay: 0,
       headers: {},
       response: {},
-      scenario: null,
       rules: [],
       statusCode: null,
       ...JSON.parse(JSON.stringify(base)),

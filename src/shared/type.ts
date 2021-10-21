@@ -64,7 +64,7 @@ export interface IOhMyMockContext {
 }
 
 export interface IData extends IOhMyMockContext {
-  presets: Record<ohMyPresetId, ohMyMockId>;
+  selected: Record<ohMyPresetId, ohMyMockId>;
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
 }

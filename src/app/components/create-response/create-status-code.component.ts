@@ -35,7 +35,11 @@ export class CreateStatusCodeComponent {
 
     if (this.form.valid) {
       const data = {
-        mock: this.form.value
+        mock: {
+          statusCode: this.form.value.statusCode,
+          ...(this.form.value.label && { label: this.form.value.label })
+        },
+        clone: this.form.value.clone
       };
 
       this.dialogRef.close(data);
