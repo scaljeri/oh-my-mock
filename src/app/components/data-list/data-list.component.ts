@@ -98,6 +98,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   scenarioOptions: string[] = [];
   presets: string[];
   isPresetCopy = false;
+  context: IOhMyContext;
 
   public data: Record<ohMyDataId, IData>;
 
@@ -121,6 +122,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(): void {
     if (this.state) {
       this.filteredDataList = this.filterListByKeywords();
+      this.context = this.state.context;
     }
   }
 
@@ -173,7 +175,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     if (!Object.keys(data.mocks).length) {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
-      // this.upsertData({ id, enabled: !data.enabled });
+      const isActive = data.enabled[this.state.context.preset];
+      this.upsertData({ id, enabled: { ...data.enabled, [this.state.context.preset]: !isActive } });
     }
   }
 

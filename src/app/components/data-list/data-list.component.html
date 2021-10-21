@@ -43,20 +43,20 @@
           info</mat-icon>
       </div>
     </div>
-    <span class="mock">Mock</span>
+    <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>
   </li>
 
   <li class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy"
     (click)="onDataClick(row, index)" [ngClass]="{
     'is-selected': selection.isSelected(index),
-    'is-active': false,
-    'is-modified': row.mocks['xxx']?.modifiedOn}">
+    'is-active': row.enabled[context.preset],
+    'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn}">
     <span class="method">{{row.requestType}}</span>
     <span class="type">{{row.method}}</span>
     <span class="url">{{row.url}}</span>
     <span class="mock">
-      <!-- <oh-my-mock-label *ngIf="row.activeMock" [mock]="row.mocks[row.activeMock]" [state]="state"></oh-my-mock-label> -->
+      <oh-my-mock-label *ngIf="row.selected[context.preset] as mockId" [mock]="row.mocks[mockId]"></oh-my-mock-label>
     </span>
     <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
   </li>
@@ -82,8 +82,8 @@
     <div class="btn-wrapper">
       <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">
-        <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>
-        <mat-icon *ngIf="row.enabled">stop</mat-icon>
+        <mat-icon *ngIf="!row.enabled[context.preset]">play_arrow</mat-icon>
+        <mat-icon *ngIf="row.enabled[context.preset]">stop</mat-icon>
       </button>
       <button *ngIf="showClone" (click)="onClone(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">
