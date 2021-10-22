@@ -60,7 +60,8 @@ export class MockUtils {
     return {
       id: mock.id,
       statusCode: mock.statusCode,
-      ...(mock.label !== undefined && { label: mock.label })
+      ...(mock.label !== undefined && { label: mock.label }),
+      ...(mock.modifiedOn && { modifiedOn: mock.modifiedOn})
     }
   }
 

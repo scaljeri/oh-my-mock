@@ -1,6 +1,17 @@
-<ngx-monaco-editor *ngIf="!base" class="oh-no-backspace-nav" [options]="editorOptions" [formControl]="editorCtrl"
-  (init)="onInitEditor($event)"></ngx-monaco-editor>
+  <ngx-monaco-editor
+    *ngIf="!base"
+    class="oh-no-backspace-nav"
+    [options]="editorOptions"
+    [formControl]="editorCtrl"
+    (init)="onInitEditor($event)"
+  ></ngx-monaco-editor>
 
-<ngx-monaco-diff-editor *ngIf="base" class="oh-no-backspace-nav" [options]="editorOptions" [original]="base"
-  [modified]="updatedCode" (init)="onInitDiffEditor($event)">
-</ngx-monaco-diff-editor>
+  <ngx-monaco-diff-editor
+    *ngIf="base"
+    class="oh-no-backspace-nav"
+    [options]="editorOptions"
+    [original]="base"
+    [modified]="updatedCode"
+    (init)="onInitDiffEditor($event)"
+  >
+  </ngx-monaco-diff-editor>

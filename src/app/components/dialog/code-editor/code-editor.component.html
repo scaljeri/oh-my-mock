@@ -1,9 +1,10 @@
 <div class="editor-wrapper oh-no-backspace-nav">
-  <oh-my-code-edit 
-    [formControl]="ctrl" 
-    theme="vs-dark" 
-    [type]="input.type" 
+  <oh-my-code-edit
+    [formControl]="ctrl"
+    theme="vs-dark"
+    [type]="input.type"
     [base]="base"
+    [showMinimap]="true"
     (errors)="onErrors($event)"></oh-my-code-edit>
 </div>
 

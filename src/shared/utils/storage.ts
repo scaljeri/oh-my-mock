@@ -16,7 +16,7 @@ export interface IOhMyStorageUpdate {
 }
 
 export class StorageUtils {
-  static appVersion: string;
+  static appVersion = '__OH_MY_VERSION__';
   static tick = 0;
   static updatesSubject = new Subject<IOhMyStorageUpdate>();
   static updates$ = StorageUtils.updatesSubject.asObservable();
@@ -32,9 +32,7 @@ export class StorageUtils {
 
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY, skipMigrate = false): Promise<T> {
     return new Promise<T>((resolve) => {
-      console.log('INNNNNNN');
       chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
-      console.log('INNNNNNN aaaaa');
         if (!skipMigrate && MigrateUtils.shouldMigrate(data[key])) {
           data[key] = MigrateUtils.migrate(data[key]) as T;
           await this.set(key, data[key]); // persist migrated data
@@ -51,8 +49,12 @@ export class StorageUtils {
     return this.set(STORAGE_KEY, store)
   }
 
-  static set(key: string, value: unknown): Promise<void> {
+  static set(key: string, value: unknown & { version?: string }): Promise<void> {
     return new Promise(resolve => {
+      if (value && !value.version) {
+        value.version = this.appVersion;
+      }
+
       this.chrome.storage.local.set({ [key]: value, [OH_MY_TICK]: ID }, resolve);
     });
   }

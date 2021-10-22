@@ -90,6 +90,9 @@ export class MockComponent implements OnChanges, OnDestroy {
       .subscribe(response => {
         this.response = response;
         this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : '';
+
+        this.responseCtrl.setValue(response.responseMock, { emitEvent: false });
+        this.headersCtrl.setValue(response.headersMock, { emitEvent: false });
       }));
 
     // this.subscriptions.push(this.activeMock$.subscribe(mock => {
@@ -101,10 +104,12 @@ export class MockComponent implements OnChanges, OnDestroy {
 
 
     this.responseCtrl.valueChanges.subscribe(val => {
+      // this.responseCtrl.setValue(val, { emitEvent: false });
       this.upsertMock({ id: this.response.id, responseMock: val });
     });
 
     this.headersCtrl.valueChanges.subscribe(val => {
+      // this.headersCtrl.setValue(val, { emitEvent: false });
       this.onHeadersChange(val);
     });
   }
@@ -130,13 +135,10 @@ export class MockComponent implements OnChanges, OnDestroy {
 
   onHeadersChange(headersMock: string): void {
     try {
-      if (JSON.parse(headersMock) && headersMock !== JSON.stringify(this.response.headersMock || {})) {
         this.upsertMock({
           id: this.response.id,
           headersMock: JSON.parse(headersMock)
         });
-        this.cdr.detectChanges();
-      }
     } catch (err) {
     }
   }
@@ -175,20 +177,17 @@ export class MockComponent implements OnChanges, OnDestroy {
     };
 
     this.openCodeDialog(data, (update: string) => {
+      // this.responseCtrl.setValue(update, { emitEvent: false });
       this.upsertMock({ id: this.response.id, responseMock: update });
-      // setTimeout(() => {
-      //   this.responseRef.update();
-      // });
     });
   }
 
   onShowHeadersFullscreen(): void {
     const data = { code: this.response.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
-      this.upsertMock({ id: this.response.id, headersMock: JSON.parse(update) });
-      // setTimeout(() => {
-      //   this.headersRef.update();
-      // });
+      const headers = JSON.parse(update);
+      // this.headersCtrl.setValue(headers, { emitEvent: false });
+      this.upsertMock({ id: this.response.id, headersMock: headers });
     });
   }
 

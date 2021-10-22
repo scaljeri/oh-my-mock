@@ -1,4 +1,4 @@
-import { IOhMyContext, IOhMyMock, IState, ohMyDataId, ohMyDomain, ohMyMockId, origin } from '../type';
+import { IMock, IOhMyContext, IOhMyMock, IState, ohMyDataId, ohMyDomain, ohMyMockId, origin } from '../type';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
 import { STORAGE_KEY } from '@shared/constants';
@@ -32,18 +32,6 @@ export class StoreUtils {
 
   static getState(store: IOhMyMock, domain: ohMyDomain): IState | null {
     return store.content.states[domain];
-
-    // if (!state) {
-    // state = await this.StorageUtils.get(domain);
-    // }
-
-    // if (!state && initIfEmpty) {
-    // state = this.StateUtils.init({ domain });
-    //
-    // await this.StorageUtils.set(STORAGE_KEY, store);
-    // await this.StorageUtils.set(domain, state)
-    // }
-    // return state;
   }
 
   static setState(store: IOhMyMock, state: IState): IOhMyMock {
@@ -52,6 +40,12 @@ export class StoreUtils {
     if (store.domains.indexOf(state.domain) === -1) {
       store.domains = [state.domain, ...store.domains];
     }
+
+    return store;
+  }
+
+  static setResponse(store: IOhMyMock, response: IMock): IOhMyMock {
+    store.content.mocks = { ...store.content.mocks, [response.id]: response };
 
     return store;
   }

@@ -32,6 +32,7 @@ import { APP_VERSION } from './tokens';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
 import { MigrateUtils } from '@shared/utils/migrate';
+import { StorageUtils } from '@shared/utils/storage';
 
 @NgModule({
   declarations: [
@@ -65,7 +66,7 @@ import { MigrateUtils } from '@shared/utils/migrate';
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule { 
+export class AppModule {
   constructor( @Inject(APP_VERSION) version: string) {
     StateUtils.version = version;
     StoreUtils.version = version;

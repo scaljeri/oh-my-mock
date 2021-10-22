@@ -193,9 +193,8 @@ export class OhMyState {
     let mockId: ohMyMockId;
 
     if (payload.mock.id) {
-      mockId = mock.id;
+      mockId = payload.mock.id;
     } else if (payload.clone) {
-
       if (payload.clone === true) {
         mockId = data.selected[state.context.preset];
       } else {
@@ -203,9 +202,8 @@ export class OhMyState {
       }
     }
 
-
     if (mockId) {
-      mock = { ...(store.content.mocks[mockId] || await OhMyState.StorageUtils.get(mock.id)), ...payload.mock };
+      mock = { ...(store.content.mocks[mockId] || await OhMyState.StorageUtils.get<IMock>(mock.id)), ...payload.mock };
 
       if (payload.clone) {
         mock.id = uniqueId();
@@ -221,6 +219,10 @@ export class OhMyState {
       data.enabled[state.context.preset] = true;
     }
 
+    if (payload.mock.id) {
+      mock.modifiedOn = timestamp();
+    }
+
     data.mocks = {
       ...data.mocks,
       [mock.id]: OhMyState.MockUtils.createShallowMock(mock as IOhMyShallowMock)
@@ -234,6 +236,8 @@ export class OhMyState {
     }
 
     store = OhMyState.StoreUtils.setState(store, state);
+    store = OhMyState.StoreUtils.setResponse(store, mock);
+
     ctx.setState(store);
   }
 
