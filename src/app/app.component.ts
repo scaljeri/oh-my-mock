@@ -11,7 +11,7 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 import { Aux } from './store/actions';
 import { IState } from '../shared/type';
-import { Select, Store } from '@ngxs/store';
+import { Select } from '@ngxs/store';
 import { OhMyState } from './store/state';
 import { filter, Observable } from 'rxjs';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
@@ -41,28 +41,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   isInitializing = true;
 
   @Dispatch() activate = (value: boolean) => new Aux({ appActive: value }, this.context);
-  @Select(OhMyState.mainState) state$: Observable<IState>;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
-  // animals$: Observable<any>;
   constructor(
     public context: ContextService,
     private stateStream: StateStreamService,
     private router: Router,
-    public dialog: MatDialog) {
-    // this.version = this.appStateService.version;
-
-    // this.store.select(state => state).
-    //   return state;
-    // });
-    // this.animals$.subscribe(x => {
-
-    //   debugger;
-    // })
-    // this.appStateService.domain$.subscribe(domain => this.domain = domain);
-  }
+    public dialog: MatDialog) {}
 
   async ngAfterViewInit(): Promise<void> {
     this.stateStream.state$.pipe(filter(s => !!s)).subscribe((state: IState) => {
@@ -92,6 +79,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:beforeunload')
   ngOnDestroy(): void {
     // this.contentService.destroy();
+    // TODO: Create a toggle for window-active
     console.log('TODO');
   }
 

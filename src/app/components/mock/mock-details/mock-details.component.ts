@@ -3,9 +3,9 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IData, IMock, IOhMyContext, IOhMyPresets } from '@shared/type';
+import { IData, IMock, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
-import { UpsertMock, UpsertScenarios } from 'src/app/store/actions';
+import { UpsertMock } from 'src/app/store/actions';
 
 @Component({
   selector: 'oh-my-mock-details',

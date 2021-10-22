@@ -1,17 +1,17 @@
-<mat-card *ngIf="data" class="header">
+<mat-card *ngIf="request" class="header">
   <app-mock-header
-    [data]="data"
+    [data]="request"
     [context]="context"
   ></app-mock-header>
 </mat-card>
 
-<mat-card *ngIf="mock; else nodata" class="details">
+<mat-card *ngIf="response; else nodata" class="details">
   <section class="mock-settings">
-    <oh-my-mock-details
-      [mock]="mock"
+    <!-- <oh-my-mock-details
+      [mock]="response"
       [context]="context"
       [data]="data"
-    ></oh-my-mock-details>
+    ></oh-my-mock-details> -->
 
     <div class="mock-actions">
       <button mat-stroked-button class="delete-mock" (click)="onDelete()">

@@ -26,7 +26,6 @@ import {
   IData,
   IState,
   IOhMyMock,
-  IOhMyViewItemsOrder,
   ohMyMockId,
   ohMyDataId,
   ohMyDomain,
@@ -43,16 +42,12 @@ import { STORAGE_KEY } from '@shared/constants';
 
 import * as view from '@shared/utils/view';
 import { StoreUtils } from '@shared/utils/store';
-import { AppStateService } from '../services/app-state.service';
 import { DataUtils } from '@shared/utils/data';
 import { StorageUtils } from '@shared/utils/storage';
 import { StateUtils } from '@shared/utils/state';
-import { MigrationUtils } from '../utils/migration';
-import { APP_VERSION } from '../tokens';
 import { MockUtils } from '@shared/utils/mock';
-import { OhMyScenarios, PresetUtils } from '@shared/utils/preset';
+import { PresetUtils } from '@shared/utils/preset';
 import { timestamp } from '@shared/utils/timestamp';
-import { arrayRemoveItem } from '@shared/utils/array';
 import { uniqueId } from '@shared/utils/unique-id';
 
 @State<IOhMyMock>({
@@ -249,31 +244,10 @@ export class OhMyState {
     const data = { ...(OhMyState.StateUtils.findData(state, payload) || OhMyState.DataUtils.init(payload)), ...payload };
     state = OhMyState.StateUtils.setData(state, data);
     const store = OhMyState.StoreUtils.setState(OhMyState.ohMyStore(ctx), state);
-    // state.views = { ...state.views };
-
-    // Object.entries(state.views).forEach(([name, list]) => {
-    //   if (!list.includes(data.id)) {
-    //     state.views[name] = [data.id, ...state.views[name]];
-    //   }
-    // });
 
     await OhMyState.StorageUtils.set(state.domain, state);
     ctx.setState(store);
   }
-
-  // Scenarios are per IState and can be used in every IMock (referenced by scanarioId)
-  // TODO: Need Storage action here too
-  // @Action(UpsertScenarios)
-  // async upsertScenarios(ctx: StateContext<IOhMyMock>, { payload, domain }: { payload: OhMyScenarios, domain?: string }) {
-  //   const [state, activeDomain] = await this.getMyState(ctx, domain);
-
-  //   state.presets = { ...payload }; // OhMyState.ScenarioUtils.add(state.scenarios, payload);
-  //   const store = OhMyState.StoreUtils.setState(OhMyState.getStore(ctx), state);
-
-  //   await OhMyState.StorageUtils.set(state.domain, state);
-
-  //   ctx.setState(store);
-  // }
 
   @Action(DeleteMock)
   @Action(DeleteMockStorage)
@@ -315,12 +289,6 @@ export class OhMyState {
     OhMyState.StorageUtils.remove(Object.keys(data.mocks));
     OhMyState.StorageUtils.set(state.domain, state);
 
-    // Object.entries(state.views).forEach(([name, list]) => {
-    //   if (list.includes(data.id)) {
-    //     const index = state.views[name].indexOf(data.id);
-    //     state.views[name] = arrayRemoveItem(state.views[name], index)[0];
-    //   }
-    // });
     await OhMyState.StorageUtils.set(state.domain, state);
 
     const states = { ...store.content.states, [state.domain]: state };
@@ -346,9 +314,10 @@ export class OhMyState {
   @Action(LoadMock)
   async loadMock(ctx: StateContext<IOhMyMock>, { payload }: { payload: { id: ohMyMockId } & Partial<IOhMyShallowMock> }) {
     const store = OhMyState.ohMyStore(ctx);
-    store.content.mocks = { ...store.content.mocks };
+    store.content = { ...store.content, mocks: { ...store.content.mocks }};
 
     if (store.content.mocks[payload.id]) {
+      // Just create a new object so the value will be emitted
       store.content.mocks[payload.id] = { ...store.content.mocks[payload.id] };
     } else {
       let mock = await OhMyState.StorageUtils.get<IMock>(payload.id);

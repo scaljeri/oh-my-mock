@@ -32,7 +32,9 @@ export class StorageUtils {
 
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY, skipMigrate = false): Promise<T> {
     return new Promise<T>((resolve) => {
+      console.log('INNNNNNN');
       chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
+      console.log('INNNNNNN aaaaa');
         if (!skipMigrate && MigrateUtils.shouldMigrate(data[key])) {
           data[key] = MigrateUtils.migrate(data[key]) as T;
           await this.set(key, data[key]); // persist migrated data
