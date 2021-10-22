@@ -6,12 +6,13 @@
 </mat-card>
 
 <mat-card *ngIf="response; else nodata" class="details">
+  <h3>Response details</h3>
   <section class="mock-settings">
-    <!-- <oh-my-mock-details
+    <oh-my-mock-details
       [mock]="response"
       [context]="context"
-      [data]="data"
-    ></oh-my-mock-details> -->
+      [requestId]="requestId"
+    ></oh-my-mock-details>
 
     <div class="mock-actions">
       <button mat-stroked-button class="delete-mock" (click)="onDelete()">

@@ -9,11 +9,12 @@
     </p>
     <div class="scenario-dropdown">
       <p>
-        <oh-my-scenario-dropdown [formControl]="scenarioCtrl"></oh-my-scenario-dropdown>
-        <oh-my-link (click)="onManageScenarios()">Manage scenarios</oh-my-link>
+        <mat-form-field>
+          <mat-label>Label</mat-label>
+          <input matInput [formControl]="labelCtrl">
+        </mat-form-field>
       </p>
-      <mat-icon color="primary" matTooltip="With scenario's you can distinguish mocks with the same status code and mocks
-        can be activated by scenario.">info</mat-icon>
+      <mat-icon color="primary" matTooltip="You can use labels to distinguish responses with the same status code">info</mat-icon>
     </div>
     <p>
       <mat-form-field class="example-full-width">

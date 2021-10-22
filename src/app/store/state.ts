@@ -205,7 +205,7 @@ export class OhMyState {
 
 
     if (mockId) {
-      mock = { ...(store.content.mocks[mock.id] || await OhMyState.StorageUtils.get(mock.id)), ...payload.mock };
+      mock = { ...(store.content.mocks[mockId] || await OhMyState.StorageUtils.get(mock.id)), ...payload.mock };
 
       if (payload.clone) {
         mock.id = uniqueId();

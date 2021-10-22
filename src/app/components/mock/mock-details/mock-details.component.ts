@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IData, IMock, IOhMyContext } from '@shared/type';
+import { IMock, IOhMyContext, ohMyDataId } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { UpsertMock } from 'src/app/store/actions';
 
@@ -14,8 +14,8 @@ import { UpsertMock } from 'src/app/store/actions';
 })
 export class MockDetailsComponent implements OnChanges {
   @Input() mock: IMock;
+  @Input() requestId: ohMyDataId;
   @Input() context: IOhMyContext;
-  @Input() data: IData;
 
   private subscriptions = new Subscription();
   requiredMsg = REQUIRED_MSG;
@@ -37,7 +37,7 @@ export class MockDetailsComponent implements OnChanges {
     delete update.contentType;
 
     return new UpsertMock({
-      id: this.data.id,
+      id: this.requestId,
       mock: { id: this.mock.id, ...update, headersMock:
         { ...this.mock.headersMock, ['content-type']: contentType } }
     }, this.context)
@@ -54,7 +54,7 @@ export class MockDetailsComponent implements OnChanges {
       statusCode: new FormControl(this.mock.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      scenario: new FormControl(this.mock.label, { updateOn: 'blur'}),
+      label: new FormControl(this.mock.label, { updateOn: 'blur'}),
       contentType: new FormControl(this.mock.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
@@ -65,10 +65,6 @@ export class MockDetailsComponent implements OnChanges {
 
       this.upsertMock(values);
     }));
-
-    // this.subscription.add(this.state$.subscribe(state => {
-//
-    // }));
   }
 
   ngOnChanges(): void {
@@ -79,7 +75,7 @@ export class MockDetailsComponent implements OnChanges {
     this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
     this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });
     this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'], { emitEvent: false });
-    this.scenarioCtrl.setValue(this.mock.label,  { emitEvent: false, onlySelf: true });
+    this.labelCtrl.setValue(this.mock.label,  { emitEvent: false, onlySelf: true });
   }
 
   onManageScenarios(): void {
@@ -96,8 +92,8 @@ export class MockDetailsComponent implements OnChanges {
     // });
   }
 
-  get scenarioCtrl(): FormControl {
-    return this.form.get('scenario') as FormControl;
+  get labelCtrl(): FormControl {
+    return this.form.get('label') as FormControl;
   }
 
   get statusCodeCtrl(): FormControl {
