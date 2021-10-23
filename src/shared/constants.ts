@@ -34,7 +34,8 @@ export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONN
 
 export enum objectTypes {
   MOCK = 'MOCK',
-  STATE = 'STATE'
+  STATE = 'STATE',
+  STORE = 'STORE'
 }
 export enum packetTypes {
   ACTIVE = 'active',

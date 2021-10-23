@@ -1,7 +1,7 @@
 import contentParser from 'content-type-parser';
 
 import { IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId } from '../type'
-import { MOCK_JS_CODE } from '../constants';
+import { MOCK_JS_CODE, objectTypes } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
 
@@ -23,6 +23,7 @@ export class MockUtils {
       ...JSON.parse(JSON.stringify(base)),
       id: uniqueId(),
       createdOn: timestamp(),
+      type: objectTypes.MOCK,
       modifiedOn: null,
       ...update
     };

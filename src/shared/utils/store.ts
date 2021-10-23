@@ -5,7 +5,7 @@ import { STORAGE_KEY } from '@shared/constants';
 import { DataUtils } from './data';
 
 export class StoreUtils {
-  static version = '-';
+  static version = '__OH_MY_VERSION__';
   static StorageUtils = StorageUtils;
   static StateUtils = StateUtils;
   static DataUtils = DataUtils;

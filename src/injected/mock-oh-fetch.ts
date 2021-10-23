@@ -1,4 +1,4 @@
-import { IData, IMock, IOhMyRequest, requestMethod } from '../shared/type';
+import { IOhMyAPIRequest, requestMethod } from '../shared/type';
 
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiResponse } from './message/dispatch-api-response';
@@ -7,14 +7,15 @@ import { ohMyMockStatus } from '../shared/constants';
 
 const ORIG_FETCH = window.fetch;
 
+declare let window: { fetch: any };
+
 const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
-  // TODO: wat komt er uit eval, een IMock?? dan moet dit anders
-  const { response, headers, status } =
+  const { response, headers, status, statusCode, delay } =
     await dispatchApiRequest({
       url,
       method: 'GET',
       ...config
-    } as IOhMyRequest, 'FETCH');
+    } as IOhMyAPIRequest, 'FETCH');
 
   if (status === ohMyMockStatus.NO_CONTENT) {
     return fecthApi(url, config);
@@ -31,12 +32,12 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
       body = new Blob([response as any], { type: headers['content-type'] });
     }
 
-    // const rsp = new Response(body, {
-    //   headers: fetchUtils.jsonToHeaders(headers),
-    //   status: mock.statusCode
-    // });
+    const rsp = new Response(body, {
+      headers: fetchUtils.jsonToHeaders(headers),
+      status: statusCode
+    });
 
-    // setTimeout(() => resolv(rsp), mock.delay ?? mock.delay);
+    setTimeout(() => resolv(rsp), delay  || 0);
   });
 }
 
@@ -61,4 +62,12 @@ function fecthApi(url, config): Promise<unknown> {
   });
 }
 
-export { OhMyFetch };
+function patchFetch(): void {
+  window.fetch = OhMyFetch;
+}
+
+function unpatchFetch(): void {
+  window.fetch = ORIG_FETCH;
+}
+
+export { OhMyFetch, unpatchFetch, patchFetch };

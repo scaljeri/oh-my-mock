@@ -22,6 +22,8 @@ export interface IOhMyMockStorage {
   domains: domain[];
   version: string;
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
+  modifiedOn?: string;
+  type: objectTypes.STORE;
 }
 
 export interface IOhMyMockContent {
@@ -52,6 +54,7 @@ export interface IState {
   aux: IOhMyAux;
   presets: Record<ohMyPresetId, string>;
   context: IOhMyContext;
+  modifiedOn?: string;
 }
 
 // url, method and type are used to map an API request with a mock
@@ -86,7 +89,6 @@ export interface IMock {
   id: ohMyMockId;
   version: string;
   type: objectTypes.MOCK;
-
   label?: string;
   statusCode: statusCode;
   response?: string;
@@ -163,9 +165,11 @@ export interface IOhMyAPIRequest {
 
 export interface IOhMyMockResponse {
   status: ohMyMockStatus;
+  message?: string;
   statusCode?: statusCode;
   headers?: Record<string, string>;
   response?: unknown;
+  delay?: number;
 }
 
 export interface IOhMyAPIResponse {

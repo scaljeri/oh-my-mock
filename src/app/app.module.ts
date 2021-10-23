@@ -5,7 +5,7 @@ import { Inject, NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
 import { NgxsModule } from '@ngxs/store';
-import { NgxsDispatchPluginModule } from '@ngxs-labs/dispatch-decorator';
+import { Dispatch, NgxsDispatchPluginModule } from '@ngxs-labs/dispatch-decorator';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,11 +28,11 @@ import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
 import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
-import { APP_VERSION } from './tokens';
-import { StateUtils } from '@shared/utils/state';
-import { StoreUtils } from '@shared/utils/store';
-import { MigrateUtils } from '@shared/utils/migrate';
-import { StorageUtils } from '@shared/utils/storage';
+import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
+import { UpdateStateStorage, UpdateStoreStorage, UpsertResponseStorage } from './store/storage-actions';
+import { IMock, IOhMyMock, IState } from '@shared/type';
+import { objectTypes } from '@shared/constants';
+import { StateStreamService } from './services/state-stream.service';
 
 @NgModule({
   declarations: [
@@ -45,7 +45,7 @@ import { StorageUtils } from '@shared/utils/storage';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(appRoutes, { useHash: true, scrollPositionRestoration: 'enabled' } ),
+    RouterModule.forRoot(appRoutes, { useHash: true, scrollPositionRestoration: 'enabled' }),
     NgxsModule.forRoot([OhMyState], { developmentMode: false }),
     ReactiveFormsModule,
     NgxsDispatchPluginModule.forRoot(),
@@ -67,12 +67,28 @@ import { StorageUtils } from '@shared/utils/storage';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor( @Inject(APP_VERSION) version: string) {
-    StateUtils.version = version;
-    StoreUtils.version = version;
-    MigrateUtils.version = version;
-  }
 
+  @Dispatch() updateStore = (store: IOhMyMock) => new UpdateStoreStorage(store);
+  @Dispatch() updateState = (state: IState) => new UpdateStateStorage(state);
+  @Dispatch() upsertResponse = (mock: IMock) => new UpsertResponseStorage(mock);
+
+  constructor(private stateStream: StateStreamService) {
+    StorageUtils.listen();
+    StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
+      debugger;
+      switch (update.newValue.type) {
+        case objectTypes.STATE:
+          this.updateState(update.newValue as IState);
+          break;
+        case objectTypes.MOCK:
+          this.upsertResponse(update.newValue as IMock);
+          break;
+        case objectTypes.STORE:
+          this.updateStore(update.newValue as IOhMyMock);
+          break;
+      }
+    });
+  }
 }
 
-chrome.storage.local.get(null, function(data) {console.log('ALL DATA: ', data);})
+chrome.storage.local.get(null, function (data) { console.log('ALL DATA: ', data); })

@@ -1,3 +1,5 @@
+import { objectTypes } from '../constants';
+import { timestamp } from 'rxjs';
 import { IData, IOhMyPresetChange, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
 import { compareUrls } from './urls';
 
@@ -6,12 +8,15 @@ export class StateUtils {
 
   static init(base: Partial<IState> = {}): IState {
     return {
-      version: this.version, views: {
-        activity: []
-      }, aux: { newAutoActivate: true }, data: {}, presets: { default: 'Default' }, context: {
+      version: this.version,
+      views: { activity: [] },
+      aux: { newAutoActivate: true }, data: {}, presets: { default: 'Default' },
+      context: {
         preset: 'default',
         domain: base.domain
-      }, ...base
+      },
+      type: objectTypes.STATE, ...base,
+      onModified: timestamp()
     } as IState;
   }
 

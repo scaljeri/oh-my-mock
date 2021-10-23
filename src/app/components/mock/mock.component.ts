@@ -34,6 +34,7 @@ export class MockComponent implements OnChanges, OnDestroy {
 
   @Dispatch() loadMock = (smock: IOhMyShallowMock) => new LoadMock(smock);
   @Dispatch() upsertMock = (mock: Partial<IMock>) => {
+    debugger;
     return new UpsertMock({
       id: this.requestId,
       makeActive: true,

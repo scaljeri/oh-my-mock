@@ -1,37 +1,40 @@
-import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
+import { ohMyMockStatus } from '../shared/constants';
 import { IData, IOhMyAPIRequest } from '../shared/type';
-import { StateUtils } from '../shared/utils/state';
 import { parse } from '../shared/utils/xhr-headers';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 
-let proto; //  = window.XMLHttpRequest.prototype;
-let protoOpen; // = proto.open;
-let protoSend; //  = proto.send;
-let protoAddEventListener;//  = proto.addEventListener;
+// TO serve OhMyMock responses for XMLHttpRequest, the following properties will be replaced:
+let protoOpen;
+let protoSend;
+let protoAddEventListener;
+let protoSetRequestHeader;
 
 function persistXmlHttpProto() {
-    proto = window.XMLHttpRequest.prototype;
+    const proto = window.XMLHttpRequest.prototype;
     protoOpen = proto.open;
     protoSend = proto.send;
     protoAddEventListener = proto.addEventListener;
+    protoSetRequestHeader = proto.setRequestHeader;
 }
 
 export function unpatchXmlHttpRequest() {
-    if (proto) {
+    if (protoOpen) {
         window.XMLHttpRequest.prototype.open = protoOpen;
         window.XMLHttpRequest.prototype.send = protoSend;
         window.XMLHttpRequest.prototype.addEventListener = protoAddEventListener;
+        window.XMLHttpRequest.prototype.setRequestHeader = protoSetRequestHeader;
     }
 }
 
 export function patchXmlHttpRequest() {
-    if (!proto) {
+    if (!protoOpen) {
         persistXmlHttpProto();
     }
 
     window.XMLHttpRequest.prototype.open = function (...args) {
         this.ohListeners = [];
+        this.ohHeaders = {};
         this.ohMethod = args[0];
         this.ohUrl = args[1];
 
@@ -46,14 +49,21 @@ export function patchXmlHttpRequest() {
         return protoAddEventListener.call(this, eventName, callback);
     }
 
+    window.XMLHttpRequest.prototype.setRequestHeader = function (key, value) {
+      this.ohHeaders[key] = value;
+      return protoSetRequestHeader.call(this, key, value);
+    }
+
     window.XMLHttpRequest.prototype.send = function (body) {
         // const { response, headers, status } =
-        // TODO: add headers!!
+        debugger;
         dispatchApiRequest({
             url: this.ohUrl,
             method: 'GET',
+            headers: this.ohHeaders,
             body
         } as IOhMyAPIRequest, 'XHR').then(data => {
+          debugger;
             if (data.status === ohMyMockStatus.NO_CONTENT) {
                 this.addEventListener('load', response => {
                     dispatchApiResponse({

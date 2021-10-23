@@ -1,5 +1,6 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { IState } from '../shared/type';
+import { OhMyFetch, patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { ohMyState$ } from './state-manager';
 import { log } from './utils';
@@ -7,11 +8,12 @@ import { log } from './utils';
 declare let window: any;
 declare let state: IState;
 
+console.log('YES, patchxxx', state);
 window[STORAGE_KEY] = { state };
 
 // hasCSPIssues();
-console.log('YES, patch', state);
 patchXmlHttpRequest();
+patchFetch();
 
 ohMyState$.subscribe((state: IState) => {
   if (!state) {
@@ -23,10 +25,10 @@ ohMyState$.subscribe((state: IState) => {
     if (state.aux.appActive) {
       log('%c*** Activated ***', 'background: green');
       patchXmlHttpRequest();
-      // window.fetch = OhMyFetch;
+      patchFetch();
     } else {
       unpatchXmlHttpRequest();
-      // window.fetch = MEM_FETCH;
+      unpatchFetch();
       log('%c*** Deactivated ***', 'background: red');
     }
   // }

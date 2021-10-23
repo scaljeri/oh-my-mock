@@ -1,4 +1,4 @@
-import { OH_MY_TICK, STORAGE_KEY } from '../constants';
+import { objectTypes, OH_MY_TICK, STORAGE_KEY } from '../constants';
 import { IMock, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { uniqueId } from './unique-id';
@@ -7,12 +7,12 @@ import { MigrateUtils } from './migrate';
 const ID = uniqueId();
 
 export interface IOhMyStorageChange {
-  newValue: unknown, oldValue?: unknown;
+  newValue: unknown & { type: objectTypes }, oldValue?: unknown & { type: objectTypes };
 }
 
 export interface IOhMyStorageUpdate {
   key: string;
-  change: IOhMyStorageChange;
+  update: IOhMyStorageChange;
 }
 
 export class StorageUtils {
@@ -24,9 +24,8 @@ export class StorageUtils {
 
   static listen(): void {
     this.chrome.storage.onChanged.addListener((changes: Record<string, IOhMyStorageChange>, namespace: string) => {
-      if (changes[OH_MY_TICK]?.newValue !== ID) {
-        Object.keys(changes).forEach(key => this.updatesSubject.next({ key, change: changes[key] }));
-      }
+      Object.keys(changes).forEach(key =>
+        this.updatesSubject.next({ key, update: changes[key] }));
     });
   }
 
@@ -55,7 +54,7 @@ export class StorageUtils {
         value.version = this.appVersion;
       }
 
-      this.chrome.storage.local.set({ [key]: value, [OH_MY_TICK]: ID }, resolve);
+      this.chrome.storage.local.set({ [key]: value }, resolve);
     });
   }
 

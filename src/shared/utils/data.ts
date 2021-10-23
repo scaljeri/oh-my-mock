@@ -37,12 +37,12 @@ export class DataUtils {
       return data.mocks[search.id];
     }
 
-    const [id,] = Object.entries(data.mocks).find(([k, v]) =>
+    const output = Object.entries(data.mocks).find(([k, v]) =>
       (!search.id || k === search.id) &&
       (!search.statusCode || search.statusCode === v.statusCode) &&
       (!search.label || search.label === v.label));
 
-    return id ? data.mocks[id] : null;
+    return output ? data.mocks[output[0]] : null;
   }
 
   static addMock = (context: IOhMyContext, data: IData, mock: IMock, autoActivate = true): IData => {

@@ -1,17 +1,17 @@
 import { ohMyMockStatus } from '../constants';
-import { IMock, IOhMyAPIRequest } from '../type';
+import { IMock, IOhMyAPIRequest, IOhMyMockResponse } from '../type';
 import { compileJsCode } from './eval-jscode';
 
-export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<any> => {
+export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<IOhMyMockResponse> => {
   // TODO: Shouldn't here and shouldn't be an error just no-content for example
   if (!mock) {
     return {
       status: ohMyMockStatus.ERROR,
-      result: 'No mock available'
+      message: 'No mock available'
     };
   }
 
-  let retVal: any;
+  let retVal: IOhMyMockResponse;
   const context = {
     response: mock.responseMock,
     headers: mock.headersMock,
@@ -29,13 +29,13 @@ export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<a
       headers: request.headers
     });
 
-    retVal = null; // { status: ohMyEvalStatus.OK, result };
+    retVal = { status: ohMyMockStatus.OK, ...result };
   } catch (err) {
     // TODO: send message to popup so the error can be reviewed
     // eslint-disable-next-line no-console
     retVal = {
       status: ohMyMockStatus.ERROR,
-      result: err.message
+      message: err.message
     };
   }
 

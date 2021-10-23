@@ -20,7 +20,7 @@ import {
   UpsertMock,
   PresetCreate
 } from './actions';
-import { DeleteMockStorage, UpdateMockStorage } from './storage-actions';
+import { DeleteMockStorage, UpdateMockStorage, UpdateStateStorage } from './storage-actions';
 
 import {
   IData,
@@ -38,9 +38,8 @@ import {
 import { patch } from '@ngxs/store/operators';
 import { ContextService } from '../services/context.service';
 
-import { STORAGE_KEY } from '@shared/constants';
+import { objectTypes, STORAGE_KEY } from '@shared/constants';
 
-import * as view from '@shared/utils/view';
 import { StoreUtils } from '@shared/utils/store';
 import { DataUtils } from '@shared/utils/data';
 import { StorageUtils } from '@shared/utils/storage';
@@ -53,9 +52,10 @@ import { uniqueId } from '@shared/utils/unique-id';
 @State<IOhMyMock>({
   name: STORAGE_KEY,
   defaults: {
+    type: objectTypes.STORE,
     domains: [],
     version: '',
-    content: { mocks: {}, states: {} }
+    content: { mocks: {}, states: {} },
   }
 })
 @Injectable()
@@ -207,7 +207,7 @@ export class OhMyState {
 
       if (payload.clone) {
         mock.id = uniqueId();
-        mock.createdOn =  timestamp();
+        mock.createdOn = timestamp();
         delete mock.modifiedOn;
       }
     } else {
@@ -318,7 +318,7 @@ export class OhMyState {
   @Action(LoadMock)
   async loadMock(ctx: StateContext<IOhMyMock>, { payload }: { payload: { id: ohMyMockId } & Partial<IOhMyShallowMock> }) {
     const store = OhMyState.ohMyStore(ctx);
-    store.content = { ...store.content, mocks: { ...store.content.mocks }};
+    store.content = { ...store.content, mocks: { ...store.content.mocks } };
 
     if (store.content.mocks[payload.id]) {
       // Just create a new object so the value will be emitted
@@ -337,13 +337,16 @@ export class OhMyState {
     ctx.setState(store)
   }
 
-  // `state` should always be present!
+  @Action(UpdateStateStorage)
   @Action(UpdateState)
-  async updateState(ctx: StateContext<IOhMyMock>, { payload }: { payload: IState }) {
+  async updateState(ctx: StateContext<IOhMyMock>, action: { payload: IState }) {
     const store = OhMyState.ohMyStore(ctx);
-    const state = { ...store.content.states[payload.domain], ...payload };
+    const state = { ...store.content.states[action.payload.domain], ...action.payload };
 
-    await OhMyState.StorageUtils.set(state.domain, state);
+    debugger;
+    if (action instanceof UpdateState) {
+      await OhMyState.StorageUtils.set(state.domain, state);
+    }
 
     store.content = { ...store.content, states: { ...store.content.states, [state.domain]: state } };
     ctx.setState(store)
