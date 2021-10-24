@@ -69,7 +69,6 @@ function sendKnockKnock() {
 // }
 
 function handlePacketFromInjected(packet: IPacket) {
-  debugger;
   // chrome.runtime.sendMessage({
   //   ...packet,
   //   domain: OhMyContentState.host,
@@ -79,7 +78,6 @@ function handlePacketFromInjected(packet: IPacket) {
 }
 
 function handlePacketFromBg(packet: IPacket): void {
-  debugger;
   //   sendMsgToInjected({
   //     context: { id: packet.payload.context.id },
   //     type: packetTypes.EVAL_RESULT,
@@ -118,8 +116,7 @@ async function handlePopupClosed(packet: IPacket<{ active: boolean }>): Promise<
 // }
 
 async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
-  debugger;
-  const output = await handleApiRequest(payload.data, payload.context.requestType, contentState);
+  const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType}, contentState);
 
   sendMsgToInjected({ type: packetTypes.MOCK_RESPONSE, data: output, context: payload.context },);
 }
@@ -135,7 +132,6 @@ streamByType$<any>(packetTypes.DISPATCH_API_REQUEST, appSources.INJECTED).subscr
 streamByType$<IOhMyAPIResponse>(packetTypes.DISPATCH_API_RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
   const result = handleApiResponse(payload.data, contentState);
-  debugger;
   // TODO: send result back to injected
 }
 
@@ -163,3 +159,6 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>)
   (document.head || document.documentElement).appendChild(script);
   script.remove();
 })();
+
+
+chrome.storage.local.get(null, function (data) { console.log('ALL DATA: ', data); })

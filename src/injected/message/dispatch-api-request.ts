@@ -53,7 +53,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
     const payload = {
       context: { id, url: window.location.origin, requestType },
       type: packetTypes.DISPATCH_API_REQUEST,
-      data: { request }
+      data: { ...request }
     }
 
     streamById$(id, appSources.CONTENT)

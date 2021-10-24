@@ -13,7 +13,7 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
   const { response, headers, status, statusCode, delay } =
     await dispatchApiRequest({
       url,
-      method: 'GET',
+      method: config.method || 'GET',
       ...config
     } as IOhMyAPIRequest, 'FETCH');
 

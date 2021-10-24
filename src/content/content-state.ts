@@ -20,7 +20,6 @@ export class OhMyContentState {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
       console.log('received update for ' + key, update);
-      debugger;
       this.cache[key] = update.newValue;
       this.subjects[key]?.next(update.newValue);
     });

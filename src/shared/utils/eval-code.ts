@@ -22,7 +22,7 @@ export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<I
   try {
     const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyAPIRequest) => Partial<IMock>;
     const result = await code(context, {
-      type: request.type,
+      requestType: request.requestType,
       url: request.url,
       method: request.method,
       body: request.body,

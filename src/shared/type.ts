@@ -158,7 +158,7 @@ export interface IOhMyViewItemsOrder {
 export interface IOhMyAPIRequest {
   url: string;
   method: requestMethod;
-  type: requestType;
+  requestType: requestType;
   body: unknown;
   headers: Record<string, string>;
 }

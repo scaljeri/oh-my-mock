@@ -15,7 +15,6 @@ streamByType$(packetTypes.ACTIVE, appSources.CONTENT).subscribe((packet: IPacket
   // state = packet.payload.data as IState;
   // update.next(state);
   // INJECTED SCRIPT: state-manger.ts
-  debugger;
 });
 
 export const ohMyState$ = update.asObservable();

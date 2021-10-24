@@ -42,7 +42,6 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   state: IState;
 
   @Dispatch() upsertMock = (mock: Partial<IMock>, clone: ohMyMockId | undefined) => {
-    debugger;
     return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.state.context);
   }
   @Dispatch() upsertData = (data: Partial<IData>) => {

@@ -1,11 +1,11 @@
-import { IMock, IOhMyMockResponse, IOhMyAPIRequest, IOhMyShallowMock, requestType } from "../shared/type";
+import { IMock, IOhMyMockResponse, IOhMyAPIRequest, IOhMyShallowMock } from "../shared/type";
 import { DataUtils } from "../shared/utils/data";
 import { StateUtils } from '../shared/utils/state';
 import { OhMyContentState } from "./content-state";
 import { evalCode } from '../shared/utils/eval-code';
 import { ohMyMockStatus } from "../shared/constants";
 
-export async function handleApiRequest(request: IOhMyAPIRequest, requestType: requestType, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
+export async function handleApiRequest(request: IOhMyAPIRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
     /*
         1) pass to server
         2) check state
@@ -18,7 +18,7 @@ export async function handleApiRequest(request: IOhMyAPIRequest, requestType: re
 
     // 2)
     const state = await contentState.getState();
-    const data = StateUtils.findData(state, { ...request, requestType });
+    const data = StateUtils.findData(state, request);
 
     if (data && DataUtils.hasActiveMock(data, state.context)) {
         // yes
@@ -29,7 +29,6 @@ export async function handleApiRequest(request: IOhMyAPIRequest, requestType: re
 
         const response = await evalCode(mock, request);
         console.log(response);
-        debugger;
         return response;
     } else {
         return {

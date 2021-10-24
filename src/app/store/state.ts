@@ -343,7 +343,6 @@ export class OhMyState {
     const store = OhMyState.ohMyStore(ctx);
     const state = { ...store.content.states[action.payload.domain], ...action.payload };
 
-    debugger;
     if (action instanceof UpdateState) {
       await OhMyState.StorageUtils.set(state.domain, state);
     }

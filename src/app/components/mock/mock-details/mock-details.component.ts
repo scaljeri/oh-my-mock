@@ -33,7 +33,6 @@ export class MockDetailsComponent implements OnChanges {
   filteredMimeTypes$: Observable<string[]>;
 
   @Dispatch() upsertMock = (update: Partial<IMock & { contentType?: string }> ) => {
-    debugger;
     const contentType = update.contentType;
     delete update.contentType;
 
