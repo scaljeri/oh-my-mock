@@ -48,6 +48,7 @@ declare let window: any;
 // }
 
 export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyMockResponse> => {
+
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
     const payload = {
@@ -68,7 +69,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
           // log(`Mocked ${data.type}(${data.method}) ${data.url} -> %cERROR`, 'color: red');
           reject(null);
         } else {
-          // logMocked(resp.response);
+          logMocked(requestType, request.method, request.url, resp);
           resolve(resp);
         }
       });

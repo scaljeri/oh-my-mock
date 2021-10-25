@@ -1,5 +1,5 @@
 import { STORAGE_KEY } from '../shared/constants';
-import { IData } from '../shared/type';
+import { IData, IOhMyMockResponse } from '../shared/type';
 import { logging } from '../shared/utils/log';
 
 export type ohLogFn = (msg: string, ...data: unknown[]) => void;
@@ -11,13 +11,11 @@ export const error = (msg) => {
 	log(`%c${msg}`, 'background: red');
 }
 
-export const logMocked = (data: IData): void => {
-  console.log('todo, log request', data);
-  // if (data?.headers['content-type']?.includes('application/json')) {
-  //   result = {
-  //     ...result,
-  //     response: result.response ? JSON.parse(result.response) : ''
-  //   }
-  // }
-  // log(`Mocked ${data.type}(${data.method}) ${data.url}`, result);
+export const logMocked = (type, method, url, data: IOhMyMockResponse): void => {
+  let response = data.response;
+
+  if (data?.headers['content-type']?.includes('application/json')) {
+    response = data.response ? JSON.parse(data.response as string) : '';
+  }
+  log(`Mocked ${type}(${method}) ${url}`, response);
 }
