@@ -54,9 +54,14 @@ export class DataUtils {
           statusCode: mock.statusCode,
           label: mock.label
         }
-      }, selected: { ...data.selected, [context.preset]: mock.id },
+      }, selected: { ...data.selected },
       enabled: { ...data.enabled, [context.preset]: autoActivate }
     };
+
+    if (autoActivate || Object.keys(data.mocks).length === 1) {
+      data.enabled[context.preset] = true;
+      data.selected[context.preset] = mock.id;
+    }
 
     return data;
   }

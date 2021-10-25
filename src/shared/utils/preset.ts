@@ -21,7 +21,7 @@ export class PresetUtils {
       .find(([, v]) => v.toLowerCase() === value.toLowerCase())?.[0];
   }
 
-  static create(presets: IOhMyPresets, cloneFrom: string): IOhMyPresetChange {
+  static create(presets: IOhMyPresets, cloneFrom: string, activate = true): IOhMyPresetChange {
     let newValue = '';
     let count = 0;
 
@@ -43,6 +43,6 @@ export class PresetUtils {
     }
     newValue += `${count === 0 ? '' : ` ${count}`}`;
 
-    return { id: uniqueId(), value: newValue };
+    return { id: uniqueId(), value: newValue, activate };
   }
 }

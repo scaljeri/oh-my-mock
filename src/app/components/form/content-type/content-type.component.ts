@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import * as contentType from '@shared/utils/content-type';
 
 const MIME_TYPES = [
   'text/css',
@@ -35,11 +36,13 @@ export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor
   ctrl = new FormControl(null, { updateOn: 'blur' });
   options = MIME_TYPES;
 
+  private originalContentType: string;
+
   ngAfterViewInit(): void {
     this.ctrl.valueChanges.pipe(
     ).subscribe(value => {
-      this.onChange(value);
-      this.onTouch(value);
+      this.onChange(contentType.update(this.originalContentType, value));
+      this.onTouch(contentType.update(this.originalContentType, value));
     });
   }
 
@@ -47,7 +50,8 @@ export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor
   onTouch: any = () => { }
 
   writeValue(value: any) {
-    this.ctrl.setValue(value, { emitEvent: false });
+    this.originalContentType = value;
+    this.ctrl.setValue(contentType.strip(value), { emitEvent: false });
   }
 
   registerOnChange(fn: any) {

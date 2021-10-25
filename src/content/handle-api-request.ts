@@ -28,7 +28,6 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
         const mock = await contentState.get<IMock>(mockShallow.id);
 
         const response = await evalCode(mock, request);
-        console.log(response);
         return response;
     } else {
         return {

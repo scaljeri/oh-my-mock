@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, forwardRef, Input, OnChanges, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IOhMyContext, IOhMyPresetChange, IOhMyPresets } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
 import { Subscription } from 'rxjs';
-import { ContextService } from 'src/app/services/context.service';
 import { StateStreamService } from 'src/app/services/state-stream.service';
 import { PresetCreate } from 'src/app/store/actions';
+import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 
 @Component({
@@ -30,12 +30,15 @@ export class PresetComponent implements OnInit, OnChanges {
 
   presetCtrl = new FormControl();
   options: string[] = [];
-  isPresetCopy = false;
+  isPresetCopied = false;
   subscriptions = new Subscription();
   presets: IOhMyPresets;
   context: IOhMyContext;
 
-  constructor(private toast: HotToastService, private stateStream: StateStreamService) {
+  @ViewChild(AutocompleteDropdownComponent) dropdown: AutocompleteDropdownComponent;
+
+  constructor(private toast: HotToastService, private stateStream: StateStreamService,
+    private cdr: ChangeDetectorRef) {
   }
 
   ngOnInit(): void {
@@ -45,6 +48,13 @@ export class PresetComponent implements OnInit, OnChanges {
 
       this.options = Object.values(this.presets)
       this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
+
+      if (this.isPresetCopied) {
+        this.isPresetCopied = false;
+        this.dropdown.focus();
+      }
+
+      this.cdr.detectChanges();
     }));
 
     this.presetCtrl.valueChanges.subscribe(preset => {
@@ -65,10 +75,10 @@ export class PresetComponent implements OnInit, OnChanges {
   }
 
   onPresetCopy(preset: string) {
-    this.isPresetCopy = true;
+    this.isPresetCopied = true;
 
     const updates = [PresetUtils.create(this.presets, preset)];
-    this.presets[updates[0].id] = updates[0].value;
+
     this.presetCtrl.setValue(updates[0].value, { emitEvent: false });
 
     if (preset !== '' && preset !== undefined) {

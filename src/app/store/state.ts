@@ -381,29 +381,41 @@ export class OhMyState {
     state.data = { ...state.data };
     state.context = { ...state.context };
 
+    const preset = state.context.preset;
+
     if (!Array.isArray(payload)) {
       payload = [payload];
     }
 
     payload.forEach(change => {
+      const isUpdate = !!state.presets[change.id] && !change.delete;
+
       if (change.delete) {
         delete state.presets[change.id];
-        // state.context.preset = OhMyState.PresetUtils.findId(state.presets, Object.values(state.presets).sort()[0]);
         if (change.id === state.context.preset) {
           delete state.context.preset;
         }
-
-        Object.values(state.data).map(d => {
-          const data = { ...d, presets: { ...d.selected }, enabled: { ...d.enabled } };
-          delete data.presets[change.id];
-          delete data.enabled[change.id];
-        })
       } else { // new or update
         state.presets[change.id] = change.value;
 
         if (change.activate) {
           state.context.preset = change.id;
         }
+      }
+
+      if (!isUpdate) {
+        Object.values(state.data).map(d => {
+          const data = { ...d, presets: { ...d.selected }, enabled: { ...d.enabled } };
+
+          if (change.delete) {
+            delete data.enabled[change.id];
+            delete data.selected[change.id];
+          } else if (data.selected[change.id] === undefined) {
+            data.selected[change.id] = data.selected[preset];
+            data.enabled[change.id] = data.enabled[preset];
+          }
+          state.data[data.id] = data;
+        });
       }
     });
 

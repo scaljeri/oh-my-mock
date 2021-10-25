@@ -11,27 +11,30 @@ declare let state: IState;
 console.log('YES, patchxxx', state);
 window[STORAGE_KEY] = { state };
 
+handleStateUpdate(state);
 // hasCSPIssues();
-patchXmlHttpRequest();
-patchFetch();
 
 ohMyState$.subscribe((state: IState) => {
+  handleStateUpdate(state);
+});
+
+function handleStateUpdate(state: IState): void {
   if (!state) {
     return;
   }
 
   // Did activity change?
   // if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
-    if (state.aux.appActive) {
-      log('%c*** Activated ***', 'background: green');
-      patchXmlHttpRequest();
-      patchFetch();
-    } else {
-      unpatchXmlHttpRequest();
-      unpatchFetch();
-      log('%c*** Deactivated ***', 'background: red');
-    }
+  if (state.aux.appActive) {
+    log('%c*** Activated ***', 'background: green');
+    patchXmlHttpRequest();
+    patchFetch();
+  } else {
+    unpatchXmlHttpRequest();
+    unpatchFetch();
+    log('%c*** Deactivated ***', 'background: red');
+  }
   // }
 
   // ohMyState = state;
-});
+}

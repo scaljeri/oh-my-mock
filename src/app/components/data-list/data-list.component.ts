@@ -7,13 +7,10 @@ import { style, animate } from "@angular/animations";
 import { DeleteData, LoadState, Aux, UpdateState, UpsertData, PresetCreate } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { domain, IData, IOhMyAux, IOhMyContext, IOhMyPresetChange, IState, IStore, ohMyDataId } from '@shared/type';
-import { AppStateService } from 'src/app/services/app-state.service';
-import { Observable, Subscription } from 'rxjs';
+import { IData, IOhMyAux, IOhMyContext, IOhMyPresetChange, IState, IStore, ohMyDataId } from '@shared/type';
+import { Subscription } from 'rxjs';
 import { uniqueId } from '@shared/utils/unique-id';
 import { FormControl } from '@angular/forms';
-import { STORAGE_KEY } from '@shared/constants';
-import { OhMyState } from 'src/app/store/state';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from 'src/app/constants';
 
@@ -123,6 +120,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     if (this.state) {
       this.filteredDataList = this.filterListByKeywords();
       this.context = this.state.context;
+      this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
     }
   }
 
