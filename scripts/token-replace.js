@@ -27,13 +27,16 @@ function replaceTokenWithFileContent(tokenKey, sourceFile, inputFile) {
   const source = fs.readFileSync(sourceFile, {encoding:'utf8', flag:'r'});
   const input = fs.readFileSync(inputFile, {encoding:'utf8', flag:'r'});
   const parts = source.split(token);
-  const update = parts[0] + input + parts[1]; // source.replace(token, input);
 
-  fs.writeFileSync(sourceFile, update, {
-    encoding: "utf8",
-    flag: "w+",
-    mode: 0o666
-  });
+  if (parts.length === 2) {
+    const update = parts[0] + input + parts[1]; // source.replace(token, input);
+
+    fs.writeFileSync(sourceFile, update, {
+      encoding: "utf8",
+      flag: "w+",
+      mode: 0o666
+    });
+  }
 }
 
 function determineVersion() {

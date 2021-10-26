@@ -32,32 +32,32 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   }
 }
 
-async function handleEval(packet: IPacket<any>): Promise<void> {
-  window.ohMyHost = packet.payload.context.url;
-  const input = packet.payload.data as any;
-  const data = await evalCode(input.data, input.request);
+// async function handleEval(packet: IPacket<any>): Promise<void> {
+//   window.ohMyHost = packet.payload.context.url;
+//   const input = packet.payload.data as any;
+//   const data = await evalCode(input.data, input.request);
 
-  sendMessage2Content(packet.tabId as number, packet.payload.context, data, packetTypes.EVAL_RESULT);
-}
+//   sendMessage2Content(packet.tabId as number, packet.payload.context, data, packetTypes.EVAL_RESULT);
+// }
 
-async function handleDispatch(packet: IPacket<any>): Promise<void> {
-  const payload = packet.payload;
-  const data = (payload.data as any).data;
-  const mock = await dispatchRemote(payload);
+// async function handleDispatch(packet: IPacket<any>): Promise<void> {
+//   const payload = packet.payload;
+//   const data = (payload.data as any).data;
+//   const mock = await dispatchRemote(payload);
 
-  if (mock) {
-    // data.mocks[data.activeMock] = mock;
-  }
+//   if (mock) {
+//     // data.mocks[data.activeMock] = mock;
+//   }
 
-  const update = await evalCode(data, payload.data.request);
+//   const update = await evalCode(data, payload.data.request);
 
-  sendMessage2Content(packet.tabId as number, packet.payload.context, update, packetTypes.DATA);
-}
+//   sendMessage2Content(packet.tabId as number, packet.payload.context, update, packetTypes.DATA);
+// }
 
 // Listeners
-streamByType$(packetTypes.ACTIVE, appSources.POPUP).subscribe(handleActivityChanges);
-streamByType$(packetTypes.EVAL, appSources.CONTENT).subscribe(handleEval);
-streamByType$(packetTypes.DATA_DISPATCH, appSources.CONTENT).subscribe(handleDispatch);
+// streamByType$(packetTypes.ACTIVE, appSources.POPUP).subscribe(handleActivityChanges);
+// streamByType$(packetTypes.EVAL, appSources.CONTENT).subscribe(handleEval);
+// streamByType$(packetTypes.DATA_DISPATCH, appSources.CONTENT).subscribe(handleDispatch);
 
 chrome.runtime.onInstalled.addListener(function (details) {
   chrome.storage.local.get([STORAGE_KEY], (state) => {
@@ -75,11 +75,25 @@ chrome.browserAction.onClicked.addListener(function (tab) {
   const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
 
   if (domain) {
+
     const popup = window.open(
       `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`,
       `oh-my-mock-${tab.id}`,
       'menubar=0,innerWidth=900,innerHeight=800'
     );
+
+    // TODO:
+    let popupIsActive = false;
+    // popup.onunload = function () {
+    //   if (popupIsActive) { // Initially the window loads (and unloads) with a blanl page
+    //     chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: tab.id });
+    //     popupIsActive = false;
+    //   } else {
+
+        chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
+    //     popupIsActive = true;
+    //   }
+    // }
   }
 
   // popup.addEventListener("beforeunload", () => {

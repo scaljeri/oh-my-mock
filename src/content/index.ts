@@ -168,6 +168,9 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>)
 function inject(state: IState) {
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 
+  if (!state) {
+    return;
+  }
   isInjectedInjected = true;
 
   const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
