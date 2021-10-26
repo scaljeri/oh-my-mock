@@ -30,7 +30,7 @@
     <span class="method">Method</span>
     <div class="url">
       <span>Url</span>
-      <div class="filter-field">
+      <div class="filter-field" [ngClass]="{'active': filterCtrl.value }">
         <mat-form-field [floatLabel]="'never'">
           <input type="search" matInput placeholder="Filter" [formControl]="filterCtrl">
           <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"

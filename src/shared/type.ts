@@ -38,6 +38,7 @@ export interface IOhMyAux {
   filterKeywords?: string;
   appActive?: boolean;
   newAutoActivate?: boolean;
+  popupActive?: boolean;
 }
 
 export interface IOhMyContext {

@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, filter, Observable } from "rxjs";
 import { STORAGE_KEY } from "../shared/constants";
 import { IOhMyMock, IState } from "../shared/type";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
@@ -42,6 +42,6 @@ export class OhMyContentState {
   getStreamFor<T = unknown>(key: string): Observable<T> {
     this.subjects[key] ??= new BehaviorSubject<T>(undefined);
 
-    return this.subjects[key].asObservable(); // shared???
+    return this.subjects[key].asObservable().pipe(filter(s => !!s)); // shared???
   }
 }

@@ -8,12 +8,17 @@ import { handleApiRequest } from './handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 
-debug('Script loaded and ready....');
+// debug('Script loaded and ready....');
 
 const contentState = new OhMyContentState();
 
+let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
-  sendMsgToInjected({ type: packetTypes.STATE, data: state },);
+  if (isInjectedInjected) {
+    sendMsgToInjected({ type: packetTypes.STATE, data: state },);
+  } else if (state?.aux.popupActive) {
+    inject(state);
+  }
 });
 
 // Handle messages from Popup / Background script
@@ -118,7 +123,7 @@ async function handlePopupClosed(packet: IPacket<{ active: boolean }>): Promise<
 // }
 
 async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
-  const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType}, contentState);
+  const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, contentState);
 
   sendMsgToInjected({ type: packetTypes.MOCK_RESPONSE, data: output, context: payload.context },);
 }
@@ -155,12 +160,20 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>)
 (async function () {
   const state = await contentState.getState() || StateUtils.init();
 
+  if (state.aux.popupActive) {
+    inject(state);
+  }
+})();
+
+function inject(state: IState) {
+  chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
+
+  isInjectedInjected = true;
+
   const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
   const script = document.createElement('script');
   script.textContent = actualCode;
   (document.head || document.documentElement).appendChild(script);
   script.remove();
-})();
+}
 
-
-chrome.storage.local.get(null, function (data) { console.log('ALL DATA: ', data); })

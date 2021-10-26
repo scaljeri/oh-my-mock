@@ -24,7 +24,7 @@ function handleStateUpdate(state: IState): void {
 
   // Did activity change?
   // if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
-  if (state.aux.appActive) {
+  if (state.aux.popupActive && state.aux.appActive) {
     log('%c*** Activated ***', 'background: green');
     patchXmlHttpRequest();
     patchFetch();

@@ -10,16 +10,13 @@ import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 import { Aux } from './store/actions';
-import { IState } from '../shared/type';
-import { Select } from '@ngxs/store';
-import { OhMyState } from './store/state';
-import { filter, Observable } from 'rxjs';
+import { IOhMyContext, IState } from '../shared/type';
+import { filter } from 'rxjs';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 import { Router } from '@angular/router';
 import { StateStreamService } from './services/state-stream.service';
-import { ContextService } from './services/context.service';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -39,36 +36,45 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   page = '';
   dialogDone = false;
   isInitializing = true;
+  context: IOhMyContext;
+  version: string;
 
   @Dispatch() activate = (value: boolean) => new Aux({ appActive: value }, this.context);
+  @Dispatch() popupActive = (value: boolean) => new Aux({ popupActive: value }, this.context);
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
   constructor(
-    public context: ContextService,
     private stateStream: StateStreamService,
     private router: Router,
-    public dialog: MatDialog) {}
+    public dialog: MatDialog) { }
 
   async ngAfterViewInit(): Promise<void> {
     this.stateStream.state$.pipe(filter(s => !!s)).subscribe((state: IState) => {
-        this.domain = this.context.domain;
+      this.context = state.context;
+      this.domain = state.context.domain;
+      this.version = state.version;
 
-        this.isInitializing = false;
-        this.enabled = state.aux.appActive;
+      if (!state.aux.popupActive) {
+        this.popupActive(true);
+      }
 
-        if (this.enabled) {
-          if (this.dialogRef) {
-            this.dialogRef.close();
-          }
+      this.isInitializing = false;
+      this.enabled = state.aux.appActive;
 
-          // TODO: update state with toggle true for active window
-          // Without this informtion the content/injected scripts cannot start early mocking!!!
-        } else if (!this.dialogRef && !this.dialogDone) {
-          this.notifyDisabled();
+      if (this.enabled) {
+        if (this.dialogRef) {
+          this.dialogRef.close();
         }
+
+        // TODO: update state with toggle true for active window
+        // Without this informtion the content/injected scripts cannot start early mocking!!!
+      } else if (!this.dialogRef && !this.dialogDone) {
+        this.notifyDisabled();
+      }
     });
+
   }
 
   onEnableChange({ checked }: MatSlideToggleChange): void {
@@ -78,9 +84,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('window:beforeunload')
   ngOnDestroy(): void {
-    // this.contentService.destroy();
-    // TODO: Create a toggle for window-active
-    console.log('TODO');
+    this.popupActive(false);
   }
 
   notifyDisabled(): void {

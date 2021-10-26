@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CanActivate } from '@angular/router';
 import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IOhMyMock, ohMyDomain } from '@shared/type';
+import { ohMyDomain } from '@shared/type';
 import { AppStateService } from './services/app-state.service';
-import { MigrationsService } from './services/migrations.service';
 import { InitState } from './store/actions';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
