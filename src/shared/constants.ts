@@ -74,5 +74,6 @@ export const MOCK_RULE_TYPES = {
 export enum ohMyMockStatus {
   OK,
   ERROR,
-  NO_CONTENT
+  NO_CONTENT,
+  INACTIVE
 }

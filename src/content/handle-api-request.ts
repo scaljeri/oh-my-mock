@@ -31,7 +31,7 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
         return response;
     } else {
         return {
-            status: ohMyMockStatus.NO_CONTENT
+            status: data ? ohMyMockStatus.INACTIVE : ohMyMockStatus.NO_CONTENT
         }
     }
 }

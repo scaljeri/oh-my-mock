@@ -5,14 +5,16 @@ import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
 import { handleApiRequest } from './handle-api-request';
-import { StorageUtils } from '../shared/utils/storage';
 import { StateUtils } from '../shared/utils/state';
-import { DataUtils } from '../shared/utils/data';
 import { handleApiResponse } from './handle-api-response';
 
 debug('Script loaded and ready....');
 
 const contentState = new OhMyContentState();
+
+contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
+  sendMsgToInjected({ type: packetTypes.STATE, data: state },);
+});
 
 // Handle messages from Popup / Background script
 chrome.runtime.onMessage.addListener(emitPacket);

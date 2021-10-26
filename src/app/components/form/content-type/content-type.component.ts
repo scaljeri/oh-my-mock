@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
-import * as contentType from '@shared/utils/content-type';
+import * as contentType from '@shared/utils/mime-type';
 
 const MIME_TYPES = [
   'text/css',

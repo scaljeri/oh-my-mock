@@ -4,7 +4,7 @@ import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IData, IOhMyAPIResponse, IOhMyMockResponse, IOhMyAPIRequest, IPacket, requestType } from '../../shared/type';
+import { IOhMyMockResponse, IOhMyAPIRequest, IPacket, requestType } from '../../shared/type';
 
 declare let window: any;
 
@@ -61,15 +61,14 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       .pipe(take(1))
       .subscribe((packet: IPacket<IOhMyMockResponse>) => {
         const resp = packet.payload.data;
+        logMocked(request, requestType, resp);
         if (resp.status === ohMyMockStatus.ERROR) {
           // TODO: can this happen????
           // printEvalError(resp.result as string, data);
           // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);
           // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
-          // log(`Mocked ${data.type}(${data.method}) ${data.url} -> %cERROR`, 'color: red');
           reject(null);
         } else {
-          logMocked(requestType, request.method, request.url, resp);
           resolve(resp);
         }
       });
