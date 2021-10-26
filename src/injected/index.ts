@@ -8,6 +8,8 @@ import { log } from './utils';
 declare let window: any;
 declare let state: IState;
 
+let isOhMyMockActive = false;
+
 window[STORAGE_KEY] = { state };
 
 handleStateUpdate(state);
@@ -25,10 +27,14 @@ function handleStateUpdate(state: IState): void {
   // Did activity change?
   // if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
   if (state.aux.popupActive && state.aux.appActive) {
-    log('%c*** Activated ***', 'background: green');
-    patchXmlHttpRequest();
-    patchFetch();
+    if (!isOhMyMockActive) {
+      isOhMyMockActive = true;
+      log('%c*** Activated ***', 'background: green');
+      patchXmlHttpRequest();
+      patchFetch();
+    }
   } else {
+    isOhMyMockActive = false;
     unpatchXmlHttpRequest();
     unpatchFetch();
     log('%c*** Deactivated ***', 'background: red');

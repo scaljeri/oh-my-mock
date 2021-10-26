@@ -14,9 +14,9 @@ export function extractMimeType(contentType: string): string {
 }
 
 export function strip(ct = ''): string {
-  return ct.match(/^[^;]+/)[0];
+  return ct.match(/^[^;]{0,}/)[0];
 }
 
 export function update(source: string, update: string): string {
-  return source.replace(/^[^;]+/, update);
+  return source.replace(/^[^;]{0,}/, update);
 }
