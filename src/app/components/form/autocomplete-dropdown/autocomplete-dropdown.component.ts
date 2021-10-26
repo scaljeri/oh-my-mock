@@ -112,6 +112,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   writeValue(value: any) {
     this.internalValue = value;
     this.ctrl.setValue(value, { emitEvent: false });
+    this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
 
     setTimeout(() => {
       this.cdr.detectChanges();

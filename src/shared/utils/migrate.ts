@@ -9,7 +9,7 @@ export class MigrateUtils {
     static version = '__OH_MY_VERSION__';
 
     static shouldMigrate(obj: { version?: string }): boolean {
-        return false; // obj && obj.version !== this.version;
+        return obj && obj.version !== this.version;
     }
 
     static migrate(data: IOhMyMock | IState | IMock): IOhMyMock | IState | IMock | unknown {
