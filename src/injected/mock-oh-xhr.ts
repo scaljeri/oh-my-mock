@@ -62,7 +62,7 @@ export function patchXmlHttpRequest() {
       headers: this.ohHeaders,
       body
     } as IOhMyAPIRequest, 'XHR').then(data => {
-      if (data.status === ohMyMockStatus.NO_CONTENT) {
+      if (data.status !== ohMyMockStatus.OK) {
         this.addEventListener('load', event => {
           // TODO: Should we do something with this event
           dispatchApiResponse({

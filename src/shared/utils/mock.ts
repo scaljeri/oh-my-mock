@@ -31,15 +31,6 @@ export class MockUtils {
     mock.responseMock ??= mock.response;
     mock.headersMock ??= mock.headers;
 
-    if (mock.headersMock) {
-      const contentType = contentParser(mock.headersMock['content-type']);
-
-      if (contentType) {
-        mock.type = contentType.type;
-        mock.subType = contentType.subtype;
-      }
-    }
-
     return mock;
   }
 

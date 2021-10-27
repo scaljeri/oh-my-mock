@@ -24,7 +24,6 @@ export class UpdatesReceiverService {
   constructor() {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
-      console.log('RECEIEVD UPDATE ' + key, update.newValue);
       switch (update.newValue.type) {
         case objectTypes.STATE:
           this.updateState(update.newValue as IState);

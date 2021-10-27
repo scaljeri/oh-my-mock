@@ -28,8 +28,8 @@ export class DataUtils {
     return data.enabled[context.preset];
   }
 
-  static hasActiveMock(data: IData, context: IOhMyContext): boolean {
-    return !!data.selected[context.preset];
+  static activeMock(data: IData, context: IOhMyContext): ohMyMockId {
+    return data.enabled[context.preset] && data.selected[context.preset];
   }
 
   static findMock(data: IData, search: IOhMyMockSearch): IOhMyShallowMock | null {

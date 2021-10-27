@@ -6,32 +6,32 @@ import { evalCode } from '../shared/utils/eval-code';
 import { ohMyMockStatus } from "../shared/constants";
 
 export async function handleApiRequest(request: IOhMyAPIRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
-    /*
-        1) pass to server
-        2) check state
-            * yes -> create response
-            * no -> return null
-    */
+  /*
+      1) pass to server
+      2) check state
+          * yes -> create response
+          * no -> return null
+  */
 
-    // 1)
-    // TODO
+  // 1)
+  // TODO
 
-    // 2)
-    const state = await contentState.getState();
-    const data = StateUtils.findData(state, request);
+  // 2)
+  const state = await contentState.getState();
+  const data = StateUtils.findData(state, request);
 
-    if (data && DataUtils.hasActiveMock(data, state.context)) {
-        // yes
+  if (!data) {
+    return { status: ohMyMockStatus.NO_CONTENT };
+  }
 
-        // TODO: do we need enabled or selected. And where is context
-        const mockShallow = DataUtils.getSelectedResponse(data, state.context) as IOhMyShallowMock;
-        const mock = await contentState.get<IMock>(mockShallow.id);
+  const activeResponseId = DataUtils.activeMock(data, state.context)
 
-        const response = await evalCode(mock, request);
-        return response;
-    } else {
-        return {
-            status: data ? ohMyMockStatus.INACTIVE : ohMyMockStatus.NO_CONTENT
-        }
-    }
+  if (activeResponseId) {
+    const mockShallow = DataUtils.getSelectedResponse(data, state.context) as IOhMyShallowMock;
+    const mock = await contentState.get<IMock>(mockShallow.id);
+
+    const response = await evalCode(mock, request);
+    return response;
+  }
+  return { status: ohMyMockStatus.INACTIVE };
 }
