@@ -4,6 +4,7 @@ import { mockSteps } from './migrations/mock';
 import { stateSteps } from './migrations/state';
 import { storeSteps } from './migrations/store';
 
+const IS_BETA_RE = /beta/;
 
 export class MigrateUtils {
     static version = '__OH_MY_VERSION__';
@@ -17,6 +18,10 @@ export class MigrateUtils {
 
         if (compareVersions(version, MigrateUtils.version) === 1) { // Can only happen with JSON imports
             return null;
+        }
+
+        if (this.isDevelopVersion(version)) { // ignore
+          return data;
         }
 
         let migrateSteps = [];
@@ -44,5 +49,9 @@ export class MigrateUtils {
 
     static isMock(data: unknown): data is IMock {
         return (data as IMock).headers !== undefined;
+    }
+
+    static isDevelopVersion(version: string): boolean {
+      return IS_BETA_RE.test(version);
     }
 }
