@@ -1,7 +1,11 @@
 import { objectTypes } from '../constants';
 import { timestamp } from 'rxjs';
-import { IData, IOhMyPresetChange, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
+import { IData, IMock, IOhMyPresetChange, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
 import { compareUrls } from './urls';
+import { DataUtils } from './data';
+import { StorageUtils } from './storage';
+import { uniqueId } from './unique-id';
+import { MockUtils } from './mock';
 
 export class StateUtils {
   static version = '__OH_MY_VERSION__';
@@ -51,7 +55,7 @@ export class StateUtils {
   static findData(state: IState, search: IOhMyUpsertData): IData | undefined {
     const result = Object.values(state.data).find(v => {
       return (
-        (!search.id || v.id === search.id) &&
+        (search.id && v.id === search.id) || !search.id &&
         (!search.method || search.method === v.method) &&
         (!search.requestType || search.requestType === v.requestType) &&
         (!search.url || search.url === v.url || compareUrls(search.url, v.url))
@@ -118,6 +122,31 @@ export class StateUtils {
         state.context.preset = update.id;
       }
     }
+
+    return state;
+  }
+
+  static async cloneRequests(state: IState, requests: Partial<IData> | Partial<IData>[]): Promise<IState> {
+    if (!Array.isArray(requests)) {
+      requests = [requests];
+    }
+
+    for (const r of requests) {
+      const data = { ...(this.findData(state, r) || DataUtils.init(r)) };
+
+      const entries = Object.values(r.mocks);
+
+      for (const e of entries) {
+        const respData = await StorageUtils.get<IMock>(e[0]);
+        respData.id = uniqueId();
+        await StorageUtils.set(respData.id, respData);
+        data.mocks[respData.id] = MockUtils.createShallowMock(respData);
+      }
+
+      state = StateUtils.setData(state, data);
+    }
+
+    await StorageUtils.set(state.domain, state);
 
     return state;
   }

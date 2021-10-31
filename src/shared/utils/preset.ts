@@ -1,5 +1,5 @@
 import { uniqueId } from './unique-id';
-import { IOhMyPresetChange, IOhMyPresets, ohMyPresetId } from '../type';
+import { IOhMyPresetChange, IOhMyPresets, IState, ohMyPresetId } from '../type';
 
 const IS_COPY_RE = /copy(\s\d+)?/;
 
@@ -21,7 +21,7 @@ export class PresetUtils {
       .find(([, v]) => v.toLowerCase() === value.toLowerCase())?.[0];
   }
 
-  static create(presets: IOhMyPresets, cloneFrom: string, activate = true): IOhMyPresetChange {
+  static create(presets: IOhMyPresets, cloneFrom: string, activate = true): IOhMyPresetChange  {
     let newValue = '';
     let count = 0;
 
@@ -44,5 +44,34 @@ export class PresetUtils {
     newValue += `${count === 0 ? '' : ` ${count}`}`;
 
     return { id: uniqueId(), value: newValue, activate };
+  }
+
+  static update(id: ohMyPresetId, value: string, presets: IOhMyPresets): IOhMyPresets {
+    return { ...presets, [id]: value };
+  }
+
+  static delete(state: IState, id: ohMyPresetId): IState {
+    const retVal = {
+      ...state, data: { ...state.data },
+      presets: { ...state.presets }, context: { ...state.context }
+    };
+
+    Object.values(retVal.data).forEach(request => {
+      retVal.data[request.id] = {
+        ...request,
+        selected: { ...request.selected }, enabled: { ...request.enabled }
+      };
+
+      delete retVal.data[request.id].selected[id];
+      delete retVal.data[request.id].enabled[id];
+    });
+
+    if (state.context.preset === id) {
+      delete retVal.context.preset;
+    }
+
+    delete retVal.presets[id];
+
+    return retVal;
   }
 }

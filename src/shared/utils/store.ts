@@ -1,7 +1,7 @@
-import { IMock, IOhMyContext, IOhMyMock, IState, ohMyDataId, ohMyDomain, ohMyMockId, origin } from '../type';
+import { IOhMyContext, IOhMyMock, IState, ohMyDomain, origin } from '../type';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
-import { STORAGE_KEY } from '@shared/constants';
+import { objectTypes } from '@shared/constants';
 import { DataUtils } from './data';
 
 export class StoreUtils {
@@ -12,13 +12,12 @@ export class StoreUtils {
 
   static clone(store: IOhMyMock): IOhMyMock {
     const domains = [...store.domains];
-    const content = { mocks: { ...store.content.mocks }, states: { ...store.content.states } };
 
-    return { ...store, content, domains };
+    return { ...store, domains };
   }
 
   static init(context?: IOhMyContext, origin: origin = 'local'): IOhMyMock {
-    const store = { domains: [], version: this.version, origin, content: { states: {}, mocks: {} } } as IOhMyMock;
+    const store = { type: objectTypes.STORE, domains: [], version: this.version, origin, content: { states: {}, mocks: {} } } as IOhMyMock;
 
     if (context) {
       store.domains.push(context.domain);
@@ -30,13 +29,7 @@ export class StoreUtils {
     return store;
   }
 
-  static getState(store: IOhMyMock, domain: ohMyDomain): IState | null {
-    return store.content.states[domain];
-  }
-
   static setState(store: IOhMyMock, state: IState): IOhMyMock {
-    store.content.states = { ...store.content.states, [state.domain]: state };
-
     if (store.domains.indexOf(state.domain) === -1) {
       store.domains = [state.domain, ...store.domains];
     }
@@ -44,62 +37,12 @@ export class StoreUtils {
     return store;
   }
 
-  static setResponse(store: IOhMyMock, response: IMock): IOhMyMock {
-    store.content.mocks = { ...store.content.mocks, [response.id]: response };
-
-    return store;
-  }
-
-  // static async getState(store: IOhMyMock, domain: ohMyDomain): Promise<IState | null> {
-  //   return store.content.domains[domain] || await this.getDomain(store, domain);
-  // }
-
-  static isStateLoaded(store: IOhMyMock, domain: ohMyDomain): boolean {
-    return !!store.content.states[domain];
-  }
 
   static removeState(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
-    const state = this.getState(store, domain);
     const domains = [...store.domains];
-
-    if (state) {
-      Object.keys(state.data)
-        .forEach(async (dataId) => store = await this.removeData(store, domain, dataId));
-
-      delete store.content.states[domain];
-      // await this.StorageUtils.reset(domain);
-    }
-
     domains.splice(domains.indexOf(domain), 1);
+
     return { ...store, domains };
-  }
-
-  static removeData(store: IOhMyMock, state: IState | ohMyDomain, dataId: ohMyDataId): IOhMyMock {
-    const domain = typeof state === 'string' ? state : state.domain;
-    state = { ...store.content.states[domain] };
-    const data = this.StateUtils.removeData(state, dataId);
-
-    store.content = {
-      ...store.content,
-      states: { ...store.content.states, [domain]: state }
-    };
-
-    store = this.removeMocks(store, Object.keys(data.mocks));
-
-    return store;
-  }
-
-  static removeMocks(store: IOhMyMock, mocks: ohMyMockId[] | ohMyMockId): IOhMyMock {
-    const clone = { ...store, content: { ...store.content, mocks: { ...store.content.mocks } } };
-
-    // TODO: remove mock from data....
-
-    (Array.isArray(mocks) ? mocks : [mocks]).forEach(async (acc, mockId) => {
-      delete clone.content.mocks[mockId];
-      // await this.StorageUtils.remove(mockId);
-    });
-
-    return clone;
   }
 
   static removeDomain(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
@@ -109,37 +52,5 @@ export class StoreUtils {
     }
 
     return store;
-  }
-
-  static removeMock(store: IOhMyMock, domain: ohMyDomain, mockId: ohMyMockId, dataId: ohMyDataId): IOhMyMock {
-    const content = { states: { ...store.content.states }, mocks: { ...store.content.mocks } };
-    delete content.mocks[mockId];
-
-    const state = { ...content.states[domain], data: { ...content.states[domain].data } };
-    state.data[dataId] = StoreUtils.DataUtils.removeMock(state.context, state.data[dataId], mockId)
-    content.states[domain] = state;
-
-    return { ...store, content };
-  }
-
-  static async reset(store?: IOhMyMock, domain?: string): Promise<IOhMyMock> {
-    if (domain) {
-      if (!store.domains.indexOf(domain)) {
-        store.domains.push(domain);
-      }
-
-      store.content = { ...store.content, states: { ...store.content.states, [domain]: this.StateUtils.init({ domain }) } };
-    } else {
-      store = this.init();
-    }
-
-    return store;
-  }
-
-  static async persistStore(store: IOhMyMock): Promise<void> {
-    const clone = { ...store };
-    delete clone.content;
-
-    await this.StorageUtils.set(STORAGE_KEY, clone);
   }
 }

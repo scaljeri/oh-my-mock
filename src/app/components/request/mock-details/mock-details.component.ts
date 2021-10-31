@@ -1,11 +1,9 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IMock, IOhMyContext, ohMyDataId } from '@shared/type';
+import { IMock, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
-import { UpsertMock } from 'src/app/store/actions';
 
 @Component({
   selector: 'oh-my-mock-details',
@@ -14,7 +12,7 @@ import { UpsertMock } from 'src/app/store/actions';
 })
 export class MockDetailsComponent implements OnChanges {
   @Input() mock: IMock;
-  @Input() requestId: ohMyDataId;
+  @Input() response: IMock;
   @Input() context: IOhMyContext;
 
   private subscriptions = new Subscription();
@@ -32,16 +30,16 @@ export class MockDetailsComponent implements OnChanges {
   ];
   filteredMimeTypes$: Observable<string[]>;
 
-  @Dispatch() upsertMock = (update: Partial<IMock & { contentType?: string }> ) => {
-    const contentType = update.contentType;
-    delete update.contentType;
+  // @Dispatch() upsertMock = (update: Partial<IMock & { contentType?: string }> ) => {
+  //   const contentType = update.contentType;
+  //   delete update.contentType;
 
-    return new UpsertMock({
-      id: this.requestId,
-      mock: { id: this.mock.id, ...update, headersMock:
-        { ...this.mock.headersMock, ['content-type']: contentType } }
-    }, this.context)
-  };
+  //   return new UpsertMock({
+  //     id: this.requestId,
+  //     mock: { id: this.mock.id, ...update, headersMock:
+  //       { ...this.mock.headersMock, ['content-type']: contentType } }
+  //   }, this.context)
+  // };
 
   // @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => new UpsertScenarios(scenarios, this.domain);
   // @Select(OhMyState.mainState) state$: Observable<IState>;
@@ -63,7 +61,7 @@ export class MockDetailsComponent implements OnChanges {
         delete values.statusCode;
       }
 
-      this.upsertMock(values);
+      // this.upsertMock(values);
     }));
   }
 

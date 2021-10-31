@@ -1,9 +1,6 @@
 import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Store } from '@ngxs/store';
 import { IData, IOhMyContext, IState, ohMyPresetId } from '@shared/type';
-import { UpsertData, UpsertScenarios } from 'src/app/store/actions';
 import { MigrationsService } from 'src/app/services/migrations.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import compareVersions from 'compare-versions';
@@ -18,10 +15,11 @@ import { StoreUtils } from '@shared/utils/store';
 })
 export class JsonImportComponent {
 
-  @Dispatch() upsertData =
-    (data: IData, domain: string) => new UpsertData(data, this.context);
-  @Dispatch() upsertScenarios =
-    (scenarios: Record<ohMyPresetId, string>, domain: string) => new UpsertScenarios(scenarios, { domain })
+  // @Dispatch() upsertData =
+  //   (data: IData, domain: string) => new UpsertData(data, this.context);
+  // @Dispatch() upsertScenarios =
+  //   (scenarios: Record<ohMyPresetId, string>, domain: string) => new UpsertScenarios(scenarios, { domain })
+
   isUploading = false;
   ctrl = new FormControl(true);
   context: IOhMyContext;
@@ -29,7 +27,7 @@ export class JsonImportComponent {
   constructor(
     @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,
     private appState: AppStateService,
-    private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
+    private mirgationService: MigrationsService, private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
     Array.from(fileList).forEach(file => {
@@ -52,7 +50,7 @@ export class JsonImportComponent {
                 this.toast.warning(`Data was migrated from version ${version} to ${migratedState.version} before import!`);
               }
               // Success
-              this.upsertScenarios(migratedState.domains[domain].scenarios, this.ctrl.value ? null : domain);
+              // this.upsertScenarios(migratedState.domains[domain].scenarios, this.ctrl.value ? null : domain);
               // TODO
               // migratedState.domains[domain]?.data.forEach(d => {
               //   this.upsertData({ ...d, id: uniqueId() }, this.ctrl.value ? null : domain);

@@ -18,20 +18,12 @@ export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
 }
 
-export interface IOhMyMockStorage {
+export interface IOhMyMock {
   domains: domain[];
   version: string;
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
   modifiedOn?: string;
   type: objectTypes.STORE;
-}
-
-export interface IOhMyMockContent {
-  mocks: Record<ohMyMockId, IMock>,
-  states: Record<ohMyDomain, IState>
-}
-export interface IOhMyMock extends IOhMyMockStorage {
-  content: IOhMyMockContent;
 }
 
 export interface IOhMyAux {

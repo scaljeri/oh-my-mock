@@ -36,7 +36,11 @@ export class UpdateState {
 
 export class UpsertData {
   static readonly type = '[Data] upsert';
-  constructor(public payload: Partial<IData>, public context: IOhMyContext) { }
+  constructor(public payload: Partial<IData> | Partial<IData>[], public context: IOhMyContext) {
+    if (!Array.isArray(payload)) {
+      this.payload = [payload];
+    }
+  }
 }
 
 export class UpsertMock {

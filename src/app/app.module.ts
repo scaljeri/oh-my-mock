@@ -4,8 +4,6 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
-import { NgxsModule } from '@ngxs/store';
-import { NgxsDispatchPluginModule } from '@ngxs-labs/dispatch-decorator';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,8 +16,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { ComponentsModule } from './components/components.module';
-import { OhMyState } from './store/state';
-import { UpdatesReceiverService } from './services/updates-receiver.service';
 import { appRoutes } from './app.routes';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HotToastModule } from '@ngneat/hot-toast';
@@ -41,9 +37,7 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
     BrowserModule,
     BrowserAnimationsModule,
     RouterModule.forRoot(appRoutes, { useHash: true, scrollPositionRestoration: 'enabled' }),
-    NgxsModule.forRoot([OhMyState], { developmentMode: false }),
     ReactiveFormsModule,
-    NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
@@ -62,8 +56,6 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor(private externalUpdatesService: UpdatesReceiverService) {
-  }
 }
 
 chrome.storage.local.get(null, function (data) { console.log('ALL DATA: ', data); })

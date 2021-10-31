@@ -48,7 +48,7 @@ export class MockUtils {
     }
   }
 
-  static createShallowMock(mock: IOhMyShallowMock & Partial<IMock>): IOhMyShallowMock {
+  static createShallowMock(mock: IOhMyShallowMock & Partial<IMock> | IMock): IOhMyShallowMock {
     return {
       id: mock.id,
       statusCode: mock.statusCode,

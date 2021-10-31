@@ -1,6 +1,6 @@
 import compareVersions from 'compare-versions'
 
-const VERSION = '__OH_MY_VERSION';
+const VERSION = '__OH_MY_VERSION__';
 
 export const mockSteps = [
     (data) => {

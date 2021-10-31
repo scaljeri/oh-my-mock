@@ -37,15 +37,12 @@
 </div>
 
 <section class="responses-wrapper">
-  <div *ngIf="state" class="responses" [ngClass]="{ 'is-active': data.enabled[context.preset] }">
+  <div class="responses" [ngClass]="{ 'is-active': request.enabled[context.preset] }">
     <h3>
       Responses
-      <mat-icon
-        color="primary"
-        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!"
-      >
-        info</mat-icon
-      >
+      <mat-icon color="primary"
+        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!">
+        info</mat-icon>
     </h3>
     <div class="codes-wrapper">
       <button class="inactive" mat-raised-button (click)="onDisableRequest()">
@@ -55,9 +52,9 @@
         mat-raised-button
         *ngFor="let mockId of mockIds"
         (click)="onSelectStatusCode(mockId)"
-        [ngClass]="{ 'is-active': data.selected[context.preset] === mockId }"
+        [ngClass]="{ 'is-active': request.selected[context.preset] === mockId }"
       >
-        <oh-my-mock-label [mock]="data.mocks[mockId]"></oh-my-mock-label>
+        <oh-my-mock-label [mock]="request.mocks[mockId]"></oh-my-mock-label>
       </button>
       <button mat-raised-button (click)="openAddResponseDialog()">+</button>
     </div>
@@ -73,6 +70,6 @@
         color="primary"
         [matTooltip]="presetInfo">info</mat-icon>
     </h3>
-    <oh-my-preset class="preset"></oh-my-preset>
+    <oh-my-preset *ngIf="context" class="preset" [context]="context"></oh-my-preset>
   </div>
 </section>

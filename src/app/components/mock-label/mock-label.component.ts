@@ -1,8 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { Store } from '@ngxs/store';
-import { STORAGE_KEY } from '@shared/constants';
 import { IMock, IOhMyShallowMock, IState, IStore, statusCode } from '@shared/type';
-import { OhMyState } from 'src/app/store/state';
 
 @Component({
   selector: 'oh-my-mock-label',

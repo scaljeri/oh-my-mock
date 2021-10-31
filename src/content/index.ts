@@ -165,6 +165,8 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>)
   }
 })();
 
+// https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
+
 function inject(state: IState) {
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 

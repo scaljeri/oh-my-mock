@@ -1,11 +1,9 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
 import { IData, IMock, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-response/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
-import { UpsertData, UpsertMock } from 'src/app/store/actions';
 import { FormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { METHODS } from '@shared/constants';
@@ -13,15 +11,17 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { StateStreamService } from 'src/app/services/state-stream.service';
 import { presetInfo } from '../../../constants';
 import { DataUtils } from '@shared/utils/data';
+import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyStateService } from 'src/app/services/state.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
-  selector: 'app-mock-header',
-  templateUrl: './mock-header.component.html',
-  styleUrls: ['./mock-header.component.scss']
+  selector: 'oh-request-header',
+  templateUrl: './request-header.component.html',
+  styleUrls: ['./request-header.component.scss']
 })
-export class MockHeaderComponent implements OnInit, OnChanges {
-  @Input() data: IData;
+export class RequestHeaderComponent implements OnInit, OnChanges {
+  @Input() request: IData;
   @Input() context: IOhMyContext;
 
   @Output() mockActivated = new EventEmitter();
@@ -41,20 +41,17 @@ export class MockHeaderComponent implements OnInit, OnChanges {
   subscriptions: Subscription[] = [];
   state: IState;
 
-  @Dispatch() upsertMock = (mock: Partial<IMock>, clone: ohMyMockId | undefined) => {
-    return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.state.context);
-  }
-  @Dispatch() upsertData = (data: Partial<IData>) => {
-    return new UpsertData({ ...this.data, ...data }, this.context);
-  }
+  // @Dispatch() upsertMock = (mock: Partial<IMock>, clone: ohMyMockId | undefined) => {
+  //   return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.state.context);
+  // }
+  // @Dispatch() upsertData = (data: Partial<IData>) => {
+  //   return new UpsertData({ ...this.data, ...data }, this.context);
+  // }
 
   constructor(
     public dialog: MatDialog,
-    private stateStream: StateStreamService) {
-    this.subscriptions.push(this.stateStream.state$.subscribe(state => {
-      this.state = state;
-    }));
-  }
+    private storeService: OhMyState,
+    private stateService: OhMyStateService) { }
 
   ngOnInit(): void {
     // setTimeout(() => {
@@ -65,49 +62,63 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
     this.methodCtrl.valueChanges.subscribe(val => {
       const method = (val || '').toUpperCase();
-      if (method !== this.data.method) {
-        this.upsertData({ method });
+      if (method !== this.request.method) {
+        this.storeService.upsertRequest({
+          id: this.request.id, method
+        }, this.context)
       }
     });
 
     this.typeCtrl.valueChanges.subscribe(type => {
-      if (type !== this.data.requestType) {
-        this.upsertData({ requestType: type });
+      if (type !== this.request.requestType) {
+        this.storeService.upsertRequest({
+          id: this.request.id, requestType: type
+        }, this.context)
       }
     });
 
-    this.methodCtrl.setValue(this.data.method);
-    this.typeCtrl.setValue(this.data.requestType);
-    this.urlCtrl.setValue(this.data.url);
+    this.urlCtrl.valueChanges.subscribe(url => {
+      if (url !== this.request.url) {
+        this.storeService.upsertRequest({
+          id: this.request.id, url: url
+        }, this.context)
+      }
+    });
+
+
   }
 
   ngOnChanges(): void {
-    this.mockIds = this.data
-      ? Object.keys(this.data.mocks).sort((a, b) => {
-        const ma = this.data.mocks[a];
-        const mb = this.data.mocks[b];
+    this.mockIds = this.request
+      ? Object.keys(this.request.mocks).sort((a, b) => {
+        const ma = this.request.mocks[a];
+        const mb = this.request.mocks[b];
 
         return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
       }) : [];
+
+      this.methodCtrl.setValue(this.request.method);
+      this.typeCtrl.setValue(this.request.requestType);
+      this.urlCtrl.setValue(this.request.url);
   }
 
   onUrlUpdate(url: string): void {
-    this.upsertData({ url });
+    // this.upsertData({ url });
   }
 
   onSelectStatusCode(mockId: ohMyMockId): void {
-    this.upsertData({
-      id: this.data.id,
-      enabled: { ...this.data.enabled, [this.context.preset]: true },
-      selected: { ...this.data.selected, [this.context.preset]: mockId }
-    });
+    // this.upsertData({
+    //   id: this.data.id,
+    //   enabled: { ...this.data.enabled, [this.context.preset]: true },
+    //   selected: { ...this.data.selected, [this.context.preset]: mockId }
+    // });
   }
 
   onDisableRequest(): void {
-    this.upsertData({
-      id: this.data.id,
-      enabled: { ...this.data.enabled, [this.context.preset]: false }
-    });
+    // this.upsertData({
+    //   id: this.data.id,
+    //   enabled: { ...this.data.enabled, [this.context.preset]: false }
+    // });
   }
 
   openAddResponseDialog(): void {
@@ -122,13 +133,13 @@ export class MockHeaderComponent implements OnInit, OnChanges {
         return;
       }
 
-      this.upsertMock(update.mock, update.clone && DataUtils.getSelectedResponse(this.data, this.context)?.id);
+      // this.upsertMock(update.mock, update.clone && DataUtils.getSelectedResponse(this.data, this.context)?.id);
     });
   }
 
   exportNgApiMock(): void {
     this.dialog.open(NgApiMockCreateMockDialogWrapperComponent, {
-      data: this.data
+      data: this.request
     });
   }
 
@@ -142,7 +153,7 @@ export class MockHeaderComponent implements OnInit, OnChanges {
 
   getMock(id: ohMyMockId): IOhMyShallowMock {
 
-    return this.data.mocks[id];
+    return this.request.mocks[id];
   }
 
   onMethodChange(event): void {

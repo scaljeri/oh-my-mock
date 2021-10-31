@@ -121,7 +121,6 @@ ol[data-table] {
   }
 
   li.data-row {
-    cursor: pointer;
     display: flex;
     padding: 0 $spacer-4;
     position: relative;
@@ -144,6 +143,10 @@ ol[data-table] {
         }
       }
     }
+
+    &.row-clickable {
+      cursor: pointer;
+    }
   }
 }
 
@@ -156,7 +159,7 @@ ol[data-table] {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  cursor: move;
+  cursor: pointer;
   font-size: 14px;
 }
 

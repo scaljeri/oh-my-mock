@@ -1,26 +1,17 @@
 import { Injectable } from '@angular/core';
 import { CanActivate } from '@angular/router';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { ohMyDomain } from '@shared/type';
 import { AppStateService } from './services/app-state.service';
-import { InitState } from './store/actions';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
-import { ContextService } from './services/context.service';
-import { StateStreamService } from './services/state-stream.service';
+import { OhMyStateService } from './services/state.service';
 
 @Injectable({ providedIn: 'root' })
 export class forwarderGuard implements CanActivate {
   static StateUtils = StateUtils;
   static StoreUtils = StoreUtils;
 
-  @Dispatch() initState = (domain: ohMyDomain) => {
-    return new InitState(null, { domain })
-  };
-
   constructor(
-    private context: ContextService,
-    private stateStream: StateStreamService,
+    private stateService: OhMyStateService,
     private appStateService: AppStateService) { }
 
   async canActivate(): Promise<boolean> {
@@ -34,29 +25,7 @@ export class forwarderGuard implements CanActivate {
       this.appStateService.tabId = Number(tabId);
     }
 
-    this.context.domain = this.appStateService.domain;
-    this.stateStream.domain = this.appStateService.domain;
-
-    // Load and initialize state
-    // const origStore = await this.storageService.initialize();
-
-    // let store = this.migrationService.update(origStore);
-
-    // if (!store) {
-    //   if (origStore) {
-    //     this.storageService.reset();
-    //   }
-
-    //   store = await forwarderGuard.StoreUtils.init(
-    //     forwarderGuard.StateUtils.init({ domain: this.appStateService.domain }));
-
-    // }
-
-    // if (store.version !== origStore?.version) { // Something happend
-    //   this.storageService.updateState(store);
-    // }
-
-    this.initState(this.context.domain);
+    await this.stateService.initialize(this.appStateService.domain);
 
     return true;
   }

@@ -1,7 +1,15 @@
+@import 'mixins';
+
 :host {
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  @include oh-dialog;
+}
+
+article {
+  @include oh-dialog-content(300px, 200px);
 }
 
 p {

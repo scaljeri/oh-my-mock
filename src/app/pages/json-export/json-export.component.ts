@@ -1,11 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Select, Store } from '@ngxs/store';
-import { IData, IState, IStore } from '@shared/type';
+import { IData, IState } from '@shared/type';
 import { DataListComponent } from 'src/app/components/data-list/data-list.component';
-import { OhMyState } from 'src/app/store/state';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Router } from '@angular/router';
 
@@ -23,18 +21,15 @@ export class JsonExportComponent implements OnInit {
 
   @ViewChild(DataListComponent) dataListRef: DataListComponent;
 
-  @Select(OhMyState.mainState) state$: Observable<IState>;
-
   constructor(
     private appStateService: AppStateService,
     private toast: HotToastService,
-    private store: Store,
     private router: Router) { }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.state$.subscribe((state: IState) => {
-      this.state = state;
-    }))
+    // this.subscriptions.push(this.state$.subscribe((state: IState) => {
+    //   this.state = state;
+    // }))
   }
 
   getActiveStateSnapshot(): IState {

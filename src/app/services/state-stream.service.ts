@@ -1,46 +1,67 @@
 import { Injectable } from '@angular/core';
-import { Store } from '@ngxs/store';
 
-import { IMock, IOhMyContext, IState, IStore, ohMyDomain, ohMyMockId } from '@shared/type';
-import { STORAGE_KEY } from '@shared/constants';
-import { Observable } from 'rxjs';
-import { distinctUntilChanged, filter, map, shareReplay, tap } from 'rxjs/operators';
+import { IMock, IOhMyContext, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '@shared/type';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { share } from 'rxjs/operators';
+import { StorageUtils } from '@shared/utils/storage';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StateStreamService {
   public state$: Observable<IState>;
+  private stateSubject = new BehaviorSubject<IState>(undefined);
   public state: IState;
 
   public responses$: Observable<Record<ohMyMockId, IMock>>;
   public responses: Record<ohMyMockId, IMock>;
 
-  public context$: Observable<IOhMyContext>;
   public context: IOhMyContext;
+  private contextSubject = new BehaviorSubject<IOhMyContext>(undefined);
+  public context$ = this.contextSubject.asObservable().pipe(share());
 
   public domain: ohMyDomain;
+  private domainSubject = new BehaviorSubject<ohMyDomain>(undefined);
+  public domain$ = this.domainSubject.asObservable().pipe(share());
 
-  constructor(private store: Store) {
-    this.state$ = store.select(store => {
-      this.state = store[STORAGE_KEY]?.content.states[this.domain]
-      this.context = this.state?.context;
+  public store: IOhMyMock;
+  private storeSubject = new BehaviorSubject<IOhMyMock>(undefined);
+  public store$ = this.storeSubject.asObservable().pipe(share());
 
-      return this.state;
-    }).pipe(filter(s => !!s), shareReplay(1));
+  constructor() {
+    StorageUtils.get<IOhMyMock>().then((store: IOhMyMock) => {
+      this.store = store;
+      this.storeSubject.next(store);
+    });
+    // this.state$ = storeService.select(store => {
+    //   this.store = store[STORAGE_KEY];
+    //   this.state = this.store?.content.states[this.domain]
+    //   this.context = this.state?.context;
 
-    this.context$ = this.state$.pipe(map(state => state.context), distinctUntilChanged());
+    //   return this.state;
+    // }).pipe(filter(s => !!s), shareReplay(1));
 
-    this.responses$ = store.select(store => {
-      this.responses = store[STORAGE_KEY]?.content.mocks;
+    // this.context$ = this.state$.pipe(map(state => state.context), distinctUntilChanged());
 
-      return this.responses;
-    }).pipe(filter(r => !!r), distinctUntilChanged(), shareReplay(1));
+    // this.responses$ = storeService.select(store => {
+    //   this.responses = store[STORAGE_KEY]?.content.mocks;
+
+    //   return this.responses;
+    // }).pipe(filter(r => !!r), distinctUntilChanged(), shareReplay(1));
   }
 
-  get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => {
-      return state[STORAGE_KEY].content.states[this.domain];
+  // This is called when the context of the app changes
+  changeContext(context: IOhMyContext) {
+    this.context = context;
+    this.contextSubject.next(context);
+
+    StorageUtils.get<IState>(context.domain).then(state => {
+      this.state = state;
+      this.stateSubject.next(state);
     });
   }
+
+  // getResponse$(responseId: ohMyMockId): Observable<IMock> {
+  //   return StorageUtils.get(responseId);
+  // }
 }

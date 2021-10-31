@@ -1,4 +1,4 @@
-import { objectTypes, OH_MY_TICK, STORAGE_KEY } from '../constants';
+import { objectTypes, STORAGE_KEY } from '../constants';
 import { IMock, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { uniqueId } from './unique-id';
@@ -43,8 +43,6 @@ export class StorageUtils {
   }
 
   static setStore(store: IOhMyMock): Promise<void> {
-    store.content = { mocks: {}, states: {} };
-
     return this.set(STORAGE_KEY, store)
   }
 

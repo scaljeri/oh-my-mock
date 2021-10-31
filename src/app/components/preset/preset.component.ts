@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { IOhMyContext, IOhMyPresetChange, IOhMyPresets } from '@shared/type';
+import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
 import { Subscription } from 'rxjs';
-import { StateStreamService } from 'src/app/services/state-stream.service';
-import { PresetCreate } from 'src/app/store/actions';
+import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyStateService } from 'src/app/services/state.service';
 import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 
@@ -24,76 +23,70 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
   ]
 })
 export class PresetComponent implements OnInit, OnChanges {
-  @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
-    return new PresetCreate(updates, this.context);
-  }
+  @Input() context: IOhMyContext;
 
   presetCtrl = new FormControl();
   options: string[] = [];
   isPresetCopied = false;
   subscriptions = new Subscription();
   presets: IOhMyPresets;
-  context: IOhMyContext;
+
+  private state: IState;
+  private stateSub: Subscription;
 
   @ViewChild(AutocompleteDropdownComponent) dropdown: AutocompleteDropdownComponent;
 
-  constructor(private toast: HotToastService, private stateStream: StateStreamService,
+  constructor(private toast: HotToastService,
+    private stateService: OhMyStateService,
+    private storeService: OhMyState,
     private cdr: ChangeDetectorRef) {
   }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.stateStream.state$.subscribe(state => {
-      this.context = state.context;
-      this.presets = state.presets;
-
-      this.options = Object.values(this.presets)
-      this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
-
-      if (this.isPresetCopied) {
-        this.isPresetCopied = false;
-        this.dropdown.focus();
-      }
-
-      this.cdr.detectChanges();
-    }));
-
     this.presetCtrl.valueChanges.subscribe(preset => {
       const oldPresetValue = this.presets[this.context.preset];
 
       if (preset !== oldPresetValue) {
         if (preset === '') {
-          this.presetCtrl.setValue(oldPresetValue, { emitEvent: false });
+          this.setSelectedValue(oldPresetValue);
         } else {
-          const id = PresetUtils.findId(this.presets, preset);
-          this.updatePresets({ id: id || this.context.preset, value: preset, activate: true });
+          this.storeService.upsertState(
+            { presets: PresetUtils.update(this.context.preset, preset, this.presets) }, this.context);
         }
       }
     });
   }
 
   ngOnChanges(): void {
+    this.stateSub?.unsubscribe();
+    this.stateSub = this.stateService.getState$(this.context).subscribe(state => {
+      this.state = state;
+
+      this.context = state.context;
+      this.presets = state.presets;
+      this.options = Object.values(this.presets);
+
+      this.setSelectedValue(this.presets[this.context.preset]);
+
+      if (this.isPresetCopied) {
+        this.isPresetCopied = false;
+        this.dropdown.focus();
+      }
+    });
+  }
+
+  setSelectedValue(value) {
+    this.presetCtrl.setValue(value, { emitEvent: false });
   }
 
   onPresetCopy(preset: string) {
     this.isPresetCopied = true;
 
-    const updates = [PresetUtils.create(this.presets, preset)];
+    const update = PresetUtils.create(this.presets, preset);
+    const presets = { ...this.state.presets, [update.id]: update.value };
+    this.presetCtrl.setValue(update.value, { emitEvent: false });
 
-    this.presetCtrl.setValue(updates[0].value, { emitEvent: false });
-
-    if (preset !== '' && preset !== undefined) {
-      let presetId = Object.entries(this.presets).find(([, v]) => v === preset)?.[0];
-
-      if (!presetId) { // Update existing preset value
-        presetId = this.context.preset;
-
-        updates.push({
-          id: presetId, value: preset
-        });
-      }
-    }
-
-    this.updatePresets(updates);
+    this.storeService.upsertState({ presets, context: { preset: update.id, domain: this.context.domain } }, this.context);
   }
 
   onPresetDelete(preset: string) {
@@ -103,20 +96,23 @@ export class PresetComponent implements OnInit, OnChanges {
       return this.toast.warning('Delete failed: cannot delete the last preset');
     }
 
-    const presetId = Object.entries(this.presets).find(([, v]) => v === preset)?.[0];
+    delete this.presets[this.context.preset];
+    this.options = Object.values(this.presets);
+    this.context.preset = Object.keys(this.presets)[0];
 
-    if (!presetId) {
-      this.presetCtrl.setValue(this.context.preset);
-    } else {
-      this.updatePresets({ id: presetId, delete: true })
-    }
+    this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
+    this.storeService.upsertState({ context: this.context, presets: this.presets }, this.context);
   }
 
   onBlur(): void {
     if (!this.context.preset) {
       const [id, value] = Object.entries(this.presets)[0];
       this.presetCtrl.setValue(value, { emitEvent: false });
-      this.updatePresets({ id, value, activate: true });
+      // this.updatePresets({ id, value, activate: true });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

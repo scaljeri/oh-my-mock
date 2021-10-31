@@ -26,15 +26,21 @@
           {{dataItem.url}}
         </mat-panel-description>
       </mat-expansion-panel-header>
-      <button class="clone-all" *ngIf="selectedState?.data?.length" (click)="onCloneAll()" mat-mini-fab color="warn"
+      <button class="clone-all" *ngIf="hasSelectedStateAnyRequests" (click)="onCloneAll()" mat-mini-fab color="warn"
         aria-label="Clone all">
         <mat-icon>copy_all</mat-icon>
       </button>
-      <oh-my-data-list *ngIf="selectedState" [state]="selectedState" [showClone]="true" [showDelete]="true"
-        (selectRow)="onDataSelect($event)"></oh-my-data-list>
+      <oh-my-data-list *ngIf="selectedState"
+        [state]="selectedState"
+        [showClone]="true"
+        [showDelete]="true"
+        [context]="state.context"
+        [togglableRows]="false"
+        [showDelete]="false"
+        (selectRow)="onDataSelect($event)" [hideHeader]="true"></oh-my-data-list>
     </mat-expansion-panel>
-    <mat-expansion-panel>
-      <oh-my-mock *ngIf="dataItem" [requestId]="dataItem.id" [context]="context"></oh-my-mock>
-    </mat-expansion-panel>
+    <!-- <mat-expansion-panel> -->
+      <!-- <oh-my-request *ngIf="dataItem" [requestId]="dataItem.id" [context]="context"></oh-my-request> -->
+    <!-- </mat-expansion-panel> -->
   </mat-accordion>
 </mat-card>

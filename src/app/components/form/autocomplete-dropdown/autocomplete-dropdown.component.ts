@@ -46,7 +46,8 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @ViewChild('input') inputRef: ElementRef;
   @ViewChild('trigger', { read: MatAutocompleteTrigger }) trigger: MatAutocompleteTrigger;
 
-  constructor(@Self() public ngControl: NgControl, private cdr: ChangeDetectorRef) {
+  constructor(@Self() public ngControl: NgControl,
+    private cdr: ChangeDetectorRef) {
     ngControl.valueAccessor = this;
   }
 
@@ -112,7 +113,12 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   writeValue(value: any) {
     this.internalValue = value;
     this.ctrl.setValue(value, { emitEvent: false });
-    this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+
+    if (this.showAllOnFocus) {
+      this.filteredMethodOptions = [...this.options].sort();
+    } else {
+      this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+    }
 
     setTimeout(() => {
       this.cdr.detectChanges();

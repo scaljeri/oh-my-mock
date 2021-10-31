@@ -1,18 +1,15 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { ChangeDetectionStrategy, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Store } from '@ngxs/store';
 import { style, animate } from "@angular/animations";
-import { DeleteData, LoadState, Aux, UpdateState, UpsertData, PresetCreate } from 'src/app/store/actions';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IOhMyAux, IOhMyContext, IOhMyPresetChange, IState, IStore, ohMyDataId } from '@shared/type';
+import { IData, IOhMyContext, IOhMyPresetChange, IState, ohMyDataId } from '@shared/type';
 import { Subscription } from 'rxjs';
-import { uniqueId } from '@shared/utils/unique-id';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from 'src/app/constants';
+import { OhMyState } from 'src/app/services/oh-my-store';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -39,45 +36,50 @@ export const highlightSeq = [
 })
 export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() state: IState;
+  @Input() context: IOhMyContext;
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
   @Input() showExport: boolean;
+  @Input() showPreset = true;
+  @Input() showActivateToggle = true;
+  @Input() togglableRows = true;
+  @Input() hideHeader = false;
   @Input() @HostBinding('class') theme = 'dark';
 
   @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
-  @Dispatch() updateAux = (values: IOhMyAux) => {
-    return new Aux(values, this.state.context);
-  }
-  @Dispatch() updateContext = (value: Partial<IOhMyContext>) => {
-    return new UpdateState({ context: value as IOhMyContext });
-  }
-  @Dispatch() updateState = (state: IState) => {
-    return new UpdateState(state);
-  }
-  @Dispatch() deleteData = (id: string) => {
-    return new DeleteData(id, this.state.context);
-  }
-  @Dispatch() upsertData = (data: Partial<IData>) => {
-    return new UpsertData(data, this.state.context);
-  }
+  // @Dispatch() updateAux = (values: IOhMyAux) => {
+  //   return new Aux(values, this.state.context);
+  // }
+  // @Dispatch() updateContext = (value: Partial<IOhMyContext>) => {
+  //   return new UpdateState({ context: value as IOhMyContext });
+  // }
+  // @Dispatch() updateState = (state: IState) => {
+  //   return new UpdateState(state);
+  // }
+  // @Dispatch() deleteData = (id: string) => {
+  //   return new DeleteData(id, this.state.context);
+  // }
+  // @Dispatch() upsertData = (data: Partial<IData>) => {
+  //   return new UpsertData(data, this.context);
+  // }
 
-  @Dispatch() loadState = () => {
-    return new LoadState(this.state.context.domain);
-  }
+  // @Dispatch() loadState = () => {
+  //   return new LoadState(this.state.context.domain);
+  // }
   // @Dispatch() toggleActivityList = (value: boolean) => {
   //   return new Aux({ activityList: value });
   // }
 
-  @Dispatch() toggleActivateNew = (value: boolean) => {
-    return new Aux({ newAutoActivate: value }, this.state.context);
-  }
+  // @Dispatch() toggleActivateNew = (value: boolean) => {
+  //   return new Aux({ newAutoActivate: value }, this.state.context);
+  // }
 
-  @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
-    return new PresetCreate(updates, this.state.context);
-  }
+  // @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
+  //   return new PresetCreate(updates, this.state.context);
+  // }
 
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
@@ -88,48 +90,50 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
-  scenarioCtrl = new FormControl('', { updateOn: 'blur' });
   filteredDataList: IData[];
 
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
   presets: string[];
   isPresetCopy = false;
-  context: IOhMyContext;
 
   public data: Record<ohMyDataId, IData>;
 
   constructor(
     public dialog: MatDialog,
-    private toast: HotToastService) {
-  }
+    private toast: HotToastService,
+    private storeService: OhMyState) { }
 
   ngOnInit(): void {
     let filterDebounceId;
     this.filterCtrl.valueChanges.subscribe(filter => {
-      // TODO: filter data
+      this.state.aux.filterKeywords = filter;
+      this.filteredDataList = this.filterListByKeywords();
 
-      clearTimeout(filterDebounceId);
-      filterDebounceId = window.setTimeout(() => {
-        this.updateAux({ filterKeywords: filter.toLowerCase() });
-      }, 500);
+      // Right now it is not possible to persist the filter of an other domain
+      if (this.state.context.domain === this.context.domain) {
+        clearTimeout(filterDebounceId);
+        filterDebounceId = window.setTimeout(() => {
+          this.storeService.updateAux({ filterKeywords: filter.toLowerCase() }, this.context);
+        }, 500);
+      }
     });
   }
 
   ngOnChanges(): void {
     if (this.state) {
       this.filteredDataList = this.filterListByKeywords();
-      this.context = this.state.context;
+      this.context ??= this.state.context;
       this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
     }
   }
 
   onToggleActivateNew(toggle: boolean): void {
-    this.toggleActivateNew(toggle);
+    // this.toggleActivateNew(toggle);
   }
 
   onFilterUpdate(): void {
-    this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
+    // this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
   }
 
   filterListByKeywords(): IData[] {
@@ -174,24 +178,19 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
       const isActive = data.enabled[this.state.context.preset];
-      this.upsertData({ id, enabled: { ...data.enabled, [this.state.context.preset]: !isActive } });
+      // this.upsertData({ id, enabled: { ...data.enabled, [this.state.context.preset]: !isActive } });
     }
   }
 
-  onDelete(id: ohMyDataId, event): void {
+  async onDelete(id: ohMyDataId, event) {
     event.stopPropagation();
 
     const data = this.state.data[id];
 
     // If you click delete fast enough, you can hit it twice
-    if (data) {
-      this.deleteData(id);
-
-      let msg = `Deleted mock ${data.url}`;
-      if (this.state.domain) {
-        msg += ` in domain ${this.state.domain}`;
-      }
-      this.toast.success(msg, { duration: 2000, style: {} });
+    if (data) { // Is this needed
+      this.toast.success('Deleted request', { duration: 2000, style: {} });
+      this.state = await this.storeService.deleteRequest(data, this.context);
     }
   }
 
@@ -200,16 +199,18 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
     const data = {
       ...this.state.data[id],
-      id: uniqueId()
     };
+    delete data.id; // This way the store knows its a clone (it contains mocks)
 
-    this.upsertData(data);
+    // this.upsertData(data);
     this.toast.success('Cloned ' + data.url);
   }
 
   onDataClick(data: IData, index: number): void {
-    this.selection.toggle(index);
-    this.selectRow.emit(data.id);
+    if (this.togglableRows) {
+      this.selection.toggle(index);
+      this.selectRow.emit(data.id);
+    }
   }
 
   onExport(data: IData, rowIndex, event: MouseEvent): void {

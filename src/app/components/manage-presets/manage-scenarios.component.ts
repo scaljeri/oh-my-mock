@@ -1,12 +1,8 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Inject, Input, Optional, Output, QueryList, ViewChildren } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Store } from '@ngxs/store';
-import { STORAGE_KEY } from '@shared/constants';
 import { domain, IOhMyPresets, IState, IStore, ohMyPresetId } from '@shared/type';
 import { uniqueId } from '@shared/utils/unique-id';
-import { UpsertScenarios } from 'src/app/store/actions';
-import { OhMyState } from 'src/app/store/state';
+import { OhMyState } from 'src/app/services/oh-my-store';
 
 @Component({
   selector: 'oh-my-manage-scenarios',
@@ -20,9 +16,9 @@ export class ManageScenariosComponent implements AfterViewInit {
 
   @Output() update = new EventEmitter<IOhMyPresets>();
 
-  @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => {
-    return new UpsertScenarios(scenarios, { domain: this.domain });
-  }
+  // @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => {
+  //   return new UpsertScenarios(scenarios, { domain: this.domain });
+  // }
 
   scenarioIds: ohMyPresetId[] = [];
   scenariosObj: IOhMyPresets = {};
@@ -30,14 +26,13 @@ export class ManageScenariosComponent implements AfterViewInit {
   @ViewChildren('input') inputsEl: QueryList<ElementRef>;
 
   constructor(
-    private store: Store,
     @Optional() private dialogRef: MatDialogRef<ManageScenariosComponent>,
     @Inject(MAT_DIALOG_DATA) private dialogScenarios: IOhMyPresets,
     private cdr: ChangeDetectorRef) {
     }
 
   ngAfterViewInit(): void {
-    this.domain ??= this.dialogScenarios?.domain || OhMyState.domain;
+    // this.domain ??= this.dialogScenarios?.domain || OhMyState.context?.domain;
     this.scenarios ??= this.dialogScenarios;
 
     if (this.scenarios) {
@@ -54,7 +49,7 @@ export class ManageScenariosComponent implements AfterViewInit {
   }
 
   onSave(): void {
-    this.updateScenarios(this.scenariosObj);
+    // this.updateScenarios(this.scenariosObj);
 
     if (!this.isInDialog()) {
       this.dialogRef?.close(this.scenariosObj);
@@ -87,9 +82,9 @@ export class ManageScenariosComponent implements AfterViewInit {
      typeof (this.dialogScenarios as IState).aux === 'object'); */
   }
 
-  get scenariosSnapshot(): IOhMyPresets {
-    return this.store.selectSnapshot<IOhMyPresets>((state: IStore) => {
-      return state[STORAGE_KEY].content.states[this.domain]?.presets;
-    });
-  }
+  // get scenariosSnapshot(): IOhMyPresets {
+    // return this.store.selectSnapshot<IOhMyPresets>((state: IStore) => {
+    //   return state[STORAGE_KEY].content.states[this.domain]?.presets;
+    // });
+  // }
 }

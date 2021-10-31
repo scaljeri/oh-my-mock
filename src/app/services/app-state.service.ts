@@ -20,7 +20,7 @@ export class AppStateService {
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
   // public get version(): string {
-    // return VERSION.match(/^__/) ? manifest.version : VERSION;
+  // return VERSION.match(/^__/) ? manifest.version : VERSION;
   // }
   private domainChangeSubject = new BehaviorSubject<string>(null);
   public domain$ = this.domainChangeSubject.asObservable();

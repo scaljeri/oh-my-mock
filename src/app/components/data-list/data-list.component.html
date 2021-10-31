@@ -1,4 +1,4 @@
-<div class="legenda">
+<div *ngIf="!hideHeader" class="legenda">
   <div class="labels">
     <div class="group">
       <span class="legenda-active">Active</span>
@@ -11,15 +11,19 @@
   </div>
 
   <div class="toggles">
-    <oh-my-preset class="preset"></oh-my-preset>
-    <mat-icon class="info info-contrast scenario-help" color="primary"
-    [matTooltip]="presetInfo">info</mat-icon>
+    <ng-container *ngIf="showPreset">
+      <oh-my-preset [context]="context" class="preset"></oh-my-preset>
+      <mat-icon class="info info-contrast scenario-help" color="primary"
+        [matTooltip]="presetInfo">info</mat-icon>
+    </ng-container>
 
     <div class="toggle">
-      <label for="show-active-list">Activate new</label>
-      <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="$any(state?.aux.newAutoActivate)"
-        color="primary">
-      </mat-slide-toggle>
+      <ng-container *ngIf="showActivateToggle">
+        <label for="show-active-list">Activate new</label>
+        <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="$any(state?.aux.newAutoActivate)"
+          color="primary">
+        </mat-slide-toggle>
+      </ng-container>
     </div>
   </div>
 </div>
@@ -49,6 +53,7 @@
 
   <li class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy"
     (click)="onDataClick(row, index)" [ngClass]="{
+    'row-clickable': togglableRows,
     'is-selected': selection.isSelected(index),
     'is-active': row.enabled[context.preset],
     'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn}">

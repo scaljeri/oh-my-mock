@@ -1,9 +1,6 @@
 ///<reference types="chrome"/>
 
 import { Injectable } from '@angular/core';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select, Store } from '@ngxs/store';
-import { Observable } from 'rxjs';
 import { ChangeDomain, InitState, UpsertMock, ViewChangeOrderItems } from '../store/actions';
 import { OhMyState } from '../store/state';
 import { IMock, IOhMyMock, IPacket, IState, IUpsertMock } from '@shared/type';
@@ -17,15 +14,15 @@ export class ContentService {
   static DataUtils = DataUtils;
   static StateUtils = StateUtils;
 
-  @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
-  @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
-  @Dispatch() changeDomain = (domain: string) => new ChangeDomain(domain);
-  @Select(OhMyState.mainState) state$: Observable<IState>;
+  // @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
+  // @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
+  // @Dispatch() changeDomain = (domain: string) => new ChangeDomain(domain);
+  // @Select(OhMyState.mainState) state$: Observable<IState>;
 
   private listener;
   private state: IState;
 
-  constructor(private store: Store, private appStateService: AppStateService) {
+  constructor(private appStateService: AppStateService) {
     this.listener = ({ payload, tabId, domain, source }: IPacket) => {
       if (source !== appSources.CONTENT || !domain) {
         return;
@@ -34,14 +31,14 @@ export class ContentService {
       if (tabId === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
           this.appStateService.domain = domain;
-          this.changeDomain(domain);
+          // this.changeDomain(domain);
         }
 
         if (payload.type === packetTypes.MOCK) {
-          this.upsertMock({
-            mock: payload.data as IMock,
-            ...payload.context
-          });
+          // this.upsertMock({
+          //   mock: payload.data as IMock,
+          //   ...payload.context
+          // });
         } else if (payload.type === packetTypes.HIT) {
           const state = this.getActiveStateSnapshot();
           const data = ContentService.StateUtils.findData(state, payload.context);
@@ -49,7 +46,7 @@ export class ContentService {
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           this.appStateService.hit(data);
 
-          this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
+          // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
         }
       } else {
         if (payload.type === packetTypes.KNOCKKNOCK) {
@@ -102,6 +99,6 @@ export class ContentService {
   }
 
   private getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((store: IOhMyMock) => store[STORAGE_KEY].domains[OhMyState.domain]);
+    // return this.store.selectSnapshot<IState>((store: IOhMyMock) => store[STORAGE_KEY].domains[OhMyState.domain]);
   }
 }

@@ -1,4 +1,4 @@
-<mat-drawer-container [ngClass]="{'is-initializing': isInitializing}" class="example-container" [hasBackdrop]="drawerBackdrop">
+<mat-drawer-container [ngClass]="{'is-blurred': showDisabled || isInitializing}" class="example-container" [hasBackdrop]="drawerBackdrop">
   <mat-drawer [mode]="drawerMode">
     <app-nav-list (navigate)="drawer.close()"></app-nav-list>
   </mat-drawer>
@@ -14,7 +14,7 @@
       <h1>
         <span>Oh My Mock v{{version}}</span> <span class="dash">-</span> <span>{{domain}}</span>
       </h1>
-      <mat-slide-toggle (change)="onEnableChange($event)" [checked]="enabled" [color]="color"></mat-slide-toggle>
+      <mat-slide-toggle (change)="onEnableChange($event.checked)" [checked]="enabled" [color]="color"></mat-slide-toggle>
     </mat-toolbar>
 
     <section *ngIf="!isInitializing">
@@ -24,4 +24,7 @@
 
 </mat-drawer-container>
 
-<oh-my-spinner *ngIf="isInitializing" mode="dark"></oh-my-spinner>
+<oh-my-spinner *ngIf="!context" mode="dark"></oh-my-spinner>
+
+<!-- <oh-my-disabled-enabled *ngIf="showDisabled"></oh-my-disabled-enabled> -->
+<oh-my-disabled-enabled  *ngIf="showDisabled === 1" (change)="onEnableChange($event)"></oh-my-disabled-enabled>

@@ -1,17 +1,17 @@
 <mat-card *ngIf="request" class="header">
-  <app-mock-header
-    [data]="request"
+  <oh-request-header
+    [request]="request"
     [context]="context"
-  ></app-mock-header>
+  ></oh-request-header>
 </mat-card>
-
+<!--
 <mat-card *ngIf="response; else nodata" class="details">
   <h3>Response details</h3>
   <section class="mock-settings">
     <oh-my-mock-details
       [mock]="response"
       [context]="context"
-      [requestId]="requestId"
+      [response]="response"
     ></oh-my-mock-details>
 
     <div class="mock-actions">
@@ -93,4 +93,4 @@
     </p>
     <p *ngIf="!hasMocks">New responses can be created with the + button</p>
   </section>
-</ng-template>
+</ng-template> -->

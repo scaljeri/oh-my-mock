@@ -1,4 +1,4 @@
-import { IOhMyMock, IState, ohMyDomain, IUpsertMock, IOhMyContext, IMock } from '@shared/type';
+import { IOhMyMock, IState, IUpsertMock, IOhMyContext, IMock } from '@shared/type';
 
 export class UpdateDomainsStorage {
   static readonly type = '[Storage] update Domains';
@@ -23,7 +23,7 @@ export class DeleteMockStorage {
 // -----
 export class UpdateStoreStorage {
   static readonly type = '[Storage] update State';
-  constructor(public payload: IOhMyMock) { }
+  constructor(public payload: IOhMyMock, public context: IOhMyContext) { }
 }
 
 export class UpdateStateStorage {
