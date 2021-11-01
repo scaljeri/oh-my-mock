@@ -200,13 +200,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onClone(id: ohMyDataId, event): void {
     event.stopPropagation();
 
-    const data = {
-      ...this.state.data[id],
-    };
-    delete data.id; // This way the store knows its a clone (it contains mocks)
-
-    // this.upsertData(data);
-    this.toast.success('Cloned ' + data.url);
+    this.storeService.cloneRequest(id, this.context);
+    this.toast.success('Cloned ' + this.state.data.url);
   }
 
   onDataClick(data: IData, index: number): void {
