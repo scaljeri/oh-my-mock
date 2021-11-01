@@ -132,6 +132,27 @@ export class OhMyState {
     return state;
   }
 
+  async cloneRequest(id: ohMyMockId, context: IOhMyContext): Promise<IData> {
+    const state = await this.getState(context);
+    const request = { ...state.data[id], id: uniqueId() };
+    const responses = Object.values(request.mocks);
+
+    request.mocks = {};
+    for (const shallow of responses) {
+      const response = await StorageUtils.get<IMock>(shallow.id);
+
+      shallow.id = uniqueId();
+      response.id = shallow.id;
+      request.mocks[shallow.id] = shallow;
+
+      await StorageUtils.set(shallow.id, response);
+    }
+
+    await StorageUtils.set(state.domain, StateUtils.setData(state, request));
+
+    return request;
+  }
+
   async deleteRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
     const state = await this.getState(context);
     request = (StateUtils.findData(state, request));
