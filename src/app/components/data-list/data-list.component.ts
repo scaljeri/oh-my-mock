@@ -129,12 +129,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onToggleActivateNew(toggle: boolean): void {
-    // this.toggleActivateNew(toggle);
+    this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
   }
 
-  onFilterUpdate(): void {
-    // this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
-  }
+  // onFilterUpdate(): void {
+  //   // this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
+  // }
 
   filterListByKeywords(): IData[] {
     const data = Object.values(this.state.data);
@@ -178,7 +178,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
       const isActive = data.enabled[this.state.context.preset];
-      // this.upsertData({ id, enabled: { ...data.enabled, [this.state.context.preset]: !isActive } });
+      this.storeService.upsertRequest({
+        ...data, enabled:
+          { ...data.enabled, [this.context.preset]: !isActive }
+      }, this.context);
     }
   }
 

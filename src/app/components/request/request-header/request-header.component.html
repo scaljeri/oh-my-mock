@@ -13,6 +13,7 @@
     <oh-my-autocomplete-dropdown
       label="Method"
       [formControl]="methodCtrl"
+      [showAllOnFocus]="true"
       [options]="availableMethods"
     ></oh-my-autocomplete-dropdown>
 
@@ -23,7 +24,6 @@
         matInput
         placeholder="Match API endpiont (regexp)"
         [formControl]="urlCtrl"
-        (keyup)="onUrlUpdate(url.value)"
       />
 
       <mat-icon

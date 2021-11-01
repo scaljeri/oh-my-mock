@@ -8,9 +8,7 @@ import { FormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { METHODS } from '@shared/constants';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { StateStreamService } from 'src/app/services/state-stream.service';
 import { presetInfo } from '../../../constants';
-import { DataUtils } from '@shared/utils/data';
 import { OhMyState } from 'src/app/services/oh-my-store';
 import { OhMyStateService } from 'src/app/services/state.service';
 
@@ -97,28 +95,25 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
         return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
       }) : [];
 
-      this.methodCtrl.setValue(this.request.method);
-      this.typeCtrl.setValue(this.request.requestType);
-      this.urlCtrl.setValue(this.request.url);
+    this.methodCtrl.setValue(this.request.method);
+    this.typeCtrl.setValue(this.request.requestType);
+    this.urlCtrl.setValue(this.request.url);
   }
 
-  onUrlUpdate(url: string): void {
-    // this.upsertData({ url });
-  }
+  // onUrlUpdate(url: string): void {
+  //   // this.upsertData({ url });
+  // }
 
   onSelectStatusCode(mockId: ohMyMockId): void {
-    // this.upsertData({
-    //   id: this.data.id,
-    //   enabled: { ...this.data.enabled, [this.context.preset]: true },
-    //   selected: { ...this.data.selected, [this.context.preset]: mockId }
-    // });
+    const enabled = { ...this.request.enabled, [this.context.preset]: true };
+    const selected = { ...this.request.selected, [this.context.preset]: mockId };
+
+    this.storeService.upsertRequest({ ...this.request, enabled, selected }, this.context);
   }
 
   onDisableRequest(): void {
-    // this.upsertData({
-    //   id: this.data.id,
-    //   enabled: { ...this.data.enabled, [this.context.preset]: false }
-    // });
+    const enabled = { ...this.request.enabled, [this.context.preset]: false };
+    this.storeService.upsertRequest({ ...this.request, enabled }, this.context);
   }
 
   openAddResponseDialog(): void {
@@ -128,12 +123,19 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       data: this.state
     });
 
-    dialogRef.afterClosed().subscribe((update: IUpsertMock) => {
+    dialogRef.afterClosed().subscribe(async(update: IUpsertMock) => {
       if (!update) {
         return;
       }
 
-      // this.upsertMock(update.mock, update.clone && DataUtils.getSelectedResponse(this.data, this.context)?.id);
+      if (update.clone) {
+        const x= await this.storeService.cloneResponse(
+          this.request.selected[this.context.preset],
+          update.mock, this.request, this.context);
+          debugger;
+      } else {
+        this.storeService.upsertResponse(update.mock, this.request, this.context);
+      }
     });
   }
 

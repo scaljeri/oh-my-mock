@@ -61,18 +61,23 @@ export class OhMyState {
     return retVal;
   }
 
-  async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, requestId: string, context: IOhMyContext): Promise<IMock> {
+  async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext): Promise<IMock> {
+    if (!sourceId) {
+      return this.upsertResponse(update, request, context);
+    }
+
     const state = await this.getState(context);
-    const request = StateUtils.getData(state, requestId);
-    const shallowResp = DataUtils.findMock(request, { id: sourceId });
+    const fullRequest = StateUtils.findData(state, request);
+
+    const shallowResp = DataUtils.findMock(fullRequest, { id: sourceId });
 
     const id = update.id || uniqueId();
-    request.mocks[id] = MockUtils.createShallowMock({ ...shallowResp, id, ...update });
+    fullRequest.mocks[id] = MockUtils.createShallowMock({ ...shallowResp, id, ...update });
     const retVal = { ...await StorageUtils.get<IMock>(shallowResp.id), id, ...update };
     delete retVal.modifiedOn;
 
     await StorageUtils.set(id, retVal);
-    await StorageUtils.set(state.domain, StateUtils.setData(state, request));
+    await StorageUtils.set(state.domain, StateUtils.setData(state, fullRequest));
 
     return retVal;
   }
