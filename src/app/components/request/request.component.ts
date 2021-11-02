@@ -6,8 +6,8 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IMock, IOhMyMockRule, ohMyMockId, ohMyDataId, IOhMyShallowMock, ohMyPresetId, IOhMyContext } from '@shared/type';
-import { filter, map, Observable, Subscription, tap } from 'rxjs';
+import { IData, IMock, IOhMyMockRule, ohMyMockId, IOhMyContext } from '@shared/type';
+import { filter, Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngneat/hot-toast';
@@ -15,7 +15,9 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
-import { StateStreamService } from 'src/app/services/state-stream.service';
+import { StorageUtils } from '@shared/utils/storage';
+import { OhMyStateService } from 'src/app/services/state.service';
+import { OhMyState } from 'src/app/services/oh-my-store';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -29,21 +31,6 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   response: IMock;
 
-  // @Select(OhMyState.mock) state$: Observable<IState>;
-
-  // @Dispatch() loadMock = (smock: IOhMyShallowMock) => new LoadMock(smock);
-  // @Dispatch() upsertMock = (mock: Partial<IMock>) => {
-  //   return new UpsertMock({
-  //     id: this.requestId,
-  //     makeActive: true,
-  //     mock
-  //   }, this.context);
-  // };
-  // @Dispatch() upsertData = (data: Partial<IData>) => new UpsertData(data, this.context);
-  // @Dispatch() deleteMockResponse = (id: ohMyDataId, mockId: ohMyMockId) => {
-  //   return new DeleteMock({ id, mockId }, this.context);
-  // }
-
   public dialogIsOpen = false;
 
   subscriptions = new Subscription();
@@ -56,68 +43,49 @@ export class RequestComponent implements OnChanges, OnDestroy {
   hasMocks = false;
 
   constructor(
-    private stateStream: StateStreamService,
+    private storeService: OhMyState,
+    private stateService: OhMyStateService,
     public dialog: MatDialog,
     private toast: HotToastService,
     private cdr: ChangeDetectorRef) {
   }
 
   ngOnInit(): void {
-    // this.subscriptions.add(this.stateStream.state$.subscribe(state => {
-    //   this.context = state.context;
-    //   this.request = state.data[this.requestId];
-    //   this.hasMocks = Object.keys(this.request.mocks).length > 0;
-
-    //   if (this.request.enabled[this.context.preset]) {
-    //     const responseId = this.request.selected[this.context.preset];
-
-    //     if (responseId !== this.responseId) {
-    //       this.responseId = responseId;
-    //       // this.loadMock(this.request.mocks[responseId]); // This will always trigger the subscription below
-    //     }
-    //   } else {
-    //     this.responseId = undefined;
-    //     this.response = undefined;
-    //   }
-    // }));
-
-    // this.subscriptions.add(this.stateStream.responses$.pipe(
-    //   map(responses => responses[this.responseId]), filter(r => !!r))
-    //   .subscribe(response => {
-    //     this.response = response;
-    //     this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : '';
-
-    //     this.responseCtrl.setValue(response.responseMock, { emitEvent: false });
-    //     this.headersCtrl.setValue(response.headersMock, { emitEvent: false });
-    //   }));
-
-    // this.subscriptions.push(this.activeMock$.subscribe(mock => {
-    //   this.mock = mock;
-
-    //   this.responseCtrl.setValue(mock?.responseMock, { emitEvent: false });
-    //   this.headersCtrl.setValue(mock?.headersMock, { emitEvent: false });
-    // }));
-
+    this.subscriptions.add(this.stateService.response$.pipe(filter(r => r && this.response && r.id === this.response.id))
+      .subscribe(r => {
+        this.response = r;
+        this.responseCtrl.setValue(r.responseMock, { emitEvent: false });
+        this.headersCtrl.setValue(r.headersMock, { emitEvent: false });
+      }));
 
     this.responseCtrl.valueChanges.subscribe(val => {
-      // this.responseCtrl.setValue(val, { emitEvent: false });
-      // this.upsertMock({ id: this.response.id, responseMock: val });
+      this.storeService.upsertResponse({ responseMock: val, id: this.response.id }, this.request, this.context);
     });
 
     this.headersCtrl.valueChanges.subscribe(val => {
-      // this.headersCtrl.setValue(val, { emitEvent: false });
       this.onHeadersChange(val);
     });
   }
 
-  ngOnChanges(): void {
-    // if (this.activeMockId && this.activeMockId !== this.response?.id) {
-    //   this.response = null;
-    //   this.loadMock(this.data.mocks[this.activeMockId]);
-    //   this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : '';
-    // }
+  async ngOnChanges(): Promise<void> {
+    const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
+    if (!activeResponse) {
+      return;
+    }
 
-    // this.hasMocks = Object.keys(this.data.mocks).length > 0;
+    if (this.response?.id !== activeResponse.id) {
+      this.response = await StorageUtils.get(activeResponse.id);
+
+      if (!this.response) {
+        return;
+      }
+
+      this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : '';
+      this.hasMocks = Object.keys(this.request.mocks).length > 0;
+
+      this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
+      this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
+    }
   }
 
   onDelete(): void {
@@ -126,22 +94,26 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   onRevertResponse(): void {
     // this.upsertMock({ id: this.response.id, responseMock: this.response.response });
-    this.cdr.detectChanges();
+    // this.cdr.detectChanges();
+    this.storeService.upsertResponse({ responseMock: this.response.response, id: this.response.id }, this.request, this.context);
   }
 
   onHeadersChange(headersMock: string): void {
     try {
-        // this.upsertMock({
-        //   id: this.response.id,
-        //   headersMock: JSON.parse(headersMock)
-        // });
+      this.storeService.upsertResponse({
+        id: this.response.id,
+        headersMock: JSON.parse(headersMock)
+      }, this.request, this.context);
     } catch (err) {
+      // TODO
     }
   }
 
   onRevertHeaders(): void {
+    this.storeService.upsertResponse({ headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
     // this.upsertMock({ id: this.response.id, headersMock: this.response.headers });
-    this.cdr.detectChanges();
+    // this.cdr.detectChanges();
+    // this.upsertMock({ id: this.response.id, jsCode: update });
   }
 
   onMockActivated(mockId: ohMyMockId) {
@@ -162,7 +134,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
     const data = { code: this.response.jsCode, type: 'javascript', allowErrors: false };
 
     this.openCodeDialog(data, (update: string) => {
-      // this.upsertMock({ id: this.response.id, jsCode: update });
+      this.storeService.upsertResponse({ jsCode: update, id: this.response.id }, this.request, this.context);
     });
   }
 
@@ -173,17 +145,16 @@ export class RequestComponent implements OnChanges, OnDestroy {
     };
 
     this.openCodeDialog(data, (update: string) => {
-      // this.responseCtrl.setValue(update, { emitEvent: false });
-      // this.upsertMock({ id: this.response.id, responseMock: update });
+      this.storeService.upsertResponse({
+        responseMock: update, id: this.response.id
+      }, this.request, this.context);
     });
   }
 
   onShowHeadersFullscreen(): void {
     const data = { code: this.response.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
-      const headers = JSON.parse(update);
-      // this.headersCtrl.setValue(headers, { emitEvent: false });
-      // this.upsertMock({ id: this.response.id, headersMock: headers });
+      this.onHeadersChange(update);
     });
   }
 

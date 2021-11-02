@@ -100,10 +100,6 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
     this.urlCtrl.setValue(this.request.url);
   }
 
-  // onUrlUpdate(url: string): void {
-  //   // this.upsertData({ url });
-  // }
-
   onSelectStatusCode(mockId: ohMyMockId): void {
     const enabled = { ...this.request.enabled, [this.context.preset]: true };
     const selected = { ...this.request.selected, [this.context.preset]: mockId };
@@ -129,10 +125,9 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       }
 
       if (update.clone) {
-        const x= await this.storeService.cloneResponse(
+        this.storeService.cloneResponse(
           this.request.selected[this.context.preset],
           update.mock, this.request, this.context);
-          debugger;
       } else {
         this.storeService.upsertResponse(update.mock, this.request, this.context);
       }

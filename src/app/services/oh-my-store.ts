@@ -61,33 +61,30 @@ export class OhMyState {
     return retVal;
   }
 
-  async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext): Promise<IMock> {
+  async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = true): Promise<IMock> {
     if (!sourceId) {
       return this.upsertResponse(update, request, context);
     }
 
-    const state = await this.getState(context);
-    const fullRequest = StateUtils.findData(state, request);
+    const response = { ...await StorageUtils.get<IMock>(sourceId), ...update };
 
-    const shallowResp = DataUtils.findMock(fullRequest, { id: sourceId });
+    if (!update.id) {
+      delete response.id;
+    }
 
-    const id = update.id || uniqueId();
-    fullRequest.mocks[id] = MockUtils.createShallowMock({ ...shallowResp, id, ...update });
-    const retVal = { ...await StorageUtils.get<IMock>(shallowResp.id), id, ...update };
-    delete retVal.modifiedOn;
+    if (!update.modifiedOn) {
+      delete response.modifiedOn;
+    }
 
-    await StorageUtils.set(id, retVal);
-    await StorageUtils.set(state.domain, StateUtils.setData(state, fullRequest));
-
-    return retVal;
+    return this.upsertResponse(response, request, context, activate);
   }
 
-  async upsertResponse(response: Partial<IMock>, request: Partial<IData>, context: IOhMyContext): Promise<IMock> {
-    const retVal = response.id ? { ...await StorageUtils.get<IMock>(response.id) } :
+  async upsertResponse(response: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = false): Promise<IMock> {
+    const retVal = response.id ? { ...await StorageUtils.get<IMock>(response.id), ...response } :
       MockUtils.init(response);
 
     if (response.id) {
-      retVal.createdOn = timestamp();
+      retVal.modifiedOn = timestamp();
     }
 
     let state = await this.getState(context);
@@ -99,6 +96,12 @@ export class OhMyState {
     }
 
     request = DataUtils.addMock(context, request as IData, retVal);
+
+    if (activate) {
+      request.selected[context.preset] = retVal.id
+      request.enabled[context.preset] = true;
+    }
+
     state.data[request.id] = request as IData;
 
     await StorageUtils.set(retVal.id, retVal);
@@ -141,11 +144,15 @@ export class OhMyState {
     for (const shallow of responses) {
       const response = await StorageUtils.get<IMock>(shallow.id);
 
-      shallow.id = uniqueId();
-      response.id = shallow.id;
-      request.mocks[shallow.id] = shallow;
+      const id = uniqueId();
+      if (request.selected[context.preset] === shallow.id) {
+        request.selected[context.preset] = id;
+      }
+      shallow.id = id;
+      response.id = id;
+      request.mocks[id] = shallow;
 
-      await StorageUtils.set(shallow.id, response);
+      await StorageUtils.set(id, response);
     }
 
     await StorageUtils.set(state.domain, StateUtils.setData(state, request));

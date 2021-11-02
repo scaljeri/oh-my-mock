@@ -17,6 +17,6 @@ export function strip(ct = ''): string {
   return ct.match(/^[^;]{0,}/)[0];
 }
 
-export function update(source: string, update: string): string {
+export function update(source = '', update: string): string {
   return source.replace(/^[^;]{0,}/, update);
 }

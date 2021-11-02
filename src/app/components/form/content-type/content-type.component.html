@@ -1,14 +1,5 @@
-<!-- <mat-form-field>
-  <input [ohMyUpdateInput]="input" type="text" placeholder="Content type"
-    aria-label="Content type" matInput [formControl]="ctrl" [matAutocomplete]="auto">
-  <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-    <mat-option *ngFor="let option of filteredMimeTypes$ | async" [value]="option">
-      {{option}}
-    </mat-option>
-  </mat-autocomplete>
-</mat-form-field> -->
-
-<oh-my-autocomplete-dropdown 
+<oh-my-autocomplete-dropdown
   label="Content type"
-  [options]="options" 
+  [options]="options"
+  [showAllOnFocus]="true"
   [formControl]="ctrl"></oh-my-autocomplete-dropdown>

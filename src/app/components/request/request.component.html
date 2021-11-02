@@ -4,14 +4,14 @@
     [context]="context"
   ></oh-request-header>
 </mat-card>
-<!--
+
 <mat-card *ngIf="response; else nodata" class="details">
   <h3>Response details</h3>
   <section class="mock-settings">
     <oh-my-mock-details
-      [mock]="response"
       [context]="context"
       [response]="response"
+      [requestId]="request.id"
     ></oh-my-mock-details>
 
     <div class="mock-actions">
@@ -43,7 +43,7 @@
   <section class="editors">
     <div *ngIf="!dialogIsOpen" class="response">
       <header>
-        <h2>Response</h2>
+        <h2>Data</h2>
       </header>
       <div class="code-wrapper">
         <button
@@ -93,4 +93,4 @@
     </p>
     <p *ngIf="!hasMocks">New responses can be created with the + button</p>
   </section>
-</ng-template> -->
+</ng-template>

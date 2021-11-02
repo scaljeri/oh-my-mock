@@ -10,7 +10,7 @@ export class DataUtils {
   //   return { ...state.data[id], mocks: { ...state.data[id].mocks } };
   // }
 
-  static init(data: Partial<IData>): IData {
+  static init(data: Partial<IData> = {}): IData {
     return this.create(data);
   }
 
@@ -45,7 +45,7 @@ export class DataUtils {
     return output ? data.mocks[output[0]] : null;
   }
 
-  static addMock = (context: IOhMyContext, data: IData, mock: IMock, autoActivate = true): IData => {
+  static addMock = (context: IOhMyContext, data: IData, mock: Partial<IMock>, autoActivate = true): IData => {
     data = {
       ...data, mocks:
       {

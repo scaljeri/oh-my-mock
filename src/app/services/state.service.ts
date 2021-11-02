@@ -23,8 +23,8 @@ export class OhMyStateService {
   public state$ = this.stateSubject.asObservable().pipe(shareReplay(1));
   public state: IState;
 
-  public response$: Observable<IMock>;
   private responseSubject = new BehaviorSubject<IMock>(undefined)
+  public response$ = this.responseSubject.asObservable();
 
   public context: IOhMyContext;
   private contextSubject = new BehaviorSubject<IOhMyContext>(undefined);

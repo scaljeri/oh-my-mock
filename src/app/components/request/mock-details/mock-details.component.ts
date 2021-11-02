@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { REQUIRED_MSG } from '@shared/constants';
 import { IMock, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
+import { OhMyState } from 'src/app/services/oh-my-store';
 
 @Component({
   selector: 'oh-my-mock-details',
@@ -11,8 +12,8 @@ import { Observable, Subscription } from 'rxjs';
   styleUrls: ['./mock-details.component.scss']
 })
 export class MockDetailsComponent implements OnChanges {
-  @Input() mock: IMock;
   @Input() response: IMock;
+  @Input() requestId: string;
   @Input() context: IOhMyContext;
 
   private subscriptions = new Subscription();
@@ -30,38 +31,31 @@ export class MockDetailsComponent implements OnChanges {
   ];
   filteredMimeTypes$: Observable<string[]>;
 
-  // @Dispatch() upsertMock = (update: Partial<IMock & { contentType?: string }> ) => {
-  //   const contentType = update.contentType;
-  //   delete update.contentType;
-
-  //   return new UpsertMock({
-  //     id: this.requestId,
-  //     mock: { id: this.mock.id, ...update, headersMock:
-  //       { ...this.mock.headersMock, ['content-type']: contentType } }
-  //   }, this.context)
-  // };
-
-  // @Dispatch() updateScenarios = (scenarios: IOhMyPresets) => new UpsertScenarios(scenarios, this.domain);
-  // @Select(OhMyState.mainState) state$: Observable<IState>;
-
-  constructor(public dialog: MatDialog) { }
+  constructor(private storeService: OhMyState, public dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.form = new FormGroup({
-      delay: new FormControl(this.mock.delay, { updateOn: 'blur' }),
-      statusCode: new FormControl(this.mock.statusCode, {
+      delay: new FormControl(this.response.delay, { updateOn: 'blur' }),
+      statusCode: new FormControl(this.response.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      label: new FormControl(this.mock.label, { updateOn: 'blur'}),
-      contentType: new FormControl(this.mock.headersMock['content-type'] || '', { updateOn: 'blur' })
+      label: new FormControl(this.response.label, { updateOn: 'blur'}),
+      contentType: new FormControl(this.response.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
-    this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IMock>) => {
+    this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IMock> & { contentType: string }) => {
       if (this.statusCodeCtrl.hasError('required')) {
         delete values.statusCode;
       }
 
-      // this.upsertMock(values);
+      delete values.contentType; // is not part if IMock
+
+      this.storeService.upsertResponse({
+        ...values,
+        headersMock: {
+          ...this.response.headersMock,
+          'content-type': this.contentTypeCtrl.value },
+        id: this.response.id }, { id: this.requestId}, this.context);
     }));
   }
 
@@ -70,24 +64,10 @@ export class MockDetailsComponent implements OnChanges {
       return;
     }
 
-    this.delayCtrl.setValue(this.mock.delay, { emitEvent: false, onlySelf: true });
-    this.statusCodeCtrl.setValue(this.mock.statusCode,  { emitEvent: false, onlySelf: true });
-    this.contentTypeCtrl.setValue(this.mock.headersMock['content-type'], { emitEvent: false });
-    this.labelCtrl.setValue(this.mock.label,  { emitEvent: false, onlySelf: true });
-  }
-
-  onManageScenarios(): void {
-    // const dialogRef = this.dialog.open(ManageScenariosComponent, {
-    //   width: '280px',
-    //   height: '380px'
-    // });
-
-    // dialogRef.afterClosed().subscribe((scenarios: IOhMyPresets) => {
-    //   if (scenarios !== null && scenarios !== undefined) {
-    //     console.log('received', scenarios);
-    //     this.updateScenarios(scenarios);
-    //   }
-    // });
+    this.delayCtrl.setValue(this.response.delay, { emitEvent: false, onlySelf: true });
+    this.statusCodeCtrl.setValue(this.response.statusCode,  { emitEvent: false, onlySelf: true });
+    this.contentTypeCtrl.setValue(this.response.headersMock['content-type'], { emitEvent: false });
+    this.labelCtrl.setValue(this.response.label,  { emitEvent: false, onlySelf: true });
   }
 
   get labelCtrl(): FormControl {

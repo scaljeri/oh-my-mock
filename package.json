@@ -8,23 +8,21 @@
     "cleanup": "rimraf dist",
     "replace-tokens": "node ./scripts/token-replace.js",
     "cp:manifest": "ts-node -P ./tsconfig-server.json ./scripts/copy-manifest.ts",
-
     "ci:build": "yarn cleanup && (yarn run-s ci:build:* & yarn cp:manifest; wait) && yarn replace-tokens",
     "ci:build:ng": "NG_PERSISTENT_BUILD_CACHE=1 ng build --configuration production --output-hashing none --base-href=index.html",
     "ci:build:content": "webpack -c ./webpack-prd.config.js --entry ./src/content/index.ts --output-filename content.js",
     "ci:build:injected": "webpack -c ./webpack-prd.config.js --entry ./src/injected/index.ts --output-filename oh-my-mock.js",
     "ci:build:background": "webpack -c ./webpack-prd.config.js --entry ./src/background/background.ts --output-filename background.js",
     "ci:build:splash": "cp src/splash-screen.html ./dist",
-
     "build": "yarn cleanup && (run-s build:* cp:manifest; wait) && yarn replace-tokens && yarn ci:build:splash",
     "build:ng": "NG_PERSISTENT_BUILD_CACHE=1 ng build --configuration dev --base-href=index.html",
+    "build:stats": "yarn build:ng --stats-json",
     "build:content": "webpack -c ./webpack.config.js --entry ./src/content/index.ts --output-filename content.js",
     "build:injected": "webpack -c ./webpack.config.js --entry ./src/injected/index.ts --output-filename oh-my-mock.js",
     "build:background": "webpack -c ./webpack.config.js --entry ./src/background/background.ts --output-filename background.js",
-
+    "analyze": "webpack-bundle-analyzer dist/oh-my-mock/stats.json",
     "watch": "yarn cleanup & yarn cp:manifest & run-p watch:* start:server",
     "watch:custom": "ts-node ./scripts/monitor.ts",
-
     "zip": "rm -rf dist && yarn build && cd dist && zip -r ../oh-my-mock.zip . && cd ..",
     "test": "npx jest",
     "test:stryker": "stryker run",
@@ -110,6 +108,7 @@
     "tslint": "~6.1.0",
     "typescript": "~4.3.4",
     "webpack": "^5.43.0",
+    "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.7.2"
   }
 }
