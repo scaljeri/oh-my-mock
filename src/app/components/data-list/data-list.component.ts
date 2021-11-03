@@ -123,7 +123,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(): void {
     if (this.state) {
       this.filteredDataList = this.filterListByKeywords();
-      this.context ??= this.state.context;
       this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
     }
   }

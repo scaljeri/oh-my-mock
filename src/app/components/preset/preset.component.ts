@@ -50,8 +50,12 @@ export class PresetComponent implements OnInit, OnChanges {
         if (preset === '') {
           this.setSelectedValue(oldPresetValue);
         } else {
-          this.storeService.upsertState(
-            { presets: PresetUtils.update(this.context.preset, preset, this.presets) }, this.context);
+          const selected = PresetUtils.findId(this.presets, preset);
+
+          this.storeService.upsertState({
+            context: { ...this.context, preset: selected || this.context.preset },
+            ...(!selected && { presets: { ...this.presets, [this.context.preset]: preset } })
+          }, this.context);
         }
       }
     });
