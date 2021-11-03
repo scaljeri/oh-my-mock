@@ -141,18 +141,18 @@ export class OhMyState {
     const responses = Object.values(request.mocks);
 
     request.mocks = {};
-    for (const shallow of responses) {
+    for (const shallow of responses) { // Important: dont just change `shallow` -> clone it!!
       const response = await StorageUtils.get<IMock>(shallow.id);
 
-      const id = uniqueId();
+      const newId = uniqueId();
       if (request.selected[context.preset] === shallow.id) {
-        request.selected[context.preset] = id;
+        request.selected = { ...request.selected, [context.preset]: newId };
       }
-      shallow.id = id;
-      response.id = id;
-      request.mocks[id] = shallow;
 
-      await StorageUtils.set(id, response);
+      response.id = newId;
+      request.mocks[newId] = { ...shallow, id: newId };
+
+      await StorageUtils.set(newId, response);
     }
 
     await StorageUtils.set(state.domain, StateUtils.setData(state, request));
