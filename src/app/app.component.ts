@@ -6,8 +6,6 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-
 import { IOhMyContext } from '../shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -46,7 +44,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private stateService: OhMyStateService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    public dialog: MatDialog) { }
+    public dialog: MatDialog) {
+  }
 
   async ngAfterViewInit(): Promise<void> {
     this.stateService.state$.subscribe(state => {
@@ -55,6 +54,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
 
       this.context = state.context;
+      this.popupActiveToggle(); // -> Popup is active
       this.domain = state.context.domain;
       this.version = state.version;
 
@@ -79,11 +79,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('window:beforeunload')
   ngOnDestroy(): void {
-    // this.popupActive(false);
+    this.popupActiveToggle(false);
   }
 
   notifyDisabled(): void {
     this.showDisabled = 1;
+  }
+
+  popupActiveToggle(isActive = true) {
+    this.storeService.updateAux({ popupActive: isActive }, this.context);
   }
 
   @HostListener('window:keyup.backspace')

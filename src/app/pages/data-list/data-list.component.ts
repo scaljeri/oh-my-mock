@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
@@ -16,9 +16,6 @@ import { OhMyStateService } from 'src/app/services/state.service';
 export class PageDataListComponent implements OnInit, OnDestroy {
   static StateUtils = StateUtils;
 
-  // @Dispatch() upsertRequest = (data: IData) => new UpsertData(data, this.context);
-  // @Select(OhMyState.mainState) state$: Observable<IState>;
-
   private subscriptions = new Subscription();
 
   public showRowAction = false;
@@ -34,6 +31,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -46,6 +44,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
       if (this.navigateToData) {
         this.onDataSelect(PageDataListComponent.StateUtils.findData(state, this.navigateToData).id);
       }
+      this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
     }));
   }
 

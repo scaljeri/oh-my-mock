@@ -50,37 +50,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
 
-  // @Dispatch() updateAux = (values: IOhMyAux) => {
-  //   return new Aux(values, this.state.context);
-  // }
-  // @Dispatch() updateContext = (value: Partial<IOhMyContext>) => {
-  //   return new UpdateState({ context: value as IOhMyContext });
-  // }
-  // @Dispatch() updateState = (state: IState) => {
-  //   return new UpdateState(state);
-  // }
-  // @Dispatch() deleteData = (id: string) => {
-  //   return new DeleteData(id, this.state.context);
-  // }
-  // @Dispatch() upsertData = (data: Partial<IData>) => {
-  //   return new UpsertData(data, this.context);
-  // }
-
-  // @Dispatch() loadState = () => {
-  //   return new LoadState(this.state.context.domain);
-  // }
-  // @Dispatch() toggleActivityList = (value: boolean) => {
-  //   return new Aux({ activityList: value });
-  // }
-
-  // @Dispatch() toggleActivateNew = (value: boolean) => {
-  //   return new Aux({ newAutoActivate: value }, this.state.context);
-  // }
-
-  // @Dispatch() updatePresets = (updates: IOhMyPresetChange[] | IOhMyPresetChange) => {
-  //   return new PresetCreate(updates, this.state.context);
-  // }
-
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];

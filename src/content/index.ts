@@ -10,6 +10,7 @@ import { handleApiResponse } from './handle-api-response';
 
 // debug('Script loaded and ready....');
 
+console.log('xxxxxxxxxxxxx');
 const contentState = new OhMyContentState();
 
 let isInjectedInjected = false;
@@ -20,6 +21,8 @@ contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
     inject(state);
   }
 });
+
+
 
 // Handle messages from Popup / Background script
 chrome.runtime.onMessage.addListener(emitPacket);
@@ -164,6 +167,8 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>)
     inject(state);
   }
 })();
+
+
 
 // https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 
