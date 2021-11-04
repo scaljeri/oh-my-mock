@@ -7,13 +7,13 @@ import { OhMyContentState } from "./content-state";
 export async function handleApiResponse(payload: IOhMyAPIResponse, contentState: OhMyContentState): Promise<void> {
   let state = await contentState.getState()
   let data = StateUtils.findData(state, { ...payload.data });
-  let requestExists = false;
+  let autoActivate = state.aux.newAutoActivate;
 
   if (data) {
     // This can only happen when the request is inactive. In which case, the response
     // is only added if the combination statusCode/label does not exist yet
 
-    requestExists = true;
+    autoActivate = false;
     const response = DataUtils.findMock(data, { statusCode: payload.mock.statusCode });
 
     if (response && !response.label) {
@@ -24,7 +24,7 @@ export async function handleApiResponse(payload: IOhMyAPIResponse, contentState:
   }
 
   const response = MockUtils.init(payload.mock);
-  data = DataUtils.addMock(state.context, data, response, !requestExists);
+  data = DataUtils.addMock(state.context, data, response, autoActivate);
 
   state = StateUtils.setData(state, data);
 

@@ -58,9 +58,12 @@ export class DataUtils {
       enabled: { ...data.enabled, [context.preset]: autoActivate }
     };
 
-    if (autoActivate || Object.keys(data.mocks).length === 1) {
-      data.enabled[context.preset] = true;
+    if (Object.keys(data.mocks).length === 1) {
       data.selected[context.preset] = mock.id;
+    }
+
+    if (autoActivate) {
+      data.enabled[context.preset] = true;
     }
 
     return data;
