@@ -2,10 +2,8 @@ import { Injectable } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
 import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
 import { objectTypes } from '@shared/constants';
-import { StateStreamService } from './state-stream.service';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, share, shareReplay } from 'rxjs/operators';
-import { ThrowStmt } from '@angular/compiler';
+import { filter, shareReplay } from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
 

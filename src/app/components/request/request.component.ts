@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IMock, IOhMyMockRule, ohMyMockId, IOhMyContext } from '@shared/type';
+import { IData, IMock, IOhMyMockRule, IOhMyContext } from '@shared/type';
 import { filter, Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -69,6 +69,8 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   async ngOnChanges(): Promise<void> {
     const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
+    this.response = undefined;
+
     if (!activeResponse) {
       return;
     }
@@ -89,12 +91,10 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   onDelete(): void {
-    // this.deleteMockResponse(this.requestId, this.response.id);
+    this.storeService.deleteResponse(this.response.id, this.request.id, this.context);
   }
 
   onRevertResponse(): void {
-    // this.upsertMock({ id: this.response.id, responseMock: this.response.response });
-    // this.cdr.detectChanges();
     this.storeService.upsertResponse({ responseMock: this.response.response, id: this.response.id }, this.request, this.context);
   }
 
@@ -111,23 +111,6 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   onRevertHeaders(): void {
     this.storeService.upsertResponse({ headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
-    // this.upsertMock({ id: this.response.id, headersMock: this.response.headers });
-    // this.cdr.detectChanges();
-    // this.upsertMock({ id: this.response.id, jsCode: update });
-  }
-
-  onMockActivated(mockId: ohMyMockId) {
-    // this.activeMockId = mockId;
-
-    // TODO
-    // if (!mockId) {
-    //   this.mock = null;
-    //   return this.upsertData({
-    //     id: this.data.id,
-    //     enabled: { ...this.data.enabled, [this.sccenario]: false }});
-    // } else {
-    //   this.upsertData({ id: this.data.id, enabled: { ...this.data.enabled, [this.sccenario]: false }});
-    // }
   }
 
   openShowMockCode(): void {

@@ -1,9 +1,8 @@
-import { Component, ElementRef, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IData, IOhMyContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
-import { OhMyState } from 'src/app/services/oh-my-store';
 import { OhMyStateService } from 'src/app/services/state.service';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
@@ -24,7 +23,7 @@ export class PageMockComponent implements OnInit {
   constructor(private element: ElementRef,
     private activeRoute: ActivatedRoute,
     private stateService: OhMyStateService,
-    private storeService: OhMyState) {}
+    private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.element.nativeElement.parentNode.scrollTop = 0;
@@ -33,14 +32,7 @@ export class PageMockComponent implements OnInit {
     this.subscription = this.stateService.state$.subscribe((state: IState) => {
       this.data = PageMockComponent.StateUtils.findData(state, { id: dataId });
       this.context = state.context;
-      // this.data = findMocks(state, { id: dataId });
-      // if (!this.data.activeMock && Object.keys(this.data.mocks).length) {
-      // const mockId = findAutoActiveMock(this.data);
-
-      // if (mockId) {
-      //   this.upsertData({ enabled: true, activeMock: mockId });
-      // }
-      // }
+      this.cdr.detectChanges();
     });
   }
 

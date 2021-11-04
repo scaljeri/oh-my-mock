@@ -110,12 +110,6 @@ export class OhMyState {
     return retVal;
   }
 
-  // async cloneRequests(requests: Partial<IData> | Partial<IData>[], context: IOhMyContext): Promise<IState> {
-  //   const state = this.getState(context);
-
-  //   return StateUtils.cloneRequests(state, requests)
-  // }
-
   async upsertRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
     let state = await this.getState(context);
     const retVal = {
@@ -188,7 +182,7 @@ export class OhMyState {
     return state;
   }
 
-  async deleteResponse(requestId: ohMyDataId, responseId: ohMyMockId, context: IOhMyContext): Promise<IState> {
+  async deleteResponse(responseId: ohMyMockId, requestId: ohMyDataId, context: IOhMyContext): Promise<IState> {
     let state = await this.getState(context);
     let request = StateUtils.findData(state, { id: requestId });
 
