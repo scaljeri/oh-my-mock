@@ -56,7 +56,7 @@ export class StorageUtils {
     });
   }
 
-  static remove(key: string | number | string[] | number[]): Promise<void[]> {
+  static remove(key: string | number | string[] | number[]): Promise<unknown> {
     if (!Array.isArray(key)) {
       key = [key as string];
     }

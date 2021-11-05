@@ -15,9 +15,9 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
-import { StorageUtils } from '@shared/utils/storage';
 import { OhMyStateService } from 'src/app/services/state.service';
 import { OhMyState } from 'src/app/services/oh-my-store';
+import { StorageService } from 'src/app/services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -47,6 +47,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
     private stateService: OhMyStateService,
     public dialog: MatDialog,
     private toast: HotToastService,
+    private storageService: StorageService,
     private cdr: ChangeDetectorRef) {
   }
 
@@ -76,7 +77,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
     }
 
     if (this.response?.id !== activeResponse.id) {
-      this.response = await StorageUtils.get(activeResponse.id);
+      this.response = await this.storageService.get(activeResponse.id);
 
       if (!this.response) {
         return;

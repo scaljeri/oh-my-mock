@@ -7,51 +7,54 @@ import { storeSteps } from './migrations/store';
 const IS_BETA_RE = /beta/;
 
 export class MigrateUtils {
-    static version = '__OH_MY_VERSION__';
+  static version = '__OH_MY_VERSION__';
 
-    static shouldMigrate(obj: { version?: string }): boolean {
-        return obj && obj.version !== this.version;
+  static shouldMigrate(obj: { version?: string }): boolean {
+    return obj && obj.version !== this.version;
+  }
+
+  static migrate(data: IOhMyMock | IState | IMock): IOhMyMock | IState | IMock | unknown {
+    const version = data.version || '0.0.0';
+
+    if (this.isDevelopVersion(version)) { // ignore
+      if (compareVersions(version, MigrateUtils.version) === -1) {
+        data.version = MigrateUtils.version;
+      }
+      return data;
     }
 
-    static migrate(data: IOhMyMock | IState | IMock): IOhMyMock | IState | IMock | unknown {
-        const version = data.version || '0.0.0';
-
-        if (compareVersions(version, MigrateUtils.version) === 1) { // Can only happen with JSON imports
-            return null;
-        }
-
-        if (this.isDevelopVersion(version)) { // ignore
-          return data;
-        }
-
-        let migrateSteps = [];
-
-        if (this.isStore(data)) {
-            migrateSteps = storeSteps;
-        } else if (this.isState(data)) {
-            migrateSteps = stateSteps;
-        } else if (this.isMock(data)) {
-            migrateSteps = mockSteps;
-        }
-
-        return migrateSteps.reduce((acc, step) => step(acc), data);
+    if (compareVersions(version, MigrateUtils.version) === 1) { // Can only happen with JSON imports
+      return null;
     }
 
-    // Type guards
+    let migrateSteps = [];
 
-    static isStore(data: unknown): data is IOhMyMock {
-        return (data as IOhMyMock).domains !== undefined;
+    if (this.isStore(data)) {
+      migrateSteps = storeSteps;
+    } else if (this.isState(data)) {
+      migrateSteps = stateSteps;
+    } else if (this.isMock(data)) {
+      migrateSteps = mockSteps;
     }
 
-    static isState(data: unknown): data is IState {
-        return (data as IState).data !== undefined;
-    }
+    return migrateSteps.reduce((acc, step) => step(acc), data);
+  }
 
-    static isMock(data: unknown): data is IMock {
-        return (data as IMock).headers !== undefined;
-    }
+  // Type guards
 
-    static isDevelopVersion(version: string): boolean {
-      return IS_BETA_RE.test(version);
-    }
+  static isStore(data: unknown): data is IOhMyMock {
+    return (data as IOhMyMock).domains !== undefined;
+  }
+
+  static isState(data: unknown): data is IState {
+    return (data as IState).data !== undefined;
+  }
+
+  static isMock(data: unknown): data is IMock {
+    return (data as IMock).headers !== undefined;
+  }
+
+  static isDevelopVersion(version: string): boolean {
+    return IS_BETA_RE.test(version);
+  }
 }

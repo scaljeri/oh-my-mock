@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
@@ -31,7 +31,8 @@ export class PageDataListComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -49,7 +50,9 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   }
 
   onDataSelect(id: string): void {
-    this.router.navigate(['request', id], { relativeTo: this.activatedRoute });
+    this.ngZone.run(() => {
+      this.router.navigate(['request', id], { relativeTo: this.activatedRoute });
+    });
   }
 
   onMainAction(): void {

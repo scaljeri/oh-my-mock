@@ -1,11 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
 import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
-import { objectTypes } from '@shared/constants';
+import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { filter, shareReplay } from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
+import { StorageService } from './storage.service';
 
 /*
   This service receives updates from chrome.storage. This can happen when the
@@ -36,9 +37,11 @@ export class OhMyStateService {
   private storeSubject = new BehaviorSubject<IOhMyMock>(undefined);
   public store$ = this.storeSubject.asObservable().pipe(shareReplay(1));
 
-  constructor() {
-    StorageUtils.listen();
-    this.bindStreams();
+  constructor(private ngZone: NgZone, private storageService: StorageService) {
+    ngZone.runOutsideAngular(() => {
+      StorageUtils.listen();
+      this.bindStreams();
+    })
   }
 
   async initialize(domain: ohMyDomain): Promise<void> {
@@ -51,22 +54,22 @@ export class OhMyStateService {
   }
 
   private async initStore(domain): Promise<IOhMyMock> {
-    let store = await StorageUtils.get<IOhMyMock>();
+    let store = await this.storageService.get<IOhMyMock>(STORAGE_KEY);
 
     if (!store) {
       store = StoreUtils.init({ domain });
-      await StorageUtils.setStore(store);
+      await this.storageService.setStore(store);
     }
 
     return store;
   }
 
   public async initState(domain): Promise<IState> {
-    let state = await StorageUtils.get<IState>(domain);
+    let state = await this.storageService.get<IState>(domain);
 
     if (!state) {
-      state = StateUtils.init({domain});
-      await StorageUtils.set(domain, state);
+      state = StateUtils.init({ domain });
+      await this.storageService.set(domain, state);
     }
 
     return state;
@@ -81,23 +84,25 @@ export class OhMyStateService {
   }
 
   private bindStreams(): void {
-    StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
-      // In case of delete/reset `newValue` will be `undefined`
-      const type = update.newValue?.type || update.oldValue.type;
+    this.ngZone.runOutsideAngular(() => {
+      StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
+        // In case of delete/reset `newValue` will be `undefined`
+        const type = update.newValue?.type || update.oldValue.type;
 
-      switch (type) {
-        case objectTypes.STATE:
-          if (update.newValue) {
-            this.stateSubject.next(update.newValue as IState);
-          }
-          break;
-        case objectTypes.MOCK:
-          this.responseSubject.next(update.newValue as IMock);
-          break;
-        case objectTypes.STORE:
-          this.storeSubject.next(update.newValue as IOhMyMock);
-          break;
-      }
+        switch (type) {
+          case objectTypes.STATE:
+            if (update.newValue) {
+              this.stateSubject.next(update.newValue as IState);
+            }
+            break;
+          case objectTypes.MOCK:
+            this.responseSubject.next(update.newValue as IMock);
+            break;
+          case objectTypes.STORE:
+            this.storeSubject.next(update.newValue as IOhMyMock);
+            break;
+        }
+      });
     });
   }
 }

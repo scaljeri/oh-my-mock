@@ -3,7 +3,8 @@ import { Injectable } from '@angular/core';
 import { IMock, IOhMyContext, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '@shared/type';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { share } from 'rxjs/operators';
-import { StorageUtils } from '@shared/utils/storage';
+import { StorageService } from './storage.service';
+import { STORAGE_KEY } from '@shared/constants';
 
 @Injectable({
   providedIn: 'root'
@@ -28,8 +29,8 @@ export class StateStreamService {
   private storeSubject = new BehaviorSubject<IOhMyMock>(undefined);
   public store$ = this.storeSubject.asObservable().pipe(share());
 
-  constructor() {
-    StorageUtils.get<IOhMyMock>().then((store: IOhMyMock) => {
+  constructor(private storageService: StorageService) {
+    this.storageService.get<IOhMyMock>(STORAGE_KEY).then((store: IOhMyMock) => {
       this.store = store;
       this.storeSubject.next(store);
     });
@@ -55,7 +56,7 @@ export class StateStreamService {
     this.context = context;
     this.contextSubject.next(context);
 
-    StorageUtils.get<IState>(context.domain).then(state => {
+    this.storageService.get<IState>(context.domain).then(state => {
       this.state = state;
       this.stateSubject.next(state);
     });

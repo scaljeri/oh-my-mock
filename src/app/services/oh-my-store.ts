@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
-import { AppStateService } from './app-state.service';
 import { STORAGE_KEY } from '@shared/constants';
 
 import { IOhMyMock, ohMyDomain, IState, ohMyMockId, IData, IMock, IOhMyContext, ohMyDataId, IOhMyAux } from '@shared/type';
-import { StorageUtils } from '@shared/utils/storage';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { MockUtils } from '@shared/utils/mock';
 import { uniqueId } from '@shared/utils/unique-id';
 import { url2regex } from '@shared/utils/urls';
 import { timestamp } from '@shared/utils/timestamp';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,44 +18,44 @@ export class OhMyState {
   public states: Record<ohMyDomain, IState> = {};
   public responses: Record<ohMyMockId, IMock> = {};
 
-  constructor(private appState: AppStateService) {
+  constructor(private storageService: StorageService) {
     // TODO: sync store, states and responses
   }
 
   async getStore(): Promise<IOhMyMock> {
-    return await StorageUtils.get(STORAGE_KEY);
+    return await this.storageService.get<IOhMyMock>(STORAGE_KEY);
   }
 
   async getState(context: IOhMyContext): Promise<IState> {
-    return await StorageUtils.get(context.domain) || StateUtils.init({ domain: context.domain });
+    return await this.storageService.get(context.domain) || StateUtils.init({ domain: context.domain });
   }
 
   async getResponse(id: ohMyMockId): Promise<IMock | undefined> {
-    return await StorageUtils.get(id);
+    return await this.storageService.get(id);
   }
 
   async initState(context: IOhMyContext): Promise<IState> {
     const state = StateUtils.init({ domain: context.domain });
-    await StorageUtils.set(state.domain, state);
+    await this.storageService.set(state.domain, state);
 
     return state;
   }
 
   async updateStore(store: Partial<IOhMyMock>): Promise<IOhMyMock> {
     const retVal = { ...await this.getStore(), ...store };
-    await StorageUtils.setStore(retVal);
+    await this.storageService.setStore(retVal);
 
     return retVal;
   }
 
   async upsertState(state: Partial<IState>, context?: IOhMyContext): Promise<IState> {
-    const source = await StorageUtils.get<IState>(context?.domain || state.domain);
+    const source = await this.storageService.get<IState>(context?.domain || state.domain);
     const retVal = {
       ...(source && { ...source }),
       ...state
     };
 
-    await StorageUtils.set(retVal.domain, retVal);
+    await this.storageService.set(retVal.domain, retVal);
 
     return retVal;
   }
@@ -66,7 +65,7 @@ export class OhMyState {
       return this.upsertResponse(update, request, context);
     }
 
-    const response = { ...await StorageUtils.get<IMock>(sourceId), ...update };
+    const response = { ...await this.storageService.get<IMock>(sourceId), ...update };
 
     if (!update.id) {
       delete response.id;
@@ -80,7 +79,7 @@ export class OhMyState {
   }
 
   async upsertResponse(response: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = false): Promise<IMock> {
-    const retVal = response.id ? { ...await StorageUtils.get<IMock>(response.id), ...response } :
+    const retVal = response.id ? { ...await this.storageService.get<IMock>(response.id), ...response } :
       MockUtils.init(response);
 
     if (response.id) {
@@ -104,8 +103,8 @@ export class OhMyState {
 
     state.data[request.id] = request as IData;
 
-    await StorageUtils.set(retVal.id, retVal);
-    await StorageUtils.set(state.domain, state);
+    await this.storageService.set(retVal.id, retVal);
+    await this.storageService.set(state.domain, state);
 
     return retVal;
   }
@@ -124,7 +123,7 @@ export class OhMyState {
     }
 
     state = StateUtils.setData(state, retVal);
-    await StorageUtils.set(state.domain, state);
+    await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -136,7 +135,7 @@ export class OhMyState {
 
     request.mocks = {};
     for (const shallow of responses) { // Important: dont just change `shallow` -> clone it!!
-      const response = await StorageUtils.get<IMock>(shallow.id);
+      const response = await this.storageService.get<IMock>(shallow.id);
 
       const newId = uniqueId();
       if (request.selected[context.preset] === shallow.id) {
@@ -146,10 +145,10 @@ export class OhMyState {
       response.id = newId;
       request.mocks[newId] = { ...shallow, id: newId };
 
-      await StorageUtils.set(newId, response);
+      await this.storageService.set(newId, response);
     }
 
-    await StorageUtils.set(state.domain, StateUtils.setData(state, request));
+    await this.storageService.set(state.domain, StateUtils.setData(state, request));
 
     return request;
   }
@@ -159,11 +158,11 @@ export class OhMyState {
     request = (StateUtils.findData(state, request));
 
     for (const resp of Object.values(request.mocks)) {
-      await StorageUtils.remove(resp.id);
+      await this.storageService.remove(resp.id);
     }
 
     delete state.data[request.id];
-    await StorageUtils.set(state.domain, state);
+    await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -189,8 +188,8 @@ export class OhMyState {
     request = DataUtils.removeMock(context, request, responseId);
     state = StateUtils.setData(state, request);
 
-    await StorageUtils.remove(responseId);
-    await StorageUtils.set(state.domain, state);
+    await this.storageService.remove(responseId);
+    await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -200,14 +199,14 @@ export class OhMyState {
       let state = await this.getState(context);
       Object.values(state.data)
         .flatMap(req => Object.values(req.mocks))
-        .forEach(response => StorageUtils.remove(response.id));
+        .forEach(response => this.storageService.remove(response.id));
 
       state = StateUtils.init({ domain: context.domain });
-      await StorageUtils.set(state.domain, state);
+      await this.storageService.set(state.domain, state);
       return state;
     }
 
-    await StorageUtils.reset();
+    await this.storageService.reset();
     return undefined;
   }
 
@@ -223,7 +222,7 @@ export class OhMyState {
       }
     });
 
-    await StorageUtils.set(state.domain, state);
+    await this.storageService.set(state.domain, state);
 
     return state;
   }

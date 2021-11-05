@@ -2,11 +2,10 @@ import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngneat/hot-toast';
 import { domain, IData, IOhMyContext, IState } from '@shared/type';
-import { StorageUtils } from '@shared/utils/storage';
 
 import { Subscription } from 'rxjs';
 import { StateStreamService } from 'src/app/services/state-stream.service';
-import { UpsertData } from 'src/app/store/actions';
+import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
   selector: 'oh-my-state-explorer-page',
@@ -34,6 +33,7 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
   constructor(
     private stateStream: StateStreamService,
+    private storageService: StorageService,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
@@ -45,7 +45,7 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
   async onSelectDomain(domain = this.state.domain): Promise<void> {
     this.selectedDomain = domain;
-    this.selectedState = await StorageUtils.get(domain);
+    this.selectedState = await this.storageService.get(domain);
     this.hasSelectedStateAnyRequests = Object.keys(this.selectedState.data)?.length > 0
     this.panels.toArray()[1].open();
   }
