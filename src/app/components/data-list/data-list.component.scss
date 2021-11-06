@@ -159,8 +159,11 @@ ol[data-table] {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  cursor: pointer;
   font-size: 14px;
+
+  &.togglable {
+    cursor: pointer;
+  }
 }
 
 .cdk-drag-preview {

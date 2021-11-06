@@ -4,7 +4,8 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { domain, IData, IOhMyContext, IState } from '@shared/type';
 
 import { Subscription } from 'rxjs';
-import { StateStreamService } from 'src/app/services/state-stream.service';
+import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyStateService } from 'src/app/services/state.service';
 import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
@@ -13,8 +14,6 @@ import { StorageService } from 'src/app/services/storage.service';
   styleUrls: ['./state-explorer.component.scss']
 })
 export class PageStateExplorerComponent implements OnInit, OnDestroy {
-  // @Dispatch() upsertData = (data: IData | IData[]) => new UpsertData(data, this.state.context);
-
   panelOpenState = true;
   domains: domain[];
   selectedDomain = '-';
@@ -32,8 +31,9 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
   @ViewChildren(MatExpansionPanel) panels: QueryList<MatExpansionPanel>;
 
   constructor(
-    private stateStream: StateStreamService,
+    private stateStream: OhMyStateService,
     private storageService: StorageService,
+    private storeService: OhMyState,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
@@ -51,19 +51,10 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
   }
 
   onCloneAll(): void {
-    const clones = [];
     Object.values(this.selectedState.data).forEach(data => {
-      delete data.id;
-      clones.push(data);
+      this.storeService.cloneRequest(data.id, this.selectedState.context, this.state.context)
     });
-    // this.upsertData(clones);
     this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);
-  }
-
-  onDataSelect(id: string): void {
-    // this.dataItem = findMocks(this.selectedState, { id });
-    // this.panels.toArray()[2].open();
-    // this.toast.warning('This functionality is currently disabled!');
   }
 
   ngOnDestroy(): void {

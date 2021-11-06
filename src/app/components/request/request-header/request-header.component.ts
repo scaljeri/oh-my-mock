@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IMock, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
+import { IData, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from 'src/app/components/create-response/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
@@ -22,8 +22,6 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
   @Input() request: IData;
   @Input() context: IOhMyContext;
 
-  @Output() mockActivated = new EventEmitter();
-
   public statusCode: statusCode;
   public mockIds: ohMyMockId[];
   public methodCtrl = new FormControl(null, { updateOn: 'blur' });
@@ -38,13 +36,6 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
   public availableMethods = METHODS;
   subscriptions: Subscription[] = [];
   state: IState;
-
-  // @Dispatch() upsertMock = (mock: Partial<IMock>, clone: ohMyMockId | undefined) => {
-  //   return new UpsertMock({ id: this.data.id, clone, makeActive: true, mock }, this.state.context);
-  // }
-  // @Dispatch() upsertData = (data: Partial<IData>) => {
-  //   return new UpsertData({ ...this.data, ...data }, this.context);
-  // }
 
   constructor(
     public dialog: MatDialog,
@@ -82,8 +73,6 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
         }, this.context)
       }
     });
-
-
   }
 
   ngOnChanges(): void {

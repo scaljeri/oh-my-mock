@@ -3,10 +3,11 @@ import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
 import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, shareReplay } from 'rxjs/operators';
+import { filter, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
 import { StorageService } from './storage.service';
+import { AppStateService } from './app-state.service';
 
 /*
   This service receives updates from chrome.storage. This can happen when the
@@ -19,7 +20,7 @@ import { StorageService } from './storage.service';
 })
 export class OhMyStateService {
   private stateSubject = new BehaviorSubject<IState>(undefined);
-  public state$ = this.stateSubject.asObservable().pipe(shareReplay(1));
+  public state$: Observable<IState>; //  = this.stateSubject.asObservable().pipe(shareReplay(1));
   public state: IState;
 
   private responseSubject = new BehaviorSubject<IMock>(undefined)
@@ -37,7 +38,7 @@ export class OhMyStateService {
   private storeSubject = new BehaviorSubject<IOhMyMock>(undefined);
   public store$ = this.storeSubject.asObservable().pipe(shareReplay(1));
 
-  constructor(private ngZone: NgZone, private storageService: StorageService) {
+  constructor(private ngZone: NgZone, private storageService: StorageService, private appState: AppStateService) {
     ngZone.runOutsideAngular(() => {
       StorageUtils.listen();
       this.bindStreams();
@@ -45,10 +46,16 @@ export class OhMyStateService {
   }
 
   async initialize(domain: ohMyDomain): Promise<void> {
-    await this.initStore(domain);
+    this.store = await this.initStore(domain);
     this.state = await this.initState(domain);
     this.context = this.state.context;
     this.contextSubject.next(this.context);
+
+    this.state$ = this.appState.domain$.pipe(
+      map(domain => ({ domain })),
+      startWith({ domain }),
+      switchMap(d => this.getState$(d)),
+      shareReplay(1));
 
     this.stateSubject.next(this.state);
   }
@@ -80,7 +87,12 @@ export class OhMyStateService {
   }
 
   public getState$(context: IOhMyContext): Observable<IState> {
-    return this.state$.pipe(filter(s => s.domain === context.domain));
+    // this.storageService.get<IState>(context.domain).then(s => this.stateSubject.next(s));
+
+    // return this.state$.pipe(filter(s => s?.domain === context.domain), shareReplay(1));
+    return this.stateSubject.pipe(filter(s => {
+      return s?.domain === context.domain
+    }), shareReplay(1));
   }
 
   private bindStreams(): void {

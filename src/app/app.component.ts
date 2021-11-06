@@ -6,13 +6,16 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { IOhMyContext } from '../shared/type';
+import { IOhMyContext, IState } from '@shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
 import { Router } from '@angular/router';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
+import { AppStateService } from './services/app-state.service';
+import {  Subscription } from 'rxjs';
+import { initializeApp } from './app.initialize';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -35,11 +38,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   context: IOhMyContext;
   version: string;
   showDisabled = -1;
+  stateSub: Subscription;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
   constructor(
+    private appState: AppStateService,
     private storeService: OhMyState,
     private stateService: OhMyStateService,
     private router: Router,
@@ -48,13 +53,18 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.stateService.state$.subscribe(state => {
+    await initializeApp(this.appState, this.stateService);
+
+    this.stateService.state$.subscribe((state: IState) => {
       if (!state) {
         return this.isInitializing = true;
       }
 
       this.context = state.context;
-      this.popupActiveToggle(); // -> Popup is active
+
+      if (!state.aux.popupActive) {
+        this.popupActiveToggle(); // -> Popup is active
+      }
       this.domain = state.context.domain;
       this.version = state.version;
 
@@ -68,6 +78,34 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
       this.cdr.detectChanges();
     });
+
+    // .subscribe((domain: ohMyDomain) => {
+    //   this.stateSub?.unsubscribe();
+    //   this.stateSub = this.stateService.getState$({ domain }).subscribe(state => {
+    //     if (!state) {
+    //       return this.isInitializing = true;
+    //     }
+    //     debugger;
+
+    //     this.context = state.context;
+
+    //     if (!state.aux.popupActive) {
+    //       this.popupActiveToggle(); // -> Popup is active
+    //     }
+    //     this.domain = state.context.domain;
+    //     this.version = state.version;
+
+    //     this.isInitializing = false;
+    //     this.enabled = state.aux.appActive;
+
+    //     if (this.enabled) {
+    //       this.showDisabled = 0;
+    //     } else if (this.showDisabled === -1) {
+    //       this.notifyDisabled();
+    //     }
+    //     this.cdr.detectChanges();
+    //   });
+    // })
   }
 
   onEnableChange(isChecked: boolean): void {

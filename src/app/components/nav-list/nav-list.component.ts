@@ -48,6 +48,8 @@ export class NavListComponent {
           await this.storeService.reset();
         } else if (reset === resetStateOptions.SELF) {
           await this.storeService.reset(this.context);
+        } else {
+          return;
         }
 
         this.router.navigate(['/'])

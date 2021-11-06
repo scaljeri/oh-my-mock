@@ -4,7 +4,7 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IOhMyContext, IOhMyPresetChange, IState, ohMyDataId } from '@shared/type';
+import { IData, IOhMyContext, IState, ohMyDataId } from '@shared/type';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -36,16 +36,16 @@ export const highlightSeq = [
 })
 export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() state: IState;
-  @Input() context: IOhMyContext;
+  @Input() context: IOhMyContext; // context !== state,context (but it can be)
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
   @Input() showExport: boolean;
   @Input() showPreset = true;
   @Input() showActivateToggle = true;
-  @Input() togglableRows = true;
+  @Input() @HostBinding('class.togglable') togglableRows = true;
   @Input() hideHeader = false;
-  @Input() @HostBinding('class') theme = 'dark';
+  @Input() persistFilter = true;
 
   @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
@@ -79,7 +79,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.state.aux.filterKeywords = filter;
       this.filteredDataList = this.filterListByKeywords();
 
-      // Right now it is not possible to persist the filter of an other domain
+      if (!this.persistFilter) {
+        return;
+      }
+
       if (this.state.context.domain === this.context.domain) {
         clearTimeout(filterDebounceId);
         filterDebounceId = window.setTimeout(() => {
@@ -168,7 +171,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onClone(id: ohMyDataId, event): void {
     event.stopPropagation();
 
-    this.storeService.cloneRequest(id, this.context);
+    this.storeService.cloneRequest(id, this.state.context, this.context);
     this.toast.success('Cloned ' + this.state.data.url);
   }
 

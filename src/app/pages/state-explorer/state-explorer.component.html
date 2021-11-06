@@ -32,12 +32,14 @@
       </button>
       <oh-my-data-list *ngIf="selectedState"
         [state]="selectedState"
+        [context]="context"
+        [persistFilter]="false"
         [showClone]="true"
         [showDelete]="true"
         [context]="state.context"
         [togglableRows]="false"
         [showDelete]="false"
-        (selectRow)="onDataSelect($event)" [hideHeader]="true"></oh-my-data-list>
+        [hideHeader]="true"></oh-my-data-list>
     </mat-expansion-panel>
     <!-- <mat-expansion-panel> -->
       <!-- <oh-my-request *ngIf="dataItem" [requestId]="dataItem.id" [context]="context"></oh-my-request> -->

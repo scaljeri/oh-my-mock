@@ -52,7 +52,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.stateService.response$.pipe(filter(r => r && this.response && r.id === this.response.id))
+    this.subscriptions.add(this.stateService.response$.pipe(filter(r => r && r.id === this.response?.id))
       .subscribe(r => {
         this.response = r;
         this.responseCtrl.setValue(r.responseMock, { emitEvent: false });
@@ -70,7 +70,6 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   async ngOnChanges(): Promise<void> {
     const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
-    this.response = undefined;
 
     if (!activeResponse) {
       return;

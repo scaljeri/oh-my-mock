@@ -12,17 +12,19 @@ export class StorageService {
 
   get<T extends IMock | IOhMyMock | IState>(key: string): Promise<T> {
     return new Promise(r => {
-      this.ngZone.runOutsideAngular(() => {
-        StorageUtils.get<T>(key).then(r);
-      });
+      // this.ngZone.runOutsideAngular(() => {
+        StorageUtils.get<T>(key).then((out) => {
+          this.ngZone.run(() => r(out));
+        });
+      // });
     });
   }
 
   set(key: string, value: unknown & { version?: string }): Promise<void> {
     return new Promise(r => {
-      this.ngZone.runOutsideAngular(() => {
-        StorageUtils.set(key, value).then(r);
-      });
+      // this.ngZone.runOutsideAngular(() => {
+        StorageUtils.set(key, value).then(() => this.ngZone.run(r));
+      // });
     });
   }
 

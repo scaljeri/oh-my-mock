@@ -128,8 +128,8 @@ export class OhMyState {
     return state;
   }
 
-  async cloneRequest(id: ohMyMockId, context: IOhMyContext): Promise<IData> {
-    const state = await this.getState(context);
+  async cloneRequest(id: ohMyMockId, sourceContext: IOhMyContext, context: IOhMyContext): Promise<IData> {
+    let state = await this.getState(sourceContext);
     const request = { ...state.data[id], id: uniqueId() };
     const responses = Object.values(request.mocks);
 
@@ -148,6 +148,7 @@ export class OhMyState {
       await this.storageService.set(newId, response);
     }
 
+    state = await this.getState(context);
     await this.storageService.set(state.domain, StateUtils.setData(state, request));
 
     return request;
