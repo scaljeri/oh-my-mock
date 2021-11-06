@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { forwarderGuard } from './forward-guard';
 import { ConfigComponent } from './components/config/config.component';
 
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
@@ -11,7 +10,6 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
 const appRoutes: Routes = [
   {
     path: '',
-    canActivate: [forwarderGuard],
     children: [
       {
         path: '',
