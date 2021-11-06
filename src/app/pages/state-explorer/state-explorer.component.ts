@@ -50,10 +50,10 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
     this.panels.toArray()[1].open();
   }
 
-  onCloneAll(): void {
-    Object.values(this.selectedState.data).forEach(data => {
-      this.storeService.cloneRequest(data.id, this.selectedState.context, this.state.context)
-    });
+  async onCloneAll(): Promise<void> {
+    for(const request of Object.values(this.selectedState.data)) {
+      await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
+    }
     this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);
   }
 
