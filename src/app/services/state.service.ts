@@ -3,7 +3,7 @@ import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
 import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
+import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
 import { StoreUtils } from '@shared/utils/store';
 import { StorageService } from './storage.service';
@@ -53,8 +53,14 @@ export class OhMyStateService {
 
     this.state$ = this.appState.domain$.pipe(
       map(domain => ({ domain })),
+      tap(async context => {
+        if (context.domain !== this.state.domain) {
+          this.state = await this.initState(context.domain);
+          this.stateSubject.next(this.state);
+        }
+      }),
       startWith({ domain }),
-      switchMap(d => this.getState$(d)),
+      switchMap(context => this.getState$(context)),
       shareReplay(1));
 
     this.stateSubject.next(this.state);
@@ -90,9 +96,6 @@ export class OhMyStateService {
   }
 
   public getState$(context: IOhMyContext): Observable<IState> {
-    // this.storageService.get<IState>(context.domain).then(s => this.stateSubject.next(s));
-
-    // return this.state$.pipe(filter(s => s?.domain === context.domain), shareReplay(1));
     return this.stateSubject.pipe(filter(s => {
       return s?.domain === context.domain
     }), shareReplay(1));
@@ -101,6 +104,9 @@ export class OhMyStateService {
   private bindStreams(): void {
     this.ngZone.runOutsideAngular(() => {
       StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
+        if (!this.context) {
+          return;
+        }
         // In case of delete/reset `newValue` will be `undefined`
         const type = update.newValue?.type || update.oldValue.type;
 

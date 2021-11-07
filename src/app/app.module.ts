@@ -24,6 +24,7 @@ import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
 import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
+import { ContentService } from './services/content.service';
 
 @NgModule({
   declarations: [
@@ -56,6 +57,7 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
   bootstrap: [AppComponent]
 })
 export class AppModule {
+  constructor(private contentService: ContentService) {}
 }
 
 chrome.storage.local.get(null, function (data) { console.log('ALL DATA: ', data); })

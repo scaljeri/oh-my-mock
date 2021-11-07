@@ -10,7 +10,6 @@ import { handleApiResponse } from './handle-api-response';
 
 // debug('Script loaded and ready....');
 
-console.log('xxxxxxxxxxxxx');
 const contentState = new OhMyContentState();
 
 let isInjectedInjected = false;
@@ -25,7 +24,9 @@ contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
 
 
 // Handle messages from Popup / Background script
-chrome.runtime.onMessage.addListener(emitPacket);
+chrome.runtime.onMessage.addListener((packet, sender) => {
+  emitPacket(packet);
+});
 
 // function startUpdates() {
 //   if (updateSubscription) {
@@ -68,16 +69,6 @@ function sendKnockKnock() {
   sendMsgToPopup({ type: packetTypes.KNOCKKNOCK });
 }
 
-// function load<T = unknown>(key = STORAGE_KEY): Promise<T> {
-//   return cache[key] || new Promise(resolve => {
-//     chrome.storage.local.get([key], (data) => {
-//       cache[key] = data[key];
-
-//       resolve(data[key] as T);
-//     });
-//   });
-// }
-
 function handlePacketFromInjected(packet: IPacket) {
   // chrome.runtime.sendMessage({
   //   ...packet,
@@ -95,7 +86,7 @@ function handlePacketFromBg(packet: IPacket): void {
   //   } as IPacketPayload);
 }
 
-async function handlePopupClosed(packet: IPacket<{ active: boolean }>): Promise<void> {
+async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> {
   if (!packet.tabId) {
     return;
   }
@@ -105,18 +96,6 @@ async function handlePopupClosed(packet: IPacket<{ active: boolean }>): Promise<
   if (packet.domain !== OhMyContentState.host) {
     return sendKnockKnock();
   }
-
-  // if (packet.payload.data.active) {
-  //   // startUpdates();
-
-  //   cache[STORAGE_KEY] = await StorageUtils.get();
-  //   cache[HOST] = await StorageUtils.get(HOST);
-  // } else {
-  //   stopUpdates();
-  //   cache[HOST].aux.appActive = false;
-  // }
-
-  sendMsgToInjected({ type: packetTypes.STATE, data: await contentState.getState() });
 }
 
 // async function handleDispatchedRequest(packet: IPacket<IOhMyRequest>): Promise<void> {
@@ -125,24 +104,25 @@ async function handlePopupClosed(packet: IPacket<{ active: boolean }>): Promise<
 //   sendMsgToInjected({ type: packetTypes.MOCK_RESPONSE, data: result });
 // }
 
+// Attach message listaners
+// streamByType$(packetTypes.MOCK, appSources.INJECTED).subscribe(handlePacketFromInjected);
+// streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
+// streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
+// streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
+streamByType$<any>(packetTypes.ACTIVE, appSources.POPUP).subscribe(handlePopup);
+
+streamByType$<any>(packetTypes.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
+streamByType$<IOhMyAPIResponse>(packetTypes.DISPATCH_API_RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
+
+async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
+  const result = handleApiResponse(payload.data, contentState);
+  // TODO: send result back to injected
+}
+
 async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
   const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, contentState);
 
   sendMsgToInjected({ type: packetTypes.MOCK_RESPONSE, data: output, context: payload.context },);
-}
-
-// Attach message listaners
-streamByType$(packetTypes.MOCK, appSources.INJECTED).subscribe(handlePacketFromInjected);
-streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
-// streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
-streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
-streamByType$<any>(packetTypes.ACTIVE, appSources.POPUP).subscribe(handlePopupClosed);
-streamByType$<any>(packetTypes.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
-
-streamByType$<IOhMyAPIResponse>(packetTypes.DISPATCH_API_RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
-async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
-  const result = handleApiResponse(payload.data, contentState);
-  // TODO: send result back to injected
 }
 
 // streamByType$(packetTypes.STATE, appSources.POPUP).subscribe(handlePacketFromPopup);
@@ -162,6 +142,7 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>)
 // Inject XHR/Fetch mocking code and more
 (async function () {
   const state = await contentState.getState() || StateUtils.init();
+  sendMsgToPopup({ type: packetTypes.KNOCKKNOCK });
 
   if (state.aux.popupActive) {
     inject(state);
@@ -178,12 +159,15 @@ function inject(state: IState) {
   if (!state) {
     return;
   }
-  isInjectedInjected = true;
 
-  const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
-  const script = document.createElement('script');
-  script.textContent = actualCode;
-  (document.head || document.documentElement).appendChild(script);
-  script.remove();
+  if (!isInjectedInjected) {
+    isInjectedInjected = true;
+
+    const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
+    const script = document.createElement('script');
+    script.textContent = actualCode;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+  }
 }
 

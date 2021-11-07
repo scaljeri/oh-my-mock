@@ -19,8 +19,10 @@ window.fetch = OhMockFetch;
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
-chrome.runtime.onMessage.addListener(emitPacket);
-connectWithLocalServer();
+chrome.runtime.onMessage.addListener((packet, sender) => {
+  emitPacket(packet);
+});
+// connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;
@@ -90,7 +92,7 @@ chrome.browserAction.onClicked.addListener(function (tab) {
     //     popupIsActive = false;
     //   } else {
 
-        chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
+    chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
     //     popupIsActive = true;
     //   }
     // }

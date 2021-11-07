@@ -42,7 +42,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
-  private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
+  // private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
+
   constructor(
     private appState: AppStateService,
     private storeService: OhMyState,
@@ -58,6 +59,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.stateService.state$.subscribe((state: IState) => {
       if (!state) {
         return this.isInitializing = true;
+      }
+
+      if (state.domain !== this.domain) { // Domain switch
+        this.router.navigate(['/']).then(() => {
+          this.cdr.detectChanges();
+        });
       }
 
       this.context = state.context;
@@ -78,34 +85,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
       this.cdr.detectChanges();
     });
-
-    // .subscribe((domain: ohMyDomain) => {
-    //   this.stateSub?.unsubscribe();
-    //   this.stateSub = this.stateService.getState$({ domain }).subscribe(state => {
-    //     if (!state) {
-    //       return this.isInitializing = true;
-    //     }
-    //     debugger;
-
-    //     this.context = state.context;
-
-    //     if (!state.aux.popupActive) {
-    //       this.popupActiveToggle(); // -> Popup is active
-    //     }
-    //     this.domain = state.context.domain;
-    //     this.version = state.version;
-
-    //     this.isInitializing = false;
-    //     this.enabled = state.aux.appActive;
-
-    //     if (this.enabled) {
-    //       this.showDisabled = 0;
-    //     } else if (this.showDisabled === -1) {
-    //       this.notifyDisabled();
-    //     }
-    //     this.cdr.detectChanges();
-    //   });
-    // })
   }
 
   onEnableChange(isChecked: boolean): void {
