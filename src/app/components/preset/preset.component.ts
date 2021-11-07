@@ -83,14 +83,13 @@ export class PresetComponent implements OnInit, OnChanges {
     this.presetCtrl.setValue(value, { emitEvent: false });
   }
 
-  onPresetCopy(preset: string) {
+  async onPresetCopy(preset: string) {
     this.isPresetCopied = true;
 
     const update = PresetUtils.create(this.presets, preset);
-    const presets = { ...this.state.presets, [update.id]: update.value };
     this.presetCtrl.setValue(update.value, { emitEvent: false });
 
-    this.storeService.upsertState({ presets, context: { preset: update.id, domain: this.context.domain } }, this.context);
+    await this.storeService.newPreset(update.value, update.id, this.context);
   }
 
   onPresetDelete(preset: string) {

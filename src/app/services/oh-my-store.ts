@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { STORAGE_KEY } from '@shared/constants';
 
-import { IOhMyMock, ohMyDomain, IState, ohMyMockId, IData, IMock, IOhMyContext, ohMyDataId, IOhMyAux } from '@shared/type';
+import { IOhMyMock, ohMyDomain, IState, ohMyMockId, IData, IMock, IOhMyContext, ohMyDataId, IOhMyAux, ohMyPresetId } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { MockUtils } from '@shared/utils/mock';
@@ -60,6 +60,25 @@ export class OhMyState {
     return retVal;
   }
 
+  async newPreset(label: string, id: ohMyPresetId, context: IOhMyContext, activate = true): Promise<IState> {
+    const state = await this.storageService.get<IState>(context.domain);
+    const currPreset = state.context.preset;
+
+    if (activate) {
+      state.context.preset = id;
+    }
+
+    state.presets[id] = label;
+
+    Object.values(state.data).forEach(d => {
+      d.selected[id] = d.selected[currPreset]; // Update by reference
+    });
+
+    await this.storageService.set(state.domain, state);
+
+    return state;
+  }
+
   async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = true): Promise<IMock> {
     if (!sourceId) {
       return this.upsertResponse(update, request, context);
@@ -78,21 +97,24 @@ export class OhMyState {
     return this.upsertResponse(response, request, context, activate);
   }
 
-  async upsertResponse(response: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = false): Promise<IMock> {
+  async upsertResponse(response: Partial<IMock>, pRequest: Partial<IData>, context: IOhMyContext, activate = false): Promise<IMock> {
+    let state = await this.getState(context);
     const retVal = response.id ? { ...await this.storageService.get<IMock>(response.id), ...response } :
       MockUtils.init(response);
+
+    let request = StateUtils.findData(state, pRequest);
+    if (!request) { // also new request!
+      state = await this.upsertRequest(request, context);
+      request = StateUtils.findData(state, request);
+    }
 
     if (response.id) {
       retVal.modifiedOn = timestamp();
     }
 
-    let state = await this.getState(context);
-    request = StateUtils.findData(state, request);
-
-    if (!request) {
-      state = await this.upsertRequest(request, context);
-      request = StateUtils.findData(state, request);
-    }
+    Object.keys(state.presets).filter(p => !request.selected[p]).forEach(p => {
+      request.selected[p] = retVal.id;
+    });
 
     request = DataUtils.addMock(context, request as IData, retVal);
 
