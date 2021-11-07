@@ -1,9 +1,10 @@
-import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngneat/hot-toast';
 import { domain, IData, IOhMyContext, IState } from '@shared/type';
 
 import { Subscription } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 import { OhMyState } from 'src/app/services/oh-my-store';
 import { OhMyStateService } from 'src/app/services/state.service';
 import { StorageService } from 'src/app/services/storage.service';
@@ -34,12 +35,19 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
     private stateStream: OhMyStateService,
     private storageService: StorageService,
     private storeService: OhMyState,
+    private cdr: ChangeDetectorRef,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.stateStream.state$.subscribe(state => {
-      this.state = state;
-      this.domains = this.stateStream.store.domains.filter(d => d !== state.domain);
+    // TODO: listen for domain change??
+
+    this.subscriptions.add(this.stateStream.store$.pipe(
+      startWith(this.stateStream.store)).subscribe(store => {
+      if (store) {
+        this.state = this.stateStream.state;
+        this.domains = store.domains.filter(d => d !== this.state.domain);
+        this.cdr.detectChanges();
+      }
     }));
   }
 
@@ -48,10 +56,11 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
     this.selectedState = await this.storageService.get(domain);
     this.hasSelectedStateAnyRequests = Object.keys(this.selectedState.data)?.length > 0
     this.panels.toArray()[1].open();
+    this.cdr.detectChanges();
   }
 
   async onCloneAll(): Promise<void> {
-    for(const request of Object.values(this.selectedState.data)) {
+    for (const request of Object.values(this.selectedState.data)) {
       await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
     }
     this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);

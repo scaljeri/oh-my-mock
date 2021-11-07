@@ -66,6 +66,9 @@ export class OhMyStateService {
     if (!store) {
       store = StoreUtils.init({ domain });
       await this.storageService.setStore(store);
+    } else if (!store.domains.includes(domain)) {
+      store.domains.push(domain);
+      await this.storageService.setStore(store);
     }
 
     return store;
@@ -104,6 +107,10 @@ export class OhMyStateService {
         switch (type) {
           case objectTypes.STATE:
             if (update.newValue) {
+              if ((update.newValue as IState).domain === this.context.domain) {
+                this.state = update.newValue as IState;
+              }
+
               this.stateSubject.next(update.newValue as IState);
             }
             break;
@@ -111,6 +118,7 @@ export class OhMyStateService {
             this.responseSubject.next(update.newValue as IMock);
             break;
           case objectTypes.STORE:
+            this.store = update.newValue as IOhMyMock;
             this.storeSubject.next(update.newValue as IOhMyMock);
             break;
         }
