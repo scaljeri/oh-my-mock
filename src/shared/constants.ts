@@ -9,17 +9,20 @@ Inside this sandbox you have access to the following data:
     return a PROMISE in that case!!
 
 - Synchronous example:
-
-     mock.response[1].name = "Sync example";
-     return mock;
+    const response = JSON.parse(mock.response);
+    response[1].name = "Sync example";
+    mock.response = JSON.stringify(response);
+    return mock;
 
 - Asynchronous example:
 
-     const response = await fetch("/users");
-     const data = await response.json();
-     data[1].name = "From custom code";
-     mock.response = JSON.stringify(r);
-     return mock;
+    const response = await fetch("/users");
+    const data = await response.json();
+    data[1].name = "From custom code";
+    mock.response = JSON.stringify(r);
+
+    // No need to return a Promise here, "await" takes care o this!
+    return mock;
 */
 
 return mock;
