@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { ChangeDetectionStrategy, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { style, animate } from "@angular/animations";
 
@@ -45,10 +45,12 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() showActivateToggle = true;
   @Input() @HostBinding('class.togglable') togglableRows = true;
   @Input() hideHeader = false;
+  @Input() hideFilter = false;
   @Input() persistFilter = true;
 
   @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
+  @Output() filteredList = new EventEmitter<IData[]>();
 
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
@@ -70,6 +72,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     public dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
     private toast: HotToastService,
     private storeService: OhMyState) { }
 
@@ -78,6 +81,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.filterCtrl.valueChanges.subscribe(filter => {
       this.state.aux.filterKeywords = filter;
       this.filteredDataList = this.filterListByKeywords();
+      this.filteredList.emit(this.filteredDataList);
 
       if (!this.persistFilter) {
         return;
@@ -94,8 +98,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     if (this.state) {
+      if (!this.context) {
+        this.context = this.state.context;
+      }
+
       this.filteredDataList = this.filterListByKeywords();
       this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
+
+      this.filteredList.emit(this.filteredDataList);
     }
   }
 
@@ -103,12 +113,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
   }
 
-  // onFilterUpdate(): void {
-  //   // this.updateAux({ filterKeywords: this.filterCtrl.value.toLowerCase() });
-  // }
-
   filterListByKeywords(): IData[] {
-    const data = Object.values(this.state.data);
+    const data = Object.values(this.state.data).sort((a, b) => a.lastHit > b.lastHit ? -1 : 1);
     const input = this.state.aux.filterKeywords as string;
 
     if (input === '' || input === undefined || input === null) {
@@ -189,17 +195,19 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public selectAll(): void {
-    // this.state.data.forEach((d, i) => {
-    //   this.selection.select(i);
-    // });
+    Object.keys(this.state.data).forEach((d, i) => {
+      this.selection.select(i);
+    });
+    this.cdr.detectChanges();
   }
 
   public deselectAll(): void {
     this.selection.clear();
+    this.cdr.detectChanges();
   }
 
   trackBy(index, row): string {
-    return row.type + row.method + row.url;
+    return row.id; // type + row.method + row.url;
   }
 }
 

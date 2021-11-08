@@ -57,7 +57,10 @@ import { ContentService } from './services/content.service';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor(private contentService: ContentService) {}
+  constructor(private contentService: ContentService) { }
 }
 
-chrome.storage.local.get(null, function (data) { console.log('ALL DATA: ', data); })
+chrome.storage.local.get(null, function (data) {
+  console.log('window.data === ', data);
+  window['data'] = data;
+});

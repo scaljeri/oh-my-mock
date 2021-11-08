@@ -6,17 +6,6 @@ import { evalCode } from '../shared/utils/eval-code';
 import { ohMyMockStatus } from "../shared/constants";
 
 export async function handleApiRequest(request: IOhMyAPIRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
-  /*
-      1) pass to server
-      2) check state
-          * yes -> create response
-          * no -> return null
-  */
-
-  // 1)
-  // TODO
-
-  // 2)
   const state = await contentState.getState();
   const data = StateUtils.findData(state, request);
 
@@ -24,11 +13,15 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
     return { status: ohMyMockStatus.NO_CONTENT };
   }
 
+  data.lastHit = Date.now();
+  await contentState.set(state.domain, StateUtils.setData(state, data));
+
   const activeResponseId = DataUtils.activeMock(data, state.context)
 
   if (activeResponseId) {
     const mockShallow = DataUtils.getSelectedResponse(data, state.context) as IOhMyShallowMock;
     const mock = await contentState.get<IMock>(mockShallow.id);
+
 
     const response = await evalCode(mock, request);
     return response;

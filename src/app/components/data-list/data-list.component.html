@@ -12,7 +12,7 @@
 
   <div class="toggles">
     <ng-container *ngIf="showPreset">
-      <oh-my-preset [context]="context" class="preset"></oh-my-preset>
+      <oh-my-preset *ngIf="context" [context]="context" class="preset"></oh-my-preset>
       <mat-icon class="info info-contrast scenario-help" color="primary"
         [matTooltip]="presetInfo">info</mat-icon>
     </ng-container>
@@ -34,7 +34,7 @@
     <span class="method">Method</span>
     <div class="url">
       <span>Url</span>
-      <div class="filter-field" [ngClass]="{'active': filterCtrl.value }">
+      <div *ngIf="hideFilter === false" class="filter-field" [ngClass]="{'active': filterCtrl.value }">
         <mat-form-field [floatLabel]="'never'">
           <input type="search" matInput placeholder="Filter" [formControl]="filterCtrl">
           <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"
@@ -51,17 +51,17 @@
     <span class="actions btns-1">Actions</span>
   </li>
 
-  <li class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy"
+  <li [title]="row.id" class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy"
     (click)="onDataClick(row, index)" [ngClass]="{
     'row-clickable': togglableRows,
     'is-selected': selection.isSelected(index),
-    'is-active': row.enabled[context.preset],
-    'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn}">
+    'is-active': row.enabled[context?.preset],
+    'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn}">
     <span class="method">{{row.requestType}}</span>
     <span class="type">{{row.method}}</span>
     <span class="url">{{row.url}}</span>
     <span class="mock">
-      <oh-my-mock-label *ngIf="row.selected[context.preset] as mockId" [mock]="row.mocks[mockId]"></oh-my-mock-label>
+      <oh-my-mock-label *ngIf="row.selected[context?.preset] as mockId" [mock]="row.mocks[mockId]"></oh-my-mock-label>
     </span>
     <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
   </li>
@@ -87,8 +87,8 @@
     <div class="btn-wrapper">
       <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">
-        <mat-icon *ngIf="!row.enabled[context.preset]">play_arrow</mat-icon>
-        <mat-icon *ngIf="row.enabled[context.preset]">stop</mat-icon>
+        <mat-icon *ngIf="!row.enabled[context?.preset]">play_arrow</mat-icon>
+        <mat-icon *ngIf="row.enabled[context?.preset]">stop</mat-icon>
       </button>
       <button *ngIf="showClone" (click)="onClone(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">

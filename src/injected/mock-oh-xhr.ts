@@ -67,7 +67,7 @@ export function patchXmlHttpRequest() {
           // TODO: Should we do something with this event
           dispatchApiResponse({
             data: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
-            mock: { statusCode: this.status, response: this.responseText, headers: parse(this.getAllResponseHeaders()) },
+            mock: { statusCode: this.status, response: this.response, headers: parse(this.getAllResponseHeaders()) },
           });
         });
         protoSend.call(this, body);

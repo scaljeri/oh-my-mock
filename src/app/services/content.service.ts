@@ -48,7 +48,7 @@ export class ContentService {
         }
       } else {
         if (payload.type === packetTypes.KNOCKKNOCK) {
-          if (!this.appStateService.isSameDomain(domain)) {
+          if (tabId && this.appStateService.isSameDomain(domain)) {
             this.appStateService.domain = domain;
           }
 

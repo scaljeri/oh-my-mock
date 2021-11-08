@@ -1,4 +1,4 @@
-import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IState } from '../type';
+import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -76,7 +76,7 @@ export class DataUtils {
       enabled: { ...data.enabled },
       mocks: { ...data.mocks }
     };
-    const mock = data.mocks[mockId];
+    // const mock = data.mocks[mockId];
     delete data.mocks[mockId];
     delete data.selected[context.preset];
     delete data.enabled[context.preset];
@@ -124,6 +124,7 @@ export class DataUtils {
       enabled: {},
       selected: {},
       mocks: {},
+      lastHit: Date.now(),
       ...data
     } as IData;
 

@@ -8,6 +8,10 @@ export interface IOhMyCache {
   tick?: string;
 }
 
+export interface IOhMyStorage {
+  tabId: number;
+}
+
 export class OhMyContentState {
   private cache: IOhMyCache = {};
   private subjects: Record<string, BehaviorSubject<any>> = {};
@@ -15,6 +19,7 @@ export class OhMyContentState {
   static host = window.location.host;
   static href = window.location.href;
   static tabId: number;
+  static storage: IOhMyStorage;
 
   constructor() {
     StorageUtils.listen();
@@ -22,6 +27,11 @@ export class OhMyContentState {
       this.cache[key] = update.newValue;
       this.subjects[key]?.next(update.newValue);
     });
+
+    if (window.name) {
+      OhMyContentState.storage = JSON.parse(window.name) as IOhMyStorage;
+      OhMyContentState.tabId =  OhMyContentState.storage.tabId;
+    }
   }
 
   async get<T = unknown>(key = STORAGE_KEY): Promise<T> {
@@ -43,5 +53,9 @@ export class OhMyContentState {
     this.subjects[key] ??= new BehaviorSubject<T>(undefined);
 
     return this.subjects[key].asObservable().pipe(filter(s => !!s)); // shared???
+  }
+
+  persist(data = {}): void {
+    window.name = JSON.stringify({ tabId: OhMyContentState.tabId, ...data });
   }
 }

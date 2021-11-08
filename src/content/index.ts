@@ -91,8 +91,11 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
     return;
   }
 
+  // TabId is independend of domain, it belongs to the tab!
   OhMyContentState.tabId = packet.tabId;
+  contentState.persist();
 
+  // Domain change
   if (packet.domain !== OhMyContentState.host) {
     return sendKnockKnock();
   }
