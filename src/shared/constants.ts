@@ -36,6 +36,7 @@ export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
 
 export enum objectTypes {
+  REQUEST = 'REQUEST',
   MOCK = 'MOCK',
   STATE = 'STATE',
   STORE = 'STORE'

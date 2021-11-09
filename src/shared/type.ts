@@ -64,6 +64,8 @@ export interface IData extends IOhMyMockContext {
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
   lastHit: number;
+  version?: string;
+  type: objectTypes.REQUEST;
 }
 
 export interface IOhMyShallowMock {
@@ -187,4 +189,10 @@ export interface IOhMyPresetChange {
   sourceId?: string; // preset to be cloned
   delete?: boolean;
   activate?: boolean;
+}
+
+export interface IOhMyBackup {
+  requests: IData[],
+  responses: IMock[],
+  version: string;
 }

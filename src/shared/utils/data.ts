@@ -1,4 +1,5 @@
-import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId } from '../type';
+import { objectTypes } from '../constants';
+import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IOhMyPresets } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -125,7 +126,8 @@ export class DataUtils {
       selected: {},
       mocks: {},
       lastHit: Date.now(),
-      ...data
+      ...data,
+      type: objectTypes.REQUEST,
     } as IData;
 
     if (!data.id) {
@@ -137,5 +139,20 @@ export class DataUtils {
 
   static statusCodeSort(a, b) {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
+  }
+
+  // TODO: IS this needed???
+  static prefilWithPresets(request: IData, presets: IOhMyPresets = {}): IData {
+    request.selected ??= {};
+    request.enabled ??= {};
+
+    const responses = Object.values(request.mocks).sort((a, b) => a.statusCode > b.statusCode ? -1 : 1);
+
+    Object.keys(presets).forEach(p => {
+      request.enabled[p] ??= false;
+      request.selected[p] ??= responses[0]?.id;
+    });
+
+    return request;
   }
 }
