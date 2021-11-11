@@ -4,6 +4,7 @@ import { parse } from '../shared/utils/xhr-headers';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import * as headers from '../shared/utils/xhr-headers';
+import { toBlob, toDataURL } from './blob-response';
 
 // To serve OhMyMock responses for XMLHttpRequest, the following properties will be replaced:
 let protoOpen;
@@ -61,17 +62,23 @@ export function patchXmlHttpRequest() {
       method: this.ohMethod,
       headers: this.ohHeaders,
       body
-    } as IOhMyAPIRequest, 'XHR').then(data => {
+    } as IOhMyAPIRequest, 'XHR').then(async data => {
       if (data.status !== ohMyMockStatus.OK) {
         this.addEventListener('load', event => {
           // TODO: Should we do something with this event
-          dispatchApiResponse({
-            data: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
-            mock: { statusCode: this.status, response: this.response, headers: parse(this.getAllResponseHeaders()) },
+          toDataURL(this.response, (response) => {
+            dispatchApiResponse({
+              data: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
+              mock: { statusCode: this.status, response: response, headers: parse(this.getAllResponseHeaders()) },
+            });
           });
         });
         protoSend.call(this, body);
       } else {
+        if ((data.response as string).match(/data:.*base64,/)) { // It is base64 => Blob
+          data.response = await toBlob(data.response as string);
+        }
+
         injectResponse(this, data);
 
         setTimeout(() => {

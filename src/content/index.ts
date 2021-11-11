@@ -7,10 +7,16 @@ import { OhMyContentState } from './content-state';
 import { handleApiRequest } from './handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
+import { OhMyQueue } from '../shared/utils/queue';
 
 // debug('Script loaded and ready....');
 
 const contentState = new OhMyContentState();
+
+const queue = new OhMyQueue();
+queue.addHandler('response', async (packet: unknown): Promise<void> => {
+  await handleApiResponse(packet as IOhMyAPIResponse, contentState);
+});
 
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
@@ -118,8 +124,8 @@ streamByType$<any>(packetTypes.DISPATCH_API_REQUEST, appSources.INJECTED).subscr
 streamByType$<IOhMyAPIResponse>(packetTypes.DISPATCH_API_RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
-  const result = handleApiResponse(payload.data, contentState);
-  // TODO: send result back to injected
+  queue.addPacket(payload.data, 'response');
+  // TODO: send result back to injected???
 }
 
 async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {

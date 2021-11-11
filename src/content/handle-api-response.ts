@@ -30,4 +30,5 @@ export async function handleApiResponse(payload: IOhMyAPIResponse, contentState:
 
   await contentState.set(response.id, response);
   await contentState.set(state.domain, state);
+  state = await contentState.getState()
 }

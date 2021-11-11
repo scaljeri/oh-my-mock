@@ -9,7 +9,10 @@ const ORIG_FETCH = window.fetch;
 
 declare let window: { fetch: any };
 
-const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
+const OhMyFetch = async (url, config: { method?: requestMethod, __ohSkip?: boolean } = {}) => {
+  if (config.__ohSkip) {
+    return fecthApi(url, config);
+  }
   const { response, headers, status, statusCode, delay } =
     await dispatchApiRequest({
       url,
@@ -37,26 +40,31 @@ const OhMyFetch = async (url, config: { method?: requestMethod } = {}) => {
       status: statusCode
     });
 
-    setTimeout(() => resolv(rsp), delay  || 0);
+    setTimeout(() => resolv(rsp), delay || 0);
   });
 }
 
 function fecthApi(url, config): Promise<unknown> {
-  return ORIG_FETCH(url, config).then(async response => {
-    const clone = response.clone();
+  const ohSkip = config.__ohSkip;
+  delete config.__ohSkip;
 
-    await dispatchApiResponse({
-      data: {
-        url,
-        method: config.method || 'GET',
-        requestType: 'FETCH',
-      },
-      mock: {
-        statusCode: response.status,
-        response: await clone.text(),
-        headers: fetchUtils.headersToJson(response.headers)
-      }
-    });
+  return ORIG_FETCH(url, config).then(async response => {
+    if (!ohSkip) {
+      const clone = response.clone();
+
+      await dispatchApiResponse({
+        data: {
+          url,
+          method: config.method || 'GET',
+          requestType: 'FETCH',
+        },
+        mock: {
+          statusCode: response.status,
+          response: await clone.text(),
+          headers: fetchUtils.headersToJson(response.headers)
+        }
+      });
+    }
 
     return response;
   });
