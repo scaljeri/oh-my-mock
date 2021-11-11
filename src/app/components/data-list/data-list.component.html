@@ -24,16 +24,16 @@
           color="primary">
         </mat-slide-toggle>
       </ng-container>
-      <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-      <mat-menu  #menu="matMenu">
-        <ul class="main-menu">
-          <li><button mat-menu-item>Validate requests</button></li>
-          <li><button mat-menu-item>Activate all requests</button></li>
-          <li [ngClass]="{'is-selected': state.aux.blurImages }"><button (click)="onBlurImage()"  mat-menu-item><span>Blur images</span></button></li>
-        </ul>
-      </mat-menu>
+      <ng-container *ngIf="showMenu">
+        <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+        <mat-menu  #menu="matMenu">
+          <ul class="main-menu">
+            <li><button mat-menu-item>Validate requests</button></li>
+            <li><button mat-menu-item (click)="onActivateAll()">Activate all requests</button></li>
+            <li [ngClass]="{'is-selected': state.aux.blurImages }"><button (click)="onBlurImage()"  mat-menu-item><span>Blur images</span></button></li>
+          </ul>
+        </mat-menu>
+      </ng-container>
     </div>
   </div>
 </div>

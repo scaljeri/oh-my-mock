@@ -48,6 +48,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() hideFilter = false;
   @Input() persistFilter = true;
 
+  @Input() showMenu = false;
+
   @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
   @Output() filteredList = new EventEmitter<IData[]>();
@@ -208,6 +210,19 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   public deselectAll(): void {
     this.selection.clear();
     this.cdr.detectChanges();
+  }
+
+  onActivateAll(): void {
+    this.state = { ...this.state, data: { ...this.state.data}};
+    Object.values(this.state.data).forEach(d => {
+      if (d.selected[this.state.context.preset]) {
+        d = { ...d, enabled: { ...d.enabled, [this.state.context.preset]: true} };
+        this.state.data[d.id] = d;
+      }
+    });
+
+    // NOTE: It is not this.context!!!!!
+    this.storeService.upsertState(this.state, this.state.context);
   }
 
   trackBy(index, row): string {
