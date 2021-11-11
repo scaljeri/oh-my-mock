@@ -21,6 +21,18 @@
   }
 }
 
+.main-menu {
+  @include oh-list-unstyled;
+
+  .is-selected {
+    background-color: $primary;
+
+    span {
+      font-weight: bold;
+    }
+  }
+}
+
 .is-active .mock oh-my-mock-label {
   opacity: 1;
 }

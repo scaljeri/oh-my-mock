@@ -1,10 +1,10 @@
-import { ohMyMockStatus } from '../shared/constants';
+import { IS_BASE64_RE, ohMyMockStatus } from '../shared/constants';
 import { IOhMyAPIRequest, IOhMyMockResponse } from '../shared/type';
 import { parse } from '../shared/utils/xhr-headers';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import * as headers from '../shared/utils/xhr-headers';
-import { toBlob, toDataURL } from './blob-response';
+import { toBlob, toDataURL } from '../shared/utils/image';
 
 // To serve OhMyMock responses for XMLHttpRequest, the following properties will be replaced:
 let protoOpen;
@@ -75,7 +75,7 @@ export function patchXmlHttpRequest() {
         });
         protoSend.call(this, body);
       } else {
-        if ((data.response as string).match(/data:.*base64,/)) { // It is base64 => Blob
+        if ((data.response as string).match(IS_BASE64_RE)) { // It is base64 => Blob
           data.response = await toBlob(data.response as string);
         }
 

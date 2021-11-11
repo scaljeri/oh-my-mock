@@ -31,6 +31,7 @@ export interface IOhMyAux {
   appActive?: boolean;
   newAutoActivate?: boolean;
   popupActive?: boolean;
+  blurImages?: boolean;
 }
 
 export interface IOhMyContext {

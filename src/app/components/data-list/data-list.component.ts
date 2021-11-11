@@ -194,6 +194,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.selection.toggle(rowIndex);
   }
 
+  onBlurImage(): void {
+    this.storeService.updateAux({ blurImages: !this.state.aux.blurImages }, this.context);
+  }
+
   public selectAll(): void {
     Object.keys(this.state.data).forEach((d, i) => {
       this.selection.select(i);

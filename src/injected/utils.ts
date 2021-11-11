@@ -27,7 +27,11 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
       let response = data.response;
 
       if (data?.headers?.['content-type']?.includes('application/json')) {
+        try {
         response = data.response ? JSON.parse(data.response as string) : '';
+        } catch(e) {
+          response = data.response;
+        }
       }
       log(`${msg}`, response);
   }

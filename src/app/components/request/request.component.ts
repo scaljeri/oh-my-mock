@@ -18,6 +18,7 @@ import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.com
 import { OhMyStateService } from 'src/app/services/state.service';
 import { OhMyState } from 'src/app/services/oh-my-store';
 import { StorageService } from 'src/app/services/storage.service';
+import { IS_BASE64_RE } from '@shared/constants';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -28,6 +29,7 @@ import { StorageService } from 'src/app/services/storage.service';
 export class RequestComponent implements OnChanges, OnDestroy {
   @Input() request: IData;
   @Input() context: IOhMyContext;
+  @Input() blurImages = false;
 
   response: IMock;
 
@@ -41,6 +43,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
   responseCtrl = new FormControl(null, { updateOn: 'blur' });
   headersCtrl = new FormControl(null, { updateOn: 'blur' });
   hasMocks = false;
+  isResponseImage = false;
 
   constructor(
     private storeService: OhMyState,
@@ -87,6 +90,9 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
       this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
+      if (this.response.responseMock.match(IS_BASE64_RE) && this.response.headersMock['content-type'].match(/image/)) {
+        this.isResponseImage = true;
+      }
     }
   }
 

@@ -51,6 +51,7 @@ import { UpdateInputDirective } from './update-input/update-input.directive';
 import { ContentTypeComponent } from './form/content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatMenuModule} from '@angular/material/menu';
 import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
 import { ManageScenariosComponent } from './manage-presets/manage-scenarios.component';
 
@@ -114,7 +115,8 @@ import { PresetComponent } from './preset/preset.component';
     DragDropModule,
     MatSelectModule,
     MatAutocompleteModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatMenuModule
   ],
   exports: [
     DataListComponent,

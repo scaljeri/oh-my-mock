@@ -34,6 +34,7 @@ export const STATUS_CODE_INVALID_MSG = 'Invalid status code';
 export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
+export const IS_BASE64_RE = /data:.*base64,/;
 
 export enum objectTypes {
   REQUEST = 'REQUEST',

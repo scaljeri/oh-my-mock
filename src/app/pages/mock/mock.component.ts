@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IData, IOhMyContext, IState } from '@shared/type';
+import { IData, IOhMyAux, IOhMyContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
 import { OhMyStateService } from 'src/app/services/state.service';
@@ -18,6 +18,8 @@ export class PageMockComponent implements OnInit {
   private subscription: Subscription;
   public context: IOhMyContext;
 
+  aux: IOhMyAux;
+
   // @Dispatch() upsertData = (data: IData) => new UpsertData({ id: this.data.id, ...data }, this.context);
 
   constructor(private element: ElementRef,
@@ -31,6 +33,7 @@ export class PageMockComponent implements OnInit {
 
     this.subscription = this.stateService.state$.subscribe((state: IState) => {
       this.data = PageMockComponent.StateUtils.findData(state, { id: dataId });
+      this.aux = state.aux;
       this.context = state.context;
       this.cdr.detectChanges();
     });

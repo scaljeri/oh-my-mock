@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { StorageUtils } from '@shared/utils/storage';
-import { IMock, IOhMyMock, IState } from '@shared/type';
+import { IMock, IOhMyMock, IState, ohMyDomain } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
 
 @Injectable({
@@ -32,10 +32,10 @@ export class StorageService {
     return this.set(STORAGE_KEY, value);
   }
 
-  reset(): Promise<void> {
+  reset(domain?: ohMyDomain): Promise<void> {
     return new Promise(r => {
       this.ngZone.runOutsideAngular(() => {
-        StorageUtils.reset().then(r);
+        StorageUtils.reset(domain).then(r);
       });
     });
   }

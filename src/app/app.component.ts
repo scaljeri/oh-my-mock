@@ -8,8 +8,7 @@ import {
 } from '@angular/core';
 import { IOhMyContext, IState } from '@shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';

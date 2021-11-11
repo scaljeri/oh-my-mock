@@ -55,7 +55,8 @@
         >
           <mat-icon>fullscreen</mat-icon>
         </button>
-        <oh-my-code-edit [formControl]="responseCtrl"></oh-my-code-edit>
+        <oh-my-code-edit class="request-response" *ngIf="!isResponseImage" [formControl]="responseCtrl"></oh-my-code-edit>
+        <img class="request-response" [ngClass]="{'is-blurred': blurImages }" *ngIf="isResponseImage" [src]="responseCtrl.value">
         <button class="reset" mat-button (click)="onRevertResponse()">
           Reset
         </button>
@@ -76,7 +77,7 @@
         >
           <mat-icon>fullscreen</mat-icon>
         </button>
-        <oh-my-code-edit [formControl]="headersCtrl"></oh-my-code-edit>
+        <oh-my-code-edit class="request-headers" [formControl]="headersCtrl"></oh-my-code-edit>
         <button class="reset" mat-button (click)="onRevertHeaders()">
           Reset
         </button>

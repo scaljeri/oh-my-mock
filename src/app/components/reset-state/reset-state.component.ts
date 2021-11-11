@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
 import { ResetStateOptions } from '@shared/type';
@@ -9,18 +9,13 @@ import { AppStateService } from 'src/app/services/app-state.service';
   templateUrl: './reset-state.component.html',
   styleUrls: ['./reset-state.component.scss']
 })
-export class ResetStateComponent implements OnInit {
-  public domain: string;
+export class ResetStateComponent {
   public optionTypes = resetStateOptions;
 
   constructor(
-    private appStateService: AppStateService,
+    public appStateService: AppStateService,
     private dialogRef: MatDialogRef<ResetStateComponent>
   ) {}
-
-  ngOnInit(): void {
-    this.domain = this.appStateService.domain;
-  }
 
   onCancel(): void {
     this.dialogRef.close();

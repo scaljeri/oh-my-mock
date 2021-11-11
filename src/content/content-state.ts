@@ -29,8 +29,12 @@ export class OhMyContentState {
     });
 
     if (window.name) {
+      try {
       OhMyContentState.storage = JSON.parse(window.name) as IOhMyStorage;
       OhMyContentState.tabId =  OhMyContentState.storage.tabId;
+      } catch(e) {
+        // TODO
+      }
     }
   }
 

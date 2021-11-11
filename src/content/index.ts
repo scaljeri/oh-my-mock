@@ -68,6 +68,7 @@ function sendMsgToInjected(payload: IPacketPayload) {
       })) as IPacket, OhMyContentState.href
     )
   } catch (err) {
+    // TODO
   }
 }
 

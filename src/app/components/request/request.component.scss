@@ -1,4 +1,4 @@
-@import "mixins";
+@import 'mixins';
 
 :host {
   display: flex;
@@ -81,7 +81,7 @@ mat-card + mat-card {
       right: 5px;
     }
 
-    oh-my-code-edit {
+    .request-response, oh-my-code-edit {
       margin-left: -$spacer-7;
     }
   }
@@ -114,9 +114,17 @@ mat-card + mat-card {
   margin-top: $spacer-2;
 }
 
-oh-my-code-edit {
+.request-response, .request-headers {
   align-self: center;
   height: 230px;
+  max-width: 100%;
+
+  &.is-blurred {
+    filter: blur(6px);
+  }
+}
+
+oh-my-code-edit {
   width: 100%;
 }
 
