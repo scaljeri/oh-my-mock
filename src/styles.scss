@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 // @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
-@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
 
 html {
   height: 100%;
@@ -34,7 +34,7 @@ ol.reset ul li {
 }
 
 // Wrap content in a toaster
-.hot-toast-message dynamic-content>div {
+.hot-toast-message dynamic-content > div {
   overflow-wrap: anywhere;
 }
 

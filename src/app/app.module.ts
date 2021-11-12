@@ -4,8 +4,6 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
-import { NgxsModule } from '@ngxs/store';
-import { NgxsDispatchPluginModule } from '@ngxs-labs/dispatch-decorator';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,8 +16,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { ComponentsModule } from './components/components.module';
-import { OhMyState } from './store/state';
-
 import { appRoutes } from './app.routes';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HotToastModule } from '@ngneat/hot-toast';
@@ -28,6 +24,8 @@ import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
 import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
+import { ContentService } from './services/content.service';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -39,10 +37,8 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(appRoutes, { useHash: true } ),
-    NgxsModule.forRoot([OhMyState], { developmentMode: false }),
+    RouterModule.forRoot(appRoutes, { useHash: true, scrollPositionRestoration: 'enabled' }),
     ReactiveFormsModule,
-    NgxsDispatchPluginModule.forRoot(),
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
@@ -60,4 +56,11 @@ import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.compo
   providers: [{ provide: Window, useValue: window }],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  constructor(private contentService: ContentService) { }
+}
+
+chrome.storage.local.get(null, function (data) {
+  console.log('window.data === ', data);
+  window['data'] = data;
+});

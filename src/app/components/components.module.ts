@@ -25,18 +25,18 @@ import {
   PathLocationStrategy
 } from '@angular/common';
 
-import { CodeEditComponent } from './code-edit/code-edit.component';
+import { CodeEditComponent } from './form/code-edit/code-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
-import { CreateStatusCodeComponent } from './create-status-code/create-status-code.component';
+import { CreateStatusCodeComponent } from './create-response/create-status-code.component';
 import { AddDataComponent } from './add-data/add-data.component';
 import { NavListComponent } from './nav-list/nav-list.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
 import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
 import { HeaderButtonComponent } from './header-button/header-button.component';
-import { MockComponent } from './mock/mock.component';
-import { MockHeaderComponent } from './mock/mock-header/mock-header.component';
+import { RequestComponent } from './request/request.component';
+import { RequestHeaderComponent } from './request/request-header/request-header.component';
 import { JsonImportComponent } from './json-import/json-import.component';
 import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
@@ -45,12 +45,20 @@ import { AnimatedListDirective } from './animated-list/animated-list.directive';
 import { AnonymizeComponent } from './anonymize/anonymize.component';
 import { ArrowComponent } from './arrow/arrow.component';
 import { MockLabelComponent } from './mock-label/mock-label.component';
-import { MockDetailsComponent } from './mock/mock-details/mock-details.component';
+import { MockDetailsComponent } from './request/mock-details/mock-details.component';
 import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
 import { UpdateInputDirective } from './update-input/update-input.directive';
-import { ContentTypeComponent } from './content-type/content-type.component';
+import { ContentTypeComponent } from './form/content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatMenuModule} from '@angular/material/menu';
+import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
+import { ManageScenariosComponent } from './manage-presets/manage-scenarios.component';
+
+import { OhMyDirectivesModule } from '../directives/directives.module';
+import { LinkComponent } from './link/link.component';
+import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.component';
+import { PresetComponent } from './preset/preset.component';
 
 @NgModule({
   declarations: [
@@ -63,8 +71,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     ResetStateComponent,
     DisabledEnabledComponent,
     HeaderButtonComponent,
-    MockComponent,
-    MockHeaderComponent,
+    RequestComponent,
+    RequestHeaderComponent,
     JsonImportComponent,
     FileUploaderComponent,
     FileDragDropDirective,
@@ -77,7 +85,12 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     CloudSyncComponent,
     UpdateInputDirective,
     ContentTypeComponent,
-    SpinnerComponent
+    SpinnerComponent,
+    AutocompleteDropdownComponent,
+    ManageScenariosComponent,
+    LinkComponent,
+    DialogCodeEditorComponent,
+    PresetComponent,
   ],
   imports: [
     CommonModule,
@@ -86,6 +99,7 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     MatIconModule,
     PipesModule,
     RouterModule,
+    OhMyDirectivesModule,
     MatFormFieldModule,
     MatCardModule,
     MatInputModule,
@@ -101,7 +115,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     DragDropModule,
     MatSelectModule,
     MatAutocompleteModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatMenuModule
   ],
   exports: [
     DataListComponent,
@@ -110,8 +125,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     NavListComponent,
     DisabledEnabledComponent,
     HeaderButtonComponent,
-    MockComponent,
-    MockHeaderComponent,
+    RequestComponent,
+    RequestHeaderComponent,
     FileUploaderComponent,
     AnimatedListDirective,
     ArrowComponent,
@@ -119,7 +134,10 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     CloudSyncComponent,
     UpdateInputDirective,
     ContentTypeComponent,
-    SpinnerComponent
+    SpinnerComponent,
+    AutocompleteDropdownComponent,
+    LinkComponent,
+    DialogCodeEditorComponent,
   ],
   providers: [
     Location,

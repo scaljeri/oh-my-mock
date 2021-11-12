@@ -10,7 +10,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 export class AddDataComponent {
   formGroup = new FormGroup({
     url: new FormControl('', [Validators.required]),
-    type: new FormControl('XHR', [Validators.required]),
+    requestType: new FormControl('XHR', [Validators.required]),
     method: new FormControl('GET', [Validators.required])
   });
 
@@ -34,7 +34,7 @@ export class AddDataComponent {
   }
 
   get typeControl(): FormControl {
-    return this.formGroup.get('type') as FormControl;
+    return this.formGroup.get('requestType') as FormControl;
   }
 
   get methodControl(): FormControl {

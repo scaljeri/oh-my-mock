@@ -1,0 +1,4 @@
+@mixin oh-size($width, $height: $width) {
+  height: $height;
+  width: $width;
+}

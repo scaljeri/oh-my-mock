@@ -1,7 +1,7 @@
 import { appSources, packetTypes } from '../shared/constants'
-import { IOhMyContext } from '../shared/type'
+import { IOhMyMockContext } from '../shared/type'
 
-export const sendMessage2Content = (tabId: number, context: IOhMyContext, data: unknown, type = packetTypes.MOCK): void => {
+export const sendMessage2Content = (tabId: number, context: IOhMyMockContext, data: unknown, type = packetTypes.MOCK): void => {
   chrome.tabs.sendMessage(tabId, {
     source: appSources.BACKGROUND,
     payload: {

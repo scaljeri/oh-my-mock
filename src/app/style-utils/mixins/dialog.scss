@@ -1,0 +1,26 @@
+@mixin oh-dialog {
+  @include oh-position(absolute, 0px 0px 0px 0px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: $z-dialog;
+
+  &::before {
+    @include oh-position(absolute, 0px 0px 0px 0px);
+    content: '';
+    background-color: rgba(255, 255, 255, 0.2);
+    filter: blur(3px);
+  }
+}
+
+@mixin oh-dialog-content($width, $height: $width) {
+  @include oh-size($width, $height);
+  background-color: #fff;
+  box-shadow: rgba(0, 0, 0, 0.45) 0px 54px 55px, rgba(0, 0, 0, 0.32) 0px -12px 30px, rgba(0, 0, 0, 0.32) 0px 4px 6px, rgba(0, 0, 0, 0.37) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: $spacer-2 $spacer-4;
+  border-radius: $spacer-1;
+  z-index: 1;
+}

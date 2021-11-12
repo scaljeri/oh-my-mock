@@ -1,0 +1,48 @@
+@import "mixins";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+mat-error {
+  font-size: 13px;
+
+  & + mat-error {
+    display: none;
+  }
+}
+
+mat-slide-toggle  {
+  margin-top: $spacer-4;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+// new
+form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+
+.label {
+  display: flex;
+  justify-content: space-between;
+
+  oh-my-autocomplete-dropdown {
+    margin-right: $spacer-2;
+  }
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

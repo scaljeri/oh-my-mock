@@ -1,0 +1,75 @@
+<div class="request">
+  <h3>Request</h3>
+  <section>
+    <mat-form-field class="type-select">
+      <mat-label>Type</mat-label>
+      <mat-select [formControl]="typeCtrl" name="type">
+        <mat-option *ngFor="let type of ['FETCH', 'XHR']" [value]="type">
+          {{ type }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <oh-my-autocomplete-dropdown
+      label="Method"
+      [formControl]="methodCtrl"
+      [showAllOnFocus]="true"
+      [options]="availableMethods"
+    ></oh-my-autocomplete-dropdown>
+
+    <mat-form-field class="url-input">
+      <mat-label>Url</mat-label>
+      <input
+        #url
+        matInput
+        placeholder="Match API endpiont (regexp)"
+        [formControl]="urlCtrl"
+      />
+
+      <mat-icon
+        color="primary"
+        matTooltip="The request URL is used together with the type and method to map incoming API call with a response. This field can also contain regular expressions!"
+      >
+        info</mat-icon
+      >
+    </mat-form-field>
+  </section>
+</div>
+
+<section class="responses-wrapper">
+  <div class="responses" [ngClass]="{ 'is-active': request.enabled[context.preset] }">
+    <h3>
+      Responses
+      <mat-icon color="primary"
+        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!">
+        info</mat-icon>
+    </h3>
+    <div class="codes-wrapper">
+      <button class="inactive" mat-raised-button (click)="onDisableRequest()">
+        Off
+      </button>
+      <button
+        mat-raised-button
+        *ngFor="let mockId of mockIds"
+        (click)="onSelectStatusCode(mockId)"
+        [ngClass]="{ 'is-active': request.selected[context.preset] === mockId }"
+      >
+        <oh-my-mock-label [mock]="request.mocks[mockId]"></oh-my-mock-label>
+      </button>
+      <button mat-raised-button (click)="openAddResponseDialog()">+</button>
+    </div>
+    <div class="exports">
+      <!-- <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button> -->
+    </div>
+  </div>
+  <div class="preset-selector">
+    <h3>
+      <span>Presets</span>
+      <mat-icon
+        class="info info-contrast scenario-help"
+        color="primary"
+        [matTooltip]="presetInfo">info</mat-icon>
+    </h3>
+    <oh-my-preset *ngIf="context" class="preset" [context]="context"></oh-my-preset>
+  </div>
+</section>

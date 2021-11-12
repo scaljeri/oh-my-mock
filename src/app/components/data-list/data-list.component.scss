@@ -1,6 +1,5 @@
 @import 'mixins';
-
-@import "legenda";
+@import 'legenda';
 
 :host {
   --color: #{$color-light};
@@ -10,6 +9,28 @@
   flex-direction: column;
   padding: 20px;
   position: relative;
+
+  .preset {
+    margin-top: -15px;
+    margin-bottom: -20px;
+    margin-right: 2 * $spacer-4;
+
+    ::ng-deep mat-label {
+      color: #fff;
+    }
+  }
+}
+
+.main-menu {
+  @include oh-list-unstyled;
+
+  .is-selected {
+    background-color: $primary;
+
+    span {
+      font-weight: bold;
+    }
+  }
 }
 
 .is-active .mock oh-my-mock-label {
@@ -17,7 +38,6 @@
 }
 
 li:not(.is-selected) {
-
   &.is-active {
     &,
     &:hover .btn-wrapper {
@@ -26,7 +46,6 @@ li:not(.is-selected) {
   }
 
   &.is-active.is-modified {
-
     &,
     &:hover .btn-wrapper {
       background-color: $activeModified;
@@ -34,7 +53,6 @@ li:not(.is-selected) {
   }
 
   &.is-modified:not(.is-active) {
-
     &,
     &:hover .btn-wrapper {
       background-color: $inactiveModified;
@@ -42,7 +60,6 @@ li:not(.is-selected) {
   }
 
   &:not(.is-active):not(.is-modified) {
-
     &,
     &:hover .btn-wrapper {
       background-color: $inactive;
@@ -51,7 +68,6 @@ li:not(.is-selected) {
 }
 
 li.is-selected {
-
   &,
   .btn-wrapper {
     background-color: $selected;
@@ -72,7 +88,7 @@ ol[data-table] {
     display: flex;
     font-size: 12px;
     font-weight: 500;
-    color: rgba(0, 0, 0, .54);
+    color: rgba(0, 0, 0, 0.54);
     height: 50px;
     padding: 0 $spacer-4;
 
@@ -83,6 +99,12 @@ ol[data-table] {
       position: relative;
 
       .filter-field {
+        &.active {
+          background-color: $activeModified;
+        }
+
+        padding-left: $spacer-2;
+        padding-right: $spacer-2;
         align-self: center;
         height: 50px;
         @include oh-position(absolute, 0 0 0 50%);
@@ -93,14 +115,13 @@ ol[data-table] {
           padding-right: 30px;
         }
 
-        button {
-          @include oh-position(absolute, 8px 0px 0 0);
-        }
+        // button {
+        //   @include oh-position(absolute, 8px 0px 0 0);
+        // }
 
         .search-help {
-          @include oh-position(absolute, 8px -10px 0 0);
+          @include oh-position(absolute, 8px 10px 0 0);
         }
-
       }
     }
   }
@@ -111,9 +132,7 @@ ol[data-table] {
     padding: 0;
   }
 
-
   li.data-row {
-    cursor: pointer;
     display: flex;
     padding: 0 $spacer-4;
     position: relative;
@@ -131,10 +150,14 @@ ol[data-table] {
         position: absolute;
         right: 0;
 
-        button+button {
+        button + button {
           display: block;
         }
       }
+    }
+
+    &.row-clickable {
+      cursor: pointer;
     }
   }
 }
@@ -148,16 +171,18 @@ ol[data-table] {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  cursor: move;
   font-size: 14px;
+
+  &.togglable {
+    cursor: pointer;
+  }
 }
 
 .cdk-drag-preview {
   box-sizing: border-box;
   border-radius: 4px;
   box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-    0 8px 10px 1px rgba(0, 0, 0, 0.14),
-    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
 
 .custom-drag-placeholder {
@@ -173,7 +198,6 @@ ol[data-table] {
     opacity: 0;
   }
 }
-
 
 [data-table].cdk-drop-list-dragging .data-row:not(.cdk-drag-placeholder) {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
@@ -205,7 +229,7 @@ span.type {
   padding-left: $spacer-2;
 
   oh-my-mock-label {
-    opacity: .3;
+    opacity: 0.3;
   }
 }
 
@@ -214,7 +238,7 @@ span.type {
   display: flex;
   position: relative;
 
-  button+button {
+  button + button {
     display: none;
   }
 
@@ -234,7 +258,7 @@ span.type {
     flex: 0 0 145px;
   }
 
-  button+button {
+  button + button {
     margin-left: $spacer-2;
   }
 }
@@ -251,9 +275,15 @@ span.type {
     align-items: center;
     display: flex;
 
-    &+.toggle {
+    & + .toggle {
       margin-left: $spacer-2;
     }
+  }
+
+  .scenario-help {
+    margin-top: -$spacer-4;
+    margin-right: $spacer-2;
+    margin-left: -$spacer-7;
   }
 }
 
@@ -268,28 +298,52 @@ span.type {
 
 @keyframes highlight-a {
   0% {
-    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+    background-image: linear-gradient(
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1)
+    );
   }
 
   30% {
-    background-image: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .5), rgba(0, 0, 0, .5));
+    background-image: linear-gradient(
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.5)
+    );
   }
 
   100% {
-    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+    background-image: linear-gradient(
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1)
+    );
   }
 }
 
 @keyframes highlight-b {
   0% {
-    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+    background-image: linear-gradient(
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1)
+    );
   }
 
   30% {
-    background-image: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .5), rgba(0, 0, 0, .5));
+    background-image: linear-gradient(
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.5)
+    );
   }
 
   100% {
-    background-image: linear-gradient(rgba(255, 255, 255, .1), rgba(255, 255, 255, .1), rgba(255, 255, 255, .1));
+    background-image: linear-gradient(
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1)
+    );
   }
 }

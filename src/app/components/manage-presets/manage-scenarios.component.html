@@ -1,0 +1,16 @@
+<h2>Available presets:</h2>
+<ol>
+    <li *ngFor="let id of scenarioIds">
+        <mat-form-field class="full-width">
+            <input #input matInput [(ngModel)]="scenariosObj[id]">
+        </mat-form-field>
+        <button *ngIf="id !== 'default'" (click)="onDelete(id)" mat-mini-fab>
+            <mat-icon>delete</mat-icon>
+        </button>
+    </li>
+</ol>
+<div class="actions">
+    <button type="button" mat-button (click)="onClose()">Cancel</button>
+    <button type="button" class="add-scenario" (click)="onCreate()" mat-mini-fab color="secondary">+</button>
+    <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
+</div>

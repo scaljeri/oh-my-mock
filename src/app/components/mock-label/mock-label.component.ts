@@ -1,19 +1,20 @@
-import { Component, Input } from '@angular/core';
-import { IMock, statusCode } from '../../../shared/type';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { IMock, IOhMyShallowMock, IState, IStore, statusCode } from '@shared/type';
 
 @Component({
   selector: 'oh-my-mock-label',
   templateUrl: './mock-label.component.html',
-  styleUrls: ['./mock-label.component.scss']
+  styleUrls: ['./mock-label.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MockLabelComponent {
-  @Input() mock: IMock;
+  @Input() mock: IOhMyShallowMock | IMock;
 
   get code(): statusCode {
     return this.mock?.statusCode;
   }
 
-  get scenario(): string {
-    return this.mock?.scenario;
+  get label(): string {
+    return this.mock?.label;
   }
 }

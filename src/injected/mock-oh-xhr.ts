@@ -1,173 +1,107 @@
-import { STORAGE_KEY } from '../shared/constants';
-import {
-  IData,
-  IMock,
-  requestMethod,
-} from '../shared/type';
-import { findMocks } from '../shared/utils/find-mock';
+import { IS_BASE64_RE, ohMyMockStatus } from '../shared/constants';
+import { IOhMyAPIRequest, IOhMyMockResponse } from '../shared/type';
+import { parse } from '../shared/utils/xhr-headers';
+import { dispatchApiRequest } from './message/dispatch-api-request';
+import { dispatchApiResponse } from './message/dispatch-api-response';
 import * as headers from '../shared/utils/xhr-headers';
-import { dispatchData } from './message/dispatch-eval';
-import { mockHitMessage } from './message/mock-hit';
-import { newMockMessage } from './message/new-response';
-import { ohMyState } from './state-manager';
+import { toBlob, toDataURL } from '../shared/utils/image';
 
-const Base = window.XMLHttpRequest;
+// To serve OhMyMock responses for XMLHttpRequest, the following properties will be replaced:
+let protoOpen;
+let protoSend;
+let protoAddEventListener;
+let protoSetRequestHeader;
 
-export class OhMockXhr extends Base {
-  private ohData: IData;
-  private ohMock: IMock;
-  private ohMethod: requestMethod;
-  private ohUrl: string;
-  private ohListeners = [];
-  private ohRequestBody: unknown;
-  private ohRequestHeaders: Record<string, string> = {};
-  private ohOutput: Partial<IMock>;
-  private ohMyOnload;
+function persistXmlHttpProto() {
+  const proto = window.XMLHttpRequest.prototype;
+  protoOpen = proto.open;
+  protoSend = proto.send;
+  protoAddEventListener = proto.addEventListener;
+  protoSetRequestHeader = proto.setRequestHeader;
+}
 
-  constructor() {
-    super();
+export function unpatchXmlHttpRequest() {
+  if (protoOpen) {
+    window.XMLHttpRequest.prototype.open = protoOpen;
+    window.XMLHttpRequest.prototype.send = protoSend;
+    window.XMLHttpRequest.prototype.addEventListener = protoAddEventListener;
+    window.XMLHttpRequest.prototype.setRequestHeader = protoSetRequestHeader;
+  }
+}
 
-    Object.defineProperty(this, 'onreadystatechange', {
-      get: function () {
-        return undefined;
-      },
-      set: function (callback) {
-        this.ohListeners.push(callback);
-      }
-    });
-
-    this.addEventListener('load', async (...args) => {
-      this.parseState();
-
-      if (this.ohMock) {
-        this.ohOutput = await this.mockResponse();
-
-        if (this.ohOutput === null) {
-          throw Error();
-        }
-      }
-
-      setTimeout(() => {
-        this.ohMyReady(...args);
-      }, (this.ohOutput?.delay ?? this.ohMock?.delay) || 0);
-    });
-
-    const ael = this.addEventListener.bind(this);
-    Object.defineProperty(this, 'addEventListener', {
-      value: (type: string, cb: (_: Event) => void) => {
-        if (type == 'load') {
-          this.ohListeners.push(cb);
-        } else {
-          ael(type, cb);
-        }
-      }
-    });
+export function patchXmlHttpRequest() {
+  if (!protoOpen) {
+    persistXmlHttpProto();
   }
 
-  async send(body) {
-    this.ohRequestBody = body;
+  window.XMLHttpRequest.prototype.open = function (...args) {
+    this.ohListeners = [];
+    this.ohHeaders = {};
+    this.ohMethod = args[0];
+    this.ohUrl = args[1];
 
-    this.ohMyOnload = this.onload;
-    this.onload = null;
-
-    if (this.ohMock) {
-      this.dispatchEvent(new Event('load'));
-    } else {
-      super.send(body);
-    }
+    return protoOpen.apply(this, args);
   }
 
-  setRequestHeader(key, value) {
-    this.ohRequestHeaders[key] = value;
-    super.setRequestHeader(key, value);
-  }
-
-  open(method: requestMethod, url: string, ...args: unknown[]): void {
-    this.ohMethod = method; // e.g GET, POST
-    this.ohUrl = url;
-
-    this.parseState();
-    return super.open.apply(this, [method, this.mockedUrl(url), ...args]);
-  }
-
-  ohMyReady(...args): void {
-    if (this.ohOutput) {
-      const headersString = headers.stringify(this.getHeaders());
-
-      Object.defineProperty(this, 'status', {
-        value: this.ohOutput.statusCode
-      });
-      Object.defineProperty(this, 'responseText', { value: this.ohOutput.response });
-      Object.defineProperty(this, 'response', { value: this.ohOutput.response });
-      Object.defineProperty(this, 'getAllResponseHeaders', {
-        value: () => headersString
-      });
-      Object.defineProperty(this, 'getResponseHeader', {
-        value: (key) => this.ohOutput.headers[key]
-      });
-      Object.defineProperty(this, 'readyState', { value: 4 });
-      Object.defineProperty(this, 'responseText', { value: this.ohOutput.response });
-
-
-      mockHitMessage({ id: this.ohData.id });
-    } else {
-      newMockMessage({
-        context: {
-          url: this.ohUrl,
-          method: this.ohMethod,
-          type: 'XHR'
-        },
-        data: {
-          statusCode: this.status,
-          response: this.response,
-          headers: headers.parse(this.getAllResponseHeaders())
-        }
-      });
-    }
-    this.ohListeners.forEach(l => l?.apply(this, args));
-    if (this.ohMyOnload) {
-      this.ohMyOnload();
-    }
-  }
-
-
-  private mockedUrl(url: string): string {
-    if (this.ohMock) {
-      const mimeType = this.getHeaders('content-type') || 'text/plain';
-      return `data:${mimeType},${STORAGE_KEY}-${this.ohUrl}`;
+  window.XMLHttpRequest.prototype.addEventListener = function (eventName, callback) {
+    if (eventName === 'load') {
+      this.ohListeners.push(callback);
     }
 
-    return url;
+    return protoAddEventListener.call(this, eventName, callback);
   }
 
-  private async mockResponse(): Promise<Partial<IMock>> {
-    if (!this.ohMock) {
-      return this.response;
-    }
+  window.XMLHttpRequest.prototype.setRequestHeader = function (key, value) {
+    this.ohHeaders[key] = value;
+    return protoSetRequestHeader.call(this, key, value);
+  }
 
-    return dispatchData(this.ohData, {
+  window.XMLHttpRequest.prototype.send = function (body) {
+    dispatchApiRequest({
       url: this.ohUrl,
       method: this.ohMethod,
-      body: this.ohRequestBody,
-      headers: this.ohRequestHeaders
-    }).catch(_ => _);
+      headers: this.ohHeaders,
+      body
+    } as IOhMyAPIRequest, 'XHR').then(async data => {
+      if (data.status !== ohMyMockStatus.OK) {
+        this.addEventListener('load', event => {
+          // TODO: Should we do something with this event
+          toDataURL(this.response, (response) => {
+            dispatchApiResponse({
+              data: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
+              mock: { statusCode: this.status, response: response, headers: parse(this.getAllResponseHeaders()) },
+            });
+          });
+        });
+        protoSend.call(this, body);
+      } else {
+        if ((data.response as string).match(IS_BASE64_RE)) { // It is base64 => Blob
+          data.response = await toBlob(data.response as string);
+        }
+
+        injectResponse(this, data);
+
+        setTimeout(() => {
+          this.onreadystatechange?.();
+          this.onload?.();
+
+          const progressEvent = new ProgressEvent('load', { /* ....???.... */ });
+          this.ohListeners.forEach(l => l(progressEvent));
+        }, data.delay);
+      }
+    });
   }
+}
 
-  private parseState(): void {
-    const state = ohMyState();
+function injectResponse(xhr: XMLHttpRequest, data: IOhMyMockResponse) {
+  const headersAsString = headers.stringify(data.headers);
 
-    this.ohData = null;
-    this.ohMock = null;
-
-    this.ohData = findMocks(state, { url: this.ohUrl, type: 'XHR', method: this.ohMethod }, false);
-    this.ohMock = this.ohData?.enabled && this.ohData?.mocks?.[this.ohData?.activeMock]
-  }
-
-  private getHeaders(): Record<string, string>;
-  private getHeaders(key: string): string;
-  private getHeaders(key?: string): Record<string, string> | string | void {
-    const output = this.ohOutput?.headers;
-
-    return key ? (output || {})[key] : output;
-  }
+  Object.defineProperties(xhr, {
+    status: { value: data.statusCode },
+    readyState: { value: XMLHttpRequest.DONE },
+    responseText: { value: data.response },
+    response: { value: data.response },
+    getAllResponseHeaders: { value: () => headersAsString },
+    getResponseHeader: { value: (key) => data.headers[key] }
+  });
 }

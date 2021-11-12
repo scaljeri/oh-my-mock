@@ -5,11 +5,11 @@ export default function mockToNgApiMock(mock: IData, name: string): Mock {
   const responses: Record<string, MockResponse> = {};
 
   Object.keys(mock.mocks).forEach((statusCode) => {
-    const oriMockResponse: IMock = mock.mocks[statusCode];
-    responses[statusCode] = {
-      status: Number(statusCode),
-      data: oriMockResponse.responseMock ? JSON.parse(oriMockResponse.responseMock) : ''
-    };
+    // const oriMockResponse: IMock = mock.mocks[statusCode];
+    // responses[statusCode] = {
+    //   status: Number(statusCode),
+    //   data: oriMockResponse.responseMock ? JSON.parse(oriMockResponse.responseMock) : ''
+    // };
   });
 
   return {

@@ -1,69 +1,87 @@
-<div class="legenda">
+<div *ngIf="!hideHeader" class="legenda">
   <div class="labels">
-    <span class="legenda-active">Active</span>
-    <span class="active-modified">Active/modified</span>
-    <span class="inactive">Inactive</span>
-    <span class="inactive-modified">Inactive/modified</span>
+    <div class="group">
+      <span class="legenda-active">Active</span>
+      <span class="inactive">Inactive</span>
+    </div>
+    <div class="group">
+      <span class="active-modified">Active/modified</span>
+      <span class="inactive-modified">Inactive/modified</span>
+    </div>
   </div>
 
   <div class="toggles">
-    <div class="toggle">
-      <label for="show-active-list">Activate new</label>
-      <mat-slide-toggle (change)="toggleActivateNew($event.checked)" [checked]="state.toggles.activateNew"
-        color="primary">
-      </mat-slide-toggle>
-    </div>
+    <ng-container *ngIf="showPreset">
+      <oh-my-preset *ngIf="context" [context]="context" class="preset"></oh-my-preset>
+      <mat-icon class="info info-contrast scenario-help" color="primary"
+        [matTooltip]="presetInfo">info</mat-icon>
+    </ng-container>
 
     <div class="toggle">
-      <label for="show-active-list">Order by activity</label>
-      <mat-slide-toggle (change)="toggleHitList($event.checked)" [checked]="state.toggles.hits" color="primary">
-      </mat-slide-toggle>
+      <ng-container *ngIf="showActivateToggle">
+        <label for="show-active-list">Activate new</label>
+        <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="$any(state?.aux.newAutoActivate)"
+          color="primary">
+        </mat-slide-toggle>
+      </ng-container>
+      <ng-container *ngIf="showMenu">
+        <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+        <mat-menu  #menu="matMenu">
+          <ul class="main-menu">
+            <!-- <li><button mat-menu-item>Validate requests</button></li> -->
+            <li><button mat-menu-item (click)="onActivateAll()">Activate all requests</button></li>
+            <li [ngClass]="{'is-selected': state.aux.blurImages }"><button (click)="onBlurImage()"  mat-menu-item><span>Blur images</span></button></li>
+          </ul>
+        </mat-menu>
+      </ng-container>
     </div>
   </div>
 </div>
 
-<ol data-table cdkDropList [ohMyAnimatedList]="viewList" (cdkDropListDropped)="drop($event)">
+<ol data-table>
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
     <div class="url">
       <span>Url</span>
-      <div class="filter-field">
+      <div *ngIf="hideFilter === false" class="filter-field" [ngClass]="{'active': filterCtrl.value }">
         <mat-form-field [floatLabel]="'never'">
           <input type="search" matInput placeholder="Filter" [formControl]="filterCtrl">
+          <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"
+            (click)="filterCtrl.setValue('')">
+            <mat-icon>close</mat-icon>
+          </button>
         </mat-form-field>
-        <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"
-          (click)="filterCtrl.setValue('')">
-          <mat-icon>close</mat-icon>
-        </button>
         <mat-icon class="search-help" color="primary"
           matTooltip="Each word in this search field is searched for independenty from other words. To combine multiple words use quotes">
           info</mat-icon>
       </div>
     </div>
-    <span class="mock">Mock</span>
+    <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>
   </li>
-  <li #animatedRow [cdkDragDisabled]="disabled" cdkDrag class="data-row" animatedsortitem
-    *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
-        'is-hit-a': hitcount[index] % 2 === 0,
-        'is-hit-b': hitcount[index] % 2 === 1,
+
+  <li [title]="row.id" class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy"
+    (click)="onDataClick(row, index)" [ngClass]="{
+    'row-clickable': togglableRows,
+    'is-selected': selection.isSelected(index),
+    'is-active': row.enabled[context?.preset],
+    'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn}">
+    <span class="method">{{row.requestType}}</span>
+    <span class="type">{{row.method}}</span>
+    <span class="url">{{row.url}}</span>
+    <span class="mock">
+      <oh-my-mock-label *ngIf="row.selected[context?.preset] as mockId" [mock]="row.mocks[mockId]"></oh-my-mock-label>
+    </span>
+    <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
+  </li>
+</ol>
+<!--
+<ol data-table>
+  <li *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
         'is-selected': selection.isSelected(index),
         'is-active': row.enabled,
         'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
-    <div class="custom-drag-placeholder" *cdkDragPlaceholder [ngClass]="{
-        'is-hit-a': hitcount[index] % 2 === 0,
-        'is-hit-b': hitcount[index] % 2 === 1,
-        'is-selected': selection.isSelected(index),
-        'is-active': row.enabled,
-        'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
-      <span class="method">{{row.type}}</span>
-      <span class="type">{{row.method}}</span>
-      <span class="url">{{row.url}}</span>
-      <span class="active">
-        <oh-my-mock-label [mock]="row.mocks[row.activeMock]"></oh-my-mock-label>
-      </span>
-    </div>
     <span class="method">{{row.type}}</span>
     <span class="type">{{row.method}}</span>
     <span class="url">{{row.url}}</span>
@@ -72,17 +90,17 @@
     </span>
     <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
   </li>
-</ol>
+</ol> -->
 
 <ng-template #actions let-row="row" let-index="index">
   <div class="actions btns-1">
     <div class="btn-wrapper">
       <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">
-        <mat-icon *ngIf="!row.enabled">play_arrow</mat-icon>
-        <mat-icon *ngIf="row.enabled">stop</mat-icon>
+        <mat-icon *ngIf="!row.enabled[context?.preset]">play_arrow</mat-icon>
+        <mat-icon *ngIf="row.enabled[context?.preset]">stop</mat-icon>
       </button>
-      <button *ngIf="showClone" (click)="onClone(index, $event)" mat-icon-button color="primary"
+      <button *ngIf="showClone" (click)="onClone(row.id, $event)" mat-icon-button color="primary"
         aria-label="Example icon button with a menu icon">
         <mat-icon>content_copy</mat-icon>
       </button>

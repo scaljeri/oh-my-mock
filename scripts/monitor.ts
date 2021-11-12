@@ -9,7 +9,7 @@ const packageJson = require('../package.json');
 
 const PATH_TO_TASKS = {
   'src/content': 'yarn build:content',
-  'src/injected': 'yarn build:injected',
+  'src/injected': 'yarn build:injected & yarn build:content',
   'src/background': 'yarn build:background',
   'src/shared': 'yarn run-p build:*',
   'src/app': 'yarn build:ng'

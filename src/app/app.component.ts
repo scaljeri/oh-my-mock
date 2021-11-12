@@ -1,24 +1,22 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   HostListener,
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-
-import { Toggle } from './store/actions';
-import { IState } from '../shared/type';
-import { Select } from '@ngxs/store';
-import { OhMyState } from './store/state';
-import { Observable } from 'rxjs';
+import { IOhMyContext, IState } from '@shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
-import { ContentService } from './services/content.service';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { OhMyStateService } from './services/state.service';
+import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
+import {  Subscription } from 'rxjs';
+import { initializeApp } from './app.initialize';
+
+const VERSION = '__OH_MY_VERSION__';
 
 @Component({
   selector: 'app-root',
@@ -31,71 +29,81 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   color = 'warn';
   drawerMode: MatDrawerMode = 'over';
-  dawerBackdrop = true;
-  version: string;
+  drawerBackdrop = true;
+
   page = '';
   dialogDone = false;
   isInitializing = true;
-
-  @Dispatch() activate = (value: boolean) => new Toggle({ name: 'active', value });
-  @Select(OhMyState.mainState) state$: Observable<IState>;
+  context: IOhMyContext;
+  version: string;
+  showDisabled = -1;
+  stateSub: Subscription;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
-  private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
+  // private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
 
   constructor(
-    private appStateService: AppStateService,
-    private contentService: ContentService,
+    private appState: AppStateService,
+    private storeService: OhMyState,
+    private stateService: OhMyStateService,
     private router: Router,
-    public dialog: MatDialog
-  ) {
-    this.version = this.appStateService.version;
+    private cdr: ChangeDetectorRef,
+    public dialog: MatDialog) {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.state$.subscribe((state: IState) => {
-      setTimeout(() => this.domain = this.appStateService.domain);
+    await initializeApp(this.appState, this.stateService);
 
-      if (!state || !state.domain) {
-        return;
+    this.stateService.state$.subscribe((state: IState) => {
+      if (!state) {
+        return this.isInitializing = true;
       }
+
+      if (state.domain !== this.domain) { // Domain switch
+        this.router.navigate(['/']).then(() => {
+          this.cdr.detectChanges();
+        });
+      }
+
+      this.context = state.context;
+
+      if (!state.aux.popupActive) {
+        this.popupActiveToggle(); // -> Popup is active
+      }
+      this.domain = state.context.domain;
+      this.version = state.version;
 
       this.isInitializing = false;
-      this.enabled = state.toggles.active;
+      this.enabled = state.aux.appActive;
+
       if (this.enabled) {
-        if (this.dialogRef) {
-          this.dialogRef.close();
-        }
-        this.contentService.sendActiveState(true);
-      } else if (!this.dialogRef && !this.dialogDone) {
+        this.showDisabled = 0;
+      } else if (this.showDisabled === -1) {
         this.notifyDisabled();
       }
+      this.cdr.detectChanges();
     });
   }
 
-  onEnableChange({ checked }: MatSlideToggleChange): void {
-    this.activate(checked);
-    this.contentService.sendActiveState(checked);
+  onEnableChange(isChecked: boolean): void {
+    this.storeService.updateAux({ appActive: isChecked }, this.context);
+
+    this.showDisabled = 0;
+    this.cdr.detectChanges();
   }
 
   @HostListener('window:beforeunload')
   ngOnDestroy(): void {
-    this.contentService.destroy();
+    this.popupActiveToggle(false);
   }
 
   notifyDisabled(): void {
-    this.dialogRef = this.dialog.open(DisabledEnabledComponent, {
-      width: '300px'
-    });
+    this.showDisabled = 1;
+  }
 
-    this.dialogRef.afterClosed().subscribe((enable) => {
-      if (enable) {
-        this.onEnableChange({ checked: enable } as any);
-      }
-      this.dialogDone = true;
-      this.dialogRef = null;
-    });
+  popupActiveToggle(isActive = true) {
+    this.storeService.updateAux({ popupActive: isActive }, this.context);
   }
 
   @HostListener('window:keyup.backspace')
@@ -113,6 +121,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('window:keydown.enter')
   onEnable(): void {
-    this.dialogRef?.close(true);
+    this.onEnableChange(true);
   }
 }

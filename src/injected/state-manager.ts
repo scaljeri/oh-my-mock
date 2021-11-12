@@ -11,6 +11,12 @@ streamByType$(packetTypes.STATE, appSources.CONTENT).subscribe((packet: IPacket)
   update.next(state);
 });
 
+streamByType$(packetTypes.ACTIVE, appSources.CONTENT).subscribe((packet: IPacket) => {
+  // state = packet.payload.data as IState;
+  // update.next(state);
+  // INJECTED SCRIPT: state-manger.ts
+});
+
 export const ohMyState$ = update.asObservable();
 
 export const ohMyState = (): IState => {

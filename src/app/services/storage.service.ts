@@ -1,44 +1,50 @@
-import { Injectable } from '@angular/core';
-import { Select } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { OhMyState } from '../store/state';
-import { MigrationsService } from './migrations.service';
-import { IOhMyMock, IStore } from '../../shared/type';
+import { Injectable, NgZone } from '@angular/core';
+import { StorageUtils } from '@shared/utils/storage';
+import { IMock, IOhMyMock, IState, ohMyDomain } from '@shared/type';
 import { STORAGE_KEY } from '@shared/constants';
-import { AppStateService } from './app-state.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StorageService {
-  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
 
-  constructor(private appState: AppStateService, private migrateService: MigrationsService) {
-    // this.reset();
+  constructor(private ngZone: NgZone) { }
 
+  get<T extends IMock | IOhMyMock | IState>(key: string): Promise<T> {
+    return new Promise(r => {
+      // this.ngZone.runOutsideAngular(() => {
+        StorageUtils.get<T>(key).then((out) => {
+          this.ngZone.run(() => r(out));
+        });
+      // });
+    });
   }
 
-  async initialize(): Promise<IOhMyMock> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get([STORAGE_KEY], (state: IStore) => {
-        state[STORAGE_KEY] = this.migrateService.update(state[STORAGE_KEY]);
-        resolve(state[STORAGE_KEY]);
+  set(key: string, value: unknown & { version?: string }): Promise<void> {
+    return new Promise(r => {
+      // this.ngZone.runOutsideAngular(() => {
+        StorageUtils.set(key, value).then(() => this.ngZone.run(r));
+      // });
+    });
+  }
+
+  setStore(value: IOhMyMock): Promise<void> {
+    return this.set(STORAGE_KEY, value);
+  }
+
+  reset(domain?: ohMyDomain): Promise<void> {
+    return new Promise(r => {
+      this.ngZone.runOutsideAngular(() => {
+        StorageUtils.reset(domain).then(r);
       });
     });
   }
 
-  monitorStateChanges(): void {
-    this.state$.subscribe((state) => {
-      this.update(state);
+  remove(key: string): Promise<void> {
+    return new Promise(r => {
+      this.ngZone.runOutsideAngular(() => {
+        StorageUtils.remove(key).then(r);
+      });
     });
-  }
-
-  update(update: IOhMyMock, key = STORAGE_KEY): void {
-    const updated = this.migrateService.update(update); // TODO: Is this needed?
-    return chrome.storage.local.set({ [key]: updated });
-  }
-
-  reset(): void {
-    this.update(this.migrateService.reset()[STORAGE_KEY]);
   }
 }

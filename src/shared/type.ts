@@ -1,61 +1,94 @@
-import {
-  appSources,
-  packetTypes,
-  resetStateOptions,
-  STORAGE_KEY,
-  MOCK_RULE_TYPES,
-  ohMyEvalStatus
-} from './constants';
+import { appSources, MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';
-export type statusCode = number;
-export type domain = string;
+export type statusCode = number; // DEPRECATED
+export type ohMyStatusCode = number;
+export type domain = string; // DEPRECIATED
+export type ohMyDomain = string;
 export type origin = 'local' | 'cloud' | 'ngapimock';
 export type mockRuleType = keyof typeof MOCK_RULE_TYPES;
 export type ohMyDataId = string;
 export type ohMyMockId = string;
-export type ohMyScenarioId = string;
+export type ohMyPresetId = string;
+
+export type IOhMyPresets = Record<ohMyPresetId, string>
 
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
 }
+
 export interface IOhMyMock {
-  domains: Record<domain, IState>;
+  domains: domain[];
   version: string;
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
+  modifiedOn?: string;
+  type: objectTypes.STORE;
+}
+
+export interface IOhMyAux {
+  filterKeywords?: string;
+  appActive?: boolean;
+  newAutoActivate?: boolean;
+  popupActive?: boolean;
+  blurImages?: boolean;
+}
+
+export interface IOhMyContext {
+  preset?: ohMyPresetId;
+  domain: ohMyDomain;
 }
 
 export interface IState {
+  version: string;
+  name?: string;
+  type: objectTypes.STATE;
   domain: string;
-  data: IData[];
-  views: Record<string, number[]>; // Projections
-  toggles: Record<string, boolean>; // enable toggle and toggles for projections
-  scenarios: Record<ohMyScenarioId, string>
+  data: Record<ohMyDataId, IData>;
+  aux: IOhMyAux;
+  presets: Record<ohMyPresetId, string>;
+  context: IOhMyContext;
+  modifiedOn?: string;
 }
 
 // url, method and type are used to map an API request with a mock
-export interface IOhMyContext {
+export interface IOhMyMockContext {
   url?: string;
   method?: requestMethod;
-  type?: requestType;
+  requestType?: requestType;
   id?: ohMyDataId;
   mockId?: ohMyMockId;
 }
 
-export interface IData extends IOhMyContext {
-  activeMock?: ohMyMockId;
-  enabled?: boolean;
-  mocks?: Record<ohMyMockId, IMock>;
+export interface IData extends IOhMyMockContext {
+  selected: Record<ohMyPresetId, ohMyMockId>;
+  enabled: Record<ohMyPresetId, boolean>;
+  mocks: Record<ohMyMockId, IOhMyShallowMock>;
+  lastHit: number;
+  version?: string;
+  type: objectTypes.REQUEST;
+}
+
+export interface IOhMyShallowMock {
+  id: ohMyMockId;
+  label: string;
+  modifiedOn?: string;
+  statusCode: ohMyStatusCode;
+}
+
+export interface IOhMyMockSearch {
+  id?: ohMyMockId;
+  label?: ohMyPresetId;
+  statusCode?: ohMyStatusCode;
 }
 
 export interface IMock {
   id: ohMyMockId;
-  scenario?: string;
+  version: string;
+  type: objectTypes.MOCK;
+  label?: string;
   statusCode: statusCode;
   response?: string;
-  type?: string;    // In application/json the `type` will be `application`
-  subType?: string; // In application/json the `subType` will be `json`
   responseMock?: string;
   headers?: Record<string, string>;
   headersMock?: Record<string, string>;
@@ -71,6 +104,13 @@ export interface IOhMyMockRule {
   path: string;
 }
 
+export interface IOhMyUpsertData {
+  id?: ohMyDataId;
+  url?: string;
+  method?: requestMethod;
+  requestType?: requestType;
+}
+
 // actions
 export interface IUpsertMock extends IOhMyUpsertData {
   mock: Partial<IMock>;
@@ -78,7 +118,7 @@ export interface IUpsertMock extends IOhMyUpsertData {
   makeActive?: boolean;
 }
 
-export interface IPacket<T = unknown> {
+export interface IPacket<T = any> {
   tabId?: number;
   domain?: string;
   source: appSources;
@@ -87,7 +127,7 @@ export interface IPacket<T = unknown> {
 
 export interface IPacketPayload<T = unknown> {
   type: packetTypes;
-  context?: IOhMyContext;
+  context?: IOhMyMockContext;
   data?: T;
 }
 
@@ -103,41 +143,57 @@ export type ResetStateOptions = resetStateOptions;
 
 export interface IOhMyViewItemsOrder {
   name: string;
-  from: number;
+  id: string;
   to: number;
 }
 
-export interface IOhMyToggle {
-  name: string;
-  value: boolean;
-}
+// export interface IOhMyEvalContext {
+//   data: IData;
+// request: IOhMyEvalRequest;
+// }
 
-
-export interface IOhMyUpsertData {
-  id?: ohMyDataId;
-  url?: string;
-  method?: requestMethod;
-  type?: requestType;
-}
-
-export interface IOhMyEvalContext {
-  data: IData;
-  request: IOhMyEvalRequest;
-}
-
-export interface IOhMyEvalRequest {
+export interface IOhMyAPIRequest {
   url: string;
   method: requestMethod;
+  requestType: requestType;
   body: unknown;
   headers: Record<string, string>;
 }
 
-export interface IOhMyEvalResult {
-  status: ohMyEvalStatus;
-  result: Partial<IMock> | string;
+export interface IOhMyMockResponse {
+  status: ohMyMockStatus;
+  message?: string;
+  statusCode?: statusCode;
+  headers?: Record<string, string>;
+  response?: unknown;
+  delay?: number;
+}
+
+export interface IOhMyAPIResponse {
+  data: Partial<IData>;
+  mock: Partial<IMock>;
+}
+
+export interface IDispatchApiResponsePacket {
+  context?: IOhMyMockContext;
+  data: IOhMyMockContext
 }
 
 export interface IOhMyPopupActive {
   active: boolean;
   tabId: number;
+}
+
+export interface IOhMyPresetChange {
+  id: string,
+  value?: string,
+  sourceId?: string; // preset to be cloned
+  delete?: boolean;
+  activate?: boolean;
+}
+
+export interface IOhMyBackup {
+  requests: IData[],
+  responses: IMock[],
+  version: string;
 }

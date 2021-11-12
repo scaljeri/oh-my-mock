@@ -1,13 +1,14 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Select, Store } from '@ngxs/store';
-import { IData, IState, IStore } from '@shared/type';
+import { IData, IMock, IState } from '@shared/type';
 import { DataListComponent } from 'src/app/components/data-list/data-list.component';
-import { OhMyState } from 'src/app/store/state';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Router } from '@angular/router';
+import { OhMyStateService } from 'src/app/services/state.service';
+import { uniqueId } from '@shared/utils/unique-id';
+import { StorageService } from 'src/app/services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -20,60 +21,73 @@ export class JsonExportComponent implements OnInit {
   selected: Record<string, IData> = {};
   subscriptions: Subscription[] = [];
   exportList: IData[] = []
+  hasRequests: boolean;
 
   @ViewChild(DataListComponent) dataListRef: DataListComponent;
 
-  @Select(OhMyState.mainState) state$: Observable<IState>;
-
   constructor(
     private appStateService: AppStateService,
+    private stateService: OhMyStateService,
+    private storageService: StorageService,
     private toast: HotToastService,
-    private store: Store,
     private router: Router) { }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.state$.subscribe((state: IState) => {
-      this.state = state;
-    }))
-  }
-
-  getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+    this.state = this.stateService.state;
+    this.hasRequests = Object.keys(this.state.data).length > 0;
   }
 
   onRowExport(data: IData): void {
-    this.selected[data.id] = this.selected[data.id] ? null : data;
-  }
-
-  onSelectAll(): void {
-    const keys = Object.keys(this.selected);
-    const hasSelected = keys.find(k => !!this.selected[k]);
-    const hasUnselected = keys.length === 0 || keys.find(k => !this.selected[k]);
-
-    if (!hasSelected || hasSelected && hasUnselected) { // select all
-      this.dataListRef.selectAll();
-      this.state.data.forEach(d => this.selected[d.id] = d);
-    } else if (hasSelected && !hasUnselected) { // deselect all
-      this.dataListRef.deselectAll();
-      this.state.data.forEach(d => this.selected[d.id] = null);
+    if (this.selected[data.id]) {
+      delete this.selected[data.id];
+    } else {
+      this.selected[data.id] = data;
     }
   }
 
-  onExport() {
-    const keys = Object.keys(this.selected);
-    const data = keys
-      .filter(k => this.selected[k])
-      .map(k => this.selected[k]);
+  onSelectAll(): void {
+    const hasUnselected = Object.keys(this.state.data).length -
+      Object.keys(this.selected).length > 0;
 
-    if (data.length === 0) {
+    if (hasUnselected) { // select all
+      this.dataListRef.selectAll();
+      this.selected = {};
+      Object.values(this.state.data).forEach(this.onRowExport.bind(this));
+    } else { // deselect all
+      this.dataListRef.deselectAll();
+      this.selected = {};
+    }
+  }
+
+  async onExport() {
+    const count = Object.keys(this.selected).length;
+    if (!count) {
       return this.toast.warning('Nothing selected');
     }
 
     const exportObj = {
-      data,
-      domain: this.appStateService.domain,
+      requests: [],
+      responses: [],
       version: this.appStateService.version
     }
+
+    for (const r of Object.values(this.selected)) {
+      const sMocks = Object.values(r.mocks);
+      const request = { ...r, id: uniqueId(), mocks: {} };
+      delete request.enabled; // These have presets which belong to a state/domain
+      delete request.selected; // idem
+      request.version = this.appStateService.version;
+
+      for (const sm of sMocks) {
+        const mock = await this.storageService.get<IMock>(sm.id);
+        mock.id = uniqueId();
+        request.mocks[mock.id] = { ...sm, id: mock.id };
+
+        exportObj.responses.push(mock);
+        exportObj.requests.push(request);
+      }
+    }
+
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
 
     const downloadAnchorNode = document.createElement('a');
@@ -83,7 +97,7 @@ export class JsonExportComponent implements OnInit {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 
-    this.toast.success(`Exported ${data.length} mocks as 'oh-my-mock-export.json'`);
+    this.toast.success(`Exported ${count} mocks as 'oh-my-mock-export.json'`);
 
     setTimeout(() => {
       this.router.navigate(['../']);

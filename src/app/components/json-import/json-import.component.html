@@ -1,6 +1,15 @@
-
-<oh-my-file-uploader [ngClass]="{'is-busy': isUploading}" (filesChanged)="onUploadFile($event)"></oh-my-file-uploader>
+<oh-my-file-uploader
+  [ngClass]="{ 'is-busy': isUploading }"
+  (filesChanged)="onUploadFile($event)"
+></oh-my-file-uploader>
 
 <oh-my-spinner *ngIf="isUploading" mode="dark"></oh-my-spinner>
 
-<mat-checkbox class="example-margin" [formControl]="ctrl">Import into current domain</mat-checkbox>
+<!-- <div>
+  <mat-checkbox class="example-margin" [formControl]="replaceCtrl"
+    >Replace idential requests (same Type, Method and URL)</mat-checkbox
+  >
+  <mat-checkbox *ngIf="replaceCtrl.value === false" class="example-margin" [formControl]="skipCtrl"
+    >Skip idential requests</mat-checkbox
+  >
+</div> -->

@@ -2,7 +2,7 @@ import express from 'express';
 import * as path from "path";
 import { appRouter } from './routes/routes';
 import { createServer } from '../libs/nodejs-sdk';
-import { IData, IMock, IOhMyEvalRequest } from '../src/shared/type';
+import { IData, IMock } from '../src/shared/type';
 
 const filedir = path.dirname(process.argv[1]).replace(/^\./, '');
 const basePath = __dirname.replace(filedir, '');
@@ -21,7 +21,7 @@ ohMyServer.local.add({ // settings
   type: 'XHR',
   statusCode: 200,
   path: './users.json',
-  handler: (data: IData, request: IOhMyEvalRequest, mock: IMock): void => {
+  handler: (data: IData, request: any, mock: IMock): void => {
     if (data) {
       const resp = JSON.parse(mock.responseMock);
       resp['1'] = 'Lucas Calje';

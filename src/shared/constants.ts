@@ -1,4 +1,5 @@
 export const STORAGE_KEY = 'OhMyMocks';
+export const OH_MY_TICK = 'tick';
 
 export const MOCK_JS_CODE = `/* This is where OhMyMock creates responses.
 Inside this sandbox you have access to the following data:
@@ -8,17 +9,20 @@ Inside this sandbox you have access to the following data:
     return a PROMISE in that case!!
 
 - Synchronous example:
-
-     mock.response[1].name = "Sync example";
-     return mock;
+    const response = JSON.parse(mock.response);
+    response[1].name = "Sync example";
+    mock.response = JSON.stringify(response);
+    return mock;
 
 - Asynchronous example:
 
-     const response = await fetch("/users");
-     const data = await response.json();
-     data[1].name = "From custom code";
-     mock.response = JSON.stringify(r);
-     return mock;
+    const response = await fetch("/users");
+    const data = await response.json();
+    data[1].name = "From custom code";
+    mock.response = JSON.stringify(r);
+
+    // No need to return a Promise here, "await" takes care o this!
+    return mock;
 */
 
 return mock;
@@ -29,8 +33,15 @@ export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';
 export const STATUS_CODE_INVALID_MSG = 'Invalid status code';
 export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
-export const METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
+export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
+export const IS_BASE64_RE = /data:.*base64,/;
 
+export enum objectTypes {
+  REQUEST = 'REQUEST',
+  MOCK = 'MOCK',
+  STATE = 'STATE',
+  STORE = 'STORE'
+}
 export enum packetTypes {
   ACTIVE = 'active',
   MOCK = 'mock',
@@ -40,8 +51,10 @@ export enum packetTypes {
   EVAL = 'execute',
   EVAL_RESULT = 'eval-result',
   DATA = 'data',
-  DATA_DISPATCH = 'data-dispatch'
-
+  DATA_DISPATCH = 'data-dispatch',
+  DISPATCH_API_REQUEST = 'dispatch-request',
+  DISPATCH_API_RESPONSE = 'api-response',
+  MOCK_RESPONSE = 'mock-response'
 }
 export enum appSources {
   INJECTED = 'injected',
@@ -63,7 +76,9 @@ export const MOCK_RULE_TYPES = {
   username: 'Username'
 };
 
-export enum ohMyEvalStatus {
+export enum ohMyMockStatus {
   OK,
-  ERROR
+  ERROR,
+  NO_CONTENT,
+  INACTIVE
 }

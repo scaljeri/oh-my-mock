@@ -1,86 +1,72 @@
-import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select, Store } from '@ngxs/store';
-import { STORAGE_KEY } from '@shared/constants';
-import { domain, IData, IOhMyMock, IState, IStore } from '@shared/type';
-import { findMocks } from '@shared/utils/find-mock';
-import { uniqueId } from '@shared/utils/unique-id';
-import { Observable } from 'rxjs';
-import { AppStateService } from 'src/app/services/app-state.service';
-import { UpsertData } from 'src/app/store/actions';
-import { OhMyState } from 'src/app/store/state';
+import { domain, IData, IOhMyContext, IState } from '@shared/type';
+
+import { Subscription } from 'rxjs';
+import { startWith } from 'rxjs/operators';
+import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyStateService } from 'src/app/services/state.service';
+import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
   selector: 'oh-my-state-explorer-page',
   templateUrl: './state-explorer.component.html',
   styleUrls: ['./state-explorer.component.scss']
 })
-export class PageStateExplorerComponent implements OnInit {
-  @Select(OhMyState.getState) state$: Observable<IOhMyMock>;
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
+export class PageStateExplorerComponent implements OnInit, OnDestroy {
+  panelOpenState = true;
+  domains: domain[];
+  selectedDomain = '-';
 
-  public panelOpenState = true;
-  public domains: domain[];
-  public selectedDomain = '-';
-
-  public state: IState;
-  public selectedState: IState;
-  public dataItem: IData;
-  public showRowAction = true;
-  public mainActionIconName = 'copy_all';
-  public rowActionIconName = 'content_copy';
+  state: IState;
+  selectedState: IState;
+  dataItem: IData;
+  showRowAction = true;
+  mainActionIconName = 'copy_all';
+  rowActionIconName = 'content_copy';
+  subscriptions = new Subscription();
+  context: IOhMyContext;
+  hasSelectedStateAnyRequests: boolean;
 
   @ViewChildren(MatExpansionPanel) panels: QueryList<MatExpansionPanel>;
 
   constructor(
-    private appStateService: AppStateService,
-    private store: Store,
+    private stateStream: OhMyStateService,
+    private storageService: StorageService,
+    private storeService: OhMyState,
+    private cdr: ChangeDetectorRef,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
-    this.state$.subscribe((state) => {
-      this.domains = Object.keys(state.domains).filter(d => d !== this.appStateService.domain);
+    // TODO: listen for domain change??
 
-      this.selectedState = state.domains[this.selectedDomain];
-    });
+    this.subscriptions.add(this.stateStream.store$.pipe(
+      startWith(this.stateStream.store)).subscribe(store => {
+      if (store) {
+        this.state = this.stateStream.state;
+        this.domains = store.domains.filter(d => d !== this.state.domain);
+        this.cdr.detectChanges();
+      }
+    }));
   }
 
-  async onSelectDomain(domain = this.appStateService.domain): Promise<void> {
+  async onSelectDomain(domain = this.state.domain): Promise<void> {
     this.selectedDomain = domain;
-    this.selectedState = this.getStateSnapshot(domain);
-
+    this.selectedState = await this.storageService.get(domain);
+    this.hasSelectedStateAnyRequests = Object.keys(this.selectedState.data)?.length > 0
     this.panels.toArray()[1].open();
+    this.cdr.detectChanges();
   }
 
-  private cloneData(rowIndex: number): void {
-    const data = {
-      ...this.getStateSnapshot(this.selectedDomain).data[rowIndex],
-      id: uniqueId()
-    };
-
-    this.upsertData(data);
+  async onCloneAll(): Promise<void> {
+    for (const request of Object.values(this.selectedState.data)) {
+      await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
+    }
+    this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);
   }
 
-  onCloneAll(): void {
-    const state = this.getStateSnapshot(this.selectedDomain);
-    state.data.forEach((_, i) => this.cloneData(i));
-
-    this.toast.success(`Cloned ${state.data.length} mocks`);
-  }
-
-  onDataSelect(id: string): void {
-    this.dataItem = findMocks(this.selectedState, { id });
-    this.panels.toArray()[2].open();
-  }
-
-
-  getStateSnapshot(domain: string): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => state[STORAGE_KEY].domains[domain]);
-  }
-
-  getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }
