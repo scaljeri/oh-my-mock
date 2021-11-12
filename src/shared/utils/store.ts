@@ -17,13 +17,10 @@ export class StoreUtils {
   }
 
   static init(context?: IOhMyContext, origin: origin = 'local'): IOhMyMock {
-    const store = { type: objectTypes.STORE, domains: [], version: this.version, origin, content: { states: {}, mocks: {} } } as IOhMyMock;
+    const store = { type: objectTypes.STORE, domains: [], version: this.version, origin } as IOhMyMock;
 
     if (context) {
       store.domains.push(context.domain);
-      // store.content.states[domain] = await this.getState(store, domain);
-      // store.content.states[state.domain] = state
-      // await this.persistStore(store);
     }
 
     return store;
@@ -45,12 +42,12 @@ export class StoreUtils {
     return { ...store, domains };
   }
 
-  static removeDomain(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
-    const index = store.domains.indexOf(domain);
-    if (index >= 0) {
-      store.domains = [...store.domains.slice(0, index), ...store.domains.slice(index + 1)];
-    }
+  // static removeDomain(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
+  //   const index = store.domains.indexOf(domain);
+  //   if (index >= 0) {
+  //     store.domains = [...store.domains.slice(0, index), ...store.domains.slice(index + 1)];
+  //   }
 
-    return store;
-  }
+  //   return store;
+  // }
 }
