@@ -41,7 +41,7 @@ export class DataUtils {
     const output = Object.entries(data.mocks).find(([k, v]) =>
       (!search.id || k === search.id) &&
       (!search.statusCode || search.statusCode === v.statusCode) &&
-      (!search.label || search.label === v.label));
+      (search.label === undefined || search.label === v.label || search.label === '' && v.label === undefined));
 
     return output ? data.mocks[output[0]] : null;
   }

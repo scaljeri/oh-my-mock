@@ -14,7 +14,7 @@ export async function handleApiResponse(payload: IOhMyAPIResponse, contentState:
     // is only added if the combination statusCode/label does not exist yet
 
     autoActivate = false;
-    const response = DataUtils.findMock(data, { statusCode: payload.mock.statusCode });
+    const response = DataUtils.findMock(data, { statusCode: payload.mock.statusCode, label: '' });
 
     if (response && !response.label) {
       return;
