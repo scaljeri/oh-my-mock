@@ -1,7 +1,6 @@
 import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { IData, IMock, IOhMyBackup, IOhMyContext } from '@shared/type';
-import { MigrationsService } from 'src/app/services/migrations.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import compareVersions from 'compare-versions';
 import { FormControl } from '@angular/forms';

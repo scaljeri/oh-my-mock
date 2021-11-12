@@ -4,6 +4,7 @@ import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
 
+declare let window: any;
 declare let monaco: any;
 
 @Component({

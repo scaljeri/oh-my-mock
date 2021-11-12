@@ -19,8 +19,8 @@ export class DialogCodeEditorComponent implements OnInit {
     @Optional() @Inject(MAT_DIALOG_DATA) public input: IOhMyCodeEditOptions) { }
 
   ngOnInit(): void {
-    this.ctrl.setValue(this.input.code, { emitEvent: false });
-    this.base = this.input.base;
+    this.ctrl.setValue(this.input?.code, { emitEvent: false });
+    this.base = this.input?.base;
   }
 
   onErrors(errors: IMarker[]): void {

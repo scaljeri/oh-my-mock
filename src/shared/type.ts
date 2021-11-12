@@ -71,7 +71,7 @@ export interface IData extends IOhMyMockContext {
 
 export interface IOhMyShallowMock {
   id: ohMyMockId;
-  label: string;
+  label?: string;
   modifiedOn?: string;
   statusCode: ohMyStatusCode;
 }

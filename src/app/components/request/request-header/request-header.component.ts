@@ -39,8 +39,7 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
   constructor(
     public dialog: MatDialog,
-    private storeService: OhMyState,
-    private stateService: OhMyStateService) { }
+    private storeService: OhMyState) { }
 
   ngOnInit(): void {
     // setTimeout(() => {
