@@ -24,6 +24,7 @@ export class MigrateUtils {
       return data;
     }
 
+    // `version` > `MigrateUtils.version`
     if (compareVersions(version, MigrateUtils.version) === 1) { // Can only happen with JSON imports
       return null;
     }
