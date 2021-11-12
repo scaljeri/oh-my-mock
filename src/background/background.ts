@@ -85,7 +85,7 @@ chrome.browserAction.onClicked.addListener(function (tab) {
     );
 
     // TODO:
-    let popupIsActive = false;
+    const popupIsActive = false;
     // popup.onunload = function () {
     //   if (popupIsActive) { // Initially the window loads (and unloads) with a blanl page
     //     chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: tab.id });

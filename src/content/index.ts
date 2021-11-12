@@ -164,6 +164,7 @@ async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
 // https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 
 function inject(state: IState) {
+  // eslint-disable-next-line no-console
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 
   if (!state) {
