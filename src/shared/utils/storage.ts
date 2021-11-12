@@ -1,3 +1,4 @@
+///<reference types="chrome"/>
 import { objectTypes, STORAGE_KEY } from '../constants';
 import { IMock, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
