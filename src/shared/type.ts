@@ -186,10 +186,7 @@ export interface IOhMyPopupActive {
 
 export interface IOhMyPresetChange {
   id: string,
-  value?: string,
-  sourceId?: string; // preset to be cloned
-  delete?: boolean;
-  activate?: boolean;
+  value: string
 }
 
 export interface IOhMyBackup {
