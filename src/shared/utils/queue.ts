@@ -14,7 +14,7 @@ export class OhMyQueue {
   }
 
   isHandlerActive(packetType: ohPacketType): boolean {
-    return this.handlers[packetType]?.isActive;
+    return this.handlers[packetType]?.isActive || false;
   }
 
   hasHandler(packetType: ohPacketType): boolean {
@@ -34,7 +34,6 @@ export class OhMyQueue {
     this.handlers[packetType] = {
       handler: async (packet: unknown): Promise<void> => {
         await handler(packet);          // process packet
-        this.queue[packetType].shift(); // remove packet
         this.handlers[packetType].isActive = false;
         this.next(packetType);          // next
       }, isActive: false
@@ -44,15 +43,15 @@ export class OhMyQueue {
   }
 
   next(packetType: ohPacketType): void {
-    if (!this.hasHandler(packetType) || !this.getQueue(packetType).length) {
+    if (
+      !this.hasHandler(packetType) ||
+      !this.getQueue(packetType).length ||
+      this.handlers[packetType].isActive
+      ) {
       return;
     }
 
-    if (this.queue[packetType].length && !this.handlers[packetType].isActive) {
-      this.handlers[packetType].isActive = true;
-      this.handlers[packetType].handler(this.queue[packetType][0]);
-    } else {
-      this.handlers[packetType].isActive = false;
-    }
+    this.handlers[packetType].isActive = true;
+    this.handlers[packetType].handler(this.queue[packetType].shift());
   }
 }

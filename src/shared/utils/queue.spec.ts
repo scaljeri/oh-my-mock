@@ -1,3 +1,4 @@
+import { flushPromises } from "../../test-helpers";
 import { OhMyQueue } from "./queue";
 
 describe('StoreUtils', () => {
@@ -12,8 +13,12 @@ describe('StoreUtils', () => {
 
     expect(queue.hasHandler('response')).toBeTruthy();
   })
-  describe('With queue', () => {
 
+  it('should not be active initially', () => {
+    expect(queue.isHandlerActive('response')).toBeFalsy();
+  });
+
+  describe('With queue', () => {
     beforeEach(() => {
       queue.addPacket('response', 'foo');
       queue.addPacket('response', 'bar');
@@ -25,7 +30,7 @@ describe('StoreUtils', () => {
 
     it('should not have any handlers', () => {
       expect(queue.hasHandler('response')).toBeFalsy();
-    })
+    });
 
     it('should handle packets in the queue', (done) => {
       const packets = ['foo', 'bar'];
@@ -43,6 +48,19 @@ describe('StoreUtils', () => {
       };
       queue.addHandler('response', handler);
       expect(queue.hasHandler('response')).toBeTruthy();
+    });
+
+    it('should not activate two handlers', async () => {
+      const handler = jest.fn().mockResolvedValue(null);
+      queue.addHandler('response', handler);
+
+      expect(queue.getQueue('response').length).toBe(1);
+      expect(queue.isHandlerActive('response')).toBeTruthy();
+
+      await flushPromises();
+
+      expect(handler).toHaveBeenCalledTimes(2);
+      expect(queue.getQueue('response').length).toBe(0);
     });
   });
 });
