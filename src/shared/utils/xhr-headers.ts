@@ -16,7 +16,7 @@ export const stringify = (headers: Record<string, string> = {}): string => {
         out.push(`${input[0]}: ${input[1]}`);
         return out;
       }, [])
-      .join('\r\n');
+      .join('\r\n') + '\r\n';
   }
 
   return '';

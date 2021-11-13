@@ -43,7 +43,7 @@ export class StorageService {
   remove(key: string): Promise<void> {
     return new Promise(r => {
       this.ngZone.runOutsideAngular(() => {
-        StorageUtils.remove(key).then(r);
+        (StorageUtils.remove(key) as Promise<void>).then(r);
       });
     });
   }

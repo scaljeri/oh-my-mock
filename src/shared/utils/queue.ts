@@ -9,8 +9,8 @@ export class OhMyQueue {
   private handlers: Partial<Record<ohPacketType, IOhActivity>> = {};
   private queue: Partial<Record<ohPacketType, unknown[]>> = {};
 
-  getInQueue<T = unknown>(packetType: ohPacketType): T[] {
-    return this.queue[packetType] as T[];
+  getQueue<T = unknown>(packetType: ohPacketType): T[] {
+    return this.queue[packetType] as T[] || [];
   }
 
   isHandlerActive(packetType: ohPacketType): boolean {
@@ -44,7 +44,7 @@ export class OhMyQueue {
   }
 
   next(packetType: ohPacketType): void {
-    if (!this.handlers[packetType]) {
+    if (!this.hasHandler(packetType) || !this.getQueue(packetType).length) {
       return;
     }
 
