@@ -1,11 +1,7 @@
 import { objectTypes } from '../constants';
 import { timestamp } from 'rxjs';
-import { IData, IMock, IOhMyPresetChange, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
+import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
 import { compareUrls } from './urls';
-import { DataUtils } from './data';
-import { StorageUtils } from './storage';
-import { uniqueId } from './unique-id';
-import { MockUtils } from './mock';
 
 export class StateUtils {
   static version = '__OH_MY_VERSION__';
@@ -19,17 +15,19 @@ export class StateUtils {
         preset: 'default',
         domain: base.domain
       },
-      type: objectTypes.STATE, ...base,
+      ...base,
+      type: objectTypes.STATE,
       onModified: timestamp()
     } as IState;
   }
 
-  static isState<V = IData>(input: IState | V): input is IState {
-    return (input as IState).domain !== undefined;
+  static isState(input: unknown): input is IState {
+    return (input as IState).type === objectTypes.STATE;
   }
 
-  static getRequest(state: IState, id: ohMyDataId): IData {
-    return { ...state.data[id] };
+  static getRequest(state: IState, id: ohMyDataId): IData | undefined {
+    const retVal = state.data[id];
+    return retVal ? { ...retVal } : undefined;
   }
 
   static setRequest(state: IState, data: IData): IState {
