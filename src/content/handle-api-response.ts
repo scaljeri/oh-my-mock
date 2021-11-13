@@ -6,7 +6,7 @@ import { OhMyContentState } from "./content-state";
 
 export async function handleApiResponse(payload: IOhMyAPIResponse, contentState: OhMyContentState): Promise<void> {
   let state = await contentState.getState()
-  let data = StateUtils.findData(state, { ...payload.data });
+  let data = StateUtils.findRequest(state, { ...payload.data });
   let autoActivate = state.aux.newAutoActivate;
 
   if (data) {
@@ -26,7 +26,7 @@ export async function handleApiResponse(payload: IOhMyAPIResponse, contentState:
   const response = MockUtils.init(payload.mock);
   data = DataUtils.addMock(state.context, data, response, autoActivate);
 
-  state = StateUtils.setData(state, data);
+  state = StateUtils.setRequest(state, data);
 
   await contentState.set(response.id, response);
   await contentState.set(state.domain, state);

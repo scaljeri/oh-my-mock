@@ -59,7 +59,7 @@ export class JsonImportComponent {
               requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1).forEach(r =>  {
                 r.lastHit = timestamp++; // make sure they each have a unique timestamp!
                 r = DataUtils.prefilWithPresets(r, state.presets);
-                state = StateUtils.setData(state, r)
+                state = StateUtils.setRequest(state, r)
               });
               this.storageService.set(state.domain, state);
 

@@ -32,7 +32,7 @@ export class PageMockComponent implements OnInit {
     const dataId = this.activeRoute.snapshot.params.dataId;
 
     this.subscription = this.stateService.state$.subscribe((state: IState) => {
-      this.data = PageMockComponent.StateUtils.findData(state, { id: dataId });
+      this.data = PageMockComponent.StateUtils.findRequest(state, { id: dataId });
       this.aux = state.aux;
       this.context = state.context;
       this.cdr.detectChanges();
