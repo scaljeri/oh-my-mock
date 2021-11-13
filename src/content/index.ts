@@ -125,7 +125,7 @@ streamByType$<any>(packetTypes.DISPATCH_API_REQUEST, appSources.INJECTED).subscr
 streamByType$<IOhMyAPIResponse>(packetTypes.DISPATCH_API_RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
-  queue.addPacket(payload.data, 'response');
+  queue.addPacket('response', payload.data);
   // TODO: send result back to injected???
 }
 

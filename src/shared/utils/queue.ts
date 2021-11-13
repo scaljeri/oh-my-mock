@@ -1,32 +1,58 @@
 export type ohPacketType = 'response';
 
-export class OhMyQueue {
-  private handlers = {};
-  private queue = {};
+interface IOhActivity {
+  handler: (packet: unknown) => Promise<void>
+  isActive: boolean;
+}
 
-  addPacket(packet: unknown, packetType: ohPacketType): void {
+export class OhMyQueue {
+  private handlers: Partial<Record<ohPacketType, IOhActivity>> = {};
+  private queue: Partial<Record<ohPacketType, unknown[]>> = {};
+
+  getInQueue<T = unknown>(packetType: ohPacketType): T[] {
+    return this.queue[packetType] as T[];
+  }
+
+  isHandlerActive(packetType: ohPacketType): boolean {
+    return this.handlers[packetType]?.isActive;
+  }
+
+  hasHandler(packetType: ohPacketType): boolean {
+    return !!this.handlers[packetType]?.handler;
+  }
+
+  addPacket(packetType: ohPacketType, packet: unknown): void {
     if (!this.queue[packetType]) {
       this.queue[packetType] = [];
     }
 
     this.queue[packetType].push(packet);
-
-    if (this.queue[packetType].length === 1) { // First of type, start!
-      this.next(packetType);
-    }
+    this.next(packetType);
   }
 
   addHandler(packetType: ohPacketType, handler: (packet: unknown) => Promise<void>): void {
-    this.handlers[packetType] = async (packet: unknown): Promise<void> => {
-      await handler(packet);
-      this.queue[packetType].shift();
-      this.next(packetType);
+    this.handlers[packetType] = {
+      handler: async (packet: unknown): Promise<void> => {
+        await handler(packet);          // process packet
+        this.queue[packetType].shift(); // remove packet
+        this.handlers[packetType].isActive = false;
+        this.next(packetType);          // next
+      }, isActive: false
     };
+
+    this.next(packetType);
   }
 
   next(packetType: ohPacketType): void {
-    if (this.queue[packetType].length) {
-      this.handlers[packetType](this.queue[packetType][0]);
+    if (!this.handlers[packetType]) {
+      return;
+    }
+
+    if (this.queue[packetType].length && !this.handlers[packetType].isActive) {
+      this.handlers[packetType].isActive = true;
+      this.handlers[packetType].handler(this.queue[packetType][0]);
+    } else {
+      this.handlers[packetType].isActive = false;
     }
   }
 }
