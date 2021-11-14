@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { PageStateExplorerComponent } from './state-explorer.component';
+import { OhMyStateService } from '../../services/state.service';
+import { StorageService } from '../../services/storage.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { Subject } from 'rxjs';
 
 describe('StateExplorerComponent', () => {
   let component: PageStateExplorerComponent;
@@ -13,10 +16,14 @@ describe('StateExplorerComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [PageStateExplorerComponent],
       imports: [
-        NgxsModule.forRoot([]),
         RouterTestingModule.withRoutes([])
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
+      providers: [
+        {provide: OhMyStateService, useValue: { store$: new Subject()} },
+        {provide: StorageService, useValue: {} },
+        {provide: OhMyState, useValue: {} },
+      ]
     }).compileComponents();
   });
 

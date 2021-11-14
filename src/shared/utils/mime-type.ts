@@ -6,7 +6,7 @@ export const splitMimeType = (contentType: string): {mimeType: string, mimeSubTy
 }
 
 export function isMimeTypeJSON(contentType: string): boolean  {
-    return !!contentType?.match(/json$/);
+    return !!contentType?.match(/\/json/);
 }
 
 export function extractMimeType(contentType: string): string {

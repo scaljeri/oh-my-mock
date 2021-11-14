@@ -1,20 +1,22 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CodeEditorComponent } from './code-editor.component';
+import { DialogCodeEditorComponent } from './code-editor.component';
 
 describe('CodeEditorComponent', () => {
-  let component: CodeEditorComponent;
-  let fixture: ComponentFixture<CodeEditorComponent>;
+  let component: DialogCodeEditorComponent;
+  let fixture: ComponentFixture<DialogCodeEditorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CodeEditorComponent ]
+      declarations: [ DialogCodeEditorComponent ],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CodeEditorComponent);
+    fixture = TestBed.createComponent(DialogCodeEditorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

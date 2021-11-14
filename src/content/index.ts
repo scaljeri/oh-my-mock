@@ -125,7 +125,7 @@ streamByType$<any>(packetTypes.DISPATCH_API_REQUEST, appSources.INJECTED).subscr
 streamByType$<IOhMyAPIResponse>(packetTypes.DISPATCH_API_RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
-  queue.addPacket(payload.data, 'response');
+  queue.addPacket('response', payload.data);
   // TODO: send result back to injected???
 }
 
@@ -164,6 +164,7 @@ async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
 // https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 
 function inject(state: IState) {
+  // eslint-disable-next-line no-console
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 
   if (!state) {

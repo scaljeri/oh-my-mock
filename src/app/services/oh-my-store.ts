@@ -102,10 +102,10 @@ export class OhMyState {
     const retVal = response.id ? { ...await this.storageService.get<IMock>(response.id), ...response } :
       MockUtils.init(response);
 
-    let request = StateUtils.findData(state, pRequest);
+    let request = StateUtils.findRequest(state, pRequest);
     if (!request) { // also new request!
       state = await this.upsertRequest(request, context);
-      request = StateUtils.findData(state, request);
+      request = StateUtils.findRequest(state, request);
     }
 
     if (response.id) {
@@ -116,7 +116,7 @@ export class OhMyState {
       request.selected[p] = retVal.id;
     });
 
-    request = DataUtils.addMock(context, request as IData, retVal);
+    request = DataUtils.addResponse(context, request as IData, retVal);
 
     if (activate) {
       request.selected[context.preset] = retVal.id
@@ -134,7 +134,7 @@ export class OhMyState {
   async upsertRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
     let state = await this.getState(context);
     const retVal = {
-      ...(StateUtils.findData(state, request) || DataUtils.init(request)),
+      ...(StateUtils.findRequest(state, request) || DataUtils.init(request)),
       ...request
     };
 
@@ -144,7 +144,7 @@ export class OhMyState {
       retVal.id = uniqueId();
     }
 
-    state = StateUtils.setData(state, retVal);
+    state = StateUtils.setRequest(state, retVal);
     await this.storageService.set(state.domain, state);
 
     return state;
@@ -171,14 +171,14 @@ export class OhMyState {
     }
 
     state = await this.getState(context);
-    await this.storageService.set(state.domain, StateUtils.setData(state, request));
+    await this.storageService.set(state.domain, StateUtils.setRequest(state, request));
 
     return request;
   }
 
   async deleteRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
     const state = await this.getState(context);
-    request = (StateUtils.findData(state, request));
+    request = (StateUtils.findRequest(state, request));
 
     for (const resp of Object.values(request.mocks)) {
       await this.storageService.remove(resp.id);
@@ -206,10 +206,10 @@ export class OhMyState {
 
   async deleteResponse(responseId: ohMyMockId, requestId: ohMyDataId, context: IOhMyContext): Promise<IState> {
     let state = await this.getState(context);
-    let request = StateUtils.findData(state, { id: requestId });
+    let request = StateUtils.findRequest(state, { id: requestId });
 
-    request = DataUtils.removeMock(context, request, responseId);
-    state = StateUtils.setData(state, request);
+    request = DataUtils.removeResponse(context, request, responseId);
+    state = StateUtils.setRequest(state, request);
 
     await this.storageService.remove(responseId);
     await this.storageService.set(state.domain, state);

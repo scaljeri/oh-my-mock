@@ -21,14 +21,14 @@ export class PresetUtils {
       .find(([, v]) => v.toLowerCase() === value.toLowerCase())?.[0];
   }
 
-  static create(presets: IOhMyPresets, cloneFrom: string, activate = true): IOhMyPresetChange  {
+  static create(presets: IOhMyPresets, cloneFrom: string): IOhMyPresetChange {
     let newValue = '';
     let count = 0;
 
     if (!cloneFrom) {
       newValue = 'New Preset'
       if (!this.findId(presets, newValue)) {
-        return { id: uniqueId(), value: newValue, activate: true };
+        return { id: uniqueId(), value: newValue };
       }
       newValue += ' copy';
     } else if (cloneFrom.match(IS_COPY_RE)) {
@@ -43,7 +43,7 @@ export class PresetUtils {
     }
     newValue += `${count === 0 ? '' : ` ${count}`}`;
 
-    return { id: uniqueId(), value: newValue, activate };
+    return { id: uniqueId(), value: newValue };
   }
 
   static update(id: ohMyPresetId, value: string, presets: IOhMyPresets): IOhMyPresets {
@@ -52,18 +52,23 @@ export class PresetUtils {
 
   static delete(state: IState, id: ohMyPresetId): IState {
     const retVal = {
-      ...state, data: { ...state.data },
-      presets: { ...state.presets }, context: { ...state.context }
+      ...state,
+      data: { ...state.data },
+      presets: { ...state.presets },
+      context: { ...state.context }
     };
 
     Object.values(retVal.data).forEach(request => {
-      retVal.data[request.id] = {
+      const clone = {
         ...request,
-        selected: { ...request.selected }, enabled: { ...request.enabled }
+        selected: { ...request.selected },
+        enabled: { ...request.enabled }
       };
 
-      delete retVal.data[request.id].selected[id];
-      delete retVal.data[request.id].enabled[id];
+      delete clone.selected[id];
+      delete clone.enabled[id];
+
+      retVal.data[clone.id] = clone;
     });
 
     if (state.context.preset === id) {

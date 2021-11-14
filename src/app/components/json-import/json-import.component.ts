@@ -1,7 +1,6 @@
 import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { IData, IMock, IOhMyBackup, IOhMyContext } from '@shared/type';
-import { MigrationsService } from 'src/app/services/migrations.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import compareVersions from 'compare-versions';
 import { FormControl } from '@angular/forms';
@@ -60,7 +59,7 @@ export class JsonImportComponent {
               requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1).forEach(r =>  {
                 r.lastHit = timestamp++; // make sure they each have a unique timestamp!
                 r = DataUtils.prefilWithPresets(r, state.presets);
-                state = StateUtils.setData(state, r)
+                state = StateUtils.setRequest(state, r)
               });
               this.storageService.set(state.domain, state);
 

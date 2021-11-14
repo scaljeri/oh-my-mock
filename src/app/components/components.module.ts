@@ -53,7 +53,6 @@ import { SpinnerComponent } from './spinner/spinner.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatMenuModule} from '@angular/material/menu';
 import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
-import { ManageScenariosComponent } from './manage-presets/manage-scenarios.component';
 
 import { OhMyDirectivesModule } from '../directives/directives.module';
 import { LinkComponent } from './link/link.component';
@@ -87,7 +86,6 @@ import { PresetComponent } from './preset/preset.component';
     ContentTypeComponent,
     SpinnerComponent,
     AutocompleteDropdownComponent,
-    ManageScenariosComponent,
     LinkComponent,
     DialogCodeEditorComponent,
     PresetComponent,

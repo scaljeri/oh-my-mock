@@ -33,20 +33,7 @@ export class DataUtils {
     return data.enabled[context.preset] && data.selected[context.preset];
   }
 
-  static findMock(data: IData, search: IOhMyMockSearch): IOhMyShallowMock | null {
-    if (search.id) {
-      return data.mocks[search.id];
-    }
-
-    const output = Object.entries(data.mocks).find(([k, v]) =>
-      (!search.id || k === search.id) &&
-      (!search.statusCode || search.statusCode === v.statusCode) &&
-      (search.label === undefined || search.label === v.label || search.label === '' && v.label === undefined));
-
-    return output ? data.mocks[output[0]] : null;
-  }
-
-  static addMock = (context: IOhMyContext, data: IData, mock: Partial<IMock>, autoActivate = true): IData => {
+  static addResponse(context: IOhMyContext, data: IData, mock: Partial<IMock>, autoActivate = true): IData {
     data = {
       ...data, mocks:
       {
@@ -56,33 +43,33 @@ export class DataUtils {
           label: mock.label
         }
       }, selected: { ...data.selected },
-      enabled: { ...data.enabled, [context.preset]: autoActivate }
+      enabled: { ...data.enabled }
     };
 
     if (Object.keys(data.mocks).length === 1) {
       data.selected[context.preset] = mock.id;
-    }
 
-    if (autoActivate) {
-      data.enabled[context.preset] = true;
+      if (autoActivate) {
+        data.enabled[context.preset] = true;
+      }
     }
 
     return data;
   }
 
-  static removeMock(context: IOhMyContext, data: IData, mockId: ohMyMockId): IData {
+  static removeResponse(context: IOhMyContext, data: IData, mockId: ohMyMockId): IData {
     data = {
       ...data,
       selected: { ...data.selected },
       enabled: { ...data.enabled },
       mocks: { ...data.mocks }
     };
-    // const mock = data.mocks[mockId];
+    // TODO: The following assumes that only the active mock can be deleted
     delete data.mocks[mockId];
     delete data.selected[context.preset];
     delete data.enabled[context.preset];
 
-    const nextActiveMock = Object.values(data.mocks).sort(this.statusCodeSort)?.[0]
+    const nextActiveMock = DataUtils.getNextActiveResponse(data);
 
     if (nextActiveMock) {
       data.selected[context.preset] = nextActiveMock.id;
@@ -92,32 +79,25 @@ export class DataUtils {
     return data;
   }
 
-  static activateMock(context: IOhMyContext, data: IData, mockId: ohMyMockId, scenario = null): IData {
-    data = { ...data, selected: { ...data.selected }, enabled: { ...data.enabled } };
-
-    data.selected[scenario] = mockId;
-    data.enabled[scenario] = true;
-
-    return data;
+  static getNextActiveResponse(data: IData): IOhMyShallowMock {
+    // TODO: make more advanced
+    return Object.values(data.mocks).sort(this.statusCodeSort)?.[0];
   }
 
-  // static activeMockByScenario(data: IData, scenario: ohMyScenarioId, force = false): IData {
-  //   const copy = { ...data };
-  //   const result = Object.values(data.mocks).sort(this.statusCodeSort).find(v => v.scenario === scenario);
+  // static activateMock(context: IOhMyContext, data: IData, mockId: ohMyMockId, scenario = null): IData {
+  //   data = { ...data, selected: { ...data.selected }, enabled: { ...data.enabled } };
 
-  //   if (result && (force || !data.activeMock[scenario])) {
-  //     data.activeMock = { ...data.activeMock, [scenario]: result.id };
-  //     data.isEnabled = { ...data.isEnabled, [scenario]: true };
-  //   }
+  //   data.selected[scenario] = mockId;
+  //   data.enabled[scenario] = true;
 
-  //   return copy;
+  //   return data;
   // }
 
-  static deactivateMock(context: IOhMyContext, data: IData): IData {
-    data = { ...data, enabled: { ...data.enabled, [context.preset]: false } };
+  // static deactivateResponse(context: IOhMyContext, data: IData): IData {
+  //   data = { ...data, enabled: { ...data.enabled, [context.preset]: false } };
 
-    return data
-  }
+  //   return data
+  // }
 
   static create(data: Partial<IData>): IData {
     const output = {
@@ -137,16 +117,15 @@ export class DataUtils {
     return output;
   }
 
-  static statusCodeSort(a, b) {
+  static statusCodeSort(a, b): number {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  // TODO: IS this needed???
   static prefilWithPresets(request: IData, presets: IOhMyPresets = {}): IData {
     request.selected ??= {};
     request.enabled ??= {};
 
-    const responses = Object.values(request.mocks).sort((a, b) => a.statusCode > b.statusCode ? -1 : 1);
+    const responses = Object.values(request.mocks).sort(DataUtils.statusCodeSort);
 
     Object.keys(presets).forEach(p => {
       request.enabled[p] ??= false;

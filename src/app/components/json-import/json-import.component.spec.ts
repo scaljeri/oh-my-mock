@@ -1,7 +1,9 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
-import { Store } from '@ngxs/store';
+import { AppStateService } from '../../services/app-state.service';
+import { OhMyStateService } from '../../services/state.service';
+import { StorageService } from '../../services/storage.service';
 
 import { JsonImportComponent } from './json-import.component';
 
@@ -11,11 +13,15 @@ describe('JsonImportComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ JsonImportComponent ],
+      declarations: [JsonImportComponent],
       schemas: [NO_ERRORS_SCHEMA],
-      providers: [{ provide: Store, useValue: {} }, { provide: MatDialogRef, useValue: {close: jest.fn()}}]
+      providers: [
+        { provide: AppStateService, useValue: {} },
+        { provide: OhMyStateService, useValue: {} },
+        { provide: StorageService, useValue: {} },
+        { provide: MatDialogRef, useValue: { close: jest.fn() } }]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {

@@ -8,14 +8,14 @@ import { blurBase64, isImage } from "../shared/utils/image";
 
 export async function handleApiRequest(request: IOhMyAPIRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
   const state = await contentState.getState();
-  const data = StateUtils.findData(state, request);
+  const data = StateUtils.findRequest(state, request);
 
   if (!data) {
     return { status: ohMyMockStatus.NO_CONTENT };
   }
 
   data.lastHit = Date.now();
-  await contentState.set(state.domain, StateUtils.setData(state, data));
+  await contentState.set(state.domain, StateUtils.setRequest(state, data));
 
   const activeResponseId = DataUtils.activeMock(data, state.context)
 

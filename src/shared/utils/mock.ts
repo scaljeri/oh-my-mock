@@ -1,5 +1,3 @@
-import contentParser from 'content-type-parser';
-
 import { IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId } from '../type'
 import { MOCK_JS_CODE, objectTypes } from '../constants';
 import { uniqueId } from './unique-id';
@@ -38,14 +36,17 @@ export class MockUtils {
     return this.init(source, updates);
   }
 
-  static find(mocks: Record<ohMyMockId, IMock>, searchOptions: IOhMyMockSearch): IMock | void {
-    if (searchOptions.id) {
-      return mocks[searchOptions.id];
-    } else {
-      return Object.values(mocks).find(mock =>
-        (!searchOptions.statusCode || searchOptions.statusCode === mock.statusCode) &&
-        (!searchOptions.label || searchOptions.label === mock.label));
+  static find(responses:Record<ohMyMockId, IOhMyShallowMock>, search: IOhMyMockSearch): IOhMyShallowMock | null {
+    if (search.id) {
+      return responses[search.id];
     }
+
+    const output = Object.entries(responses).find(([k, v]) =>
+      (!search.id || k === search.id) &&
+      (!search.statusCode || search.statusCode === v.statusCode) &&
+      (search.label === undefined || search.label === v.label || search.label === '' && v.label === undefined));
+
+    return output ? responses[output[0]] : null;
   }
 
   static createShallowMock(mock: IOhMyShallowMock & Partial<IMock> | IMock): IOhMyShallowMock {

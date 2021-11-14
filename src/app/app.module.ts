@@ -61,6 +61,7 @@ export class AppModule {
 }
 
 chrome.storage.local.get(null, function (data) {
+  // eslint-disable-next-line no-console
   console.log('window.data === ', data);
   window['data'] = data;
 });

@@ -43,7 +43,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
       this.hasData = Object.keys(this.state.data).length > 0;
 
       if (this.navigateToData) {
-        this.onDataSelect(PageDataListComponent.StateUtils.findData(state, this.navigateToData).id);
+        this.onDataSelect(PageDataListComponent.StateUtils.findRequest(state, this.navigateToData).id);
       }
       this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
     }));

@@ -7,15 +7,15 @@ import { Directive, EmbeddedViewRef, Input, OnChanges, TemplateRef, ViewContaine
 })
 export class OhMyForDirective implements OnChanges {
   @Input() ngForOf = [];
-  @Input() ngForEmpty!: TemplateRef<{}>;
+  @Input() ngForEmpty!: TemplateRef<unknown>;
 
-  private ref?: EmbeddedViewRef<{}>;
+  private ref?: EmbeddedViewRef<unknown>;
 
   constructor(private readonly vcr: ViewContainerRef) {}
 
   ngOnChanges() {
     this.ref?.destroy();
-    
+
     if (this.ngForOf?.length === 0) {
       this.ref = this.vcr.createEmbeddedView(this.ngForEmpty);
     }
