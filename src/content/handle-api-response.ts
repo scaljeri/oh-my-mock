@@ -24,7 +24,7 @@ export async function handleApiResponse(payload: IOhMyAPIResponse, contentState:
   }
 
   const response = MockUtils.init(payload.mock);
-  data = DataUtils.addMock(state.context, data, response, autoActivate);
+  data = DataUtils.addResponse(state.context, data, response, autoActivate);
 
   state = StateUtils.setRequest(state, data);
 

@@ -4,10 +4,16 @@ import { mockSteps } from './migrations/mock';
 import { stateSteps } from './migrations/state';
 import { storeSteps } from './migrations/store';
 import { requestSteps } from './migrations/request';
+import { objectTypes } from '../constants';
 
 const IS_BETA_RE = /beta/;
 
 export class MigrateUtils {
+  static storeSteps = storeSteps;
+  static stateSteps = stateSteps;
+  static mockSteps = mockSteps;
+  static requestSteps = requestSteps;
+
   static version = '__OH_MY_VERSION__';
 
   static shouldMigrate(obj: { version?: string }): boolean {
@@ -32,13 +38,13 @@ export class MigrateUtils {
     let migrateSteps = [];
 
     if (MigrateUtils.isStore(data)) {
-      migrateSteps = storeSteps;
+      migrateSteps = MigrateUtils.storeSteps;
     } else if (MigrateUtils.isState(data)) {
-      migrateSteps = stateSteps;
+      migrateSteps = MigrateUtils.stateSteps;
     } else if (MigrateUtils.isMock(data)) {
-      migrateSteps = mockSteps;
+      migrateSteps = MigrateUtils.mockSteps;
     } else if (MigrateUtils.isRequest(data)) {
-      migrateSteps = requestSteps;
+      migrateSteps = MigrateUtils.requestSteps;
     }
 
     return migrateSteps.reduce((acc, step) => step(acc), data);
@@ -47,19 +53,19 @@ export class MigrateUtils {
   // Type guards
 
   static isStore(data: unknown): data is IOhMyMock {
-    return (data as IOhMyMock).domains !== undefined;
+    return (data as IOhMyMock).type === objectTypes.STORE;
   }
 
   static isState(data: unknown): data is IState {
-    return (data as IState).data !== undefined;
+    return (data as IState).type === objectTypes.STATE;
   }
 
   static isMock(data: unknown): data is IMock {
-    return (data as IMock).headers !== undefined;
+    return (data as IMock).type === objectTypes.MOCK;
   }
 
-  static isRequest(data: unknown): data is IMock {
-    return (data as IData).mocks !== undefined;
+  static isRequest(data: unknown): data is IData {
+    return (data as IData).type === objectTypes.REQUEST;
   }
 
   static isDevelopVersion(version: string): boolean {
