@@ -75,6 +75,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
     const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
 
     if (!activeResponse) {
+      this.response = undefined;
       return;
     }
 
