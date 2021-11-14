@@ -116,7 +116,7 @@ export class OhMyState {
       request.selected[p] = retVal.id;
     });
 
-    request = DataUtils.addMock(context, request as IData, retVal);
+    request = DataUtils.addResponse(context, request as IData, retVal);
 
     if (activate) {
       request.selected[context.preset] = retVal.id
@@ -208,7 +208,7 @@ export class OhMyState {
     let state = await this.getState(context);
     let request = StateUtils.findRequest(state, { id: requestId });
 
-    request = DataUtils.removeMock(context, request, responseId);
+    request = DataUtils.removeResponse(context, request, responseId);
     state = StateUtils.setRequest(state, request);
 
     await this.storageService.remove(responseId);
