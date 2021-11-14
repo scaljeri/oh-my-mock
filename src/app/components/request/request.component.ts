@@ -165,15 +165,10 @@ export class RequestComponent implements OnChanges, OnDestroy {
       this.dialogIsOpen = false;
 
       if (update) {
-        // this.upsertMock({
-        //   id: this.response.id,
-        //   ...(update.data && { responseMock: update.data }),
-        //   rules: update.rules
-        // });
-
-        // setTimeout(() => {
-        //   this.responseRef?.update();
-        // });
+        this.storeService.upsertResponse({
+          id: this.response.id,
+          ...(update.data && { responseMock: update.data }),
+          rules: update.rules }, this.request, this.context);
       }
     });
   }
