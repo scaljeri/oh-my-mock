@@ -35,7 +35,7 @@ export class MigrateUtils {
       return null;
     }
 
-    let migrateSteps = [];
+    let migrateSteps = [(_) => undefined ];
 
     if (MigrateUtils.isStore(data)) {
       migrateSteps = MigrateUtils.storeSteps;

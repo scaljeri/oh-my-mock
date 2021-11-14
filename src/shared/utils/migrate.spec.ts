@@ -64,5 +64,10 @@ describe('Utils/Migrate', () => {
       expect(MigrateUtils.mockSteps[0]).toHaveBeenCalled();
       expect(out).toBe('response');
     });
+
+    it('should handle unknown type', () => {
+      const out = MigrateUtils.migrate({ a: 'b', version: '1.0.1', type: 'foo' } as any);
+      expect(out).toBeUndefined();
+    });
   });
 })
