@@ -7,9 +7,15 @@ import { ohMyMockStatus } from '../shared/constants';
 
 const ORIG_FETCH = window.fetch;
 
+interface IOhFetchConfig {
+  method?: requestMethod;
+  __ohSkip?: boolean;
+  headers?: Headers;
+}
+
 declare let window: { fetch: any };
 
-const OhMyFetch = async (url, config: { method?: requestMethod, __ohSkip?: boolean } = {}) => {
+const OhMyFetch = async (url, config: IOhFetchConfig = {}) => {
   if (config.__ohSkip) {
     return fecthApi(url, config);
   }
@@ -17,7 +23,8 @@ const OhMyFetch = async (url, config: { method?: requestMethod, __ohSkip?: boole
     await dispatchApiRequest({
       url,
       method: config.method || 'GET',
-      ...config
+      ...config,
+      ...(config.headers && { headers: fetchUtils.headersToJson(config.headers)})
     } as IOhMyAPIRequest, 'FETCH');
 
   if (status === ohMyMockStatus.NO_CONTENT) {
