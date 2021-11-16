@@ -6,6 +6,7 @@ import express from 'express';
 export const appRouter = (app: any): void => {
   const usersPath = path.join(__dirname, "..", "data", "users.json");
   const sitePath = path.join(__dirname, "..", "data", "site.html");
+  const binaryPath = path.join(__dirname, "..", "data");
   // READ
   app.get("/users", (req: express.Request, res: express.Response) => {
     setTimeout(() => {
@@ -36,6 +37,13 @@ export const appRouter = (app: any): void => {
   app.post('/users', (req: express.Request, res: express.Response) => {
     res.contentType('application/json');
     res.end(JSON.stringify({ msg: 'success' }));
+  });
+
+  app.get("/binary/*", (req: express.Request, res: express.Response) => {
+    const file = binaryPath + '/test.jpg';
+    setTimeout(() => {
+      res.sendFile(file);
+    }, 1000);
   });
 
   app.get("/*", (req: express.Request, res: express.Response) => {

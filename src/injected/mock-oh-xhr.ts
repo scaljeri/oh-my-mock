@@ -4,7 +4,7 @@ import { parse } from '../shared/utils/xhr-headers';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import * as headers from '../shared/utils/xhr-headers';
-import { toBlob, toDataURL } from '../shared/utils/image';
+import { toBlob, toDataURL } from '../shared/utils/binary';
 
 // To serve OhMyMock responses for XMLHttpRequest, the following properties will be replaced:
 let protoOpen;

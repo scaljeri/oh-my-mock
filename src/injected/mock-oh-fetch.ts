@@ -3,13 +3,18 @@ import { IOhMyAPIRequest, requestMethod } from '../shared/type';
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import { dispatchApiRequest } from './message/dispatch-api-request';
-import { ohMyMockStatus } from '../shared/constants';
+import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
+import { isBinary, toBlob, toDataURL } from '../shared/utils/binary';
+import { logging } from '../shared/utils/log';
+
+export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
+export const log = logging(`${STORAGE_KEY} (^*^)`, true);
 
 const ORIG_FETCH = window.fetch;
 
 interface IOhFetchConfig {
   method?: requestMethod;
-  __ohSkip?: boolean;
+  __ohSkip?: boolean; // Use Fetch without caching or mocking
   headers?: Headers;
 }
 
@@ -24,26 +29,31 @@ const OhMyFetch = async (url, config: IOhFetchConfig = {}) => {
       url,
       method: config.method || 'GET',
       ...config,
-      ...(config.headers && { headers: fetchUtils.headersToJson(config.headers)})
+      ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
     } as IOhMyAPIRequest, 'FETCH');
 
-  if (status === ohMyMockStatus.NO_CONTENT) {
+  if (status === ohMyMockStatus.ERROR) {
+    log('Ooops, something went wrong while mocking your FETCH request!')
+  }
+
+  if (status !== ohMyMockStatus.OK) {
     return fecthApi(url, config);
   }
 
   return new Promise(async (resolv, reject) => {
     let body = null;
 
-    if (status === ohMyMockStatus.ERROR) {
-      return reject();
-    }
 
     if (response !== undefined) { // Otherwise error with statuscode 204 (No content)
-      body = new Blob([response as any], { type: headers['content-type'] });
+      if (isBinary(headers['content-type'])) {
+        body = await toBlob(response as string);
+      } else {
+        body = new Blob([response as any], { type: headers['content-type'] });
+      }
     }
 
     const rsp = new Response(body, {
-      headers: fetchUtils.jsonToHeaders(headers),
+      headers: fetchUtils.jsonToHeaders(headers || {}),
       status: statusCode
     });
 
@@ -59,6 +69,7 @@ function fecthApi(url, config): Promise<unknown> {
     if (!ohSkip) {
       const clone = response.clone();
 
+      const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
       await dispatchApiResponse({
         data: {
           url,
@@ -67,8 +78,8 @@ function fecthApi(url, config): Promise<unknown> {
         },
         mock: {
           statusCode: response.status,
-          response: await clone.text(),
-          headers: fetchUtils.headersToJson(response.headers)
+          response: await (isBinary(headers['content-type']) ? toDataURL(await clone.blob()) : clone.text()),
+          headers
         }
       });
     }
