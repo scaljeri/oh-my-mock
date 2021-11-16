@@ -58,6 +58,7 @@ import { OhMyDirectivesModule } from '../directives/directives.module';
 import { LinkComponent } from './link/link.component';
 import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.component';
 import { PresetComponent } from './preset/preset.component';
+import { FeedbackComponent } from './feedback/feedback.component';
 
 @NgModule({
   declarations: [
@@ -89,6 +90,7 @@ import { PresetComponent } from './preset/preset.component';
     LinkComponent,
     DialogCodeEditorComponent,
     PresetComponent,
+    FeedbackComponent,
   ],
   imports: [
     CommonModule,
@@ -136,6 +138,7 @@ import { PresetComponent } from './preset/preset.component';
     AutocompleteDropdownComponent,
     LinkComponent,
     DialogCodeEditorComponent,
+    FeedbackComponent,
   ],
   providers: [
     Location,
