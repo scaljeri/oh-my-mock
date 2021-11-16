@@ -67,6 +67,7 @@
     'is-selected': selection.isSelected(index),
     'is-active': row.enabled[context?.preset],
     'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn}">
+    <span class="row-number">{{index + 1}}</span>
     <span class="method">{{row.requestType}}</span>
     <span class="type">{{row.method}}</span>
     <span class="url">{{row.url}}</span>

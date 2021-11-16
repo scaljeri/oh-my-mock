@@ -17,5 +17,5 @@ export function blurBase64(base64): Promise<string> {
 }
 
 export function isImage(contentType: string): boolean {
-  return !!contentType.match(/^image\/(?!svg)/);
+  return contentType && !!contentType.match(/^image\/(?!svg)/);
 }

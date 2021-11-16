@@ -130,6 +130,7 @@ ol[data-table] {
     border-top: 5px solid transparent;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     padding: 0;
+    position: relative;
   }
 
   li.data-row {
@@ -346,4 +347,12 @@ span.type {
       rgba(255, 255, 255, 0.1)
     );
   }
+}
+
+
+.row-number {
+  position: absolute;
+  left: $spacer-1;
+  font-size: 8px;
+  top: $spacer-1;
 }

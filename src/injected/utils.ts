@@ -1,5 +1,6 @@
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest, IOhMyMockResponse, requestType } from '../shared/type';
+import { isImage } from '../shared/utils/image';
 import { logging } from '../shared/utils/log';
 
 export type ohLogFn = (msg: string, ...data: unknown[]) => void;
@@ -32,6 +33,8 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
         } catch(e) {
           response = data.response;
         }
+      } else if (isImage(data?.headers?.['content-type'])) {
+        response = `Image Data (${data.headers['content-type']})`;
       }
       log(`${msg}`, response);
   }
