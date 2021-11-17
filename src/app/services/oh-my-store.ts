@@ -19,7 +19,6 @@ export class OhMyState {
   public responses: Record<ohMyMockId, IMock> = {};
 
   constructor(private storageService: StorageService) {
-    // TODO: sync store, states and responses
   }
 
   async getStore(): Promise<IOhMyMock> {

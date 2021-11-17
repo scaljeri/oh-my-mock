@@ -65,7 +65,7 @@ export interface IData extends IOhMyMockContext {
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
   lastHit: number;
-  version?: string;
+  version: string;
   type: objectTypes.REQUEST;
 }
 

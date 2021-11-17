@@ -20,7 +20,7 @@ export class MigrateUtils {
     return obj && obj.version !== MigrateUtils.version;
   }
 
-  static migrate(data: IOhMyMock | IState | IMock | IData): IOhMyMock | IState | IMock | IData | unknown {
+  static migrate(data: unknown & { version: string }): IOhMyMock | IState | IMock | IData | unknown {
     const version = data.version || '0.0.0';
 
     if (MigrateUtils.isDevelopVersion(version)) { // ignore

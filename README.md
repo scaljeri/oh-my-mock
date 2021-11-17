@@ -3,24 +3,19 @@
 
 ## OhMyMock
 
-OhMyMock is a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock
-) that mocks API calls. It can mock XMLHttpRequest and Fetch requests. 
+OhMyMock a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock) that can mock API responses in the browser. It is also possible to modify responses or status codes. It is especially useful for Frontend development and works well with frameworks like Angular, React or Vue. OhMyMock can serve JSON, HTML, Images and a lot more. Please
+fill a feature request if you have a response which is not supported!!
 
-There is an article on medium.com which describes OhMyMock in more detail [here](https://calje.medium.com/mock-api-responses-with-a-chrome-extension-called-ohmymock-875ac5d85999).
+There is an article on medium.com which describes OhMyMock in great detail [here](https://calje.medium.com/mock-api-responses-with-a-chrome-extension-called-ohmymock-875ac5d85999).
 
 If you have the extension install you can see how it works with XMLHttpRequest and Fetch request on
 the [demo page](https://scaljeri.github.io/oh-my-mock/). Note that you need OhMyMock for that page,
-because there is no API to serve the responses!
+because there is no API to serve the responses; Mocking is required!!
 
 By default OhMyMock is disabled and you need to enabled it, otherwise it will not cache or mock API
-responses. Via the OhMyMock UI you have can enable caching and mocking per response/request.
+responses. Via the OhMyMock UI you can enable caching and mocking per response/request.
 
 ![alt text](https://github.com/scaljeri/oh-my-mock/blob/master/images/oh-my-mock-overview.png?raw=true)
-
-## Known limitation
-Unfortunate, OhMyMock needs some time to get ready, so it might happen that API calls that are executed on page
-load happen to early for OhMyMock. The only solution for now is to delay these calls 
-(only in your development environment of course) a bit!
 
 ### Installation
 OhMyMock can be install from the 
@@ -42,13 +37,9 @@ First install all dependencies
 
 Start the development web server
 
-    $> yarn start:server
+    $> yarn watch
 
 The test page will be available at http://localhost:8000
-
-Finally start the build in watch mode
-
-    $> yarn build:watch
 
 Everytime you hit save the project will rebuild, but after each rebuild you have to reload the extension and test page your self!
 
@@ -62,7 +53,7 @@ This project consists of a couple of different part, each with a specific task. 
                           the angular app and the injected script
   * ./src/injected      - this is where mocking takes place (e.g. patching of Fetch and XmlHttpRequest)
   * ./src/shared        - code shared between all parts
-  * ./src/background.ts - the extension's background script
+  * ./src/background    - the extension's background script
 
 ##### background.js
 For all tabs in the chrome browser there will be just one instance running of this script. It is
@@ -80,7 +71,8 @@ things can happen:
 
    1) There is no cached response and the call will pass through to the API. OhMyMock will cache
       the response.
-   2) There is a cached response, but it is not active and the call will pass through to the API
+   2) There is a cached response, but it is not active and the call will pass through to the API. If
+      the status-code is not yet present OhMyMock will cache the response!
    3) There is an active cache and it will be served as the response
 
 Finally, if OhMyMock is disabled or the popup is closed, the original Fetch and XmlHttpRequest objects

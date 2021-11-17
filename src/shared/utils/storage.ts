@@ -31,14 +31,22 @@ export class StorageUtils {
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY, skipMigrate = false): Promise<T> {
     return new Promise<T>((resolve) => {
       StorageUtils.chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
-        if (!skipMigrate && StorageUtils.MigrateUtils.shouldMigrate(data[key])) {
-          data[key] = StorageUtils.MigrateUtils.migrate(data[key]) as T;
+        if (!skipMigrate) {
+          data[key] = StorageUtils.migrate(data[key]) as T;
           await StorageUtils.set(key, data[key]); // persist migrated data
         }
 
         resolve(data[key] as T);
       });
     });
+  }
+
+  static migrate(data: { version: string }): unknown | undefined {
+    if (StorageUtils.MigrateUtils.shouldMigrate(data)) {
+      return StorageUtils.MigrateUtils.migrate(data);
+    }
+
+    return data;
   }
 
   static setStore(store: IOhMyMock): Promise<void> {
