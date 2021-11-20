@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { AppStateService } from '../../services/app-state.service';
 
 import { NavListComponent } from './nav-list.component';
+import { OhMyState } from '../../services/oh-my-store';
+import { StorageService } from '../../services/storage.service';
+import { OhMyStateService } from '../../services/state.service';
 
 describe('NavListComponent', () => {
   let component: NavListComponent;
@@ -13,7 +15,9 @@ describe('NavListComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [NavListComponent],
       providers: [
-        { provide: AppStateService, useValue: {} },
+        { provide: OhMyState, useValue: {} },
+        { provide: OhMyStateService, useValue: {} },
+        { provide: StorageService, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: Router, useValue: {} },
       ],

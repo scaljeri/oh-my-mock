@@ -20,7 +20,7 @@ export async function importJSON(storage: StorageService, context: IOhMyContext,
 
   if (!store.domains.includes(context.domain)) {
     store.domains = [context.domain, ...store.domains];
-    await storage.set(STORAGE_KEY, store);
+    // await storage.set(STORAGE_KEY, store);
   }
 
   let requests = data.requests as unknown as IData[];
@@ -41,10 +41,10 @@ export async function importJSON(storage: StorageService, context: IOhMyContext,
       r = DataUtils.prefilWithPresets(r, state.presets);
       state = StateUtils.setRequest(state, r)
     });
-    await storage.set(state.domain, state);
+    // await storage.set(state.domain, state);
 
     for (const response of responses) {
-      await storage.set(response.id, response);
+      // await storage.set(response.id, response);
     }
   } else {
     status = ImportResultEnum.TOO_OLD;

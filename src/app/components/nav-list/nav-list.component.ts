@@ -12,6 +12,8 @@ import { IOhMyContext, ResetStateOptions } from '@shared/type';
 import { OhMyState } from 'src/app/services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
+import { StorageService } from 'src/app/services/storage.service';
+import { OhMyStateService } from 'src/app/services/state.service';
 
 @Component({
   selector: 'app-nav-list',
@@ -22,10 +24,10 @@ export class NavListComponent {
   @Input() context: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
 
-  // @Dispatch() stateReset = (domain?: string) => new ResetState(domain, { domain: this.appStateService.domain});
-
   constructor(
     private storeService: OhMyState,
+    private stateService: OhMyStateService,
+    private storageService: StorageService,
     private router: Router,
     public dialog: MatDialog,
   ) { }
@@ -53,9 +55,12 @@ export class NavListComponent {
         }
 
         this.router.navigate(['/'])
-        .then(() => {
-          window.location.reload();
-        });
+          // .then(() => {
+            // TODO: Remove reload, it causes issues with state :(
+            // This is a hack, just to make sure that the state has been updated before reload
+            // this.stateService.state = await this.storageService.get(this.context.domain);
+            // window.location.reload();
+          // });
       });
 
     this.navigate.emit();

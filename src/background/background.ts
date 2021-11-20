@@ -1,27 +1,58 @@
 ///<reference types="chrome"/>
 
-import { evalCode } from '../shared/utils/eval-code';
-import { appSources, packetTypes, STORAGE_KEY } from '../shared/constants';
-import { IOhMyPopupActive, IPacket } from '../shared/type';
+import { appSources, packetType, payloadType, STORAGE_KEY } from '../shared/constants';
+import { IMock, IOhMyMock, IOhMyPopupActive, IState } from '../shared/type';
 import { OhMockXhr } from './xhr';
 import { OhMockFetch } from './fetch';
-import { connectWithLocalServer, dispatchRemote } from './dispatch-remote';
-import { sendMessage2Content } from './messag';
-import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
+import { OhMyQueue } from '../shared/utils/queue';
+import { StorageUtils } from '../shared/utils/storage';
+import { IPacket, IPacketPayload } from '../shared/packet-type';
+import { OhMyStateHandler } from './state-handler';
+import { OhMyResponseHandler } from './response-handler';
+import { OhMyStoreHandler } from './store-handler';
+import { MigrateUtils } from '../shared/utils/migrate';
+import { StoreUtils } from '../shared/utils/store'
 
-declare let window: any;
-declare let console: any;
+// declare let window: any;
+// declare let console: any;
 
-window.XMLHttpRequest = OhMockXhr;
-window.fetch = OhMockFetch;
+// window.XMLHttpRequest = OhMockXhr;
+// window.fetch = OhMockFetch;
 
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
-chrome.runtime.onMessage.addListener((packet, sender) => {
-  emitPacket(packet);
+const queue = new OhMyQueue();
+OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
+
+queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
+queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
+queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
+queue.addHandler(payloadType.REMOVE, (payload: IPacketPayload<string>) => {
+  return StorageUtils.reset(payload.data);
 });
+queue.addHandler(payloadType.RESET, (payload: IPacketPayload<string>) => {
+  return StorageUtils.reset(payload.data);
+});
+
+chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
+  console.log('Received update', packet);
+  if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
+    [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
+    if (queue.hasHandler(packet.payload.type)) {
+      queue.addPacket(packet.payload.type, packet.payload, (result) => {
+        callback(result);
+      });
+    } else {
+      console.warn('No handler for ' + packet.payload.type);
+    }
+  }
+
+  return true;
+});
+
+
 // connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
@@ -62,6 +93,7 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
 // streamByType$(packetTypes.DATA_DISPATCH, appSources.CONTENT).subscribe(handleDispatch);
 
 chrome.runtime.onInstalled.addListener(function (details) {
+  debugger;
   chrome.storage.local.get([STORAGE_KEY], (state) => {
     if (!state[STORAGE_KEY]) {
       open('/splash-screen.html', '_blank');
@@ -108,4 +140,35 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 
 chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1MPLpGa5i3VkbMoxAq--TkmIHkqPVqk1cRWFUjE01CRQ/viewform', () => {
 
+});
+
+// Make sure that chrome.runtime.onInstalled is called first
+setTimeout(async () => {
+  let store = await StorageUtils.get<IOhMyMock>();
+
+  console.log('Store: ', store);
+
+  debugger;
+  if (store) {
+    if (MigrateUtils.shouldMigrate(store)) {
+      store = MigrateUtils.migrate(store);
+
+      if (!store) {
+        StorageUtils.reset();
+      } else {
+        await new Promise<Promise<unknown>[]>(r => {
+          const actions = [];
+          chrome.storage.local.get(null, function (data) {
+            for (const d of Object.values(data)) {
+              actions.push(new Promise<unknown>(r => queue.addPacket(d.type, MigrateUtils.migrate(d), r)));
+            }
+          });
+
+          r(Promise.all(actions));
+        });
+      }
+    }
+  } else {
+    await queue.addPacket(payloadType.STORE, { data: StoreUtils.init() });
+  }
 });

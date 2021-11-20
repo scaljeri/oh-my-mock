@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
-import { IData, IMock, IPacketPayload } from '../shared/type';
+import { IPacketPayload } from '../shared/packet-type';
+import { IData, IMock } from '../shared/type';
 
 let isConnected = false;
 

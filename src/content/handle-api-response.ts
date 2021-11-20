@@ -1,4 +1,4 @@
-import { IOhMyAPIResponse } from "../shared/type";
+import { IOhMyAPIResponse } from "../shared/packet-type";
 import { DataUtils } from "../shared/utils/data";
 import { MockUtils } from "../shared/utils/mock";
 import { StateUtils } from "../shared/utils/state";
@@ -26,9 +26,12 @@ export async function handleApiResponse(payload: IOhMyAPIResponse, contentState:
   const response = MockUtils.init(payload.mock);
   data = DataUtils.addResponse(state.context, data, response, autoActivate);
 
-  state = StateUtils.setRequest(state, data);
+  // state = StateUtils.setRequest(state, data);
 
-  await contentState.set(response.id, response);
-  await contentState.set(state.domain, state);
+  // await contentState.set(response.id, response);
+  // await contentState.set(state.domain, state);
+  // return Promise.all([
+  //   send({})
+  // ])
   state = await contentState.getState()
 }

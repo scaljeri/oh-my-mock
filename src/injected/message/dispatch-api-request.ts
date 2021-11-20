@@ -1,10 +1,11 @@
-import { appSources, ohMyMockStatus, packetTypes } from '../../shared/constants';
+import { appSources, ohMyMockStatus, payloadType } from '../../shared/constants';
 import { streamById$ } from '../../shared/utils/message-bus';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyMockResponse, IOhMyAPIRequest, IPacket, requestType } from '../../shared/type';
+import { IOhMyMockResponse, IOhMyAPIRequest, requestType } from '../../shared/type';
+import { IPacket } from '../../shared/packet-type';
 
 declare let window: any;
 
@@ -53,7 +54,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
     const id = uniqueId();
     const payload = {
       context: { id, url: window.location.origin, requestType },
-      type: packetTypes.DISPATCH_API_REQUEST,
+      type: payloadType.DISPATCH_API_REQUEST,
       data: { ...request }
     }
 
@@ -62,6 +63,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       .subscribe((packet: IPacket<IOhMyMockResponse>) => {
         const resp = packet.payload.data;
         logMocked(request, requestType, resp);
+
         if (resp.status === ohMyMockStatus.ERROR) {
           // TODO: can this happen????
           // printEvalError(resp.result as string, data);

@@ -31,23 +31,26 @@ export class StorageUtils {
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY, skipMigrate = false): Promise<T> {
     return new Promise<T>((resolve) => {
       StorageUtils.chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
-        if (!skipMigrate) {
-          data[key] = StorageUtils.migrate(data[key]) as T;
-          await StorageUtils.set(key, data[key]); // persist migrated data
-        }
+        // if (!skipMigrate) {
+        // const version = data[key].version;
+        // data[key] = StorageUtils.migrate(data[key]) as T;
+        // if (!data[key] || version !== data[key].version) {
+        // await StorageUtils.set(key, data[key]);
+        // }
+        // }
 
         resolve(data[key] as T);
       });
     });
   }
 
-  static migrate(data: { version: string }): unknown | undefined {
-    if (StorageUtils.MigrateUtils.shouldMigrate(data)) {
-      return StorageUtils.MigrateUtils.migrate(data);
-    }
+  // static migrate(data: { version: string }): unknown | undefined {
+  //   if (StorageUtils.MigrateUtils.shouldMigrate(data)) {
+  //     return StorageUtils.MigrateUtils.migrate(data) as { version: string };
+  //   }
 
-    return data;
-  }
+  //   return data;
+  // }
 
   static setStore(store: IOhMyMock): Promise<void> {
     return StorageUtils.set(STORAGE_KEY, store)
@@ -59,6 +62,7 @@ export class StorageUtils {
         value.version = StorageUtils.appVersion;
       }
 
+      console.log(`Write action for ${key}`, value);
       StorageUtils.chrome.storage.local.set({ [key]: value }, resolve);
     });
   }
@@ -68,15 +72,19 @@ export class StorageUtils {
       key = [key as string];
     }
 
-    return Promise.all(key.map(k =>
-      new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', resolve))));
+    return Promise.all(key.map(k => {
+      console.log('Remove ', k);
+      new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', resolve));
+    }));
   }
 
-  static reset(key?: ohMyDomain | ohMyMockId): Promise<void> {
+  static async reset(key?: ohMyDomain | ohMyMockId): Promise<void> {
     if (key) {
-      return StorageUtils.remove(key) as Promise<void>;
+      console.log(`Reset ${key}`);
+      await StorageUtils.remove(key);
     } else {
-      return new Promise(resolve => {
+      console.log(`Reset everything`);
+      await new Promise<void>(resolve => {
         StorageUtils.chrome.storage.local.clear(resolve);
       });
     }

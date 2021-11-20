@@ -1,53 +1,62 @@
-export type ohPacketType = 'response';
+import { objectTypes } from "../constants";
+
+export type ohPacketType = objectTypes;
 
 interface IOhActivity {
-  handler: (packet: unknown) => Promise<void>
+  handler: (packet: IOhQueuePacket) => Promise<void>
   isActive: boolean;
+}
+
+interface IOhQueuePacket<T = unknown> {
+  data: T;
+  callback(result?: unknown): void;
 }
 
 export class OhMyQueue {
   private handlers: Partial<Record<ohPacketType, IOhActivity>> = {};
-  private queue: Partial<Record<ohPacketType, unknown[]>> = {};
+  private queue: Partial<Record<ohPacketType, IOhQueuePacket[]>> = {};
 
-  getQueue<T = unknown>(packetType: ohPacketType): T[] {
-    return this.queue[packetType] as T[] || [];
+  getQueue<T = unknown>(packetType: string): T[] {
+    return this.queue[packetType]?.map(p => p.data) as T[] || [];
   }
 
   isHandlerActive(packetType: ohPacketType): boolean {
     return this.handlers[packetType]?.isActive || false;
   }
 
-  hasHandler(packetType: ohPacketType): boolean {
+  hasHandler(packetType: string): boolean {
     return !!this.handlers[packetType]?.handler;
   }
 
-  addPacket(packetType: ohPacketType, packet: unknown): void {
+  // The `callback` is called as soon as the packet has been processed
+  addPacket(packetType: string, packet: unknown, callback?: (result?: unknown) => void): void {
     if (!this.queue[packetType]) {
       this.queue[packetType] = [];
     }
 
-    this.queue[packetType].push(packet);
+    this.queue[packetType].push({ data: packet, callback });
     this.next(packetType);
   }
 
-  addHandler(packetType: ohPacketType, handler: (packet: unknown) => Promise<void>): void {
+  addHandler(packetType: string, handler: (packet: any) => Promise<unknown>): void {
     this.handlers[packetType] = {
-      handler: async (packet: unknown): Promise<void> => {
-        await handler(packet);          // process packet
+      handler: async (packet: IOhQueuePacket): Promise<void> => {
+        const result = await handler(packet.data); // process packet
         this.handlers[packetType].isActive = false;
-        this.next(packetType);          // next
+        packet.callback?.(result);
+        this.next(packetType);
       }, isActive: false
     };
 
     this.next(packetType);
   }
 
-  next(packetType: ohPacketType): void {
+  next(packetType: string): void {
     if (
       !this.hasHandler(packetType) ||
       !this.getQueue(packetType).length ||
       this.handlers[packetType].isActive
-      ) {
+    ) {
       return;
     }
 

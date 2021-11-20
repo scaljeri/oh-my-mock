@@ -1,5 +1,5 @@
 import { appSources } from '../../shared/constants';
-import { IPacket, IPacketPayload } from '../../shared/type';
+import { IPacket, IPacketPayload } from '../../shared/packet-type';
 
 // Send message to content script
 

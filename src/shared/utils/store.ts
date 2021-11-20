@@ -1,7 +1,7 @@
 import { IOhMyContext, IOhMyMock, IState, ohMyDomain, origin } from '../type';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
-import { objectTypes } from '@shared/constants';
+import { objectTypes } from '../constants';
 import { DataUtils } from './data';
 
 export class StoreUtils {

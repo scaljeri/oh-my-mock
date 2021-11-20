@@ -17,11 +17,15 @@ export class MigrateUtils {
   static version = '__OH_MY_VERSION__';
 
   static shouldMigrate(obj: { version?: string }): boolean {
-    return obj && obj.version !== MigrateUtils.version;
+    return obj && obj.version !== MigrateUtils.version && MigrateUtils.version !== '__OH' + '_MY_VERSION__';
   }
 
-  static migrate(data: unknown & { version: string }): IOhMyMock | IState | IMock | IData | unknown {
+  static migrate<T extends { version: string }>(data: T): T | undefined {
     const version = data.version || '0.0.0';
+
+    if (MigrateUtils.version === '__OH' + '_MY_VERSION__') {
+      return data;
+    }
 
     if (MigrateUtils.isDevelopVersion(version)) { // ignore
       if (compareVersions(version, MigrateUtils.version) === -1) {

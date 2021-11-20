@@ -42,19 +42,29 @@ export enum objectTypes {
   STATE = 'STATE',
   STORE = 'STORE'
 }
-export enum packetTypes {
+
+export enum packetType {
+  FULL = 'full',
+  PATCH = 'patch'
+}
+
+export enum payloadType {
+  STORE = 'store',
   ACTIVE = 'active',
-  MOCK = 'mock',
+  RESPONSE = 'response',
+  NEW_RESPONSE = 'new-response',
   STATE = 'state',
   KNOCKKNOCK = 'knockknock',
   HIT = 'hit',
-  EVAL = 'execute',
-  EVAL_RESULT = 'eval-result',
+  // EVAL = 'execute',
+  // EVAL_RESULT = 'eval-result',
   DATA = 'data',
-  DATA_DISPATCH = 'data-dispatch',
+  // DATA_DISPATCH = 'data-dispatch',
   DISPATCH_API_REQUEST = 'dispatch-request',
   DISPATCH_API_RESPONSE = 'api-response',
-  MOCK_RESPONSE = 'mock-response'
+  // MOCK_RESPONSE = 'mock-response'
+  RESET = 'reset',
+  REMOVE = 'remove'
 }
 export enum appSources {
   INJECTED = 'injected',

@@ -13,15 +13,17 @@ import { Router } from '@angular/router';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
-import {  Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { initializeApp } from './app.initialize';
+import { StorageService } from './services/storage.service';
+import { ContentService } from './services/content.service';
 
 const VERSION = '__OH_MY_VERSION__';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   enabled = false;
@@ -38,15 +40,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version: string;
   showDisabled = -1;
   stateSub: Subscription;
+  isUpAndRunning = false;
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
-
-  // private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
 
   constructor(
     private appState: AppStateService,
     private storeService: OhMyState,
     private stateService: OhMyStateService,
+    private contentService: ContentService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog) {
@@ -54,8 +56,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     await initializeApp(this.appState, this.stateService);
+    // await this.contentService.activate();
 
-    this.stateService.state$.subscribe((state: IState) => {
+    this.stateSub = this.stateService.state$.subscribe((state: IState) => {
       if (!state) {
         return this.isInitializing = true;
       }
@@ -67,10 +70,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
 
       this.context = state.context;
-
-      if (!state.aux.popupActive) {
-        this.popupActiveToggle(); // -> Popup is active
-      }
       this.domain = state.context.domain;
       this.version = state.version;
 
@@ -84,6 +83,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
       this.cdr.detectChanges();
     });
+
+    // send({type: payloadType.STATE, domain: 'yolo'}).then((x) => {
+    //   debugger;
+    // });
+
+    // full({ x: 'from popup' }, payloadType.STATE).then(() => {
+    //   console.log('done');
+    // });
   }
 
   onEnableChange(isChecked: boolean): void {
@@ -94,8 +101,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   @HostListener('window:beforeunload')
-  ngOnDestroy(): void {
-    this.popupActiveToggle(false);
+  ngOnDestroy() {
+    this.stateSub.unsubscribe();
+    this.contentService.deactivate();
   }
 
   notifyDisabled(): void {
@@ -103,7 +111,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   popupActiveToggle(isActive = true) {
-    this.storeService.updateAux({ popupActive: isActive }, this.context);
+    return this.storeService.updateAux({ popupActive: isActive }, this.context);
   }
 
   @HostListener('window:keyup.backspace')

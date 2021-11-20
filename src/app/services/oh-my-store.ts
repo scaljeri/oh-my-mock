@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { STORAGE_KEY } from '@shared/constants';
+import { payloadType, STORAGE_KEY } from '@shared/constants';
 
 import { IOhMyMock, ohMyDomain, IState, ohMyMockId, IData, IMock, IOhMyContext, ohMyDataId, IOhMyAux, ohMyPresetId } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
@@ -9,6 +9,7 @@ import { uniqueId } from '@shared/utils/unique-id';
 import { url2regex } from '@shared/utils/urls';
 import { timestamp } from '@shared/utils/timestamp';
 import { StorageService } from './storage.service';
+import { OhMySendToBg } from '@shared/utils/send-to-background';
 
 @Injectable({
   providedIn: 'root'
@@ -34,15 +35,19 @@ export class OhMyState {
   }
 
   async initState(context: IOhMyContext): Promise<IState> {
-    const state = StateUtils.init({ domain: context.domain });
-    await this.storageService.set(state.domain, state);
+    let state = StateUtils.init({ domain: context.domain });
+
+    state = await OhMySendToBg.full(state, payloadType.STATE);
+    // await this.storageService.set(state.domain, state);
 
     return state;
   }
 
   async updateStore(store: Partial<IOhMyMock>): Promise<IOhMyMock> {
     const retVal = { ...await this.getStore(), ...store };
-    await this.storageService.setStore(retVal);
+
+    await OhMySendToBg.full(retVal, payloadType.STORE);
+    // await this.storageService.setStore(retVal);
 
     return retVal;
   }
@@ -54,7 +59,8 @@ export class OhMyState {
       ...state
     };
 
-    await this.storageService.set(retVal.domain, retVal);
+    await OhMySendToBg.full(retVal, payloadType.STATE);
+    // await this.storageService.set(retVal.domain, retVal);
 
     return retVal;
   }
@@ -73,7 +79,8 @@ export class OhMyState {
       d.selected[id] = d.selected[currPreset]; // Update by reference
     });
 
-    await this.storageService.set(state.domain, state);
+    await OhMySendToBg.full(state, payloadType.STATE);
+    // await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -124,8 +131,10 @@ export class OhMyState {
 
     state.data[request.id] = request as IData;
 
-    await this.storageService.set(retVal.id, retVal);
-    await this.storageService.set(state.domain, state);
+    await OhMySendToBg.full(retVal, payloadType.RESPONSE);
+    await OhMySendToBg.full(state, payloadType.STATE);
+    // await this.storageService.set(retVal.id, retVal);
+    // await this.storageService.set(state.domain, state);
 
     return retVal;
   }
@@ -144,7 +153,8 @@ export class OhMyState {
     }
 
     state = StateUtils.setRequest(state, retVal);
-    await this.storageService.set(state.domain, state);
+    await OhMySendToBg.full(state, payloadType.STATE);
+    // await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -166,11 +176,13 @@ export class OhMyState {
       response.id = newId;
       request.mocks[newId] = { ...shallow, id: newId };
 
-      await this.storageService.set(newId, response);
+      await OhMySendToBg.full(response, payloadType.RESPONSE);
+      // await this.storageService.set(newId, response);
     }
 
     state = await this.getState(context);
-    await this.storageService.set(state.domain, StateUtils.setRequest(state, request));
+    await OhMySendToBg.full(StateUtils.setRequest(state, request), payloadType.STATE);
+    // await this.storageService.set(state.domain, StateUtils.setRequest(state, request));
 
     return request;
   }
@@ -180,11 +192,13 @@ export class OhMyState {
     request = (StateUtils.findRequest(state, request));
 
     for (const resp of Object.values(request.mocks)) {
-      await this.storageService.remove(resp.id);
+      // await this.storageService.remove(resp.id);
+      await OhMySendToBg.full(resp, payloadType.REMOVE);
     }
 
     delete state.data[request.id];
-    await this.storageService.set(state.domain, state);
+    await OhMySendToBg.full(state, payloadType.STATE);
+    // await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -211,7 +225,7 @@ export class OhMyState {
     state = StateUtils.setRequest(state, request);
 
     await this.storageService.remove(responseId);
-    await this.storageService.set(state.domain, state);
+    // await this.storageService.set(state.domain, state);
 
     return state;
   }
@@ -224,12 +238,11 @@ export class OhMyState {
         .forEach(response => this.storageService.remove(response.id));
 
       state = StateUtils.init({ domain: context.domain });
-      await this.storageService.set(state.domain, state);
+      // await this.storageService.set(state.domain, state);
       return state;
     }
 
     await this.storageService.reset();
-    return undefined;
   }
 
   async updateAux(aux: IOhMyAux, context: IOhMyContext): Promise<IState> {
@@ -244,7 +257,7 @@ export class OhMyState {
       }
     });
 
-    await this.storageService.set(state.domain, state);
+    // await this.storageService.set(state.domain, state);
 
     return state;
   }
