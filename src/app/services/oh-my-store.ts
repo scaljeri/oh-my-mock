@@ -246,17 +246,14 @@ export class OhMyState {
   }
 
   async updateAux(aux: IOhMyAux, context: IOhMyContext): Promise<IState> {
-    const state = await this.getState(context);
+    let state = await this.getState(context);
     state.aux = { ...state.aux };
 
-    Object.entries(aux).forEach(([k, v]) => {
-      if (v !== undefined) {
-        state.aux[k] = v;
-      } else {
-        delete state.aux[k];
-      }
-    });
+    for (const item of Object.entries(aux)) {
+      state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE);
+    }
 
+    // (state, payloadType.STATE);
     // await this.storageService.set(state.domain, state);
 
     return state;

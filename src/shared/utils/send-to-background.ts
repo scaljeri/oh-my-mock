@@ -12,8 +12,8 @@ export class OhMySendToBg {
     OhMySendToBg.source = source;
   }
 
-  static send<T = unknown>(packet: IPacket<T>): Promise<T> {
-    return new Promise<T>(r => {
+  static send<T = unknown, U = T>(packet: IPacket<T>): Promise<U> {
+    return new Promise<U>(r => {
       chrome.runtime.sendMessage(packet, (arg) => r(arg));
     });
   }
@@ -32,12 +32,12 @@ export class OhMySendToBg {
     });
   }
 
-  static patch<T = unknown>(
+  static patch<T = unknown, U = T>(
     data: T,
     path: string,
     propName: string,
     type: payloadType
-  ): Promise<T> {
+  ): Promise<U> {
     return OhMySendToBg.send({
       source: OhMySendToBg.source,
       payload: {

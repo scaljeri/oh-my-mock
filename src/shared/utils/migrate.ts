@@ -7,6 +7,7 @@ import { requestSteps } from './migrations/request';
 import { objectTypes } from '../constants';
 
 const IS_BETA_RE = /beta/;
+const DEV_VERSION = '__OH' + '_MY_VERSION__';
 
 export class MigrateUtils {
   static storeSteps = storeSteps;
@@ -23,7 +24,8 @@ export class MigrateUtils {
   static migrate<T extends { version: string }>(data: T): T | undefined {
     const version = data.version || '0.0.0';
 
-    if (MigrateUtils.version === '__OH' + '_MY_VERSION__') {
+    if (MigrateUtils.version === DEV_VERSION || version === DEV_VERSION) {
+      data.version = MigrateUtils.version;
       return data;
     }
 

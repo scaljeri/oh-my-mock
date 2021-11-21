@@ -93,7 +93,6 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
 // streamByType$(packetTypes.DATA_DISPATCH, appSources.CONTENT).subscribe(handleDispatch);
 
 chrome.runtime.onInstalled.addListener(function (details) {
-  debugger;
   chrome.storage.local.get([STORAGE_KEY], (state) => {
     if (!state[STORAGE_KEY]) {
       open('/splash-screen.html', '_blank');
@@ -148,7 +147,6 @@ setTimeout(async () => {
 
   console.log('Store: ', store);
 
-  debugger;
   if (store) {
     if (MigrateUtils.shouldMigrate(store)) {
       store = MigrateUtils.migrate(store);
