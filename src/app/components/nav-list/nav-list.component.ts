@@ -54,13 +54,9 @@ export class NavListComponent {
           return;
         }
 
+        // Now we need to tell the content script that the popup (thats us) is still active!!
+        await this.storeService.updateAux({ popupActive: true}, this.context);
         this.router.navigate(['/'])
-          // .then(() => {
-            // TODO: Remove reload, it causes issues with state :(
-            // This is a hack, just to make sure that the state has been updated before reload
-            // this.stateService.state = await this.storageService.get(this.context.domain);
-            // window.location.reload();
-          // });
       });
 
     this.navigate.emit();

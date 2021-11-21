@@ -52,6 +52,7 @@ export enum payloadType {
   STORE = 'store',
   ACTIVE = 'active',
   RESPONSE = 'response',
+  REQUEST = 'request',
   NEW_RESPONSE = 'new-response',
   STATE = 'state',
   KNOCKKNOCK = 'knockknock',

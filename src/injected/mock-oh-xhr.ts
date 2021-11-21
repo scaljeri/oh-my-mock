@@ -68,8 +68,8 @@ export function patchXmlHttpRequest() {
           // TODO: Should we do something with this event
           toDataURL(this.response, (response) => {
             dispatchApiResponse({
-              data: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
-              mock: { statusCode: this.status, response: response, headers: parse(this.getAllResponseHeaders()) },
+              request: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
+              response: { statusCode: this.status, response: response, headers: parse(this.getAllResponseHeaders()) },
             });
           });
         });

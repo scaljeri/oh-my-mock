@@ -3,24 +3,18 @@ import { MOCK_JS_CODE, objectTypes } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
 
-// export interface IOhMyMockSearchOptions {
-//   statusCode?: ohMyStatusCode;
-//   label?: string;
-//   id?: ohMyMockId;
-// }
-
 export class MockUtils {
   static init(base: Partial<IMock> = {}, update: Partial<IMock> = {}): IMock {
     const mock = {
       jsCode: MOCK_JS_CODE,
       delay: 0,
       headers: {},
-      response: {},
+      response: '{}',
       rules: [],
       statusCode: null,
-      ...JSON.parse(JSON.stringify(base)),
       id: uniqueId(),
       createdOn: timestamp(),
+      ...JSON.parse(JSON.stringify(base)),
       type: objectTypes.MOCK,
       modifiedOn: null,
       ...update
@@ -33,7 +27,7 @@ export class MockUtils {
   }
 
   static clone(source: Partial<IMock>, updates?: Partial<IMock>): IMock {
-    return this.init(source, updates);
+    return this.init(source, { id: uniqueId(), ...updates });
   }
 
   static find(responses:Record<ohMyMockId, IOhMyShallowMock>, search: IOhMyMockSearch): IOhMyShallowMock | null {

@@ -1,6 +1,6 @@
 import { ohMyDomain } from "../type";
 import { appSources, payloadType } from "../constants";
-import { IPacket } from "../packet-type";
+import { IOhMyPacketContext, IPacket } from "../packet-type";
 
 // TODO: make it a class
 export class OhMySendToBg {
@@ -18,14 +18,15 @@ export class OhMySendToBg {
     });
   }
 
-  static full<T = unknown>(
+  static full<T = unknown, U = T>(
     data: T,
-    type: payloadType
-  ): Promise<T> {
-    return OhMySendToBg.send({
+    type: payloadType,
+    context?: IOhMyPacketContext
+  ): Promise<U> {
+    return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
       payload: {
-        context: { domain: OhMySendToBg.domain },
+        context: { domain: OhMySendToBg.domain, ...context },
         type,
         data
       }
@@ -36,12 +37,13 @@ export class OhMySendToBg {
     data: T,
     path: string,
     propName: string,
-    type: payloadType
+    type: payloadType,
+    context?: IOhMyPacketContext
   ): Promise<U> {
-    return OhMySendToBg.send({
+    return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
       payload: {
-        context: { domain: OhMySendToBg.domain, path, propertyName: propName },
+        context: { domain: OhMySendToBg.domain, ...context, path, propertyName: propName },
         type,
         data
       }

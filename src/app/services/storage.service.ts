@@ -35,17 +35,17 @@ export class StorageService {
   //   return this.set(STORAGE_KEY, value);
   // }
 
-  reset(domain?: ohMyDomain): Promise<void> {
-    if (domain) {
-      return this.remove(domain);
-    } else {
-      return new Promise(r => {
-        this.ngZone.runOutsideAngular(() => {
-          StorageUtils.reset().then(r);
-        });
-      });
-    }
-  }
+  // reset(domain?: ohMyDomain): Promise<void> {
+  //   if (domain) {
+  //     return this.remove(domain);
+  //   } else {
+  //     return new Promise(r => {
+  //       this.ngZone.runOutsideAngular(() => {
+  //         StorageUtils.reset().then(r);
+  //       });
+  //     });
+  //   }
+  // }
 
   remove(key: string): Promise<void> {
     return new Promise(r => {

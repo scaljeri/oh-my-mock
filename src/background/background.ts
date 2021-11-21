@@ -1,9 +1,7 @@
 ///<reference types="chrome"/>
 
-import { appSources, packetType, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IMock, IOhMyMock, IOhMyPopupActive, IState } from '../shared/type';
-import { OhMockXhr } from './xhr';
-import { OhMockFetch } from './fetch';
+import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
+import { IOhMyMock, IOhMyPopupActive, IState, ohMyDomain } from '../shared/type';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
 import { IPacket, IPacketPayload } from '../shared/packet-type';
@@ -12,13 +10,8 @@ import { OhMyResponseHandler } from './response-handler';
 import { OhMyStoreHandler } from './store-handler';
 import { MigrateUtils } from '../shared/utils/migrate';
 import { StoreUtils } from '../shared/utils/store'
-
-// declare let window: any;
-// declare let console: any;
-
-// window.XMLHttpRequest = OhMockXhr;
-// window.fetch = OhMockFetch;
-
+import { StateUtils } from '../shared/utils/state';
+import { OhMyRemoveHandler } from './remove-handler';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -29,11 +22,11 @@ OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
 queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
 queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
-queue.addHandler(payloadType.REMOVE, (payload: IPacketPayload<string>) => {
-  return StorageUtils.reset(payload.data);
-});
-queue.addHandler(payloadType.RESET, (payload: IPacketPayload<string>) => {
-  return StorageUtils.reset(payload.data);
+queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
+queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
+  // Only used to reset everything
+  await StorageUtils.reset();
+  initStorage(payload.context?.domain);
 });
 
 chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
@@ -142,7 +135,7 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 });
 
 // Make sure that chrome.runtime.onInstalled is called first
-setTimeout(async () => {
+async function initStorage(domain?: ohMyDomain): Promise<void> {
   let store = await StorageUtils.get<IOhMyMock>();
 
   console.log('Store: ', store);
@@ -152,8 +145,9 @@ setTimeout(async () => {
       store = MigrateUtils.migrate(store);
 
       if (!store) {
-        StorageUtils.reset();
+        await StorageUtils.reset();
       } else {
+
         await new Promise<Promise<unknown>[]>(r => {
           const actions = [];
           chrome.storage.local.get(null, function (data) {
@@ -166,7 +160,19 @@ setTimeout(async () => {
         });
       }
     }
-  } else {
-    await queue.addPacket(payloadType.STORE, { data: StoreUtils.init() });
   }
+  store ??= StoreUtils.init();
+
+  let state: IState;
+  if (domain) {
+    state = StateUtils.init({ domain });
+    store = StoreUtils.setState(store, state);
+  }
+
+  await queue.addPacket(payloadType.STORE, { data: store });
+  state && await queue.addPacket(payloadType.STATE, state);
+}
+
+setTimeout(() => {
+  initStorage();
 });

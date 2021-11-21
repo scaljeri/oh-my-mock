@@ -102,7 +102,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('window:beforeunload')
   ngOnDestroy() {
-    this.stateSub.unsubscribe();
+    this.stateSub?.unsubscribe();
     this.contentService.deactivate();
   }
 

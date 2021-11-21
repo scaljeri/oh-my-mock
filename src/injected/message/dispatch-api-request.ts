@@ -5,7 +5,7 @@ import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
 import { IOhMyMockResponse, IOhMyAPIRequest, requestType } from '../../shared/type';
-import { IPacket } from '../../shared/packet-type';
+import { IPacket, IPacketPayload } from '../../shared/packet-type';
 
 declare let window: any;
 
@@ -53,10 +53,10 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
     const payload = {
-      context: { id, url: window.location.origin, requestType },
+      context: { id, requestType },
       type: payloadType.DISPATCH_API_REQUEST,
-      data: { ...request }
-    }
+      data: request
+    } as IPacketPayload<IOhMyAPIRequest>;
 
     streamById$(id, appSources.CONTENT)
       .pipe(take(1))
@@ -75,7 +75,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
         }
       });
 
-    send(payload); // Dispatch eval to background script (via content)
+    send<IOhMyAPIRequest>(payload); // Dispatch eval to background script (via content)
   });
 }
 

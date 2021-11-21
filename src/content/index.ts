@@ -1,23 +1,22 @@
 /// <reference types="chrome"/>
-import { appSources, objectTypes, payloadType } from '../shared/constants';
+import { appSources, payloadType } from '../shared/constants';
 import { IOhMyAPIRequest, IState } from '../shared/type';
-import { IOhMyAPIResponse, IPacket, IPacketPayload } from '../shared/packet-type';
+import { IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
 import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
 import { handleApiRequest } from './handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
-import { OhMyQueue } from '../shared/utils/queue';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
-const queue = new OhMyQueue();
-queue.addHandler(objectTypes.MOCK, async (packet: unknown): Promise<void> => {
-  await handleApiResponse(packet as IOhMyAPIResponse, contentState);
-});
+// const queue = new OhMyQueue();
+// queue.addHandler(objectTypes.MOCK, async (packet: unknown): Promise<void> => {
+//   await handleApiResponse(packet as IOhMyResponseUpdate, contentState);
+// });
 
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
@@ -125,15 +124,14 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
 streamByType$<any>(payloadType.ACTIVE, appSources.POPUP).subscribe(handlePopup);
 
 streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
-streamByType$<IOhMyAPIResponse>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
+streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
-async function handleInjectedApiResponse({ payload }: IPacket<IOhMyAPIResponse>) {
+async function handleInjectedApiResponse({ payload }: IPacket<IOhMyResponseUpdate>) {
   // queue.addPacket(objectTypes.MOCK, payload.data);
   // payload.context = { ...payload.context, domain: OhMyContentState.host }
   // debugger;
   // OhMySendToBg.full()
-  debugger;
-  OhMySendToBg.full(payload.data, payloadType.RESPONSE);
+  handleApiResponse(payload, contentState);
   // TODO: send result back to injected???
 }
 

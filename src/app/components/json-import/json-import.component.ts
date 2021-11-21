@@ -39,7 +39,7 @@ export class JsonImportComponent {
             const content = JSON.parse(fileLoadedEvent.target.result as string) as IOhMyBackup;
             const { requests, responses } = content;
 
-            const result = await importJSON(this.storageService, this.stateService.state.context);
+            const result = await importJSON(content, this.stateService.state.context);
 
             if (result.status === ImportResultEnum.SUCCESS) {
               this.toast.success(`Imported ${requests.length} requests and  ${responses.length} responses from ${file.name} into ${this.appState.domain}`);

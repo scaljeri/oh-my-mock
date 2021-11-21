@@ -1,20 +1,22 @@
 import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
-import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
-import { DEMO_TEST_DOMAIN, objectTypes, STORAGE_KEY } from '@shared/constants';
+import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain, IOhMyBackup } from '@shared/type';
+import { DEMO_TEST_DOMAIN, objectTypes, payloadType, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
-import { StoreUtils } from '@shared/utils/store';
 import { StorageService } from './storage.service';
 import { AppStateService } from './app-state.service';
 import { importJSON } from '../utils/import-json';
-
+import { OhMySendToBg } from '@shared/utils/send-to-background';
+import jsonFromFile from '../../assets/dummy-data.json';
 /*
   This service receives updates from chrome.storage. This can happen when the
   content script modifies the state or there are multiple popups for different
   domains active
 */
+
+const DEMO_JSON = jsonFromFile as any as IOhMyBackup;
 
 @Injectable({
   providedIn: 'root'
@@ -49,7 +51,12 @@ export class OhMyStateService {
   }
 
   async initialize(domain: ohMyDomain): Promise<void> {
-    this.store = await this.initStore(domain);
+    // if (!this.appSub) {
+    //   this.appSub = this.appState.domain$.subscribe(domain => setTimeout(() => this.initialize(domain)));
+    //   return;
+    // }
+
+    this.store = await this.initStore();
     this.state = await this.initState(domain);
     this.context = this.state.context;
     this.contextSubject.next(this.context);
@@ -57,7 +64,7 @@ export class OhMyStateService {
     this.state$ = this.appState.domain$.pipe(
       map(domain => ({ domain })),
       tap(async context => {
-        if (context.domain !== this.state.domain) {
+        if (context.domain !== this.state.domain && context.domain) {
           this.state = await this.initState(context.domain);
           this.stateSubject.next(this.state);
         }
@@ -67,33 +74,10 @@ export class OhMyStateService {
       shareReplay(1));
 
     this.stateSubject.next(this.state);
-    if (!this.appSub) {
-      this.appSub = this.appState.domain$.subscribe(domain => this.initialize(domain));
-    }
   }
 
-  private async initStore(domain): Promise<IOhMyMock> {
-    let store = await this.storageService.get<IOhMyMock>(STORAGE_KEY);
-
-    if (StorageUtils.MigrateUtils.shouldMigrate(store)) {
-      // Migrate all data, not only `store` of course
-       store = StorageUtils.MigrateUtils.migrate<IOhMyMock>(store);
-
-       if (!store) {
-         await this.storageService.reset();
-       } else {
-        // await this.storageService.migrate();
-       }
-    }
-
-    if (!store) {
-      store = StoreUtils.init({ domain });
-      // await this.storageService.setStore(store);
-      await importJSON(this.storageService, { domain: DEMO_TEST_DOMAIN }, true);
-    } else if (!store.domains.includes(domain)) {
-      store.domains.push(domain);
-      // await this.storageService.setStore(store);
-    }
+  private async initStore(): Promise<IOhMyMock> {
+    const store = await this.storageService.get<IOhMyMock>(STORAGE_KEY);
 
     return store;
   }
@@ -101,9 +85,14 @@ export class OhMyStateService {
   public async initState(domain): Promise<IState> {
     let state = await this.storageService.get<IState>(domain);
 
-    if (!state) {
+    if (!state) { // new state
       state = StateUtils.init({ domain });
-      // await this.storageService.set(domain, state);
+      state = await OhMySendToBg.full(state, payloadType.STATE);
+    }
+
+    const demoState = await this.storageService.get<IState>(DEMO_TEST_DOMAIN);
+    if (!demoState) {
+      await importJSON(DEMO_JSON, { domain: DEMO_TEST_DOMAIN }, { activate: true });
     }
 
     return state;
@@ -127,7 +116,7 @@ export class OhMyStateService {
         }
 
         // In case of delete/reset `newValue` will be `undefined`
-        const type = update.newValue?.type || update.oldValue.type;
+        const type = update.newValue?.type || update.oldValue?.type;
 
         switch (type) {
           case objectTypes.STATE:

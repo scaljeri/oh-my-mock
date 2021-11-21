@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, requestType } from './type';
+import { IData, IMock, IOhMyContext, requestType } from './type';
 
 export interface IPacket<T = unknown> {
   tabId?: number;
@@ -8,12 +8,11 @@ export interface IPacket<T = unknown> {
   payload: IPacketPayload<T>;
 }
 
-export interface IOhMyPacketContext {
+export interface IOhMyPacketContext extends IOhMyContext {
   id?: string;
   requestType?: requestType;
   path?: string;
   propertyName?: string;
-  domain?: string;
 }
 
 export interface IPacketPayload<T = unknown> {
@@ -22,7 +21,7 @@ export interface IPacketPayload<T = unknown> {
   data?: T;
 }
 
-export interface IOhMyAPIResponse {
-  data: Partial<IData>;
-  mock: Partial<IMock>;
+export interface IOhMyResponseUpdate {
+  request: Partial<IData>;
+  response: Partial<IMock>;
 }
