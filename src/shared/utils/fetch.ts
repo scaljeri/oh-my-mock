@@ -1,5 +1,7 @@
-export const headersToJson = (headers: Headers): Record<string, string> => {
-  return [...(headers as any).entries()].reduce((json, [key, value]: [string, string]) => {
+export const headersToJson = (headers: Headers & { entries: () => [string, string][] }): Record<string, string> => {
+  const entries = [ ...(headers?.entries?.() || Object.entries(headers || {}))];
+
+  return entries.reduce((json, [key, value]: [string, string]) => {
     json[key] = value;
 
     return json;

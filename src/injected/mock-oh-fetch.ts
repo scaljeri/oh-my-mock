@@ -15,7 +15,7 @@ const ORIG_FETCH = window.fetch;
 interface IOhFetchConfig {
   method?: requestMethod;
   __ohSkip?: boolean; // Use Fetch without caching or mocking
-  headers?: Headers;
+  headers?: Headers & { entries: () => [string, string][]}; // TODO: entries is not known in Headers
 }
 
 declare let window: { fetch: any };

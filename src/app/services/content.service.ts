@@ -33,9 +33,9 @@ export class ContentService {
       this.activate();
     });
 
-    this.listener = ({ payload, tabId, source }: IPacket) => {
+    this.listener = ({ payload, tabId, source, domain }: IPacket) => {
       // Only accept messages from the content script
-      const domain = payload.context?.domain;
+      // const domain = payload.context?.domain;
       if (source !== appSources.CONTENT || !domain) {
         return;
       }
@@ -72,7 +72,7 @@ export class ContentService {
       return true;
     };
 
-    // chrome.runtime.onMessage.addListener(packet => this.listener(packet));
+    chrome.runtime.onMessage.addListener(packet => this.listener(packet));
   }
 
   sendActiveState(isActive: boolean): void {

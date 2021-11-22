@@ -1,11 +1,12 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, IOhMyContext, requestType } from './type';
+import { IData, IMock, IOhMyContext, ohMyDomain, requestType } from './type';
 
 export interface IPacket<T = unknown> {
   tabId?: number;
   source: appSources;
   payload: IPacketPayload<T>;
+  domain?: ohMyDomain
 }
 
 export interface IOhMyPacketContext extends IOhMyContext {
