@@ -13,18 +13,33 @@ import { OhMySendToBg } from '../shared/utils/send-to-background';
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
-// const queue = new OhMyQueue();
-// queue.addHandler(objectTypes.MOCK, async (packet: unknown): Promise<void> => {
-//   await handleApiResponse(packet as IOhMyResponseUpdate, contentState);
-// });
+
+let popupTimeoutId: number;
+let isPopupActive = false;
+let ohState: IState;
 
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
-  console.log('NEW STATE', state);
+  ohState = state;
+
   if (isInjectedInjected) {
     sendMsgToInjected({ type: payloadType.STATE, data: state },);
   } else if (state?.aux.popupActive) {
     inject(state);
+  }
+
+  // TabId is needed to send message to Popup
+  if (!popupTimeoutId && state.aux.popupActive && !isPopupActive) {
+    sendKnockKnock();
+
+    // Sometimes popupActive is true even if the Popup is not there
+    popupTimeoutId = window.setTimeout(() => {
+      popupTimeoutId = undefined;
+      debug('Popop is not active, state out of sync!');
+      ohState.aux.popupActive = false;
+      contentState.set(OhMyContentState.host, state);
+    });
+
   }
 });
 
@@ -100,12 +115,15 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
     return;
   }
 
+  window.clearTimeout(popupTimeoutId); // Popup is active!
+  isPopupActive = true;
+
   // TabId is independend of domain, it belongs to the tab!
   OhMyContentState.tabId = packet.tabId;
   contentState.persist();
 
-  // Domain change
-  if (packet.payload.context.domain !== OhMyContentState.host) {
+  // Domain change (Popup is using wrong domain)
+  if (packet.domain !== OhMyContentState.host) {
     return sendKnockKnock();
   }
 }
@@ -121,7 +139,7 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
 // streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
-streamByType$<any>(payloadType.ACTIVE, appSources.POPUP).subscribe(handlePopup);
+streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
 
 streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
 streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);

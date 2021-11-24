@@ -81,14 +81,14 @@ export class ContentService {
       source: appSources.POPUP,
       domain: this.appStateService.domain,
       payload: {
-        type: payloadType.ACTIVE,
+        type: payloadType.KNOCKKNOCK,
         data: {
           active: isActive
         }
       }
     }
     // Send msg to content script
-    // chrome.tabs.sendMessage(Number(this.appStateService.tabId), msg);
+    chrome.tabs.sendMessage(Number(this.appStateService.tabId), msg);
     // Send msg to background script
     // chrome.runtime.sendMessage(msg);
   }

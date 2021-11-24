@@ -51,21 +51,17 @@ export class OhMyStateService {
   }
 
   async initialize(domain: ohMyDomain): Promise<void> {
-    // if (!this.appSub) {
-    //   this.appSub = this.appState.domain$.subscribe(domain => setTimeout(() => this.initialize(domain)));
-    //   return;
-    // }
-
     this.store = await this.initStore();
     this.state = await this.initState(domain);
     this.context = this.state.context;
     this.contextSubject.next(this.context);
 
     this.state$ = this.appState.domain$.pipe(
-      map(domain => ({ domain })),
+      map(domain => ({ domain })), // convert domain to context object
       tap(async context => {
         if (context.domain !== this.state.domain && context.domain) {
           this.state = await this.initState(context.domain);
+          this.context = this.state.context;
           this.stateSubject.next(this.state);
         }
       }),

@@ -63,7 +63,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         return this.isInitializing = true;
       }
 
+      // Move to somewhere else
       if (state.domain !== this.domain) { // Domain switch
+        state.aux.popupActive = true;
+        this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
+        this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
+
         this.router.navigate(['/']).then(() => {
           this.cdr.detectChanges();
         });
@@ -84,13 +89,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    // send({type: payloadType.STATE, domain: 'yolo'}).then((x) => {
-    //   debugger;
-    // });
-
-    // full({ x: 'from popup' }, payloadType.STATE).then(() => {
-    //   console.log('done');
-    // });
   }
 
   onEnableChange(isChecked: boolean): void {
