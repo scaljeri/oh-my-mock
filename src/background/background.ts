@@ -16,6 +16,29 @@ import { OhMyRemoveHandler } from './remove-handler';
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
+window.onunhandledrejection = function (event) {
+  const { reason } = event;
+  const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
+  const types = queue.getActiveHandlers();
+
+  console.log('Error in promise', types, reason);
+  queue.resetHandler(types?.[0]);
+
+  // TODO: send to popup
+  // send2Popup({ payload: { data: { msg: errorMsg, payloadTypes: types }}})
+}
+
+window.onerror = function (a, b, c, d, stacktrace) {
+  const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
+  const types = queue.getActiveHandlers();
+
+  console.log('Error', stacktrace);
+  queue.resetHandler(types[0]);
+
+  // TODO: send to popup
+  // send2Popup({ payload: { data: { msg: errorMsg, payloadTypes: types }}})
+}
+
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
 

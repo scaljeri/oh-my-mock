@@ -3,8 +3,9 @@ import { DataUtils } from "../shared/utils/data";
 import { StateUtils } from '../shared/utils/state';
 import { OhMyContentState } from "./content-state";
 import { evalCode } from '../shared/utils/eval-code';
-import { IS_BASE64_RE, ohMyMockStatus } from "../shared/constants";
+import { IS_BASE64_RE, ohMyMockStatus, payloadType } from "../shared/constants";
 import { blurBase64, isImage } from "../shared/utils/image";
+import { OhMySendToBg } from "../shared/utils/send-to-background";
 
 export async function handleApiRequest(request: IOhMyAPIRequest, contentState: OhMyContentState): Promise<IOhMyMockResponse> {
   const state = await contentState.getState();
@@ -15,7 +16,8 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
   }
 
   data.lastHit = Date.now();
-  await contentState.set(state.domain, StateUtils.setRequest(state, data));
+  // await contentState.set(state.domain, StateUtils.setRequest(state, data));
+  OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
 
   const activeResponseId = DataUtils.activeMock(data, state.context)
 

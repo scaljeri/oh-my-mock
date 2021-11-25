@@ -46,6 +46,7 @@ export class OhMyContentState {
 
   set(key, value): Promise<void> {
     this.cache[key] = value;
+
     return StorageUtils.set(key, value);
   }
 

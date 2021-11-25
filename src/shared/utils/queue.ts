@@ -1,4 +1,4 @@
-import { objectTypes } from "../constants";
+import { objectTypes, payloadType } from "../constants";
 
 export type ohPacketType = objectTypes;
 
@@ -16,9 +16,26 @@ export class OhMyQueue {
   private handlers: Partial<Record<ohPacketType, IOhActivity>> = {};
   private queue: Partial<Record<ohPacketType, IOhQueuePacket[]>> = {};
 
+  getHandlers(): Partial<Record<ohPacketType, IOhActivity>> {
+    return this.handlers;
+  }
+
+  getActiveHandlers(): ohPacketType[] {
+    return Object.entries(this.handlers).filter(([k, v]) => v.isActive)
+      .map(([k]) => k) as ohPacketType[];
+  }
+
   getQueue<T = unknown>(packetType: string): T[] {
     return this.queue[packetType]?.map(p => p.data) as T[] || [];
   }
+
+  resetHandler(packetType: ohPacketType): void {
+    if (packetType && this.handlers[packetType]) {
+      this.handlers[packetType].isActive = false;
+      this.next(packetType);
+    }
+  }
+
 
   isHandlerActive(packetType: ohPacketType): boolean {
     return this.handlers[packetType]?.isActive || false;

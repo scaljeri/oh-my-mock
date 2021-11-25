@@ -64,7 +64,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
 
       // Move to somewhere else
-      if (state.domain !== this.domain) { // Domain switch
+      if (state.domain !== this.domain && this.domain) { // Domain switch
         state.aux.popupActive = true;
         this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
         this.storeService.updateAux({ popupActive: true }, { domain: state.domain });

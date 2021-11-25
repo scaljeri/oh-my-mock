@@ -14,8 +14,6 @@ import { OhMySendToBg } from '../shared/utils/send-to-background';
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
 
-let popupTimeoutId: number;
-let isPopupActive = false;
 let ohState: IState;
 
 let isInjectedInjected = false;
@@ -29,18 +27,9 @@ contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
   }
 
   // TabId is needed to send message to Popup
-  if (!popupTimeoutId && state.aux.popupActive && !isPopupActive) {
-    sendKnockKnock();
-
-    // Sometimes popupActive is true even if the Popup is not there
-    popupTimeoutId = window.setTimeout(() => {
-      popupTimeoutId = undefined;
-      debug('Popop is not active, state out of sync!');
-      ohState.aux.popupActive = false;
-      contentState.set(OhMyContentState.host, state);
-    });
-
-  }
+  // if (!popupTimeoutId && state.aux.popupActive && !isPopupActive) {
+  //   sendKnockKnock();
+  // }
 });
 
 
@@ -114,9 +103,6 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
   if (!packet.tabId) {
     return;
   }
-
-  window.clearTimeout(popupTimeoutId); // Popup is active!
-  isPopupActive = true;
 
   // TabId is independend of domain, it belongs to the tab!
   OhMyContentState.tabId = packet.tabId;
