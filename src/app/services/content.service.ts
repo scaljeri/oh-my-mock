@@ -36,6 +36,7 @@ export class ContentService {
     this.listener = ({ payload, tabId, source, domain }: IPacket) => {
       // Only accept messages from the content script
       // const domain = payload.context?.domain;
+      debugger; // TODO: Add background script error type
       if (source !== appSources.CONTENT || !domain) {
         return;
       }
@@ -58,6 +59,8 @@ export class ContentService {
           // this.appStateService.hit(data);
 
           // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
+        } else if (payload.type === payloadType.ERROR) {
+          debugger;
         }
       } else {
         if (payload.type === payloadType.KNOCKKNOCK) {

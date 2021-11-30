@@ -6,10 +6,12 @@ import { IOhMyPacketContext, IPacket } from "../packet-type";
 export class OhMySendToBg {
   static source: appSources;
   static domain: ohMyDomain;
+  static tabId: number;
 
-  static setContext(domain: ohMyDomain, source: appSources): void {
+  static setContext(domain: ohMyDomain, source: appSources, tabId?: number): void {
     OhMySendToBg.domain = domain;
     OhMySendToBg.source = source;
+    OhMySendToBg.tabId = tabId;
   }
 
   static send<T = unknown, U = T>(packet: IPacket<T>): Promise<U> {
@@ -21,10 +23,11 @@ export class OhMySendToBg {
   static full<T = unknown, U = T>(
     data: T,
     type: payloadType,
-    context?: IOhMyPacketContext
+    context?: Partial<IOhMyPacketContext>
   ): Promise<U> {
     return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
+      tabId: OhMySendToBg.tabId,
       payload: {
         context: { domain: OhMySendToBg.domain, ...context },
         type,
@@ -38,15 +41,16 @@ export class OhMySendToBg {
     path: string,
     propName: string,
     type: payloadType,
-    context?: IOhMyPacketContext
+    context?: Partial<IOhMyPacketContext>
   ): Promise<U> {
     return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
+      tabId: OhMySendToBg.tabId,
       payload: {
         context: { domain: OhMySendToBg.domain, ...context, path, propertyName: propName },
         type,
         data
-      }
+      } as any
     });
   }
 

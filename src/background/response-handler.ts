@@ -40,12 +40,14 @@ export class OhMyResponseHandler {
     }
 
     OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
-      data: request,
-      context: {
-        path: `$.data`,
-        propertyName: request.id,
-        domain: state.domain
-      } as IOhMyPacketContext
+      payload: {
+        data: request,
+        context: {
+          path: `$.data`,
+          propertyName: request.id,
+          domain: state.domain
+        } as IOhMyPacketContext
+      }
     });
 
     return StorageUtils.set(response.id, response).then(() => response as IMock);

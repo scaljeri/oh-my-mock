@@ -9,16 +9,21 @@ import { handleApiRequest } from './handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
+import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
-OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
+OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT, OhMyContentState.tabId);
 
 let ohState: IState;
 
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
   ohState = state;
+
+  if (!OhMyContentState.tabId) {
+    sendKnockKnock();
+  }
 
   if (isInjectedInjected) {
     sendMsgToInjected({ type: payloadType.STATE, data: state },);
@@ -55,16 +60,6 @@ chrome.runtime.onMessage.addListener((packet, sender) => {
 //   updateSubscription = undefined;
 // }
 
-// Send message to Popup / Background
-function sendMsgToPopup(payload: IPacketPayload) {
-  chrome.runtime.sendMessage({
-    tabId: OhMyContentState.tabId,
-    domain: OhMyContentState.host,
-    source: appSources.CONTENT,
-    payload
-  });
-}
-
 function sendMsgToInjected(payload: IPacketPayload) {
   try {
     window.postMessage(JSON.parse(JSON.stringify(
@@ -79,7 +74,8 @@ function sendMsgToInjected(payload: IPacketPayload) {
 }
 
 function sendKnockKnock() {
-  sendMsgToPopup({ type: payloadType.KNOCKKNOCK });
+  sendMsgToPopup(OhMyContentState.tabId, OhMyContentState.host, appSources.CONTENT,
+    { type: payloadType.KNOCKKNOCK });
 }
 
 function handlePacketFromInjected(packet: IPacket) {
@@ -106,6 +102,7 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
 
   // TabId is independend of domain, it belongs to the tab!
   OhMyContentState.tabId = packet.tabId;
+  OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT, packet.tabId)
   contentState.persist();
 
   // Domain change (Popup is using wrong domain)
@@ -162,7 +159,7 @@ async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
 // Inject XHR/Fetch mocking code and more
 (async function () {
   const state = await contentState.getState() || StateUtils.init();
-  sendMsgToPopup({ type: payloadType.KNOCKKNOCK });
+  sendKnockKnock();
 
   if (state.aux.popupActive) {
     inject(state);

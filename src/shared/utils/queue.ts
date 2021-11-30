@@ -1,4 +1,5 @@
-import { objectTypes, payloadType } from "../constants";
+import { objectTypes } from "../constants";
+import { IPacket } from "../packet-type";
 
 export type ohPacketType = objectTypes;
 
@@ -7,7 +8,7 @@ interface IOhActivity {
   isActive: boolean;
 }
 
-interface IOhQueuePacket<T = unknown> {
+interface IOhQueuePacket<T = IPacket> {
   data: T;
   callback(result?: unknown): void;
 }
@@ -29,13 +30,16 @@ export class OhMyQueue {
     return this.queue[packetType]?.map(p => p.data) as T[] || [];
   }
 
+  removeFirstPacket(type: ohPacketType): void {
+    this.queue[type].shift();
+  }
+
   resetHandler(packetType: ohPacketType): void {
     if (packetType && this.handlers[packetType]) {
       this.handlers[packetType].isActive = false;
       this.next(packetType);
     }
   }
-
 
   isHandlerActive(packetType: ohPacketType): boolean {
     return this.handlers[packetType]?.isActive || false;
@@ -57,10 +61,12 @@ export class OhMyQueue {
 
   addHandler(packetType: string, handler: (packet: any) => Promise<unknown>): void {
     this.handlers[packetType] = {
-      handler: async (packet: IOhQueuePacket): Promise<void> => {
-        const result = await handler(packet.data); // process packet
+      handler: async (packet: any): Promise<void> => {
+        const result = await handler(packet.data.payload); // process packet
         this.handlers[packetType].isActive = false;
         packet.callback?.(result);
+        this.queue[packetType].shift();
+
         this.next(packetType);
       }, isActive: false
     };
@@ -78,6 +84,6 @@ export class OhMyQueue {
     }
 
     this.handlers[packetType].isActive = true;
-    this.handlers[packetType].handler(this.queue[packetType].shift());
+    this.handlers[packetType].handler(this.queue[packetType][0]);
   }
 }

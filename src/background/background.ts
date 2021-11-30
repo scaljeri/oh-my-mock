@@ -12,6 +12,7 @@ import { MigrateUtils } from '../shared/utils/migrate';
 import { StoreUtils } from '../shared/utils/store'
 import { StateUtils } from '../shared/utils/state';
 import { OhMyRemoveHandler } from './remove-handler';
+import { errorHandler } from './error-handler';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -19,24 +20,14 @@ console.log(`${STORAGE_KEY}: background script is ready`);
 window.onunhandledrejection = function (event) {
   const { reason } = event;
   const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
-  const types = queue.getActiveHandlers();
 
-  console.log('Error in promise', types, reason);
-  queue.resetHandler(types?.[0]);
-
-  // TODO: send to popup
-  // send2Popup({ payload: { data: { msg: errorMsg, payloadTypes: types }}})
+  errorHandler(queue, errorMsg);
 }
 
 window.onerror = function (a, b, c, d, stacktrace) {
   const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
-  const types = queue.getActiveHandlers();
 
-  console.log('Error', stacktrace);
-  queue.resetHandler(types[0]);
-
-  // TODO: send to popup
-  // send2Popup({ payload: { data: { msg: errorMsg, payloadTypes: types }}})
+  errorHandler(queue, errorMsg, stacktrace);
 }
 
 const queue = new OhMyQueue();
@@ -57,8 +48,9 @@ chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
   if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
     [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
     if (queue.hasHandler(packet.payload.type)) {
-      queue.addPacket(packet.payload.type, packet.payload, (result) => {
+      queue.addPacket(packet.payload.type, packet, (result) => {
         callback(result);
+        // return true;
       });
     } else {
       console.warn('No handler for ' + packet.payload.type);
@@ -192,7 +184,7 @@ async function initStorage(domain?: ohMyDomain): Promise<void> {
     store = StoreUtils.setState(store, state);
   }
 
-  await queue.addPacket(payloadType.STORE, { data: store });
+  await queue.addPacket(payloadType.STORE, { payload: { data: store } });
   state && await queue.addPacket(payloadType.STATE, state);
 }
 

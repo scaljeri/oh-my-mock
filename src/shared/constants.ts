@@ -65,7 +65,8 @@ export enum payloadType {
   DISPATCH_API_RESPONSE = 'api-response',
   // MOCK_RESPONSE = 'mock-response'
   RESET = 'reset',
-  REMOVE = 'remove'
+  REMOVE = 'remove',
+  ERROR = 'error'
 }
 export enum appSources {
   INJECTED = 'injected',
