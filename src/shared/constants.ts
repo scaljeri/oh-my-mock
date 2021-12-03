@@ -35,6 +35,7 @@ export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
 export const IS_BASE64_RE = /data:.*base64,/;
+export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new?assignees=&labels=&template=feature-or-bug.md&title=';
 
 export enum objectTypes {
   REQUEST = 'REQUEST',

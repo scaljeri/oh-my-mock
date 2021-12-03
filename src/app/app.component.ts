@@ -15,8 +15,9 @@ import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
 import { Subscription } from 'rxjs';
 import { initializeApp } from './app.initialize';
-import { StorageService } from './services/storage.service';
 import { ContentService } from './services/content.service';
+import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
+import { IPacketPayload } from '@shared/packet-type';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -41,6 +42,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   showDisabled = -1;
   stateSub: Subscription;
   isUpAndRunning = false;
+  errors: IPacketPayload[] = [];
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
@@ -89,6 +91,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
+    this.appState.errors$.subscribe(error => {
+      this.errors.push(error);
+      this.cdr.detectChanges();
+    });
+
   }
 
   onEnableChange(isChecked: boolean): void {
@@ -128,5 +135,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:keydown.enter')
   onEnable(): void {
     this.onEnableChange(true);
+  }
+
+  onErrors(): void {
+    const dialogRef = this.dialog.open(ShowErrorsComponent, {
+      width: '90%',
+      height: '90%',
+      data: this.errors
+    });
+
+    dialogRef.afterClosed().subscribe(async () => {
+      this.errors = null;
+    });
   }
 }

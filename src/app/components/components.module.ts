@@ -59,6 +59,7 @@ import { LinkComponent } from './link/link.component';
 import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.component';
 import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
+import { ShowErrorsComponent } from './show-errors/show-errors.component';
 
 @NgModule({
   declarations: [
@@ -91,6 +92,7 @@ import { FeedbackComponent } from './feedback/feedback.component';
     DialogCodeEditorComponent,
     PresetComponent,
     FeedbackComponent,
+    ShowErrorsComponent,
   ],
   imports: [
     CommonModule,

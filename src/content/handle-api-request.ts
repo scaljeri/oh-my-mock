@@ -17,7 +17,7 @@ export async function handleApiRequest(request: IOhMyAPIRequest, contentState: O
 
   data.lastHit = Date.now();
   // await contentState.set(state.domain, StateUtils.setRequest(state, data));
-  await OhMySendToBg.patch(data, '$.data', data.id, payloadType.RESPONSE);
+  await OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
 
   const activeResponseId = DataUtils.activeMock(data, state.context)
 

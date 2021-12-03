@@ -42,6 +42,9 @@ export const appRouter = (app: any): void => {
   app.get("/binary/*", (req: express.Request, res: express.Response) => {
     const file = binaryPath + '/test.jpg';
     setTimeout(() => {
+      // res.setHeader("Content-Type", 'application/json; charset=utf8');
+      // res.header("Content-Type",'application/json');
+      // res.send(JSON.stringify(data));
       res.sendFile(file);
     }, 1000);
   });

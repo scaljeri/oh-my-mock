@@ -26,7 +26,7 @@ export class OhMyResponseHandler {
     }
 
     if (Object.keys(response).length === 1 && response.id) { // delete
-      delete request.mocks[response.id];
+      request = DataUtils.removeResponse(context, request, response.id);
       await OhMyResponseHandler.StorageUtils.remove(response.id);
     } else {
       if (context.path) {
