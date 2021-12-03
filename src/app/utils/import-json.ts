@@ -18,6 +18,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
   let requests = data.requests as unknown as IData[];
   let responses = data.responses as unknown as IMock[];
 
+  debugger;
   if (MigrateUtils.shouldMigrate({ version: data.version })) {
     requests = requests.map((r: IData) => {
       r.enabled = { ...r.enabled, [state.context.preset]: activate };

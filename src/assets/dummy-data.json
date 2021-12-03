@@ -13,7 +13,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/site",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "20k9uff1ro",
@@ -28,7 +28,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "w5h5ungt3r",
@@ -43,7 +43,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "f5jlrgks1a",
@@ -58,7 +58,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "tj217471bw",
@@ -73,7 +73,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/site",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "qsaqinfskr",
@@ -88,7 +88,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "nbftmwoijz",
@@ -103,7 +103,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "t0il2am0td",
@@ -118,7 +118,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "48yspkj7dl",
@@ -133,7 +133,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "1tr3083dpg",
@@ -148,7 +148,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "djo6gnbwjh",
@@ -163,7 +163,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "uhhcx9s4tt",
@@ -178,7 +178,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/site",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "737kcg3plq",
@@ -193,7 +193,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/site",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "2yixlhil5v",
@@ -208,7 +208,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/site",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "gdr3taqtka",
@@ -223,7 +223,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/site",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "unqb9uj31y",
@@ -238,7 +238,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/users",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "a088ztqzw2",
@@ -253,7 +253,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "o1sxn1prgy",
@@ -268,7 +268,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "0wspvsa5pf",
@@ -283,7 +283,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "keokx5mk4g",
@@ -298,7 +298,7 @@
       "requestType": "FETCH",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     },
     {
       "id": "g51rlrewul",
@@ -313,7 +313,7 @@
       "requestType": "XHR",
       "type": "REQUEST",
       "url": "/binary/test\\.png",
-      "version": "3.0.3"
+      "version": "3.2.0"
     }
   ],
   "responses": [
@@ -342,7 +342,7 @@
       "rules": [],
       "statusCode": 200,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:13.515Z",
@@ -375,7 +375,7 @@
       "rules": [],
       "statusCode": 200,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:17.104Z",
@@ -408,7 +408,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:14.918Z",
@@ -439,7 +439,7 @@
       "rules": [],
       "statusCode": 200,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:12.112Z",
@@ -472,7 +472,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:14.907Z",
@@ -505,7 +505,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:12.705Z",
@@ -538,7 +538,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:18.905Z",
@@ -567,7 +567,7 @@
       "rules": [],
       "statusCode": 200,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:16.305Z",
@@ -600,7 +600,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:13.709Z",
@@ -629,7 +629,7 @@
       "rules": [],
       "statusCode": 200,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:21.306Z",
@@ -662,7 +662,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:18.103Z",
@@ -695,7 +695,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:14.746Z",
@@ -728,7 +728,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:13.103Z",
@@ -761,7 +761,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:20.705Z",
@@ -794,7 +794,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:14.921Z",
@@ -827,7 +827,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:14.505Z",
@@ -860,7 +860,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:22.710Z",
@@ -893,7 +893,7 @@
       "rules": [],
       "statusCode": 200,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:13.510Z",
@@ -926,7 +926,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:12.303Z",
@@ -959,7 +959,7 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     },
     {
       "createdOn": "2021-11-17T08:02:19.707Z",
@@ -992,8 +992,8 @@
       "rules": [],
       "statusCode": 404,
       "type": "MOCK",
-      "version": "3.1.0"
+      "version": "3.2.0"
     }
   ],
-  "version": "3.0.3"
+  "version": "3.2.0"
 }
