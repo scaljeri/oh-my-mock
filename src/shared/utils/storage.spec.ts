@@ -38,26 +38,15 @@ describe('Utils/Storage', () => {
     it('should skip data migration', async (done) => {
       StorageUtils.MigrateUtils.shouldMigrate = jest.fn().mockReturnValue(true);
 
-      StorageUtils.get('a', true).then(value => {
-        expect(value).toEqual('foo');
-        done();
-      });
-    });
-
-    it('should return migrated data', (done) => {
-      StorageUtils.MigrateUtils.shouldMigrate = jest.fn().mockReturnValue(true);
-      jest.spyOn(StorageUtils, 'set').mockResolvedValue();
-      jest.spyOn(StorageUtils.MigrateUtils, 'migrate').mockReturnValue('migrated-data');
-
       StorageUtils.get('a').then(value => {
-        expect(value).toEqual('migrated-data');
+        expect(value).toEqual('foo');
         done();
       });
     });
 
     it('should return not migrated data', (done) => {
       StorageUtils.MigrateUtils.shouldMigrate = jest.fn().mockReturnValue(false);
-      jest.spyOn(StorageUtils.MigrateUtils, 'migrate').mockReturnValue('migrated-data');
+      jest.spyOn(StorageUtils.MigrateUtils, 'migrate').mockReturnValue('migrated-data' as any);
       jest.spyOn(StorageUtils, 'set').mockResolvedValue();
 
       StorageUtils.get('a').then(value => {

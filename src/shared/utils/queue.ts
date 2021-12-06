@@ -51,6 +51,7 @@ export class OhMyQueue {
 
   // The `callback` is called as soon as the packet has been processed
   addPacket(packetType: string, packet: unknown, callback?: (result?: unknown) => void): void {
+    // eslint-disable-next-line no-console
     console.log('----adding packet to queue', packetType, packet);
     if (!this.queue[packetType]) {
       this.queue[packetType] = [];

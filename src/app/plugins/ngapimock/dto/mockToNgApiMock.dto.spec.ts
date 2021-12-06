@@ -31,7 +31,7 @@ describe('mockToNgApiMock', () => {
           statusCode: 200,
         }
       }
-    };
+    } as any;
   });
   xit('should transform', () => {
     const transformedMock: Mock = {
