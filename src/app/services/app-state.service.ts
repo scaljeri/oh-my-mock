@@ -33,6 +33,10 @@ export class AppStateService {
     this._domain = sessionStorage.getItem('domain');
     const tabId = sessionStorage.getItem('tabId');
 
+    if (this._domain) {
+      this.domainChangeSubject.next(this._domain);
+    }
+
     if (tabId) {
       this._tabId = Number(tabId);
       this.domainChangeSubject.next(this._domain);

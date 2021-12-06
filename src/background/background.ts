@@ -154,8 +154,6 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 async function initStorage(domain?: ohMyDomain): Promise<void> {
   let store = await StorageUtils.get<IOhMyMock>();
 
-  console.log('Store: ', store);
-
   if (store) {
     if (MigrateUtils.shouldMigrate(store)) {
       store = MigrateUtils.migrate(store);
@@ -168,7 +166,9 @@ async function initStorage(domain?: ohMyDomain): Promise<void> {
           const actions = [];
           chrome.storage.local.get(null, function (data) {
             for (const d of Object.values(data)) {
-              actions.push(new Promise<unknown>(r => queue.addPacket(d.type, MigrateUtils.migrate(d), r)));
+              actions.push(new Promise<unknown>(r => queue.addPacket(d.type, {
+                payload: { data: MigrateUtils.migrate(d) }
+              }, r)));
             }
           });
 
@@ -186,7 +186,7 @@ async function initStorage(domain?: ohMyDomain): Promise<void> {
   }
 
   await queue.addPacket(payloadType.STORE, { payload: { data: store } });
-  state && await queue.addPacket(payloadType.STATE, state);
+  state && await queue.addPacket(payloadType.STATE, { payload: state });
 }
 
 setTimeout(() => {

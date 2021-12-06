@@ -31,8 +31,9 @@ export class OhMyRemoveHandler {
 
       return await new Promise<IState>(r =>
         OhMyRemoveHandler.queue.addPacket(payloadType.STATE,
-          state, s => r(s as IState)));
+          { payload: state }, s => r(s as IState)));
     } else {
+      // eslint-disable-next-line no-console
       console.log(`Cannot remove type ${data.type} (not implemented)`)
       return null;
     }
