@@ -45,7 +45,7 @@ export class OhMyState {
   async updateStore(store: Partial<IOhMyMock>): Promise<IOhMyMock> {
     const retVal = { ...await this.getStore(), ...store };
 
-    await OhMySendToBg.full(retVal, payloadType.STORE);
+    await OhMySendToBg.full(retVal, payloadType.STORE, undefined, 'popup;updateStore');
     // await this.storageService.setStore(retVal);
 
     return retVal;
@@ -58,7 +58,7 @@ export class OhMyState {
       ...state
     };
 
-    await OhMySendToBg.full(retVal, payloadType.STATE);
+    await OhMySendToBg.full(retVal, payloadType.STATE, undefined, 'popup;upsertState');
     // await this.storageService.set(retVal.domain, retVal);
 
     return retVal;
@@ -78,7 +78,7 @@ export class OhMyState {
       d.selected[id] = d.selected[currPreset]; // Update by reference
     });
 
-    await OhMySendToBg.full(state, payloadType.STATE);
+    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;newPreset');
     // await this.storageService.set(state.domain, state);
 
     return state;
@@ -106,7 +106,7 @@ export class OhMyState {
     const retVal = await OhMySendToBg.full<IOhMyResponseUpdate, IMock>({
       request,
       response
-    }, payloadType.RESPONSE, context);
+    }, payloadType.RESPONSE, context, 'popup;upsertResponse');
 
     // let state = await this.getState(context);
     // const retVal = response.id ? { ...await this.storageService.get<IMock>(response.id), ...response } :
@@ -157,7 +157,7 @@ export class OhMyState {
     }
 
     state = StateUtils.setRequest(state, retVal);
-    await OhMySendToBg.full(state, payloadType.STATE);
+    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;upsertRequest');
     // await this.storageService.set(state.domain, state);
 
     return state;
@@ -180,7 +180,7 @@ export class OhMyState {
       response.id = newId;
       request.mocks[newId] = { ...shallow, id: newId };
 
-      await OhMySendToBg.full(response, payloadType.RESPONSE);
+      await OhMySendToBg.full(response, payloadType.RESPONSE, undefined, 'popup;cloneRequest');
       // await this.storageService.set(newId, response);
     }
 
@@ -197,11 +197,11 @@ export class OhMyState {
 
     for (const resp of Object.values(request.mocks)) {
       // await this.storageService.remove(resp.id);
-      await OhMySendToBg.full(resp, payloadType.REMOVE);
+      await OhMySendToBg.full(resp, payloadType.REMOVE, undefined, 'popup;deleteRequest');
     }
 
     delete state.data[request.id];
-    await OhMySendToBg.full(state, payloadType.STATE);
+    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;deleteRequest');
     // await this.storageService.set(state.domain, state);
 
     return state;
@@ -231,16 +231,16 @@ export class OhMyState {
     const state = await OhMySendToBg.full<IOhMyResponseUpdate, IState>({
       response: { id: responseId },
       request: { id: requestId }
-    }, payloadType.RESPONSE, context);
+    }, payloadType.RESPONSE, context, 'popup;deleteResponse');
 
     return state;
   }
 
   async reset(context?: IOhMyContext): Promise<void> {
     if (context) {
-      OhMySendToBg.full({ type: objectTypes.STATE, domain: context.domain}, payloadType.REMOVE, context);
+      OhMySendToBg.full({ type: objectTypes.STATE, domain: context.domain }, payloadType.REMOVE, context, 'popup;reset');
     } else {
-      OhMySendToBg.full(undefined, payloadType.RESET, context);
+      OhMySendToBg.full(undefined, payloadType.RESET, context, 'popup;reset;everything');
     }
   }
 
@@ -249,7 +249,7 @@ export class OhMyState {
     state.aux = { ...state.aux };
 
     for (const item of Object.entries(aux)) {
-      state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE);
+      state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE, undefined, 'popup;updateAux');
     }
 
     // (state, payloadType.STATE);

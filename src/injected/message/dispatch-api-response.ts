@@ -6,6 +6,7 @@ export function dispatchApiResponse(payload: IOhMyResponseUpdate) {
   send({
     context: { domain: window.location.host },
     type: payloadType.RESPONSE,
-    data: { ...payload }
+    data: { ...payload },
+    description: 'injected; dispatchApiResponse'
   });
 }

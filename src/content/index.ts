@@ -26,7 +26,7 @@ contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
   }
 
   if (isInjectedInjected) {
-    sendMsgToInjected({ type: payloadType.STATE, data: state },);
+    sendMsgToInjected({ type: payloadType.STATE, data: state, description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
   } else if (state?.aux.popupActive) {
     inject(state);
   }
@@ -75,7 +75,7 @@ function sendMsgToInjected(payload: IPacketPayload) {
 
 function sendKnockKnock() {
   sendMsgToPopup(OhMyContentState.tabId, OhMyContentState.host, appSources.CONTENT,
-    { type: payloadType.KNOCKKNOCK });
+    { type: payloadType.KNOCKKNOCK, description: 'content;sendKnockKnock' });
 }
 
 function handlePacketFromInjected(packet: IPacket) {
@@ -139,7 +139,11 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyResponseUpdat
 async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
   const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, contentState);
 
-  sendMsgToInjected({ type: payloadType.RESPONSE, data: output, context: payload.context },);
+  sendMsgToInjected({
+    type: payloadType.RESPONSE,
+    data: output,
+    context: payload.context, description: 'content;receivedApiRequest'
+  });
 }
 
 // streamByType$(packetTypes.STATE, appSources.POPUP).subscribe(handlePacketFromPopup);

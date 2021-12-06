@@ -44,15 +44,18 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
 });
 
 chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
-  console.log('Received update', packet);
   if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
     [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
+
+    // eslint-disable-next-line no-console
+    console.log('Received update', packet);
     if (queue.hasHandler(packet.payload.type)) {
       queue.addPacket(packet.payload.type, packet, (result) => {
         callback(result);
         // return true;
       });
     } else {
+      // eslint-disable-next-line no-console
       console.warn('No handler for ' + packet.payload.type);
     }
   }

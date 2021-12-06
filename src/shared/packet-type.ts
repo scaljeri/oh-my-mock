@@ -20,6 +20,7 @@ export interface IPacketPayload<T = unknown> {
   type: payloadType;
   context?: IOhMyPacketContext;
   data?: T;
+  description: string;
 }
 
 export interface IOhMyResponseUpdate {

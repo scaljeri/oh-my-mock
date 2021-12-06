@@ -79,12 +79,12 @@ export class OhMyStateService {
   }
 
   public async initState(domain): Promise<IState> {
-    let state = await this.storageService.get<IState>(domain);
+    const state = await this.storageService.get<IState>(domain) || StateUtils.init({ domain });
 
-    if (!state) { // new state
-      state = StateUtils.init({ domain });
-      state = await OhMySendToBg.full(state, payloadType.STATE);
-    }
+    // if (!state) { // new state
+    //   state = StateUtils.init({ domain });
+    //   state = await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;initState');
+    // }
 
     const demoState = await this.storageService.get<IState>(DEMO_TEST_DOMAIN);
     if (!demoState) {

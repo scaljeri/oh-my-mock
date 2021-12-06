@@ -14,6 +14,7 @@ export function errorHandler(queue: OhMyQueue, ...errors: unknown[]): void {
 
   sendMsgToPopup(packet?.tabId, packet?.payload?.context?.domain, appSources.BACKGROUND, {
     type: payloadType.ERROR,
-    data: { packet, errors }
+    data: { packet, errors },
+    description: 'background;errorHandler'
   });
 }

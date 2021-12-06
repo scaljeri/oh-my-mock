@@ -23,7 +23,8 @@ export class OhMySendToBg {
   static full<T = unknown, U = T>(
     data: T,
     type: payloadType,
-    context?: Partial<IOhMyPacketContext>
+    context?: Partial<IOhMyPacketContext>,
+    description?: string
   ): Promise<U> {
     return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
@@ -31,7 +32,8 @@ export class OhMySendToBg {
       payload: {
         context: { domain: OhMySendToBg.domain, ...context },
         type,
-        data
+        data,
+        description
       }
     });
   }
@@ -41,7 +43,8 @@ export class OhMySendToBg {
     path: string,
     propName: string,
     type: payloadType,
-    context?: Partial<IOhMyPacketContext>
+    context?: Partial<IOhMyPacketContext>,
+    description?: string
   ): Promise<U> {
     return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
@@ -49,17 +52,19 @@ export class OhMySendToBg {
       payload: {
         context: { domain: OhMySendToBg.domain, ...context, path, propertyName: propName },
         type,
-        data
+        data,
+        description
       } as any
     });
   }
 
-  static reset(key: string): Promise<string> {
+  static reset(key: string, description?: string): Promise<string> {
     return OhMySendToBg.send({
       source: OhMySendToBg.source,
       payload: {
         type: payloadType.RESET,
-        data: key
+        data: key,
+        description
       }
     });
   }
