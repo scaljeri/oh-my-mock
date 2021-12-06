@@ -13,15 +13,18 @@ import { Router } from '@angular/router';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
-import {  Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { initializeApp } from './app.initialize';
+import { ContentService } from './services/content.service';
+import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
+import { IPacketPayload } from '@shared/packet-type';
 
 const VERSION = '__OH_MY_VERSION__';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   enabled = false;
@@ -38,39 +41,44 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version: string;
   showDisabled = -1;
   stateSub: Subscription;
+  isUpAndRunning = false;
+  errors: IPacketPayload[] = [];
 
   @ViewChild(MatDrawer) drawer: MatDrawer;
-
-  // private dialogRef: MatDialogRef<DisabledEnabledComponent, boolean>;
 
   constructor(
     private appState: AppStateService,
     private storeService: OhMyState,
     private stateService: OhMyStateService,
+    private contentService: ContentService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog) {
+      // eslint-disable-next-line no-console
+      console.log('verions ' + VERSION);
   }
 
   async ngAfterViewInit(): Promise<void> {
     await initializeApp(this.appState, this.stateService);
+    // await this.contentService.activate();
 
-    this.stateService.state$.subscribe((state: IState) => {
+    this.stateSub = this.stateService.state$.subscribe((state: IState) => {
       if (!state) {
         return this.isInitializing = true;
       }
 
-      if (state.domain !== this.domain) { // Domain switch
+      // Move to somewhere else
+      if (state.domain !== this.domain && this.domain) { // Domain switch
+        state.aux.popupActive = true;
+        // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
+        // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
+
         this.router.navigate(['/']).then(() => {
           this.cdr.detectChanges();
         });
       }
 
       this.context = state.context;
-
-      if (!state.aux.popupActive) {
-        this.popupActiveToggle(); // -> Popup is active
-      }
       this.domain = state.context.domain;
       this.version = state.version;
 
@@ -84,6 +92,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
       this.cdr.detectChanges();
     });
+
+    this.appState.errors$.subscribe(error => {
+      this.errors.push(error);
+      this.cdr.detectChanges();
+    });
+
   }
 
   onEnableChange(isChecked: boolean): void {
@@ -94,8 +108,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   @HostListener('window:beforeunload')
-  ngOnDestroy(): void {
-    this.popupActiveToggle(false);
+  ngOnDestroy() {
+    this.stateSub?.unsubscribe();
+    this.contentService.deactivate();
   }
 
   notifyDisabled(): void {
@@ -103,7 +118,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   popupActiveToggle(isActive = true) {
-    this.storeService.updateAux({ popupActive: isActive }, this.context);
+    return this.storeService.updateAux({ popupActive: isActive }, this.context);
   }
 
   @HostListener('window:keyup.backspace')
@@ -122,5 +137,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:keydown.enter')
   onEnable(): void {
     this.onEnableChange(true);
+  }
+
+  onErrors(): void {
+    const dialogRef = this.dialog.open(ShowErrorsComponent, {
+      width: '90%',
+      height: '90%',
+      data: this.errors
+    });
+
+    dialogRef.afterClosed().subscribe(async () => {
+      this.errors = null;
+    });
   }
 }

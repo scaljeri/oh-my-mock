@@ -6,6 +6,7 @@ const isBeta = !!version.match(/beta/);
 
 replaceToken('./dist/oh-my-mock.js', 'SHOW_DEBUG', String(isBeta));
 replaceToken('./dist/content.js', 'SHOW_DEBUG', String(isBeta));
+replaceToken('./dist/background.js', 'VERSION', version);
 replaceToken('./dist/content.js', 'VERSION', version);
 replaceToken('./dist/oh-my-mock/main.js', 'VERSION', version);
 replaceTokenWithFileContent('INJECTED_CODE', './dist/content.js', './dist/oh-my-mock.js');

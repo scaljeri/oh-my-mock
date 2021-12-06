@@ -46,6 +46,7 @@ export class OhMyContentState {
 
   set(key, value): Promise<void> {
     this.cache[key] = value;
+
     return StorageUtils.set(key, value);
   }
 
@@ -61,5 +62,9 @@ export class OhMyContentState {
 
   persist(data = {}): void {
     window.name = JSON.stringify({ tabId: OhMyContentState.tabId, ...data });
+  }
+
+  get tabId(): number {
+    return OhMyContentState.tabId;
   }
 }

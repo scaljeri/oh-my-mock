@@ -15,7 +15,7 @@ const ORIG_FETCH = window.fetch;
 interface IOhFetchConfig {
   method?: requestMethod;
   __ohSkip?: boolean; // Use Fetch without caching or mocking
-  headers?: Headers;
+  headers?: Headers & { entries: () => [string, string][]}; // TODO: entries is not known in Headers
 }
 
 declare let window: { fetch: any };
@@ -71,12 +71,12 @@ function fecthApi(url, config): Promise<unknown> {
 
       const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
       await dispatchApiResponse({
-        data: {
+        request: {
           url,
           method: config.method || 'GET',
           requestType: 'FETCH',
         },
-        mock: {
+        response: {
           statusCode: response.status,
           response: await (isBinary(headers['content-type']) ? toDataURL(await clone.blob()) : clone.text()),
           headers

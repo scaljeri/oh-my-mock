@@ -1,34 +1,26 @@
-import { IOhMyAPIResponse } from "../shared/type";
-import { DataUtils } from "../shared/utils/data";
+import { payloadType } from "../shared/constants";
+import { IOhMyResponseUpdate, IPacketPayload } from "../shared/packet-type";
 import { MockUtils } from "../shared/utils/mock";
+import { OhMySendToBg } from "../shared/utils/send-to-background";
 import { StateUtils } from "../shared/utils/state";
 import { OhMyContentState } from "./content-state";
 
-export async function handleApiResponse(payload: IOhMyAPIResponse, contentState: OhMyContentState): Promise<void> {
-  let state = await contentState.getState()
-  let data = StateUtils.findRequest(state, { ...payload.data });
-  let autoActivate = state.aux.newAutoActivate;
+export async function handleApiResponse(payload: IPacketPayload<IOhMyResponseUpdate>, contentState: OhMyContentState): Promise<void> {
+  const state = await contentState.getState()
+  const data = StateUtils.findRequest(state, { ...payload.data.request });
 
   if (data) {
-    // This can only happen when the request is inactive. In which case, the response
-    // is only added if the combination statusCode/label does not exist yet
+    //   // This can only happen when the request is inactive. In which case, the response
+    //   // is only added if the combination statusCode/label does not exist yet
 
-    autoActivate = false;
-    const response = MockUtils.find(data.mocks, { statusCode: payload.mock.statusCode, label: '' });
+    const sResponse = MockUtils.find(data.mocks, { statusCode: payload.data.response.statusCode, label: '' });
 
-    if (response && !response.label) {
+    if (sResponse) {
       return;
     }
-  } else {
-    data = DataUtils.init(payload.data);
   }
 
-  const response = MockUtils.init(payload.mock);
-  data = DataUtils.addResponse(state.context, data, response, autoActivate);
+  payload.data.response.label = '';
 
-  state = StateUtils.setRequest(state, data);
-
-  await contentState.set(response.id, response);
-  await contentState.set(state.domain, state);
-  state = await contentState.getState()
+  OhMySendToBg.full(payload.data, payloadType.RESPONSE, { domain: OhMyContentState.host });
 }

@@ -7,6 +7,7 @@ import { requestSteps } from './migrations/request';
 import { objectTypes } from '../constants';
 
 const IS_BETA_RE = /beta/;
+const DEV_VERSION = '__OH' + '_MY_VERSION__';
 
 export class MigrateUtils {
   static storeSteps = storeSteps;
@@ -17,11 +18,16 @@ export class MigrateUtils {
   static version = '__OH_MY_VERSION__';
 
   static shouldMigrate(obj: { version?: string }): boolean {
-    return obj && obj.version !== MigrateUtils.version;
+    return obj && obj.version !== MigrateUtils.version && MigrateUtils.version !== '__OH' + '_MY_VERSION__';
   }
 
-  static migrate(data: IOhMyMock | IState | IMock | IData): IOhMyMock | IState | IMock | IData | unknown {
+  static migrate<T extends { version: string }>(data: T): T | undefined {
     const version = data.version || '0.0.0';
+
+    if (MigrateUtils.version === DEV_VERSION || version === DEV_VERSION) {
+      data.version = MigrateUtils.version;
+      return data;
+    }
 
     if (MigrateUtils.isDevelopVersion(version)) { // ignore
       if (compareVersions(version, MigrateUtils.version) === -1) {

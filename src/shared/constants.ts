@@ -35,6 +35,7 @@ export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
 export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'];
 export const IS_BASE64_RE = /data:.*base64,/;
+export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new?assignees=&labels=&template=feature-or-bug.md&title=';
 
 export enum objectTypes {
   REQUEST = 'REQUEST',
@@ -42,19 +43,31 @@ export enum objectTypes {
   STATE = 'STATE',
   STORE = 'STORE'
 }
-export enum packetTypes {
+
+export enum packetType {
+  FULL = 'full',
+  PATCH = 'patch'
+}
+
+export enum payloadType {
+  STORE = 'store',
   ACTIVE = 'active',
-  MOCK = 'mock',
+  RESPONSE = 'response',
+  REQUEST = 'request',
+  NEW_RESPONSE = 'new-response',
   STATE = 'state',
   KNOCKKNOCK = 'knockknock',
   HIT = 'hit',
-  EVAL = 'execute',
-  EVAL_RESULT = 'eval-result',
+  // EVAL = 'execute',
+  // EVAL_RESULT = 'eval-result',
   DATA = 'data',
-  DATA_DISPATCH = 'data-dispatch',
+  // DATA_DISPATCH = 'data-dispatch',
   DISPATCH_API_REQUEST = 'dispatch-request',
   DISPATCH_API_RESPONSE = 'api-response',
-  MOCK_RESPONSE = 'mock-response'
+  // MOCK_RESPONSE = 'mock-response'
+  RESET = 'reset',
+  REMOVE = 'remove',
+  ERROR = 'error'
 }
 export enum appSources {
   INJECTED = 'injected',

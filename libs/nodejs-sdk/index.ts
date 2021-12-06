@@ -2,7 +2,7 @@ import express from 'express';
 import { Server, Socket } from 'socket.io';
 import * as http from 'http';
 import { IOhServerConfig, OhMyServer } from './oh-my-server';
-import { IPacketPayload } from '../../src/shared/type';
+import { IPacketPayload } from '../../src/shared/packet-type';
 
 export * from '../../src/shared/type';
 

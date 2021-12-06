@@ -12,6 +12,8 @@ import { IOhMyContext, ResetStateOptions } from '@shared/type';
 import { OhMyState } from 'src/app/services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
+import { StorageService } from 'src/app/services/storage.service';
+import { OhMyStateService } from 'src/app/services/state.service';
 
 @Component({
   selector: 'app-nav-list',
@@ -22,10 +24,10 @@ export class NavListComponent {
   @Input() context: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
 
-  // @Dispatch() stateReset = (domain?: string) => new ResetState(domain, { domain: this.appStateService.domain});
-
   constructor(
     private storeService: OhMyState,
+    private stateService: OhMyStateService,
+    private storageService: StorageService,
     private router: Router,
     public dialog: MatDialog,
   ) { }
@@ -52,10 +54,9 @@ export class NavListComponent {
           return;
         }
 
+        // Now we need to tell the content script that the popup (thats us) is still active!!
+        await this.storeService.updateAux({ popupActive: true}, this.context);
         this.router.navigate(['/'])
-        .then(() => {
-          window.location.reload();
-        });
       });
 
     this.navigate.emit();

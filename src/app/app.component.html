@@ -1,30 +1,52 @@
-<mat-drawer-container [ngClass]="{'is-blurred': showDisabled || isInitializing}" class="example-container" [hasBackdrop]="drawerBackdrop">
+<mat-drawer-container
+  [ngClass]="{ 'is-blurred': showDisabled || isInitializing }"
+  class="example-container"
+  [hasBackdrop]="drawerBackdrop"
+>
   <mat-drawer [mode]="drawerMode">
-    <app-nav-list [context]="context" (navigate)="drawer.close()"></app-nav-list>
+    <app-nav-list
+      [context]="context"
+      (navigate)="drawer.close()"
+    ></app-nav-list>
   </mat-drawer>
 
   <mat-drawer-content>
     <mat-toolbar>
       <app-header-button (menu)="drawer.toggle()"></app-header-button>
-      <a routerLink="cloud-sync" [routerLinkActive]="'is-syncing'" class="cloud-sync" mat-icon-button
-        aria-label="Cloud sync">
+      <a
+        routerLink="cloud-sync"
+        [routerLinkActive]="'is-syncing'"
+        class="cloud-sync"
+        mat-icon-button
+        aria-label="Cloud sync"
+      >
         <oh-my-cloud-sync-svg></oh-my-cloud-sync-svg>
       </a>
 
+      <button *ngIf="errors.length" (click)="onErrors()" mat-icon-button color="warn"><mat-icon>error</mat-icon></button>
+
       <h1>
-        <span>Oh My Mock v{{version}}</span> <span class="dash">-</span> <span>{{domain}}</span>
+        <span>Oh My Mock v{{ version }}</span> <span class="dash">-</span>
+        <span>{{ domain }}</span>
       </h1>
-      <mat-slide-toggle (change)="onEnableChange($event.checked)" [checked]="enabled" [color]="color"></mat-slide-toggle>
+      <mat-slide-toggle
+        (change)="onEnableChange($event.checked)"
+        [checked]="enabled"
+        [color]="color"
+      ></mat-slide-toggle>
     </mat-toolbar>
 
     <section *ngIf="!isInitializing">
       <router-outlet></router-outlet>
     </section>
   </mat-drawer-content>
-
 </mat-drawer-container>
 
+<oh-my-feedback></oh-my-feedback>
 <oh-my-spinner *ngIf="!context" mode="dark"></oh-my-spinner>
 
 <!-- <oh-my-disabled-enabled *ngIf="showDisabled"></oh-my-disabled-enabled> -->
-<oh-my-disabled-enabled  *ngIf="showDisabled === 1" (change)="onEnableChange($event)"></oh-my-disabled-enabled>
+<oh-my-disabled-enabled
+  *ngIf="showDisabled === 1"
+  (change)="onEnableChange($event)"
+></oh-my-disabled-enabled>

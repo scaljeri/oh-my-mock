@@ -1,6 +1,7 @@
 /// <reference types="chrome"/>
 
 import { Inject, Injectable } from '@angular/core';
+import { IPacketPayload } from '@shared/packet-type';
 import { IData, ohMyDomain } from '@shared/type';
 import { BehaviorSubject, shareReplay, Subject } from 'rxjs';
 import { APP_VERSION } from '../tokens';
@@ -16,6 +17,9 @@ export interface IPage {
 export class AppStateService {
   private _domain: string;
   private _tabId: number;
+
+  private errorSubject = new Subject<IPacketPayload>();
+  public errors$ = this.errorSubject.asObservable().pipe(shareReplay());
 
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
@@ -61,5 +65,9 @@ export class AppStateService {
 
   hit(data: IData): void {
     this.hitSubject.next(data);
+  }
+
+  addError(data: IPacketPayload): void {
+    this.errorSubject.next(data);
   }
 }

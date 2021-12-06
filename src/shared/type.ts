@@ -1,4 +1,4 @@
-import { appSources, MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, packetTypes, resetStateOptions, STORAGE_KEY } from './constants';
+import { MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, resetStateOptions, STORAGE_KEY } from './constants';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';
@@ -65,7 +65,7 @@ export interface IData extends IOhMyMockContext {
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
   lastHit: number;
-  version?: string;
+  version: string;
   type: objectTypes.REQUEST;
 }
 
@@ -118,34 +118,34 @@ export interface IUpsertMock extends IOhMyUpsertData {
   makeActive?: boolean;
 }
 
-export interface IPacket<T = any> {
-  tabId?: number;
-  domain?: string;
-  source: appSources;
-  payload: IPacketPayload<T>;
-}
+// export interface IPacket<T = any> {
+//   tabId?: number;
+//   domain?: string;
+//   source: appSources;
+//   payload: IPacketPayload<T>;
+// }
 
-export interface IPacketPayload<T = unknown> {
-  type: packetTypes;
-  context?: IOhMyMockContext;
-  data?: T;
-}
+// export interface IPacketPayload<T = unknown> {
+//   type: packetTypes;
+//   context?: IOhMyMockContext;
+//   data?: T;
+// }
 
-export interface IMockedTmpResponse {
-  [STORAGE_KEY]: {
-    sourceUrl: string;
-    mockUrl: string;
-    start: number;
-  };
-}
+// export interface IMockedTmpResponse {
+//   [STORAGE_KEY]: {
+//     sourceUrl: string;
+//     mockUrl: string;
+//     start: number;
+//   };
+// }
 
 export type ResetStateOptions = resetStateOptions;
 
-export interface IOhMyViewItemsOrder {
-  name: string;
-  id: string;
-  to: number;
-}
+// export interface IOhMyViewItemsOrder {
+//   name: string;
+//   id: string;
+//   to: number;
+// }
 
 // export interface IOhMyEvalContext {
 //   data: IData;
@@ -167,11 +167,6 @@ export interface IOhMyMockResponse {
   headers?: Record<string, string>;
   response?: unknown;
   delay?: number;
-}
-
-export interface IOhMyAPIResponse {
-  data: Partial<IData>;
-  mock: Partial<IMock>;
 }
 
 export interface IDispatchApiResponsePacket {
