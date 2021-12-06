@@ -122,9 +122,10 @@ chrome.browserAction.onClicked.addListener(function (tab) {
       `oh-my-mock-${tab.id}`,
       'menubar=0,innerWidth=900,innerHeight=800'
     );
+    // chrome.windows.create({url: `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`, height: 800, width: 900, type: 'popup'});
 
     // TODO:
-    const popupIsActive = false;
+    // const popupIsActive = false;
     // popup.onunload = function () {
     //   if (popupIsActive) { // Initially the window loads (and unloads) with a blanl page
     //     chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: tab.id });
