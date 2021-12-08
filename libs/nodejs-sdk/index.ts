@@ -27,19 +27,21 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
     // eslint-disable-next-line no-console
     console.log("Client connected", socket.handshake.query.source);
 
-    socket.on("data", async function (payload: IPacketPayload<any>) {
+    socket.on("data", async function (payload: IPacketPayload) {
       // eslint-disable-next-line no-console
-      if (payload.data) {
-        // eslint-disable-next-line no-console
-        console.log(`Received request: ${payload.data.data.url} - ${payload.data.data.type} `);
-        const data = payload.data.data;
+      console.log('RECEIVED DARTA', payload);
+      // eslint-disable-next-line no-console
+      // if (payload.data) {
+      //   // eslint-disable-next-line no-console
+      //   console.log(`Received request: ${payload.data.data.url} - ${payload.data.data.type} `);
+      //   const data = payload.data.data;
 
-        const mock = await myServer.local.updateMock(data, payload.data.request);
+      //   const mock = await myServer.local.updateMock(data, payload.data.request);
 
-        if (payload?.context?.id) {
-          socket.emit(payload.context.id, mock);
-        }
-      }
+      //   if (payload?.context?.id) {
+      //     socket.emit(payload.context.id, mock);
+      //   }
+      // }
     });
   });
 

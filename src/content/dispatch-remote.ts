@@ -6,7 +6,7 @@ let isConnected = false;
 
 const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transports: ['websocket'] });
 
-  export const connectWithLocalServer = (): void => {
+export const connectWithLocalServer = (): void => {
 
   socket.io.on("error", (error) => {
     // eslint-disable-next-line no-console
@@ -33,11 +33,10 @@ const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transp
   });
 }
 
-export const dispatchRemote = async (payload: IPacketPayload<any>): Promise<IMock> => {
+export const dispatchRemote = async (payload: IPacketPayload<any>): Promise<IMock | undefined> => {
   //   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
 
   if (isConnected) {
-
     return new Promise<IMock>(resolve => {
       socket.on(payload.context.id, (result: IMock) => {
         socket.off(payload.context.id);
@@ -48,7 +47,7 @@ export const dispatchRemote = async (payload: IPacketPayload<any>): Promise<IMoc
       socket.emit('data', payload);
     });
   } else {
-    return null;
+    return undefined;
   }
 }
 

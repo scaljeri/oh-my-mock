@@ -1,8 +1,8 @@
 /// <reference types="chrome"/>
 import { appSources, payloadType } from '../shared/constants';
 import { IOhMyAPIRequest, IState } from '../shared/type';
-import { IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
-import { emitPacket, streamByType$ } from '../shared/utils/message-bus';
+import { IOhMessage, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
+import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
 import { handleApiRequest } from './handle-api-request';
@@ -10,6 +10,14 @@ import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
+import { connectWithLocalServer, dispatchRemote } from './dispatch-remote';
+import { triggerWindow } from '../shared/utils/trigger-msg-window';
+import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
+
+// Setup the message bus with the a trigger
+const messageBus = new OhMyMessageBus()
+  .setTrigger(triggerWindow)
+  .setTrigger(triggerRuntime)
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
@@ -39,11 +47,11 @@ contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
 
 
 // Handle messages from Popup / Background script
-chrome.runtime.onMessage.addListener((packet, sender) => {
-  emitPacket(packet);
+// chrome.runtime.onMessage.addListener((packet, sender) => {
+//   emitPacket(packet);
 
-  return true;
-});
+//   return true;
+// });
 
 // function startUpdates() {
 //   if (updateSubscription) {
@@ -95,7 +103,7 @@ function handlePacketFromBg(packet: IPacket): void {
   //   } as IPacketPayload);
 }
 
-async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> {
+async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
   if (!packet.tabId) {
     return;
   }
@@ -122,12 +130,13 @@ async function handlePopup(packet: IPacket<{ active: boolean }>): Promise<void> 
 // streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
-streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
+messageBus.streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
 
-streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
-streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
+messageBus.streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
+messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
-async function handleInjectedApiResponse({ payload }: IPacket<IOhMyResponseUpdate>) {
+async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpdate>) {
+  const { payload } = packet;
   // queue.addPacket(objectTypes.MOCK, payload.data);
   // payload.context = { ...payload.context, domain: OhMyContentState.host }
   // debugger;
@@ -136,7 +145,12 @@ async function handleInjectedApiResponse({ payload }: IPacket<IOhMyResponseUpdat
   // TODO: send result back to injected???
 }
 
-async function receivedApiRequest({ payload }: IPacket<IOhMyAPIRequest>) {
+async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
+  const { payload } = packet;
+  const state = await contentState.getState();
+  payload.context = { ...state.context, ...payload.context };
+
+  // const output = await dispatchRemote(payload) ??
   const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, contentState);
 
   sendMsgToInjected({
@@ -200,3 +214,5 @@ function inject(state: IState) {
 // send({x: 40}, OhMyContentState.tabId).then(x => {
 //   debugger;
 // })
+
+connectWithLocalServer();

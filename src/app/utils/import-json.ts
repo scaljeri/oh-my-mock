@@ -1,4 +1,4 @@
-import { IData, IMock, IOhMyBackup, IOhMyContext, IOhMyMock, IState } from '@shared/type';
+import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '@shared/type';
 import { DataUtils } from '@shared/utils/data';
 import { MigrateUtils } from '@shared/utils/migrate';
 import { StateUtils } from '@shared/utils/state';

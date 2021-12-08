@@ -1,14 +1,13 @@
 import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
 import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain, IOhMyBackup } from '@shared/type';
-import { DEMO_TEST_DOMAIN, objectTypes, payloadType, STORAGE_KEY } from '@shared/constants';
+import { DEMO_TEST_DOMAIN, objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
 import { StorageService } from './storage.service';
 import { AppStateService } from './app-state.service';
 import { importJSON } from '../utils/import-json';
-import { OhMySendToBg } from '@shared/utils/send-to-background';
 import jsonFromFile from '../../assets/dummy-data.json';
 /*
   This service receives updates from chrome.storage. This can happen when the
@@ -87,7 +86,7 @@ export class OhMyStateService {
     // }
 
     const demoState = await this.storageService.get<IState>(DEMO_TEST_DOMAIN);
-    if (!demoState) {
+    if (!demoState || Object.keys(demoState.data).length === 0) {
       await importJSON(DEMO_JSON, { domain: DEMO_TEST_DOMAIN }, { activate: true });
     }
 

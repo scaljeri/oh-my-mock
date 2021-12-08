@@ -2,6 +2,12 @@
 import { appSources, payloadType } from './constants';
 import { IData, IMock, IOhMyContext, ohMyDomain, requestType } from './type';
 
+export type ohMessage = <T = unknown>(message: IOhMessage) => void;
+export interface IOhMessage<T = unknown> {
+  packet: IPacket<T>;
+  sender: unknown;
+  callback: (data: unknown) => void;
+}
 export interface IPacket<T = unknown> {
   tabId?: number;
   source: appSources;

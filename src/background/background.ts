@@ -4,7 +4,7 @@ import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyMock, IOhMyPopupActive, IState, ohMyDomain } from '../shared/type';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
-import { IPacket, IPacketPayload } from '../shared/packet-type';
+import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
 import { OhMyStateHandler } from './state-handler';
 import { OhMyResponseHandler } from './response-handler';
 import { OhMyStoreHandler } from './store-handler';
@@ -13,6 +13,8 @@ import { StoreUtils } from '../shared/utils/store'
 import { StateUtils } from '../shared/utils/state';
 import { OhMyRemoveHandler } from './remove-handler';
 import { errorHandler } from './error-handler';
+import { OhMyMessageBus } from '../shared/utils/message-bus';
+import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -43,25 +45,42 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
   initStorage(payload.context?.domain);
 });
 
-chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
-  if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
-    [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
 
-    // eslint-disable-next-line no-console
-    console.log('Received update', packet);
-    if (queue.hasHandler(packet.payload.type)) {
-      queue.addPacket(packet.payload.type, packet, (result) => {
-        callback(result);
-        // return true;
-      });
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn('No handler for ' + packet.payload.type);
-    }
-  }
+// streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
 
-  return true;
+const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
+
+const stream$ = messageBus.streamByType$([payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
+  [appSources.CONTENT, appSources.POPUP])
+
+stream$.subscribe(({ packet, callback }: IOhMessage) => {
+  // eslint-disable-next-line no-console
+  console.log('Received update', packet);
+  queue.addPacket(packet.payload.type, packet, (result) => {
+    callback(result);
+    // return true;
+  });
 });
+
+// chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
+//   if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
+//     [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
+
+//     // eslint-disable-next-line no-console
+//     console.log('Received update', packet);
+//     if (queue.hasHandler(packet.payload.type)) {
+//       queue.addPacket(packet.payload.type, packet, (result) => {
+//         callback(result);
+//         // return true;
+//       });
+//     } else {
+//       // eslint-disable-next-line no-console
+//       console.warn('No handler for ' + packet.payload.type);
+//     }
+//   }
+
+//   return true;
+// });
 
 
 // connectWithLocalServer();
