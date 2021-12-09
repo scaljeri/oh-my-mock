@@ -7,15 +7,15 @@ import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operat
 import { StateUtils } from '@shared/utils/state';
 import { StorageService } from './storage.service';
 import { AppStateService } from './app-state.service';
-import { importJSON } from '../utils/import-json';
-import jsonFromFile from '../../assets/dummy-data.json';
+import { importJSON } from '../../shared/utils/import-json';
+// import jsonFromFile from '../../assets/dummy-data.json';
 /*
   This service receives updates from chrome.storage. This can happen when the
   content script modifies the state or there are multiple popups for different
   domains active
 */
 
-const DEMO_JSON = jsonFromFile as any as IOhMyBackup;
+// const DEMO_JSON = jsonFromFile as any as IOhMyBackup;
 
 @Injectable({
   providedIn: 'root'
@@ -85,10 +85,10 @@ export class OhMyStateService {
     //   state = await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;initState');
     // }
 
-    const demoState = await this.storageService.get<IState>(DEMO_TEST_DOMAIN);
-    if (!demoState || Object.keys(demoState.data).length === 0) {
-      await importJSON(DEMO_JSON, { domain: DEMO_TEST_DOMAIN }, { activate: true });
-    }
+    // const demoState = await this.storageService.get<IState>(DEMO_TEST_DOMAIN);
+    // if (!demoState || Object.keys(demoState.data).length === 0) {
+    //   await importJSON(DEMO_JSON, { domain: DEMO_TEST_DOMAIN }, { activate: true });
+    // }
 
     return state;
   }

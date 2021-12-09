@@ -1,8 +1,8 @@
-import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '@shared/type';
-import { DataUtils } from '@shared/utils/data';
-import { MigrateUtils } from '@shared/utils/migrate';
-import { StateUtils } from '@shared/utils/state';
-import { StorageUtils } from '@shared/utils/storage';
+import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '../type';
+import { DataUtils } from './data';
+import { MigrateUtils } from './migrate';
+import { StateUtils } from './state';
+import { StorageUtils } from './storage';
 
 export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR

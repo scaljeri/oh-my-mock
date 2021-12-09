@@ -29,9 +29,9 @@ export class StorageUtils {
   }
 
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY): Promise<T> {
-    if (!key) {
-      return Promise.resolve(undefined);
-    }
+    // if (!key) {
+    //   return Promise.resolve(undefined);
+    // }
 
     return new Promise<T>((resolve) => {
       StorageUtils.chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
@@ -43,7 +43,7 @@ export class StorageUtils {
         // }
         // }
 
-        resolve(data[key] as T);
+        resolve((key === null ? data : data[key]) as T);
       });
     });
   }

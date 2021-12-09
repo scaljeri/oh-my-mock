@@ -31,7 +31,7 @@ export class OhMyQueue {
   }
 
   removeFirstPacket(type: ohPacketType): void {
-    this.queue[type].shift();
+    this.queue[type]?.shift();
   }
 
   resetHandler(packetType: ohPacketType): void {
