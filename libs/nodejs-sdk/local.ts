@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { IData, IMock, IOhMyMockContext, statusCode } from '../../src/shared/type';
+import { ohMyMockStatus } from '../../src/shared/constants';
+import { IOhMyComputedResponse } from '../../src/shared/packet-type';
+import { IData, IOhMyMockContext, statusCode } from '../../src/shared/type';
 import { compareUrls } from '../../src/shared/utils/urls';
 
 const fsPromise = fs.promises;
@@ -14,7 +16,7 @@ export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
   statusCode?: statusCode;
   headers?: Record<string, string>;
   path: string
-  handler: (data: IData, request: any, mock: IMock) => IMock;
+  handler: (fileResponse: string, input: IOhMyComputedResponse) => IOhMyComputedResponse;
 };
 
 export class OhMyLocal {
@@ -23,45 +25,47 @@ export class OhMyLocal {
   constructor(private config: IOhMyLocalConfig) { }
 
   add(context: IOhFileContext): void {
-    // eslint-disable-next-line no-console
     this.contexts.push(context);
   }
 
-  findContext(input: IData): IOhFileContext | null {
-    return {} as any;
-    // return (this.contexts.filter(c => {
-    //   // eslint-disable-next-line no-console
-
-    //   return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url, c.url);
-    // }) || [])[0];
+  findContext(input: Partial<IData>): IOhFileContext | null {
+    return (this.contexts.filter(c => {
+      return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url, c.url);
+    }) || [])[0];
   }
 
   // If a context is defined for `data`, it will update and return `mock`. If not, the
   // original `mock` object is returned
-  async updateMock(data: IData, request: any): Promise<IMock> {
-    // const context = this.findContext(data);
-    // const mock: IMock = data.mocks?.[data.activeMock];
+  async updateMock(data: IOhMyComputedResponse): Promise<IOhMyComputedResponse> {
+    const context = this.findContext(data.request);
+    if (!context) {
+      // eslint-disable-next-line no-console
+      console.log(`     no response defined`);
 
-    // if (!context) {
-    //   // eslint-disable-next-line no-console
-    //   console.log(`     no response defined`);
+      return data;
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`     serving response from disk`);
+    }
 
-    //   return mock! as any;
-    // } else {
-    //   // eslint-disable-next-line no-console
-    //   console.log(`     serving response from disk`);
-    // }
+    const respFromFile = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
 
-    // const responseMock = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
+    if (respFromFile) {
+      data.response = {
+        ...data.response,
+        status: ohMyMockStatus.OK,
+        response: respFromFile,
+        ...(context.statusCode && { statusCode: context.statusCode }),
+        ...(context.headers && { headers: context.headers })
+      };
+      data.response.response = respFromFile;
 
-    // if (responseMock) {
-    //   (mock! as any).responseMock = responseMock as any;
-    //   (mock! as any).statusCode = (context.statusCode || mock!.statusCode) as any;
-    //   mock!.headersMock = (context.headers || mock!.headersMock) as any;
-    // }
+      if (context.statusCode) {
 
-    // return (context?.handler(data, request, mock! as any) || mock) as any;
-    return {} as any;
+      }
+    }
+
+    return context?.handler(respFromFile, data) || data;
   }
 
   static async loadFile(filename: string): Promise<string | null> {

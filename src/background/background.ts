@@ -16,6 +16,8 @@ import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 
+import './server-dispatcher';
+
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 

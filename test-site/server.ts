@@ -3,6 +3,7 @@ import * as path from "path";
 import { appRouter } from './routes/routes';
 import { createServer } from '../libs/nodejs-sdk';
 import { IData, IMock } from '../src/shared/type';
+import { IOhMyComputedResponse } from '../src/shared/packet-type';
 
 const filedir = path.dirname(process.argv[1]).replace(/^\./, '');
 const basePath = __dirname.replace(filedir, '');
@@ -18,14 +19,14 @@ const app = ohMyServer.app;
 ohMyServer.local.add({ // settings
   url: '/users',
   method: 'GET',
-  type: 'XHR',
+  requestType: 'XHR',
   statusCode: 200,
   path: './users.json',
-  handler: (data: IData, request: any, mock: IMock): void => {
-    if (data) {
-      const resp = JSON.parse(mock.responseMock);
-      resp['1'] = 'Lucas Calje';
-      mock.responseMock = JSON.stringify(resp);
+  handler: (respFile: string, data: IOhMyComputedResponse): void => {
+    if (respFile) {
+      const resp = JSON.parse(respFile);
+      resp['1'].name = 'Lucas Calje';
+      data.response.response = JSON.stringify(resp);
     }
   }
 } as any);

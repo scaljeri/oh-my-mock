@@ -66,6 +66,7 @@ export enum payloadType {
   // DATA_DISPATCH = 'data-dispatch',
   DISPATCH_API_REQUEST = 'dispatch-request',
   DISPATCH_API_RESPONSE = 'api-response',
+  DISPATCH_TO_SERVER = 'dispatch-to-server',
   // MOCK_RESPONSE = 'mock-response'
   RESET = 'reset',
   REMOVE = 'remove',

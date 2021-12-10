@@ -1,16 +1,15 @@
 /// <reference types="chrome"/>
-import { appSources, payloadType } from '../shared/constants';
-import { IOhMyAPIRequest, IState } from '../shared/type';
+import { appSources, ohMyMockStatus, payloadType } from '../shared/constants';
+import { IOhMyAPIRequest, IOhMyMockResponse, IState } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
-import { handleApiRequest } from './handle-api-request';
+import { handleApiRequest } from '../shared/utils/handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
-import { connectWithLocalServer, dispatchRemote } from './dispatch-remote';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 
@@ -150,12 +149,15 @@ async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
   const state = await contentState.getState();
   payload.context = { ...state.context, ...payload.context };
 
-  // const output = await dispatchRemote(payload) ??
-  const output = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, contentState);
+  let result = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(payload.data, payloadType.DISPATCH_TO_SERVER, { domain: OhMyContentState.host });
+
+  if (result.status !== ohMyMockStatus.OK) {
+    result = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, state);
+  }
 
   sendMsgToInjected({
     type: payloadType.RESPONSE,
-    data: output,
+    data: result,
     context: payload.context, description: 'content;receivedApiRequest'
   });
 }
@@ -215,4 +217,3 @@ function inject(state: IState) {
 //   debugger;
 // })
 
-connectWithLocalServer();
