@@ -149,32 +149,23 @@ async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
   const state = await contentState.getState();
   payload.context = { ...state.context, ...payload.context };
 
-  let result = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(payload.data, payloadType.DISPATCH_TO_SERVER, { domain: OhMyContentState.host });
+  let retVal = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(payload.data, payloadType.DISPATCH_TO_SERVER, payload.context) as IOhMyMockResponse;
+  const result = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, state);
 
-  if (result.status !== ohMyMockStatus.OK) {
-    result = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, state);
+  if (result.status === ohMyMockStatus.OK) {
+    if (retVal.status === ohMyMockStatus.OK) { // merge
+      retVal.headers = { ...result.headers, ...retVal.headers };
+    } else {
+      retVal = result;
+    }
   }
 
   sendMsgToInjected({
     type: payloadType.RESPONSE,
-    data: result,
+    data: retVal,
     context: payload.context, description: 'content;receivedApiRequest'
   });
 }
-
-// streamByType$(packetTypes.STATE, appSources.POPUP).subscribe(handlePacketFromPopup);
-
-// async function getCurrentState(): Promise<IState> {
-//   return cache[STORAGE_KEY].content.states[HOST] || load<IState>(HOST);
-// }
-
-// chrome.storage.onChanged.addListener(async (changes, namespace) => {
-//   Object.entries(changes).forEach(([k, v]) => {
-//     cache[k] = v.newValue;
-//   });
-//   // const state = await getCurrentState();
-//   // sendMsgToInjected({ type: packetTypes.ACTIVE, data: state.aux.appActive });
-// });
 
 // Inject XHR/Fetch mocking code and more
 (async function () {

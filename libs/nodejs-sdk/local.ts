@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ohMyMockStatus } from '../../src/shared/constants';
-import { IOhMyComputedResponse } from '../../src/shared/packet-type';
-import { IData, IOhMyMockContext, statusCode } from '../../src/shared/type';
+import { IOhMyDispatchServerRequest } from '../../src/shared/packet-type';
+import { IData, IOhMyMockContext, IOhMyMockResponse, statusCode } from '../../src/shared/type';
 import { compareUrls } from '../../src/shared/utils/urls';
 
 const fsPromise = fs.promises;
@@ -16,7 +16,7 @@ export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
   statusCode?: statusCode;
   headers?: Record<string, string>;
   path: string
-  handler: (fileResponse: string, input: IOhMyComputedResponse) => IOhMyComputedResponse;
+  handler: (output: IOhMyMockResponse, input: IOhMyDispatchServerRequest) => IOhMyMockResponse;
 };
 
 export class OhMyLocal {
@@ -36,36 +36,32 @@ export class OhMyLocal {
 
   // If a context is defined for `data`, it will update and return `mock`. If not, the
   // original `mock` object is returned
-  async updateMock(data: IOhMyComputedResponse): Promise<IOhMyComputedResponse> {
+  async updateMock(data: IOhMyDispatchServerRequest): Promise<IOhMyMockResponse> {
     const context = this.findContext(data.request);
     if (!context) {
       // eslint-disable-next-line no-console
       console.log(`     no response defined`);
 
-      return data;
+      return { status: ohMyMockStatus.NO_CONTENT };
     } else {
       // eslint-disable-next-line no-console
       console.log(`     serving response from disk`);
     }
 
+    const output = {
+      status: ohMyMockStatus.NO_CONTENT,
+      ...(context.statusCode && { statusCode: context.statusCode }),
+      ...(context.headers && { headers: context.headers })
+    } as IOhMyMockResponse;
+
     const respFromFile = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
 
     if (respFromFile) {
-      data.response = {
-        ...data.response,
-        status: ohMyMockStatus.OK,
-        response: respFromFile,
-        ...(context.statusCode && { statusCode: context.statusCode }),
-        ...(context.headers && { headers: context.headers })
-      };
-      data.response.response = respFromFile;
-
-      if (context.statusCode) {
-
-      }
+      output.response = respFromFile;
+      output.status = ohMyMockStatus.OK;
     }
 
-    return context?.handler(respFromFile, data) || data;
+    return context?.handler(output, data) || { status: ohMyMockStatus.NO_CONTENT };
   }
 
   static async loadFile(filename: string): Promise<string | null> {

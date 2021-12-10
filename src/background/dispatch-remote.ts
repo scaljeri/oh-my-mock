@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
-import { IPacketPayload } from '../shared/packet-type';
-import { IMock } from '../shared/type';
+import { IOhMyDispatchServerRequest, IPacketPayload } from '../shared/packet-type';
+import { IOhMyMockResponse } from '../shared/type';
 import { uniqueId } from '../shared/utils/unique-id';
 
 let isConnected = false;
@@ -34,15 +34,13 @@ export const connectWithLocalServer = (): void => {
   });
 }
 
-export const dispatchRemote = async (payload: IPacketPayload<any>): Promise<IMock | undefined> => {
+export const dispatchRemote = async (payload: IPacketPayload<IOhMyDispatchServerRequest>): Promise<IOhMyMockResponse> => {
   //   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
 
-  console.log('xxxx');
-  debugger;
   if (isConnected) {
-    return new Promise<IMock>(resolve => {
+    return new Promise<IOhMyMockResponse>(resolve => {
       const id = uniqueId();
-      socket.on(id, (result: IMock) => {
+      socket.on(id, (result: IOhMyMockResponse) => {
         socket.off(payload.context.id);
 
         resolve(result);
@@ -52,7 +50,7 @@ export const dispatchRemote = async (payload: IPacketPayload<any>): Promise<IMoc
       socket.emit('data', payload);
     });
   } else {
-    return undefined;
+    return (payload as any).data.response as IOhMyMockResponse;
   }
 }
 

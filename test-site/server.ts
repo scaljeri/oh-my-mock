@@ -2,8 +2,8 @@ import express from 'express';
 import * as path from "path";
 import { appRouter } from './routes/routes';
 import { createServer } from '../libs/nodejs-sdk';
-import { IData, IMock } from '../src/shared/type';
-import { IOhMyComputedResponse } from '../src/shared/packet-type';
+import { IOhMyMockResponse } from '../src/shared/type';
+import { IOhMyDispatchServerRequest } from '../src/shared/packet-type';
 
 const filedir = path.dirname(process.argv[1]).replace(/^\./, '');
 const basePath = __dirname.replace(filedir, '');
@@ -22,12 +22,14 @@ ohMyServer.local.add({ // settings
   requestType: 'XHR',
   statusCode: 200,
   path: './users.json',
-  handler: (respFile: string, data: IOhMyComputedResponse): void => {
-    if (respFile) {
-      const resp = JSON.parse(respFile);
+  handler: (output: IOhMyMockResponse<string>, data: IOhMyDispatchServerRequest): IOhMyMockResponse => {
+    if (output.response) {
+      const resp = JSON.parse(output.response);
       resp['1'].name = 'Lucas Calje';
-      data.response.response = JSON.stringify(resp);
+      output.response = JSON.stringify(resp);
     }
+
+    return output;
   }
 } as any);
 

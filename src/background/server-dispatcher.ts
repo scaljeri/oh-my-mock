@@ -1,8 +1,7 @@
 import { connectWithLocalServer, dispatchRemote } from "./dispatch-remote";
-import { appSources, payloadType } from "../shared/constants";
+import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
 import { IOhMessage } from "../shared/packet-type";
-import { IOhMyAPIRequest, IState } from "../shared/type";
-import { handleApiRequest } from "../shared/utils/handle-api-request";
+import { IOhMyAPIRequest, IOhMyUpsertData, IState } from "../shared/type";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
@@ -12,21 +11,20 @@ const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
   .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest>) => {
     const state = await StorageUtils.get<IState>(packet.payload.context.domain);
-    const output = await handleApiRequest(packet.payload.data, state, false);
-    const data = StateUtils.findRequest(state, packet.payload.data);
+    const request = { ...packet.payload.data as any, requestType: packet.payload.context.requestType } as IOhMyUpsertData;
+    const data = StateUtils.findRequest(state, request);
 
     const result = await dispatchRemote({
       type: payloadType.DISPATCH_API_REQUEST,
       context: state.context,
       description: 'background;dispatch-to-server',
       data: {
-        response: output,
-        request: data,
+        request: data || request,
         context: state.context
       }
     });
 
-    callback(result.response);
+    callback(result || { status: ohMyMockStatus.NO_CONTENT });
   });
 
 

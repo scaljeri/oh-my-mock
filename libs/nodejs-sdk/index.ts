@@ -2,7 +2,7 @@ import express from 'express';
 import { Server, Socket } from 'socket.io';
 import * as http from 'http';
 import { IOhServerConfig, OhMyServer } from './oh-my-server';
-import { IOhMyComputedResponse, IPacketPayload } from '../../src/shared/packet-type';
+import { IOhMyDispatchServerRequest, IPacketPayload } from '../../src/shared/packet-type';
 
 export * from '../../src/shared/type';
 
@@ -27,7 +27,7 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
     // eslint-disable-next-line no-console
     console.log("Client connected", socket.handshake.query.source);
 
-    socket.on("data", async function (payload: IPacketPayload<IOhMyComputedResponse>) {
+    socket.on("data", async function (payload: IPacketPayload<IOhMyDispatchServerRequest>) {
       // eslint-disable-next-line no-console
       if (payload.data) {
         const mock = await myServer.local.updateMock(payload.data);

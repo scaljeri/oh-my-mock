@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, IOhMyContext, IOhMyMockResponse, ohMyDomain, requestType } from './type';
+import { IData, IMock, IOhMyContext, IOhMyUpsertData, ohMyDomain, requestType } from './type';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
 export interface IOhMessage<T = unknown> {
@@ -35,8 +35,7 @@ export interface IOhMyResponseUpdate {
   response: Partial<IMock>;
 }
 
-export interface IOhMyComputedResponse {
-  response: IOhMyMockResponse,
-  request: Partial<IData>
+export interface IOhMyDispatchServerRequest {
+  request: IData | IOhMyUpsertData,
   context: IOhMyContext
 }
