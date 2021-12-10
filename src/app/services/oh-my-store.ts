@@ -148,7 +148,7 @@ export class OhMyState {
       response.id = newId;
       request.mocks[newId] = { ...shallow, id: newId };
 
-      await OhMySendToBg.full(response, payloadType.RESPONSE, undefined, 'popup;cloneRequest');
+      await OhMySendToBg.full({ response, request }, payloadType.RESPONSE, undefined, 'popup;cloneRequest');
       // await this.storageService.set(newId, response);
     }
 
