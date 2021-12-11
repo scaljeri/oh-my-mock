@@ -4,7 +4,7 @@ const VERSION = '__OH_MY_VERSION__';
 
 export const stateSteps = [
     (data) => {
-        if (compareVersions(data.version || '0.0.0', '3.3.0') === -1) { // Everything before 3.0.3 is discarded
+        if (compareVersions(data.version || '0.0.0', '3.3.1') === -1) { // Everything before 3.0.3 is discarded
             return null;
         }
 
