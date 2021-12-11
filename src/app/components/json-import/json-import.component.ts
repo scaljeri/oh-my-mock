@@ -6,7 +6,7 @@ import { FormControl } from '@angular/forms';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { OhMyStateService } from 'src/app/services/state.service';
 import { StorageService } from 'src/app/services/storage.service';
-import { importJSON, ImportResultEnum } from 'src/app/utils/import-json';
+import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
 
 @Component({
   selector: 'oh-my-json-import',

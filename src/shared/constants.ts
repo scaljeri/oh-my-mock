@@ -37,11 +37,13 @@ export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONN
 export const IS_BASE64_RE = /data:.*base64,/;
 export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new?assignees=&labels=&template=feature-or-bug.md&title=';
 
+// TODO: align with payloadType
 export enum objectTypes {
-  REQUEST = 'REQUEST',
-  MOCK = 'MOCK',
-  STATE = 'STATE',
-  STORE = 'STORE'
+  REQUEST = 'request',
+  MOCK = 'response', // Deprecated
+  RESPONSE = 'response',
+  STATE = 'state',
+  STORE = 'store'
 }
 
 export enum packetType {
@@ -64,6 +66,7 @@ export enum payloadType {
   // DATA_DISPATCH = 'data-dispatch',
   DISPATCH_API_REQUEST = 'dispatch-request',
   DISPATCH_API_RESPONSE = 'api-response',
+  DISPATCH_TO_SERVER = 'dispatch-to-server',
   // MOCK_RESPONSE = 'mock-response'
   RESET = 'reset',
   REMOVE = 'remove',

@@ -1,8 +1,8 @@
-import { IData, IMock, IOhMyBackup, IOhMyContext, IOhMyMock, IState } from '@shared/type';
-import { DataUtils } from '@shared/utils/data';
-import { MigrateUtils } from '@shared/utils/migrate';
-import { StateUtils } from '@shared/utils/state';
-import { StorageUtils } from '@shared/utils/storage';
+import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '../type';
+import { DataUtils } from './data';
+import { MigrateUtils } from './migrate';
+import { StateUtils } from './state';
+import { StorageUtils } from './storage';
 
 export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
@@ -18,7 +18,6 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
   let requests = data.requests as unknown as IData[];
   let responses = data.responses as unknown as IMock[];
 
-  debugger;
   if (MigrateUtils.shouldMigrate({ version: data.version })) {
     requests = requests.map((r: IData) => {
       r.enabled = { ...r.enabled, [state.context.preset]: activate };

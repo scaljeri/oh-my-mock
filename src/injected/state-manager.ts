@@ -1,18 +1,19 @@
 import { BehaviorSubject } from 'rxjs';
 import { appSources, payloadType } from '../shared/constants';
-import { IPacket } from '../shared/packet-type';
 import { IState } from '../shared/type';
-import { streamByType$ } from '../shared/utils/message-bus';
+import { OhMyMessageBus } from '../shared/utils/message-bus';
+import { triggerWindow } from '../shared/utils/trigger-msg-window';
 
 let state: IState;
 const update = new BehaviorSubject<IState>(state);
+const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
-streamByType$(payloadType.STATE, appSources.CONTENT).subscribe((packet: IPacket) => {
+mb.streamByType$(payloadType.STATE, appSources.CONTENT).subscribe(({ packet }) => {
   state = packet.payload.data as IState;
   update.next(state);
 });
 
-streamByType$(payloadType.ACTIVE, appSources.CONTENT).subscribe((packet: IPacket) => {
+mb.streamByType$(payloadType.ACTIVE, appSources.CONTENT).subscribe(({ packet }) => {
   // state = packet.payload.data as IState;
   // update.next(state);
   // INJECTED SCRIPT: state-manger.ts

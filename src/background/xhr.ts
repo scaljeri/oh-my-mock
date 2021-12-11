@@ -1,13 +1,13 @@
-import { patchUrl } from './utils';
+// import { patchUrl } from './utils';
 
-declare let window: any
+// declare let window: any
 
-const Base = window.XMLHttpRequest;
+// const Base = window.XMLHttpRequest;
 
-export class OhMockXhr extends Base {
-  static ohHost: string;
+// export class OhMockXhr extends Base {
+//   static ohHost: string;
 
-  open(method: string, url: string, ...args: unknown[]): void {
-    return super.open(method, patchUrl(url, window.ohMyHost), ...args);
-  }
-}
+//   open(method: string, url: string, ...args: unknown[]): void {
+//     return super.open(method, patchUrl(url, window.ohMyHost), ...args);
+//   }
+// }

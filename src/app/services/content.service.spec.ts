@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Subject } from 'rxjs';
 import { AppStateService } from './app-state.service';
 
 import { ContentService } from './content.service';
@@ -8,7 +9,7 @@ describe('ContentService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: AppStateService, useValue: {} }],
+      providers: [{ provide: AppStateService, useValue: { domain$: new Subject()} }],
       imports: [],
     });
     service = TestBed.inject(ContentService);

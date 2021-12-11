@@ -1,11 +1,12 @@
 import { appSources, ohMyMockStatus, payloadType } from '../../shared/constants';
-import { streamById$ } from '../../shared/utils/message-bus';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
 import { IOhMyMockResponse, IOhMyAPIRequest, requestType } from '../../shared/type';
 import { IPacket, IPacketPayload } from '../../shared/packet-type';
+import { OhMyMessageBus } from '../../shared/utils/message-bus';
+import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
 declare let window: any;
 
@@ -49,6 +50,7 @@ declare let window: any;
 // }
 
 export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyMockResponse> => {
+  const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
@@ -58,11 +60,12 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       data: request
     } as IPacketPayload<IOhMyAPIRequest>;
 
-    streamById$(id, appSources.CONTENT)
+    mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))
-      .subscribe((packet: IPacket<IOhMyMockResponse>) => {
-        const resp = packet.payload.data;
+      .subscribe(({ packet }) => {
+        const resp = packet.payload.data as IOhMyMockResponse;
         logMocked(request, requestType, resp);
+        mb.clear();
 
         if (resp.status === ohMyMockStatus.ERROR) {
           // TODO: can this happen????

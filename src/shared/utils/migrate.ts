@@ -18,7 +18,7 @@ export class MigrateUtils {
   static version = '__OH_MY_VERSION__';
 
   static shouldMigrate(obj: { version?: string }): boolean {
-    return obj && obj.version !== MigrateUtils.version && MigrateUtils.version !== '__OH' + '_MY_VERSION__';
+    return obj && obj.version !== MigrateUtils.version; // && MigrateUtils.version !== '__OH' + '_MY_VERSION__';
   }
 
   static migrate<T extends { version: string }>(data: T): T | undefined {

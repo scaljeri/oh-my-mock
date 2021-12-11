@@ -1,6 +1,7 @@
 {
   "extends": "./prd.tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   }
 }

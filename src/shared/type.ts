@@ -160,12 +160,12 @@ export interface IOhMyAPIRequest {
   headers: Record<string, string>;
 }
 
-export interface IOhMyMockResponse {
+export interface IOhMyMockResponse<T = unknown> {
   status: ohMyMockStatus;
   message?: string;
   statusCode?: statusCode;
   headers?: Record<string, string>;
-  response?: unknown;
+  response?: T;
   delay?: number;
 }
 

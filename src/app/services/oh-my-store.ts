@@ -84,7 +84,7 @@ export class OhMyState {
     return state;
   }
 
-  async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = true): Promise<IMock> {
+  async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext): Promise<IMock> {
     if (!sourceId) {
       return this.upsertResponse(update, request, context);
     }
@@ -99,46 +99,14 @@ export class OhMyState {
       delete response.modifiedOn;
     }
 
-    return this.upsertResponse(response, request, context, activate);
+    return this.upsertResponse(response, request, context);
   }
 
-  async upsertResponse(response: Partial<IMock>, request: Partial<IData>, context: IOhMyContext, activate = false): Promise<IMock> {
+  async upsertResponse(response: Partial<IMock>, request: Partial<IData>, context: IOhMyContext): Promise<IMock> {
     const retVal = await OhMySendToBg.full<IOhMyResponseUpdate, IMock>({
       request,
       response
     }, payloadType.RESPONSE, context, 'popup;upsertResponse');
-
-    // let state = await this.getState(context);
-    // const retVal = response.id ? { ...await this.storageService.get<IMock>(response.id), ...response } :
-    //   MockUtils.init(response);
-
-    // let request = StateUtils.findRequest(state, pRequest);
-    // if (!request) { // also new request!
-    //   state = await this.upsertRequest(request, context);
-    //   request = StateUtils.findRequest(state, request);
-    // }
-
-    // if (response.id) {
-    //   retVal.modifiedOn = timestamp();
-    // }
-
-    // Object.keys(state.presets).filter(p => !request.selected[p]).forEach(p => {
-    //   request.selected[p] = retVal.id;
-    // });
-
-    // request = DataUtils.addResponse(context, request as IData, retVal);
-
-    // if (activate) {
-    //   request.selected[context.preset] = retVal.id
-    //   request.enabled[context.preset] = true;
-    // }
-
-    // state.data[request.id] = request as IData;
-
-    // await OhMySendToBg.full(retVal, payloadType.RESPONSE);
-    // await OhMySendToBg.full(state, payloadType.STATE);
-    // await this.storageService.set(retVal.id, retVal);
-    // await this.storageService.set(state.domain, state);
 
     return retVal;
   }
@@ -180,7 +148,7 @@ export class OhMyState {
       response.id = newId;
       request.mocks[newId] = { ...shallow, id: newId };
 
-      await OhMySendToBg.full(response, payloadType.RESPONSE, undefined, 'popup;cloneRequest');
+      await OhMySendToBg.full({ response, request }, payloadType.RESPONSE, undefined, 'popup;cloneRequest');
       // await this.storageService.set(newId, response);
     }
 

@@ -29,9 +29,9 @@ export class StorageUtils {
   }
 
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY): Promise<T> {
-    if (!key) {
-      return Promise.resolve(undefined);
-    }
+    // if (!key) {
+    //   return Promise.resolve(undefined);
+    // }
 
     return new Promise<T>((resolve) => {
       StorageUtils.chrome.storage.local.get(key, async (data: { [key: string]: T }) => {
@@ -43,7 +43,7 @@ export class StorageUtils {
         // }
         // }
 
-        resolve(data[key] as T);
+        resolve((key === null ? data : data[key]) as T);
       });
     });
   }
@@ -66,6 +66,7 @@ export class StorageUtils {
         value.version = StorageUtils.appVersion;
       }
 
+      // eslint-disable-next-line no-console
       console.log(`Write action for ${key}`, value);
       StorageUtils.chrome.storage.local.set({ [key]: value }, resolve);
     });
@@ -77,17 +78,14 @@ export class StorageUtils {
     }
 
     return Promise.all(key.map(k => {
-      console.log('Remove ', k);
       new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', resolve));
     }));
   }
 
   static async reset(key?: ohMyDomain | ohMyMockId): Promise<void> {
     if (key) {
-      console.log(`Reset ${key}`);
       await StorageUtils.remove(key);
     } else {
-      console.log(`Reset everything`);
       await new Promise<void>(resolve => {
         StorageUtils.chrome.storage.local.clear(resolve);
       });
