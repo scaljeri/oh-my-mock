@@ -1,6 +1,6 @@
 {
   "name": "@scaljeri/ohmymock-sdk",
-  "version": "0.0.10",
+  "version": "0.0.23",
   "description": "SDK for OhMyMock node server",
   "main": "libs/nodejs-sdk/index.js",
   "types": "libs/nodejs-sdk/index.d.ts",
@@ -8,7 +8,9 @@
   "author": "lucascalje <lucas@calje.eu>",
   "license": "MIT",
   "private": false,
-  "type": "module",
+  "bin": {
+    "oh-server": "./libs/nodejs-sdk/server.js"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^4.1.2"

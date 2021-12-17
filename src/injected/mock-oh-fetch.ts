@@ -15,15 +15,29 @@ const ORIG_FETCH = window.fetch;
 interface IOhFetchConfig {
   method?: requestMethod;
   __ohSkip?: boolean; // Use Fetch without caching or mocking
-  headers?: Headers & { entries: () => [string, string][]}; // TODO: entries is not known in Headers
+  headers?: Headers & { entries: () => [string, string][] }; // TODO: entries is not known in Headers
+  body?: FormData | unknown;
 }
 
 declare let window: { fetch: any };
 
-const OhMyFetch = async (url, config: IOhFetchConfig = {}) => {
+const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => {
   if (config.__ohSkip) {
     return fecthApi(url, config);
   }
+
+  if (url instanceof Request) {
+    config = { headers: url.headers as any, method: url.method as requestMethod };
+    url = url.url;
+  }
+
+  if (config.body instanceof FormData) {
+    const fd = {};
+    config.body.forEach((value, key) => fd[key] = value);
+    config.body = fd;
+
+  }
+
   const { response, headers, status, statusCode, delay } =
     await dispatchApiRequest({
       url,

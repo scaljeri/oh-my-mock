@@ -1,0 +1,9 @@
+ [
+     {
+       "url": "/users",
+       "method": "GET",
+       "requestType": "XHR",
+       "statusCode": "200",
+       "path": "./users.json"
+     }
+   ]

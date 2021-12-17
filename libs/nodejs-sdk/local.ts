@@ -11,12 +11,15 @@ export interface IOhMyLocalConfig {
   basePath?: string;
 }
 
+export type IOhMySdkResponse = IOhMyMockResponse;
+export type IOhMySdkRequest = IOhMyDispatchServerRequest;
+
 export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
 {
   statusCode?: statusCode;
   headers?: Record<string, string>;
   path: string
-  handler: (output: IOhMyMockResponse, input: IOhMyDispatchServerRequest) => IOhMyMockResponse;
+  handler: (output: IOhMySdkResponse, input: IOhMySdkRequest) => IOhMySdkResponse;
 };
 
 export class OhMyLocal {
@@ -30,7 +33,7 @@ export class OhMyLocal {
 
   findContext(input: Partial<IData>): IOhFileContext | null {
     return (this.contexts.filter(c => {
-      return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url, c.url);
+      return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url!, c.url!);
     }) || [])[0];
   }
 
@@ -61,7 +64,7 @@ export class OhMyLocal {
       output.status = ohMyMockStatus.OK;
     }
 
-    return context?.handler(output, data) || { status: ohMyMockStatus.NO_CONTENT };
+    return context ? (context.handler?.(output, data) || output) : { status: ohMyMockStatus.NO_CONTENT };
   }
 
   static async loadFile(filename: string): Promise<string | null> {

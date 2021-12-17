@@ -37,7 +37,10 @@ import { ContentService } from './services/content.service';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(appRoutes, { useHash: true, scrollPositionRestoration: 'enabled' }),
+    RouterModule.forRoot(appRoutes, {
+      enableTracing: true,
+      useHash: true, scrollPositionRestoration: 'enabled'
+    }),
     ReactiveFormsModule,
     MatToolbarModule,
     MatIconModule,

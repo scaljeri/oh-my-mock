@@ -9,7 +9,7 @@ import {
 import { IOhMyContext, IState } from '@shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
@@ -52,14 +52,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private stateService: OhMyStateService,
     private contentService: ContentService,
     private router: Router,
+    private activatedRoute: ActivatedRoute,
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog) {
-      // eslint-disable-next-line no-console
-      console.log('verions ' + VERSION);
+    // eslint-disable-next-line no-console
+    console.log('verions ' + VERSION);
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await initializeApp(this.appState, this.stateService);
+    await initializeApp(this.appState, this.stateService, this.activatedRoute);
     // await this.contentService.activate();
 
     this.stateSub = this.stateService.state$.subscribe((state: IState) => {

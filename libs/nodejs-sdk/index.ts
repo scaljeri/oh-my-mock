@@ -4,7 +4,8 @@ import * as http from 'http';
 import { IOhServerConfig, OhMyServer } from './oh-my-server';
 import { IOhMyDispatchServerRequest, IPacketPayload } from '../../src/shared/packet-type';
 
-export * from '../../src/shared/type';
+// export * from '../../src/shared/type';
+export * from './local';
 
 export interface IOhMyServerConfig extends IOhServerConfig {
   port?: number

@@ -77,21 +77,6 @@
     <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
   </li>
 </ol>
-<!--
-<ol data-table>
-  <li *ngFor="let row of applyFilter(data); index as index; trackBy: trackBy" (click)="onDataClick(row, index)" [ngClass]="{
-        'is-selected': selection.isSelected(index),
-        'is-active': row.enabled,
-        'is-modified': row.mocks[row.activeMock]?.modifiedOn}">
-    <span class="method">{{row.type}}</span>
-    <span class="type">{{row.method}}</span>
-    <span class="url">{{row.url}}</span>
-    <span class="mock">
-      <oh-my-mock-label [mock]="row.mocks[row.activeMock]"></oh-my-mock-label>
-    </span>
-    <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
-  </li>
-</ol> -->
 
 <ng-template #actions let-row="row" let-index="index">
   <div class="actions btns-1">
