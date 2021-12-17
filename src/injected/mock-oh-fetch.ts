@@ -42,7 +42,7 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
     await dispatchApiRequest({
       url,
       method: config.method || 'GET',
-      ...config,
+      ...(config.body && { body: config.body }),
       ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
     } as IOhMyAPIRequest, 'FETCH');
 
@@ -55,10 +55,10 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
   }
 
   return new Promise(async (resolv, reject) => {
-    let body = null;
+    let body = null
 
 
-    if (response !== undefined) { // Otherwise error with statuscode 204 (No content)
+    if (response !== undefined && statusCode !== 204) { // Otherwise error with statuscode 204 (No content)
       if (isBinary(headers['content-type'])) {
         body = await toBlob(response as string);
       } else {
@@ -70,7 +70,6 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
       headers: fetchUtils.jsonToHeaders(headers || {}),
       status: statusCode
     });
-
     setTimeout(() => resolv(rsp), delay || 0);
   });
 }
