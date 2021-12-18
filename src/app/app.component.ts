@@ -111,7 +111,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:beforeunload')
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
-    this.contentService.deactivate();
+    this.contentService.deactivate(true);
   }
 
   notifyDisabled(): void {
@@ -148,7 +148,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(async () => {
-      this.errors = null;
+      this.errors = [];
     });
   }
 }

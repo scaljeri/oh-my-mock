@@ -115,5 +115,3 @@ responses, allow you to modified responses and headers, created new ones and a l
     </td>
   </tr>
   </table>
-
-

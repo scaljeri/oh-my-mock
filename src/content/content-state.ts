@@ -9,7 +9,7 @@ export interface IOhMyCache {
 }
 
 export interface IOhMyStorage {
-  tabId: number;
+  isPopupOpen: boolean;
 }
 
 export class OhMyContentState {
@@ -18,7 +18,7 @@ export class OhMyContentState {
 
   static host = window.location.host;
   static href = window.location.href;
-  static tabId: number;
+  static isPopupOpen: boolean = undefined;
   static storage: IOhMyStorage;
 
   constructor() {
@@ -30,9 +30,9 @@ export class OhMyContentState {
 
     if (window.name) {
       try {
-      OhMyContentState.storage = JSON.parse(window.name) as IOhMyStorage;
-      OhMyContentState.tabId =  OhMyContentState.storage.tabId;
-      } catch(e) {
+        OhMyContentState.storage = JSON.parse(window.name) as IOhMyStorage;
+        OhMyContentState.isPopupOpen = OhMyContentState.storage?.isPopupOpen;
+      } catch (e) {
         // TODO
       }
     }
@@ -61,10 +61,17 @@ export class OhMyContentState {
   }
 
   persist(data = {}): void {
-    window.name = JSON.stringify({ tabId: OhMyContentState.tabId, ...data });
+    window.name = JSON.stringify(data);
   }
 
-  get tabId(): number {
-    return OhMyContentState.tabId;
+  setPopupOpen(isOpen: boolean): void {
+    OhMyContentState.storage = { ...OhMyContentState.storage, isPopupOpen: isOpen };
+    this.persist(OhMyContentState.storage);
+
+    OhMyContentState.isPopupOpen = isOpen;
+  }
+
+  get isPopupOpen(): boolean {
+    return OhMyContentState.isPopupOpen;
   }
 }

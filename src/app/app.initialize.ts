@@ -15,8 +15,8 @@ export async function initializeApp(
   const tabId = urlParams.get('tabId');
 
   if (domain) { // Note: on reload these params do not exist anymore!
-    appStateService.domain = domain;
     appStateService.tabId = Number(tabId);
+    appStateService.domain = domain;
   }
 
   await stateService.initialize(appStateService.domain);

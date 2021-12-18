@@ -51,7 +51,9 @@ export class AppStateService {
     this._domain = domain;
     sessionStorage.setItem('domain', domain);
 
-    this.domainChangeSubject.next(domain);
+    setTimeout(() => {
+      this.domainChangeSubject.next(domain);
+    });
   }
 
   get tabId(): number {

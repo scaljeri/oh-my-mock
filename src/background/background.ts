@@ -56,9 +56,10 @@ const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 const stream$ = messageBus.streamByType$([payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
   [appSources.CONTENT, appSources.POPUP])
 
-stream$.subscribe(({ packet, callback }: IOhMessage) => {
+stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   // eslint-disable-next-line no-console
   console.log('Received update', packet);
+  packet.tabId = sender.tab.id;
   queue.addPacket(packet.payload.type, packet, (result) => {
     callback(result);
     // return true;

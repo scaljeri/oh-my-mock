@@ -5,7 +5,7 @@ import { IData, IMock, IOhMyContext, IOhMyUpsertData, ohMyDomain, requestType } 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
 export interface IOhMessage<T = unknown> {
   packet: IPacket<T>;
-  sender: unknown;
+  sender: chrome.runtime.MessageSender;
   callback: (data: unknown) => void;
 }
 export interface IPacket<T = unknown> {

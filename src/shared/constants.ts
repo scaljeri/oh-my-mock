@@ -70,7 +70,9 @@ export enum payloadType {
   // MOCK_RESPONSE = 'mock-response'
   RESET = 'reset',
   REMOVE = 'remove',
-  ERROR = 'error'
+  ERROR = 'error',
+  POPUP_CLOSED = 'popup-closed',
+  POPUP_OPEN = 'popup-open',
 }
 export enum appSources {
   INJECTED = 'injected',

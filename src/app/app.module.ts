@@ -38,7 +38,7 @@ import { ContentService } from './services/content.service';
     BrowserModule,
     BrowserAnimationsModule,
     RouterModule.forRoot(appRoutes, {
-      enableTracing: true,
+      enableTracing: false,
       useHash: true, scrollPositionRestoration: 'enabled'
     }),
     ReactiveFormsModule,

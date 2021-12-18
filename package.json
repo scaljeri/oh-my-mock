@@ -1,6 +1,6 @@
 {
   "name": "oh-my-mock",
-  "version": "3.3.1",
+  "version": "3.3.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -16,7 +16,7 @@
     "ci:build:splash": "cp src/splash-screen.html ./dist",
     "build": "yarn cleanup && (run-s build:* cp:manifest; wait) && yarn replace-tokens && yarn ci:build:splash",
     "build:ng": "NG_PERSISTENT_BUILD_CACHE=1 ng build --configuration dev --base-href=/oh-my-mock/index.html",
-    "xxxbuild:ng": "NG_PERSISTENT_BUILD_CACHE=1 ng build --configuration dev --base-href=index.html",
+    "oldbuild:ng": "NG_PERSISTENT_BUILD_CACHE=1 ng build --configuration dev --base-href=index.html",
     "build:stats": "yarn build:ng --stats-json",
     "build:content": "webpack -c ./webpack.config.js --entry ./src/content/index.ts --output-filename content.js",
     "build:injected": "webpack -c ./webpack.config.js --entry ./src/injected/index.ts --output-filename oh-my-mock.js",

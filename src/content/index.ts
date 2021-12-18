@@ -9,9 +9,10 @@ import { handleApiRequest } from '../shared/utils/handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
-import { sendMsgToPopup } from '../shared/utils/send-to-popup';
+// import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
+import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
@@ -20,52 +21,16 @@ const messageBus = new OhMyMessageBus()
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
-OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT, OhMyContentState.tabId);
-
-let ohState: IState;
+OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
-  ohState = state;
-
-  if (!OhMyContentState.tabId) {
-    sendKnockKnock();
-  }
-
   if (isInjectedInjected) {
-    sendMsgToInjected({ type: payloadType.STATE, data: state, description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
-  } else if (state?.aux.popupActive) {
+    sendMsgToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
+  } else if (state?.aux.popupActive || contentState.isPopupOpen) {
     inject(state);
   }
-
-  // TabId is needed to send message to Popup
-  // if (!popupTimeoutId && state.aux.popupActive && !isPopupActive) {
-  //   sendKnockKnock();
-  // }
 });
-
-
-// Handle messages from Popup / Background script
-// chrome.runtime.onMessage.addListener((packet, sender) => {
-//   emitPacket(packet);
-
-//   return true;
-// });
-
-// function startUpdates() {
-//   if (updateSubscription) {
-//     return;
-//   }
-
-//   updateSubscription = StorageUtils.updates$.subscribe(update => {
-//     cache[update.key] = update.change.newValue;
-//   });
-// }
-
-// function stopUpdates() {
-//   updateSubscription?.unsubscribe();
-//   updateSubscription = undefined;
-// }
 
 function sendMsgToInjected(payload: IPacketPayload) {
   try {
@@ -81,7 +46,7 @@ function sendMsgToInjected(payload: IPacketPayload) {
 }
 
 function sendKnockKnock() {
-  sendMsgToPopup(OhMyContentState.tabId, OhMyContentState.host, appSources.CONTENT,
+  sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
     { type: payloadType.KNOCKKNOCK, description: 'content;sendKnockKnock' });
 }
 
@@ -103,19 +68,16 @@ function handlePacketFromBg(packet: IPacket): void {
 }
 
 async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
-  if (!packet.tabId) {
-    return;
-  }
-
+  contentState.setPopupOpen(packet.payload.data.active);
   // TabId is independend of domain, it belongs to the tab!
-  OhMyContentState.tabId = packet.tabId;
-  OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT, packet.tabId)
-  contentState.persist();
+  // OhMyContentState.tabId = packet.tabId;
+  // OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
+  // contentState.persist();
 
-  // Domain change (Popup is using wrong domain)
-  if (packet.domain !== OhMyContentState.host) {
-    return sendKnockKnock();
-  }
+  // // Domain change (Popup is using wrong domain)
+  // if (packet.domain !== OhMyContentState.host) {
+  //   return sendKnockKnock();
+  // }
 }
 
 // async function handleDispatchedRequest(packet: IPacket<IOhMyRequest>): Promise<void> {
@@ -129,7 +91,10 @@ async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise
 // streamByType$(packetTypes.HIT, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
-messageBus.streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
+// messageBus.streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
+
+messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
+messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
 
 messageBus.streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
@@ -169,8 +134,10 @@ async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
 
 // Inject XHR/Fetch mocking code and more
 (async function () {
-  const state = await contentState.getState() || StateUtils.init();
+  let state = await contentState.getState() || StateUtils.init();
   sendKnockKnock();
+
+  state = updateStateForInjected(state);
 
   if (state.aux.popupActive) {
     inject(state);
@@ -192,6 +159,8 @@ function inject(state: IState) {
   if (!isInjectedInjected) {
     isInjectedInjected = true;
 
+    state = updateStateForInjected(state);
+
     const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
     const script = document.createElement('script');
     script.textContent = actualCode;
@@ -200,11 +169,18 @@ function inject(state: IState) {
   }
 }
 
-// full({ x: 'yolo'}, payloadType.STATE).then(() => {
-//   console.log('done');
-// })
+/* It is somewhat complex to determine whether the popup window is open or not
+First of all, OhMyMock doesn't do anything if the popup is closed. However, it is
+possible that the content script loads and doesn't know if it is open or not. it takes
+too much time for content script to check if it is (it might miss the inital api requests)
+*/
+function updateStateForInjected(state): IState {
+  if (contentState.isPopupOpen === true) {
+    state.aux.popupActive = true;
+  } else if (state.aux.popupActive) {
+    contentState.setPopupOpen(true);
+  }
 
-// send({x: 40}, OhMyContentState.tabId).then(x => {
-//   debugger;
-// })
+  return state;
+}
 

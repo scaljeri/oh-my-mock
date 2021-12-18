@@ -5,10 +5,10 @@ import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './app-state.service';
 import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
-import { IState } from '@shared/type';
 import { IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { StorageUtils } from '@shared/utils/storage';
+import { send2content } from '../utils/send2content';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
@@ -16,7 +16,6 @@ export class ContentService {
   static StateUtils = StateUtils;
 
   private listener;
-  private state: IState;
 
   constructor(private appStateService: AppStateService) {
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
@@ -31,16 +30,22 @@ export class ContentService {
       }
       OhMySendToBg.domain = d;
       this.activate();
+      this.open(true);
     });
 
-    this.listener = ({ payload, tabId, source, domain }: IPacket) => {
+    this.listener = ({ payload, source, domain }: IPacket, sender) => {
       // Only accept messages from the content script
       // const domain = payload.context?.domain;
       if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
         return;
       }
 
-      if (tabId === this.appStateService.tabId) {
+      // First checl background source, because it doesn't have a sender.tab
+      if (source === appSources.BACKGROUND) {
+        if (payload.type === payloadType.ERROR) {
+          this.appStateService.addError(payload);
+        }
+      } else if (sender.tab.id === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
           this.appStateService.domain = domain;
         }
@@ -58,73 +63,45 @@ export class ContentService {
           // this.appStateService.hit(data);
 
           // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
-        } else if (payload.type === payloadType.ERROR) {
-          this.appStateService.addError(payload);
         }
       } else {
-        if (payload.type === payloadType.KNOCKKNOCK) {
-          if (tabId && this.appStateService.isSameDomain(domain)) {
-            this.appStateService.domain = domain;
-          }
+        // if (payload.type === payloadType.KNOCKKNOCK) {
+        //   if (tabId && this.appStateService.isSameDomain(domain)) {
+        //     this.appStateService.domain = domain;
+        //   }
 
-          this.sendActiveState(true);
-        }
+        //   this.sendActiveState(true);
+        // }
       }
 
       return true;
     };
 
-    chrome.runtime.onMessage.addListener(packet => this.listener(packet));
+    chrome.runtime.onMessage.addListener((packet, sender) => this.listener(packet, sender));
   }
 
-  sendActiveState(isActive: boolean): void {
-    const msg = {
-      tabId: this.appStateService.tabId,
+  open(isOpen = true): void {
+    const packet = {
       source: appSources.POPUP,
       domain: this.appStateService.domain,
       payload: {
-        type: payloadType.KNOCKKNOCK,
-        data: {
-          active: isActive
-        }
+        type: isOpen ? payloadType.POPUP_OPEN : payloadType.POPUP_CLOSED,
+        data: { isOpen }
       }
-    }
-    // Send msg to content script
-    chrome.tabs.sendMessage(Number(this.appStateService.tabId), msg);
-    // Send msg to background script
-    // chrome.runtime.sendMessage(msg);
+    } as IPacket;
+
+    send2content(this.appStateService.tabId, packet);
   }
-
-  // send(data): void {
-  // log('Sending state to content script', data);
-  // const output = {
-  //   tabId: this.appStateService.tabId,
-  //   source: appSources.POPUP,
-  //   domain: this.appStateService.domain,
-  //   payload: {
-  //     type: packetTypes.STATE,
-  //     data
-  //   }
-  // }
-  // chrome.tabs.sendMessage(Number(this.appStateService.tabId), output);
-  // chrome.runtime.sendMessage(output);
-  // }
-
-  // destroy(): void {
-  //   // const x = chrome.runtime.onMessage.hasListener(this.listener);
-  //   // chrome.runtime.onMessage.removeListener(this.listener);
-  //   // this.send({ ...this.state, toggles: { ...this.state.toggles, active: false } });
-  //   this.sendActiveState(false);
-  // }
 
   activate(): Promise<boolean> {
     return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
-    // .then(() => {
-    // debugger;
-    // })
   }
 
-  deactivate(): Promise<boolean> {
+  deactivate(isClosing = false): Promise<boolean> {
+    if (isClosing) {
+      this.open(false);
+    }
+
     return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
   }
 
