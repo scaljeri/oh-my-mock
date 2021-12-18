@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AppComponent } from './app.component';
 import { AppStateService } from './services/app-state.service';
 import { ContentService } from './services/content.service';
@@ -18,7 +18,8 @@ describe('AppComponent', () => {
         { provide: Router, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: OhMyStateService, useValue: {} },
-        { provide: ContentService, useValue: {}}
+        { provide: ContentService, useValue: {} },
+        { provide: ActivatedRoute, useValue: {} }
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
