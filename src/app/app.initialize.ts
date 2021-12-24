@@ -13,10 +13,11 @@ export async function initializeApp(
 
   const domain = urlParams.get('domain');
   const tabId = urlParams.get('tabId');
-
+  const contentVersion = urlParams.get('contentVersion');
   if (domain) { // Note: on reload these params do not exist anymore!
     appStateService.tabId = Number(tabId);
     appStateService.domain = domain;
+    appStateService.contentVersion = contentVersion;
   }
 
   await stateService.initialize(appStateService.domain);
