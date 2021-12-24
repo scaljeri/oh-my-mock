@@ -1,5 +1,5 @@
 /// <reference types="chrome"/>
-import { appSources, ohMyMockStatus, payloadType } from '../shared/constants';
+import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest, IOhMyMockResponse, IState } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
@@ -13,6 +13,8 @@ import { OhMySendToBg } from '../shared/utils/send-to-background';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
+
+import './inject-version';
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()

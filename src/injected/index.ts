@@ -10,7 +10,8 @@ declare let state: IState;
 
 let isOhMyMockActive = false;
 
-window[STORAGE_KEY] = { state };
+window[STORAGE_KEY] ??= {};
+window[STORAGE_KEY].state = state;
 
 handleStateUpdate(state);
 // hasCSPIssues();
@@ -39,7 +40,4 @@ function handleStateUpdate(state: IState): void {
     unpatchFetch();
     log('%c*** Deactivated ***', 'background: red');
   }
-  // }
-
-  // ohMyState = state;
 }

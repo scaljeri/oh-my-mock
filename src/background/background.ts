@@ -144,11 +144,20 @@ chrome.browserAction.onClicked.addListener(async function (tab) {
   if (domain) {
     await initStorage(domain);
 
-    const popup = window.open(
-      `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`,
-      `oh-my-mock-${tab.id}`,
-      'menubar=0,innerWidth=900,innerHeight=800'
+    chrome.tabs.executeScript(tab.id,
+      {
+        code: `document.getElementById('${STORAGE_KEY}')?.getAttribute('data-version')`
+      }, (output) => {
+        const version = output[0];
+        const popup = window.open(
+          `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}&contentVersion=${version}`,
+          `oh-my-mock-${tab.id}`,
+          'menubar=0,innerWidth=900,innerHeight=800'
+        );
+      }
     );
+
+
     // chrome.windows.create({url: `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`, height: 800, width: 900, type: 'popup'});
 
     // TODO:

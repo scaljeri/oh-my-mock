@@ -18,6 +18,7 @@ import { initializeApp } from './app.initialize';
 import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
 import { IPacketPayload } from '@shared/packet-type';
+import { VersionMismatchComponent } from './components/version-mismatch/version-mismatch.component';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -63,6 +64,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     await initializeApp(this.appState, this.stateService, this.activatedRoute);
     // await this.contentService.activate();
 
+    console.log('xxxxxx', this.appState.contentVersion, VERSION);
+    if (this.appState.contentVersion !== VERSION) {
+      return this.openVersionMismatchDialog();
+    }
+
     this.stateSub = this.stateService.state$.subscribe((state: IState) => {
       if (!state) {
         return this.isInitializing = true;
@@ -98,7 +104,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.errors.push(error);
       this.cdr.detectChanges();
     });
-
   }
 
   onEnableChange(isChecked: boolean): void {
@@ -150,5 +155,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     dialogRef.afterClosed().subscribe(async () => {
       this.errors = [];
     });
+  }
+
+  openVersionMismatchDialog(): void {
+    const dialogRef = this.dialog.open(VersionMismatchComponent, {
+      width: '90%',
+      height: '90%',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(async () => {
+    });
+
   }
 }

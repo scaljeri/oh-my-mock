@@ -3,24 +3,30 @@
 
 ## OhMyMock
 
-OhMyMock a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock) that can mock API responses in the browser. It is also possible to modify responses or status codes. It is especially useful for Frontend development and works well with frameworks like Angular, React or Vue. OhMyMock can serve JSON, HTML, Images and a lot more. Please
-fill a feature request if you have a response which is not supported!!
+OhMyMock is a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock) that can mock API responses in the browser. It works as follows:
+The first time an API request is made it only caches the response, but the next time it will mock
+the request and reply with the cached response. It is also possible to modify responses or status codes. 
+This extension is especially useful for Frontend development and works well with frameworks like Angular, React or Vue.
+OhMyMock can serve JSON, HTML, Images and a lot more.
+Please make a feature request if you have a response which is not supported!!
 
 There is an article on medium.com which describes OhMyMock in great detail [here](https://calje.medium.com/mock-api-responses-with-a-chrome-extension-called-ohmymock-875ac5d85999).
 
 If you have the extension install you can see how it works with XMLHttpRequest and Fetch request on
-the [demo page](https://scaljeri.github.io/oh-my-mock/). Note that you need OhMyMock for that page,
-because there is no API to serve the responses; Mocking is required!!
+the [demo page](https://scaljeri.github.io/oh-my-mock/).
 
 By default OhMyMock is disabled and you need to enabled it, otherwise it will not cache or mock API
-responses. Via the OhMyMock UI you can enable caching and mocking per response/request.
+responses.
 
-![alt text](https://github.com/scaljeri/oh-my-mock/blob/master/images/oh-my-mock-overview.png?raw=true)
+![alt text](https://github.com/scaljeri/oh-my-mock/blob/master/images/ohmymock-request-list.png?raw=true)
+![alt text](https://github.com/scaljeri/oh-my-mock/blob/master/images/ohmymock-response-details.png?raw=true)
 
 ### Installation
 OhMyMock can be install from the 
 [chrome extension store](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock), 
-but you can also compile the source and use that instead if you like. This is what you would do if you want to do OhMyMock develop. 
+but you can also compile the source and use that instead if you like.
+This is what you would do if you want to do OhMyMock develop. 
+
 To install it from source checkout this repository and run the following commands
 
     $> yarn
@@ -28,14 +34,14 @@ To install it from source checkout this repository and run the following command
 
 The compiled code is stored in **"./dist"**
 
-Navigate in Chrome to chrome:extensions and enable `development mode` and upload the **"./dist"** folder via the `Load unpacked` button. Thats it.
+Navigate in Chrome to chrome://extensions and enable `development mode` and upload the **"./dist"** folder via the `Load unpacked` button. Thats it.
 
-### Setup development
+### Setup for development
 First install all dependencies
 
     $> yarn
 
-Start the development web server
+Start the development web server and watchers
 
     $> yarn watch
 
@@ -48,6 +54,7 @@ This project consists of a couple of different part, each with a specific task. 
 
   * ./scripts           - Tooling
   * ./test-site         - Webserver (test/demo site)
+  * ./libs/nodejs-sdk   - sdk for serving mocks from files
   * ./src/app           - angular app, the OhMyMock popup
   * ./src/content       - the extension content script, needed to pass messages between
                           the angular app and the injected script
@@ -55,32 +62,46 @@ This project consists of a couple of different part, each with a specific task. 
   * ./src/shared        - code shared between all parts
   * ./src/background    - the extension's background script
 
+##### OhMyMock CDK
+The cdk enables you to create a NodeJs server which connects with the chrome extension.
+This allows you to serve responses in an easy way using a NodeJs server. This way it is
+possible to serve file content as responses. If the server doesn't have a response for
+a specific request, OhMyMock will then look in the cache and serve that if it exists.
+
 ##### background.js
 For all tabs in the chrome browser there will be just one instance running of this script. It is
 always active and when the OhMyMock icons is clicked it will open the OhMyMock popup (angular app). 
-Its other taks is to pass messages from the popup to the content script. Messages send from the 
-content script go straight to the popup. 
+If you are using the OhMyMock SDK, the background script will establish the websocket connection. 
 
 ##### content script
-Each tab has its own instance of the content script. It takes care of 2 things, 1) inject code into the context of the website and 2) communicate between popup/background and injected script. 
+Each tab has its own instance of the content script. It takes care of two things 
+  
+  1) Inject code into the context of the website
+  2) It receives every request from the injected script. It is the task of the content script
+     to find a mock (the response that will be served). This is a two step process:
+
+     1) If there is a websocket connection (in case you use the SDK) the request is forwarded
+        to the NodeJs. 
+     2) If there is no websocket connection or the NodeJs doesn't serve a response, it looks
+        inside the cached responses. 
 
 ##### injected script
-The injected script remains dormant until OhMyMock is enabled. If active it will patch window.fetch 
-and window.XmlHttpRequest. This way it is in full control of all requests. When a reuqest is made 3
-things can happen:
+The injected script remains dormant until OhMyMock is enabled.
+If active it will patch window.fetch and window.XmlHttpRequest.
+This way it is in full control of all requests.
+When a request is made 3 things can happen:
 
-   1) There is no cached response and the call will pass through to the API. OhMyMock will cache
-      the response.
-   2) There is a cached response, but it is not active and the call will pass through to the API. If
-      the status-code is not yet present OhMyMock will cache the response!
+   1) Every request is dispatched to the content script. If the content script doesn't find
+      a response the call will pass through to the API. OhMyMock will cache the response.
+   2) If there is a cached response, but it is not active, the call will pass through to the API.
    3) There is an active cache and it will be served as the response
 
 Finally, if OhMyMock is disabled or the popup is closed, the original Fetch and XmlHttpRequest objects
 are restored, as if nothing ever happend.
 
 ##### Angular app
-The angular application is where you can interact with OhMyMock. This is where OhMyMock persists 
-responses, allow you to modified responses and headers, created new ones and a lot more.
+The angular application is where you can interact with OhMyMock. Here you can see
+which responses are cached, which are active, etc. Here you can also create responses manually.
 
 ## Core Team
 

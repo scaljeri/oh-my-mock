@@ -17,6 +17,7 @@ export interface IPage {
 export class AppStateService {
   private _domain: string;
   private _tabId: number;
+  #contentVersion: string;
 
   private errorSubject = new Subject<IPacketPayload>();
   public errors$ = this.errorSubject.asObservable().pipe(shareReplay());
@@ -63,6 +64,15 @@ export class AppStateService {
   set tabId(tabId: number) {
     this._tabId = tabId;
     sessionStorage.setItem('tabId', String(tabId));
+  }
+
+  get contentVersion(): string {
+    return this.#contentVersion;
+  }
+
+  set contentVersion(version: string) {
+    this.#contentVersion = version;
+    sessionStorage.setItem('contentVersion', version);
   }
 
   isSameDomain(domain: string): boolean {
