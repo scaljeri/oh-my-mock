@@ -6,7 +6,13 @@ import { ohMyState$ } from './state-manager';
 import { log } from './utils';
 
 declare let window: any;
-declare let state: IState;
+const state = {
+  aux: {
+    popupActive: true,
+    appActive: true
+  }
+} as IState;
+
 
 let isOhMyMockActive = false;
 

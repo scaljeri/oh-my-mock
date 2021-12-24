@@ -10,7 +10,7 @@ export function errorHandler(queue: OhMyQueue, ...errors: unknown[]): void {
   queue.resetHandler(types?.[0]);
 
   // eslint-disable-next-line no-console
-  console.log('Error in promise', types, ...errors);
+  console.log('Error in promise', types, ...errors, packet);
 
   sendMsgToPopup(packet?.tabId, packet?.payload?.context?.domain, appSources.BACKGROUND, {
     type: payloadType.ERROR,

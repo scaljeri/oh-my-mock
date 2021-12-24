@@ -17,22 +17,24 @@ import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 
 import './server-dispatcher';
+import { openPopup } from './open-popup';
+import { connectWithLocalServer } from './dispatch-remote';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
 
-window.onunhandledrejection = function (event) {
-  const { reason } = event;
-  const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
+// window.onunhandledrejection = function (event) {
+//   const { reason } = event;
+//   const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
 
-  errorHandler(queue, errorMsg);
-}
+//   // errorHandler(queue, errorMsg);
+// }
 
-window.onerror = function (a, b, c, d, stacktrace) {
-  const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
+// window.onerror = function (a, b, c, d, stacktrace) {
+//   const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
 
-  errorHandler(queue, errorMsg, stacktrace);
-}
+//   errorHandler(queue, errorMsg, stacktrace);
+// }
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
@@ -66,28 +68,28 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   });
 });
 
-// chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
-//   if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
-//     [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
+chrome.runtime.onMessage.addListener((packet: IPacket, sender, callback) => {
+  if ([appSources.CONTENT, appSources.POPUP].includes(packet.source) &&
+    [payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET].includes(packet.payload.type)) {
 
-//     // eslint-disable-next-line no-console
-//     console.log('Received update', packet);
-//     if (queue.hasHandler(packet.payload.type)) {
-//       queue.addPacket(packet.payload.type, packet, (result) => {
-//         callback(result);
-//         // return true;
-//       });
-//     } else {
-//       // eslint-disable-next-line no-console
-//       console.warn('No handler for ' + packet.payload.type);
-//     }
-//   }
+    // eslint-disable-next-line no-console
+    console.log('Received update', packet);
+    if (queue.hasHandler(packet.payload.type)) {
+      queue.addPacket(packet.payload.type, packet, (result) => {
+        callback(result);
+        // return true;
+      });
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn('No handler for ' + packet.payload.type);
+    }
+  }
 
-//   return true;
-// });
+  return true;
+});
 
 
-// connectWithLocalServer();
+connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;
@@ -99,33 +101,6 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   }
 }
 
-// async function handleEval(packet: IPacket<any>): Promise<void> {
-//   window.ohMyHost = packet.payload.context.url;
-//   const input = packet.payload.data as any;
-//   const data = await evalCode(input.data, input.request);
-
-//   sendMessage2Content(packet.tabId as number, packet.payload.context, data, packetTypes.EVAL_RESULT);
-// }
-
-// async function handleDispatch(packet: IPacket<any>): Promise<void> {
-//   const payload = packet.payload;
-//   const data = (payload.data as any).data;
-//   const mock = await dispatchRemote(payload);
-
-//   if (mock) {
-//     // data.mocks[data.activeMock] = mock;
-//   }
-
-//   const update = await evalCode(data, payload.data.request);
-
-//   sendMessage2Content(packet.tabId as number, packet.payload.context, update, packetTypes.DATA);
-// }
-
-// Listeners
-// streamByType$(packetTypes.ACTIVE, appSources.POPUP).subscribe(handleActivityChanges);
-// streamByType$(packetTypes.EVAL, appSources.CONTENT).subscribe(handleEval);
-// streamByType$(packetTypes.DATA_DISPATCH, appSources.CONTENT).subscribe(handleDispatch);
-
 chrome.runtime.onInstalled.addListener(function (details) {
   chrome.storage.local.get([STORAGE_KEY], (state) => {
     if (!state[STORAGE_KEY]) {
@@ -135,99 +110,17 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 
-chrome.browserAction.onClicked.addListener(async function (tab) {
+chrome.action.onClicked.addListener(async function (tab) {
   // eslint-disable-next-line no-console
   console.log('OhMyMock: Extension clicked', tab.id);
 
-  const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
-
-  if (domain) {
-    await initStorage(domain);
-
-    chrome.tabs.executeScript(tab.id,
-      {
-        code: `document.getElementById('${STORAGE_KEY}')?.getAttribute('data-version')`
-      }, (output) => {
-        const version = output[0];
-        const popup = window.open(
-          `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}&contentVersion=${version}`,
-          `oh-my-mock-${tab.id}`,
-          'menubar=0,innerWidth=900,innerHeight=800'
-        );
-      }
-    );
-
-
-    // chrome.windows.create({url: `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`, height: 800, width: 900, type: 'popup'});
-
-    // TODO:
-    // const popupIsActive = false;
-    // popup.onunload = function () {
-    //   if (popupIsActive) { // Initially the window loads (and unloads) with a blanl page
-    //     chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: tab.id });
-    //     popupIsActive = false;
-    //   } else {
-
-    chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
-    //     popupIsActive = true;
-    //   }
-    // }
-  }
-
-  // popup.addEventListener("beforeunload", () => {
-  // });
-
-  // chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-  //    tabId = tab.id;
-  // });
+  openPopup(tab);
+  chrome.action.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
 });
 
 chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1MPLpGa5i3VkbMoxAq--TkmIHkqPVqk1cRWFUjE01CRQ/viewform', () => {
 
 });
-
-// // Make sure that chrome.runtime.onInstalled is called first
-// async function initStorage(domain?: ohMyDomain): Promise<void> {
-//   let store = await StorageUtils.get<IOhMyMock>();
-
-//   if (store) {
-//     if (MigrateUtils.shouldMigrate(store)) {
-//       store = MigrateUtils.migrate(store);
-
-//       if (!store) {
-//         await StorageUtils.reset();
-//       } else {
-
-//         await new Promise<Promise<unknown>[]>(r => {
-//           const actions = [];
-//           chrome.storage.local.get(null, function (data) {
-//             for (const d of Object.values(data)) {
-//               actions.push(new Promise<unknown>(r => queue.addPacket(d.type, {
-//                 payload: { data: MigrateUtils.migrate(d) }
-//               }, r)));
-//             }
-//           });
-
-//           r(Promise.all(actions));
-//         });
-//       }
-//     }
-//   }
-//   store ??= StoreUtils.init();
-
-//   let state: IState;
-//   if (domain) {
-//     state = StateUtils.init({ domain });
-//     store = StoreUtils.setState(store, state);
-//   }
-
-//   await queue.addPacket(payloadType.STORE, { payload: { data: store } });
-//   state && await queue.addPacket(payloadType.STATE, { payload: state });
-// }
-
-// setTimeout(() => {
-// initStorage();
-// });
 
 // timeout is needed because onInstalled need to be called first!
 setTimeout(async () => {

@@ -21,6 +21,7 @@ window.ohMyMock.xhr = (method, responseType, cb) => {
       xhrInjectResponse(xhr);
     }
   };
+  console.log('----xhr send ------');
   xhr.send(method === 'POST' ? { x: 10 } : null);
 };
 

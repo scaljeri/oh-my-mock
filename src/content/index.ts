@@ -162,12 +162,18 @@ function inject(state: IState) {
     isInjectedInjected = true;
 
     state = updateStateForInjected(state);
+    const s = document.createElement('script');
+    s.src = chrome.runtime.getURL('oh-my-mock.js');
+    s.onload = function () {
+      this['remove']();
+    };
+    (document.head || document.documentElement).appendChild(s);
 
-    const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
-    const script = document.createElement('script');
-    script.textContent = actualCode;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
+    // const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
+    // const script = document.createElement('script');
+    // script.textContent = actualCode;
+    // (document.head || document.documentElement).appendChild(script);
+    // script.remove();
   }
 }
 
