@@ -10,8 +10,6 @@ import { logging } from '../shared/utils/log';
 export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
 export const log = logging(`${STORAGE_KEY} (^*^)`, true);
 
-const ORIG_FETCH = window.fetch;
-
 interface IOhFetchConfig {
   method?: requestMethod;
   __ohSkip?: boolean; // Use Fetch without caching or mocking
@@ -19,7 +17,8 @@ interface IOhFetchConfig {
   body?: FormData | unknown;
 }
 
-declare let window: { fetch: any };
+declare let window: { fetch: any, [STORAGE_KEY]: any };
+window[STORAGE_KEY] ??= {};
 
 const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => {
   if (config.__ohSkip) {
@@ -78,7 +77,7 @@ function fecthApi(url, config): Promise<unknown> {
   const ohSkip = config.__ohSkip;
   delete config.__ohSkip;
 
-  return ORIG_FETCH(url, config).then(async response => {
+  return window[STORAGE_KEY].fetch.call(window, url, config).then(async response => {
     if (!ohSkip) {
       const clone = response.clone();
 
@@ -102,11 +101,12 @@ function fecthApi(url, config): Promise<unknown> {
 }
 
 function patchFetch(): void {
+  window[STORAGE_KEY].fetch ??= window.fetch;
   window.fetch = OhMyFetch;
 }
 
 function unpatchFetch(): void {
-  window.fetch = ORIG_FETCH;
+  window.fetch = window[STORAGE_KEY].fetch;
 }
 
 export { OhMyFetch, unpatchFetch, patchFetch };

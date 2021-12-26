@@ -12,7 +12,8 @@ export interface IPacket<T = unknown> {
   tabId?: number;
   source: appSources;
   payload: IPacketPayload<T>;
-  domain?: ohMyDomain
+  domain?: ohMyDomain,
+  version?: string;
 }
 
 export interface IOhMyPacketContext extends IOhMyContext {

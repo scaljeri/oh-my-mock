@@ -17,15 +17,17 @@ const ohMyServer = createServer({
 const app = ohMyServer.app;
 
 ohMyServer.local.add({ // settings
-  url: '/users',
-  method: 'GET',
-  requestType: 'XHR',
-  statusCode: 200,
+  url: '/site',
+  method: 'POST',
+  requestType: 'FETCH',
+  statusCode: 201,
   path: './users.json',
   handler: (output: IOhMyMockResponse<string>, data: IOhMyDispatchServerRequest): IOhMyMockResponse => {
     if (output.response) {
       const resp = JSON.parse(output.response);
       resp['1'].name = 'Lucas Calje';
+      console.log(output);
+      output.headers = { 'content-type': 'application/json', source: 'nodejs/oh-my-mock-sdk' };
       output.response = JSON.stringify(resp);
     }
 

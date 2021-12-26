@@ -7,7 +7,8 @@ export const send = <T = unknown>(payload: IPacketPayload<T>): void => {
   window.postMessage(
     {
       source: appSources.INJECTED,
-      payload
+      payload,
+      version: '__OH_MY_VERSION__'
     } as IPacket<T>,
     '*'
   );
