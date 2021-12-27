@@ -1,4 +1,5 @@
 /// <reference types="chrome"/>
+
 import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest, IOhMyMockResponse, IState } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
@@ -168,20 +169,17 @@ function inject(state: IState) {
   if (!isInjectedInjected) {
     isInjectedInjected = true;
 
-    state = updateStateForInjected(state);
-
-    const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
     const script = document.createElement('script');
-    script.textContent = actualCode;
+    script.onload = function () {
+      script.remove();
+      sendMsgToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
+    };
+    script.src = chrome.extension.getURL('oh-my-mock.js');
     (document.head || document.documentElement).appendChild(script);
-    script.remove();
   }
 }
 
-/* It is somewhat complex to determine whether the popup window is open or not
-First of all, OhMyMock doesn't do anything if the popup is closed. However, it is
-possible that the content script loads and doesn't know if it is open or not. it takes
-too much time for content script to check if it is (it might miss the inital api requests)
+/* Some logic to determine if the popup is active or not
 */
 function updateStateForInjected(state): IState {
   if (contentState.isPopupOpen === true) {
