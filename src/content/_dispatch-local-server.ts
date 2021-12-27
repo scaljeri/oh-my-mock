@@ -1,11 +1,12 @@
 import { io } from 'socket.io-client';
-import { IData, IMock, IPacketPayload } from '../shared/type';
+import { IPacketPayload } from '../shared/packet-type';
+import { IData, IMock } from '../shared/type';
 
 let isConnected = false;
 
 const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transports: ['websocket'] });
 
-  export const connectWithLocalServer = (): void => {
+export const connectWithLocalServer = (): void => {
 
   socket.io.on("error", (error) => {
     // eslint-disable-next-line no-console

@@ -60,7 +60,6 @@ import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.comp
 import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
 import { ShowErrorsComponent } from './show-errors/show-errors.component';
-import { VersionMismatchComponent } from './version-mismatch/version-mismatch.component';
 
 @NgModule({
   declarations: [
@@ -94,7 +93,6 @@ import { VersionMismatchComponent } from './version-mismatch/version-mismatch.co
     PresetComponent,
     FeedbackComponent,
     ShowErrorsComponent,
-    VersionMismatchComponent,
   ],
   imports: [
     CommonModule,
@@ -143,7 +141,6 @@ import { VersionMismatchComponent } from './version-mismatch/version-mismatch.co
     LinkComponent,
     DialogCodeEditorComponent,
     FeedbackComponent,
-    VersionMismatchComponent
   ],
   providers: [
     Location,

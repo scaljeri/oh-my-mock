@@ -9,17 +9,20 @@ import { handleApiRequest } from '../shared/utils/handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
-// import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 
-import './inject-version';
+window[STORAGE_KEY]?.off?.();
+
+const VERSION = '__OH_MY_VERSION__';
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)
-  .setTrigger(triggerRuntime)
+  .setTrigger(triggerRuntime);
+
+window[STORAGE_KEY] = { off: () => messageBus.clear() }
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
@@ -52,22 +55,22 @@ function sendKnockKnock() {
     { type: payloadType.KNOCKKNOCK, description: 'content;sendKnockKnock' });
 }
 
-function handlePacketFromInjected(packet: IPacket) {
-  // chrome.runtime.sendMessage({
-  //   ...packet,
-  //   domain: OhMyContentState.host,
-  //   source: appSources.CONTENT,
-  //   tabId: OhMyContentState.tabId
-  // } as IPacket)
-}
+// function handlePacketFromInjected(packet: IPacket) {
+//   // chrome.runtime.sendMessage({
+//   //   ...packet,
+//   //   domain: OhMyContentState.host,
+//   //   source: appSources.CONTENT,
+//   //   tabId: OhMyContentState.tabId
+//   // } as IPacket)
+// }
 
-function handlePacketFromBg(packet: IPacket): void {
-  //   sendMsgToInjected({
-  //     context: { id: packet.payload.context.id },
-  //     type: packetTypes.EVAL_RESULT,
-  //     data: packet.payload.data
-  //   } as IPacketPayload);
-}
+// function handlePacketFromBg(packet: IPacket): void {
+//   //   sendMsgToInjected({
+//   //     context: { id: packet.payload.context.id },
+//   //     type: packetTypes.EVAL_RESULT,
+//   //     data: packet.payload.data
+//   //   } as IPacketPayload);
+// }
 
 async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
   contentState.setPopupOpen(packet.payload.data.active);
@@ -112,6 +115,10 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
 }
 
 async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
+  if (packet.version !== VERSION) {
+    return window[STORAGE_KEY].off();
+  }
+
   const { payload } = packet;
   const state = await contentState.getState();
   payload.context = { ...state.context, ...payload.context };

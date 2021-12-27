@@ -5,6 +5,7 @@ const version = determineVersion();
 const isBeta = !!version.match(/beta/);
 
 replaceToken('./dist/oh-my-mock.js', 'SHOW_DEBUG', String(isBeta));
+replaceToken('./dist/oh-my-mock.js', 'VERSION', version);
 replaceToken('./dist/content.js', 'SHOW_DEBUG', String(isBeta));
 replaceToken('./dist/background.js', 'VERSION', version);
 replaceToken('./dist/content.js', 'VERSION', version);
