@@ -34,7 +34,7 @@ export async function openPopup(tab?: chrome.tabs.Tab) {
         // open the window and the tab
         const popup = await chrome.windows.create({
           // url: `chrome-extension://${chrome.runtime.id}/index.html`,
-          url: `/oh-my-mock/index.html?tabid=${tab.id}&domain=${domain}`,
+          url: `/oh-my-mock/index.html?tabId=${tab.id}&domain=${domain}`,
           type: 'popup',
           height: 800,
           width: 900

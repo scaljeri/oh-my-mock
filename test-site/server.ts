@@ -17,8 +17,8 @@ const ohMyServer = createServer({
 const app = ohMyServer.app;
 
 ohMyServer.local.add({ // settings
-  url: '/site',
-  method: 'POST',
+  url: '/users',
+  method: 'GET',
   requestType: 'FETCH',
   statusCode: 201,
   path: './users.json',
@@ -27,8 +27,8 @@ ohMyServer.local.add({ // settings
       const resp = JSON.parse(output.response);
       resp['1'].name = 'Lucas Calje';
       console.log(output);
-      output.headers = { 'content-type': 'application/json', source: 'nodejs/oh-my-mock-sdk' };
       output.response = JSON.stringify(resp);
+      output.headers = { 'content-type': 'application/json', source: 'nodejs/oh-my-mock-sdk' };
     }
 
     return output;

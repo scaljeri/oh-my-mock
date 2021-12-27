@@ -106,7 +106,9 @@ function patchFetch(): void {
 }
 
 function unpatchFetch(): void {
-  window.fetch = window[STORAGE_KEY].fetch;
+  if (window[STORAGE_KEY].fetch) {
+    window.fetch = window[STORAGE_KEY].fetch;
+  }
 }
 
 export { OhMyFetch, unpatchFetch, patchFetch };

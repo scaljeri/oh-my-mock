@@ -63,8 +63,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     await initializeApp(this.appState, this.stateService, this.activatedRoute);
     // await this.contentService.activate();
 
-
-
     this.stateSub = this.stateService.state$.subscribe((state: IState) => {
       if (!state) {
         return this.isInitializing = true;
