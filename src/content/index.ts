@@ -2,7 +2,7 @@
 
 import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest, IOhMyMockResponse, IState } from '../shared/type';
-import { IOhMessage, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
+import { IOhMessage, IOhMyReadyResponse, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
@@ -98,6 +98,27 @@ async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise
 // streamByType$(packetTypes.DATA_DISPATCH, appSources.INJECTED).subscribe(handlePacketFromInjected);
 // streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
 // messageBus.streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
+
+async function handlePreResponse({ packet }: IOhMessage<IOhMyReadyResponse<unknown>>) {
+  console.log('PACKET', packet);
+  const state = await contentState.getState();
+
+  let result = packet.payload.data.response;
+
+  if (packet.payload.data.response.status === ohMyMockStatus.NO_CONTENT) {
+    result = await handleApiRequest(packet.payload.data.request, state);
+  }
+
+  console.log('SEND PRE_RESPONSE TO INJECTED', result);
+
+  sendMsgToInjected({
+    type: payloadType.PRE_RESPONSE,
+    data: result,
+    context: state.context, description: 'content;pre-response'
+  });
+}
+
+messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
 
 messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
 messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);

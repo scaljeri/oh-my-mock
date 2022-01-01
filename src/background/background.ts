@@ -16,8 +16,10 @@ import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
+import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
+import { injectContent } from './inject-content';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -92,37 +94,10 @@ chrome.browserAction.onClicked.addListener(async function (tab) {
   console.log('OhMyMock: Extension clicked', tab.id);
 
   openPopup(tab);
-
-  // You could iterate through the content scripts here
-  const scripts = chrome.runtime.getManifest().content_scripts[0].js;
-  let i = 0;
-  const s = scripts.length;
-  for (; i < s; i++) {
-    chrome.tabs.executeScript(tab.id, {
-      file: scripts[i]
-    });
-  }
-
-  // const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
-
-  // if (domain) {
-  //   await initStorage(domain);
-
-  //   chrome.tabs.executeScript(tab.id,
-  //     {
-  //       code: `document.getElementById('${STORAGE_KEY}')?.getAttribute('data-version')`
-  //     }, (output) => {
-  //       const version = output[0];
-  //       const popup = window.open(
-  //         `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}&contentVersion=${version}`,
-  //         `oh-my-mock-${tab.id}`,
-  //         'menubar=0,innerWidth=900,innerHeight=800'
-  //       );
-  //     }
-  //   );
+  webRequestListener(tab);
+  injectContent(tab.id);
 
 
-  // chrome.windows.create({url: `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`, height: 800, width: 900, type: 'popup'});
 
   // TODO:
   // const popupIsActive = false;

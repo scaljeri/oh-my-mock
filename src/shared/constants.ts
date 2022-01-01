@@ -73,6 +73,7 @@ export enum payloadType {
   ERROR = 'error',
   POPUP_CLOSED = 'popup-closed',
   POPUP_OPEN = 'popup-open',
+  PRE_RESPONSE = 'pre-response',
 }
 export enum appSources {
   INJECTED = 'injected',

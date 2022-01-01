@@ -1,4 +1,5 @@
 window.ohMyMock.fetch = (method, responseType, cb) => {
+  debugger;
     fetch(ohMyMock.urlMap[responseType], {
       method, headers: new Headers()
     }).then((response) => {

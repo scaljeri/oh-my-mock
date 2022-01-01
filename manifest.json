@@ -8,7 +8,8 @@
     "storage",
     "unlimitedStorage",
     "tabs",
-    "*://*/*"
+    "*://*/*",
+    "webRequest"
   ],
   "browser_action": {
     "default_icon": "oh-my-mock/assets/icons/icon-off-128.png"
