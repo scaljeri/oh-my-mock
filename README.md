@@ -103,6 +103,7 @@ are restored, as if nothing ever happend.
 The angular application is where you can interact with OhMyMock. Here you can see
 which responses are cached, which are active, etc. Here you can also create responses manually.
 
+<!--
 ## Core Team
 
 <table border="0">
@@ -121,7 +122,7 @@ which responses are cached, which are active, etc. Here you can also create resp
         <sub><b>Remco Vlierman</b></sub></a>
     </td>
   </tr>
-</table>
+</table> -->
 
 ## Contributors
 
