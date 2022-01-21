@@ -131,6 +131,8 @@ which responses are cached, which are active, etc. Here you can also create resp
 <!-- markdownlint-disable -->
 <table>
   <tr>
+     <td align="center"><a href="https://github.com/scaljeri"><img src="https://avatars2.githubusercontent.com/u/1078741?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Lucas Calje</b></sub></a>
+    </td>
     <td align="center"><a href="https://github.com/imcuttle"><img src="https://avatars3.githubusercontent.com/u/13509258?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cong Yu</b></sub></a>
     </td>
     <td align="center"><a href="https://github.com/plohoj"><img src="https://avatars3.githubusercontent.com/u/10156573?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alexandr Plokhih</b></sub></a>
