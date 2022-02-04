@@ -22,7 +22,6 @@ window.ohMyMock.xhr = (method, responseType, cb) => {
       xhrInjectResponse(xhr);
     }
   };
-  console.log('SEND XHR NOW------');
 
   const own = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype, 'response');
   delete own.value;
@@ -33,20 +32,21 @@ window.ohMyMock.xhr = (method, responseType, cb) => {
   // Reflect.get(XMLHttpRequest.prototype, "response", 'yolo');
   xhr.send(method === 'POST' ? { x: 10 } : null);
   xhr.addEventListener("loadend", () => {
+    console.log('done')
     console.log(xhr);
     setTimeout(() => {
       response.data = 'yolo';
     })
   });
-  Object.defineProperty(XMLHttpRequest.prototype, 'response', { ...own,
-    get: () => {
-      console.log(xhr);
-      return response.data;
-    },
-    set: (v) => {
-      console.log('setting',v );
-    }
-  });
+  // Object.defineProperty(XMLHttpRequest.prototype, 'response', { ...own,
+  //   get: () => {
+  //     console.log('inside the patch', xhr);
+  //     return response.data;
+  //   },
+  //   set: (v) => {
+  //     console.log('setting',v );
+  //   }
+  // });
 };
 
 function xhrInjectResponse(xhr) {

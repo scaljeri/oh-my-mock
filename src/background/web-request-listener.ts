@@ -1,33 +1,72 @@
 import { appSources, payloadType } from "../shared/constants";
 import { IOhMyReadyResponse, IPacket } from "../shared/packet-type";
 import { requestMethod, requestType } from "../shared/type";
-import { convertToDomain } from "../shared/utils/domain";
+import * as ohUrl from "../shared/utils/domain";
 import { sendMsgToContent } from "../shared/utils/send-to-content";
 import { dispatch2Server } from "./server-dispatcher";
 
-export function webRequestListener(tab: chrome.tabs.Tab, timeout = 10000) {
+type listenerFn = (d: chrome.webRequest.WebRequestBodyDetails) => void
 
-  console.log('LISTEN FOR NETWORK TRAFFIC');
-  const listener = (details: chrome.webRequest.WebRequestBodyDetails) => {
+interface IOhMyTab {
+  timeoutId: number;
+  handler: listenerFn;
+}
+
+interface IOhMyHandlerConfig {
+  domain: string;
+  tabId: number;
+}
+
+const listeners: Record<number, IOhMyTab> = {};
+
+function removeListener(handler: listenerFn) {
+  chrome.webRequest.onBeforeRequest.removeListener(handler);
+}
+
+function addListener(tab: chrome.tabs.Tab, timeout = 2000) {
+  if (listeners[tab.id]) {
+    window.clearTimeout(listeners[tab.id].timeoutId);
+    removeListener(listeners[tab.id].handler)
+  }
+
+  const config = {
+    tabId: tab.id,
+    domain: ohUrl.toDomain(tab.url),
+  };
+
+  const handler = createHandler(config)
+
+  chrome.webRequest.onBeforeRequest.addListener(handler,
+    { tabId: tab.id, urls: ["http://*/*", "https://*/*"] } as chrome.webRequest.RequestFilter);
+
+  listeners[tab.id] = {
+    handler,
+    timeoutId: window.setTimeout(() => {
+      chrome.webRequest.onBeforeRequest.removeListener(handler);
+    }, timeout)
+  }
+}
+
+function createHandler(config: IOhMyHandlerConfig) {
+  return (details: chrome.webRequest.WebRequestBodyDetails) => {
     if (details.type === 'xmlhttprequest') {
 
       console.log('recived request', details);
-      debugger;
       dispatch2Server({
-        url: details.url,
+        url: ohUrl.toPath(details.url),
         method: details.method as requestMethod,
         requestType: details.type as requestType,
-      }, convertToDomain(tab.url)).then(response => {
+      }, config.domain).then(response => {
         console.log('RECEIVED FROM SEVER', response)
 
-        sendMsgToContent(tab.id, {
+        sendMsgToContent(config.tabId, {
           source: appSources.BACKGROUND,
           payload: {
             type: payloadType.PRE_RESPONSE,
             data: {
               response,
               request: {
-                url: details.url,
+                url: ohUrl.toPath(details.url),
                 method: details.method,
                 requestType: 'XHR'
               }
@@ -37,12 +76,9 @@ export function webRequestListener(tab: chrome.tabs.Tab, timeout = 10000) {
       });
     }
   }
+}
 
-  chrome.webRequest.onBeforeRequest.addListener(listener,
-    { tabId: tab.id, urls: ["http://*/*", "https://*/*"] } as chrome.webRequest.RequestFilter);
-
-  // This network sniffing is only needed for a few seconds
-  setTimeout(() => {
-    // chrome.webRequest.onBeforeRequest.removeListener(listener);
-  }, timeout);
+export function webRequestListener(tab: chrome.tabs.Tab, timeout = 2000) {
+  console.log('LISTEN FOR NETWORK TRAFFIC');
+  addListener(tab);
 }

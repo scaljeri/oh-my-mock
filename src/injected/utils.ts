@@ -29,8 +29,8 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
 
       if (data?.headers?.['content-type']?.includes('application/json')) {
         try {
-        response = data.response ? JSON.parse(data.response as string) : '';
-        } catch(e) {
+          response = data.response ? JSON.parse(data.response as string) : '';
+        } catch (e) {
           response = data.response;
         }
       } else if (isImage(data?.headers?.['content-type'])) {
@@ -38,4 +38,16 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
       }
       log(`${msg}`, response);
   }
+}
+
+export function findCachedResponse(url, type, doRemove = true): any {
+  const result = window[STORAGE_KEY].cache.find(
+    c => c && c.request.url === url && c.request.requestType === type);
+
+  if (result && doRemove) {
+    const index = window[STORAGE_KEY].cache[result];
+    delete window[STORAGE_KEY].cache[index];
+  }
+
+  return result;
 }

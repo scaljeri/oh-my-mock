@@ -29,6 +29,12 @@ window[STORAGE_KEY] = { off: () => messageBus.clear() }
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
+// Activate network listener in background script
+OhMySendToBg.send({
+  source: appSources.CONTENT,
+  payload: { type: payloadType.PRE_RESPONSE, description: 'content:activate-network-listeners' }
+});
+
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
   if (isInjectedInjected) {
@@ -103,17 +109,17 @@ async function handlePreResponse({ packet }: IOhMessage<IOhMyReadyResponse<unkno
   console.log('PACKET', packet);
   const state = await contentState.getState();
 
-  let result = packet.payload.data.response;
+  const response = packet.payload.data.response;
 
-  if (packet.payload.data.response.status === ohMyMockStatus.NO_CONTENT) {
-    result = await handleApiRequest(packet.payload.data.request, state);
+  if (response.status === ohMyMockStatus.NO_CONTENT) {
+    packet.payload.data.response = await handleApiRequest(packet.payload.data.request, state);
   }
 
-  console.log('SEND PRE_RESPONSE TO INJECTED', result);
+  console.log('SEND PRE_RESPONSE TO INJECTED', packet.payload);
 
   sendMsgToInjected({
     type: payloadType.PRE_RESPONSE,
-    data: result,
+    data: packet.payload.data,
     context: state.context, description: 'content;pre-response'
   });
 }

@@ -94,7 +94,7 @@ chrome.browserAction.onClicked.addListener(async function (tab) {
   console.log('OhMyMock: Extension clicked', tab.id);
 
   openPopup(tab);
-  webRequestListener(tab);
+  // webRequestListener(tab);
   injectContent(tab.id);
 
 
@@ -133,4 +133,8 @@ setTimeout(async () => {
   if (!state || Object.keys(state.data).length === 0) {
     await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN }, { activate: true });
   }
+});
+
+messageBus.streamByType$(payloadType.PRE_RESPONSE, appSources.CONTENT).subscribe(({ packet, sender, callback }: IOhMessage) => {
+  webRequestListener(sender.tab);
 });

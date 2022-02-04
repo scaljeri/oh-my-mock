@@ -5,12 +5,16 @@ import { dispatchApiRequest } from './message/dispatch-api-request';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import * as headers from '../shared/utils/xhr-headers';
 import { toBlob, toDataURL } from '../shared/utils/binary';
+import { findCachedResponse } from './utils';
 
 // To serve OhMyMock responses for XMLHttpRequest, the following properties will be replaced:
 let protoOpen;
 let protoSend;
 let protoAddEventListener;
 let protoSetRequestHeader;
+let protoResponse;
+let protoResponseText;
+let protoStatus;
 
 function persistXmlHttpProto() {
   const proto = window.XMLHttpRequest.prototype;
@@ -18,6 +22,10 @@ function persistXmlHttpProto() {
   protoSend = proto.send;
   protoAddEventListener = proto.addEventListener;
   protoSetRequestHeader = proto.setRequestHeader;
+  protoResponse = Object.getOwnPropertyDescriptor(proto, 'response');
+  // protoResponseText = proto.responseText;
+  protoResponseText = Object.getOwnPropertyDescriptor(proto, 'responseText');
+  protoStatus = Object.getOwnPropertyDescriptor(proto, 'status');
 }
 
 export function unpatchXmlHttpRequest() {
@@ -26,6 +34,11 @@ export function unpatchXmlHttpRequest() {
     window.XMLHttpRequest.prototype.send = protoSend;
     window.XMLHttpRequest.prototype.addEventListener = protoAddEventListener;
     window.XMLHttpRequest.prototype.setRequestHeader = protoSetRequestHeader;
+    Object.defineProperties(window.XMLHttpRequest.prototype, {
+      response: protoResponse,
+      responseText: protoResponseText,
+      status: protoStatus
+    });
   }
 }
 
@@ -91,6 +104,33 @@ export function patchXmlHttpRequest() {
       }
     });
   }
+
+  const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'response');
+  console.log('PATCHING-------')
+  Object.defineProperties(window.XMLHttpRequest.prototype, {
+    response: {
+      ...descriptor,
+      get: function () {
+        // TODO: Lookup cached response
+        console.log('------RETURN  RESPONSE:', this.ohMyResponse);
+        const result = findCachedResponse(this.responseURL.replace(window.origin, ''), 'XHR')
+        debugger;
+        // const result = findCachedResponse()
+        return result?.response?.response || this.ohMyResponse;
+      },
+      set: function (resp: unknown) {
+        console.log('-------SET RESPONSE:', resp);
+        this.ohMyResponse = resp;
+      }
+    },
+    status: {
+      get: function () {
+      },
+      set: function (status: number) {
+        this.ohMyStatus = status;
+      }
+    }
+  });
 }
 
 function injectResponse(xhr: XMLHttpRequest, data: IOhMyMockResponse) {

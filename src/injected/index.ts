@@ -11,7 +11,7 @@ declare let window: any;
 let isOhMyMockActive = false;
 
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-window[STORAGE_KEY] ??= {};
+window[STORAGE_KEY] = { cache: [] };
 window[STORAGE_KEY].version = VERSION;
 
 const sub = ohMyState$.subscribe((state: IState) => {
@@ -30,7 +30,7 @@ function handleStateUpdate(state: IState): void {
       isOhMyMockActive = true;
       log('%c*** Activated ***', 'background: green');
       patchXmlHttpRequest();
-      patchFetch();
+      // patchFetch();
     }
   } else {
     isOhMyMockActive = false;
