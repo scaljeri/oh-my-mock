@@ -13,7 +13,14 @@ import { OhMySendToBg } from '../shared/utils/send-to-background';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
+import { sendMessageToInjected } from './send-to-injected';
+import { receivedApiRequest } from './handle-api-request';
+import { initPreResponseHandler } from './handle-pre-response';
+import { BehaviorSubject } from 'rxjs';
 
+declare let window: any;
+
+window.injectedDone$ = new BehaviorSubject(false);
 window[STORAGE_KEY]?.off?.();
 
 const VERSION = '__OH_MY_VERSION__';
@@ -38,24 +45,24 @@ OhMySendToBg.send({
 let isInjectedInjected = false;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
   if (isInjectedInjected) {
-    sendMsgToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
+    sendMessageToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
   } else if (state?.aux.popupActive || contentState.isPopupOpen) {
     inject(state);
   }
 });
 
-function sendMsgToInjected(payload: IPacketPayload) {
-  try {
-    window.postMessage(JSON.parse(JSON.stringify(
-      {
-        payload,
-        source: appSources.CONTENT
-      })) as IPacket, OhMyContentState.href
-    )
-  } catch (err) {
-    // TODO
-  }
-}
+// function sendMsgToInjected(payload: IPacketPayload) {
+//   try {
+//     window.postMessage(JSON.parse(JSON.stringify(
+//       {
+//         payload,
+//         source: appSources.CONTENT
+//       })) as IPacket, OhMyContentState.href
+//     )
+//   } catch (err) {
+//     // TODO
+//   }
+// }
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -106,30 +113,36 @@ async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise
 // messageBus.streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
 
 async function handlePreResponse({ packet }: IOhMessage<IOhMyReadyResponse<unknown>>) {
-  console.log('PACKET', packet);
-  const state = await contentState.getState();
+  // console.log('PACKET', packet);
+  // const state = await contentState.getState();
 
-  const response = packet.payload.data.response;
+  // const response = packet.payload.data.response;
 
-  if (response.status === ohMyMockStatus.NO_CONTENT) {
-    packet.payload.data.response = await handleApiRequest(packet.payload.data.request, state);
-  }
+  // if (response.status === ohMyMockStatus.NO_CONTENT) {
+  //   packet.payload.data.response = await handleApiRequest(packet.payload.data.request, state);
+  // }
 
-  console.log('SEND PRE_RESPONSE TO INJECTED', packet.payload);
+  // console.log('SEND PRE_RESPONSE TO INJECTED', packet.payload);
 
-  sendMsgToInjected({
-    type: payloadType.PRE_RESPONSE,
-    data: packet.payload.data,
-    context: state.context, description: 'content;pre-response'
-  });
+  // sendMessageToInjected({
+  //   type: payloadType.PRE_RESPONSE,
+  //   data: packet.payload.data,
+  //   context: state.context, description: 'content;pre-response'
+  // });
 }
 
-messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
+initPreResponseHandler(messageBus, contentState);
+// messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
 
 messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
 messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
 
-messageBus.streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
+messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subscribe(async ({ packet }: IOhMessage<IOhMyAPIRequest>) => {
+  const state = await contentState.getState();
+
+  receivedApiRequest(packet, state);
+
+});
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpdate>) {
@@ -142,32 +155,6 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // TODO: send result back to injected???
 }
 
-async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
-  if (packet.version !== VERSION) {
-    return window[STORAGE_KEY].off();
-  }
-
-  const { payload } = packet;
-  const state = await contentState.getState();
-  payload.context = { ...state.context, ...payload.context };
-
-  let retVal = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(payload.data, payloadType.DISPATCH_TO_SERVER, payload.context) as IOhMyMockResponse;
-  const result = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, state);
-
-  if (result.status === ohMyMockStatus.OK) {
-    if (retVal.status === ohMyMockStatus.OK) { // merge
-      retVal.headers = { ...result.headers, ...retVal.headers };
-    } else {
-      retVal = result;
-    }
-  }
-
-  sendMsgToInjected({
-    type: payloadType.RESPONSE,
-    data: retVal,
-    context: payload.context, description: 'content;receivedApiRequest'
-  });
-}
 
 // Inject XHR/Fetch mocking code and more
 (async function () {
@@ -189,6 +176,7 @@ function inject(state: IState) {
   // eslint-disable-next-line no-console
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 
+
   if (!state) {
     return;
   }
@@ -199,7 +187,8 @@ function inject(state: IState) {
     const script = document.createElement('script');
     script.onload = function () {
       script.remove();
-      sendMsgToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
+      sendMessageToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
+      window.injectedDone$.next(true);
     };
     script.src = chrome.extension.getURL('oh-my-mock.js');
     (document.head || document.documentElement).appendChild(script);

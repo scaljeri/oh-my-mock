@@ -1,6 +1,6 @@
 import { appSources, payloadType } from "../shared/constants";
 import { IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { requestMethod, requestType } from "../shared/type";
+import { IOhMyUpsertData, requestMethod } from "../shared/type";
 import * as ohUrl from "../shared/utils/domain";
 import { sendMsgToContent } from "../shared/utils/send-to-content";
 import { dispatch2Server } from "./server-dispatcher";
@@ -23,7 +23,7 @@ function removeListener(handler: listenerFn) {
   chrome.webRequest.onBeforeRequest.removeListener(handler);
 }
 
-function addListener(tab: chrome.tabs.Tab, timeout = 2000) {
+function addListener(tab: chrome.tabs.Tab, timeout: number) {
   if (listeners[tab.id]) {
     window.clearTimeout(listeners[tab.id].timeoutId);
     removeListener(listeners[tab.id].handler)
@@ -51,34 +51,40 @@ function createHandler(config: IOhMyHandlerConfig) {
   return (details: chrome.webRequest.WebRequestBodyDetails) => {
     if (details.type === 'xmlhttprequest') {
 
-      console.log('recived request', details);
-      dispatch2Server({
+      // Do both 'XHR' and 'FETCH' because we cannot tell which one it is
+      handleRequest({
         url: ohUrl.toPath(details.url),
         method: details.method as requestMethod,
-        requestType: details.type as requestType,
-      }, config.domain).then(response => {
-        console.log('RECEIVED FROM SEVER', response)
+      }, config);
 
-        sendMsgToContent(config.tabId, {
-          source: appSources.BACKGROUND,
-          payload: {
-            type: payloadType.PRE_RESPONSE,
-            data: {
-              response,
-              request: {
-                url: ohUrl.toPath(details.url),
-                method: details.method,
-                requestType: 'XHR'
-              }
-            }
-          }
-        } as IPacket<IOhMyReadyResponse>)
-      });
+      // handleRequest({
+      //   url: ohUrl.toPath(details.url),
+      //   method: details.method as requestMethod,
+      //   requestType: 'FETCH'
+      // }, config);
     }
   }
 }
 
 export function webRequestListener(tab: chrome.tabs.Tab, timeout = 2000) {
-  console.log('LISTEN FOR NETWORK TRAFFIC');
-  addListener(tab);
+  addListener(tab, timeout);
+}
+
+
+async function handleRequest(data: IOhMyUpsertData, { domain, tabId }: IOhMyHandlerConfig) {
+  const response = await dispatch2Server(data, domain);
+
+  sendMsgToContent(tabId, {
+    source: appSources.BACKGROUND,
+    payload: {
+      type: payloadType.PRE_RESPONSE,
+      data: {
+        response,
+        request: {
+          url: data.url, // ohUrl.toPath(data.url),
+          method: data.method,
+        }
+      }
+    }
+  } as IPacket<IOhMyReadyResponse>)
 }

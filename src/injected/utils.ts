@@ -1,5 +1,5 @@
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyMockResponse, requestType } from '../shared/type';
+import { IOhMyAPIRequest, IOhMyMockResponse, requestType, IOhMyMockContext } from '../shared/type';
 import { isImage } from '../shared/utils/image';
 import { logging } from '../shared/utils/log';
 
@@ -40,13 +40,14 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
   }
 }
 
-export function findCachedResponse(url, type, doRemove = true): any {
-  const result = window[STORAGE_KEY].cache.find(
-    c => c && c.request.url === url && c.request.requestType === type);
+export function findCachedResponse(search: IOhMyMockContext, remove = true): any {
+  const result = window[STORAGE_KEY].cache.find(c =>
+    c && c.request.url === search.url &&
+    (!search.method || c.request.method === search.method));
 
-  if (result && doRemove) {
+  if (result && remove) {
     const index = window[STORAGE_KEY].cache[result];
-    delete window[STORAGE_KEY].cache[index];
+    window[STORAGE_KEY].cache.splice(index, 1);
   }
 
   return result;

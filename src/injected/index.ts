@@ -8,6 +8,7 @@ import { log } from './utils';
 const VERSION = '__OH_MY_VERSION__';
 declare let window: any;
 
+console.log('initing injected -0--');
 let isOhMyMockActive = false;
 
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times

@@ -29,7 +29,7 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
   }
 
   const result = await dispatchRemote({
-    type: payloadType.DISPATCH_API_REQUEST,
+    type: payloadType.API_REQUEST,
     context: state.context,
     description: 'background;dispatch-to-server',
     data: {

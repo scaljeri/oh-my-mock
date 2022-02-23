@@ -33,7 +33,8 @@ export class OhMyLocal {
 
   findContext(input: Partial<IData>): IOhFileContext | null {
     return (this.contexts.filter(c => {
-      return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url!, c.url!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return (!input.method || c.method === input.method) && compareUrls(input.url!, c.url!);
     }) || [])[0];
   }
 

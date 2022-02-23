@@ -37,13 +37,15 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
 
   }
 
-  const { response, headers, status, statusCode, delay } =
-    await dispatchApiRequest({
-      url,
-      method: config.method || 'GET',
-      ...(config.body && { body: config.body }),
-      ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
-    } as IOhMyAPIRequest, 'FETCH');
+
+  const result = await dispatchApiRequest({
+    url,
+    method: config.method || 'GET',
+    ...(config.body && { body: config.body }),
+    ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
+  } as IOhMyAPIRequest, 'FETCH');
+
+  const { response, headers, status, statusCode, delay } = result.response;
 
   if (status === ohMyMockStatus.ERROR) {
     log('Ooops, something went wrong while mocking your FETCH request!')

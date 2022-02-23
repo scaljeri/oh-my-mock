@@ -20,12 +20,14 @@ mb.streamByType$(payloadType.ACTIVE, appSources.CONTENT).subscribe(({ packet }) 
   // INJECTED SCRIPT: state-manger.ts
 });
 
-mb.streamByType$<IOhMyReadyResponse>(payloadType.PRE_RESPONSE, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyReadyResponse>) => {
+console.log('SETUP LISTENER INJECTED FOR PRE');
+mb.streamByType$<IOhMyReadyResponse>(payloadType.RESPONSE, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyReadyResponse>) => {
   // state = packet.payload.data as IState;
   // update.next(state);
   // INJECTED SCRIPT: state-manger.ts
-  console.log('received pre-packet', packet);
+  console.log('----------------------------------------', packet)
   if (packet.payload.data.response.status === ohMyMockStatus.OK) {
+    console.log('PRE_RESPONSE', packet.payload);
     window[STORAGE_KEY].cache.push(packet.payload.data);
   }
 });

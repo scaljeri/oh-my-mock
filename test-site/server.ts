@@ -19,7 +19,6 @@ const app = ohMyServer.app;
 ohMyServer.local.add({ // settings
   url: '/users',
   method: 'GET',
-  requestType: 'FETCH',
   statusCode: 201,
   path: './users.json',
   handler: (output: IOhMyMockResponse<string>, data: IOhMyDispatchServerRequest): IOhMyMockResponse => {
