@@ -1,8 +1,9 @@
 import { findCachedResponse } from "../utils";
 import * as headers from '../../shared/utils/xhr-headers';
+import { ohMyMockStatus } from "../../shared/constants";
 
 const descrAllHeaders = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'getAllResponseHeaders');
-const descrHeader = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'getResponseHeaders');
+const descrHeader = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'getResponseHeader');
 
 export function patchResponseHeaders() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'getAllResponseHeaders', {
@@ -19,7 +20,7 @@ export function patchResponseHeaders() {
       if (headersObj) {
         return headers.stringify(headersObj);
       } else {
-        this.__getAllResponseHeaders();
+        return this.__getAllResponseHeaders();
       }
     }
   });
@@ -35,10 +36,14 @@ export function patchResponseHeaders() {
         });
       }
 
-      return this.ohResult.response?.headers?.[header] || this.__getResponseHeader(header);
+      if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
+        return this.ohResult.response?.headers?.[header];
+      } else {
+        return this.__getResponseHeader(header);
+      }
     }
   });
-  Object.defineProperty(window.XMLHttpRequest.prototype, '__getResponseHeader', { ...descrAllHeaders });
+  Object.defineProperty(window.XMLHttpRequest.prototype, '__getResponseHeader', { ...descrHeader });
 }
 
 export function unpatchResponseHeaders() {

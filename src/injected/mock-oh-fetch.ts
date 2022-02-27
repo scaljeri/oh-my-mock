@@ -4,7 +4,7 @@ import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { isBinary, toBlob, toDataURL } from '../shared/utils/binary';
+import { isBinary, b64ToBlob, blobToDataURL } from '../shared/utils/binary';
 import { logging } from '../shared/utils/log';
 
 export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
@@ -61,7 +61,7 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
 
     if (response !== undefined && statusCode !== 204) { // Otherwise error with statuscode 204 (No content)
       if (isBinary(headers['content-type'])) {
-        body = await toBlob(response as string);
+        body = await b64ToBlob(response as string);
       } else {
         body = new Blob([response as any], { type: headers['content-type'] });
       }
@@ -92,7 +92,7 @@ function fecthApi(url, config): Promise<unknown> {
         },
         response: {
           statusCode: response.status,
-          response: await (isBinary(headers['content-type']) ? toDataURL(await clone.blob()) : clone.text()),
+          response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
           headers
         }
       });
