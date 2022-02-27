@@ -55,8 +55,19 @@
         >
           <mat-icon>fullscreen</mat-icon>
         </button>
-        <oh-my-code-edit class="request-response" *ngIf="!isResponseImage" [formControl]="responseCtrl"></oh-my-code-edit>
-        <img class="request-response" [ngClass]="{'is-blurred': blurImages }" *ngIf="isResponseImage" [src]="responseCtrl.value">
+        <oh-my-code-edit
+          class="request-response"
+          *ngIf="!isResponseImage"
+          [formControl]="responseCtrl"
+        ></oh-my-code-edit>
+        <oh-my-mock-image
+          class="request-response"
+          [ngClass]="{ 'is-blurred': blurImages }"
+          *ngIf="isResponseImage"
+          [contentType]="responseType"
+          [src]="responseCtrl.value"
+        >
+        </oh-my-mock-image>
         <button class="reset" mat-button (click)="onRevertResponse()">
           Reset
         </button>
@@ -77,7 +88,10 @@
         >
           <mat-icon>fullscreen</mat-icon>
         </button>
-        <oh-my-code-edit class="request-headers" [formControl]="headersCtrl"></oh-my-code-edit>
+        <oh-my-code-edit
+          class="request-headers"
+          [formControl]="headersCtrl"
+        ></oh-my-code-edit>
         <button class="reset" mat-button (click)="onRevertHeaders()">
           Reset
         </button>
@@ -90,7 +104,8 @@
   <section class="no-data">
     <p>This request is not active and OhMyMock will not serve any data.</p>
     <p *ngIf="hasMocks">
-      To start serving data, select a response, create a new response or change the preset.
+      To start serving data, select a response, create a new response or change
+      the preset.
     </p>
     <p *ngIf="!hasMocks">New responses can be created with the + button</p>
   </section>
