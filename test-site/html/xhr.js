@@ -92,7 +92,6 @@ function xhrInjectResponse(xhr) {
   // const blob = new Blob([xhr.response]);
   // const srcBlob = URL.createObjectURL(blob);
   // window.ohMyMock.responseFn(blob);
-  debugger;
   window.ohMyMock.responseFn(xhr.response);
   window.ohMyMock.statusCodeFn(xhr.status);
   window.ohMyMock.headersFn(xhr.getAllResponseHeaders());
