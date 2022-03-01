@@ -1,6 +1,7 @@
 import { findCachedResponse } from "../utils";
 
-const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'status');
+const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__status');
+const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'status');
 
 export function patchStatus() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'status', {
@@ -21,5 +22,5 @@ export function patchStatus() {
 
 export function unpatchStatus() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'status', descriptor);
-  delete window.XMLHttpRequest.prototype['__send'];
+  delete window.XMLHttpRequest.prototype['__status'];
 }

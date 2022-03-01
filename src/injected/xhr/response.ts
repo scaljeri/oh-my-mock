@@ -2,7 +2,8 @@ import { ohMyMockStatus } from "../../shared/constants";
 import { b64ToArrayBuffer, b64ToBlob } from "../../shared/utils/binary";
 import { findCachedResponse } from "../utils";
 
-const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'response');
+const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__response');
+const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__': '') + 'response');
 
 export function patchResponse() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'response', {
@@ -21,6 +22,8 @@ export function patchResponse() {
           response = b64ToBlob(response);
         } else if (this.responseType === 'arraybuffer') {
           response = b64ToArrayBuffer(response);
+        } else if (this.responseType === 'json') {
+          response = JSON.parse(response);
         }
 
         return response;
@@ -36,15 +39,3 @@ export function unpatchResponse() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'response', descriptor);
   delete window.XMLHttpRequest.prototype['__response'];
 }
-
-// function initResult(xhr) {
-//   const url = (xhr.ohUrl || xhr.responseURL).replace(window.origin, '');
-
-//   return findCachedResponse({
-//     url,
-//     method: xhr.ohMethod,
-//     requestType: 'XHR'
-//   });
-
-//   // TODO: populate ohResponse, ohResponseText, ohStatus and ohHeaders
-// }

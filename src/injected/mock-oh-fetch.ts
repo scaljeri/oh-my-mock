@@ -12,7 +12,6 @@ export const log = logging(`${STORAGE_KEY} (^*^)`, true);
 
 interface IOhFetchConfig {
   method?: requestMethod;
-  __ohSkip?: boolean; // Use Fetch without caching or mocking
   headers?: Headers & { entries: () => [string, string][] }; // TODO: entries is not known in Headers
   body?: FormData | unknown;
 }
@@ -21,10 +20,6 @@ declare let window: { fetch: any, [STORAGE_KEY]: any };
 window[STORAGE_KEY] ??= {};
 
 const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => {
-  if (config.__ohSkip) {
-    return fecthApi(url, config);
-  }
-
   if (url instanceof Request) {
     config = { headers: url.headers as any, method: url.method as requestMethod };
     url = url.url;
@@ -76,27 +71,22 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
 }
 
 function fecthApi(url, config): Promise<unknown> {
-  const ohSkip = config.__ohSkip;
-  delete config.__ohSkip;
-
   return window[STORAGE_KEY].fetch.call(window, url, config).then(async response => {
-    if (!ohSkip) {
-      const clone = response.clone();
+    const clone = response.clone();
 
-      const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
-      await dispatchApiResponse({
-        request: {
-          url,
-          method: config.method || 'GET',
-          requestType: 'FETCH',
-        },
-        response: {
-          statusCode: response.status,
-          response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
-          headers
-        }
-      });
-    }
+    const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
+    await dispatchApiResponse({
+      request: {
+        url,
+        method: config.method || 'GET',
+        requestType: 'FETCH',
+      },
+      response: {
+        statusCode: response.status,
+        response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
+        headers
+      }
+    });
 
     return response;
   });

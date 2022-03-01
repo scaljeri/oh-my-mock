@@ -28,6 +28,8 @@ export class OhMyContentState {
       this.subjects[key]?.next(update.newValue);
     });
 
+    window[STORAGE_KEY].off.push(() => StorageUtils.off())
+
     if (window.name) {
       try {
         OhMyContentState.storage = JSON.parse(window.name) as IOhMyStorage;

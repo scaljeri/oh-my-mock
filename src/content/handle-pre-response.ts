@@ -21,7 +21,6 @@ export function initPreResponseHandler(messageBus: OhMyMessageBus, contentState:
       if (!val) {
         return;
       }
-      console.log('SENDING NOW----------');
       sendMessageToInjected({
         type: payloadType.RESPONSE,
         data: packet.payload.data,

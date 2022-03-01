@@ -1,6 +1,7 @@
 import { findCachedResponse } from "../utils";
 
-const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, 'responseText');
+const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__responseText');
+const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'responseText');
 
 export function patchResponseText() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'responseText', {

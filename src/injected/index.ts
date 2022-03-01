@@ -2,22 +2,24 @@ import { STORAGE_KEY } from '../shared/constants';
 import { IState } from '../shared/type';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
-import { ohMyState$ } from './state-manager';
+import { setupListenersMessageBus } from './state-manager';
 import { log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
 declare let window: any;
 
-console.log('initing injected -0--');
 let isOhMyMockActive = false;
 
+window[STORAGE_KEY]?.off?.forEach(c => c());
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-window[STORAGE_KEY] = { cache: [] };
+window[STORAGE_KEY] = { cache: [], off: [] };
 window[STORAGE_KEY].version = VERSION;
 
+const ohMyState$ = setupListenersMessageBus();
 const sub = ohMyState$.subscribe((state: IState) => {
   handleStateUpdate(state);
 });
+window[STORAGE_KEY].off.push(() => sub.unsubscribe());
 
 function handleStateUpdate(state: IState): void {
   if (!state) {

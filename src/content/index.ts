@@ -1,12 +1,11 @@
 /// <reference types="chrome"/>
 
-import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyMockResponse, IState } from '../shared/type';
-import { IOhMessage, IOhMyReadyResponse, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
+import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
+import { IOhMyAPIRequest, IState } from '../shared/type';
+import { IOhMessage, IOhMyReadyResponse, IOhMyResponseUpdate } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { debug } from './utils';
 import { OhMyContentState } from './content-state';
-import { handleApiRequest } from '../shared/utils/handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
@@ -19,9 +18,11 @@ import { initPreResponseHandler } from './handle-pre-response';
 import { BehaviorSubject } from 'rxjs';
 
 declare let window: any;
+const x = Math.random();
 
 window.injectedDone$ = new BehaviorSubject(false);
-window[STORAGE_KEY]?.off?.();
+window[STORAGE_KEY]?.off?.forEach(h => h());
+window[STORAGE_KEY] = { off: [] };
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -29,8 +30,8 @@ const VERSION = '__OH_MY_VERSION__';
 const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)
   .setTrigger(triggerRuntime);
+window[STORAGE_KEY].off.push(() => messageBus.clear());
 
-window[STORAGE_KEY] = { off: () => messageBus.clear() }
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
@@ -50,19 +51,6 @@ contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
     inject(state);
   }
 });
-
-// function sendMsgToInjected(payload: IPacketPayload) {
-//   try {
-//     window.postMessage(JSON.parse(JSON.stringify(
-//       {
-//         payload,
-//         source: appSources.CONTENT
-//       })) as IPacket, OhMyContentState.href
-//     )
-//   } catch (err) {
-//     // TODO
-//   }
-// }
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -88,15 +76,6 @@ function sendKnockKnock() {
 
 async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
   contentState.setPopupOpen(packet.payload.data.active);
-  // TabId is independend of domain, it belongs to the tab!
-  // OhMyContentState.tabId = packet.tabId;
-  // OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
-  // contentState.persist();
-
-  // // Domain change (Popup is using wrong domain)
-  // if (packet.domain !== OhMyContentState.host) {
-  //   return sendKnockKnock();
-  // }
 }
 
 // async function handleDispatchedRequest(packet: IPacket<IOhMyRequest>): Promise<void> {

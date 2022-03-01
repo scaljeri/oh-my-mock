@@ -2118,12 +2118,12 @@
     merge-source-map "^1.1.0"
     schema-utils "^2.7.0"
 
-"@materia-ui/ngx-monaco-editor@^5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@materia-ui/ngx-monaco-editor/-/ngx-monaco-editor-5.1.0.tgz#76c2f7ec3654f4ad30fa4a5b8439dcf0fa0f47f4"
-  integrity sha512-5k4yJzh1rbygbgwomcTOA63NABr/pYMZZNmtwN/2/eo07ZNxiJY3puNKjJkNN2cuWeZA5Qu7LKDS0E8oYpN/cg==
+"@materia-ui/ngx-monaco-editor@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@materia-ui/ngx-monaco-editor/-/ngx-monaco-editor-6.0.0.tgz#9ae93666019e9a6d4f787370b4373cbb63a04a38"
+  integrity sha512-gTqNQjOGznZxOC0NlmKdKSGCJuTts8YmK4dsTQAGc5IgIV7cZdQWiW6AL742h0ruED6q0cAunEYjXT6jzHBoIQ==
   dependencies:
-    tslib "^1.10.0"
+    tslib "^2.0.0"
 
 "@ng-apimock/core@^3.0.1":
   version "3.0.1"

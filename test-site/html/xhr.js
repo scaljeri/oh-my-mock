@@ -1,7 +1,7 @@
 window.ohMyMock.xhr = (method, responseType, cb) => {
   const xhr = new XMLHttpRequest();
   if (responseType === 'png') {
-    xhr.responseType = 'blob'; // 'arraybuffer';
+    xhr.responseType = 'blob'; // 'arraybuffer'; // 'blob';
   }
   xhr.open(method, ohMyMock.urlMap[responseType]);
   xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
@@ -92,7 +92,13 @@ function xhrInjectResponse(xhr) {
   // const blob = new Blob([xhr.response]);
   // const srcBlob = URL.createObjectURL(blob);
   // window.ohMyMock.responseFn(blob);
-  window.ohMyMock.responseFn(xhr.response);
+  const response = xhr.response;
+  if (response instanceof Uint8Array) {
+    window.ohMyMock.responseFn(new Blob([response]));
+  } else {
+    window.ohMyMock.responseFn(response);
+  }
+
   window.ohMyMock.statusCodeFn(xhr.status);
   window.ohMyMock.headersFn(xhr.getAllResponseHeaders());
 }

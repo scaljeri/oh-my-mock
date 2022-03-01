@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, share, tap } from 'rxjs/operators';
+import { filter, share } from 'rxjs/operators';
 import { appSources, payloadType } from '../constants';
 import { IOhMessage, ohMessage } from '../packet-type';
 
@@ -13,7 +13,6 @@ export class OhMyMessageBus {
   setTrigger(receiver: (cb: ohMessage) => () => void): OhMyMessageBus {
     if (receiver) {
       this.offs.push(receiver((message: IOhMessage) => {
-        console.log('recived packeaggges', message);
         this.emitPacket(message);
 
         return !!message?.callback;

@@ -20,12 +20,17 @@ export class StorageUtils {
   static updates$ = StorageUtils.updatesSubject.asObservable();
   static chrome = chrome;
   static MigrateUtils = MigrateUtils;
+  static callback = (changes: Record<string, IOhMyStorageChange>, namespace: string) => {
+    Object.keys(changes).forEach(key =>
+      StorageUtils.updatesSubject.next({ key, update: changes[key] }));
+  }
 
   static listen(): void {
-    StorageUtils.chrome.storage.onChanged.addListener((changes: Record<string, IOhMyStorageChange>, namespace: string) => {
-      Object.keys(changes).forEach(key =>
-        StorageUtils.updatesSubject.next({ key, update: changes[key] }));
-    });
+    StorageUtils.chrome.storage.onChanged.addListener(StorageUtils.callback);
+  }
+
+  static off(): void {
+    StorageUtils.chrome.storage.onChanged.removeListener(StorageUtils.callback);
   }
 
   static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY): Promise<T> {
