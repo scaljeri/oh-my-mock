@@ -8,12 +8,17 @@ import { log } from './utils';
 const VERSION = '__OH_MY_VERSION__';
 declare let window: any;
 
-let isOhMyMockActive = false;
+let isOhMyMockActive = true;
 
+console.log('xxxx injected xxxxxxx');
 window[STORAGE_KEY]?.off?.forEach(c => c());
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
 window[STORAGE_KEY] = { cache: [], off: [] };
 window[STORAGE_KEY].version = VERSION;
+
+// TODO: This is testing code => REmove!!
+patchXmlHttpRequest();
+patchFetch();
 
 const ohMyState$ = setupListenersMessageBus();
 const sub = ohMyState$.subscribe((state: IState) => {
@@ -33,7 +38,7 @@ function handleStateUpdate(state: IState): void {
       isOhMyMockActive = true;
       log('%c*** Activated ***', 'background: green');
       patchXmlHttpRequest();
-      // patchFetch();
+      patchFetch();
     }
   } else {
     isOhMyMockActive = false;

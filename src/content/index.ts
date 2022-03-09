@@ -155,7 +155,6 @@ function inject(state: IState) {
   // eslint-disable-next-line no-console
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 
-
   if (!state) {
     return;
   }
@@ -165,12 +164,17 @@ function inject(state: IState) {
 
     const script = document.createElement('script');
     script.onload = function () {
-      script.remove();
+      // script.remove();
       sendMessageToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
       window.injectedDone$.next(true);
     };
-    script.src = chrome.extension.getURL('oh-my-mock.js');
-    (document.head || document.documentElement).appendChild(script);
+    script.type = "text/javascript";
+    // script.setAttribute('async', 'false');
+    // script.setAttribute('defer', 'false'); // TODO: try `true`
+    script.src = chrome.runtime.getURL('oh-my-mock.js');
+    // (document.head || document.documentElement).appendChild(script);
+    document.head.insertBefore(script, document.head.firstChild);
+    // document.write('<script type="text/javascript" src="other.js"><\/script>');
   }
 }
 

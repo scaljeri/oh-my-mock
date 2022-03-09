@@ -24,6 +24,7 @@ export function setupListenersMessageBus() {
   });
 
   mb.streamByType$<IOhMyReadyResponse>(payloadType.RESPONSE, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyReadyResponse>) => {
+    console.log('XXXXXXXXXXXXXXXXXXXXXXX', packet.payload.data);
     if (packet.payload.data.response.status === ohMyMockStatus.OK) {
       window[STORAGE_KEY].cache.push(packet.payload.data);
     }

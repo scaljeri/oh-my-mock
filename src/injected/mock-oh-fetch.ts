@@ -4,8 +4,13 @@ import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiResponse } from './message/dispatch-api-response';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { isBinary, b64ToBlob, blobToDataURL } from '../shared/utils/binary';
+import { isBinary, blobToDataURL } from '../shared/utils/binary';
 import { logging } from '../shared/utils/log';
+import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
+import { patchHeaders, unpatchHeaders } from './fetch/headers';
+import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
+import { patchResponseJson, unpatchResponseJson } from './fetch/json';
+import { patchResponseText, unpatchResponseText } from './fetch/text';
 
 export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
 export const log = logging(`${STORAGE_KEY} (^*^)`, true);
@@ -16,20 +21,19 @@ interface IOhFetchConfig {
   body?: FormData | unknown;
 }
 
-declare let window: { fetch: any, [STORAGE_KEY]: any };
-window[STORAGE_KEY] ??= {};
+declare let window: { fetch: any };
 
-const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => {
-  if (url instanceof Request) {
-    config = { headers: url.headers as any, method: url.method as requestMethod };
-    url = url.url;
+const OhMyFetch = async (request: string | Request, config: IOhFetchConfig = {}) => {
+  let url = request as string;
+  if (request instanceof Request) {
+    config = { headers: request.headers as any, method: request.method as requestMethod };
+    url = request.url;
   }
 
   if (config.body instanceof FormData) {
     const fd = {};
     config.body.forEach((value, key) => fd[key] = value);
     config.body = fd;
-
   }
 
 
@@ -47,60 +51,99 @@ const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => 
   }
 
   if (status !== ohMyMockStatus.OK) {
-    return fecthApi(url, config);
+    return OhMyFetch['__fetch'](request, config).then(async response => {
+      const clone = response.clone();
+
+      const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
+      await dispatchApiResponse({
+        request: {
+          url,
+          method: config.method || 'GET',
+          requestType: 'FETCH',
+        },
+        response: {
+          statusCode: response.status,
+          response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
+          headers
+        }
+      });
+
+      return response;
+    });
   }
 
-  return new Promise(async (resolv, reject) => {
-    let body = null
+  return new Promise(resolve => {
+    const resp = new Response();
+    resp['ohUrl'] = url;
+    resp['ohMethod'] = config.method;
 
-
-    if (response !== undefined && statusCode !== 204) { // Otherwise error with statuscode 204 (No content)
-      if (isBinary(headers['content-type'])) {
-        body = await b64ToBlob(response as string);
-      } else {
-        body = new Blob([response as any], { type: headers['content-type'] });
-      }
-    }
-
-    const rsp = new Response(body, {
-      headers: fetchUtils.jsonToHeaders(headers || {}),
-      status: statusCode
-    });
-    setTimeout(() => resolv(rsp), delay || 0);
+    setTimeout(() => resolve(resp), delay || 0);
   });
+
+  // return new Promise(async (resolv, reject) => {
+  //   let body = null
+
+
+  //   if (response !== undefined && statusCode !== 204) { // Otherwise error with statuscode 204 (No content)
+  //     if (isBinary(headers['content-type'])) {
+  //       body = await b64ToBlob(response as string);
+  //     } else {
+  //       body = new Blob([response as any], { type: headers['content-type'] });
+  //     }
+  //   }
+
+  //   const rsp = new Response(body, {
+  //     headers: fetchUtils.jsonToHeaders(headers || {}),
+  //     status: statusCode
+  //   });
+  //   setTimeout(() => resolv(rsp), delay || 0);
+  // });
 }
 
-function fecthApi(url, config): Promise<unknown> {
-  return window[STORAGE_KEY].fetch.call(window, url, config).then(async response => {
-    const clone = response.clone();
+// function fecthApi(url, config): Promise<unknown> {
+//   return window[STORAGE_KEY].fetch.call(window, url, config).then(async response => {
+//     const clone = response.clone();
 
-    const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
-    await dispatchApiResponse({
-      request: {
-        url,
-        method: config.method || 'GET',
-        requestType: 'FETCH',
-      },
-      response: {
-        statusCode: response.status,
-        response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
-        headers
-      }
-    });
+//     const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
+//     await dispatchApiResponse({
+//       request: {
+//         url,
+//         method: config.method || 'GET',
+//         requestType: 'FETCH',
+//       },
+//       response: {
+//         statusCode: response.status,
+//         response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
+//         headers
+//       }
+//     });
 
-    return response;
-  });
-}
+//     return response;
+//   });
+// }
 
 function patchFetch(): void {
-  window[STORAGE_KEY].fetch ??= window.fetch;
+  const origFetch = window.fetch['__fetch'] || window.fetch;
   window.fetch = OhMyFetch;
+  console.log('PATCH EVERYTHONG');
+  OhMyFetch['__fetch'] = origFetch;
+  patchResponseBlob();
+  patchResponseArrayBuffer();
+  patchResponseJson();
+  patchResponseText();
+  patchHeaders();
 }
 
 function unpatchFetch(): void {
-  if (window[STORAGE_KEY].fetch) {
-    window.fetch = window[STORAGE_KEY].fetch;
+  if (window.fetch['__fetch']) {
+    window.fetch = window.fetch['__fetch'];
   }
+
+  unpatchResponseBlob();
+  unpatchResponseArrayBuffer();
+  unpatchResponseJson();
+  unpatchResponseText();
+  unpatchHeaders();
 }
 
 export { OhMyFetch, unpatchFetch, patchFetch };

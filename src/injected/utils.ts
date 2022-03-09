@@ -52,3 +52,16 @@ export function findCachedResponse(search: IOhMyMockContext, remove = true): any
 
   return result;
 }
+
+export function findCachedResponsesync(search: IOhMyMockContext, remove = true): Promise<any> {
+  return new Promise(resolve => {
+    let count = 0;
+    const iid = window.setInterval(() => {
+      const result = findCachedResponse(search, remove);
+      if (result || ++count === 10) {
+        window.clearInterval(iid);
+        resolve(result);
+      }
+    }, 100);
+  })
+}

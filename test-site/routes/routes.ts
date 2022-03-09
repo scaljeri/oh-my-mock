@@ -18,11 +18,11 @@ export const appRouter = (app: any): void => {
         res.contentType('application/json');
         res.send(data);
       });
-    }, 1000);
+    }, 100);
   });
 
   app.get("/site", (req: express.Request, res: express.Response) => {
-    setTimeout(() => {
+    // setTimeout(() => {
       fs.readFile(sitePath, "utf8", (err, data) => {
         if (err) {
           throw err;
@@ -31,7 +31,7 @@ export const appRouter = (app: any): void => {
         res.contentType('text/html');
         res.send(data);
       });
-    }, 2000);
+    // }, 2000);
   });
 
   app.post('/users', (req: express.Request, res: express.Response) => {
@@ -41,12 +41,12 @@ export const appRouter = (app: any): void => {
 
   app.get("/binary/*", (req: express.Request, res: express.Response) => {
     const file = binaryPath + '/test.jpg';
-    setTimeout(() => {
+    // setTimeout(() => {
       // res.setHeader("Content-Type", 'application/json; charset=utf8');
       // res.header("Content-Type",'application/json');
       // res.send(JSON.stringify(data));
       res.sendFile(file);
-    }, 1000);
+    // }, 1000);
   });
 
   app.get("/*", (req: express.Request, res: express.Response) => {
