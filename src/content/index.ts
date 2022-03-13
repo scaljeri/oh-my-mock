@@ -125,7 +125,6 @@ messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subs
   receivedApiRequest(packet, state);
 
 });
-console.log('(*&^%$#@#$%^&*&^%$#@#$%^&*(*&^%R$E#W@#$%^&*(');
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpdate>) {
@@ -134,7 +133,7 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // payload.context = { ...payload.context, domain: OhMyContentState.host }
   // debugger;
   // OhMySendToBg.full()
-  console.log('NEW RESPONSE');
+  console.log('----NEW RESPONSE');
   handleApiResponse(payload, contentState);
   // TODO: send result back to injected???
 }

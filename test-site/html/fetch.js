@@ -2,7 +2,6 @@ window.ohMyMock.fetch = (method, responseType, cb) => {
     fetch(ohMyMock.urlMap[responseType], {
       method, headers: new Headers()
     }).then((response) => {
-      console.log('--------------------------------');
       const headers = [...response.headers.entries()];
       ohMyMock.headersFn(headers);
 

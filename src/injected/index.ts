@@ -30,9 +30,8 @@ function handleStateUpdate(state: IState): void {
   if (!state) {
     return;
   }
+  window[STORAGE_KEY].state = state;
 
-  // Did activity change?
-  // if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
   if (state.aux.popupActive && state.aux.appActive) {
     if (!isOhMyMockActive) {
       isOhMyMockActive = true;

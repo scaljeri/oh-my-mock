@@ -1,4 +1,6 @@
+import { ohMyMockStatus } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
+import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__responseText');
 const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'responseText');
@@ -12,6 +14,10 @@ export function patchResponseText() {
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
           method: this.ohMethod
         });
+
+        if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+          persistResponse(this, this.ohResult.request);
+        }
       }
 
       if (this.responseType !== '' && this.responseType !== 'text') {

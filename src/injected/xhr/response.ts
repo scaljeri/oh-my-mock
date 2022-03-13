@@ -1,6 +1,7 @@
 import { ohMyMockStatus } from "../../shared/constants";
 import { b64ToArrayBuffer, b64ToBlob } from "../../shared/utils/binary";
 import { findCachedResponse } from "../utils";
+import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__response');
 const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__': '') + 'response');
@@ -14,6 +15,10 @@ export function patchResponse() {
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
           method: this.ohMethod
         });
+
+        if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+          persistResponse(this, this.ohResult.request);
+        }
       }
 
       if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
@@ -22,7 +27,7 @@ export function patchResponse() {
           response = b64ToBlob(response);
         } else if (this.responseType === 'arraybuffer') {
           response = b64ToArrayBuffer(response);
-        } else if (this.responseType === 'json') {
+        } else if (this.responseType === 'json' && response === 'string') {
           response = JSON.parse(response);
         }
 

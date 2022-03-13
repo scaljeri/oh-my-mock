@@ -2,10 +2,11 @@ import { IMock, IOhMyMockResponse, IOhMyAPIRequest, IOhMyShallowMock, IState } f
 import { DataUtils } from "./data";
 import { StateUtils } from './state';
 import { evalCode } from './eval-code';
-import { IS_BASE64_RE, ohMyMockStatus, payloadType } from "../constants";
-import { blurBase64, isImage } from "./image";
+import { ohMyMockStatus, payloadType } from "../constants";
+import { blurBase64, isImage, stripB64Prefix } from "./image";
 import { OhMySendToBg } from "./send-to-background";
 import { StorageUtils } from "./storage";
+import { getMimeType } from "./mime-type";
 
 export async function handleApiRequest(request: IOhMyAPIRequest, state: IState, emitHit = true): Promise<IOhMyMockResponse> {
   const data = StateUtils.findRequest(state, request);
@@ -28,13 +29,9 @@ export async function handleApiRequest(request: IOhMyAPIRequest, state: IState, 
 
     // TODO: Skip this if customCode is untouched!!
     const response = await evalCode(mock, request);
-    if (
-      typeof response.response === 'string' &&
-      (response.response as string).match(IS_BASE64_RE) &&
-      isImage(response.headers?.['content-type']) &&
-      state.aux.blurImages) {
-      // TODO: dos blurBase64 work??
-      response.response = await blurBase64(response.response as string);
+    const contentType = getMimeType(response.headers);
+    if (typeof response.response === 'string' && isImage(contentType) && state.aux.blurImages) {
+      response.response = stripB64Prefix(await blurBase64(response.response as string, contentType));
     }
     return response;
   }

@@ -11,7 +11,7 @@ export function patchResponseBlob() {
   Object.defineProperties(window.Response.prototype, {
     blob: {
       ...descriptor,
-      value: function () {
+      value: async function () {
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
@@ -25,8 +25,8 @@ export function patchResponseBlob() {
 
         if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
           const response = this.ohResult.response?.response;
-          const contentType = getMimeType(this.ohResult.headers);
-          return Promise.resolve(b64ToBlob(response, contentType)); // TODO: Can this also be a normal string
+          const contentType = getMimeType(this.ohResult.response.headers);
+          return b64ToBlob(response, contentType); // TODO: Can this also be a normal string
         } else {
           return this.__blob();
         }

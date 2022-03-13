@@ -1,5 +1,5 @@
 export function getMimeType(headers: Record<string, string>): string {
-  return headers['content-type'];
+  return headers?.['content-type'];
 }
 export const splitMimeType = (contentType: string): { mimeType: string, mimeSubType: string } => {
   const [mimeType, mimeSubType] = strip(contentType)?.split(/\//);
