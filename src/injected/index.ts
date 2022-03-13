@@ -8,7 +8,7 @@ import { log } from './utils';
 const VERSION = '__OH_MY_VERSION__';
 declare let window: any;
 
-let isOhMyMockActive = true;
+let isOhMyMockActive = false;
 
 console.log('xxxx injected xxxxxxx');
 window[STORAGE_KEY]?.off?.forEach(c => c());
@@ -17,8 +17,8 @@ window[STORAGE_KEY] = { cache: [], off: [] };
 window[STORAGE_KEY].version = VERSION;
 
 // TODO: This is testing code => REmove!!
-patchXmlHttpRequest();
-patchFetch();
+// patchXmlHttpRequest();
+// patchFetch();
 
 const ohMyState$ = setupListenersMessageBus();
 const sub = ohMyState$.subscribe((state: IState) => {
@@ -36,7 +36,7 @@ function handleStateUpdate(state: IState): void {
   if (state.aux.popupActive && state.aux.appActive) {
     if (!isOhMyMockActive) {
       isOhMyMockActive = true;
-      log('%c*** Activated ***', 'background: green');
+      log('%c*** Activated ***', 'background: green', ', XHR and FETCH ready for mocking');
       patchXmlHttpRequest();
       patchFetch();
     }
@@ -44,7 +44,7 @@ function handleStateUpdate(state: IState): void {
     isOhMyMockActive = false;
     unpatchXmlHttpRequest();
     unpatchFetch();
-    log('%c*** Deactivated ***', 'background: red');
+    log('%c*** Deactivated ***', 'background: red', ', removed XHR and FETCH patches');
   }
 }
 

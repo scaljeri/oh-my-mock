@@ -17,7 +17,7 @@ export async function handleApiRequest(request: IOhMyAPIRequest, state: IState, 
   data.lastHit = Date.now();
 
   if (emitHit) {
-    await OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
+    OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
   }
 
   const activeResponseId = DataUtils.activeMock(data, state.context)
@@ -26,13 +26,14 @@ export async function handleApiRequest(request: IOhMyAPIRequest, state: IState, 
     const mockShallow = DataUtils.getSelectedResponse(data, state.context) as IOhMyShallowMock;
     const mock = await StorageUtils.get<IMock>(mockShallow.id);
 
-
+    // TODO: Skip this if customCode is untouched!!
     const response = await evalCode(mock, request);
     if (
       typeof response.response === 'string' &&
       (response.response as string).match(IS_BASE64_RE) &&
       isImage(response.headers?.['content-type']) &&
       state.aux.blurImages) {
+      // TODO: dos blurBase64 work??
       response.response = await blurBase64(response.response as string);
     }
     return response;

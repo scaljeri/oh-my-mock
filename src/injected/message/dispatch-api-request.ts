@@ -74,7 +74,8 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
           // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
           reject(null);
         } else {
-          window[STORAGE_KEY].cache.push(packet.payload.data);
+          console.log('CACHE', window[STORAGE_KEY]);
+          window[STORAGE_KEY].cache.unshift(packet.payload.data);
           resolve(resp);
         }
       });

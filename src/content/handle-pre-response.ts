@@ -9,7 +9,7 @@ declare let window: any;
 
 export function initPreResponseHandler(messageBus: OhMyMessageBus, contentState: OhMyContentState) {
   messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(async ({ packet }: IOhMessage<IOhMyReadyResponse<unknown>>) => {
-    const state = await contentState.getState();
+    const state = await contentState.getState(); // TODO: use cached state??
 
     const response = packet.payload.data.response;
 

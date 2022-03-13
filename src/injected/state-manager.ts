@@ -4,6 +4,7 @@ import { IOhMessage, IOhMyReadyResponse, IPacket } from '../shared/packet-type';
 import { IState } from '../shared/type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
+import { log } from './utils';
 
 let state: IState;
 
@@ -14,6 +15,7 @@ export function setupListenersMessageBus() {
 
   mb.streamByType$(payloadType.STATE, appSources.CONTENT).subscribe(({ packet }) => {
     state = packet.payload.data as IState;
+    log('Received state update', state);
     update.next(state);
   });
 
@@ -24,10 +26,10 @@ export function setupListenersMessageBus() {
   });
 
   mb.streamByType$<IOhMyReadyResponse>(payloadType.RESPONSE, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyReadyResponse>) => {
-    console.log('XXXXXXXXXXXXXXXXXXXXXXX', packet.payload.data);
-    if (packet.payload.data.response.status === ohMyMockStatus.OK) {
+    log('injected: (PRE)RESPONSE', packet.payload.data);
+    // if (packet.payload.data.response.status === ohMyMockStatus.OK) {
       window[STORAGE_KEY].cache.push(packet.payload.data);
-    }
+    // }
   });
 
   return update.asObservable();

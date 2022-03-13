@@ -46,14 +46,14 @@ export function findCachedResponse(search: IOhMyMockContext, remove = true): any
     (!search.method || c.request.method === search.method));
 
   if (result && remove) {
-    const index = window[STORAGE_KEY].cache[result];
+    const index = window[STORAGE_KEY].cache.indexOf(result);
     window[STORAGE_KEY].cache.splice(index, 1);
   }
 
   return result;
 }
 
-export function findCachedResponsesync(search: IOhMyMockContext, remove = true): Promise<any> {
+export function findCachedResponseAsync(search: IOhMyMockContext, remove = true): Promise<any> {
   return new Promise(resolve => {
     let count = 0;
     const iid = window.setInterval(() => {
@@ -64,4 +64,8 @@ export function findCachedResponsesync(search: IOhMyMockContext, remove = true):
       }
     }, 100);
   })
+}
+
+export function removeDomainFromUrl(url: string): string {
+  return url.replace(window.location.origin, '');
 }

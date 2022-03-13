@@ -1,9 +1,12 @@
-import { payloadType } from '../../shared/constants';
+import { payloadType, STORAGE_KEY } from '../../shared/constants';
 import { IOhMyResponseUpdate } from '../../shared/packet-type';
+import { log } from '../utils';
 import { send } from './send';
 
 export function dispatchApiResponse(payload: IOhMyResponseUpdate) {
-  console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+  log('----------- new rrrrrrrrrrresp');
+  window[STORAGE_KEY].cache.unshift(payload);
+
   send({
     context: { domain: window.location.host },
     type: payloadType.RESPONSE,

@@ -1,6 +1,6 @@
-import { appSources, payloadType } from "../shared/constants";
+import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
 import { IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { IOhMyUpsertData, requestMethod } from "../shared/type";
+import { IOhMyMockResponse, IOhMyUpsertData, requestMethod } from "../shared/type";
 import * as ohUrl from "../shared/utils/domain";
 import { sendMsgToContent } from "../shared/utils/send-to-content";
 import { dispatch2Server } from "./server-dispatcher";
@@ -72,8 +72,14 @@ export function webRequestListener(tab: chrome.tabs.Tab, timeout = 2000) {
 
 
 async function handleRequest(data: IOhMyUpsertData, { domain, tabId }: IOhMyHandlerConfig) {
-  const response = await dispatch2Server(data, domain);
+  dispatchToContent(tabId, data);
+  // const response = await dispatch2Server(data, domain);
+  // if (response.status === ohMyMockStatus.OK) {
+  //   dispatchToContent(tabId, data, response);
+  // }
+}
 
+function dispatchToContent(tabId: number, data: IOhMyUpsertData, response: IOhMyMockResponse = { status: ohMyMockStatus.NO_CONTENT }) {
   sendMsgToContent(tabId, {
     source: appSources.BACKGROUND,
     payload: {

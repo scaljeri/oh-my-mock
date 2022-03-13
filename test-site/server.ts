@@ -17,7 +17,7 @@ const ohMyServer = createServer({
 const app = ohMyServer.app;
 
 ohMyServer.local.add({ // settings
-  url: '/users',
+  url: '/userx',
   method: 'GET',
   statusCode: 201,
   path: './users.json',

@@ -11,6 +11,7 @@ import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
 import { patchResponseJson, unpatchResponseJson } from './fetch/json';
 import { patchResponseText, unpatchResponseText } from './fetch/text';
+import { patchStatus, unpatchStatus } from './fetch/status';
 
 export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
 export const log = logging(`${STORAGE_KEY} (^*^)`, true);
@@ -51,22 +52,24 @@ const OhMyFetch = async (request: string | Request, config: IOhFetchConfig = {})
   }
 
   if (status !== ohMyMockStatus.OK) {
-    return OhMyFetch['__fetch'](request, config).then(async response => {
+    return OhMyFetch['__fetch'].call(window, request, config).then(async response => {
       const clone = response.clone();
 
-      const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
-      await dispatchApiResponse({
+      const headers = fetchUtils.headersToJson(clone['__headers']);
+      response.ohResult = {
         request: {
           url,
           method: config.method || 'GET',
           requestType: 'FETCH',
         },
         response: {
-          statusCode: response.status,
-          response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
+          statusCode: clone['__status'],
+          response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone['__blob']()) : clone['__text']()),
           headers
         }
-      });
+      };
+
+      await dispatchApiResponse(response.ohResult);
 
       return response;
     });
@@ -132,6 +135,7 @@ function patchFetch(): void {
   patchResponseJson();
   patchResponseText();
   patchHeaders();
+  patchStatus();
 }
 
 function unpatchFetch(): void {
@@ -144,6 +148,7 @@ function unpatchFetch(): void {
   unpatchResponseJson();
   unpatchResponseText();
   unpatchHeaders();
+  unpatchStatus();
 }
 
-export { OhMyFetch, unpatchFetch, patchFetch };
+export { unpatchFetch, patchFetch };

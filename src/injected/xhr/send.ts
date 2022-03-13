@@ -29,9 +29,17 @@ export function patchSend() {
               // console.log('CCCCCCCCCCCCC', contentType);
               // const headersStr =  this.getAllResponseHeaders();
               // const headers =  parse(headersStr);
+
+              let response = this.__response;
+              if (this.responseType === 'blob' || this.responseType === 'arraybuffer') {
+                response = await convertToB64(this.__response);
+              } else if (this.responseType === 'json') {
+                response = JSON.stringify(response);
+              }
+
               dispatchApiResponse({
                 request: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
-                response: { statusCode: this.status, response: await convertToB64(this.response), headers: parse(this.getAllResponseHeaders()) },
+                response: { statusCode: this.status, response, headers: parse(this.getAllResponseHeaders()) },
               } as IOhMyResponseUpdate);
             });
             this.__send(body);
