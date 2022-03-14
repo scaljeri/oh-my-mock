@@ -1,5 +1,4 @@
 <html>
-
 <head>
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -12,6 +11,7 @@
       urlMap: {
         html: '/site',
         json: '/users',
+        'json-external': 'https://jsonplaceholder.typicode.com/todos/1',
         png: '/binary/test.png'
       }
     };
@@ -47,8 +47,9 @@
       <h3>Response type</h3>
       <select name="response">
         <option value="html">HTML</option>
-        <option value="json" selected="selected">JSON</option>
-        <option value="png" >PNG</option>
+        <option value="json" >JSON</option>
+        <option value="json-external" >EXTERNAL JSON</option>
+        <option value="png" selected="selected">PNG</option>
       </select>
     </div>
 

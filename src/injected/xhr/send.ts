@@ -1,10 +1,8 @@
 import { ohMyMockStatus } from "../../shared/constants";
-import { IOhMyResponseUpdate } from "../../shared/packet-type";
 import { IOhMyAPIRequest } from "../../shared/type";
-import { convertToB64 } from "../../shared/utils/binary";
-import { parse } from "../../shared/utils/xhr-headers";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
-import { dispatchApiResponse } from "../message/dispatch-api-response";
+import { findCachedResponse } from "../utils";
+import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__send');
 const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'send');
@@ -30,17 +28,10 @@ export function patchSend() {
               // const headersStr =  this.getAllResponseHeaders();
               // const headers =  parse(headersStr);
 
-              let response = this.__response;
-              if (this.responseType === 'blob' || this.responseType === 'arraybuffer') {
-                response = await convertToB64(this.__response);
-              } else if (this.responseType === 'json') {
-                response = JSON.stringify(response);
+              if (!this.ohResult) {
+                this.ohResult = findCachedResponse({ url: this.ohUrl, method: this.ohMethod });
+                persistResponse(this, this.ohResult.request);
               }
-
-              dispatchApiResponse({
-                request: { url: this.ohUrl, method: this.ohMethod, requestType: 'XHR' },
-                response: { statusCode: this.status, response, headers: parse(this.getAllResponseHeaders()) },
-              } as IOhMyResponseUpdate);
             });
             this.__send(body);
           } else {
