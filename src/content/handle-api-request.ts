@@ -11,7 +11,7 @@ const VERSION = '__OH_MY_VERSION__';
 //  IOhMyReadyResponse
 export async function receivedApiRequest(packet: IPacket<IOhMyAPIRequest>, state: IState) {
   if (packet.version !== VERSION && !VERSION.match('beta')) {
-    return window[STORAGE_KEY].off();
+    return window[STORAGE_KEY].off?.();
   }
 
   const { payload } = packet;

@@ -10,7 +10,7 @@ declare let window: any;
 
 let isOhMyMockActive = false;
 
-console.log('xxxx injected xxxxxxx');
+console.log('First script tag, Injected script');
 window[STORAGE_KEY]?.off?.forEach(c => c());
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
 window[STORAGE_KEY] = { cache: [], off: [] };
@@ -52,3 +52,7 @@ window[STORAGE_KEY].unpatch = () => {
   unpatchFetch();
   sub.unsubscribe();
 }
+
+
+const state = JSON.parse(document.querySelector(`#${STORAGE_KEY}`).getAttribute('oh-my-state'));
+handleStateUpdate(state);

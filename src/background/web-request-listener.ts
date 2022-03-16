@@ -53,7 +53,7 @@ function createHandler(config: IOhMyHandlerConfig) {
 
       // Do both 'XHR' and 'FETCH' because we cannot tell which one it is
       handleRequest({
-        url: ohUrl.toPath(details.url),
+        url: ohUrl.toPath(details.url, config.domain),
         method: details.method as requestMethod,
       }, config);
 

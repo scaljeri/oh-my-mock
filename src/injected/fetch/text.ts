@@ -23,6 +23,8 @@ export function patchResponseText() {
             if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
               persistResponse(this, this.ohResult.request);
             }
+
+            return this.__text();
           })
         }
 

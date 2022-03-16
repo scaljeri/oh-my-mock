@@ -1,4 +1,4 @@
-import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
+import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from "../shared/constants";
 import { IOhMessage, IOhMyReadyResponse } from "../shared/packet-type";
 import { handleApiRequest } from "../shared/utils/handle-api-request";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
@@ -11,25 +11,37 @@ export function initPreResponseHandler(messageBus: OhMyMessageBus, contentState:
   messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(async ({ packet }: IOhMessage<IOhMyReadyResponse<unknown>>) => {
     const state = await contentState.getState(); // TODO: use cached state??
 
+    console.log('=========================== PRE REPONSE RECEIVED ==============');
     const response = packet.payload.data.response;
 
     if (response.status === ohMyMockStatus.NO_CONTENT) {
       packet.payload.data.response = await handleApiRequest(packet.payload.data.request, state);
     }
 
-    const sub = window.injectedDone$.subscribe((val) => {
-      if (!val) {
-        return;
-      }
-      sendMessageToInjected({
-        type: payloadType.RESPONSE,
-        data: packet.payload.data,
-        context: state.context, description: 'content;pre-response'
-      });
+    if (window[STORAGE_KEY].injectionDone$.value === true) {
+      console.log('CONTENT: SEND PRE RESPONSE NOW')
+      sendPreResponse(packet, state);
+    } else {
+      const sub = window.injectionDone$.subscribe((val) => {
+        if (!val) {
+          return;
+        }
 
-      setTimeout(() => {
-        sub.unsubscribe();
+        console.log('CONTENT: SEND PRE RESPONSE NOW12')
+        sendPreResponse(packet, state);
+
+        setTimeout(() => {
+          sub.unsubscribe();
+        });
       });
-    });
+    }
+  });
+}
+
+function sendPreResponse(packet, state) {
+  sendMessageToInjected({
+    type: payloadType.RESPONSE,
+    data: packet.payload.data,
+    context: state.context, description: 'content;pre-response'
   });
 }

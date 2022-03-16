@@ -23,9 +23,8 @@ import { BehaviorSubject } from 'rxjs';
 declare let window: any;
 const x = Math.random();
 
-window.injectedDone$ = new BehaviorSubject(false);
 window[STORAGE_KEY]?.off?.forEach(h => h());
-window[STORAGE_KEY] = { off: [] };
+window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -168,16 +167,18 @@ function inject(state: IState) {
     console.log('******* start inject ********');
     const script = document.createElement('script');
     script.onload = function () {
-      sendMessageToInjected({
-        type: payloadType.STATE, data:
-          updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)'
-      });
-      window.injectedDone$.next(true);
-      script.remove();
+      // sendMessageToInjected({
+      //   type: payloadType.STATE, data:
+      //     updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)'
+      // });
+      window[STORAGE_KEY].injectionDone$.next(true);
+      // script.remove();
     };
     script.type = "text/javascript";
+    script.setAttribute('oh-my-state', JSON.stringify(state));
+    script.setAttribute('id', STORAGE_KEY);
     // script.setAttribute('async', 'false');
-    // script.setAttribute('defer', 'false'); // TODO: try `true`
+    script.setAttribute('defer', ''); // TODO: try `true`
     script.src = chrome.runtime.getURL('oh-my-mock.js');
     // (document.head || document.documentElement).appendChild(script);
     document.head.insertBefore(script, document.head.firstChild);
