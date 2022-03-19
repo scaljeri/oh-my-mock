@@ -36,6 +36,24 @@ function addListener(tab: chrome.tabs.Tab, timeout: number) {
 
   const handler = createHandler(config)
 
+  // chrome.runtime.onSuspend.addListener(function() {
+  //   console.log("Unloading.");
+  //   chrome.browserAction.setBadgeText({text: ""});
+  // });
+
+  // chrome.webRequest.onHeadersReceived.addListener(details => {
+  //   // let header = details.responseHeaders.find(e => e.name.toLowerCase() === 'content-type');
+  //   let header = details.responseHeaders.find(e => e.name.toLowerCase() === 'content-security-policy');
+  //   // header.value = 'text/plain';
+  //   debugger;
+  //   return { responseHeaders: details.responseHeaders };
+  // }, { urls: ["http://localhost:8000/*"] }, ['blocking', 'responseHeaders']);
+
+  // chrome.webRequest.onCompleted.addListener((details: any) => {
+  //   console.log(details);
+  //   debugger;
+  // });
+
   chrome.webRequest.onBeforeRequest.addListener(handler,
     { tabId: tab.id, urls: ["http://*/*", "https://*/*"] } as chrome.webRequest.RequestFilter);
 

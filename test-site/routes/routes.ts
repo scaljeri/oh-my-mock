@@ -9,7 +9,7 @@ export const appRouter = (app: any): void => {
   const binaryPath = path.join(__dirname, "..", "data");
   // READ
   app.get("/users", (req: express.Request, res: express.Response) => {
-    setTimeout(() => {
+    // setTimeout(() => {
       fs.readFile(usersPath, "utf8", (err, data) => {
         if (err) {
           throw err;
@@ -18,7 +18,7 @@ export const appRouter = (app: any): void => {
         res.contentType('application/json');
         res.send(data);
       });
-    }, 100);
+    // }, 100);
   });
 
   app.get("/site", (req: express.Request, res: express.Response) => {
@@ -41,12 +41,12 @@ export const appRouter = (app: any): void => {
 
   app.get("/binary/*", (req: express.Request, res: express.Response) => {
     const file = binaryPath + '/test.jpg';
-    setTimeout(() => {
+    // setTimeout(() => {
       // res.setHeader("Content-Type", 'application/json; charset=utf8');
       // res.header("Content-Type",'application/json');
       // res.send(JSON.stringify(data));
       res.sendFile(file);
-    }, 100);
+    // }, 100);
   });
 
   app.get("/*", (req: express.Request, res: express.Response) => {

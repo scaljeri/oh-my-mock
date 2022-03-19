@@ -15,7 +15,6 @@ window.ohMyMock.fetch = (method, responseType, cb) => {
     } /*else if (responseType.match(/json/)) {
       response.json().then(window.ohMyMock.responseFn);
     } */else {
-        xdebugger;
       response.text().then(r => {
         window.ohMyMock.responseFn(r); });
     }

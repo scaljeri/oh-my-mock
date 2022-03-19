@@ -11,7 +11,6 @@ export function initPreResponseHandler(messageBus: OhMyMessageBus, contentState:
   messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(async ({ packet }: IOhMessage<IOhMyReadyResponse<unknown>>) => {
     const state = await contentState.getState(); // TODO: use cached state??
 
-    console.log('=========================== PRE REPONSE RECEIVED ==============');
     const response = packet.payload.data.response;
 
     if (response.status === ohMyMockStatus.NO_CONTENT) {
@@ -19,15 +18,13 @@ export function initPreResponseHandler(messageBus: OhMyMessageBus, contentState:
     }
 
     if (window[STORAGE_KEY].injectionDone$.value === true) {
-      console.log('CONTENT: SEND PRE RESPONSE NOW')
       sendPreResponse(packet, state);
     } else {
-      const sub = window.injectionDone$.subscribe((val) => {
+      const sub = window[STORAGE_KEY].injectionDone$.subscribe((val) => {
         if (!val) {
           return;
         }
 
-        console.log('CONTENT: SEND PRE RESPONSE NOW12')
         sendPreResponse(packet, state);
 
         setTimeout(() => {
