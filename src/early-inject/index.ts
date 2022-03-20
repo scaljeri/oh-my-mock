@@ -1,9 +1,10 @@
-if (!XMLHttpRequest['__send']) {
+if (!XMLHttpRequest.prototype['__send']) {
   const dsend = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype, 'send');
   const dopen = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype, 'open');
 
   Object.defineProperties(window.XMLHttpRequest.prototype, {
     send: {
+      ...dsend,
       value: function (body) {
         const sid = setInterval(() => {
           if (window['OhMyMocks']) {
@@ -14,6 +15,7 @@ if (!XMLHttpRequest['__send']) {
       }
     },
     open: {
+      ...dopen,
       value: function (...args) {
         this.ohListeners = [];
         this.ohHeaders = {};
