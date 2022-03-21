@@ -8,7 +8,7 @@
 # Only exists if Bazel was run
 /bazel-out
 stats.json
-injected.json
+/stats
 
 # dependencies
 /node_modules

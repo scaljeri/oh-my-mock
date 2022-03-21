@@ -128,7 +128,6 @@ const OhMyFetch = async (request: string | Request, config: IOhFetchConfig = {})
 function patchFetch(): void {
   const origFetch = window.fetch['__fetch'] || window.fetch;
   window.fetch = OhMyFetch;
-  console.log('PATCH EVERYTHONG');
   OhMyFetch['__fetch'] = origFetch;
   patchResponseBlob();
   patchResponseArrayBuffer();
@@ -141,14 +140,13 @@ function patchFetch(): void {
 function unpatchFetch(): void {
   if (window.fetch['__fetch']) {
     window.fetch = window.fetch['__fetch'];
+    unpatchResponseBlob();
+    unpatchResponseArrayBuffer();
+    unpatchResponseJson();
+    unpatchResponseText();
+    unpatchHeaders();
+    unpatchStatus();
   }
-
-  unpatchResponseBlob();
-  unpatchResponseArrayBuffer();
-  unpatchResponseJson();
-  unpatchResponseText();
-  unpatchHeaders();
-  unpatchStatus();
 }
 
 export { unpatchFetch, patchFetch };

@@ -38,7 +38,7 @@ if (!XMLHttpRequest.prototype['__send']) {
     return this.__addEventListener(eventName, callback);
   }
 
-  window['__fetch'] = window.fetch;
+  const origFetch = window.fetch;
   (window as any).fetch = function (input, init) {
     return new Promise(function (r) {
       const fid = setInterval(function () {
@@ -49,4 +49,5 @@ if (!XMLHttpRequest.prototype['__send']) {
       }, 50);
     })
   }
+  window.fetch['__fetch'] = origFetch;
 }
