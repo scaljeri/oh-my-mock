@@ -17,7 +17,6 @@ import { receivedApiRequest } from './handle-api-request';
 import { initPreResponseHandler } from './handle-pre-response';
 import { BehaviorSubject } from 'rxjs';
 
-
 declare let window: any;
 const x = Math.random();
 

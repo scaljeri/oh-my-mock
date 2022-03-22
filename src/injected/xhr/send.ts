@@ -28,7 +28,7 @@ export function patchSend() {
               // const headersStr =  this.getAllResponseHeaders();
               // const headers =  parse(headersStr);
 
-              if (!this.ohResult) {
+              if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK ) {
                 this.ohResult = findCachedResponse({ url: this.ohUrl, method: this.ohMethod });
                 persistResponse(this, this.ohResult.request);
               }
