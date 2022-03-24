@@ -1,7 +1,7 @@
 /// <reference types="chrome"/>
 
 import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IState } from '../shared/type';
+import { IOhMyAPIRequest, IOhMyAux, IState } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { debug } from './utils';
@@ -16,6 +16,7 @@ import { sendMessageToInjected } from './send-to-injected';
 import { receivedApiRequest } from './handle-api-request';
 import { initPreResponseHandler } from './handle-pre-response';
 import { BehaviorSubject } from 'rxjs';
+import { handleExternalInsert } from './crud/insert';
 
 declare let window: any;
 const x = Math.random();
@@ -43,8 +44,9 @@ OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 // });
 
 let isInjectedInjected = false;
+let lastAux: IOhMyAux;
 contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
-  if (isInjectedInjected) {
+  if (isInjectedInjected && state && !isAuxUpdated(lastAux, state.aux)) {
     sendMessageToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
   } else if (state?.aux.popupActive || contentState.isPopupOpen) {
     inject(state);
@@ -112,6 +114,8 @@ async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise
 initPreResponseHandler(messageBus, contentState);
 // messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
 
+messageBus.streamByType$<any>(payloadType.INSERT, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
+
 messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
 messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
 
@@ -159,25 +163,22 @@ function inject(state: IState) {
   }
 
   const shouldInject = state.aux.appActive && state.aux.popupActive
-  isEarlyInjectNeeded =  shouldInject && isEarlyInjectNeeded === true;
 
-  if (!shouldInject) {
+  if (!shouldInject || isInjectedInjected) {
     return;
   }
 
-  if (!isInjectedInjected) {
-    isInjectedInjected = true;
+  isInjectedInjected = true;
+  isEarlyInjectNeeded = shouldInject && isEarlyInjectNeeded === true;
 
-    if (isEarlyInjectNeeded) {
-      // Early inject
-      const el = document.createElement('div');
-      el.setAttribute('onclick', `'__OH_MY_INJECTED_CODE__'`);
-      document.documentElement.appendChild(el);
-      el.click();
-      el.remove();
-    }
+  if (isEarlyInjectNeeded) {
+    // Early inject
+    const el = document.createElement('div');
+    el.setAttribute('onclick', `'__OH_MY_INJECTED_CODE__'`);
+    document.documentElement.appendChild(el);
+    el.click();
+    el.remove();
 
-    console.log('******* start inject ********');
     const script = document.createElement('script');
     script.onload = function () {
       // sendMessageToInjected({
@@ -197,9 +198,11 @@ function inject(state: IState) {
     (document.head || document.documentElement).appendChild(script);
     // document.head.insertBefore(script, document.head.firstChild);
     // document.write('<script type="text/javascript" src="other.js"><\/script>');
-
-    chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
+  } else {
+    window.location.reload();
   }
+
+  chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
 }
 
 /* Some logic to determine if the popup is active or not
@@ -212,5 +215,9 @@ function updateStateForInjected(state): Partial<IState> {
   }
 
   return { aux: state.aux };
+}
+
+function isAuxUpdated(oldAux, newAux): boolean {
+  return JSON.stringify(oldAux)?.split('').sort().join('') !== JSON.stringify(newAux)?.split('').sort().join('');
 }
 

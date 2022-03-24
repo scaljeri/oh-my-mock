@@ -15,14 +15,6 @@ export function patchAddEventListener() {
     return this.__addEventListener(eventName, callback);
   }
   window.XMLHttpRequest.prototype['__addEventListener'] = addEventListener;
-
-  // window.XMLHttpRequest.prototype.addEventListener = function (eventName, callback) {
-  //   if (eventName === 'load') {
-  //     this.ohListeners.push(callback);
-  //   }
-
-  //   return addEventListener.call(this, eventName, callback);
-  // }
 }
 
 export function unpatchAddEventListener() {

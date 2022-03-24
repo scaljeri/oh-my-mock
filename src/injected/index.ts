@@ -10,15 +10,12 @@ declare let window: any;
 
 let isOhMyMockActive = false;
 
-console.log('First script tag, Injected script');
 window[STORAGE_KEY]?.off?.forEach(c => c());
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-window[STORAGE_KEY] = { cache: [], off: [] };
+window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false };
 window[STORAGE_KEY].version = VERSION;
-
-// TODO: This is testing code => REmove!!
-// patchXmlHttpRequest();
-// patchFetch();
+window[STORAGE_KEY].off = [];
+window[STORAGE_KEY].cache = [];
 
 const ohMyState$ = setupListenersMessageBus();
 const sub = ohMyState$.subscribe((state: IState) => {
@@ -27,6 +24,7 @@ const sub = ohMyState$.subscribe((state: IState) => {
 window[STORAGE_KEY].off.push(() => sub.unsubscribe());
 
 function handleStateUpdate(state: IState): void {
+
   if (!state) {
     return;
   }
@@ -34,12 +32,14 @@ function handleStateUpdate(state: IState): void {
 
   if (state.aux.popupActive && state.aux.appActive) {
     if (!isOhMyMockActive) {
+      window[STORAGE_KEY].isEnabled = true;
       isOhMyMockActive = true;
       log('%c*** Activated ***', 'background: green', ', XHR and FETCH ready for mocking');
       patchXmlHttpRequest();
       patchFetch();
     }
   } else {
+    window[STORAGE_KEY].isEnabled = false;
     isOhMyMockActive = false;
     unpatchXmlHttpRequest();
     unpatchFetch();
@@ -52,7 +52,6 @@ window[STORAGE_KEY].unpatch = () => {
   unpatchFetch();
   sub.unsubscribe();
 }
-
 
 const state = JSON.parse(document.querySelector(`#${STORAGE_KEY}`).getAttribute('oh-my-state'));
 handleStateUpdate(state);

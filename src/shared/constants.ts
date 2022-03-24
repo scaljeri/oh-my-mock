@@ -74,12 +74,14 @@ export enum payloadType {
   POPUP_CLOSED = 'popup-closed',
   POPUP_OPEN = 'popup-open',
   PRE_RESPONSE = 'pre-response',
+  INSERT = 'insert'
 }
 export enum appSources {
   INJECTED = 'injected',
   CONTENT = 'content',
   POPUP = 'popup',
-  BACKGROUND = 'background'
+  BACKGROUND = 'background',
+  EXTERNAL = 'external'
 }
 
 export enum resetStateOptions {

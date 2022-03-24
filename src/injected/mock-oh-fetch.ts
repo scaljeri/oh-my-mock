@@ -24,7 +24,7 @@ interface IOhFetchConfig {
 
 declare let window: { fetch: any };
 
-const OhMyFetch = async (request: string | Request, config: IOhFetchConfig = {}) => {
+async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {}) {
   let url = request as string;
   if (request instanceof Request) {
     config = { headers: request.headers as any, method: request.method as requestMethod };
@@ -52,7 +52,7 @@ const OhMyFetch = async (request: string | Request, config: IOhFetchConfig = {})
   }
 
   if (status !== ohMyMockStatus.OK) {
-    return OhMyFetch['__fetch'].call(window, request, config).then(async response => {
+    return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
       const clone = response.clone();
 
       const headers = fetchUtils.headersToJson(clone['__headers']);
@@ -126,9 +126,11 @@ const OhMyFetch = async (request: string | Request, config: IOhFetchConfig = {})
 // }
 
 function patchFetch(): void {
-  const origFetch = window.fetch['__fetch'] || window.fetch;
-  window.fetch = OhMyFetch;
-  OhMyFetch['__fetch'] = origFetch;
+  window[STORAGE_KEY].fetch = ohMyFetch;
+  // const origFetch = window.fetch['__fetch'] || window.fetch;
+  // window.fetch = OhMyFetch;
+  // OhMyFetch['__fetch'] = origFetch;
+  // window[STORAGE_KEY].fetch = OhMyFetch;
   patchResponseBlob();
   patchResponseArrayBuffer();
   patchResponseJson();
@@ -138,8 +140,7 @@ function patchFetch(): void {
 }
 
 function unpatchFetch(): void {
-  if (window.fetch['__fetch']) {
-    window.fetch = window.fetch['__fetch'];
+  if (XMLHttpRequest.prototype['__fetch']) {
     unpatchResponseBlob();
     unpatchResponseArrayBuffer();
     unpatchResponseJson();

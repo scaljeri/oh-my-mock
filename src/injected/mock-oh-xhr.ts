@@ -6,23 +6,29 @@ import { patchStatus, unpatchStatus } from './xhr/status';
 import { patchResponseText, unpatchResponseText } from './xhr/response-text';
 import { patchResponse, unpatchResponse } from './xhr/response';
 import { patchResponseHeaders, unpatchResponseHeaders } from './xhr/response-headers';
+import { STORAGE_KEY } from '../shared/constants';
+
+declare let window: any;
 
 export function unpatchXmlHttpRequest() {
-  unpatchAddEventListener();
-  unpatchSetRequestHeader();
+  delete window[STORAGE_KEY].xhr;
+
+  // unpatchAddEventListener();
+  // unpatchSetRequestHeader();
+  // unpatchOpen();
+  // unpatchSend();
   unpatchResponseHeaders()
-  unpatchOpen();
-  unpatchSend();
   unpatchStatus();
   unpatchResponseText();
   unpatchResponse();
 }
 
 export function patchXmlHttpRequest() {
-  patchAddEventListener();
-  patchSetRequestHeader();
+  window[STORAGE_KEY].xhr = {};
+  // patchAddEventListener();
+  // patchSetRequestHeader();
+  // patchOpen();
   patchResponseHeaders();
-  patchOpen();
   patchSend();
   patchStatus();
   patchResponseText();
