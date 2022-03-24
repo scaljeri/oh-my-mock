@@ -4,7 +4,6 @@ import { log } from '../utils';
 import { send } from './send';
 
 export function dispatchApiResponse(payload: IOhMyResponseUpdate) {
-  log('----------- new rrrrrrrrrrresp');
   window[STORAGE_KEY].cache.unshift(payload);
 
   send({

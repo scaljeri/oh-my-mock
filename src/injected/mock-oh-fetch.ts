@@ -12,6 +12,7 @@ import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/ar
 import { patchResponseJson, unpatchResponseJson } from './fetch/json';
 import { patchResponseText, unpatchResponseText } from './fetch/text';
 import { patchStatus, unpatchStatus } from './fetch/status';
+import { persistResponse } from './fetch/persist-response';
 
 export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
 export const log = logging(`${STORAGE_KEY} (^*^)`, true);
@@ -53,23 +54,7 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
 
   if (status !== ohMyMockStatus.OK) {
     return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
-      const clone = response.clone();
-
-      const headers = fetchUtils.headersToJson(clone['__headers']);
-      response.ohResult = {
-        request: {
-          url,
-          method: config.method || 'GET',
-          requestType: 'FETCH',
-        },
-        response: {
-          statusCode: clone['__status'],
-          response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone['__blob']()) : clone['__text']()),
-          headers
-        }
-      };
-
-      await dispatchApiResponse(response.ohResult);
+      response.ohResult = await persistResponse(response, result.request);
 
       return response;
     });

@@ -133,7 +133,6 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // payload.context = { ...payload.context, domain: OhMyContentState.host }
   // debugger;
   // OhMySendToBg.full()
-  console.log('----NEW RESPONSE');
   handleApiResponse(payload, contentState);
   // TODO: send result back to injected???
 }

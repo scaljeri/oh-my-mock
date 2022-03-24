@@ -5,7 +5,11 @@ import { extractMimeType, isMimeTypeText } from '../../shared/utils/mime-type';
 import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
-export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<void> {
+export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<IOhMyResponseUpdate> {
+  if (response['ohResult']) {
+    return response['ohResult'];
+  }
+
   const clone = await response.clone();
   const headers = Object.fromEntries(clone.headers['entries']());
 
@@ -22,8 +26,13 @@ export async function persistResponse(response: Response, request: IOhMyAPIReque
     output = await convertToB64(await clone.blob());
   }
 
-  dispatchApiResponse({
+  const ohResult = {
     request: { url: removeDomainFromUrl(response['ohUrl'] || response.url), method: response['ohMethod'] || request?.method, requestType: 'FETCH' },
-    response: { statusCode: clone.status, response: output, headers },
-  } as IOhMyResponseUpdate);
+    response: { statusCode: clone.status, response: output, headers }
+  } as IOhMyResponseUpdate;
+
+  dispatchApiResponse(ohResult);
+  response['ohResult'] = ohResult;
+
+  return ohResult;
 }

@@ -156,7 +156,7 @@ export interface IOhMyAPIRequest {
   url: string;
   method: requestMethod;
   requestType: requestType;
-  body: unknown;
+  body?: unknown;
   headers: Record<string, string>;
 }
 
