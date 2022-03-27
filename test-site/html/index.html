@@ -6,26 +6,17 @@
       width: 100%;
     }
   </style>
-  <script>
-    console.log('Seconds script (inline)');
-    window.ohMyMock = {
-      urlMap: {
-        html: '/site',
-        json: '/users',
-        'json-external': 'https://jsonplaceholder.typicode.com/todos/1',
-        png: '/binary/test.png'
-      }
-    };
-  </script>
+  <script>window.ohMyMock = { urlMap: { html: '/site', json: '/users', 'json-external': 'https://jsonplaceholder.typicode.com/todos/1', png: '/binary/test.png' } };</script>
   <script src="fetch.js"></script>
   <script src="xhr.js"></script>
   <script src="hammer-time.js"></script>
+  <script src="main.js"></script>
 </head>
 
 <body>
   <h1>Test site</h1>
 
-  <form class="selection" onsubmit="return onSubmit()">
+  <form class="selection" onsubmit="return window.onSubmit()">
     <div class="type">
       <h3>Type</h3>
       <select name=type>
@@ -48,9 +39,9 @@
       <h3>Response type</h3>
       <select name="response">
         <option value="html">HTML</option>
-        <option value="json" selected="selected">JSON</option>
+        <option value="json" >JSON</option>
         <option value="json-external"  >EXTERNAL JSON</option>
-        <option value="png">PNG</option>
+        <option value="png" selected="selected">PNG</option>
       </select>
     </div>
 
@@ -78,84 +69,6 @@
       </div>
     </article>
   </section>
-
-  <script>
-    if (!window.ohMyMock) {
-      window.ohMyMock = {}
-    }
-
-    ohMyMock.statusCodeFn = st => {
-      document.querySelector('.status-code span').innerText = st;
-    };
-
-    ohMyMock.responseFn = r => {
-      const img = document.querySelector('img');
-      img.style.display = 'none';
-      if (r instanceof Blob) {
-        const urlCreator = window.URL || window.webkitURL;
-        const imageUrl = urlCreator.createObjectURL(r);
-        r = '';
-        img.src = imageUrl;
-        img.style.display = 'block';
-      } else if (window.ohMyMock.response === 'json') {
-        try {
-          if (typeof r === 'object') {
-            r = JSON.stringify(r);
-          }
-
-          r = JSON.stringify(JSON.parse(r), null, 4);
-        } catch { /* Ooops */ }
-      }
-
-      document.querySelector('.body pre').innerText = r;
-    };
-
-    ohMyMock.durationFn = () => {
-      document.querySelector('.duration span').innerText =
-        (Date.now() - ohMyMock.starttime) + 'ms';
-    };
-
-    ohMyMock.headersFn = h => {
-      if (typeof h === 'object') {
-        h = JSON.stringify(h, null, 4);
-      }
-
-      document.querySelector('.headers').innerText = h;
-    }
-
-    ohMyMock.resetFn = () => {
-      ohMyMock.headersFn('');
-      ohMyMock.statusCodeFn('');
-      ohMyMock.responseFn('');
-    };
-
-    window.onSubmit = () => {
-      try {
-        const form = document.forms[0];
-        const fd = new FormData(form);
-
-        ohMyMock.type = fd.get('type');
-        ohMyMock.method = fd.get('method');
-        ohMyMock.response = fd.get('response');
-
-        ohMyMock.starttime = Date.now();
-        const interId = setInterval(() => ohMyMock.durationFn(), 100);
-
-        const handler = window.ohMyMock[fd.get('type')];
-        ohMyMock.resetFn();
-        handler(fd.get('method'), fd.get('response'), () => {
-          clearInterval(interId);
-          ohMyMock.durationFn();
-        });
-      } catch (err) {
-        console.log("Oops something bad happend", err);
-      }
-
-      return false;
-    };
-
-    window.onSubmit();
-  </script>
 </body>
 
 </html>

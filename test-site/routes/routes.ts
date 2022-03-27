@@ -18,7 +18,7 @@ export const appRouter = (app: any): void => {
       res.contentType('application/json');
       res.send(data);
     });
-    // }, 100);
+    // }, 2000);
   });
 
   app.get("/site", (req: express.Request, res: express.Response) => {

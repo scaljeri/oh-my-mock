@@ -1,12 +1,12 @@
 import { STORAGE_KEY } from '../shared/constants';
-import { IState } from '../shared/type';
+import { IOhMyInjectedState } from '../shared/type';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { setupListenersMessageBus } from './state-manager';
 import { log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
-declare let window: any;
+declare let window: any & { [STORAGE_KEY]: Record<string, any> };
 
 let isOhMyMockActive = false;
 
@@ -18,19 +18,19 @@ window[STORAGE_KEY].off = [];
 window[STORAGE_KEY].cache = [];
 
 const ohMyState$ = setupListenersMessageBus();
-const sub = ohMyState$.subscribe((state: IState) => {
+const sub = ohMyState$.subscribe((state: IOhMyInjectedState) => {
   handleStateUpdate(state);
 });
 window[STORAGE_KEY].off.push(() => sub.unsubscribe());
 
-function handleStateUpdate(state: IState): void {
+function handleStateUpdate(state: IOhMyInjectedState): void {
 
   if (!state) {
     return;
   }
   window[STORAGE_KEY].state = state;
 
-  if (state.aux.popupActive && state.aux.appActive) {
+  if (state.active) {
     if (!isOhMyMockActive) {
       window[STORAGE_KEY].isEnabled = true;
       isOhMyMockActive = true;

@@ -4,6 +4,7 @@ import { update } from "../shared/utils/partial-updater";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
 import { StoreUtils } from "../shared/utils/store";
+import { clearCSPRemoval, cSPRemoval } from "./remove-csp-header";
 
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
@@ -24,6 +25,12 @@ export class OhMyStateHandler {
 
         await OhMyStateHandler.StorageUtils.setStore(store);
       }
+    }
+
+    if (state.aux.appActive && state.aux.popupActive) {
+      cSPRemoval([`http://${payload.context.domain}/*`, `https://${payload.context.domain}/*`]);
+    } else {
+      clearCSPRemoval(`*://${payload.context.domain}`);
     }
 
     return StorageUtils.set(state.domain, state).then(() => state);

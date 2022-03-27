@@ -35,7 +35,7 @@ ohMyServer.local.add({ // settings
 } as any);
 
 app.get("/", (req: any, res: any) => {
-  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')));
+  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')), { headers: {'Content-Security-Policy': "script-src self http://localhost:8000 'sha256-Q0SJRqmBvkIJTEAzehkaEwtDExaJMuU0rs9VkrhTO5s='"}});
 });
 
 
@@ -43,7 +43,3 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
 appRouter(app)
-
-app.get("/", (req: any, res: any) => {
-  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')));
-});

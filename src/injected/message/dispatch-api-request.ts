@@ -3,8 +3,8 @@ import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyMockResponse, IOhMyAPIRequest, requestType } from '../../shared/type';
-import { IOhMyReadyResponse, IPacket, IPacketPayload } from '../../shared/packet-type';
+import { IOhMyAPIRequest, requestType } from '../../shared/type';
+import { IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
@@ -74,7 +74,6 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
           // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
           reject(null);
         } else {
-          console.log('CACHE', window[STORAGE_KEY]);
           window[STORAGE_KEY].cache.unshift(packet.payload.data);
           resolve(resp);
         }

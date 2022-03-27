@@ -1,10 +1,10 @@
 /// <reference types="chrome"/>
 
 import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyAux, IState } from '../shared/type';
-import { IOhMessage, IOhMyResponseUpdate } from '../shared/packet-type';
+import { IOhMyAPIRequest, IOhMyInjectedState } from '../shared/type';
+import { IOhMessage, IOhMyResponseUpdate, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
-import { debug } from './utils';
+import { debug, error } from './utils';
 import { OhMyContentState } from './content-state';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
@@ -19,7 +19,6 @@ import { BehaviorSubject } from 'rxjs';
 import { handleExternalInsert } from './crud/insert';
 
 declare let window: any;
-const x = Math.random();
 
 window[STORAGE_KEY]?.off?.forEach(h => h());
 window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
@@ -32,6 +31,7 @@ const messageBus = new OhMyMessageBus()
   .setTrigger(triggerRuntime);
 window[STORAGE_KEY].off.push(() => messageBus.clear());
 
+let isInjectedInjected = false;
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
@@ -43,15 +43,16 @@ OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 //   payload: { type: payloadType.PRE_RESPONSE, description: 'content:activate-network-listeners' }
 // });
 
-let isInjectedInjected = false;
-let lastAux: IOhMyAux;
-contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
-  if (isInjectedInjected && state && !isAuxUpdated(lastAux, state.aux)) {
-    sendMessageToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
-  } else if (state?.aux.popupActive || contentState.isPopupOpen) {
-    inject(state);
+window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) => {
+  if (!inject({ active: value })) {
+    sendMessageToInjected({
+      type: payloadType.STATE,
+      data: {
+        active: value, description: 'content;contentState.isActive'
+      }
+    } as IPacketPayload);
   }
-});
+}));
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -75,9 +76,9 @@ function sendKnockKnock() {
 //   //   } as IPacketPayload);
 // }
 
-async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
-  contentState.setPopupOpen(packet.payload.data.active);
-}
+// async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
+//   contentState.setPopupOpen(packet.payload.data.active);
+// }
 
 // async function handleDispatchedRequest(packet: IPacket<IOhMyRequest>): Promise<void> {
 //   const result = await handleRequest(packet.payload.data);
@@ -114,10 +115,32 @@ async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise
 initPreResponseHandler(messageBus, contentState);
 // messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
 
-messageBus.streamByType$<any>(payloadType.INSERT, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
+document.addEventListener("securitypolicyviolation", (e) => {
+  error('CSP issues detected, OhMyMock will reload and remove CSP headers!');
+  console.log(e.blockedURI);
+  console.log(e.violatedDirective);
+  console.log(e.originalPolicy);
 
-messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
-messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
+  if (++contentState.reloadCount > 1) {
+    window.location.reload();
+  } else {
+    contentState.reloadCount = 0;
+    error('Could not remove Content-Security-Policy!');
+  }
+});
+
+messageBus.streamByType$<any>(payloadType.INSERT, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
+// TODO
+// messageBus.streamByType$<any>(payloadType.RELOAD, appSources.POPUP).subscribe(({ packet }) => {
+
+//   eval('const x = 10');
+//   fetch('data:text/plain;charset=utf-8;base64,T2hNeU1vY2s=');
+//   debugger;
+//   window.location.reload();
+// });
+
+// messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
+// messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
 
 messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subscribe(async ({ packet }: IOhMessage<IOhMyAPIRequest>) => {
   const state = await contentState.getState();
@@ -137,86 +160,51 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // TODO: send result back to injected???
 }
 
-let isEarlyInjectNeeded = true;
-
 // Inject XHR/Fetch mocking code and more
 (async function () {
-  let state = await contentState.getState() || StateUtils.init();
+  await contentState.init();
+
+  const state = contentState.state || StateUtils.init();
 
   sendKnockKnock();
 
-  state = updateStateForInjected(state) as IState;
-
-  inject(state);
+  inject({ active: contentState.isActive(state) });
 })();
 
 
 
 // https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 
-function inject(state: IState) {
-  // eslint-disable-next-line no-console
-
-  if (!state) {
-    return;
-  }
-
-  const shouldInject = state.aux.appActive && state.aux.popupActive
-
-  if (!shouldInject || isInjectedInjected) {
-    return;
+function inject(state: IOhMyInjectedState): boolean {
+  // Only inject if OhMyMock is active and not already injeced
+  if (!state || !state?.active || isInjectedInjected) {
+    return false;
   }
 
   isInjectedInjected = true;
-  isEarlyInjectNeeded = shouldInject && isEarlyInjectNeeded === true;
 
-  if (isEarlyInjectNeeded) {
-    // Early inject
-    const el = document.createElement('div');
-    el.setAttribute('onclick', `'__OH_MY_INJECTED_CODE__'`);
-    document.documentElement.appendChild(el);
-    el.click();
-    el.remove();
+  // Early inject
+  const el = document.createElement('div');
+  el.setAttribute('onclick', `'__OH_MY_INJECTED_CODE__'`);
+  document.documentElement.appendChild(el);
+  el.click();
+  el.remove();
 
-    const script = document.createElement('script');
-    script.onload = function () {
-      // sendMessageToInjected({
-      //   type: payloadType.STATE, data:
-      //     updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)'
-      // });
-      window[STORAGE_KEY].injectionDone$.next(true);
-      script.remove();
-    };
+  const script = document.createElement('script');
+  script.onload = function () {
+    window[STORAGE_KEY].injectionDone$.next(true);
+    script.remove();
+  };
 
-    script.type = "text/javascript";
-    script.setAttribute('oh-my-state', JSON.stringify(state));
-    script.setAttribute('id', STORAGE_KEY);
-    // script.setAttribute('async', 'false');
-    script.setAttribute('defer', ''); // TODO: try `true`
-    script.src = chrome.runtime.getURL('oh-my-mock.js');
-    (document.head || document.documentElement).appendChild(script);
-    // document.head.insertBefore(script, document.head.firstChild);
-    // document.write('<script type="text/javascript" src="other.js"><\/script>');
-  } else {
-    window.location.reload();
-  }
+  script.type = "text/javascript";
+  script.setAttribute('oh-my-state', JSON.stringify(state));
+  script.setAttribute('id', STORAGE_KEY);
+  // script.setAttribute('async', 'false');
+  script.setAttribute('defer', ''); // TODO: try `true`
+  script.src = chrome.runtime.getURL('oh-my-mock.js');
+  (document.head || document.documentElement).appendChild(script);
 
   chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
+
+  return true;
 }
-
-/* Some logic to determine if the popup is active or not
-*/
-function updateStateForInjected(state): Partial<IState> {
-  if (contentState.isPopupOpen === true) {
-    state.aux.popupActive = true;
-  } else if (state.aux.popupActive) {
-    contentState.setPopupOpen(true);
-  }
-
-  return { aux: state.aux };
-}
-
-function isAuxUpdated(oldAux, newAux): boolean {
-  return JSON.stringify(oldAux)?.split('').sort().join('') !== JSON.stringify(newAux)?.split('').sort().join('');
-}
-

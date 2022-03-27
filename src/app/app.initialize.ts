@@ -1,6 +1,8 @@
 import { ActivatedRoute } from '@angular/router';
+import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './services/app-state.service';
 import { OhMyStateService } from './services/state.service';
+import { send2content } from './utils/send2content';
 
 export async function initializeApp(
   appStateService: AppStateService,
@@ -21,4 +23,14 @@ export async function initializeApp(
   }
 
   await stateService.initialize(appStateService.domain);
+  // TODO: Send msg to BG to start with CSP header removal!!
+  // send2content(appStateService.tabId, {
+  //   source: appSources.POPUP,
+  //   domain: appStateService.domain,
+  //   payload: {
+  //     type: payloadType.RELOAD,
+  //     data: true,
+  //     description: 'popup:reload-content'
+  //   }
+  // });
 }

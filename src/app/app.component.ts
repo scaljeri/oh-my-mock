@@ -56,7 +56,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog) {
     // eslint-disable-next-line no-console
-    console.log('verions ' + VERSION);
   }
 
   async ngAfterViewInit(): Promise<void> {

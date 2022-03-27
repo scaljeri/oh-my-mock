@@ -8,8 +8,8 @@ export class OhMySendToBg {
   static domain: ohMyDomain;
 
   static setContext(domain: ohMyDomain, source: appSources): void {
-    OhMySendToBg.domain = domain;
-    OhMySendToBg.source = source;
+    this.domain = domain;
+    this.source = source;
   }
 
   static send<T = unknown, U = T>(packet: IPacket<T>): Promise<U> {

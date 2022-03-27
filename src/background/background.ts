@@ -19,7 +19,8 @@ import { openPopup } from './open-popup';
 import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
-import { injectContent } from './inject-content';
+// import { injectContent } from './inject-content';
+import { cSPRemoval } from './remove-csp-header';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -68,6 +69,12 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   });
 });
 
+const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
+  [appSources.CONTENT])
+
+domainStream$.subscribe(({ packet }: IOhMessage) => {
+  cSPRemoval([`http://${packet.domain}/*`, `https://${packet.domain}/*`]);
+});
 // connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
@@ -88,6 +95,14 @@ chrome.runtime.onInstalled.addListener(function (details) {
   });
 });
 
+chrome.runtime.onSuspend.addListener(function () {
+  console.log("Suspending.");
+  chrome.browserAction.setBadgeText({ text: "" });
+});
+
+// cSPRemoval('http://localhost:8000/*')
+
+
 
 chrome.browserAction.onClicked.addListener(async function (tab) {
   // eslint-disable-next-line no-console
@@ -95,7 +110,7 @@ chrome.browserAction.onClicked.addListener(async function (tab) {
 
   openPopup(tab);
   // webRequestListener(tab);
-  injectContent(tab.id);
+  // injectContent(tab.id);
 
 
 

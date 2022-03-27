@@ -189,3 +189,7 @@ export interface IOhMyBackup {
   responses: IMock[],
   version: string;
 }
+
+export interface IOhMyInjectedState {
+  active: boolean;
+}
