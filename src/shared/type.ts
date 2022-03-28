@@ -1,4 +1,5 @@
 import { MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, resetStateOptions, STORAGE_KEY } from './constants';
+import { ImportResultEnum } from './utils/import-json';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';
@@ -190,6 +191,15 @@ export interface IOhMyBackup {
   version: string;
 }
 
+export interface IOhMyCrud extends IOhMyBackup {
+  activate?: boolean;
+}
+
+export interface IOhMyStateUpdateResult {
+  status: ImportResultEnum;
+}
+
 export interface IOhMyInjectedState {
   active: boolean;
 }
+

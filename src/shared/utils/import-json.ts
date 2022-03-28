@@ -1,4 +1,4 @@
-import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '../type';
+import { IData, IMock, IOhMyBackup, IOhMyContext, IOhMyStateUpdateResult, IState } from '../type';
 import { DataUtils } from './data';
 import { MigrateUtils } from './migrate';
 import { StateUtils } from './state';
@@ -7,12 +7,9 @@ import { StorageUtils } from './storage';
 export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
 }
-export interface IOhMyImportResult {
-  status: ImportResultEnum;
-}
 
-export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { activate = false } = {}): Promise<IOhMyImportResult> {
-  const state = await StorageUtils.get<IState>(context.domain) || StateUtils.init(context);
+export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { activate = false } = {}, sUtils = StorageUtils): Promise<IOhMyStateUpdateResult> {
+  const state = await sUtils.get<IState>(context.domain) || StateUtils.init(context);
 
   let status = ImportResultEnum.SUCCESS;
   let requests = data.requests as unknown as IData[];
@@ -36,10 +33,10 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
     }
 
     for (const response of responses) {
-      await StorageUtils.set(response.id, response);
+      await sUtils.set(response.id, response);
     }
 
-    await StorageUtils.set(state.domain, state);
+    await sUtils.set(state.domain, state);
   } else {
     status = ImportResultEnum.TOO_OLD;
   }

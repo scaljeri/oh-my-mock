@@ -121,15 +121,15 @@ document.addEventListener("securitypolicyviolation", (e) => {
   console.log(e.violatedDirective);
   console.log(e.originalPolicy);
 
-  if (++contentState.reloadCount > 1) {
-    window.location.reload();
+  if (++contentState.reloadCount < 2) {
+      window.location.reload();
   } else {
     contentState.reloadCount = 0;
     error('Could not remove Content-Security-Policy!');
   }
 });
 
-messageBus.streamByType$<any>(payloadType.INSERT, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
+messageBus.streamByType$<any>(payloadType.CRUD, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
 // TODO
 // messageBus.streamByType$<any>(payloadType.RELOAD, appSources.POPUP).subscribe(({ packet }) => {
 

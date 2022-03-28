@@ -21,6 +21,7 @@ import { webRequestListener } from './web-request-listener';
 import './server-dispatcher';
 // import { injectContent } from './inject-content';
 import { cSPRemoval } from './remove-csp-header';
+import { OhMyImportHandler } from './handlers/import';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -45,6 +46,7 @@ queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
 queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
+queue.addHandler(payloadType.CRUD, OhMyImportHandler.insert);
 queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
   await StorageUtils.reset();
@@ -57,7 +59,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 
-const stream$ = messageBus.streamByType$([payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
+const stream$ = messageBus.streamByType$([payloadType.CRUD, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
   [appSources.CONTENT, appSources.POPUP])
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {

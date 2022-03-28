@@ -75,6 +75,7 @@ export enum payloadType {
   POPUP_OPEN = 'popup-open',
   PRE_RESPONSE = 'pre-response',
   INSERT = 'insert',
+  CRUD = 'crud',
 }
 export enum appSources {
   INJECTED = 'injected',
