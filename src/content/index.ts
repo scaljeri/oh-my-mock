@@ -4,7 +4,7 @@ import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest, IOhMyInjectedState } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
-import { debug, error } from './utils';
+// import { debug, error } from './utils';
 import { OhMyContentState } from './content-state';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
@@ -14,9 +14,9 @@ import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 import { sendMessageToInjected } from './send-to-injected';
 import { receivedApiRequest } from './handle-api-request';
-import { initPreResponseHandler } from './handle-pre-response';
 import { BehaviorSubject } from 'rxjs';
 import { handleExternalInsert } from './crud/insert';
+import { handleCSP } from './csp-handler';
 
 declare let window: any;
 
@@ -53,6 +53,8 @@ window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) =
     } as IPacketPayload);
   }
 }));
+
+window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -112,22 +114,8 @@ function sendKnockKnock() {
 // });
 // }
 
-initPreResponseHandler(messageBus, contentState);
+// initPreResponseHandler(messageBus, contentState);
 // messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
-
-document.addEventListener("securitypolicyviolation", (e) => {
-  error('CSP issues detected, OhMyMock will reload and remove CSP headers!');
-  console.log(e.blockedURI);
-  console.log(e.violatedDirective);
-  console.log(e.originalPolicy);
-
-  if (++contentState.reloadCount < 2) {
-      window.location.reload();
-  } else {
-    contentState.reloadCount = 0;
-    error('Could not remove Content-Security-Policy!');
-  }
-});
 
 messageBus.streamByType$<any>(payloadType.CRUD, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
 // TODO
@@ -190,21 +178,23 @@ function inject(state: IOhMyInjectedState): boolean {
   el.click();
   el.remove();
 
-  const script = document.createElement('script');
-  script.onload = function () {
-    window[STORAGE_KEY].injectionDone$.next(true);
-    script.remove();
-  };
+  messageBus.streamByType$<boolean>(payloadType.READY, appSources.PRE_INJECTED).subscribe(() => {
+    const script = document.createElement('script');
+    script.onload = function () {
+      window[STORAGE_KEY].injectionDone$.next(true);
+      script.remove();
+    };
 
-  script.type = "text/javascript";
-  script.setAttribute('oh-my-state', JSON.stringify(state));
-  script.setAttribute('id', STORAGE_KEY);
-  // script.setAttribute('async', 'false');
-  script.setAttribute('defer', ''); // TODO: try `true`
-  script.src = chrome.runtime.getURL('oh-my-mock.js');
-  (document.head || document.documentElement).appendChild(script);
+    script.type = "text/javascript";
+    script.setAttribute('oh-my-state', JSON.stringify(state));
+    script.setAttribute('id', STORAGE_KEY);
+    // script.setAttribute('async', 'false');
+    script.setAttribute('defer', ''); // TODO: try `true`
+    script.src = chrome.runtime.getURL('oh-my-mock.js');
+    (document.head || document.documentElement).appendChild(script);
+  });
 
-  chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
+  chrome.storage.local.get(null, function (data) { console.log('OhMyMock data dump: ', data); })
 
   return true;
 }

@@ -22,6 +22,7 @@ import './server-dispatcher';
 // import { injectContent } from './inject-content';
 import { cSPRemoval } from './remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
+import { sendMsgToContent } from '../shared/utils/send-to-content';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -74,8 +75,15 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
 const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
   [appSources.CONTENT])
 
-domainStream$.subscribe(({ packet }: IOhMessage) => {
-  cSPRemoval([`http://${packet.domain}/*`, `https://${packet.domain}/*`]);
+domainStream$.subscribe((msg: IOhMessage) => {
+  cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
+  sendMsgToContent(msg.sender.tab.id, {
+    source: appSources.BACKGROUND,
+    payload: {
+      type: payloadType.CSP_REMOVAL_ACTIVATED,
+      data: true
+    }
+  } as IPacket<boolean>)
 });
 // connectWithLocalServer();
 

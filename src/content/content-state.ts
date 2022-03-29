@@ -10,7 +10,7 @@ export interface IOhMyCache {
 
 export interface IOhMyStorage {
   forceActive?: boolean;
-  reloadCount?: number;
+  isReloaded?: boolean;
 }
 
 export class OhMyContentState {
@@ -43,9 +43,9 @@ export class OhMyContentState {
     // TODO: relplace with SessionStorage
     if (window.name) {
       try {
-        this.storage = JSON.parse(window.name) as IOhMyStorage;
+        this.storage = window.name === '' ? { isReloaded: false } : JSON.parse(window.name) as IOhMyStorage;
       } catch (e) {
-        // TODO
+        this.isReloaded = false;
       }
     }
   }
@@ -97,7 +97,7 @@ export class OhMyContentState {
   }
 
   set forceActive(isActive: boolean) {
-    this.storage ??= { forceActive: false, reloadCount: 0 };
+    this.storage ??= { forceActive: false, isReloaded: false };
     this.storage.forceActive = isActive;
 
     window.name = JSON.stringify(this.storage);
@@ -109,14 +109,14 @@ export class OhMyContentState {
     return this.storage?.forceActive || false;
   }
 
-  set reloadCount(value: number) {
-    this.storage ??= { forceActive: false, reloadCount: 0 };
-    this.storage.reloadCount = value;
+  set isReloaded(value: boolean) {
+    this.storage ??= { forceActive: false, isReloaded: false };
+    this.storage.isReloaded = value;
 
     window.name = JSON.stringify(this.storage);
   }
 
-  get reloadCount() {
-    return this.storage?.reloadCount;
+  get isReloaded() {
+    return this.storage?.isReloaded;
   }
 }

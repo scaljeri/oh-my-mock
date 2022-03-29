@@ -76,13 +76,16 @@ export enum payloadType {
   PRE_RESPONSE = 'pre-response',
   INSERT = 'insert',
   CRUD = 'crud',
+  CSP_REMOVAL_ACTIVATED = 'csp-removal-started',
+  READY = 'ready',
 }
 export enum appSources {
   INJECTED = 'injected',
   CONTENT = 'content',
   POPUP = 'popup',
   BACKGROUND = 'background',
-  EXTERNAL = 'external'
+  EXTERNAL = 'external',
+  PRE_INJECTED = 'pre-injected',
 }
 
 export enum resetStateOptions {

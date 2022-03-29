@@ -78,3 +78,11 @@ if (!window[KEY]) {
   }
   window[KEY]['__fetch'] = origFetch;
 }
+
+window.postMessage({
+  source: 'pre-injected',
+  payload: {
+    type: 'ready',
+    data: true
+  }
+}, '*');

@@ -1,4 +1,3 @@
-console.log('Third script tag, external script');
 window.ohMyMock.fetch = (method, responseType, cb) => {
   fetch(ohMyMock.urlMap[responseType], {
     method,
