@@ -36,7 +36,7 @@
     "lint": "tsc --project tsconfig.json --noEmit && eslint . --ext js,ts,json --quiet --fix",
     "e2e": "ng e2e",
     "chrome:crx": "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --pack-extension=./dist",
-    "crx": "./scripts/build-crx.sh ./dist ./scripts/dist.pem",
+    "crx": "./scripts/build-crx.sh ./dist ./scripts/dummy.pem",
     "release:lib": "rimraf dist && tsc --build ./tsconfig-sdk.json && cp libs/nodejs-sdk/package.json ./dist && cp libs/nodejs-sdk/README.md ./dist && cd dist && npm publish --access=public && cd ..",
     "zcsp:hash": "echo -n ${npm_config_code} | openssl sha256 -binary | openssl base64",
     "csp:hex": "echo 'a' | openssl sha256 -binary | hexdump",
