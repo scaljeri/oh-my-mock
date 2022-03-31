@@ -15,8 +15,8 @@ import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 import { sendMessageToInjected } from './send-to-injected';
 import { receivedApiRequest } from './handle-api-request';
 import { BehaviorSubject } from 'rxjs';
-import { handleExternalInsert } from './crud/insert';
 import { handleCSP } from './csp-handler';
+import { handleAPI } from './api';
 
 declare let window: any;
 
@@ -55,6 +55,7 @@ window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) =
 }));
 
 window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
+handleAPI(messageBus, contentState);
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -117,7 +118,6 @@ function sendKnockKnock() {
 // initPreResponseHandler(messageBus, contentState);
 // messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
 
-messageBus.streamByType$<any>(payloadType.CRUD, appSources.EXTERNAL).subscribe(handleExternalInsert(contentState));
 // TODO
 // messageBus.streamByType$<any>(payloadType.RELOAD, appSources.POPUP).subscribe(({ packet }) => {
 

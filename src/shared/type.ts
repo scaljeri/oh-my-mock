@@ -29,8 +29,8 @@ export interface IOhMyMock {
 
 export interface IOhMyAux {
   filterKeywords?: string;
-  appActive?: boolean;
   newAutoActivate?: boolean;
+  appActive?: boolean;
   popupActive?: boolean;
   blurImages?: boolean;
 }
@@ -191,15 +191,6 @@ export interface IOhMyBackup {
   version: string;
 }
 
-export interface IOhMyCrud extends IOhMyBackup {
-  activate?: boolean;
-}
-
-export interface IOhMyStateUpdateResult {
-  status: ImportResultEnum;
-}
-
 export interface IOhMyInjectedState {
   active: boolean;
 }
-

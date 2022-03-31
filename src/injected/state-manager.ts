@@ -1,6 +1,6 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMessage, IOhMyReadyResponse } from '../shared/packet-type';
+import { IOhMessage, IOhMyImportStatus, IOhMyReadyResponse } from '../shared/packet-type';
 import { IOhMyInjectedState } from '../shared/type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
@@ -9,6 +9,7 @@ import { log } from './utils';
 let state: IOhMyInjectedState;
 
 export function setupListenersMessageBus() {
+  const externalApiResults = new Subject<IOhMyImportStatus>();
   const update = new BehaviorSubject<IOhMyInjectedState>(state);
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
   window[STORAGE_KEY].off.push(() => mb.clear());
@@ -28,7 +29,14 @@ export function setupListenersMessageBus() {
     window[STORAGE_KEY].cache.push(packet.payload.data);
   });
 
-  return update.asObservable();
+  mb.streamByType$<IOhMyImportStatus>(payloadType.EXTERNAL_API_RESULT, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyImportStatus>) => {
+    externalApiResults.next(packet.payload.data);
+  });
+
+  return {
+    stateUpdate$: update.asObservable(),
+    externalApiResult$: externalApiResults.asObservable()
+  }
 }
 
 export const ohMyState = (): IOhMyInjectedState => {

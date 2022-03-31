@@ -1,5 +1,6 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { IOhMyInjectedState } from '../shared/type';
+import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { setupListenersMessageBus } from './state-manager';
@@ -17,11 +18,13 @@ window[STORAGE_KEY].version = VERSION;
 window[STORAGE_KEY].off = [];
 window[STORAGE_KEY].cache = [];
 
-const ohMyState$ = setupListenersMessageBus();
-const sub = ohMyState$.subscribe((state: IOhMyInjectedState) => {
+const streams = setupListenersMessageBus();
+const sub = streams.stateUpdate$.subscribe((state: IOhMyInjectedState) => {
   handleStateUpdate(state);
 });
 window[STORAGE_KEY].off.push(() => sub.unsubscribe());
+
+initApi(streams.externalApiResult$);
 
 function handleStateUpdate(state: IOhMyInjectedState): void {
 
@@ -37,6 +40,7 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
       log('%c*** Activated ***', 'background: green', ', XHR and FETCH ready for mocking');
       patchXmlHttpRequest();
       patchFetch();
+      notify(true)
     }
   } else {
     window[STORAGE_KEY].isEnabled = false;
@@ -44,6 +48,7 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
     unpatchXmlHttpRequest();
     unpatchFetch();
     log('%c*** Deactivated ***', 'background: red', ', removed XHR and FETCH patches');
+    notify(false)
   }
 }
 
@@ -55,3 +60,15 @@ window[STORAGE_KEY].unpatch = () => {
 
 const state = JSON.parse(document.querySelector(`#${STORAGE_KEY}`).getAttribute('oh-my-state'));
 handleStateUpdate(state);
+
+function notify(isActive: boolean) {
+  window.postMessage({
+    source: 'ohmymock',
+    payload: {
+      type: 'message',
+      data: {
+        isActive
+      }
+    }
+  }, window.location.origin);
+}

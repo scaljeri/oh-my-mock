@@ -74,10 +74,12 @@ export enum payloadType {
   POPUP_CLOSED = 'popup-closed',
   POPUP_OPEN = 'popup-open',
   PRE_RESPONSE = 'pre-response',
-  INSERT = 'insert',
+  UPSERT = 'upsert',
   CRUD = 'crud',
+  SETTINGS = 'settings',
   CSP_REMOVAL_ACTIVATED = 'csp-removal-started',
   READY = 'ready',
+  EXTERNAL_API_RESULT = 'external-api-result'
 }
 export enum appSources {
   INJECTED = 'injected',
