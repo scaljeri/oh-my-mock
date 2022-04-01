@@ -6,7 +6,7 @@ window.postMessage({
   source: 'external',
    payload: {
       type: 'settings',
-       data: { activate: true }
+       data: { active: true }
    }
 }, '*');
 

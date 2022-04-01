@@ -29,7 +29,7 @@ export function setupListenersMessageBus() {
     window[STORAGE_KEY].cache.push(packet.payload.data);
   });
 
-  mb.streamByType$<IOhMyImportStatus>(payloadType.EXTERNAL_API_RESULT, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyImportStatus>) => {
+  mb.streamByType$<IOhMyImportStatus>(payloadType.OHMYMOCK_API_OUTPUT, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyImportStatus>) => {
     externalApiResults.next(packet.payload.data);
   });
 

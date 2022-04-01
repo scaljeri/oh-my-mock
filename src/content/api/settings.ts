@@ -20,12 +20,11 @@ export function handleAPISettings(contentState: OhMyContentState) {
       result = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE);
     }
 
-
     sendMessageToInjected({
       ...(payload.id && { id: payload.id }),
-      type: payloadType.EXTERNAL_API_RESULT,
-      data: result,
-      description: 'content:upsert-result'
+      type: payloadType.OHMYMOCK_API_OUTPUT,
+      data: result ? { status: 'success' } : { status: 'failure' },
+      description: 'content:settings-api-output'
     });
   }
 }

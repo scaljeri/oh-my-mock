@@ -79,7 +79,7 @@ export enum payloadType {
   SETTINGS = 'settings',
   CSP_REMOVAL_ACTIVATED = 'csp-removal-started',
   READY = 'ready',
-  EXTERNAL_API_RESULT = 'external-api-result'
+  OHMYMOCK_API_OUTPUT = 'ohmymock-api-output'
 }
 export enum appSources {
   INJECTED = 'injected',

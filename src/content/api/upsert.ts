@@ -14,7 +14,7 @@ export function handleAPIUpsert(contentState: OhMyContentState) {
       data, type, context);
 
     const output = {
-      type: payloadType.EXTERNAL_API_RESULT,
+      type: payloadType.OHMYMOCK_API_OUTPUT,
       data: { status: result.status, id: packet.payload.id },
       description: 'content:upsert-result'
     }
