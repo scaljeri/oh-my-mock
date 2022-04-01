@@ -4,7 +4,7 @@ import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__response');
-const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__': '') + 'response');
+const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'response');
 
 export function patchResponse() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'response', {
@@ -27,7 +27,7 @@ export function patchResponse() {
           response = b64ToBlob(response);
         } else if (this.responseType === 'arraybuffer') {
           response = b64ToArrayBuffer(response);
-        } else if (this.responseType === 'json' && response === 'string') {
+        } else if (this.responseType === 'json' && typeof response === 'string') {
           response = JSON.parse(response);
         }
 
