@@ -6,6 +6,7 @@ import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
 import { triggerRuntime } from "../shared/utils/trigger-msg-runtime";
+import { DataUtils } from "../shared/utils/data";
 
 const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
@@ -22,10 +23,18 @@ connectWithLocalServer();
 
 export async function dispatch2Server(request: IOhMyUpsertData, domain: string): Promise<IOhMyMockResponse> {
   const state = await StorageUtils.get<IState>(domain);
-  let data = request;
+  let data; // = request;
+  let mock;
 
   if (state) {
-    data = StateUtils.findRequest(state, request) || request;
+    data = StateUtils.findRequest(state, request);
+    if (data) {
+      const mockId = DataUtils.activeMock(data, state.context);
+
+      if (mockId) {
+        mock = await StorageUtils.get(mockId);
+      }
+    }
   }
 
   const result = await dispatchRemote({
@@ -34,7 +43,14 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
     description: 'background;dispatch-to-server',
     data: {
       request: data || request,
-      context: state.context
+      context: state.context,
+      ...(mock && {
+        mock: {
+          headers: mock.headersMock,
+          response: mock.responseMock,
+          statusCode: mock.statusCode
+        }
+      })
     }
   });
 

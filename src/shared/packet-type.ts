@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, requestType } from './type';
+import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, ohMyStatusCode, requestType } from './type';
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
@@ -45,6 +45,7 @@ export interface IOhMyReadyResponse<T = string> {
 export interface IOhMyDispatchServerRequest {
   request: IData | IOhMyUpsertData,
   context: IOhMyContext
+  mock?: { response: unknown, headers: Record<string, string>, statusCode: ohMyStatusCode };
 }
 
 export interface IOhMyImportStatus {

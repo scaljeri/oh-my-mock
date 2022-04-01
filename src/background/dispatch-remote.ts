@@ -47,6 +47,7 @@ export const dispatchRemote = async (payload: IPacketPayload<IOhMyDispatchServer
       });
 
       payload.id = id;
+
       socket.emit('data', payload);
     });
   } else {
