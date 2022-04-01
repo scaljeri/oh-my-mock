@@ -194,6 +194,7 @@ function inject(state: IOhMyInjectedState): boolean {
     (document.head || document.documentElement).appendChild(script);
   });
 
+  // eslint-disable-next-line no-console
   chrome.storage.local.get(null, function (data) { console.log('OhMyMock data dump: ', data); })
 
   return true;

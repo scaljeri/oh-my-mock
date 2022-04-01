@@ -107,6 +107,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 chrome.runtime.onSuspend.addListener(function () {
+  // eslint-disable-next-line no-console
   console.log("Suspending.");
   chrome.browserAction.setBadgeText({ text: "" });
 });

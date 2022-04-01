@@ -23,6 +23,7 @@ export async function persistResponse(xhr: XMLHttpRequest, request: IOhMyAPIRequ
   } else if (rt === '' || rt === 'text') {
     output = xhr['__responseText'];
   } else {
+    // eslint-disable-next-line no-console
     return console.error(`XHR Error: OhMyMock does not support response type ${rt}.\nPlease file a feature request if you need this to be fixed!`);
   }
 
