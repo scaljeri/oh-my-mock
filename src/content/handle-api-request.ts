@@ -1,6 +1,6 @@
 
 import { ohMyMockStatus, payloadType, STORAGE_KEY } from "../shared/constants";
-import { IOhMyReadyResponse, IPacket } from "../shared/packet-type";
+import { IOhMyPacketContext, IOhMyReadyResponse, IPacket } from "../shared/packet-type";
 import { IOhMyAPIRequest, IOhMyMockResponse, IState } from "../shared/type";
 import { handleApiRequest } from "../shared/utils/handle-api-request";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
@@ -9,7 +9,7 @@ import { sendMessageToInjected } from "./send-to-injected";
 const VERSION = '__OH_MY_VERSION__';
 
 //  IOhMyReadyResponse
-export async function receivedApiRequest(packet: IPacket<IOhMyAPIRequest>, state: IState) {
+export async function receivedApiRequest(packet: IPacket<IOhMyAPIRequest, IOhMyPacketContext>, state: IState) {
   if (packet.version !== VERSION && !VERSION.match('beta')) {
     return window[STORAGE_KEY].off?.();
   }

@@ -58,7 +58,7 @@ window[STORAGE_KEY].unpatch = () => {
   sub.unsubscribe();
 }
 
-const state = JSON.parse(document.querySelector(`#${STORAGE_KEY}`).getAttribute('oh-my-state'));
+const state = JSON.parse(document.querySelector(`#id-${STORAGE_KEY}`).getAttribute('oh-my-state'));
 handleStateUpdate(state);
 
 function notify(isActive: boolean) {

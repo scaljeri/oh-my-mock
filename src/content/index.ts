@@ -187,7 +187,7 @@ function inject(state: IOhMyInjectedState): boolean {
 
     script.type = "text/javascript";
     script.setAttribute('oh-my-state', JSON.stringify(state));
-    script.setAttribute('id', STORAGE_KEY);
+    script.setAttribute('id', `id-${STORAGE_KEY}`);
     // script.setAttribute('async', 'false');
     script.setAttribute('defer', ''); // TODO: try `true`
     script.src = chrome.runtime.getURL('oh-my-mock.js');

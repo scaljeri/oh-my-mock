@@ -1,6 +1,6 @@
 import { connectWithLocalServer, dispatchRemote } from "./dispatch-remote";
 import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
-import { IOhMessage } from "../shared/packet-type";
+import { IOhMessage, IOhMyPacketContext } from "../shared/packet-type";
 import { IOhMyAPIRequest, IOhMyUpsertData, IState, IOhMyMockResponse } from "../shared/type";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { StateUtils } from "../shared/utils/state";
@@ -9,7 +9,7 @@ import { triggerRuntime } from "../shared/utils/trigger-msg-runtime";
 
 const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
-  .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest>) => {
+  .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
     const request = { ...packet.payload.data, requestType: packet.payload.context.requestType } as IOhMyUpsertData;
     const result = await dispatch2Server(request, packet.payload.context.domain);
 

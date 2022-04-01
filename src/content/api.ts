@@ -1,4 +1,4 @@
-import { IOhMyExternalSettings, OhMyAPIUpsert } from "../shared/api-types";
+import { IOhMyMockSettings, OhMyAPIUpsert } from "../shared/api-types";
 import { appSources, payloadType } from "../shared/constants";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { handleAPIUpsert } from "./api/upsert";
@@ -7,5 +7,5 @@ import { OhMyContentState } from "./content-state";
 
 export function handleAPI(messageBus: OhMyMessageBus, contentState: OhMyContentState) {
   messageBus.streamByType$<OhMyAPIUpsert>(payloadType.UPSERT, appSources.INJECTED).subscribe(handleAPIUpsert(contentState));
-  messageBus.streamByType$<IOhMyExternalSettings>(payloadType.SETTINGS, appSources.EXTERNAL).subscribe(handleAPISettings(contentState));
+  messageBus.streamByType$<IOhMyMockSettings>(payloadType.SETTINGS, appSources.EXTERNAL).subscribe(handleAPISettings(contentState));
 }

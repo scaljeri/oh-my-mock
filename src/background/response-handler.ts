@@ -12,7 +12,7 @@ export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate>): Promise<IMock> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IMock> {
     const state = await OhMyResponseHandler.StorageUtils.get<IState>(context.domain);
 
     let request = StateUtils.findRequest(state, data.request);

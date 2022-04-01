@@ -6,7 +6,7 @@
       width: 100%;
     }
   </style>
-  <script>window.ohMyMock = { urlMap: { html: '/site', json: '/users', 'json-external': 'https://jsonplaceholder.typicode.com/todos/1', png: '/binary/test.png' } };</script>
+  <script>window.ohMyMockTest = { urlMap: { html: '/site', json: '/users', 'json-external': 'https://jsonplaceholder.typicode.com/todos/1', png: '/binary/test.png' } };</script>
   <script src="fetch.js"></script>
   <script src="xhr.js"></script>
   <script src="hammer-time.js"></script>
@@ -16,7 +16,7 @@
 <body>
   <h1>Test site</h1>
 
-  <form class="selection" onsubmit="return window.onSubmit()">
+  <form class="selection" onsubmit="return window.onSubmit();">
     <div class="type">
       <h3>Type</h3>
       <select name=type>

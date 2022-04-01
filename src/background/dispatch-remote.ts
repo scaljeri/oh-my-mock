@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { IOhMyDispatchServerRequest, IPacketPayload } from '../shared/packet-type';
+import { IOhMyDispatchServerRequest, IOhMyPacketContext, IPacketPayload } from '../shared/packet-type';
 import { IOhMyMockResponse } from '../shared/type';
 import { uniqueId } from '../shared/utils/unique-id';
 
@@ -34,7 +34,7 @@ export const connectWithLocalServer = (): void => {
   });
 }
 
-export const dispatchRemote = async (payload: IPacketPayload<IOhMyDispatchServerRequest>): Promise<IOhMyMockResponse> => {
+export const dispatchRemote = async (payload: IPacketPayload<IOhMyDispatchServerRequest, IOhMyPacketContext>): Promise<IOhMyMockResponse> => {
   //   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
 
   if (isConnected) {

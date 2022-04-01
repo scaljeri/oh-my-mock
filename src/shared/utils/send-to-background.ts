@@ -1,4 +1,4 @@
-import { ohMyDomain } from "../type";
+import { IOhMyContext, ohMyDomain } from "../type";
 import { appSources, payloadType } from "../constants";
 import { IOhMyPacketContext, IPacket } from "../packet-type";
 
@@ -21,7 +21,7 @@ export class OhMySendToBg {
   static full<T = unknown, U = T>(
     data: T,
     type: payloadType,
-    context?: Partial<IOhMyPacketContext>,
+    context?: Partial<IOhMyPacketContext | IOhMyContext>,
     description?: string
   ): Promise<U> {
     return OhMySendToBg.send<T, U>({

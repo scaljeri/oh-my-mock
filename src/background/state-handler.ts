@@ -1,4 +1,4 @@
-import { IPacketPayload } from "../shared/packet-type";
+import { IOhMyPacketContext, IPacketPayload } from "../shared/packet-type";
 import { IOhMyMock, IState } from "../shared/type";
 import { update } from "../shared/utils/partial-updater";
 import { StateUtils } from "../shared/utils/state";
@@ -9,7 +9,7 @@ import { clearCSPRemoval, cSPRemoval } from "./remove-csp-header";
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
-  static async update(payload: IPacketPayload<IState | unknown>): Promise<IState> {
+  static async update(payload: IPacketPayload<IState | unknown, IOhMyPacketContext>): Promise<IState> {
     const { data, context } = payload;
 
     let state = data as IState;

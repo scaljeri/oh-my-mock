@@ -36,8 +36,9 @@ export interface IOhMyAux {
 }
 
 export interface IOhMyContext {
-  preset?: ohMyPresetId;
   domain: ohMyDomain;
+  preset?: ohMyPresetId;
+  active?: boolean;
 }
 
 export interface IState {

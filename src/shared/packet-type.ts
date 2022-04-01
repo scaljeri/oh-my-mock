@@ -4,15 +4,15 @@ import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUp
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
-export interface IOhMessage<T = unknown> {
-  packet: IPacket<T>;
+export interface IOhMessage<T = unknown, X = IOhMyContext> {
+  packet: IPacket<T, X>;
   sender: chrome.runtime.MessageSender;
   callback: (data: unknown) => void;
 }
-export interface IPacket<T = unknown> {
+export interface IPacket<T = unknown, U = IOhMyContext> {
   tabId?: number;
   source: appSources;
-  payload: IPacketPayload<T>;
+  payload: IPacketPayload<T, U>;
   domain?: ohMyDomain,
   version?: string;
 }
@@ -24,10 +24,10 @@ export interface IOhMyPacketContext extends IOhMyContext {
   propertyName?: string;
 }
 
-export interface IPacketPayload<T = unknown> {
+export interface IPacketPayload<T = unknown, U = IOhMyContext> {
   id?: string;
   type: payloadType;
-  context?: IOhMyPacketContext;
+  context?: U
   data?: T;
   description: string;
 }

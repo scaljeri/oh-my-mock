@@ -7,16 +7,15 @@ import { sendMessageToInjected } from "../send-to-injected";
 
 export function handleAPIUpsert(contentState: OhMyContentState) {
   return async ({ packet }: IOhMessage<OhMyAPIUpsert>) => {
-    const payload = packet.payload;
-    const type = payload.type;
-    const data = { activate: true, ...packet.payload.data } as OhMyAPIUpsert;
+    const { type, context, data } = packet.payload;
+    // const data = { activate: true, ...packet.payload.data } as OhMyAPIUpsert;
 
     const result = await OhMySendToBg.full<OhMyAPIUpsert, IOhMyImportStatus>(
-      data, type, { domain: OhMyContentState.host });
+      data, type, context);
 
     const output = {
       type: payloadType.EXTERNAL_API_RESULT,
-      data: { status: result.status, id: payload.id },
+      data: { status: result.status, id: packet.payload.id },
       description: 'content:upsert-result'
     }
 

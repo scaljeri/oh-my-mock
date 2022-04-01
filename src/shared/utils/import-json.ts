@@ -9,7 +9,7 @@ export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
 }
 
-export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { activate = false } = {}, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
+export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
   const state = await sUtils.get<IState>(context.domain) || StateUtils.init(context);
 
   let status = ImportResultEnum.SUCCESS;
@@ -18,7 +18,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
 
   if (MigrateUtils.shouldMigrate({ version: data.version })) {
     requests = requests.map((r: IData) => {
-      r.enabled = { ...r.enabled, [state.context.preset]: activate };
+      r.enabled = { ...r.enabled, [state.context.preset]: context.active };
       return MigrateUtils.migrate(r);
     }) as IData[];
     responses = data.responses.map(MigrateUtils.migrate) as IMock[];
@@ -29,7 +29,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
 
     for (let request of requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1)) {
       request.lastHit = timestamp++; // make sure they each have a unique timestamp!
-      request = DataUtils.prefilWithPresets(request, state.presets);
+      request = DataUtils.prefilWithPresets(request, state.presets, context.active);
       state.data[request.id] = request;
     }
 

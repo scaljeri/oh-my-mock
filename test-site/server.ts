@@ -17,7 +17,7 @@ const ohMyServer = createServer({
 const app = ohMyServer.app;
 
 ohMyServer.local.add({ // settings
-  url: '/userx',
+  url: '/users',
   method: 'GET',
   statusCode: 201,
   path: './users.json',
@@ -35,7 +35,9 @@ ohMyServer.local.add({ // settings
 } as any);
 
 app.get("/", (req: any, res: any) => {
-  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')), { headers: {'Content-Security-Policy': "script-src self http://localhost:8000 'sha256-Q0SJRqmBvkIJTEAzehkaEwtDExaJMuU0rs9VkrhTO5s='"}});
+  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')), {
+    headers: {
+      'Content-Security-Policy': "script-src self http://localhost:8000  'sha256-Y0Ko9LKZfaEAS30EibFdh13KX/GKjZrZcny1T0bsrxA='"}});
 });
 
 

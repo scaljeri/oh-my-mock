@@ -1,12 +1,12 @@
-if (!window.ohMyMock) {
-  window.ohMyMock = {}
+if (!window.ohMyMockTest) {
+  window.ohMyMockTest = {}
 }
 
-ohMyMock.statusCodeFn = st => {
+ohMyMockTest.statusCodeFn = st => {
   document.querySelector('.status-code span').innerText = st;
 };
 
-ohMyMock.responseFn = r => {
+ohMyMockTest.responseFn = r => {
   const img = document.querySelector('img');
   img.style.display = 'none';
   if (r instanceof Blob) {
@@ -15,7 +15,7 @@ ohMyMock.responseFn = r => {
     r = '';
     img.src = imageUrl;
     img.style.display = 'block';
-  } else if (window.ohMyMock.response === 'json') {
+  } else if (window.ohMyMockTest.response === 'json') {
     try {
       if (typeof r === 'object') {
         r = JSON.stringify(r);
@@ -28,12 +28,12 @@ ohMyMock.responseFn = r => {
   document.querySelector('.body pre').innerText = r;
 };
 
-ohMyMock.durationFn = () => {
+ohMyMockTest.durationFn = () => {
   document.querySelector('.duration span').innerText =
-    (Date.now() - ohMyMock.starttime) + 'ms';
+    (Date.now() - ohMyMockTest.starttime) + 'ms';
 };
 
-ohMyMock.headersFn = h => {
+ohMyMockTest.headersFn = h => {
   if (typeof h === 'object') {
     h = JSON.stringify(h, null, 4);
   }
@@ -41,10 +41,10 @@ ohMyMock.headersFn = h => {
   document.querySelector('.headers').innerText = h;
 }
 
-ohMyMock.resetFn = () => {
-  ohMyMock.headersFn('');
-  ohMyMock.statusCodeFn('');
-  ohMyMock.responseFn('');
+ohMyMockTest.resetFn = () => {
+  ohMyMockTest.headersFn('');
+  ohMyMockTest.statusCodeFn('');
+  ohMyMockTest.responseFn('');
 };
 
 window.onSubmit = () => {
@@ -52,18 +52,18 @@ window.onSubmit = () => {
     const form = document.forms[0];
     const fd = new FormData(form);
 
-    ohMyMock.type = fd.get('type');
-    ohMyMock.method = fd.get('method');
-    ohMyMock.response = fd.get('response');
+    ohMyMockTest.type = fd.get('type');
+    ohMyMockTest.method = fd.get('method');
+    ohMyMockTest.response = fd.get('response');
 
-    ohMyMock.starttime = Date.now();
-    const interId = setInterval(() => ohMyMock.durationFn(), 100);
+    ohMyMockTest.starttime = Date.now();
+    const interId = setInterval(() => ohMyMockTest.durationFn(), 100);
 
-    const handler = window.ohMyMock[fd.get('type')];
-    ohMyMock.resetFn();
+    const handler = window.ohMyMockTest[fd.get('type')];
+    ohMyMockTest.resetFn();
     handler(fd.get('method'), fd.get('response'), () => {
       clearInterval(interId);
-      ohMyMock.durationFn();
+      ohMyMockTest.durationFn();
     });
   } catch (err) {
     console.log("Oops something bad happend", err);

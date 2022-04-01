@@ -23,6 +23,7 @@ import './server-dispatcher';
 import { cSPRemoval } from './remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { sendMsgToContent } from '../shared/utils/send-to-content';
+import { connectWithLocalServer } from './dispatch-remote';
 
 // eslint-disable-next-line no-console
 console.log(`${STORAGE_KEY}: background script is ready`);
@@ -48,11 +49,11 @@ queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
 queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
-queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
+queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
   await StorageUtils.reset();
   await initStorage();
-  await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN }, { activate: true });
+  await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
 });
 
 
@@ -85,7 +86,7 @@ domainStream$.subscribe((msg: IOhMessage) => {
     }
   } as IPacket<boolean>)
 });
-// connectWithLocalServer();
+connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;
@@ -156,7 +157,7 @@ setTimeout(async () => {
 
   const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
   if (!state || Object.keys(state.data).length === 0) {
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN }, { activate: true });
+    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
   }
 });
 

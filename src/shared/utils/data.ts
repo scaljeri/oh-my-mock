@@ -121,14 +121,18 @@ export class DataUtils {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  static prefilWithPresets(request: IData, presets: IOhMyPresets = {}): IData {
+  static prefilWithPresets(request: IData, presets: IOhMyPresets = {}, active?): IData {
     request.selected ??= {};
     request.enabled ??= {};
 
     const responses = Object.values(request.mocks).sort(DataUtils.statusCodeSort);
 
     Object.keys(presets).forEach(p => {
-      request.enabled[p] ??= false;
+      if (active !== undefined) {
+        request.enabled[p] = active;
+      } else {
+        request.enabled[p] ??= false;
+      }
       request.selected[p] ??= responses[0]?.id;
     });
 

@@ -3,8 +3,8 @@ import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyAPIRequest, requestType } from '../../shared/type';
-import { IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
+import { IOhMyAPIRequest, IOhMyContext, requestType } from '../../shared/type';
+import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
@@ -58,7 +58,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       context: { id, requestType },
       type: payloadType.API_REQUEST,
       data: request
-    } as IPacketPayload<IOhMyAPIRequest>;
+    } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;
 
     mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))

@@ -1,4 +1,4 @@
-export const STORAGE_KEY = 'OhMyMocks';
+export const STORAGE_KEY = 'OhMyMock';
 export const OH_MY_TICK = 'tick';
 
 export const MOCK_JS_CODE = `/* This is where OhMyMock creates responses.

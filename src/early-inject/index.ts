@@ -1,4 +1,4 @@
-const KEY = 'OhMyMocks';
+const KEY = 'OhMyMock';
 
 // Extract state from attribute
 
