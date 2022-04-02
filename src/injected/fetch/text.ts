@@ -1,5 +1,5 @@
 import { ohMyMockStatus } from "../../shared/constants";
-import { findCachedResponseAsync } from "../utils";
+import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.Response.prototype.hasOwnProperty('__text');
@@ -11,21 +11,19 @@ export function patchResponseText() {
       ...descriptor,
       value: function () {
         if (!this.ohResult) {
-          return findCachedResponseAsync({
+          this.oHResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
-          }).then(result => {
-            this.ohResult = result;
-            if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-              return Promise.resolve(this.ohResult.response?.response);
-            }
+          });
+          if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
+            return Promise.resolve(this.ohResult.response?.response);
+          }
 
-            if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
-              persistResponse(this, this.ohResult.request);
-            }
+          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+            persistResponse(this, this.ohResult.request);
+          }
 
-            return this.__text();
-          })
+          return this.__text();
         }
 
         if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {

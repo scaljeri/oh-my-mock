@@ -35,7 +35,6 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
 
   if (state.active) {
     if (!isOhMyMockActive) {
-      window[STORAGE_KEY].isEnabled = true;
       isOhMyMockActive = true;
       log('%c*** Activated ***', 'background: green', ', XHR and FETCH ready for mocking');
       patchXmlHttpRequest();
@@ -43,7 +42,7 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
       notify(true)
     }
   } else {
-    window[STORAGE_KEY].isEnabled = false;
+    window[STORAGE_KEY].cache = [];
     isOhMyMockActive = false;
     unpatchXmlHttpRequest();
     unpatchFetch();

@@ -173,7 +173,7 @@ function inject(state: IOhMyInjectedState): boolean {
 
   // Early inject
   const el = document.createElement('div');
-  el.setAttribute('onclick', `'__OH_MY_INJECTED_CODE__'`);
+  el.setAttribute('onclick', `const KEY='${STORAGE_KEY}';` + `'__OH_MY_INJECTED_CODE__'`);
   document.documentElement.appendChild(el);
   el.click();
   el.remove();

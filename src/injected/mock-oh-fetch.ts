@@ -26,6 +26,10 @@ interface IOhFetchConfig {
 declare let window: { fetch: any };
 
 async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {}) {
+  if (!window[STORAGE_KEY].state?.active) {
+    return window[STORAGE_KEY]['__fetch'].call(window, request, config);
+  }
+
   let url = request as string;
   if (request instanceof Request) {
     config = { headers: request.headers as any, method: request.method as requestMethod };

@@ -11,7 +11,7 @@ import { STORAGE_KEY } from '../shared/constants';
 declare let window: any;
 
 export function unpatchXmlHttpRequest() {
-  delete window[STORAGE_KEY].xhr;
+  // delete window[STORAGE_KEY].xhr;
 
   // unpatchAddEventListener();
   // unpatchSetRequestHeader();

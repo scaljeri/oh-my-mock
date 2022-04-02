@@ -1,3 +1,4 @@
+import { STORAGE_KEY } from '../../shared/constants';
 import { IOhMyResponseUpdate } from '../../shared/packet-type';
 import { IOhMyAPIRequest } from '../../shared/type';
 import { convertToB64 } from '../../shared/utils/binary';
@@ -6,7 +7,7 @@ import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
 export async function persistResponse(xhr: XMLHttpRequest, request: IOhMyAPIRequest): Promise<void> {
-  if (xhr['__ohIsPerisisted']) {
+  if (xhr['__ohIsPerisisted'] || !window[STORAGE_KEY].state?.active) {
     return;
   }
   xhr['__ohIsPerisisted'] = true;

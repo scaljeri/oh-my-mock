@@ -15,6 +15,10 @@ export function patchSend() {
   // ...descriptor,
   // value: function (body) {
   window[STORAGE_KEY].xhr.send = function (body) {
+    if (!window[STORAGE_KEY].state?.active) {
+      return this.__send(body);
+    }
+
     dispatchApiRequest({
       url: this.ohUrl,
       method: this.ohMethod,

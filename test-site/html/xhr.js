@@ -9,7 +9,6 @@ window.ohMyMockTest.xhr = (method, responseType, cb) => {
   xhr.onreadystatechange = cb;
   let count = 0;
   xhr.addEventListener('load', (res) => {
-    console.log('LOAD');
     count++;
     if (count === 2) {
       xhrInjectResponse(xhr);
@@ -33,6 +32,7 @@ window.ohMyMockTest.xhr = (method, responseType, cb) => {
   const response = {};
 
   // Reflect.get(XMLHttpRequest.prototype, "response", 'yolo');
+  console.log('XHR2 send');
   xhr.send(method === 'POST' ? { x: 10 } : null);
   xhr.addEventListener('loadend', () => {
     console.log('done');
@@ -93,7 +93,6 @@ function xhrInjectResponse(xhr) {
   // const srcBlob = URL.createObjectURL(blob);
   // window.ohMyMockTest.responseFn(blob);
   console.log('------------ xhr ------------');
-      debugger;
   const response = xhr.response;
   if (response instanceof Uint8Array) {
     window.ohMyMockTest.responseFn(new Blob([response]));

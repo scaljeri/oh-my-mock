@@ -1,3 +1,4 @@
+import { STORAGE_KEY } from '../../shared/constants';
 import { IOhMyResponseUpdate } from '../../shared/packet-type';
 import { IOhMyAPIRequest } from '../../shared/type';
 import { convertToB64 } from '../../shared/utils/binary';
@@ -6,6 +7,10 @@ import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
 export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<IOhMyResponseUpdate> {
+  if (!window[STORAGE_KEY].state?.active) {
+    return;
+  }
+
   if (response['ohResult']) {
     return response['ohResult'];
   }
