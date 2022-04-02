@@ -1,10 +1,8 @@
 import { IOhMyAPIRequest, requestMethod } from '../shared/type';
 
 import * as fetchUtils from '../shared/utils/fetch';
-import { dispatchApiResponse } from './message/dispatch-api-response';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { isBinary, blobToDataURL } from '../shared/utils/binary';
 import { logging } from '../shared/utils/log';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
@@ -71,55 +69,10 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
 
     setTimeout(() => resolve(resp), delay || 0);
   });
-
-  // return new Promise(async (resolv, reject) => {
-  //   let body = null
-
-
-  //   if (response !== undefined && statusCode !== 204) { // Otherwise error with statuscode 204 (No content)
-  //     if (isBinary(headers['content-type'])) {
-  //       body = await b64ToBlob(response as string);
-  //     } else {
-  //       body = new Blob([response as any], { type: headers['content-type'] });
-  //     }
-  //   }
-
-  //   const rsp = new Response(body, {
-  //     headers: fetchUtils.jsonToHeaders(headers || {}),
-  //     status: statusCode
-  //   });
-  //   setTimeout(() => resolv(rsp), delay || 0);
-  // });
 }
-
-// function fecthApi(url, config): Promise<unknown> {
-//   return window[STORAGE_KEY].fetch.call(window, url, config).then(async response => {
-//     const clone = response.clone();
-
-//     const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
-//     await dispatchApiResponse({
-//       request: {
-//         url,
-//         method: config.method || 'GET',
-//         requestType: 'FETCH',
-//       },
-//       response: {
-//         statusCode: response.status,
-//         response: await (isBinary(headers['content-type']) ? blobToDataURL(await clone.blob()) : clone.text()),
-//         headers
-//       }
-//     });
-
-//     return response;
-//   });
-// }
 
 function patchFetch(): void {
   window[STORAGE_KEY].fetch = ohMyFetch;
-  // const origFetch = window.fetch['__fetch'] || window.fetch;
-  // window.fetch = OhMyFetch;
-  // OhMyFetch['__fetch'] = origFetch;
-  // window[STORAGE_KEY].fetch = OhMyFetch;
   patchResponseBlob();
   patchResponseArrayBuffer();
   patchResponseJson();
