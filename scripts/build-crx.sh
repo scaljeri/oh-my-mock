@@ -11,7 +11,7 @@ fi
 dir=$1
 key=$2
 name=$(basename "$dir")
-crx="OhMyMock.crx"
+crx="oh-my-mock.crx"
 pub="$name.pub"
 sig="$name.sig"
 zip="$name.zip"
