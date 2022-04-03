@@ -32,7 +32,7 @@ window.ohMyMockTest.xhr = (method, responseType, cb) => {
   const response = {};
 
   // Reflect.get(XMLHttpRequest.prototype, "response", 'yolo');
-  console.log('XHR2 send');
+  console.log('XHR send');
   xhr.send(method === 'POST' ? { x: 10 } : null);
   xhr.addEventListener('loadend', () => {
     console.log('done');

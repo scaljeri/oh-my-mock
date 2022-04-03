@@ -9,14 +9,14 @@ export function patchResponseText() {
   Object.defineProperties(window.Response.prototype, {
     text: {
       ...descriptor,
-      value: function () {
+      value: async function () {
         if (!this.ohResult) {
           this.oHResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
           });
           if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-            return Promise.resolve(this.ohResult.response?.response);
+            return this.ohResult.response?.response;
           }
 
           if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
@@ -27,7 +27,7 @@ export function patchResponseText() {
         }
 
         if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-          return Promise.resolve(this.ohResult.response?.response);
+          return this.ohResult.response?.response;
         } else {
           return this.__text();
         }

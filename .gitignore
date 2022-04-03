@@ -9,6 +9,7 @@
 /bazel-out
 stats.json
 /stats
+screenshots/*
 
 # dependencies
 /node_modules

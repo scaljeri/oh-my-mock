@@ -17,6 +17,7 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
+              allowTsInNodeModules: true,
               configFile: path.resolve('./dev.tsconfig.json')
             }
           }
