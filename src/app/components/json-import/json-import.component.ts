@@ -1,13 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Store } from '@ngxs/store';
-import { findActiveData } from '../../../shared/utils/find-mock'
-import { IData, IState, IStore } from '@shared/type';
-import { UpsertData } from 'src/app/store/actions';
-import { OhMyState } from 'src/app/store/state';
-import { MigrationsService } from 'src/app/services/migrations.service';
-import { STORAGE_KEY } from '@shared/constants';
+import { IOhMyBackup, IOhMyContext } from '@shared/type';
+import { MatDialogRef } from '@angular/material/dialog';
+import { FormControl } from '@angular/forms';
+import { AppStateService } from 'src/app/services/app-state.service';
+import { OhMyStateService } from 'src/app/services/state.service';
+import { StorageService } from 'src/app/services/storage.service';
+import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
 
 @Component({
   selector: 'oh-my-json-import',
@@ -16,50 +15,45 @@ import { STORAGE_KEY } from '@shared/constants';
 })
 export class JsonImportComponent {
 
-  @Dispatch() upsertData = (data: IData, domain: string) => new UpsertData(data, domain);
+  isUploading = false;
+  skipCtrl = new FormControl(false);
+  replaceCtrl = new FormControl(false);
+  context: IOhMyContext;
 
-  constructor(private mirgationService: MigrationsService, private store: Store, private toast: HotToastService) { }
+  constructor(
+    @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,
+    private appState: AppStateService,
+    private stateService: OhMyStateService,
+    private storageService: StorageService,
+    private toast: HotToastService) { }
 
   onUploadFile(fileList: FileList): void {
-    const state = this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
-
     Array.from(fileList).forEach(file => {
       const fileReader = new FileReader();
       fileReader.onload = (fileLoadedEvent) => {
-        try {
-          const { domain, version, data } = JSON.parse(fileLoadedEvent.target.result as string) as IState & { version: string };
-          let addCount = 0;
 
-          const migratedState = this.mirgationService.update(
-            { version, domains: { [domain]: { domain, data, views: {}, toggles: {} } } });
+        this.isUploading = true;
 
-          if (version > migratedState.version && !version.match(/^__/)) { // In development the version starts with __
-            this.toast.error(`Import failed, version of OhMyMock is too old`)
-          } else if ((version || '0.0.0') < migratedState.version) {
-            if (migratedState.domains[domain]?.data?.length !== 0) {
-              return this.toast.warning(`Nothing imported, version of the data is too old!`);
-            } else {
-              this.toast.warning(`Data was migrated to version ${migratedState.version} before import!`);
+        setTimeout(async () => {
+          try {
+            const content = JSON.parse(fileLoadedEvent.target.result as string) as IOhMyBackup;
+            const { requests, responses } = content;
+
+            const result = await importJSON(content, this.stateService.state.context);
+
+            if (result.status === ImportResultEnum.SUCCESS) {
+              this.toast.success(`Imported ${requests.length} requests and  ${responses.length} responses from ${file.name} into ${this.appState.domain}`);
+            } else if (result.status === ImportResultEnum.TOO_OLD) {
+              this.toast.error(`Import failed, your version of OhMyMock is too old`)
             }
+          } catch {
+            this.toast.error(`File ${file} does not contain (valid) JSON`);
+          } finally {
+            this.isUploading = false;
           }
 
-          // Mocks that already exist are not imported but skipped, this should change!!
-          // TODO: A mock can already exist, but the import can have different status codes!!
-          migratedState.domains[domain]?.data.forEach(d => {
-            if (!findActiveData(state, d.url, d.method, d.type)) {
-              addCount++;
-              this.upsertData(d, domain);
-            }
-          });
-
-          if (addCount > 0) {
-            this.toast.success(`Imported mocks from ${file.name} into ${domain} (added ${addCount}/${data.length})`);
-          } else {
-            this.toast.warning(`No mocks where imported, they all exist already!`);
-          }
-        } catch {
-          this.toast.error(`File ${file} does not contain (valid) JSON`);
-        }
+          this.dialogRef?.close();
+        }, 500);
       };
 
       fileReader.readAsText(file, "UTF-8");

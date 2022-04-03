@@ -1,66 +1,95 @@
-import { STORAGE_KEY } from '../shared/constants';
-import { IData, IMock, requestType } from '../shared/type';
-import { compileJsCode } from '../shared/utils/eval-jscode';
-import { findActiveData } from '../shared/utils/find-mock'
+import { IOhMyAPIRequest, requestMethod } from '../shared/type';
+
 import * as fetchUtils from '../shared/utils/fetch';
+import { dispatchApiRequest } from './message/dispatch-api-request';
+import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
+import { logging } from '../shared/utils/log';
+import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
+import { patchHeaders, unpatchHeaders } from './fetch/headers';
+import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
+import { patchResponseJson, unpatchResponseJson } from './fetch/json';
+import { patchResponseText, unpatchResponseText } from './fetch/text';
+import { patchStatus, unpatchStatus } from './fetch/status';
+import { persistResponse } from './fetch/persist-response';
 
-const ORIG_FETCH = window.fetch;
-const OhMyFetch = (url, config: { method?: requestType } = {}) => {
-  const { method = 'GET' } = config;
-  const data: IData = findActiveData(window[STORAGE_KEY].state, url, 'FETCH', method);
-  const mock: IMock = data?.mocks[data?.activeStatusCode];
+export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
+export const log = logging(`${STORAGE_KEY} (^*^)`, true);
 
-  if (mock) {
-    window[STORAGE_KEY].hitSubject.next({
-      url: url,
-      method: 'FETCH',
-      type: method,
-      statusCode: data.activeStatusCode
-    });
+interface IOhFetchConfig {
+  method?: requestMethod;
+  headers?: Headers & { entries: () => [string, string][] }; // TODO: entries is not known in Headers
+  body?: FormData | unknown;
+}
 
-    return new Promise((resolv, reject) => {
-      try {
-        const respMock = compileJsCode(mock.jsCode)( {
-          response: mock.responseMock,
-          headers: mock.headersMock,
-          delay: mock.delay,
-          statusCode: data.activeStatusCode }, config);
-        const body = new Blob([respMock.response], { type: respMock.headers['content-type'] });
+declare let window: { fetch: any };
 
-        const response = new Response(body, {
-          headers: fetchUtils.jsonToHeaders(respMock.headers),
-          status: respMock.statusCode
-        });
+async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {}) {
+  if (!window[STORAGE_KEY].state?.active) {
+    return window[STORAGE_KEY]['__fetch'].call(window, request, config);
+  }
 
-        setTimeout(() => resolv(response), respMock.delay);
-      } catch (err) {
-        reject(err);
-      }
-    });
-  } else {
-    return ORIG_FETCH(url, config).then(response => {
-      if (!data || !data.mocks[response.status]) {
-        const clone = response.clone();
+  let url = request as string;
+  if (request instanceof Request) {
+    config = { headers: request.headers as any, method: request.method as requestMethod };
+    url = request.url;
+  }
 
-        clone.text().then(txt => {
-          window[STORAGE_KEY].newMockSubject.next({
-            context: {
-              url,
-              method: 'FETCH',
-              type: method,
-              statusCode: response.status
-            },
-            data: {
-              response: txt,
-              headers: fetchUtils.headersToJson(response.headers)
-            }
-          });
-        });
-      }
+  if (config.body instanceof FormData) {
+    const fd = {};
+    config.body.forEach((value, key) => fd[key] = value);
+    config.body = fd;
+  }
+
+
+  const result = await dispatchApiRequest({
+    url,
+    method: config.method || 'GET',
+    ...(config.body && { body: config.body }),
+    ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
+  } as IOhMyAPIRequest, 'FETCH');
+
+  const { response, headers, status, statusCode, delay } = result.response;
+
+  if (status === ohMyMockStatus.ERROR) {
+    log('Ooops, something went wrong while mocking your FETCH request!')
+  }
+
+  if (status !== ohMyMockStatus.OK) {
+    return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
+      response.ohResult = await persistResponse(response, result.request);
 
       return response;
     });
   }
+
+  return new Promise(resolve => {
+    const resp = new Response();
+    resp['ohUrl'] = url;
+    resp['ohMethod'] = config.method;
+
+    setTimeout(() => resolve(resp), delay || 0);
+  });
 }
 
-export { OhMyFetch };
+function patchFetch(): void {
+  window[STORAGE_KEY].fetch = ohMyFetch;
+  patchResponseBlob();
+  patchResponseArrayBuffer();
+  patchResponseJson();
+  patchResponseText();
+  patchHeaders();
+  patchStatus();
+}
+
+function unpatchFetch(): void {
+  if (XMLHttpRequest.prototype['__fetch']) {
+    unpatchResponseBlob();
+    unpatchResponseArrayBuffer();
+    unpatchResponseJson();
+    unpatchResponseText();
+    unpatchHeaders();
+    unpatchStatus();
+  }
+}
+
+export { unpatchFetch, patchFetch };

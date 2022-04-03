@@ -1,0 +1,20 @@
+@import 'mixins';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.is-busy {
+  filter: blur(2px);
+}
+
+oh-my-spinner {
+  @include oh-position(absolute, 50% 0 0 50%);
+  transform: translate(-50%, -50%);
+}
+
+mat-checkbox {
+	margin-top: $spacer-2;
+}

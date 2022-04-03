@@ -1,9 +1,12 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
+import { Subject } from 'rxjs';
 import { AppStateService } from '../../services/app-state.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { OhMyStateService } from '../../services/state.service';
 import { PageDataListComponent } from './data-list.component';
 
 describe('DataOverviewComponent', () => {
@@ -15,9 +18,13 @@ describe('DataOverviewComponent', () => {
       declarations: [PageDataListComponent],
       providers: [
         { provide: MatDialog, useValue: {} },
-        { provide: AppStateService, useValue: {} }
+        { provide: AppStateService, useValue: {} },
+        { provide: OhMyStateService, useValue: { state$: new Subject()} },
+        { provide: OhMyState, useValue: {} },
+        { provide: Router, useValue: {} },
+        { provide: ActivatedRoute, useValue: {} },
       ],
-      imports: [RouterTestingModule.withRoutes([]), NgxsModule.forRoot([])],
+      imports: [RouterTestingModule.withRoutes([]) ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
@@ -25,6 +32,7 @@ describe('DataOverviewComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PageDataListComponent);
     component = fixture.componentInstance;
+    component.state = {} as any;
     fixture.detectChanges();
   });
 

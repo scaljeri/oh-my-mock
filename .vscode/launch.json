@@ -1,0 +1,41 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Attach to Chrome",
+			"port": 9222,
+			"request": "attach",
+			"type": "pwa-chrome",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
+			"name": "Debug with Jest",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/.bin/jest",
+			"cwd": "${workspaceRoot}",
+			"args": [
+				"${fileBasenameNoExtension}",
+				"--runInBand",
+				// "--no-cache"
+			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"disableOptimisticBPs": true,
+			"protocol": "inspector",
+     	"runtimeExecutable": "/usr/local/bin/node"
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Run all test with `ng test`",
+			"program": "${workspaceFolder}/node_modules/@angular/cli/bin/ng",
+			"cwd": "${workspaceFolder}",
+			"args": [
+				"test"
+			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"disableOptimisticBPs": true		}
+	]
+}

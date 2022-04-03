@@ -1,0 +1,35 @@
+<form [formGroup]="form" *ngIf="form">
+  <div>
+    <p>
+      <mat-form-field>
+        <mat-label>Status Code</mat-label>
+        <input type="number" matInput [formControl]="statusCodeCtrl">
+        <mat-error> {{requiredMsg}} </mat-error>
+      </mat-form-field>
+    </p>
+    <div class="scenario-dropdown">
+      <p>
+        <mat-form-field>
+          <mat-label>Label</mat-label>
+          <input matInput [formControl]="labelCtrl">
+        </mat-form-field>
+      </p>
+      <mat-icon color="primary" matTooltip="You can use labels to distinguish responses with the same status code">info</mat-icon>
+    </div>
+    <p>
+      <mat-form-field class="example-full-width">
+        <mat-label>Response delay (ms)</mat-label>
+        <input matInput [formControl]="delayCtrl" class="value" [value]="response.delay">
+      </mat-form-field>
+    </p>
+  </div>
+
+  <div class="details">
+    <p class="vertical">
+      <oh-my-content-type [formControl]="contentTypeCtrl"></oh-my-content-type>
+    </p>
+    <p><span class="label">Created:</span><span class="value">{{response.createdOn | date:'d/M/YYYY, H:mm'}}</span></p>
+    <p><span class="label">Last modified:</span><span class="value">{{response.modifiedOn | date:'d/M/YYYY, H:mm'}}</span>
+    </p>
+  </div>
+</form>

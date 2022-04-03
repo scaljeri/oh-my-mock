@@ -1,45 +1,62 @@
 import { Injectable } from '@angular/core';
+import compareVersions from 'compare-versions';
+
 import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './app-state.service';
 
-const MIGRATION_MAP = {
-  // This is a token that is replaced in the application by the token-repace.js script. But,
-  // during development is not replace (and it should not be replaced here) so we need to take care of it
-  ['__OH_MY_' + 'VERSION__']: { next: '2.0.0', migrate: (_) => _ },
-  '0.0.0': { next: '2.0.0', migrate: () => null },
-  '2.0.0': {}
-}
+import { migrations, IOhMygrations } from '../migrations/'
+import * as stateUtils from '@shared/utils/store';
+
+/**
+ * Each new version might require the data of the previous version to be modified.
+ * If this is the case, add that previous version in this list with a migration function.
+ */
 
 @Injectable({
   providedIn: 'root'
 })
 export class MigrationsService {
+  versions: string[];
 
-  constructor(private appState: AppStateService) { }
+  constructor(private appState: AppStateService) {
+    this.versions = Object.keys(migrations).sort(compareVersions);
+  }
 
-  update(state: IOhMyMock = this.reset()): IOhMyMock {
+  update(state: IOhMyMock): IOhMyMock {
+    if (!state) {
+      return null;
+    }
+
     state = { ...state };
-    const version = state.version;
+    const version = state.version || '0.0.0';
 
-    if (version && (!MIGRATION_MAP[version] || (version > this.appState.version && !this.appState.version.match(/^__/)))) {
-      // This can only happen with imports. The App version is lower than the imported data
-      return this.reset();
+    // development
+    if (this.appState.version.match(/^__/)) {
+      return state;
     }
 
-    // Old OhMyMock versions do not have a version. If a version is unknown it is set to '0.0.0'
-    let action = MIGRATION_MAP[version || '0.0.0'] || MIGRATION_MAP['0.0.0'];
-
-    while (action?.next) {
-      state = action.migrate(state) || this.reset();
-      state.version = action.next;
-
-      action = MIGRATION_MAP[action.next];
+    if (compareVersions(version, this.appState.version) === 1) { // Can only happen with manual JSON imports
+      return null;
     }
+
+    for (let i = 0; i < this.versions.length; i++) {
+      if (compareVersions(version, this.versions[i]) === -1) {
+        state = migrations[this.versions[i]](state);
+
+        if (!state) {
+          return;
+        }
+
+        state.version = this.versions[i];
+      }
+    }
+
+    state.version = this.appState.version;
 
     return state;
   }
 
-  reset(): IOhMyMock {
-    return { domains: {}, version: this.appState.version };
+  getMigrations(): IOhMygrations {
+    return migrations;
   }
 }

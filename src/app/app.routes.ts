@@ -1,16 +1,15 @@
 import { Routes } from '@angular/router';
-import { forwarderGuard } from './forward-guard';
 import { ConfigComponent } from './components/config/config.component';
 
 import { NgApimockSettingsComponent } from './plugins/ngapimock/ng-apimock-settings/ng-apimock-settings.component';
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
+import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
 
 const appRoutes: Routes = [
   {
     path: '',
-    canActivate: [forwarderGuard],
     children: [
       {
         path: '',
@@ -21,7 +20,7 @@ const appRoutes: Routes = [
         component: ConfigComponent
       },
       {
-        path: 'mocks/:mockIndex',
+        path: 'request/:dataId',
         component: PageMockComponent
       },
       {
@@ -35,6 +34,10 @@ const appRoutes: Routes = [
       {
         path: 'json-export',
         component: JsonExportComponent
+      },
+      {
+        path: 'cloud-sync',
+        component: CloudSyncPageComponent
       }
     ]
   }

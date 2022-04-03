@@ -1,5 +1,4 @@
-import { LEADING_TRIVIA_CHARS } from '@angular/compiler/src/render3/view/template';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 
@@ -11,11 +10,11 @@ import { MatDialogRef } from '@angular/material/dialog';
 export class AddDataComponent {
   formGroup = new FormGroup({
     url: new FormControl('', [Validators.required]),
-    type: new FormControl('XHR', [Validators.required]),
+    requestType: new FormControl('XHR', [Validators.required]),
     method: new FormControl('GET', [Validators.required])
   });
 
-  constructor(private dialogRef: MatDialogRef<AddDataComponent>) {}
+  constructor(private dialogRef: MatDialogRef<AddDataComponent>) { }
 
   onSave(): void {
     this.formGroup.markAsTouched();
@@ -35,7 +34,7 @@ export class AddDataComponent {
   }
 
   get typeControl(): FormControl {
-    return this.formGroup.get('type') as FormControl;
+    return this.formGroup.get('requestType') as FormControl;
   }
 
   get methodControl(): FormControl {

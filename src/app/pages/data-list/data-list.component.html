@@ -1,10 +1,28 @@
 <oh-my-data-list
   [state]="state"
+  [context]="state.context"
   [showActivate]="true"
+  [showClone]="true"
   [showDelete]="true"
-  (select)="onDataSelect($event)"></oh-my-data-list>
+  [showMenu]="true"
+  (selectRow)="onDataSelect($event)"
+>
+</oh-my-data-list>
 
-<button *ngIf="!domain" (click)="onAddData()" class="new-data" mat-fab color="primary"
-  aria-label="Delete all mocks for a specific URL">
+<section *ngIf="!hasData" class="no-data">
+  <h2>No responses available</h2>
+  <p>Any Fetch or XHR call will automatically show up here if this extension is active!</p>
+
+  <oh-my-arrow></oh-my-arrow>
+</section>
+
+<button
+  *ngIf="!domain"
+  (click)="onAddData()"
+  class="new-data"
+  mat-fab
+  color="primary"
+  aria-label="Delete all mocks for a specific URL"
+>
   <mat-icon>add</mat-icon>
 </button>

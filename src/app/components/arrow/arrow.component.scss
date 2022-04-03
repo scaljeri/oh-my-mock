@@ -1,0 +1,57 @@
+:host {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 250px;
+}
+
+p {
+  font-size: 22px;
+  margin-bottom: -40px;
+  text-align: center;
+}
+
+/* Arrow */
+
+.arrow {
+  position: relative;
+  width: 100px;
+  transform: rotate(-30deg);
+}
+
+.arrow .curve {
+  border: 2px solid #BE5F4B;
+  border-color: transparent transparent transparent #fff;
+  height: 360px;
+  width: 1200px;
+  border-radius: 230px 0 0 150px;
+}
+
+.arrow .point {
+  position: absolute;
+  left: 40px;
+  top: 315px;
+}
+
+.arrow .point:before,
+.arrow .point:after {
+  border: 1px solid #fff;
+  height: 25px;
+  content: "";
+  position: absolute;
+}
+
+.arrow .point:before {
+  top: -11px;
+  left: -11px;
+  transform: rotate(-74deg);
+
+  -ms-transform: rotate(-74deg);
+}
+
+.arrow .point:after {
+  top: -20px;
+  left: 5px;
+  transform: rotate(12deg);
+}

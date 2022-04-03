@@ -1,29 +1,27 @@
 <html>
-
 <head>
   <link rel="stylesheet" href="styles.css">
-  <script>
-    window.ohMyMock = {
-      urlMap: {
-        html: '/site',
-        json: '/users'
-      }
-    };
-  </script>
-  <script src="get.js"></script>
+  <style>
+    img {
+      width: 100%;
+    }
+  </style>
+  <script>window.ohMyMockTest = { urlMap: { html: '/site', json: '/users', 'json-external': 'https://jsonplaceholder.typicode.com/todos/1', png: '/binary/test.png' } };</script>
   <script src="fetch.js"></script>
+  <script src="xhr.js"></script>
   <script src="hammer-time.js"></script>
+  <script src="main.js"></script>
 </head>
 
 <body>
   <h1>Test site</h1>
 
-  <form class="selection" onsubmit="return onSubmit()">
+  <form class="selection" onsubmit="return window.onSubmit();">
     <div class="type">
       <h3>Type</h3>
       <select name=type>
-        <option value="xhr" selected="selected">XHR</option>
-        <option value="fetch">FETCH</option>
+        <option value="xhr"  >XHR</option>
+        <option value="fetch"   selected="selected">FETCH</option>
       </select>
     </div>
 
@@ -41,7 +39,9 @@
       <h3>Response type</h3>
       <select name="response">
         <option value="html">HTML</option>
-        <option value="json" selected="selected">JSON</option>
+        <option value="json"  selected="selected">JSON</option>
+        <option value="json-external"  >EXTERNAL JSON</option>
+        <option value="png">PNG</option>
       </select>
     </div>
 
@@ -65,74 +65,10 @@
       <div class="body">
         <h3>Body</h3>
         <pre></pre>
+        <img/>
       </div>
     </article>
   </section>
-
-  <script>
-    if (!window.ohMyMock) {
-      window.ohMyMock = {}
-    }
-
-    ohMyMock.statusCodeFn = st => {
-      document.querySelector('.status-code span').innerText = st;
-    };
-
-    ohMyMock.responseFn = r => {
-      if (window.ohMyMock.response === 'json') {
-        try {
-          if (typeof r === 'object') {
-            r = JSON.stringify(r);
-          }
-
-          r = JSON.stringify(JSON.parse(r), null, 4);
-        } catch { /* Ooops */ }
-      }
-
-      document.querySelector('.body pre').innerText = r;
-    };
-
-    ohMyMock.durationFn = () => {
-      console.log('dur');
-      document.querySelector('.duration span').innerText =
-        (Date.now() - ohMyMock.starttime) + 'ms';
-    };
-
-    ohMyMock.headersFn = h => {
-      if (typeof h === 'object') {
-        h = JSON.stringify(h, null, 4);
-      }
-
-      document.querySelector('.headers').innerText = h;
-    }
-
-    ohMyMock.resetFn = () => {
-      ohMyMock.headersFn('');
-      ohMyMock.statusCodeFn('');
-      ohMyMock.responseFn('');
-    };
-
-    window.onSubmit = () => {
-      const form = document.forms[0];
-      const fd = new FormData(form);
-
-      ohMyMock.type = fd.get('type');
-      ohMyMock.method = fd.get('method');
-      ohMyMock.response = fd.get('response');
-
-      ohMyMock.starttime = Date.now();
-      const interId = setInterval(() => ohMyMock.durationFn(), 100);
-
-      const handler = window.ohMyMock[fd.get('type')];
-      ohMyMock.resetFn();
-      handler(fd.get('method'), fd.get('response'), () => {
-        clearInterval(interId);
-        ohMyMock.durationFn();
-      });
-
-      return false;
-    };
-  </script>
 </body>
 
 </html>

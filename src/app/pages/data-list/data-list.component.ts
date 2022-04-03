@@ -1,14 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UntilDestroy } from '@ngneat/until-destroy';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select, Store } from '@ngxs/store';
-import { IData, IState, IStore } from '@shared/type';
-import { Observable, Subscription } from 'rxjs';
+import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
+import { StateUtils } from '@shared/utils/state';
+import { Subscription } from 'rxjs';
 import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
-import { DeleteData, UpsertData } from 'src/app/store/actions';
-import { OhMyState } from 'src/app/store/state';
+import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyStateService } from 'src/app/services/state.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -16,59 +14,76 @@ import { OhMyState } from 'src/app/store/state';
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
 })
-export class PageDataListComponent implements OnInit {
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex);
-  @Select(OhMyState.mainState) state$: Observable<IState>;
+export class PageDataListComponent implements OnInit, OnDestroy {
+  static StateUtils = StateUtils;
+
+  private subscriptions = new Subscription();
 
   public showRowAction = false;
   public state: IState;
   public domain: string;
-  public subscriptions: Subscription[] = [];
+  public navigateToData: IOhMyMockContext;
+  context: IOhMyContext;
+  hasData = false;
 
   constructor(
+    private stateService: OhMyStateService,
+    private storeService: OhMyState,
     public dialog: MatDialog,
-    private store: Store,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) { }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.state$.subscribe((state: IState) => {
+    this.subscriptions.add(this.stateService.state$.subscribe((state: IState) => {
+      this.context = state.context;
+
       this.state = state;
+      this.hasData = Object.keys(this.state.data).length > 0;
+
+      if (this.navigateToData) {
+        this.onDataSelect(PageDataListComponent.StateUtils.findRequest(state, this.navigateToData).id);
+      }
+      this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
     }));
   }
 
-  onDataSelect(index: number): void {
-    this.router.navigate(['mocks', index], { relativeTo: this.activatedRoute });
+  onDataSelect(id: string): void {
+    this.ngZone.run(() => {
+      this.router.navigate(['request', id], { relativeTo: this.activatedRoute });
+    });
   }
 
   onMainAction(): void {
     this.showRowAction = !this.showRowAction;
   }
 
-  onRowAction(rowIndex: number): void {
-    this.deleteData(rowIndex);
-  }
-
   onAddData(): void {
     const dialogRef = this.dialog.open(AddDataComponent, {
-      width: '30%'
+      width: '30%',
     });
 
     dialogRef.afterClosed().subscribe((data: IData) => {
       if (data) {
-        const state = this.stateSnapshot;
-        const newDataIndex = state.data.length;
-        this.upsertData(data);
-        this.router.navigate(['mocks', newDataIndex]);
+        // To be able to navigate to the requests mocks page, it first needs to be created,
+        // which is why the request information is stored in a tmp variable for later processing
+        this.navigateToData = data;
+        this.storeService.upsertRequest(data, this.context);
+        // this.upsertRequest(data);
       }
     });
   }
 
-  get stateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) =>
-      OhMyState.getActiveState(state)
-    );
+  // get stateSnapshot(): IState {
+  // return null;
+  // return this.store.selectSnapshot<IState>((state: IStore) =>
+  //   OhMyState.getActiveState(state)
+  // );
+  // }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

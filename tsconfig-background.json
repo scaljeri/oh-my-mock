@@ -1,7 +1,17 @@
 {
-  "extends": "./tsconfig-content.json",
   "compilerOptions": {
-    "types": []
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "lib": ["es2015", "dom"],
+    "strict": true,
+    "esModuleInterop": false,
+    "outDir": "out-tsc",
+    "rootDir": "./",
+    "importHelpers": true,
   },
-  "files": ["src/background.ts"]
+  "include": [
+    "./src/background/*.ts"
+  ]
 }

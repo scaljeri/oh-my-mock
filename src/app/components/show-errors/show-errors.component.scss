@@ -1,0 +1,25 @@
+@import 'mixins';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.close {
+  @include oh-position(absolute,  4px 4px 0 0);
+}
+
+h2 {
+  align-items: center;
+  display: flex;
+
+  mat-icon {
+    margin-right: $spacer-1;
+  }
+}
+
+oh-my-code-edit {
+  flex: 1;
+}

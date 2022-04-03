@@ -54,8 +54,11 @@ export class AnimatedListDirective {
     this.ohMyAnimatedList.forEach(itemIndex => {
       const meta = this.getMeta(itemIndex);
 
-      this.rowRefs.get(itemIndex).nativeElement.style.transform = `translateY(${offset - meta.offset}px)`;
-      offset += meta.height;
+      // IF needed because filtering makes this a bit weird
+      if (this.rowRefs.get(itemIndex)) {
+        this.rowRefs.get(itemIndex).nativeElement.style.transform = `translateY(${offset - meta.offset}px)`;
+        offset += meta.height;
+      }
     });
   }
 

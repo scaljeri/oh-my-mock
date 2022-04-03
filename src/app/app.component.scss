@@ -1,5 +1,28 @@
+@import "mixins";
+
 :host {
   background-color: #000;
+}
+
+
+.is-blurred {
+  filter: blur(2px);
+}
+
+mat-toolbar {
+  max-width: 100%;
+  overflow: hidden;
+
+  h1 {
+    flex: 1;
+    @include oh-ellipsis;
+    padding-right: $spacer-2;
+
+    .dash {
+      padding: 0 $spacer-2;
+    }
+  }
+
 }
 
 mat-drawer-content {
@@ -22,4 +45,19 @@ mat-drawer-content {
     flex: 1;
     overflow: scroll;
   }
+
+  .cloud-sync {
+    margin-right: $spacer-4;
+  }
+}
+
+oh-my-spinner {
+  @include oh-position(absolute, 50% 0 0 50%);
+  transform: translate(-50%, -50%);
+}
+
+oh-my-feedback {
+  @include oh-position(absolute, 50% 0 0 0px);
+  transform: translateY(-50%);
+  z-index: 1;
 }

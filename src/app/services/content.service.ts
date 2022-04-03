@@ -1,94 +1,116 @@
 ///<reference types="chrome"/>
 
 import { Injectable } from '@angular/core';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Select, Store } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { ChangeDomain, InitState, UpsertMock, ViewChangeOrderItems } from '../store/actions';
-import { OhMyState } from '../store/state';
-import { IMock, IOhMyMock, IPacket, IState, IStore, IUpsertMock } from '@shared/type';
-import { appSources, packetTypes } from '@shared/constants';
-import { log } from '../utils/log';
+import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './app-state.service';
-import { findActiveData } from '@shared/utils/find-mock';
+import { DataUtils } from '@shared/utils/data';
+import { StateUtils } from '@shared/utils/state';
+import { IPacket } from '@shared/packet-type';
+import { OhMySendToBg } from '@shared/utils/send-to-background';
+import { StorageUtils } from '@shared/utils/storage';
+import { send2content } from '../utils/send2content';
+
 @Injectable({ providedIn: 'root' })
 export class ContentService {
-  @Dispatch() upsertMock = (data: IUpsertMock) => new UpsertMock(data);
-  @Dispatch() initState = (state: IOhMyMock) => new InitState(state);
-  @Dispatch() changeDomain = (domain: string) => new ChangeDomain(domain);
-  @Select(OhMyState.mainState) state$: Observable<IState>;
+  static DataUtils = DataUtils;
+  static StateUtils = StateUtils;
 
   private listener;
-  private state: IState;
 
-  constructor(private store: Store, private appStateService: AppStateService) {
-    this.listener = ({ payload, tabId, domain, source }: IPacket) => {
-      if (source !== appSources.CONTENT) {
+  constructor(private appStateService: AppStateService) {
+    OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
+
+    appStateService.domain$.subscribe(d => {
+      if (!d) {
         return;
       }
 
-      log('Recieved a message', payload);
+      if (d !== OhMySendToBg.domain && OhMySendToBg.domain) {
+        this.deactivate(); // TODO: in case of multiple windows make sure to reactivate!!
+      }
+      OhMySendToBg.domain = d;
+      this.activate();
+      this.open(true);
+    });
 
-      if (tabId === this.appStateService.tabId) {
+    this.listener = ({ payload, source, domain }: IPacket, sender) => {
+      // Only accept messages from the content script
+      // const domain = payload.context?.domain;
+      if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
+        return;
+      }
+
+      // First checl background source, because it doesn't have a sender.tab
+      if (source === appSources.BACKGROUND) {
+        if (payload.type === payloadType.ERROR) {
+          this.appStateService.addError(payload);
+        }
+      } else if (sender.tab.id === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
           this.appStateService.domain = domain;
-          this.changeDomain(domain);
         }
 
-        if (payload.type === packetTypes.MOCK) {
-          this.upsertMock({
-            mock: payload.data as IMock,
-            ...payload.context
-          });
-        } else if (payload.type === packetTypes.HIT) {
-          const state = this.getActiveStateSnapshot();
-          const data = findActiveData(state, payload.context.url, payload.context.method, payload.context.type);
+        if (payload.type === payloadType.RESPONSE) {
+          // this.upsertMock({
+          //   mock: payload.data as IMock,
+          //   ...payload.context
+          // });
+        } else if (payload.type === payloadType.HIT) {
+          // const state = this.getActiveStateSnapshot();
+          // const data = ContentService.StateUtils.findData(state, payload.context);
 
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
-          this.appStateService.hit(data);
+          // this.appStateService.hit(data);
 
-          const from = state.views['hits'].indexOf(state.data.indexOf(data));
-          this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', from, to: 0 }));
+          // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
         }
       } else {
-        if (payload.type === packetTypes.KNOCKKNOCK) {
-          this.send(OhMyState.getActiveState(this.store.snapshot()));
-        }
+        // if (payload.type === payloadType.KNOCKKNOCK) {
+        //   if (tabId && this.appStateService.isSameDomain(domain)) {
+        //     this.appStateService.domain = domain;
+        //   }
+
+        //   this.sendActiveState(true);
+        // }
       }
+
+      return true;
     };
 
-    chrome.runtime.onMessage.addListener(this.listener);
-
-    this.state$.subscribe((state: IState) => {
-      if (!state) {
-        return;
-      }
-
-      this.state = state;
-
-      if (state.domain) {
-        this.send(state);
-      }
-    });
+    chrome.runtime.onMessage.addListener((packet, sender) => this.listener(packet, sender));
   }
 
-  send(data): void {
-    log('Sending state to content script', data);
-    chrome.runtime.sendMessage({
-      tabId: this.appStateService.tabId,
+  open(isOpen = true): void {
+    const packet = {
       source: appSources.POPUP,
       domain: this.appStateService.domain,
       payload: {
-        type: packetTypes.STATE,
-        data
+        type: isOpen ? payloadType.POPUP_OPEN : payloadType.POPUP_CLOSED,
+        data: { isOpen }
       }
-    });
+    } as IPacket;
+
+    send2content(this.appStateService.tabId, packet);
   }
 
-  destroy(): void {
-    // const x = chrome.runtime.onMessage.hasListener(this.listener);
-    // chrome.runtime.onMessage.removeListener(this.listener);
-    this.send({ ...this.state, enabled: false });
+  activate(): Promise<boolean> {
+    return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
+  }
+
+  deactivate(isClosing = false): Promise<boolean> {
+    if (isClosing) {
+      this.open(false);
+    }
+
+    return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
+  }
+
+  reset(key: string): Promise<void> {
+    if (key) {
+      return OhMySendToBg.reset(key).then(() => { });
+    } else {
+      return StorageUtils.reset();
+    }
   }
 
   private getActiveStateSnapshot(): IState {

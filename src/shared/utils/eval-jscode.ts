@@ -1,8 +1,7 @@
-import { IOhMockResponse } from '../type';
+import { IMock } from '../type';
 
-export const compileJsCode = (code: string): ((mock, request) => IOhMockResponse) => {
-  code = `${code};\n\nreturn mock;`;
+export const compileJsCode = (code: string): ((mock: Partial<IMock>, request: any) => Partial<IMock>) => {
   // tslint-disable-next
-  return eval(new Function('mock', 'request', code) as any);
+  return eval(`async (mock, request) => {'use strict';${code}}`);
 };
 

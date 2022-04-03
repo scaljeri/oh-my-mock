@@ -11,12 +11,15 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "es2020",
-    "lib": ["es2018", "dom"],
-    "types": [],
+    "lib": ["es2018", "esnext", "dom"],
+    "types": ["chrome"],
     "paths": {
       "@shared/*": ["src/shared/*"]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmitHelpers": false,
+     "resolveJsonModule": true
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
   "angularCompilerOptions": {

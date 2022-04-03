@@ -2,17 +2,18 @@ import {
   Component,
   EventEmitter,
   HostListener,
+  Input,
   Output
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
+import { MatDialog } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
-import { ResetStateOptions } from '@shared/type';
-import { AppStateService } from 'src/app/services/app-state.service';
-import { ResetState } from 'src/app/store/actions';
+import { IOhMyContext, ResetStateOptions } from '@shared/type';
+import { OhMyState } from 'src/app/services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
+import { StorageService } from 'src/app/services/storage.service';
+import { OhMyStateService } from 'src/app/services/state.service';
 
 @Component({
   selector: 'app-nav-list',
@@ -20,15 +21,16 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
   styleUrls: ['./nav-list.component.scss']
 })
 export class NavListComponent {
+  @Input() context: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
 
-  @Dispatch() stateReset = (domain?: string) => new ResetState(domain);
-
   constructor(
-    private appStateService: AppStateService,
+    private storeService: OhMyState,
+    private stateService: OhMyStateService,
+    private storageService: StorageService,
+    private router: Router,
     public dialog: MatDialog,
-    private router: Router
-  ) {}
+  ) { }
 
   @HostListener('click')
   closeDrawer(): void {
@@ -43,12 +45,18 @@ export class NavListComponent {
 
     dialogRef
       .afterClosed()
-      .subscribe((reset: undefined | ResetStateOptions) => {
+      .subscribe(async (reset: undefined | ResetStateOptions) => {
         if (reset === resetStateOptions.ALL) {
-          this.stateReset();
+          await this.storeService.reset();
         } else if (reset === resetStateOptions.SELF) {
-          this.stateReset(this.appStateService.domain);
+          await this.storeService.reset(this.context);
+        } else {
+          return;
         }
+
+        // Now we need to tell the content script that the popup (thats us) is still active!!
+        await this.storeService.updateAux({ popupActive: true}, this.context);
+        this.router.navigate(['/'])
       });
 
     this.navigate.emit();

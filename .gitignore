@@ -4,8 +4,11 @@
 /dist
 /tmp
 /out-tsc
+/.angular
 # Only exists if Bazel was run
 /bazel-out
+stats.json
+/stats
 
 # dependencies
 /node_modules
@@ -43,7 +46,11 @@ testem.log
 dist.crx
 dist.pem
 oh-my-mock.zip
+reports
 
 # System Files
 .DS_Store
 Thumbs.db
+
+# stryker temp files
+.stryker-tmp

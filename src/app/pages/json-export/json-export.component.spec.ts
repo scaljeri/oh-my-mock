@@ -2,11 +2,12 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { RouterTestingModule } from "@angular/router/testing";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HotToastService } from '@ngneat/hot-toast';
-import { NgxsModule, Store } from '@ngxs/store';
-import { AppStateService } from 'src/app/services/app-state.service';
+import { StorageService } from '../../services/storage.service';
+import { OhMyStateService } from '../../services/state.service';
 
 import { JsonExportComponent } from './json-export.component';
 import { Subject } from 'rxjs';
+import { AppStateService } from '../../services/app-state.service';
 
 describe('JsonExportComponent', () => {
   let component: JsonExportComponent;
@@ -15,11 +16,12 @@ describe('JsonExportComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [JsonExportComponent],
-      imports: [RouterTestingModule.withRoutes([]), NgxsModule.forRoot()],
+      imports: [RouterTestingModule.withRoutes([])],
       providers: [
         { provide: AppStateService, useValue: {} },
         { provide: HotToastService, useValue: {} },
-        { provide: Store, useValue: { selectSnapshot: jest.fn() } },
+        { provide: StorageService, useValue: {} },
+        { provide: OhMyStateService, useValue: { state: { data: {}}} },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

@@ -1,21 +1,15 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
-import { Dispatch } from '@ngxs-labs/dispatch-decorator';
-import { Store } from '@ngxs/store';
-import { trigger, style, animate, transition } from "@angular/animations";
-import { DeleteData, Toggle, UpdateDataStatusCode, UpsertData, ViewChangeOrderItems, ViewReset } from 'src/app/store/actions';
-import { findActiveData } from '../../../shared/utils/find-mock'
+import { style, animate } from "@angular/animations";
 
-import { OhMyState } from 'src/app/store/state';
-import { findAutoActiveMock } from 'src/app/utils/data';
-import { IContext, IData, IState, IStore, statusCode } from 'src/shared/type';
-import { AppStateService } from 'src/app/services/app-state.service';
+// import { findAutoActiveMock } from 'src/app/utils/data';
+import { IData, IOhMyContext, IState, ohMyDataId } from '@shared/type';
 import { Subscription } from 'rxjs';
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { arrayMoveItem } from '@shared/utils/array';
-import { UntilDestroy } from '@ngneat/until-destroy';
-import { isViewValidate } from '../../utils/validate-view';
+import { FormControl } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { presetInfo } from 'src/app/constants';
+import { OhMyState } from 'src/app/services/oh-my-store';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -28,64 +22,79 @@ export const highlightSeq = [
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
-  animations: [
-    trigger("inOutAnimation", [
-      transition(":leave", [
-        style({ height: "*", opacity: 1, paddingTop: "*", paddingBottom: "*" }),
-        animate(
-          ".7s ease-in",
-          style({ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 })
-        )
-      ])
-    ])
-  ]
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // animations: [
+  //   trigger("inOutAnimation", [
+  //     transition(":leave", [
+  //       style({ height: "*", opacity: 1, paddingTop: "*", paddingBottom: "*" }),
+  //       animate(
+  //         ".7s ease-in",
+  //         style({ height: 0, opacity: 0, paddingTop: 0, paddingBottom: 0 })
+  //       )
+  //     ])
+  //   ])
+  // ]
 })
 export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() state: IState;
+  @Input() context: IOhMyContext; // context !== state,context (but it can be)
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
   @Input() showExport: boolean;
-  @Input() @HostBinding('class') theme = 'dark';
-  @Output() select = new EventEmitter<number>();
-  @Output() dataExport = new EventEmitter<number>();
+  @Input() showPreset = true;
+  @Input() showActivateToggle = true;
+  @Input() @HostBinding('class.togglable') togglableRows = true;
+  @Input() hideHeader = false;
+  @Input() hideFilter = false;
+  @Input() persistFilter = true;
 
-  @Dispatch() deleteData = (dataIndex: number) => new DeleteData(dataIndex, this.state.domain);
-  @Dispatch() upsertData = (data: IData) => new UpsertData(data);
-  @Dispatch() viewReorder = (name: string, from: number, to: number) => new ViewChangeOrderItems({ name, from, to });
-  @Dispatch() viewReset = (name: string) => new ViewReset(name);
-  @Dispatch() toggleHitList = (value: boolean) => new Toggle({ name: 'hits', value });
-  @Dispatch() updateActiveStatusCode = (data: IData, statusCode: statusCode) =>
-    new UpdateDataStatusCode({ url: data.url, method: data.method, type: data.type, statusCode }, this.state.domain);
+  @Input() showMenu = false;
 
-  public displayedColumns = ['type', 'method', 'url', 'activeStatusCode', 'actions'];
+  @Output() selectRow = new EventEmitter<string>();
+  @Output() dataExport = new EventEmitter<IData>();
+  @Output() filteredList = new EventEmitter<IData[]>();
+
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];
+  public visibleBtns = 1;
   public disabled = false;
-  private timeoutId: number;
-  private isBusyAnimating = false;
+  public presetInfo = presetInfo;
 
-  subscriptions: Subscription[] = [];
+  subscriptions = new Subscription();
+  filterCtrl = new FormControl('');
+  filteredDataList: IData[];
 
-  public viewList: number[];
+  public viewList: ohMyDataId[];
+  scenarioOptions: string[] = [];
+  presets: string[];
+  isPresetCopy = false;
 
-  public data: IData[];
-
-  @ViewChildren('animatedRow', { read: ElementRef }) rows: QueryList<ElementRef>;
+  public data: Record<ohMyDataId, IData>;
 
   constructor(
-    private appState: AppStateService,
-    private store: Store,
-    private toast: HotToastService) { }
+    public dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private toast: HotToastService,
+    private storeService: OhMyState) { }
 
   ngOnInit(): void {
-    this.subscriptions.push(this.appState.hit$.subscribe((data: IData) => {
-      const index = this.data.indexOf(data);
-      const hitIndex = this.viewList.indexOf(index);
+    let filterDebounceId;
+    this.filterCtrl.valueChanges.subscribe(filter => {
+      this.state.aux.filterKeywords = filter;
+      this.filteredDataList = this.filterListByKeywords();
+      this.filteredList.emit(this.filteredDataList);
 
-      if (this.state.toggles.hits) {
-        this.viewList = arrayMoveItem(this.viewList, hitIndex, 0);
+      if (!this.persistFilter) {
+        return;
+      }
+
+      if (this.state.context.domain === this.context.domain) {
+        clearTimeout(filterDebounceId);
+        filterDebounceId = window.setTimeout(() => {
+          this.storeService.updateAux({ filterKeywords: filter.toLowerCase() }, this.context);
+        }, 500);
       }
 
       this.hitcount[hitIndex] = (this.hitcount[hitIndex] || 0) + 1;
@@ -94,112 +103,134 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(): void {
-    this.timeoutId && clearTimeout(this.timeoutId);
-
-    this.timeoutId = setTimeout(() => {
-      // The hit list has animated its change. The problem after the animation  rows
-      // are moved around with css `transform` which doesn't work with Drag&Drop.
-      // So, below we change the order of the data, so no css transformation are needed
-      // anymore
-      this.isBusyAnimating = false;
-
-      if (!this.state) { // It happens (Explore-state)
-        return;
+    if (this.state) {
+      if (!this.context) {
+        this.context = this.state.context;
       }
 
-      const viewList = this.state.views[this.state.toggles.hits ? 'hits' : 'normal'] || [];
+      this.filteredDataList = this.filterListByKeywords();
+      this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
 
-      // Self healing!!
-      if (isViewValidate(viewList, this.state.data)) { // It happens too, super weird
-        this.data = viewList.map(v => this.state.data[v]);
-        this.viewList = this.data.map((v, i) => i);
-      } else {
-        console.warn(`The view "${this.state.toggles.hits ? 'hits' : 'normal'} is in an invalid state (${this.state.domain})`, viewList);
+      this.filteredList.emit(this.filteredDataList);
+    }
+  }
 
-        this.viewReset(this.state.toggles.hits ? 'hits' : 'normal');
-        this.data = this.state.data;
-        this.viewList = this.data.map((_, i) => i);
-      }
+  onToggleActivateNew(toggle: boolean): void {
+    this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
+  }
 
-    }, this.isBusyAnimating ? 1000 : 0);
+  filterListByKeywords(): IData[] {
+    const data = Object.values(this.state.data).sort((a, b) => a.lastHit > b.lastHit ? -1 : 1);
+    const input = this.state.aux.filterKeywords as string;
+
+    if (input === '' || input === undefined || input === null) {
+      return data;
+    }
+
+    const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
+    const rmQuotedRe = /"[^"]+"\s{0,}/g;
+
+    const qwords = input.match(quotedRe) || [];
+    const words = input.replace(rmQuotedRe, '').split(' ');
+    const terms = [...qwords, ...words];
+
+    const filtered = data.filter((d: IData) =>
+      terms
+        .filter(v => v !== undefined && v !== '')
+        .some(v =>
+          d.url.toLowerCase().includes(v) ||
+          d.requestType.toLowerCase().includes(v) ||
+          d.method.toLowerCase().includes(v) /*||
+          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) TODO */
+          // || !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
+        )
+    );
+
+    return filtered;
   }
 
   ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
-  onActivateToggle(rowIndex: number, event: MouseEvent): void {
+  onActivateToggle(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
-    const data = this.data[rowIndex];
+    const data = this.state.data[id];
 
-    if (!data.activeStatusCode) {
-      const statusCode = findAutoActiveMock(data);
-      this.updateActiveStatusCode(this.data[rowIndex], statusCode as number);
-      this.toast.success(`Mock with status-code ${statusCode} activated`);
+    if (!Object.keys(data.mocks).length) {
+      this.toast.error(`Could not activate, there are no responses available`);
     } else {
-      this.updateActiveStatusCode(this.data[rowIndex], 0);
-      this.toast.warning('Mock disabled!');
+      const isActive = data.enabled[this.state.context.preset];
+      this.storeService.upsertRequest({
+        ...data, enabled:
+          { ...data.enabled, [this.context.preset]: !isActive }
+      }, this.context);
     }
   }
 
-  onDelete(rowIndex: number, event): void {
+  async onDelete(id: ohMyDataId, event) {
     event.stopPropagation();
 
-    const index = this.state.data.indexOf(this.data[rowIndex]);
-    let msg = `Deleted mock ${this.data[index].url}`;
-    if (this.state.domain) {
-      msg += ` on domain ${this.state.domain}`;
+    const data = this.state.data[id];
+
+    // If you click delete fast enough, you can hit it twice
+    if (data) { // Is this needed
+      this.toast.success('Deleted request', { duration: 2000, style: {} });
+      this.state = await this.storeService.deleteRequest(data, this.context);
     }
-    this.toast.success(msg, { duration: 2000, style: {} });
-    this.deleteData(index);
   }
 
-  onClone(rowIndex: number, event): void {
+  onClone(id: ohMyDataId, event): void {
     event.stopPropagation();
-    const data = this.data[rowIndex];
-    const state = this.getActiveStateSnapshot();
 
-    // Cannot clone a mock which already exists
-    if (!findActiveData(state, data.url, data.method, data.type)) {
-      this.upsertData(data);
-      this.toast.success('Cloned ' + data.url);
-    } else {
-      this.toast.error(`Mock already exists (${data.url})`);
-    }
+    this.storeService.cloneRequest(id, this.state.context, this.context);
+    this.toast.success('Cloned ' + this.state.data.url);
   }
 
   onDataClick(data: IData, index: number): void {
-    this.selection.toggle(index);
-    this.select.emit(this.state.data.indexOf(data));
+    if (this.togglableRows) {
+      this.selection.toggle(index);
+      this.selectRow.emit(data.id);
+    }
   }
 
-  onExport(rowIndex: number, event: MouseEvent): void {
+  onExport(data: IData, rowIndex, event: MouseEvent): void {
     event.stopPropagation()
-    const data = this.data[rowIndex];
-    const state = this.getActiveStateSnapshot();
-    this.dataExport.emit(state.data.indexOf(data));
+    this.dataExport.emit(data);
     this.selection.toggle(rowIndex);
   }
 
+  onBlurImage(): void {
+    this.storeService.updateAux({ blurImages: !this.state.aux.blurImages }, this.context);
+  }
+
   public selectAll(): void {
-    this.state.data.forEach((d, i) => {
+    Object.keys(this.state.data).forEach((d, i) => {
       this.selection.select(i);
     });
+    this.cdr.detectChanges();
   }
 
   public deselectAll(): void {
     this.selection.clear();
+    this.cdr.detectChanges();
+  }
+
+  onActivateAll(): void {
+    this.state = { ...this.state, data: { ...this.state.data}};
+    Object.values(this.state.data).forEach(d => {
+      if (d.selected[this.state.context.preset]) {
+        d = { ...d, enabled: { ...d.enabled, [this.state.context.preset]: true} };
+        this.state.data[d.id] = d;
+      }
+    });
+
+    // NOTE: It is not this.context!!!!!
+    this.storeService.upsertState(this.state, this.state.context);
   }
 
   trackBy(index, row): string {
-    return row.type + row.method + row.url;
-  }
-
-  drop(event: CdkDragDrop<unknown>): void {
-    this.viewReorder(this.state.toggles.hits ? 'hits' : 'normal', event.previousIndex, event.currentIndex);
-  }
-
-  private getActiveStateSnapshot(): IState {
-    return this.store.selectSnapshot<IState>((state: IStore) => OhMyState.getActiveState(state));
+    return row.id; // type + row.method + row.url;
   }
 }
 

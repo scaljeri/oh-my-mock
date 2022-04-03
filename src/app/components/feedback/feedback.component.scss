@@ -1,0 +1,18 @@
+@import 'mixins';
+
+:host {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+
+  background-color: $primary;
+  padding: $spacer-2 $spacer-1;
+
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+
+  a {
+    color: #fff;
+    font-size: $oh-sub-header;
+    text-decoration: inherit;
+  }
+}

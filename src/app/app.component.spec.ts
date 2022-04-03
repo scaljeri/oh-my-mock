@@ -1,20 +1,25 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AppComponent } from './app.component';
+import { AppStateService } from './services/app-state.service';
 import { ContentService } from './services/content.service';
-import { StorageService } from './services/storage.service';
+import { OhMyState } from './services/oh-my-store';
+import { OhMyStateService } from './services/state.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [AppComponent],
       providers: [
-        { provide: StorageService, useValue: {} },
-        { provide: ContentService, useValue: {} },
+        { provide: AppStateService, useValue: {} },
+        { provide: OhMyState, useValue: {} },
         { provide: Router, useValue: {} },
         { provide: MatDialog, useValue: {} },
+        { provide: OhMyStateService, useValue: {} },
+        { provide: ContentService, useValue: {} },
+        { provide: ActivatedRoute, useValue: {} }
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();

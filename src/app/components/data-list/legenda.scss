@@ -1,7 +1,12 @@
+$active: #99ffcc;
+$inactive: #fff;
+$inactiveModified: #fff8ff;
+$activeModified: #ffff99;
+$selected: #6666ff;
+
 .legenda {
   display: flex;
   margin-bottom: 5px;
-  margin-right: 150px;
   background-color: grey;
   padding: $spacer-2;
   color: $color-light;
@@ -11,37 +16,42 @@
     flex: 1;
   }
 
+  .group {
+    span + span {
+      margin-top: 5px;
+    }
+  }
+
   span {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    margin-right: 10px;
 
     &::before {
-      content: '';
+      content: "";
       border: 1px solid lightgrey;
       border-radius: 3px;
       display: block;
-      width: 20px;
-      height: 20px;
+      width: 10px;
+      height: 10px;
       margin-right: 5px;
-    }
-
-    &+span {
-      padding-left: 10px;
     }
   }
 
-
   .legenda-active::before {
-    background-color: #99ffcc;
+    background-color: $active;
   }
 
   .inactive::before {
-    background-color: #fff;
-
+    background-color: $inactive;
   }
 
   .active-modified::before {
-    background-color: #ffff99;
+    background-color: $activeModified;
+  }
+
+  .inactive-modified::before {
+    background-color: darken($inactiveModified, 10);
   }
 }

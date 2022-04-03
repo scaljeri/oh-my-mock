@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { IMarker } from '../code-edit/code-edit';
+import { IMarker } from '../form/code-edit/code-edit';
 
 @Component({
   selector: 'oh-my-code-errors',

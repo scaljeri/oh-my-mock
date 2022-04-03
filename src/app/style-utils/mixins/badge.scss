@@ -1,0 +1,12 @@
+@mixin oh-my-badge() {
+  background-color: rgba(0, 0, 0, .6);
+  border: 1px solid $color-dark;
+  border-radius: $spacer-1;
+  color: $color-light;
+  display: inline-flex;
+  font-size: $oh-font-size;
+  font-weight: bold;
+  justify-content: center;
+  padding: $spacer-2;
+  white-space: nowrap;
+}

@@ -1,16 +1,32 @@
-@import "~@angular/material/theming";
+@use '~@angular/material'as *;
 
-$primaryPalette: mat-palette($mat-indigo);
-$accentPalette: mat-palette($mat-indigo, A200, A100, A400);
+$app-primary: define-palette($indigo-palette, 500);
+$app-accent: define-palette($pink-palette, A200, A100, A400);
+
+// The "warn" palette is optional and defaults to red if not specified.
+$app-warn: define-palette($red-palette);
+
+$theme: define-light-theme((color: (primary: $app-primary,
+      accent: $app-accent,
+      warn: $app-warn)));
+
+// @include core-theme($theme);
+@include all-component-themes($theme);
+// $primaryPalette: mat-palette($mat-indigo);
+// $accentPalette: mat-palette($mat-indigo, A200, A100, A400);
 
 // the default warn palette is red, so use that if the theme doesn't define one
-$warnPalette: mat-palette($mat-red);
+// $warnPalette: mat-palette($mat-red);
 
-$primary: mat-color($primaryPalette);
-$accent: mat-color($accentPalette);
-$warn: mat-color($warnPalette);
+// $primary: mat-color($primaryPalette);
+// $accent: mat-color($accentPalette);
+// $warn: mat-color($warnPalette);
 
 // colors
+$primary: map_get($app-primary, 900);
+$accent: map_get($app-accent, 900);
+$warn: map_get($app-warn, 900);
+
 $color-light: #fff;
 $color-dark: #000;
 
@@ -22,7 +38,13 @@ $spacer-1: 4px;
 $spacer-2: 8px;
 $spacer-3: 12px;
 $spacer-4: 16px;
+$spacer-5: 20px;
+$spacer-6: 25px;
+$spacer-7: 30px;
 
 // font sizes
 $oh-font-size: 15px;
 $oh-sub-header: 18px;
+
+// z-indices
+$z-dialog: 1000;

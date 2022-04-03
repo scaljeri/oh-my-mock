@@ -1,0 +1,14 @@
+<oh-my-autocomplete-dropdown
+#input
+[showAllOnFocus]="true"
+[showCopy]="!!context?.preset"
+[showDelete]="true"
+copyInfo="Clone/createn new preset"
+class="preset"
+[options]="options"
+[formControl]="presetCtrl"
+(copy)="onPresetCopy($event)"
+(blur)="onBlur()"
+(delete)="onPresetDelete($event)"
+label="preset">
+</oh-my-autocomplete-dropdown>

@@ -1,16 +1,19 @@
 {
   "name": "Oh-my-Mock",
-  "version": "__OH_MY_VERSION__",
+  "version": "0.0.0",
   "description": "Extension for caching and mocking API (XHR/Fetch) responses",
   "manifest_version": 2,
   "permissions": [
     "background",
     "storage",
     "unlimitedStorage",
-    "*://*/*"
+    "tabs",
+    "*://*/*",
+    "webRequest",
+    "webRequestBlocking"
   ],
   "browser_action": {
-    "default_icon": "oh-my-mock/assets/images/icon-16.png"
+    "default_icon": "oh-my-mock/assets/icons/icon-off-128.png"
   },
   "background": {
     "scripts": ["background.js"]
@@ -18,14 +21,15 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "run_at": "document_start",
       "js": ["content.js"]
     }
   ],
-  "web_accessible_resources": ["injected.js", "oh-my-mock/index.html"],
+  "web_accessible_resources": ["oh-my-mock.js.map", "oh-my-mock.js", "oh-my-mock/index.html"],
   "icons": {
-    "16": "oh-my-mock/assets/images/icon-16.png",
-    "48": "oh-my-mock/assets/images/icon-48.png",
-    "128": "oh-my-mock/assets/images/icon-128.png"
+    "16": "oh-my-mock/assets/icons/icon-16.png",
+    "48": "oh-my-mock/assets/icons/icon-48.png",
+    "128": "oh-my-mock/assets/icons/icon-128.png"
   },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

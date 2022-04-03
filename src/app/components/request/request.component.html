@@ -1,0 +1,112 @@
+<mat-card *ngIf="request" class="header">
+  <oh-request-header
+    [request]="request"
+    [context]="context"
+  ></oh-request-header>
+</mat-card>
+
+<mat-card *ngIf="response; else nodata" class="details">
+  <h3>Response details</h3>
+  <section class="mock-settings">
+    <oh-my-mock-details
+      [context]="context"
+      [response]="response"
+      [requestId]="request.id"
+    ></oh-my-mock-details>
+
+    <div class="mock-actions">
+      <button mat-stroked-button class="delete-mock" (click)="onDelete()">
+        <mat-icon>delete_forever</mat-icon>
+      </button>
+
+      <button mat-stroked-button class="anonymize-mock" (click)="onAnonymize()">
+        Anonymise your data
+      </button>
+      <div class="action-wrapper">
+        <button
+          class="js-code-edit"
+          (click)="openShowMockCode()"
+          mat-stroked-button
+        >
+          Mocking with code
+        </button>
+        <mat-icon
+          color="primary"
+          matTooltip="This is the place where OhMyMock creates responses. You can write code in here to change the default mocking behaviour. You can make Fetch/XHR request and/or change the cached responses/headers."
+        >
+          info</mat-icon
+        >
+      </div>
+    </div>
+  </section>
+
+  <section class="editors">
+    <div *ngIf="!dialogIsOpen" class="response">
+      <header>
+        <h2>Data</h2>
+      </header>
+      <div class="code-wrapper">
+        <button
+          class="fullscreen"
+          (click)="onShowResponseFullscreen()"
+          mat-mini-fab
+          color="primary"
+          aria-label="Example icon button with a menu icon"
+        >
+          <mat-icon>fullscreen</mat-icon>
+        </button>
+        <oh-my-code-edit
+          class="request-response"
+          *ngIf="!isResponseImage"
+          [formControl]="responseCtrl"
+        ></oh-my-code-edit>
+        <oh-my-mock-image
+          class="request-response"
+          [ngClass]="{ 'is-blurred': blurImages }"
+          *ngIf="isResponseImage"
+          [contentType]="responseType"
+          [src]="responseCtrl.value"
+        >
+        </oh-my-mock-image>
+        <button class="reset" mat-button (click)="onRevertResponse()">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="!dialogIsOpen" class="headers">
+      <header>
+        <h2>Headers</h2>
+      </header>
+      <div class="code-wrapper">
+        <button
+          class="fullscreen"
+          (click)="onShowHeadersFullscreen()"
+          mat-mini-fab
+          color="primary"
+          aria-label="Example icon button with a menu icon"
+        >
+          <mat-icon>fullscreen</mat-icon>
+        </button>
+        <oh-my-code-edit
+          class="request-headers"
+          [formControl]="headersCtrl"
+        ></oh-my-code-edit>
+        <button class="reset" mat-button (click)="onRevertHeaders()">
+          Reset
+        </button>
+      </div>
+    </div>
+  </section>
+</mat-card>
+
+<ng-template #nodata>
+  <section class="no-data">
+    <p>This request is not active and OhMyMock will not serve any data.</p>
+    <p *ngIf="hasMocks">
+      To start serving data, select a response, create a new response or change
+      the preset.
+    </p>
+    <p *ngIf="!hasMocks">New responses can be created with the + button</p>
+  </section>
+</ng-template>

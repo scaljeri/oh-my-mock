@@ -1,6 +1,12 @@
-import { Injectable } from '@angular/core';
-import { IContext, IData } from '@shared/type';
-import { BehaviorSubject, Subject } from 'rxjs';
+/// <reference types="chrome"/>
+
+import { Inject, Injectable } from '@angular/core';
+import { IPacketPayload } from '@shared/packet-type';
+import { IData, ohMyDomain } from '@shared/type';
+import { BehaviorSubject, shareReplay, Subject } from 'rxjs';
+import { APP_VERSION } from '../tokens';
+
+const VERSION = '__OH_MY_VERSION__'; // For development only
 
 export interface IPage {
   title: string;
@@ -11,17 +17,26 @@ export interface IPage {
 export class AppStateService {
   private _domain: string;
   private _tabId: number;
+  #contentVersion: string;
+
+  private errorSubject = new Subject<IPacketPayload>();
+  public errors$ = this.errorSubject.asObservable().pipe(shareReplay());
 
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
-  public version = '__OH_MY_VERSION__';
+  // public get version(): string {
+  // return VERSION.match(/^__/) ? manifest.version : VERSION;
+  // }
+  private domainChangeSubject = new BehaviorSubject<ohMyDomain>(null);
+  public domain$ = this.domainChangeSubject.asObservable().pipe(shareReplay());
 
-  private domainChangeSubject = new BehaviorSubject<string>(null);
-  public domain$ = this.domainChangeSubject.asObservable();
-
-  constructor() {
+  constructor(@Inject(APP_VERSION) public version: string) {
     this._domain = sessionStorage.getItem('domain');
     const tabId = sessionStorage.getItem('tabId');
+
+    if (this._domain) {
+      this.domainChangeSubject.next(this._domain);
+    }
 
     if (tabId) {
       this._tabId = Number(tabId);
@@ -37,7 +52,9 @@ export class AppStateService {
     this._domain = domain;
     sessionStorage.setItem('domain', domain);
 
-    this.domainChangeSubject.next(domain);
+    setTimeout(() => {
+      this.domainChangeSubject.next(domain);
+    });
   }
 
   get tabId(): number {
@@ -49,11 +66,24 @@ export class AppStateService {
     sessionStorage.setItem('tabId', String(tabId));
   }
 
+  get contentVersion(): string {
+    return this.#contentVersion;
+  }
+
+  set contentVersion(version: string) {
+    this.#contentVersion = version;
+    sessionStorage.setItem('contentVersion', version);
+  }
+
   isSameDomain(domain: string): boolean {
     return domain && this._domain === domain;
   }
 
-  hit(data: IContext): void {
+  hit(data: IData): void {
     this.hitSubject.next(data);
+  }
+
+  addError(data: IPacketPayload): void {
+    this.errorSubject.next(data);
   }
 }
