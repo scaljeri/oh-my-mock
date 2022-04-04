@@ -19,7 +19,10 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
   const server = new http.Server(app);
   // const io = new Server(server);
-  const io = new Server(server, { transports: ['websocket'] });
+  const io = new Server(server, {
+    transports: ['websocket'],
+    maxHttpBufferSize: 1e8
+  });
   const myServer = new OhMyServer(app, server, { local: config.local })
 
   io.on("connection", function (socket: Socket) {
@@ -30,8 +33,14 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyDispatchServerRequest>) {
       // eslint-disable-next-line no-console
+      // if (payload.data.request.url.match(/tasks/)) {
+      console.log('received payload', payload.data.request.url);
+      // }
       if (payload.data) {
         const mock = await myServer.local.updateMock(payload.data);
+        if (payload.data.request.url.match(/tasks/)) {
+          console.log('response is ready', mock, payload.data.request.url);
+        }
 
         socket.emit(payload.id || 'data', mock);
       }
