@@ -32,15 +32,8 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
     console.log("Client connected", socket.handshake.query.source);
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyDispatchServerRequest>) {
-      // eslint-disable-next-line no-console
-      // if (payload.data.request.url.match(/tasks/)) {
-      console.log('received payload', payload.data.request.url);
-      // }
       if (payload.data) {
         const mock = await myServer.local.updateMock(payload.data);
-        if (payload.data.request.url.match(/tasks/)) {
-          console.log('response is ready', mock, payload.data.request.url);
-        }
 
         socket.emit(payload.id || 'data', mock);
       }
