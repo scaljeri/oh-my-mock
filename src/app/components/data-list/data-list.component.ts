@@ -213,11 +213,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  onActivateAll(): void {
+  onActivateAll(isActive: boolean): void {
     this.state = { ...this.state, data: { ...this.state.data } };
     Object.values(this.state.data).forEach(d => {
       if (d.selected[this.state.context.preset]) {
-        d = { ...d, enabled: { ...d.enabled, [this.state.context.preset]: true } };
+        d = { ...d, enabled: { ...d.enabled, [this.state.context.preset]: isActive } };
         this.state.data[d.id] = d;
       }
     });

@@ -29,7 +29,8 @@
         <mat-menu  #menu="matMenu">
           <ul class="main-menu">
             <!-- <li><button mat-menu-item>Validate requests</button></li> -->
-            <li><button mat-menu-item (click)="onActivateAll()">Activate all requests</button></li>
+            <li><button mat-menu-item (click)="onActivateAll(true)">Activate all requests</button></li>
+            <li><button mat-menu-item (click)="onActivateAll(false)">Deactivate all requests</button></li>
             <li [ngClass]="{'is-selected': state.aux.blurImages }"><button (click)="onBlurImage()"  mat-menu-item><span>Blur images</span></button></li>
           </ul>
         </mat-menu>
