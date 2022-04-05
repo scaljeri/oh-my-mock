@@ -15,19 +15,33 @@ export function patchResponseText() {
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
           });
-          if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-            return Promise.resolve(this.ohResult.response?.response);
-          }
+          // if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
+          //   let output = this.ohResult.response?.response;
+          //   if (typeof output !== 'string') {
+          //     try {
+          //       output = JSON.stringify(output);
+          //     } catch (err) { /* not json */ }
+          //   }
+          //   return Promise.resolve(output);
+          // }
 
           if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
             persistResponse(this, this.ohResult.request);
           }
 
-          return this.__text();
+          // return this.__text();
         }
 
+        console.log('TEXT 1');
         if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-          return Promise.resolve(this.ohResult.response?.response);
+          let output = this.ohResult.response?.response;
+          if (typeof output !== 'string') {
+            try {
+              output = JSON.stringify(output);
+            } catch (err) { /* not json */ }
+          }
+        console.log('TEXT 2');
+          return Promise.resolve(output);
         } else {
           return this.__text();
         }
