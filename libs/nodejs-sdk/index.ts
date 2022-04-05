@@ -10,6 +10,7 @@ export * from './local';
 export interface IOhMyServerConfig extends IOhServerConfig {
   port?: number
   listenHandler?: () => void;
+  maxBufferSize?: number // max 1e8
 }
 
 export const createServer = (config: IOhMyServerConfig): OhMyServer => {
@@ -21,7 +22,7 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
   // const io = new Server(server);
   const io = new Server(server, {
     transports: ['websocket'],
-    maxHttpBufferSize: 1e8
+    maxHttpBufferSize: config.maxBufferSize || 10000000 // 1e8
   });
   const myServer = new OhMyServer(app, server, { local: config.local })
 

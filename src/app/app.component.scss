@@ -1,9 +1,8 @@
-@import "mixins";
+@import 'mixins';
 
 :host {
   background-color: #000;
 }
-
 
 .is-blurred {
   filter: blur(2px);
@@ -12,6 +11,7 @@
 mat-toolbar {
   max-width: 100%;
   overflow: hidden;
+  position: relative;
 
   h1 {
     flex: 1;
@@ -22,7 +22,18 @@ mat-toolbar {
       padding: 0 $spacer-2;
     }
   }
+}
 
+.disabled-notification {
+  background-color: red;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%);
+  border-radius: 5px;
+  border: 5px solid #fff;
+  padding: $spacer-2;
+  top: 40px;
+  z-index: 1;
 }
 
 mat-drawer-content {
@@ -38,7 +49,6 @@ mat-drawer-content {
   .header-spacer {
     flex: 1 1 auto;
   }
-
 
   section {
     padding: 20px;
