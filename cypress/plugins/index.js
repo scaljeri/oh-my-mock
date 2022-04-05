@@ -18,6 +18,7 @@
 
 // const extensionLoader = require('cypress-browser-extension-plugin/loader');
 // const webpack = require('@cypress/webpack-preprocessor');
+const path = require('path');
 
 // function getWepPackWithFileChange(options) {
 //   const webPackPreProcessor = webpack(options);
@@ -37,7 +38,7 @@ module.exports = (on, config) => {
   // on("file:preprocessor", getWepPackWithFileChange(options));
 
   on('before:browser:launch', (browser, launchOptions) => {
-    launchOptions.extensions.push('../oh-my-mock');
+    launchOptions.extensions.push(path.join(__dirname, '..', '..', 'dist'));
 
     return launchOptions;
   });

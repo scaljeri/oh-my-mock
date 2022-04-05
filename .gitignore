@@ -9,7 +9,8 @@
 /bazel-out
 stats.json
 /stats
-screenshots/*
+cypress/screenshots/*
+cypress/videos/*
 
 # dependencies
 /node_modules
