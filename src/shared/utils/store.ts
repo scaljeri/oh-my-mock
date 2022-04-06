@@ -27,7 +27,7 @@ export class StoreUtils {
   }
 
   static hasState(store: IOhMyMock, domain: ohMyDomain): boolean {
-    return store.domains.indexOf(domain) >= 0;
+    return store?.domains?.indexOf(domain) >= 0;
   }
 
   static setState(store: IOhMyMock, state: IState): IOhMyMock {

@@ -110,7 +110,7 @@ export class DataUtils {
       type: objectTypes.REQUEST,
     } as IData;
 
-    if (!data.id) {
+    if (!data?.id && data?.url) {
       output.url = url2regex(data.url);
     }
 
