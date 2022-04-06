@@ -58,11 +58,13 @@ export class OhMyLocal {
       ...(context.headers && { headers: context.headers })
     } as IOhMyMockResponse;
 
-    const respFromFile = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
+    if (context.path) {
+      const respFromFile = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
 
-    if (respFromFile) {
-      output.response = respFromFile;
-      output.status = ohMyMockStatus.OK;
+      if (respFromFile) {
+        output.response = respFromFile;
+        output.status = ohMyMockStatus.OK;
+      }
     }
 
     return context ? (context.handler?.(output, data) || output) : { status: ohMyMockStatus.NO_CONTENT };
