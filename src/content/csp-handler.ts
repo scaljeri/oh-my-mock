@@ -3,7 +3,6 @@ import { appSources, payloadType } from "../shared/constants";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { OhMyContentState } from "./content-state";
 import { error } from "./utils";
-
 const cspSubject = new Subject();
 const cspRemovalSubject = new Subject();
 

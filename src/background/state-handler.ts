@@ -14,10 +14,6 @@ export class OhMyStateHandler {
 
     let state = data as IState;
 
-    if (!state) {
-      return;
-    }
-
     try {
       if (context?.path) {
         state = await OhMyStateHandler.StorageUtils.get<IState>(context.domain) || StateUtils.init({ domain: context.domain });

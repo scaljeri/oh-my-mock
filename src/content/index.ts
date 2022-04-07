@@ -23,8 +23,6 @@ declare let window: any;
 window[STORAGE_KEY]?.off?.forEach(h => h());
 window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
 
-const VERSION = '__OH_MY_VERSION__';
-
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)

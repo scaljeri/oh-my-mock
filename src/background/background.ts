@@ -24,22 +24,20 @@ import { cSPRemoval } from './remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { connectWithLocalServer } from './dispatch-remote';
+import { error } from './utils';
 
-// eslint-disable-next-line no-console
-console.log(`${STORAGE_KEY}: background script is ready`);
+// window.onunhandledrejection = function (event) {
+//   const { reason } = event;
+//   const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
 
-window.onunhandledrejection = function (event) {
-  const { reason } = event;
-  const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
+// errorHandler(queue, errorMsg);
+// }
 
-  errorHandler(queue, errorMsg);
-}
+// window.onerror = function (a, b, c, d, stacktrace) {
+//   const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
 
-window.onerror = function (a, b, c, d, stacktrace) {
-  const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
-
-  errorHandler(queue, errorMsg, stacktrace);
-}
+//   errorHandler(queue, errorMsg, stacktrace);
+// }
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
@@ -70,6 +68,13 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   packet.tabId = sender.tab.id;
   queue.addPacket(packet.payload.type, packet, (result) => {
     callback(result);
+  }).catch(err => {
+    const types = queue.getActiveHandlers();
+    const packet = queue.getQueue(types?.[0])?.[0] as IPacket;
+    queue.removeFirstPacket(types?.[0]); // The first packet in this queue cannot be processed!
+    queue.resetHandler(types?.[0]);
+
+    error(`Could not process packet of type ${types?.[0]}`, packet);
   });
 });
 
