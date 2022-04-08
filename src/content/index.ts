@@ -17,13 +17,12 @@ import { receivedApiRequest } from './handle-api-request';
 import { BehaviorSubject } from 'rxjs';
 import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
+import { debug } from './utils';
 
 declare let window: any;
 
 window[STORAGE_KEY]?.off?.forEach(h => h());
 window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
-
-const VERSION = '__OH_MY_VERSION__';
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
@@ -195,7 +194,7 @@ function inject(state: IOhMyInjectedState): boolean {
   });
 
   // eslint-disable-next-line no-console
-  chrome.storage.local.get(null, function (data) { console.log('OhMyMock data dump: ', data); })
+  chrome.storage.local.get(null, function (data) { debug('Data dump: ', data); })
 
   return true;
 }

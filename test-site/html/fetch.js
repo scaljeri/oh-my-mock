@@ -9,8 +9,13 @@ window.ohMyMockTest.fetch = (method, responseType, cb) => {
     ohMyMockTest.statusCodeFn(response.status);
     if (responseType === 'png') {
       response.blob().then((r) => {
-        window.ohMyMockTest.responseFn(r);
+         window.ohMyMockTest.responseFn(r);
       });
+
+    //   response.arrayBuffer().then((r) => {
+    //    const out = new Blob( [ r ], { type: "image/png" } );
+    //    window.ohMyMockTest.responseFn(out);
+    //  });
     } /*else if (responseType.match(/json/)) {
       response.json().then(window.ohMyMockTest.responseFn);
     } */else {

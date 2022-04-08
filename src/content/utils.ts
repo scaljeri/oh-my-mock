@@ -1,11 +1,6 @@
-import { STORAGE_KEY } from '../shared/constants';
-import { logging } from '../shared/utils/log';
+import { debugBuilder, errorBuilder } from "../shared/utils/logging"
 
-export type ohLogFn = (msg: string, ...data: unknown[]) => void;
+export const CONTENT_PREFIX = 'ConTeNt DEBUG'
 
-export const debug = logging(`${STORAGE_KEY} (^*^) | ConTeNt DEBUG`);
-export const log = logging(`${STORAGE_KEY} (^*^)`, true);
-
-export const error = (msg) => {
-  log(`%c${msg}`, 'background: red');
-}
+export const error = errorBuilder();
+export const debug = debugBuilder();
