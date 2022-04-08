@@ -1,7 +1,7 @@
 window.ohMyMockTest.xhr = (method, responseType, cb) => {
   const xhr = new XMLHttpRequest();
   if (responseType === 'png') {
-    xhr.responseType = 'blob'; // 'arraybuffer'; // 'blob';
+    xhr.responseType = 'arraybuffer'; // 'arraybuffer'; // 'blob';
   }
   xhr.open(method, ohMyMockTest.urlMap[responseType]);
   xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
