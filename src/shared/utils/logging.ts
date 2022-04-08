@@ -19,15 +19,14 @@ export const PREFIX_STYLES_APPEND = 'background: inherit; color: inherit;monospa
 const LOG_PREFIX = `%c(%c^%c*%c^%c) ${STORAGE_KEY}`;
 
 export const logging = (config: IOhMyLoggingConfig = {}) => {
-  let str = LOG_PREFIX;
-  const prefixStyles = [...PREFIX_STYLES_BASE];
-  if (config.prefix) {
-    str += ` %c${config.prefix}: `;
-    prefixStyles.push(PREFIX_STYLES_APPEND);
-  }
+  return (msg: string, ...rest: (string | unknown)[]) => {
 
-  return (msg: string, ...styles: (string | unknown)[]) => {
-    (config?.handler || console.log)(`${str} %c${msg}`, ...prefixStyles, ...styles);
+    if (['undefined', 'object'].includes(typeof rest[0])) {
+      rest.unshift(PREFIX_STYLES_APPEND);
+    }
+    rest.unshift(...PREFIX_STYLES_BASE);
+
+    (config?.handler || console.log)(`${LOG_PREFIX} %c${msg}`, ...rest);
   }
 }
 
@@ -41,14 +40,13 @@ export const logBuilder = (config?: IOhMyLoggingConfig) => {
 
 export const warnBuilder = (config: IOhMyLoggingConfig = {}) => {
   return logging({
-    prefix: '%c',
-    styles: 'background: yellow; color: #fff', handler: console.warn, ...config
+    styles: 'background: yellow; color: #fff',
+    handler: console.warn, ...config
   });
 }
 
 export const errorBuilder = (config: IOhMyLoggingConfig = {}) => {
   return logging({
-    prefix: '%c',
     styles: 'background: red; color: #fff', handler: console.error, ...config
   });
 }

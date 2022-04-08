@@ -93,7 +93,7 @@ export class OhMyContentState {
   // }
 
   isActive(state: IState): boolean {
-    return state.aux.appActive && state.aux.popupActive || this.forceActive;
+    return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
   }
 
   set forceActive(isActive: boolean) {

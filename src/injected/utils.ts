@@ -34,7 +34,7 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
       } else if (isImage(data?.headers?.['content-type'])) {
         response = `Image Data (${data.headers['content-type']})`;
       }
-      log(`${msg}`, response);
+      log(`${msg} ${data.headers['content-type']}`, response);
   }
 }
 

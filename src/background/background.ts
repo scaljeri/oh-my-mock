@@ -49,9 +49,13 @@ queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
 queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
 queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
-  await StorageUtils.reset();
-  await initStorage();
-  await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+  try {
+    await StorageUtils.reset();
+    await initStorage(payload.context?.domain);
+    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+  } catch (err) {
+    error('Could not initialize the store', err);
+  }
 });
 
 

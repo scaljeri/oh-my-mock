@@ -17,6 +17,7 @@ import { receivedApiRequest } from './handle-api-request';
 import { BehaviorSubject } from 'rxjs';
 import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
+import { debug } from './utils';
 
 declare let window: any;
 
@@ -193,7 +194,7 @@ function inject(state: IOhMyInjectedState): boolean {
   });
 
   // eslint-disable-next-line no-console
-  chrome.storage.local.get(null, function (data) { console.log('OhMyMock data dump: ', data); })
+  chrome.storage.local.get(null, function (data) { debug('Data dump: ', data); })
 
   return true;
 }

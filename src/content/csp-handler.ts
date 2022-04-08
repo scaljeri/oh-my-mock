@@ -7,7 +7,7 @@ const cspSubject = new Subject();
 const cspRemovalSubject = new Subject();
 
 function cspListener(event) {
-  error('CSP issues detected, OhMyMock will reload and remove CSP headers!');
+  error('CSP issues detected, this page will be reloaded so CSP headers can be removed!');
   // error(`blockedURI:', event.blockedURI);
   // console.log('violatedDirective', event.violatedDirective);
   // console.log('originalPolicy', event.originalPolicy);
