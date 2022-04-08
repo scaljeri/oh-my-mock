@@ -1,7 +1,7 @@
 describe('OhMyMock', () => {
   describe('Early call', () => {
     before((done) => {
-      cy.visit('http://localhost:8000');
+      cy.visit('https://scaljeri.github.io/oh-my-mock/');
       cy.get("html").then(() => {
         window.addEventListener('message', e => {
           done()
