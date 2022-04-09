@@ -23,7 +23,7 @@ export function patchResponseJson() {
 
         if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
           const response = this.ohResult.response?.response;
-          return Promise.resolve(JSON.parse(response));
+          return Promise.resolve(typeof response === 'string' ? JSON.parse(response) : response);
         } else {
           return this.__json();
         }
