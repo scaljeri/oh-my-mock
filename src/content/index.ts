@@ -17,11 +17,23 @@ import { receivedApiRequest } from './handle-api-request';
 import { BehaviorSubject } from 'rxjs';
 import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
-import { debug } from './utils';
+import { debug, error } from './utils';
 
 declare let window: any;
 
-window[STORAGE_KEY]?.off?.forEach(h => h());
+window.onunhandledrejection = function (event: PromiseRejectionEvent) {
+  if (event.reason.message.match(/Extension context invalidated/)) {
+    error('OhMyMock has been updated, this page is now invalid -> reloading....')
+    window.location.reload();
+  }
+}
+
+if (window[STORAGE_KEY]) {
+  window[STORAGE_KEY].off.forEach(h => {
+    typeof h === 'function' ? h() : h.unsubscribe?.();
+  });
+}
+
 window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
 
 // Setup the message bus with the a trigger

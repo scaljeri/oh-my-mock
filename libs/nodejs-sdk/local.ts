@@ -18,7 +18,7 @@ export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
 {
   statusCode?: statusCode;
   headers?: Record<string, string>;
-  path: string
+  path?: string
   handler: (output: IOhMySdkResponse, input: IOhMySdkRequest) => IOhMySdkResponse;
 };
 
