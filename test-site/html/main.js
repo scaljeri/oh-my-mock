@@ -52,8 +52,7 @@ ohMyMockTest.resetFn = () => {
 function handleUrl(formData) {
   const url = new URL(window.location.href);
   const newUrl =
-    url.origin +
-    '?' +
+  `${url.origin}${window.location.pathname}?` +
     [...formData.entries()].map((kv) => `${kv[0]}=${kv[1]}`).join('&');
   window.history.pushState(
     Object.fromEntries(formData),
