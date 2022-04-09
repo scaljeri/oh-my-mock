@@ -1,5 +1,5 @@
 window.ohMyMockTest.fetch = (method, response, responseType, cb) => {
-  fetch(ohMyMockTest.urlMap[response], {
+  fetch(`/oh-my-mock/${ohMyMockTest.urlMap[response]}`, {
     method,
     headers: new Headers()
   }).then((r) => {
