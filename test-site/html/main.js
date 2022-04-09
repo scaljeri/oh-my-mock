@@ -6,7 +6,7 @@ ohMyMockTest.statusCodeFn = (st) => {
   document.querySelector('.status-code span').innerText = st;
 };
 
-ohMyMockTest.responseFn = (r) => {
+ohMyMockTest.responseFn = r => {
   const img = document.querySelector('img');
   img.style.display = 'none';
   if (r instanceof Blob) {
@@ -22,9 +22,7 @@ ohMyMockTest.responseFn = (r) => {
       }
 
       r = JSON.stringify(JSON.parse(r), null, 4);
-    } catch {
-      /* Ooops */
-    }
+    } catch { /* Ooops */ }
   }
 
   document.querySelector('.body pre').innerText = r;
@@ -32,10 +30,10 @@ ohMyMockTest.responseFn = (r) => {
 
 ohMyMockTest.durationFn = () => {
   document.querySelector('.duration span').innerText =
-    Date.now() - ohMyMockTest.starttime + 'ms';
+    (Date.now() - ohMyMockTest.starttime) + 'ms';
 };
 
-ohMyMockTest.headersFn = (h) => {
+ohMyMockTest.headersFn = h => {
   if (typeof h === 'object') {
     h = JSON.stringify(h, null, 4);
   }
@@ -48,6 +46,7 @@ ohMyMockTest.resetFn = () => {
   ohMyMockTest.statusCodeFn('');
   ohMyMockTest.responseFn('');
 };
+
 
 function handleUrl(formData) {
   const url = new URL(window.location.href);
@@ -69,8 +68,8 @@ window.onSubmit = (skipHistory) => {
     ohMyMockTest.type = fd.get('type');
     ohMyMockTest.method = fd.get('method');
     ohMyMockTest.response = fd.get('response');
-    ohMyMockTest.responseType = fd.get('responseType');
 
+    ohMyMockTest.responseType = fd.get('responseType');
     if (!skipHistory) {
       handleUrl(fd);
     }
@@ -80,6 +79,7 @@ window.onSubmit = (skipHistory) => {
 
     const handler = window.ohMyMockTest[fd.get('type')];
     ohMyMockTest.resetFn();
+
     handler(
       ohMyMockTest.method,
       ohMyMockTest.response,

@@ -28,7 +28,7 @@ Object.defineProperties(window.XMLHttpRequest.prototype, {
     value: function (...args) {
       this.ohListeners = [];
       this.ohHeaders = {};
-      this.ohMethod = args[0];
+      this.ohMethod = args[0].toUpperCase();
       this.ohUrl = args[1];
 
       this.__open(...args);

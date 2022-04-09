@@ -44,7 +44,7 @@ export interface IOhMyReadyResponse<T = string> {
 
 export interface IOhMyDispatchServerRequest {
   request: IData | IOhMyUpsertData,
-  context: IOhMyContext
+  context: IOhMyContext,
   mock?: {
     response: unknown,
     headers: Record<string, string>,
