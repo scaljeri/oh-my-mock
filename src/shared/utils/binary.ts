@@ -85,8 +85,8 @@ export function arrayBufferToB64(buffer: ArrayBuffer): string {
   return `${window.btoa(String.fromCharCode(...new Uint8Array(buffer)))}`;
 }
 
-export function b64ToArrayBuffer(b64: string): Uint8Array {
+export function b64ToArrayBuffer(b64: string): ArrayBuffer { // Uint8Array {
   const asciiString = window.atob(b64);
 
-  return new Uint8Array([...asciiString].map(char => char.charCodeAt(0)));
+  return new Uint8Array([...asciiString].map(char => char.charCodeAt(0))).buffer;
 }

@@ -94,7 +94,7 @@ function xhrInjectResponse(xhr) {
   console.debug('------------ xhr ------------');
 
   const response = xhr.response;
-  if (response instanceof Uint8Array) {
+  if (response instanceof ArrayBuffer) {
     window.ohMyMockTest.responseFn(new Blob([response]));
   } else {
     window.ohMyMockTest.responseFn(response);
