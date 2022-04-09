@@ -26,33 +26,37 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
   let data; // = request;
   let mock;
 
-  if (state) {
-    data = StateUtils.findRequest(state, request);
-    if (data) {
-      const mockId = DataUtils.activeMock(data, state.context);
+  try {
+    if (state) {
+      data = StateUtils.findRequest(state, request);
+      if (data) {
+        const mockId = DataUtils.activeMock(data, state.context);
 
-      if (mockId) {
-        mock = await StorageUtils.get(mockId);
+        if (mockId) {
+          mock = await StorageUtils.get(mockId);
+        }
       }
     }
-  }
 
-  const result = await dispatchRemote({
-    type: payloadType.API_REQUEST,
-    context: state.context,
-    description: 'background;dispatch-to-server',
-    data: {
-      request: data || request,
+    const result = await dispatchRemote({
+      type: payloadType.API_REQUEST,
       context: state.context,
-      ...(mock && {
-        mock: {
-          headers: mock.headersMock,
-          response: mock.responseMock,
-          statusCode: mock.statusCode
-        }
-      })
-    }
-  });
+      description: 'background;dispatch-to-server',
+      data: {
+        request: data || request,
+        context: state.context,
+        ...(mock && {
+          mock: {
+            headers: mock.headersMock,
+            response: mock.responseMock,
+            statusCode: mock.statusCode
+          }
+        })
+      }
+    });
 
-  return result || { status: ohMyMockStatus.NO_CONTENT }
+    return result || { status: ohMyMockStatus.NO_CONTENT }
+  } catch (err) {
+
+  }
 }

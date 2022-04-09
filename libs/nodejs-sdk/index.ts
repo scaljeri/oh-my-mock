@@ -10,6 +10,7 @@ export * from './local';
 export interface IOhMyServerConfig extends IOhServerConfig {
   port?: number
   listenHandler?: () => void;
+  maxBufferSize?: number // max 1e8
 }
 
 export const createServer = (config: IOhMyServerConfig): OhMyServer => {
@@ -19,7 +20,10 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
 
   const server = new http.Server(app);
   // const io = new Server(server);
-  const io = new Server(server, { transports: ['websocket'] });
+  const io = new Server(server, {
+    transports: ['websocket'],
+    maxHttpBufferSize: config.maxBufferSize || 10000000 // 1e8
+  });
   const myServer = new OhMyServer(app, server, { local: config.local })
 
   io.on("connection", function (socket: Socket) {
@@ -29,7 +33,6 @@ export const createServer = (config: IOhMyServerConfig): OhMyServer => {
     console.log("Client connected", socket.handshake.query.source);
 
     socket.on("data", async function (payload: IPacketPayload<IOhMyDispatchServerRequest>) {
-      // eslint-disable-next-line no-console
       if (payload.data) {
         const mock = await myServer.local.updateMock(payload.data);
 

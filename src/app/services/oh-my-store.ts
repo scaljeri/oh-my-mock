@@ -163,13 +163,16 @@ export class OhMyState {
     const state = await this.getState(context);
     request = (StateUtils.findRequest(state, request));
 
+    // Delete all response from the request
     for (const resp of Object.values(request.mocks)) {
       // await this.storageService.remove(resp.id);
-      await OhMySendToBg.full(resp, payloadType.REMOVE, undefined, 'popup;deleteRequest');
+      // await OhMySendToBg.full(resp, payloadType.REMOVE, undefined, 'popup;deleteRequestMock');
+      await this.deleteResponse(resp.id, request.id, context);
     }
 
+    // Delete the request
     delete state.data[request.id];
-    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;deleteRequest');
+    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;deleteRequestFromState');
     // await this.storageService.set(state.domain, state);
 
     return state;

@@ -45,7 +45,11 @@ export interface IOhMyReadyResponse<T = string> {
 export interface IOhMyDispatchServerRequest {
   request: IData | IOhMyUpsertData,
   context: IOhMyContext
-  mock?: { response: unknown, headers: Record<string, string>, statusCode: ohMyStatusCode };
+  mock?: {
+    response: unknown,
+    headers: Record<string, string>,
+    statusCode: ohMyStatusCode
+  };
 }
 
 export interface IOhMyImportStatus {

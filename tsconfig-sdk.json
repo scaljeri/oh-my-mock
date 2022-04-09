@@ -5,7 +5,8 @@
     "outDir": "./dist",
     "types": [],
     "declaration": true,
-    "strict": true
+    "strictNullChecks": false,
+    "noImplicitAny": false
   },
   "include": ["libs"],
   "exclude": ["node_modules"]

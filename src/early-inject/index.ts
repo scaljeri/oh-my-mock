@@ -10,13 +10,17 @@ Object.defineProperties(window.XMLHttpRequest.prototype, {
   send: {
     ...dsend,
     value: function (body) {
-      // Wait for the injected code
-      const sid = setInterval(() => {
-        if (window[KEY].xhr) {
-          clearInterval(sid);
-          window[KEY].xhr.send.call(this, body);
-        }
-      }, 50)
+      if (window[KEY].xhr) {
+        window[KEY].xhr.send.call(this, body);
+      } else {
+        // Wait for the injected code
+        const sid = setInterval(() => {
+          if (window[KEY].xhr) {
+            clearInterval(sid);
+            window[KEY].xhr.send.call(this, body);
+          }
+        }, 50);
+      }
     }
   },
   open: {
@@ -57,12 +61,16 @@ const origFetch = window.fetch;
 (window as any).fetch = function (input, init) {
 
   return new Promise(function (r) {
-    const fid = setInterval(function () {
-      if (window[KEY].fetch) {
-        clearInterval(fid);
-        r(window[KEY].fetch(input, init));
-      }
-    }, 50);
+    if (window[KEY].fetch) {
+      r(window[KEY].fetch(input, init));
+    } else {
+      const fid = setInterval(function () {
+        if (window[KEY].fetch) {
+          clearInterval(fid);
+          r(window[KEY].fetch(input, init));
+        }
+      }, 50);
+    }
   })
 }
 window[KEY]['__fetch'] = origFetch;

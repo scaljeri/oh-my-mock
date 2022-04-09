@@ -3,7 +3,6 @@ import { IOhMyAPIRequest, requestMethod } from '../shared/type';
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { logging } from '../shared/utils/log';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
@@ -11,9 +10,7 @@ import { patchResponseJson, unpatchResponseJson } from './fetch/json';
 import { patchResponseText, unpatchResponseText } from './fetch/text';
 import { patchStatus, unpatchStatus } from './fetch/status';
 import { persistResponse } from './fetch/persist-response';
-
-export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
-export const log = logging(`${STORAGE_KEY} (^*^)`, true);
+import { error } from './utils';
 
 interface IOhFetchConfig {
   method?: requestMethod;
@@ -51,7 +48,7 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
   const { response, headers, status, statusCode, delay } = result.response;
 
   if (status === ohMyMockStatus.ERROR) {
-    log('Ooops, something went wrong while mocking your FETCH request!')
+    error('Ooops, something went wrong while mocking your FETCH request!')
   }
 
   if (status !== ohMyMockStatus.OK) {

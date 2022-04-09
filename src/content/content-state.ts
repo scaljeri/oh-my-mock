@@ -20,7 +20,7 @@ export class OhMyContentState {
   private cache: IOhMyCache = {};
   private subjects: Record<string, BehaviorSubject<any>> = {};
   private storage: IOhMyStorage;
-  private isActiveSubject = new BehaviorSubject(false);
+  private isActiveSubject = new BehaviorSubject(undefined);
 
   isActive$ = this.isActiveSubject.asObservable().pipe(distinctUntilChanged());
   state: IState;
@@ -93,7 +93,7 @@ export class OhMyContentState {
   // }
 
   isActive(state: IState): boolean {
-    return state.aux.appActive && state.aux.popupActive || this.forceActive;
+    return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
   }
 
   set forceActive(isActive: boolean) {

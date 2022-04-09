@@ -1,5 +1,6 @@
 <html>
 <head>
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
   <link rel="stylesheet" href="styles.css">
   <style>
     img {
@@ -11,6 +12,7 @@
   <script src="xhr.js"></script>
   <script src="hammer-time.js"></script>
   <script src="main.js"></script>
+  <title>OhMyMock DEMO page</title>
 </head>
 
 <body>
@@ -20,28 +22,38 @@
     <div class="type">
       <h3>Type</h3>
       <select name=type>
-        <option value="xhr"  >XHR</option>
-        <option value="fetch"   selected="selected">FETCH</option>
+        <option value="xhr"  selected="selected" >XHR</option>
+        <option value="fetch"  >FETCH</option>
       </select>
     </div>
 
     <div class="method">
       <h3>Method</h3>
       <select name="method">
-        <option value="GET" selected="selected">GET</option>
-        <option value="POST">POST</option>
-        <option value="PUT">UPDATE</option>
-        <option value="DELETE">DELETE</option>
+        <option value="get" selected="selected">GET</option>
+        <option value="post">POST</option>
+        <option value="put">UPDATE</option>
+        <option value="delete">DELETE</option>
       </select>
     </div>
 
     <div class="response">
-      <h3>Response type</h3>
+      <h3>Response</h3>
       <select name="response">
         <option value="html">HTML</option>
-        <option value="json"  selected="selected">JSON</option>
+        <option value="json" >JSON</option>
         <option value="json-external"  >EXTERNAL JSON</option>
-        <option value="png">PNG</option>
+        <option value="png" selected="selected">PNG</option>
+      </select>
+    </div>
+
+    <div class="response">
+      <h3>Response Type</h3>
+      <select name="responseType">
+        <option value="text">text</option>
+        <option value="json" >json</option>
+        <option value="blob" >blob</option>
+        <option value="arrayBuffer" selected="selected">arrayBuffer</option>
       </select>
     </div>
 

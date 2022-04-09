@@ -27,7 +27,6 @@ window[STORAGE_KEY].off.push(() => sub.unsubscribe());
 initApi(streams.externalApiResult$);
 
 function handleStateUpdate(state: IOhMyInjectedState): void {
-
   if (!state) {
     return;
   }
@@ -36,7 +35,7 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
   if (state.active) {
     if (!isOhMyMockActive) {
       isOhMyMockActive = true;
-      log('%c*** Activated ***', 'background: green', ', XHR and FETCH ready for mocking');
+      log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
       patchXmlHttpRequest();
       patchFetch();
       notify(true)
@@ -46,7 +45,7 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
     isOhMyMockActive = false;
     unpatchXmlHttpRequest();
     unpatchFetch();
-    log('%c*** Deactivated ***', 'background: red', ', removed XHR and FETCH patches');
+    log('*** Deactivated ***%c Removed XHR and FETCH patches', 'background: red;padding:3px;margin-right:5px', 'background-color: transparent');
     notify(false)
   }
 }

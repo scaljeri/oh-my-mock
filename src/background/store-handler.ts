@@ -10,11 +10,19 @@ export class OhMyStoreHandler {
   static async update({ data, context }: IPacketPayload<IOhMyMock, IOhMyPacketContext>): Promise<IOhMyMock> {
     let store = data;
 
-    if (context?.path) {
-      store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
-      store = update<IOhMyMock>(context.path, store, context.propertyName, data);
+    if (!data) {
+      return;
     }
 
-    return StorageUtils.setStore(store).then(() => store);
+    try {
+      if (context?.path) {
+        store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
+        store = update<IOhMyMock>(context.path, store, context.propertyName, data);
+      }
+
+      return StorageUtils.setStore(store).then(() => store);
+    } catch (err) {
+
+    }
   }
 }
