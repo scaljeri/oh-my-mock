@@ -8,7 +8,9 @@
     "storage",
     "unlimitedStorage",
     "tabs",
-    "*://*/*"
+    "*://*/*",
+    "webRequest",
+    "webRequestBlocking"
   ],
   "browser_action": {
     "default_icon": "oh-my-mock/assets/icons/icon-off-128.png"
@@ -23,7 +25,7 @@
       "js": ["content.js"]
     }
   ],
-  "web_accessible_resources": ["oh-my-mock.js", "oh-my-mock/index.html"],
+  "web_accessible_resources": ["oh-my-mock.js.map", "oh-my-mock.js", "oh-my-mock/index.html"],
   "icons": {
     "16": "oh-my-mock/assets/icons/icon-16.png",
     "48": "oh-my-mock/assets/icons/icon-48.png",

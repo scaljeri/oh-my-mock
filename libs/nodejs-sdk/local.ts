@@ -33,7 +33,8 @@ export class OhMyLocal {
 
   findContext(input: Partial<IData>): IOhFileContext | null {
     return (this.contexts.filter(c => {
-      return c.method === input.method && c.requestType === input.requestType && compareUrls(input.url!, c.url!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return (!input.method || c.method === input.method) && compareUrls(input.url!, c.url!);
     }) || [])[0];
   }
 
@@ -57,11 +58,13 @@ export class OhMyLocal {
       ...(context.headers && { headers: context.headers })
     } as IOhMyMockResponse;
 
-    const respFromFile = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
+    if (context.path) {
+      const respFromFile = await OhMyLocal.loadFile(path.join((this.config.basePath || ''), context.path));
 
-    if (respFromFile) {
-      output.response = respFromFile;
-      output.status = ohMyMockStatus.OK;
+      if (respFromFile) {
+        output.response = respFromFile;
+        output.status = ohMyMockStatus.OK;
+      }
     }
 
     return context ? (context.handler?.(output, data) || output) : { status: ohMyMockStatus.NO_CONTENT };

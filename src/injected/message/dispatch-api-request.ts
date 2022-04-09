@@ -1,10 +1,10 @@
-import { appSources, ohMyMockStatus, payloadType } from '../../shared/constants';
+import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyMockResponse, IOhMyAPIRequest, requestType } from '../../shared/type';
-import { IPacket, IPacketPayload } from '../../shared/packet-type';
+import { IOhMyAPIRequest, IOhMyContext, requestType } from '../../shared/type';
+import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
@@ -49,31 +49,32 @@ declare let window: any;
 //   });
 // }
 
-export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyMockResponse> => {
+export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyReadyResponse> => {
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
     const payload = {
       context: { id, requestType },
-      type: payloadType.DISPATCH_API_REQUEST,
+      type: payloadType.API_REQUEST,
       data: request
-    } as IPacketPayload<IOhMyAPIRequest>;
+    } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;
 
     mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))
       .subscribe(({ packet }) => {
-        const resp = packet.payload.data as IOhMyMockResponse;
-        logMocked(request, requestType, resp);
+        const resp = packet.payload.data as IOhMyReadyResponse;
+        logMocked(request, requestType, resp.response);
         mb.clear();
 
-        if (resp.status === ohMyMockStatus.ERROR) {
+        if (resp.response.status === ohMyMockStatus.ERROR) {
           // TODO: can this happen????
           // printEvalError(resp.result as string, data);
           // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);
           // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
           reject(null);
         } else {
+          window[STORAGE_KEY].cache.unshift(packet.payload.data);
           resolve(resp);
         }
       });

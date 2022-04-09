@@ -19,7 +19,6 @@ const app = ohMyServer.app;
 ohMyServer.local.add({ // settings
   url: '/users',
   method: 'GET',
-  requestType: 'FETCH',
   statusCode: 201,
   path: './users.json',
   handler: (output: IOhMyMockResponse<string>, data: IOhMyDispatchServerRequest): IOhMyMockResponse => {
@@ -36,7 +35,11 @@ ohMyServer.local.add({ // settings
 } as any);
 
 app.get("/", (req: any, res: any) => {
-  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')));
+  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')), {
+    headers: {
+      'Content-Security-Policy': "script-src self http://localhost:8000  'sha256-Y0Ko9LKZfaEAS30EibFdh13KX/GKjZrZcny1T0bsrxA='"
+    }
+    });
 });
 
 
@@ -44,7 +47,3 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
 appRouter(app)
-
-app.get("/", (req: any, res: any) => {
-  res.sendFile(path.resolve(path.join(__dirname, 'html/index.html')));
-});

@@ -60,6 +60,7 @@ import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.comp
 import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
 import { ShowErrorsComponent } from './show-errors/show-errors.component';
+import { MockImageComponent } from './mock-image/mock-image.component';
 
 @NgModule({
   declarations: [
@@ -93,6 +94,7 @@ import { ShowErrorsComponent } from './show-errors/show-errors.component';
     PresetComponent,
     FeedbackComponent,
     ShowErrorsComponent,
+    MockImageComponent
   ],
   imports: [
     CommonModule,
@@ -141,6 +143,7 @@ import { ShowErrorsComponent } from './show-errors/show-errors.component';
     LinkComponent,
     DialogCodeEditorComponent,
     FeedbackComponent,
+    MockImageComponent
   ],
   providers: [
     Location,

@@ -1,17 +1,18 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, IOhMyContext, IOhMyUpsertData, ohMyDomain, requestType } from './type';
+import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, ohMyStatusCode, requestType } from './type';
+import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
-export interface IOhMessage<T = unknown> {
-  packet: IPacket<T>;
+export interface IOhMessage<T = unknown, X = IOhMyContext> {
+  packet: IPacket<T, X>;
   sender: chrome.runtime.MessageSender;
   callback: (data: unknown) => void;
 }
-export interface IPacket<T = unknown> {
+export interface IPacket<T = unknown, U = IOhMyContext> {
   tabId?: number;
   source: appSources;
-  payload: IPacketPayload<T>;
+  payload: IPacketPayload<T, U>;
   domain?: ohMyDomain,
   version?: string;
 }
@@ -23,10 +24,10 @@ export interface IOhMyPacketContext extends IOhMyContext {
   propertyName?: string;
 }
 
-export interface IPacketPayload<T = unknown> {
+export interface IPacketPayload<T = unknown, U = IOhMyContext> {
   id?: string;
   type: payloadType;
-  context?: IOhMyPacketContext;
+  context?: U
   data?: T;
   description: string;
 }
@@ -36,7 +37,18 @@ export interface IOhMyResponseUpdate {
   response: Partial<IMock>;
 }
 
+export interface IOhMyReadyResponse<T = string> {
+  request: IOhMyAPIRequest;
+  response: IOhMyMockResponse<T>;
+}
+
 export interface IOhMyDispatchServerRequest {
   request: IData | IOhMyUpsertData,
   context: IOhMyContext
+  mock?: { response: unknown, headers: Record<string, string>, statusCode: ohMyStatusCode };
+}
+
+export interface IOhMyImportStatus {
+  id?: string;
+  status: ImportResultEnum;
 }

@@ -18,7 +18,6 @@ import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.com
 import { OhMyStateService } from 'src/app/services/state.service';
 import { OhMyState } from 'src/app/services/oh-my-store';
 import { StorageService } from 'src/app/services/storage.service';
-import { IS_BASE64_RE } from '@shared/constants';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -39,6 +38,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   activeMock$: Observable<IMock>;
   responseType: string;
+  contentType: string;
 
   responseCtrl = new FormControl(null, { updateOn: 'blur' });
   headersCtrl = new FormControl(null, { updateOn: 'blur' });
@@ -86,12 +86,12 @@ export class RequestComponent implements OnChanges, OnDestroy {
         return;
       }
 
-      this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : '';
+      this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : this.response?.headersMock?.['content-type'];
       this.hasMocks = Object.keys(this.request.mocks).length > 0;
 
       this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
-      if (this.response.responseMock.match(IS_BASE64_RE) && this.response.headersMock['content-type'].match(/image/)) {
+      if (this.response.headersMock['content-type'].match(/image/)) {
         this.isResponseImage = true;
       }
     }

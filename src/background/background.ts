@@ -16,24 +16,28 @@ import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
+import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
+// import { injectContent } from './inject-content';
+import { cSPRemoval } from './remove-csp-header';
+import { OhMyImportHandler } from './handlers/import';
+import { sendMsgToContent } from '../shared/utils/send-to-content';
+import { connectWithLocalServer } from './dispatch-remote';
+import { error } from './utils';
 
-// eslint-disable-next-line no-console
-console.log(`${STORAGE_KEY}: background script is ready`);
+// window.onunhandledrejection = function (event) {
+//   const { reason } = event;
+//   const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
 
-window.onunhandledrejection = function (event) {
-  const { reason } = event;
-  const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
+// errorHandler(queue, errorMsg);
+// }
 
-  errorHandler(queue, errorMsg);
-}
+// window.onerror = function (a, b, c, d, stacktrace) {
+//   const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
 
-window.onerror = function (a, b, c, d, stacktrace) {
-  const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
-
-  errorHandler(queue, errorMsg, stacktrace);
-}
+//   errorHandler(queue, errorMsg, stacktrace);
+// }
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
@@ -42,11 +46,16 @@ queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
 queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
-queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
+queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
+queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
-  await StorageUtils.reset();
-  await initStorage();
-  await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN }, { activate: true });
+  try {
+    await StorageUtils.reset();
+    await initStorage(payload.context?.domain);
+    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+  } catch (err) {
+    error('Could not initialize the store', err);
+  }
 });
 
 
@@ -54,7 +63,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload<string>) => {
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 
-const stream$ = messageBus.streamByType$([payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
   [appSources.CONTENT, appSources.POPUP])
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
@@ -63,10 +72,30 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   packet.tabId = sender.tab.id;
   queue.addPacket(packet.payload.type, packet, (result) => {
     callback(result);
+  }).catch(err => {
+    const types = queue.getActiveHandlers();
+    const packet = queue.getQueue(types?.[0])?.[0] as IPacket;
+    queue.removeFirstPacket(types?.[0]); // The first packet in this queue cannot be processed!
+    queue.resetHandler(types?.[0]);
+
+    error(`Could not process packet of type ${types?.[0]}`, packet);
   });
 });
 
-// connectWithLocalServer();
+const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
+  [appSources.CONTENT])
+
+domainStream$.subscribe((msg: IOhMessage) => {
+  cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
+  sendMsgToContent(msg.sender.tab.id, {
+    source: appSources.BACKGROUND,
+    payload: {
+      type: payloadType.CSP_REMOVAL_ACTIVATED,
+      data: true
+    }
+  } as IPacket<boolean>)
+});
+connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;
@@ -86,43 +115,25 @@ chrome.runtime.onInstalled.addListener(function (details) {
   });
 });
 
+chrome.runtime.onSuspend.addListener(function () {
+  // eslint-disable-next-line no-console
+  console.log("Suspending.");
+  chrome.browserAction.setBadgeText({ text: "" });
+});
+
+// cSPRemoval('http://localhost:8000/*')
+
+
 
 chrome.browserAction.onClicked.addListener(async function (tab) {
   // eslint-disable-next-line no-console
   console.log('OhMyMock: Extension clicked', tab.id);
 
   openPopup(tab);
-
-  // You could iterate through the content scripts here
-  const scripts = chrome.runtime.getManifest().content_scripts[0].js;
-  let i = 0;
-  const s = scripts.length;
-  for (; i < s; i++) {
-    chrome.tabs.executeScript(tab.id, {
-      file: scripts[i]
-    });
-  }
-
-  // const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
-
-  // if (domain) {
-  //   await initStorage(domain);
-
-  //   chrome.tabs.executeScript(tab.id,
-  //     {
-  //       code: `document.getElementById('${STORAGE_KEY}')?.getAttribute('data-version')`
-  //     }, (output) => {
-  //       const version = output[0];
-  //       const popup = window.open(
-  //         `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}&contentVersion=${version}`,
-  //         `oh-my-mock-${tab.id}`,
-  //         'menubar=0,innerWidth=900,innerHeight=800'
-  //       );
-  //     }
-  //   );
+  // webRequestListener(tab);
+  // injectContent(tab.id);
 
 
-  // chrome.windows.create({url: `/oh-my-mock/index.html?domain=${domain}&tabId=${tab.id}`, height: 800, width: 900, type: 'popup'});
 
   // TODO:
   // const popupIsActive = false;
@@ -156,6 +167,10 @@ setTimeout(async () => {
 
   const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
   if (!state || Object.keys(state.data).length === 0) {
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN }, { activate: true });
+    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
   }
+});
+
+messageBus.streamByType$(payloadType.PRE_RESPONSE, appSources.CONTENT).subscribe(({ packet, sender, callback }: IOhMessage) => {
+  webRequestListener(sender.tab);
 });

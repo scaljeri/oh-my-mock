@@ -50,18 +50,17 @@ export class OhMyQueue {
   }
 
   // The `callback` is called as soon as the packet has been processed
-  addPacket(packetType: string, packet: unknown, callback?: (result?: unknown) => void): void {
-    // eslint-disable-next-line no-console
-    console.log('----adding packet to queue', packetType, packet);
+  addPacket(packetType: string, packet: unknown, callback?: (result?: unknown) => void): Promise<void> {
     if (!this.queue[packetType]) {
       this.queue[packetType] = [];
     }
 
     this.queue[packetType].push({ data: packet, callback });
-    this.next(packetType);
+
+    return this.next(packetType);
   }
 
-  addHandler(packetType: string, handler: (packet: any) => Promise<unknown>): void {
+  async addHandler(packetType: string, handler: (packet: any) => Promise<unknown>): Promise<void> {
     this.handlers[packetType] = {
       handler: async (packet: any): Promise<void> => {
         const result = await handler(packet.data.payload); // process packet
@@ -69,14 +68,14 @@ export class OhMyQueue {
         packet.callback?.(result);
         this.queue[packetType].shift();
 
-        this.next(packetType);
+        return this.next(packetType);
       }, isActive: false
     };
 
-    this.next(packetType);
+    return this.next(packetType);
   }
 
-  next(packetType: string): void {
+  async next(packetType: string): Promise<void> {
     if (
       !this.hasHandler(packetType) ||
       !this.getQueue(packetType).length ||
@@ -86,6 +85,6 @@ export class OhMyQueue {
     }
 
     this.handlers[packetType].isActive = true;
-    this.handlers[packetType].handler(this.queue[packetType][0]);
+    return this.handlers[packetType].handler(this.queue[packetType][0]);
   }
 }

@@ -1,4 +1,4 @@
-export function blurBase64(base64): Promise<string> {
+export function blurBase64(base64, contentType: string): Promise<string> {
   const img = new Image();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -12,10 +12,14 @@ export function blurBase64(base64): Promise<string> {
 
       r(canvas.toDataURL());
     }
-    img.src = base64;
+    img.src =  `data:${contentType};base64,${base64}`;
   });
 }
 
 export function isImage(contentType: string): boolean {
   return contentType && !!contentType.match(/^image\/(?!svg)/);
+}
+
+export function stripB64Prefix(b64: string): string {
+  return b64.replace(/[^,]+,/, '');
 }

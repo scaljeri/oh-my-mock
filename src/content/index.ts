@@ -1,54 +1,60 @@
 /// <reference types="chrome"/>
-import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyMockResponse, IState } from '../shared/type';
-import { IOhMessage, IOhMyResponseUpdate, IPacket, IPacketPayload } from '../shared/packet-type';
+
+import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
+import { IOhMyAPIRequest, IOhMyInjectedState } from '../shared/type';
+import { IOhMessage, IOhMyResponseUpdate, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
-import { debug } from './utils';
+// import { debug, error } from './utils';
 import { OhMyContentState } from './content-state';
-import { handleApiRequest } from '../shared/utils/handle-api-request';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
+import { sendMessageToInjected } from './send-to-injected';
+import { receivedApiRequest } from './handle-api-request';
+import { BehaviorSubject } from 'rxjs';
+import { handleCSP } from './csp-handler';
+import { handleAPI } from './api';
+import { debug } from './utils';
 
-window[STORAGE_KEY]?.off?.();
+declare let window: any;
 
-const VERSION = '__OH_MY_VERSION__';
+window[STORAGE_KEY]?.off?.forEach(h => h());
+window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)
   .setTrigger(triggerRuntime);
+window[STORAGE_KEY].off.push(() => messageBus.clear());
 
-window[STORAGE_KEY] = { off: () => messageBus.clear() }
+let isInjectedInjected = false;
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
-let isInjectedInjected = false;
-contentState.getStreamFor<IState>(OhMyContentState.host).subscribe(state => {
-  if (isInjectedInjected) {
-    sendMsgToInjected({ type: payloadType.STATE, data: updateStateForInjected(state), description: 'content;contentState.getStreamFor<IState>(OhMyContentState.host)' },);
-  } else if (state?.aux.popupActive || contentState.isPopupOpen) {
-    inject(state);
-  }
-});
+// Activate network listener in background script
+// OhMySendToBg.send({
+//   source: appSources.CONTENT,
+//   payload: { type: payloadType.PRE_RESPONSE, description: 'content:activate-network-listeners' }
+// });
 
-function sendMsgToInjected(payload: IPacketPayload) {
-  try {
-    window.postMessage(JSON.parse(JSON.stringify(
-      {
-        payload,
-        source: appSources.CONTENT
-      })) as IPacket, OhMyContentState.href
-    )
-  } catch (err) {
-    // TODO
+window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) => {
+  if (!inject({ active: value })) {
+    sendMessageToInjected({
+      type: payloadType.STATE,
+      data: {
+        active: value, description: 'content;contentState.isActive'
+      }
+    } as IPacketPayload);
   }
-}
+}));
+
+window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
+handleAPI(messageBus, contentState);
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -72,18 +78,9 @@ function sendKnockKnock() {
 //   //   } as IPacketPayload);
 // }
 
-async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
-  contentState.setPopupOpen(packet.payload.data.active);
-  // TabId is independend of domain, it belongs to the tab!
-  // OhMyContentState.tabId = packet.tabId;
-  // OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT)
-  // contentState.persist();
-
-  // // Domain change (Popup is using wrong domain)
-  // if (packet.domain !== OhMyContentState.host) {
-  //   return sendKnockKnock();
-  // }
-}
+// async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise<void> {
+//   contentState.setPopupOpen(packet.payload.data.active);
+// }
 
 // async function handleDispatchedRequest(packet: IPacket<IOhMyRequest>): Promise<void> {
 //   const result = await handleRequest(packet.payload.data);
@@ -98,10 +95,46 @@ async function handlePopup({ packet }: IOhMessage<{ active: boolean }>): Promise
 // streamByType$(packetTypes.DATA, appSources.BACKGROUND).subscribe(handlePacketFromBg);
 // messageBus.streamByType$<any>(payloadType.KNOCKKNOCK, appSources.POPUP).subscribe(handlePopup);
 
-messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
-messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
+// async function handlePreResponse({ packet }: IOhMessage<IOhMyReadyResponse<unknown>>) {
+// console.log('PACKET', packet);
+// const state = await contentState.getState();
 
-messageBus.streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
+// const response = packet.payload.data.response;
+
+// if (response.status === ohMyMockStatus.NO_CONTENT) {
+//   packet.payload.data.response = await handleApiRequest(packet.payload.data.request, state);
+// }
+
+// console.log('SEND PRE_RESPONSE TO INJECTED', packet.payload);
+
+// sendMessageToInjected({
+//   type: payloadType.PRE_RESPONSE,
+//   data: packet.payload.data,
+//   context: state.context, description: 'content;pre-response'
+// });
+// }
+
+// initPreResponseHandler(messageBus, contentState);
+// messageBus.streamByType$<any>(payloadType.PRE_RESPONSE, appSources.BACKGROUND).subscribe(handlePreResponse);
+
+// TODO
+// messageBus.streamByType$<any>(payloadType.RELOAD, appSources.POPUP).subscribe(({ packet }) => {
+
+//   eval('const x = 10');
+//   fetch('data:text/plain;charset=utf-8;base64,T2hNeU1vY2s=');
+//   debugger;
+//   window.location.reload();
+// });
+
+// messageBus.streamByType$<any>(payloadType.POPUP_OPEN, appSources.POPUP).subscribe(handlePopup);
+// messageBus.streamByType$<any>(payloadType.POPUP_CLOSED, appSources.POPUP).subscribe(handlePopup);
+
+messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subscribe(async ({ packet }: IOhMessage<IOhMyAPIRequest>) => {
+  const state = await contentState.getState();
+
+  receivedApiRequest(packet, state);
+
+});
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpdate>) {
@@ -114,82 +147,54 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // TODO: send result back to injected???
 }
 
-async function receivedApiRequest({ packet }: IOhMessage<IOhMyAPIRequest>) {
-  if (packet.version !== VERSION) {
-    return window[STORAGE_KEY].off();
-  }
-
-  const { payload } = packet;
-  const state = await contentState.getState();
-  payload.context = { ...state.context, ...payload.context };
-
-  let retVal = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(payload.data, payloadType.DISPATCH_TO_SERVER, payload.context) as IOhMyMockResponse;
-  const result = await handleApiRequest({ ...payload.data, requestType: payload.context.requestType }, state);
-
-  if (result.status === ohMyMockStatus.OK) {
-    if (retVal.status === ohMyMockStatus.OK) { // merge
-      retVal.headers = { ...result.headers, ...retVal.headers };
-    } else {
-      retVal = result;
-    }
-  }
-
-  sendMsgToInjected({
-    type: payloadType.RESPONSE,
-    data: retVal,
-    context: payload.context, description: 'content;receivedApiRequest'
-  });
-}
-
 // Inject XHR/Fetch mocking code and more
 (async function () {
-  let state = await contentState.getState() || StateUtils.init();
+  await contentState.init();
+
+  const state = contentState.state || StateUtils.init();
+
   sendKnockKnock();
 
-  state = updateStateForInjected(state);
-
-  if (state.aux.popupActive) {
-    inject(state);
-  }
+  inject({ active: contentState.isActive(state) });
 })();
 
 
 
 // https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 
-function inject(state: IState) {
-  // eslint-disable-next-line no-console
-  chrome.storage.local.get(null, function (data) { console.log('ALL OhMyMock data: ', data); })
-
-  if (!state) {
-    return;
+function inject(state: IOhMyInjectedState): boolean {
+  // Only inject if OhMyMock is active and not already injeced
+  if (!state || !state?.active || isInjectedInjected) {
+    return false;
   }
 
-  if (!isInjectedInjected) {
-    isInjectedInjected = true;
+  isInjectedInjected = true;
 
-    state = updateStateForInjected(state);
+  // Early inject
+  const el = document.createElement('div');
+  el.setAttribute('onclick', `const KEY='${STORAGE_KEY}';` + `'__OH_MY_INJECTED_CODE__'`);
+  document.documentElement.appendChild(el);
+  el.click();
+  el.remove();
 
-    const actualCode = '(' + function (state) { '__OH_MY_INJECTED_CODE__' } + `)(${JSON.stringify(state)});`;
+  messageBus.streamByType$<boolean>(payloadType.READY, appSources.PRE_INJECTED).subscribe(() => {
     const script = document.createElement('script');
-    script.textContent = actualCode;
+    script.onload = function () {
+      window[STORAGE_KEY].injectionDone$.next(true);
+      script.remove();
+    };
+
+    script.type = "text/javascript";
+    script.setAttribute('oh-my-state', JSON.stringify(state));
+    script.setAttribute('id', `id-${STORAGE_KEY}`);
+    // script.setAttribute('async', 'false');
+    script.setAttribute('defer', ''); // TODO: try `true`
+    script.src = chrome.runtime.getURL('oh-my-mock.js');
     (document.head || document.documentElement).appendChild(script);
-    script.remove();
-  }
+  });
+
+  // eslint-disable-next-line no-console
+  chrome.storage.local.get(null, function (data) { debug('Data dump: ', data); })
+
+  return true;
 }
-
-/* It is somewhat complex to determine whether the popup window is open or not
-First of all, OhMyMock doesn't do anything if the popup is closed. However, it is
-possible that the content script loads and doesn't know if it is open or not. it takes
-too much time for content script to check if it is (it might miss the inital api requests)
-*/
-function updateStateForInjected(state): IState {
-  if (contentState.isPopupOpen === true) {
-    state.aux.popupActive = true;
-  } else if (state.aux.popupActive) {
-    contentState.setPopupOpen(true);
-  }
-
-  return state;
-}
-

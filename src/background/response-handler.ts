@@ -12,44 +12,52 @@ export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate>): Promise<IMock> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IMock> {
     const state = await OhMyResponseHandler.StorageUtils.get<IState>(context.domain);
-
-    let request = StateUtils.findRequest(state, data.request);
-    let response = data.response;
-    let autoActivate = false;
-
-
-    if (!request) {
-      request = DataUtils.init(data.request);
-      autoActivate = state.aux.newAutoActivate;
+    if (!data || !state) {
+      return;
     }
 
-    if (Object.keys(response).length === 1 && response.id) { // delete
-      request = DataUtils.removeResponse(context, request, response.id);
-      await OhMyResponseHandler.StorageUtils.remove(response.id);
-    } else {
-      if (context.path) {
-        response = await OhMyResponseHandler.StorageUtils.get<IMock>(response.id);
-        response = update<IMock>(context.path, response as IMock, context.propertyName, data.response[context.propertyName]);
-      } else { // new, update or delete
-        response = MockUtils.init(await OhMyResponseHandler.StorageUtils.get<IMock>(response.id), response);
+    try {
+
+      let request = StateUtils.findRequest(state, data.request);
+      let response = data.response;
+      let autoActivate = false;
+
+
+      if (!request) {
+        request = DataUtils.init(data.request);
+        autoActivate = state.aux?.newAutoActivate;
       }
 
-      request = DataUtils.addResponse(state.context, request, response, autoActivate);
+      if (response && Object.keys(response).length === 1 && response.id) { // delete
+        request = DataUtils.removeResponse(context, request, response.id);
+        await OhMyResponseHandler.StorageUtils.remove(response.id);
+      } else {
+        if (context.path) {
+          response = await OhMyResponseHandler.StorageUtils.get<IMock>(response.id);
+          response = update<IMock>(context.path, response as IMock, context.propertyName, data.response[context.propertyName]);
+        } else { // new, update or delete
+          response = MockUtils.init(await OhMyResponseHandler.StorageUtils.get<IMock>(response.id), response);
+        }
+
+        request = DataUtils.addResponse(state.context, request, response, autoActivate);
+      }
+
+      OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
+        payload: {
+          data: request,
+          context: {
+            path: `$.data`,
+            propertyName: request.id,
+            domain: state.domain
+          } as IOhMyPacketContext
+        }
+      });
+
+      return StorageUtils.set(response.id, response).then(() => response as IMock);
+    } catch (err) {
+
     }
-
-    OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
-      payload: {
-        data: request,
-        context: {
-          path: `$.data`,
-          propertyName: request.id,
-          domain: state.domain
-        } as IOhMyPacketContext
-      }
-    });
-
-    return StorageUtils.set(response.id, response).then(() => response as IMock);
   }
 }

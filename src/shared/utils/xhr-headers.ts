@@ -1,4 +1,4 @@
-export const parse = (headers: string): Record<string, string> => {
+export const parse = (headers = ''): Record<string, string> => {
   return headers.split('\r\n').reduce((s, n) => {
     if (n) {
       const split = n.split(': ');

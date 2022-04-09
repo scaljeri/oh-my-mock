@@ -64,7 +64,8 @@ export class AnonymizeComponent implements OnInit {
 
   applyRules(jsonStr = this.mock.responseMock): unknown {
     const rules = this.rules.filter(r => r.type && r.path);
-    const json = JSON.parse(jsonStr);
+    // deep clone
+    const json = JSON.parse(typeof jsonStr === 'string' ? jsonStr : JSON.stringify(jsonStr));
 
     rules.forEach(r => {
       JSONPath({

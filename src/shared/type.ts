@@ -1,4 +1,5 @@
 import { MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, resetStateOptions, STORAGE_KEY } from './constants';
+import { ImportResultEnum } from './utils/import-json';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';
@@ -28,15 +29,16 @@ export interface IOhMyMock {
 
 export interface IOhMyAux {
   filterKeywords?: string;
-  appActive?: boolean;
   newAutoActivate?: boolean;
+  appActive?: boolean;
   popupActive?: boolean;
   blurImages?: boolean;
 }
 
 export interface IOhMyContext {
-  preset?: ohMyPresetId;
   domain: ohMyDomain;
+  preset?: ohMyPresetId;
+  active?: boolean;
 }
 
 export interface IState {
@@ -156,7 +158,7 @@ export interface IOhMyAPIRequest {
   url: string;
   method: requestMethod;
   requestType: requestType;
-  body: unknown;
+  body?: unknown;
   headers: Record<string, string>;
 }
 
@@ -188,4 +190,8 @@ export interface IOhMyBackup {
   requests: IData[],
   responses: IMock[],
   version: string;
+}
+
+export interface IOhMyInjectedState {
+  active: boolean;
 }

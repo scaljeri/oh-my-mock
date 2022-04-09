@@ -1,5 +1,5 @@
 import { objectTypes } from '../constants';
-import { IData, IMock, IOhMyMockSearch, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IOhMyPresets } from '../type';
+import { IData, IMock, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IOhMyPresets } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -110,7 +110,7 @@ export class DataUtils {
       type: objectTypes.REQUEST,
     } as IData;
 
-    if (!data.id) {
+    if (!data?.id && data?.url) {
       output.url = url2regex(data.url);
     }
 
@@ -121,14 +121,18 @@ export class DataUtils {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  static prefilWithPresets(request: IData, presets: IOhMyPresets = {}): IData {
+  static prefilWithPresets(request: IData, presets: IOhMyPresets = {}, active?): IData {
     request.selected ??= {};
     request.enabled ??= {};
 
     const responses = Object.values(request.mocks).sort(DataUtils.statusCodeSort);
 
     Object.keys(presets).forEach(p => {
-      request.enabled[p] ??= false;
+      if (active !== undefined) {
+        request.enabled[p] = active;
+      } else {
+        request.enabled[p] ??= false;
+      }
       request.selected[p] ??= responses[0]?.id;
     });
 

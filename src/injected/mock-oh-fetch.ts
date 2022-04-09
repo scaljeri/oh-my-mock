@@ -1,114 +1,92 @@
 import { IOhMyAPIRequest, requestMethod } from '../shared/type';
 
 import * as fetchUtils from '../shared/utils/fetch';
-import { dispatchApiResponse } from './message/dispatch-api-response';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { isBinary, toBlob, toDataURL } from '../shared/utils/binary';
-import { logging } from '../shared/utils/log';
-
-export const debug = logging(`${STORAGE_KEY} (^*^) DEBUG`);
-export const log = logging(`${STORAGE_KEY} (^*^)`, true);
+import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
+import { patchHeaders, unpatchHeaders } from './fetch/headers';
+import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
+import { patchResponseJson, unpatchResponseJson } from './fetch/json';
+import { patchResponseText, unpatchResponseText } from './fetch/text';
+import { patchStatus, unpatchStatus } from './fetch/status';
+import { persistResponse } from './fetch/persist-response';
+import { error } from './utils';
 
 interface IOhFetchConfig {
   method?: requestMethod;
-  __ohSkip?: boolean; // Use Fetch without caching or mocking
   headers?: Headers & { entries: () => [string, string][] }; // TODO: entries is not known in Headers
   body?: FormData | unknown;
 }
 
-declare let window: { fetch: any, [STORAGE_KEY]: any };
-window[STORAGE_KEY] ??= {};
+declare let window: { fetch: any };
 
-const OhMyFetch = async (url: string | Request, config: IOhFetchConfig = {}) => {
-  if (config.__ohSkip) {
-    return fecthApi(url, config);
+async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {}) {
+  if (!window[STORAGE_KEY].state?.active) {
+    return window[STORAGE_KEY]['__fetch'].call(window, request, config);
   }
 
-  if (url instanceof Request) {
-    config = { headers: url.headers as any, method: url.method as requestMethod };
-    url = url.url;
+  let url = request as string;
+  if (request instanceof Request) {
+    config = { headers: request.headers as any, method: request.method as requestMethod };
+    url = request.url;
   }
 
   if (config.body instanceof FormData) {
     const fd = {};
     config.body.forEach((value, key) => fd[key] = value);
     config.body = fd;
-
   }
 
-  const { response, headers, status, statusCode, delay } =
-    await dispatchApiRequest({
-      url,
-      method: config.method || 'GET',
-      ...(config.body && { body: config.body }),
-      ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
-    } as IOhMyAPIRequest, 'FETCH');
+
+  const result = await dispatchApiRequest({
+    url,
+    method: config.method || 'GET',
+    ...(config.body && { body: config.body }),
+    ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
+  } as IOhMyAPIRequest, 'FETCH');
+
+  const { response, headers, status, statusCode, delay } = result.response;
 
   if (status === ohMyMockStatus.ERROR) {
-    log('Ooops, something went wrong while mocking your FETCH request!')
+    error('Ooops, something went wrong while mocking your FETCH request!')
   }
 
   if (status !== ohMyMockStatus.OK) {
-    return fecthApi(url, config);
+    return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
+      response.ohResult = await persistResponse(response, result.request);
+
+      return response;
+    });
   }
 
-  return new Promise(async (resolv, reject) => {
-    let body = null
+  return new Promise(resolve => {
+    const resp = new Response();
+    resp['ohUrl'] = url;
+    resp['ohMethod'] = config.method;
 
-
-    if (response !== undefined && statusCode !== 204) { // Otherwise error with statuscode 204 (No content)
-      if (isBinary(headers['content-type'])) {
-        body = await toBlob(response as string);
-      } else {
-        body = new Blob([response as any], { type: headers['content-type'] });
-      }
-    }
-
-    const rsp = new Response(body, {
-      headers: fetchUtils.jsonToHeaders(headers || {}),
-      status: statusCode
-    });
-    setTimeout(() => resolv(rsp), delay || 0);
-  });
-}
-
-function fecthApi(url, config): Promise<unknown> {
-  const ohSkip = config.__ohSkip;
-  delete config.__ohSkip;
-
-  return window[STORAGE_KEY].fetch.call(window, url, config).then(async response => {
-    if (!ohSkip) {
-      const clone = response.clone();
-
-      const headers = response.headers ? fetchUtils.headersToJson(response.headers) : {};
-      await dispatchApiResponse({
-        request: {
-          url,
-          method: config.method || 'GET',
-          requestType: 'FETCH',
-        },
-        response: {
-          statusCode: response.status,
-          response: await (isBinary(headers['content-type']) ? toDataURL(await clone.blob()) : clone.text()),
-          headers
-        }
-      });
-    }
-
-    return response;
+    setTimeout(() => resolve(resp), delay || 0);
   });
 }
 
 function patchFetch(): void {
-  window[STORAGE_KEY].fetch ??= window.fetch;
-  window.fetch = OhMyFetch;
+  window[STORAGE_KEY].fetch = ohMyFetch;
+  patchResponseBlob();
+  patchResponseArrayBuffer();
+  patchResponseJson();
+  patchResponseText();
+  patchHeaders();
+  patchStatus();
 }
 
 function unpatchFetch(): void {
-  if (window[STORAGE_KEY].fetch) {
-    window.fetch = window[STORAGE_KEY].fetch;
+  if (XMLHttpRequest.prototype['__fetch']) {
+    unpatchResponseBlob();
+    unpatchResponseArrayBuffer();
+    unpatchResponseJson();
+    unpatchResponseText();
+    unpatchHeaders();
+    unpatchStatus();
   }
 }
 
-export { OhMyFetch, unpatchFetch, patchFetch };
+export { unpatchFetch, patchFetch };

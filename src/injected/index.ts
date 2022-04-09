@@ -1,47 +1,52 @@
 import { STORAGE_KEY } from '../shared/constants';
-import { IState } from '../shared/type';
+import { IOhMyInjectedState } from '../shared/type';
+import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
-import { ohMyState$ } from './state-manager';
+import { setupListenersMessageBus } from './state-manager';
 import { log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
-declare let window: any;
-declare let state: IState;
+declare let window: any & { [STORAGE_KEY]: Record<string, any> };
 
 let isOhMyMockActive = false;
 
+window[STORAGE_KEY]?.off?.forEach(c => c());
 window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-window[STORAGE_KEY] ??= {};
+window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false };
 window[STORAGE_KEY].version = VERSION;
-window[STORAGE_KEY].state = state;
+window[STORAGE_KEY].off = [];
+window[STORAGE_KEY].cache = [];
 
-handleStateUpdate(state);
-// hasCSPIssues();
-
-const sub = ohMyState$.subscribe((state: IState) => {
+const streams = setupListenersMessageBus();
+const sub = streams.stateUpdate$.subscribe((state: IOhMyInjectedState) => {
   handleStateUpdate(state);
 });
+window[STORAGE_KEY].off.push(() => sub.unsubscribe());
 
-function handleStateUpdate(state: IState): void {
+initApi(streams.externalApiResult$);
+
+function handleStateUpdate(state: IOhMyInjectedState): void {
   if (!state) {
     return;
   }
+  window[STORAGE_KEY].state = state;
 
-  // Did activity change?
-  // if (!ohMyState || ohMyState.aux.appActive !== state.aux.appActive) {
-  if (state.aux.popupActive && state.aux.appActive) {
+  if (state.active) {
     if (!isOhMyMockActive) {
       isOhMyMockActive = true;
-      log('%c*** Activated ***', 'background: green');
+      log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
       patchXmlHttpRequest();
       patchFetch();
+      notify(true)
     }
   } else {
+    window[STORAGE_KEY].cache = [];
     isOhMyMockActive = false;
     unpatchXmlHttpRequest();
     unpatchFetch();
-    log('%c*** Deactivated ***', 'background: red');
+    log('*** Deactivated ***%c Removed XHR and FETCH patches', 'background: red;padding:3px;margin-right:5px', 'background-color: transparent');
+    notify(false)
   }
 }
 
@@ -49,4 +54,19 @@ window[STORAGE_KEY].unpatch = () => {
   unpatchXmlHttpRequest();
   unpatchFetch();
   sub.unsubscribe();
+}
+
+const state = JSON.parse(document.querySelector(`#id-${STORAGE_KEY}`).getAttribute('oh-my-state'));
+handleStateUpdate(state);
+
+function notify(isActive: boolean) {
+  window.postMessage({
+    source: 'ohmymock',
+    payload: {
+      type: 'message',
+      data: {
+        isActive
+      }
+    }
+  }, window.location.origin);
 }

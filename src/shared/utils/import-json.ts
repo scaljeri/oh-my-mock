@@ -1,3 +1,4 @@
+import { IOhMyImportStatus } from '../packet-type';
 import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '../type';
 import { DataUtils } from './data';
 import { MigrateUtils } from './migrate';
@@ -7,12 +8,9 @@ import { StorageUtils } from './storage';
 export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
 }
-export interface IOhMyImportResult {
-  status: ImportResultEnum;
-}
 
-export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { activate = false } = {}): Promise<IOhMyImportResult> {
-  const state = await StorageUtils.get<IState>(context.domain) || StateUtils.init(context);
+export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
+  const state = await sUtils.get<IState>(context.domain) || StateUtils.init(context);
 
   let status = ImportResultEnum.SUCCESS;
   let requests = data.requests as unknown as IData[];
@@ -20,7 +18,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
 
   if (MigrateUtils.shouldMigrate({ version: data.version })) {
     requests = requests.map((r: IData) => {
-      r.enabled = { ...r.enabled, [state.context.preset]: activate };
+      r.enabled = { ...r.enabled, [state.context.preset]: context.active };
       return MigrateUtils.migrate(r);
     }) as IData[];
     responses = data.responses.map(MigrateUtils.migrate) as IMock[];
@@ -31,15 +29,15 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, { act
 
     for (let request of requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1)) {
       request.lastHit = timestamp++; // make sure they each have a unique timestamp!
-      request = DataUtils.prefilWithPresets(request, state.presets);
+      request = DataUtils.prefilWithPresets(request, state.presets, context.active);
       state.data[request.id] = request;
     }
 
     for (const response of responses) {
-      await StorageUtils.set(response.id, response);
+      await sUtils.set(response.id, response);
     }
 
-    await StorageUtils.set(state.domain, state);
+    await sUtils.set(state.domain, state);
   } else {
     status = ImportResultEnum.TOO_OLD;
   }

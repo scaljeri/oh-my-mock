@@ -1,4 +1,4 @@
-export const STORAGE_KEY = 'OhMyMocks';
+export const STORAGE_KEY = 'OhMyMock';
 export const OH_MY_TICK = 'tick';
 
 export const MOCK_JS_CODE = `/* This is where OhMyMock creates responses.
@@ -64,7 +64,7 @@ export enum payloadType {
   // EVAL_RESULT = 'eval-result',
   DATA = 'data',
   // DATA_DISPATCH = 'data-dispatch',
-  DISPATCH_API_REQUEST = 'dispatch-request',
+  API_REQUEST = 'api-request',
   DISPATCH_API_RESPONSE = 'api-response',
   DISPATCH_TO_SERVER = 'dispatch-to-server',
   // MOCK_RESPONSE = 'mock-response'
@@ -73,12 +73,21 @@ export enum payloadType {
   ERROR = 'error',
   POPUP_CLOSED = 'popup-closed',
   POPUP_OPEN = 'popup-open',
+  PRE_RESPONSE = 'pre-response',
+  UPSERT = 'upsert',
+  CRUD = 'crud',
+  SETTINGS = 'settings',
+  CSP_REMOVAL_ACTIVATED = 'csp-removal-started',
+  READY = 'ready',
+  OHMYMOCK_API_OUTPUT = 'ohmymock-api-output'
 }
 export enum appSources {
   INJECTED = 'injected',
   CONTENT = 'content',
   POPUP = 'popup',
-  BACKGROUND = 'background'
+  BACKGROUND = 'background',
+  EXTERNAL = 'external',
+  PRE_INJECTED = 'pre-injected',
 }
 
 export enum resetStateOptions {
