@@ -92,6 +92,7 @@ function xhrInjectResponse(xhr) {
   // const srcBlob = URL.createObjectURL(blob);
   // window.ohMyMockTest.responseFn(blob);
   console.debug('------------ xhr ------------');
+
   const response = xhr.response;
   if (response instanceof Uint8Array) {
     window.ohMyMockTest.responseFn(new Blob([response]));
