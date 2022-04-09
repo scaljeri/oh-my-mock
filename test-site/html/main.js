@@ -49,7 +49,20 @@ ohMyMockTest.resetFn = () => {
   ohMyMockTest.responseFn('');
 };
 
-window.onSubmit = () => {
+function handleUrl(formData) {
+  const url = new URL(window.location.href);
+  const newUrl =
+    url.origin +
+    '?' +
+    [...formData.entries()].map((kv) => `${kv[0]}=${kv[1]}`).join('&');
+  window.history.pushState(
+    Object.fromEntries(formData),
+    'OhMyMock DEMO page',
+    newUrl
+  );
+}
+
+window.onSubmit = (skipHistory) => {
   try {
     const form = document.forms[0];
     const fd = new FormData(form);
@@ -58,6 +71,10 @@ window.onSubmit = () => {
     ohMyMockTest.method = fd.get('method');
     ohMyMockTest.response = fd.get('response');
     ohMyMockTest.responseType = fd.get('responseType');
+
+    if (!skipHistory) {
+      handleUrl(fd);
+    }
 
     ohMyMockTest.starttime = Date.now();
     const interId = setInterval(() => ohMyMockTest.durationFn(), 100);
@@ -91,10 +108,21 @@ const response = (params.response || 'png').toLowerCase();
 const responseType = params.responseType || 'blob';
 
 document.addEventListener('DOMContentLoaded', (event) => {
-  document.querySelector('[name=type]').value = type;
-  document.querySelector('[name=method]').value = method;
-  document.querySelector('[name=response]').value = response;
-  document.querySelector('[name=responseType]').value = responseType;
+  updateForm({ type, method, response, responseType });
 
-  window.onSubmit();
+  window.onSubmit(true);
 });
+
+window.onpopstate = function (e) {
+  if (e.state) {
+    updateForm(e.state);
+    window.onSubmit(true);
+  }
+};
+
+function updateForm(values) {
+  document.querySelector('[name=type]').value = values.type;
+  document.querySelector('[name=method]').value = values.method;
+  document.querySelector('[name=response]').value = values.response;
+  document.querySelector('[name=responseType]').value = values.responseType;
+}
