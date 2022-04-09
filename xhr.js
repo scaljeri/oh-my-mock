@@ -1,16 +1,22 @@
-window.ohMyMockTest.xhr = (method, responseType, cb) => {
+window.ohMyMockTest.xhr = (method, response, responseType, cb) => {
   const xhr = new XMLHttpRequest();
-  if (responseType === 'png') {
-    xhr.responseType = 'blob'; // 'arraybuffer'; // 'blob';
-  }
-  xhr.open(method, ohMyMockTest.urlMap[responseType]);
+  xhr.responseType = responseType.toLowerCase(); // 'arraybuffer'; // 'blob';
+
+  xhr.open(method, ohMyMockTest.urlMap[response]);
   xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
 
-  xhr.onreadystatechange = cb;
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      // cb();
+    }
+  };
+
+  // Both methods should fire, otherwise it will not work!!
   let count = 0;
   xhr.addEventListener('load', (res) => {
     count++;
     if (count === 2) {
+      cb();
       xhrInjectResponse(xhr);
     }
   });
@@ -18,29 +24,22 @@ window.ohMyMockTest.xhr = (method, responseType, cb) => {
   xhr.onload = () => {
     count++;
     if (count === 2) {
+      cb();
       xhrInjectResponse(xhr);
     }
   };
 
-  // const own = Object.getOwnPropertyDescriptor(
-  //   XMLHttpRequest.prototype,
-  //   'response'
-  // );
-  // delete own.value;
-  // delete own.writable;
-
-  const response = {};
+  // const response = {};
 
   // Reflect.get(XMLHttpRequest.prototype, "response", 'yolo');
-  console.log('XHR2 send');
-  xhr.send(method === 'POST' ? { x: 10 } : null);
-  xhr.addEventListener('loadend', () => {
-    console.log('done');
-    console.log(xhr);
-    setTimeout(() => {
-      response.data = 'yolo';
-    });
-  });
+  xhr.send(method === 'post' ? { x: 10 } : null);
+  // xhr.addEventListener('loadend', () => {
+  //   console.log('done');
+  //   console.log(xhr);
+  //   setTimeout(() => {
+  //     response.data = 'yolo';
+  //   });
+  // });
 
   // const descriptor = Object.getOwnPropertyDescriptor(
   //   window.XMLHttpRequest.prototype,
@@ -92,7 +91,7 @@ function xhrInjectResponse(xhr) {
   // const blob = new Blob([xhr.response]);
   // const srcBlob = URL.createObjectURL(blob);
   // window.ohMyMockTest.responseFn(blob);
-  console.log('------------ xhr ------------');
+  console.debug('------------ xhr ------------');
   const response = xhr.response;
   if (response instanceof Uint8Array) {
     window.ohMyMockTest.responseFn(new Blob([response]));
