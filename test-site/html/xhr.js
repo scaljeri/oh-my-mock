@@ -2,7 +2,7 @@ window.ohMyMockTest.xhr = (method, response, responseType, cb) => {
   const xhr = new XMLHttpRequest();
   xhr.responseType = responseType.toLowerCase(); // 'arraybuffer'; // 'blob';
 
-  xhr.open(method, ohMyMockTest.urlMap[response);
+  xhr.open(method, ohMyMockTest.urlMap[response]);
   xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
 
   xhr.onreadystatechange = () => {
