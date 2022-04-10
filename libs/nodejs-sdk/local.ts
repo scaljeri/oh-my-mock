@@ -40,7 +40,7 @@ export class OhMyLocal {
 
   // If a context is defined for `data`, it will update and return `mock`. If not, the
   // original `mock` object is returned
-  async updateMock(data: IOhMyDispatchServerRequest): Promise<IOhMyMockResponse> {
+  async updateMock(data: IOhMyDispatchServerRequest): Promise<IOhMySdkResponse> {
     const context = this.findContext(data.request);
     if (!context) {
       // eslint-disable-next-line no-console
