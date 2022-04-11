@@ -18,6 +18,7 @@ import { BehaviorSubject } from 'rxjs';
 import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
 import { debug, error } from './utils';
+import { injectCode } from './inject-code';
 
 declare let window: any;
 
@@ -174,39 +175,16 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
 
 // https://stackoverflow.com/questions/9515704/use-a-content-script-to-access-the-page-context-variables-and-functions
 
-function inject(state: IOhMyInjectedState): boolean {
+async function inject(state: IOhMyInjectedState): Promise<boolean> {
   // Only inject if OhMyMock is active and not already injeced
-  if (!state || !state?.active || isInjectedInjected) {
-    return false;
+  if (!isInjectedInjected) {
+    isInjectedInjected = await injectCode(state);
+
+    if (isInjectedInjected) {
+      // eslint-disable-next-line no-console
+      chrome.storage.local.get(null, function (data) { debug('Data dump: ', data); })
+    }
   }
 
-  isInjectedInjected = true;
-
-  // Early inject
-  const el = document.createElement('div');
-  el.setAttribute('onclick', `const KEY='${STORAGE_KEY}';` + `'__OH_MY_INJECTED_CODE__'`);
-  document.documentElement.appendChild(el);
-  el.click();
-  el.remove();
-
-  messageBus.streamByType$<boolean>(payloadType.READY, appSources.PRE_INJECTED).subscribe(() => {
-    const script = document.createElement('script');
-    script.onload = function () {
-      window[STORAGE_KEY].injectionDone$.next(true);
-      script.remove();
-    };
-
-    script.type = "text/javascript";
-    script.setAttribute('oh-my-state', JSON.stringify(state));
-    script.setAttribute('id', `id-${STORAGE_KEY}`);
-    // script.setAttribute('async', 'false');
-    script.setAttribute('defer', ''); // TODO: try `true`
-    script.src = chrome.runtime.getURL('oh-my-mock.js');
-    (document.head || document.documentElement).appendChild(script);
-  });
-
-  // eslint-disable-next-line no-console
-  chrome.storage.local.get(null, function (data) { debug('Data dump: ', data); })
-
-  return true;
+  return isInjectedInjected;
 }

@@ -1,5 +1,7 @@
 window.addEventListener('message', e => {
- console.log('this is a test', e);
+ if (e.data.source === 'content') {
+  console.log('this is a test', e);
+ }
 })
 
 window.postMessage({

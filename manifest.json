@@ -22,7 +22,8 @@
     {
       "matches": ["<all_urls>"],
       "run_at": "document_start",
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "all_frames": true
     }
   ],
   "web_accessible_resources": ["oh-my-mock.js.map", "oh-my-mock.js", "oh-my-mock/index.html"],

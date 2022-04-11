@@ -40,6 +40,8 @@ module.exports = (on, config) => {
   on('before:browser:launch', (browser, launchOptions) => {
     launchOptions.extensions.push(path.join(__dirname, '..', '..', 'dist'));
 
+    launchOptions.args.push('--auto-open-devtools-for-tabs')
+
     return launchOptions;
   });
 };

@@ -3,6 +3,7 @@ import { payloadType } from "../../shared/constants";
 import { IOhMessage, IOhMyImportStatus } from "../../shared/packet-type";
 import { OhMySendToBg } from "../../shared/utils/send-to-background";
 import { OhMyContentState } from "../content-state";
+import { injectCode } from "../inject-code";
 import { sendMessageToInjected } from "../send-to-injected";
 
 export function handleAPISettings(contentState: OhMyContentState) {
@@ -18,6 +19,10 @@ export function handleAPISettings(contentState: OhMyContentState) {
 
     if (data.blurImages !== undefined) {
       result = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE);
+    }
+
+    if (data.active) {
+      await injectCode({active: true});
     }
 
     sendMessageToInjected({

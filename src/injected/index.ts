@@ -12,7 +12,7 @@ declare let window: any & { [STORAGE_KEY]: Record<string, any> };
 let isOhMyMockActive = false;
 
 window[STORAGE_KEY]?.off?.forEach(c => c());
-window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
+// window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
 window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false };
 window[STORAGE_KEY].version = VERSION;
 window[STORAGE_KEY].off = [];
