@@ -1,6 +1,6 @@
 import { findCachedResponse } from "../utils";
 import * as headers from '../../shared/utils/xhr-headers';
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__getResponseHeader');
@@ -11,6 +11,10 @@ export function patchResponseHeaders() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'getAllResponseHeaders', {
     ...descrAllHeaders,
     value: function () {
+      if (!window[STORAGE_KEY]?.state.active) {
+        return this.__getAllResponseHeaders();
+      }
+
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
@@ -35,6 +39,10 @@ export function patchResponseHeaders() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'getResponseHeader', {
     ...descrHeader,
     value: function (header: string) {
+      if (!window[STORAGE_KEY]?.state.active) {
+        return this.__getResponseHeader();
+      }
+
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),

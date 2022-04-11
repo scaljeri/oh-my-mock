@@ -1,3 +1,4 @@
+import { STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__status');
@@ -7,6 +8,10 @@ export function patchStatus() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'status', {
     ...descriptor,
     get: function () {
+      if (!window[STORAGE_KEY].state.active) {
+        return this.__status;
+      }
+
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),

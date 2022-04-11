@@ -1,4 +1,4 @@
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { b64ToArrayBuffer } from "../../shared/utils/binary";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
@@ -11,6 +11,10 @@ export function patchResponseArrayBuffer() {
     arrayBuffer: {
       ...descriptor,
       value: function () {
+        if (!window[STORAGE_KEY].state.active) {
+          return this.__arrayBuffer();
+        }
+
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),

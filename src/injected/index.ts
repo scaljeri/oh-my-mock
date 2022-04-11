@@ -13,7 +13,7 @@ let isOhMyMockActive = false;
 
 window[STORAGE_KEY]?.off?.forEach(c => c());
 // window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false };
+window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false, state: { active: false } };
 window[STORAGE_KEY].version = VERSION;
 window[STORAGE_KEY].off = [];
 window[STORAGE_KEY].cache = [];
@@ -23,6 +23,9 @@ const sub = streams.stateUpdate$.subscribe((state: IOhMyInjectedState) => {
   handleStateUpdate(state);
 });
 window[STORAGE_KEY].off.push(() => sub.unsubscribe());
+
+patchXmlHttpRequest();
+patchFetch();
 
 initApi(streams.externalApiResult$);
 
@@ -36,15 +39,15 @@ function handleStateUpdate(state: IOhMyInjectedState): void {
     if (!isOhMyMockActive) {
       isOhMyMockActive = true;
       log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
-      patchXmlHttpRequest();
-      patchFetch();
+      // patchXmlHttpRequest();
+      // patchFetch();
       notify(true)
     }
   } else {
     window[STORAGE_KEY].cache = [];
     isOhMyMockActive = false;
-    unpatchXmlHttpRequest();
-    unpatchFetch();
+    // unpatchXmlHttpRequest();
+    // unpatchFetch();
     log('*** Deactivated ***%c Removed XHR and FETCH patches', 'background: red;padding:3px;margin-right:5px', 'background-color: transparent');
     notify(false)
   }

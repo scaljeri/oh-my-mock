@@ -1,5 +1,6 @@
 import { IS_BASE64_RE } from "../constants";
 import { isImage } from "./image";
+import { errorBuilder } from "./logging";
 
 // TODO
 
@@ -49,23 +50,41 @@ export function blobToDataURL(response: Blob, cb?): Promise<string> {
 // }
 
 // TODO: does this work the same way as toBlob?????
-export function b64ToBlob(b64Data: string, contentType = '', sliceSize = 512) {
-  const byteCharacters = window.atob(b64Data);
-  const byteArrays = [];
+export function b64ToBlob(b64Data: unknown, contentType = '', sliceSize = 512) {
+  if (typeof b64Data === 'object') {
+    return objToBlob(b64Data);
+  } else if (typeof b64Data === 'string') {
+    const byteCharacters = window.atob(b64Data);
+    const byteArrays = [];
 
-  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      const slice = byteCharacters.slice(offset, offset + sliceSize);
 
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
     }
 
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
+    const blob = new Blob(byteArrays, { type: contentType });
+    return blob;
+  } else {
+    errorBuilder()('Ooops, you tried to convert something unknown into a Blob, which is not supported!');
+    errorBuilder()('If what you do is correct, please fill in a feature report!!');
+    errorBuilder()('Your input data is:', b64Data, contentType);
   }
+}
 
-  const blob = new Blob(byteArrays, { type: contentType });
+export function objToBlob(json: any, contentType = 'application/json;charset=utf-8'): Blob {
+  const str = JSON.stringify(json);
+  const bytes = new TextEncoder().encode(str);
+  const blob = new Blob([bytes], {
+    type: contentType
+  });
+
   return blob;
 }
 

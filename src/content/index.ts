@@ -56,7 +56,7 @@ OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 // });
 
 window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) => {
-  if (!inject({ active: value })) {
+  if (inject({ active: value })) {
     sendMessageToInjected({
       type: payloadType.STATE,
       data: {
