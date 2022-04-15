@@ -61,6 +61,7 @@ import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
 import { ShowErrorsComponent } from './show-errors/show-errors.component';
 import { MockImageComponent } from './mock-image/mock-image.component';
+import { StatusCodeComponent } from './form/status-code/status-code.component';
 
 @NgModule({
   declarations: [
@@ -94,7 +95,8 @@ import { MockImageComponent } from './mock-image/mock-image.component';
     PresetComponent,
     FeedbackComponent,
     ShowErrorsComponent,
-    MockImageComponent
+    MockImageComponent,
+    StatusCodeComponent
   ],
   imports: [
     CommonModule,
@@ -143,7 +145,8 @@ import { MockImageComponent } from './mock-image/mock-image.component';
     LinkComponent,
     DialogCodeEditorComponent,
     FeedbackComponent,
-    MockImageComponent
+    MockImageComponent,
+    StatusCodeComponent
   ],
   providers: [
     Location,

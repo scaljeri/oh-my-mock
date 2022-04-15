@@ -87,11 +87,12 @@ export class RequestComponent implements OnChanges, OnDestroy {
       }
 
       this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : this.response?.headersMock?.['content-type'];
+      this.isResponseImage = false;
       this.hasMocks = Object.keys(this.request.mocks).length > 0;
 
       this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
-      if (this.response.headersMock['content-type'].match(/image/)) {
+      if (this.response.headersMock['content-type']?.match(/image/)) {
         this.isResponseImage = true;
       }
     }

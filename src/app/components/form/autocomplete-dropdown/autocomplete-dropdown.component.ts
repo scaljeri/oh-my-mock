@@ -22,6 +22,7 @@ import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/m
 })
 export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, ControlValueAccessor {
   @Input() options: string[];
+  @Input() optionLabels: Record<string, string> = {};
   @Input() label: string;
   @Input() showAllOnFocus = false;
   @Input() clearOnFocus = false;
