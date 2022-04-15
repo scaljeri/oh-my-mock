@@ -14,9 +14,9 @@ mat-toolbar {
   position: relative;
 
   h1 {
-    flex: 1;
     @include oh-ellipsis;
-    padding-right: $spacer-2;
+    position: relative;
+    padding-right: $spacer-7 + $spacer-5;
 
     .dash {
       padding: 0 $spacer-2;
@@ -31,8 +31,8 @@ mat-toolbar {
   transform: translate(-50%);
   border-radius: 5px;
   border: 5px solid #fff;
-  padding: $spacer-2;
-  top: 40px;
+  padding: $spacer-2 $spacer-2 $spacer-1;
+  top: 43px;
   z-index: 1;
 }
 
@@ -72,11 +72,16 @@ oh-my-feedback {
   z-index: 1;
 }
 
+mat-slide-toggle {
+  @include oh-position(absolute, 50% $spacer-2 0 0);
+  transform: translateY(-50%);
+}
+
 .buy-me-a-coffee {
   align-items: center;
   display: inline-flex;
   height: 100%;
-  margin-right: $spacer-4;
+  margin-left: auto;
 
   img {
     height: 50%;

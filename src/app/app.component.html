@@ -32,18 +32,22 @@
         <mat-icon>error</mat-icon>
       </button>
 
-      <h1>
+      <h1 class="title">
         <span>Oh My Mock v{{ version }}</span> <span class="dash">-</span>
         <span>{{ domain }}</span>
+        <mat-slide-toggle
+          (change)="onEnableChange($event.checked)"
+          [checked]="enabled"
+          [color]="color"
+        ></mat-slide-toggle>
       </h1>
-      <a class="buy-me-a-coffee" target="_blank" href="https://www.buymeacoffee.com/ohmymock">
+      <a
+        class="buy-me-a-coffee"
+        target="_blank"
+        href="https://www.buymeacoffee.com/ohmymock"
+      >
         <img src="assets/images/buy-me-a-coffee.png" />
       </a>
-      <mat-slide-toggle
-        (change)="onEnableChange($event.checked)"
-        [checked]="enabled"
-        [color]="color"
-      ></mat-slide-toggle>
     </mat-toolbar>
     <div
       *ngIf="!enabled && showDisabled !== 1 && domain"
