@@ -71,3 +71,14 @@ oh-my-feedback {
   transform: translateY(-50%);
   z-index: 1;
 }
+
+.buy-me-a-coffee {
+  align-items: center;
+  display: inline-flex;
+  height: 100%;
+  margin-right: $spacer-4;
+
+  img {
+    height: 50%;
+  }
+}

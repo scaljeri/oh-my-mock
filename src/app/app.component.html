@@ -36,13 +36,19 @@
         <span>Oh My Mock v{{ version }}</span> <span class="dash">-</span>
         <span>{{ domain }}</span>
       </h1>
+      <a class="buy-me-a-coffee" target="_blank" href="https://www.buymeacoffee.com/ohmymock">
+        <img src="assets/images/buy-me-a-coffee.png" />
+      </a>
       <mat-slide-toggle
         (change)="onEnableChange($event.checked)"
         [checked]="enabled"
         [color]="color"
       ></mat-slide-toggle>
     </mat-toolbar>
-    <div *ngIf="!enabled && showDisabled !== 1 && domain" class="disabled-notification">
+    <div
+      *ngIf="!enabled && showDisabled !== 1 && domain"
+      class="disabled-notification"
+    >
       <h3>OhMyMock is inactive</h3>
     </div>
 
