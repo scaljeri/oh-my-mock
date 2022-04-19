@@ -1,10 +1,10 @@
 describe('OhMyMock', () => {
   describe('Early call', () => {
     beforeEach((done) => {
-      cy.visit('https://scaljeri.github.io/oh-my-mock/?type=fetch&method=get&response=json&responseType=json');
-      // cy.visit('https://example.cypress.io');
-      // done();
-      // cy.visit('http://localhost:8000/?type=fetch&method=get&response=json&responseType=json');
+      // cy.visit('https://scaljeri.github.io/oh-my-mock/?type=fetch&method=get&response=json-external&responseType=blob');
+      // // cy.visit('https://example.cypress.io');
+      // // done();
+      cy.visit('http://localhost:8000/?type=fetch&method=get&response=json-external&responseType=text');
       cy.get("html").then(() => {
         window.addEventListener('message', e => {
             done();
@@ -21,15 +21,23 @@ describe('OhMyMock', () => {
     });
 
     it('displays two todo items by default', () => {
-      // cy.get('.go').click();
+      // cy.contains('GO >>>');
+      // cy.wait(1000);
+      // cy.wait(3000);
+      // cy.get('.response-type').then($select => {
+      //   console.log('xxxxxxxxx', $select.length);
+      //   //evaluates as true
+      // });
+      cy.get('.response-type').select('json');
+      cy.get('.go').click();
       // cy.intercept({
       //   method: 'GET',
       //   url: '/users',
       // }).as('earlyCall');
 
-      cy.wait(1000);
+      // cy.wait(1000);
 
-      cy.get('.body pre', { timeout: 10000 }).should('be.visible');
+      // cy.get('.body pre', { timeout: 10000 }).should('be.visible');
       // cy.get('.go').should('have.length', 1);
       // // cy.get('.go').first().contains('Go >>>')
       // cy.get('.go').click();
@@ -79,23 +87,23 @@ describe('OhMyMock', () => {
       // cy.get('.todo-list li').last().should('have.text', 'Walk the dog')
     })
 
-    it('should be ok', () => {
-      // cy.get('.todo-list li').first().should('have.text', 'Pay electric bill')
-      // // cy.get('pre').should(($pre) => {
-      // cy.get(".go").then(function ($elem) {
-      //   cy.log($elem.text())
-      // })
-      // cy.get('.go').text().then(text => {
-      //   expect(text).toBe('Yolo');
-      // })
-      // .toContain('Go') => {
-      //     expect($pre.get(0).innerText).toContain('king')
-      // });
-      // cy.get('.go').click();
-      // cy.get('pre').should(($pre) => {
-      //     expect($pre.get(0).innerText).toContain('king')
-      // });
-      expect('Luc').to.equal('Luc');
-    });
+    // it('should be ok', () => {
+    //   // cy.get('.todo-list li').first().should('have.text', 'Pay electric bill')
+    //   // // cy.get('pre').should(($pre) => {
+    //   // cy.get(".go").then(function ($elem) {
+    //   //   cy.log($elem.text())
+    //   // })
+    //   // cy.get('.go').text().then(text => {
+    //   //   expect(text).toBe('Yolo');
+    //   // })
+    //   // .toContain('Go') => {
+    //   //     expect($pre.get(0).innerText).toContain('king')
+    //   // });
+    //   // cy.get('.go').click();
+    //   // cy.get('pre').should(($pre) => {
+    //   //     expect($pre.get(0).innerText).toContain('king')
+    //   // });
+    //   expect('Luc').to.equal('Luc');
+    // });
   })
 })

@@ -15,6 +15,7 @@ export const appRouter = (app: any): void => {
         throw err;
       }
 
+      // res.setHeader("Content-Type", 'application/json');
       res.contentType('application/json');
       res.send(data);
     });

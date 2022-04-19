@@ -84,6 +84,10 @@ mat-slide-toggle {
   margin-left: auto;
 
   img {
-    height: 50%;
+    height: 70%;
+
+    &:hover {
+      transform: scale(1.04);
+    }
   }
 }

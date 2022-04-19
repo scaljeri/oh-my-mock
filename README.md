@@ -1,7 +1,7 @@
 ![Master workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/master.yml/badge.svg)
 ![Feature workflow](https://github.com/scaljeri/oh-my-mock/actions/workflows/feature.yml/badge.svg)
 
-<a href="https://www.buymeacoffee.com/ohmymock"><img src="https://raw.githubusercontent.com/scaljeri/oh-my-mock/feature/cypress/src/assets/images/bmac-btn.png" width="200px;" alt="Buy me a coffee"/>
+<a target="_blank" href="https://www.buymeacoffee.com/ohmymock"><img src="https://raw.githubusercontent.com/scaljeri/oh-my-mock/feature/cypress/src/assets/images/bmac-btn.png" width="200px;" alt="Buy me a coffee"/>
 ## OhMyMock
 
 OhMyMock is a [Chrome Extension](https://chrome.google.com/webstore/detail/oh-my-mock/egadlcooejllkdejejkhibmaphidmock) that can mock API responses in the browser. It works as follows:
