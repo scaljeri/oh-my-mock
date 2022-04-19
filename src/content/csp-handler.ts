@@ -24,6 +24,7 @@ export function handleCSP(ms: OhMyMessageBus, contentState: OhMyContentState) {
 
   ms.streamByType$<boolean>(payloadType.READY, appSources.PRE_INJECTED).subscribe(() => {
     contentState.isReloaded = false;
+    subscription.unsubscribe();
   });
 
   const subscription = combineLatest([cspSubject, cspRemovalSubject]).pipe(
