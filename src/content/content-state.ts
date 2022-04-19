@@ -92,7 +92,7 @@ export class OhMyContentState {
   //   return OhMyContentState.isPopupOpen;
   // }
 
-  isActive(state: IState): boolean {
+  isActive(state: IState = this.state): boolean {
     return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
   }
 
