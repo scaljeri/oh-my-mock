@@ -6,6 +6,8 @@ interface IOhCspItem {
 }
 const csps = {} as Record<string, IOhCspItem>;
 
+const CSP_OFF = "script-src * data: blob: 'unsafe-inline' 'unsafe-eval';";
+
 setInterval(() => {
   Object.keys(csps).forEach(key => {
     const item = csps[key];
@@ -20,10 +22,12 @@ function removeCSPFn(urls: string[]) {
   return (details) => {
     csps[urls[0]].starttime = Date.now() + ACTIVE_WINDOW;
 
-    const header = details.responseHeaders.find(e => e.name.toLowerCase() === 'content-security-policy');
-    if (header) {
-      header.value = "script-src * data: blob: 'unsafe-inline' 'unsafe-eval';"
-    }
+    details.responseHeaders.filter(
+      e => ['content-security-policy', 'content-security-policy-report-only'].includes(e.name.toLowerCase()))
+      .forEach(header => {
+        header.value = CSP_OFF;
+      });
+
     return { responseHeaders: details.responseHeaders };
   }
 }
