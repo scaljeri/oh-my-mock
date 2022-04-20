@@ -11,24 +11,24 @@ export function handleAPISettings(contentState: OhMyContentState) {
     const payload = packet.payload;
     const data = payload.data;
 
-    let result;
+    let state;
     if (data.active !== undefined) {
-      result = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'popupActive', payloadType.STATE);
-      result = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'appActive', payloadType.STATE);
+      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'popupActive', payloadType.STATE, payload.context);
+      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
     }
 
     if (data.blurImages !== undefined) {
-      result = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE);
+      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE, payload.context);
     }
 
-    if (data.active) {
-      await injectCode({active: true});
+    if (data.active && state.domain === window.location.origin) {
+      await injectCode({ active: true });
     }
 
     sendMessageToInjected({
       ...(payload.id && { id: payload.id }),
       type: payloadType.OHMYMOCK_API_OUTPUT,
-      data: result ? { status: 'success' } : { status: 'failure' },
+      data: !!state ? { status: 'success' } : { status: 'failure' },
       description: 'content:settings-api-output'
     });
   }

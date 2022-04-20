@@ -49,14 +49,10 @@ let isInjectedInjected = false;
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
-// Activate network listener in background script
-// OhMySendToBg.send({
-//   source: appSources.CONTENT,
-//   payload: { type: payloadType.PRE_RESPONSE, description: 'content:activate-network-listeners' }
-// });
+window[STORAGE_KEY].off.push(contentState.isActive$.subscribe(async (value: boolean) => {
+  await inject({ active: value });
 
-window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) => {
-  if (inject({ active: value })) {
+  if (isInjectedInjected) {
     sendMessageToInjected({
       type: payloadType.STATE,
       data: {
@@ -67,6 +63,7 @@ window[STORAGE_KEY].off.push(contentState.isActive$.subscribe((value: boolean) =
 }));
 
 window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
+// API
 handleAPI(messageBus, contentState);
 
 function sendKnockKnock() {

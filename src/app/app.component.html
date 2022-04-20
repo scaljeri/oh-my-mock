@@ -33,7 +33,7 @@
       </button>
 
       <h1 class="title">
-        <span>Oh My Mock v{{ version }}</span> <span class="dash">-</span>
+        <span>Oh My Mock</span> <span class="dash">-</span>
         <span>{{ domain }}</span>
         <mat-slide-toggle
           (change)="onEnableChange($event.checked)"
@@ -49,6 +49,8 @@
         <img alt="buy me a coffee" src="assets/images/bmac-btn.png" />
         <!-- <img src="assets/images/buy-me-a-coffee.png" /> -->
       </a>
+
+      <div class="version">v{{ version }}</div>
     </mat-toolbar>
     <div
       *ngIf="!enabled && showDisabled !== 1 && domain"

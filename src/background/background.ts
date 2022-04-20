@@ -5,11 +5,8 @@ import { IOhMyBackup, IOhMyPopupActive, IState } from '../shared/type';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
-import { OhMyStateHandler } from './state-handler';
-import { OhMyResponseHandler } from './response-handler';
-import { OhMyStoreHandler } from './store-handler';
-import { OhMyRemoveHandler } from './remove-handler';
-import { errorHandler } from './error-handler';
+import { OhMyStateHandler } from './handlers/state-handler';
+import { OhMyRemoveHandler } from './handlers/remove-handler';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { initStorage } from './init';
@@ -20,11 +17,13 @@ import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
 // import { injectContent } from './inject-content';
-import { cSPRemoval } from './remove-csp-header';
+import { cSPRemoval } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { connectWithLocalServer } from './dispatch-remote';
 import { error } from './utils';
+import { OhMyResponseHandler } from './handlers/response-handler';
+import { OhMyStoreHandler } from './handlers/store-handler';
 
 // window.onunhandledrejection = function (event) {
 //   const { reason } = event;

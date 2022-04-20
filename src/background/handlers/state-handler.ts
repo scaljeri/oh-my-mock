@@ -1,31 +1,31 @@
-import { IOhMyPacketContext, IPacketPayload } from "../shared/packet-type";
-import { IOhMyMock, IState } from "../shared/type";
-import { update } from "../shared/utils/partial-updater";
-import { StateUtils } from "../shared/utils/state";
-import { StorageUtils } from "../shared/utils/storage";
-import { StoreUtils } from "../shared/utils/store";
+import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
+import { IOhMyMock, IState } from "../../shared/type";
+import { update } from "../../shared/utils/partial-updater";
+import { StateUtils } from "../../shared/utils/state";
+import { StorageUtils } from "../../shared/utils/storage";
+import { StoreUtils } from "../../shared/utils/store";
 import { clearCSPRemoval, cSPRemoval } from "./remove-csp-header";
 
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
   static async update(payload: IPacketPayload<IState | unknown, IOhMyPacketContext>): Promise<IState> {
-    const { data, context } = payload;
-
-    let state = data as IState;
-
     try {
+      const { data, context } = payload;
+
+      let state = data as IState || StateUtils.init({ domain: context.domain });
+
       if (context?.path) {
         state = await OhMyStateHandler.StorageUtils.get<IState>(context.domain) || StateUtils.init({ domain: context.domain });
         state = update<IState>(context.path, state, context.propertyName, data);
-      } else { // Is the state new, add it to the store
-        let store = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
+      }
+      // Is the state new, add it to the store
+      let store = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
 
-        if (!StoreUtils.hasState(store, state.domain)) {
-          store = StoreUtils.setState(store, state);
+      if (!StoreUtils.hasState(store, state.domain)) {
+        store = StoreUtils.setState(store, state);
 
-          await OhMyStateHandler.StorageUtils.setStore(store);
-        }
+        await OhMyStateHandler.StorageUtils.setStore(store);
       }
 
       if (state.aux.appActive && state.aux.popupActive) {

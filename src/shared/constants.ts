@@ -5,23 +5,19 @@ export const MOCK_JS_CODE = `/* This is where OhMyMock creates responses.
 Inside this sandbox you have access to the following data:
   * 'mock' - object with a cached response, header and status code
   * 'request' - details of the ongoing request
-  * Feel free to use fetch or XMLHttpRequest, but make sure to
-    return a PROMISE in that case!!
+  Feel free to use fetch or XMLHttpRequest, but make sure to
+  return a PROMISE or await in that case!!
+  NOTE: you can use \`debugger\` to inspect these objects!
 
 - Synchronous example:
-    const response = JSON.parse(mock.response);
-    response[1].name = "Sync example";
-    mock.response = JSON.stringify(response);
+    mock.response[1].name = "Sync example";
     return mock;
 
 - Asynchronous example:
 
     const response = await fetch("/users");
-    const data = await response.json();
-    data[1].name = "From custom code";
-    mock.response = JSON.stringify(r);
-
-    // No need to return a Promise here, "await" takes care o this!
+    mock.response = await response.json();
+    mock.response[1].name = "From custom code";
     return mock;
 */
 

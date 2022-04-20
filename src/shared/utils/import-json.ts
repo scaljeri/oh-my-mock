@@ -1,9 +1,10 @@
 import { IOhMyImportStatus } from '../packet-type';
-import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '../type';
+import { IData, IMock, IOhMyBackup, IOhMyContext, IOhMyMock, IState } from '../type';
 import { DataUtils } from './data';
 import { MigrateUtils } from './migrate';
 import { StateUtils } from './state';
 import { StorageUtils } from './storage';
+import { StoreUtils } from "../../shared/utils/store";
 
 export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
@@ -38,6 +39,14 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtil
     }
 
     await sUtils.set(state.domain, state);
+    // Is the state new, add it to the store
+    let store = await sUtils.get<IOhMyMock>();
+
+    if (!StoreUtils.hasState(store, state.domain)) {
+      store = StoreUtils.setState(store, state);
+
+      await sUtils.setStore(store);
+    }
   } else {
     status = ImportResultEnum.TOO_OLD;
   }

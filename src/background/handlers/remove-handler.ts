@@ -1,10 +1,10 @@
-import { DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../shared/constants";
-import { IPacketPayload } from "../shared/packet-type";
-import { IMock, IOhMyBackup, IState } from "../shared/type";
-import { importJSON } from "../shared/utils/import-json";
-import { OhMyQueue } from "../shared/utils/queue";
-import { StorageUtils } from "../shared/utils/storage";
-import jsonFromFile from '../shared/dummy-data.json';
+import { DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
+import { IPacketPayload } from "../../shared/packet-type";
+import { IMock, IOhMyBackup, IState } from "../../shared/type";
+import { importJSON } from "../../shared/utils/import-json";
+import { OhMyQueue } from "../../shared/utils/queue";
+import { StorageUtils } from "../../shared/utils/storage";
+import jsonFromFile from '../../shared/dummy-data.json';
 
 
 // Not for Response/IMock
