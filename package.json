@@ -1,6 +1,6 @@
 {
   "name": "oh-my-mock",
-  "version": "3.3.9",
+  "version": "3.3.10",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -82,7 +82,7 @@
     "@angular/compiler-cli": "12.2.12",
     "@cypress/webpack-preprocessor": "^5.11.1",
     "@ng-apimock/core": "^3.0.1",
-    "@playwright/test": "^1.21.0",
+    "@playwright/test": "^1.21.1-beta-1650321640000",
     "@stryker-mutator/core": "5.1.1",
     "@stryker-mutator/jest-runner": "5.1.1",
     "@stryker-mutator/karma-runner": "5.1.1",
