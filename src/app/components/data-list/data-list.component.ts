@@ -17,6 +17,10 @@ export const highlightSeq = [
   animate('1s ease-out', style({ backgroundColor: '*' }))
 ];
 
+interface IDataView extends IData {
+  urlStart: string;
+  urlEnd: string;
+}
 @Component({
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
@@ -63,7 +67,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
-  filteredDataList: IData[];
+  filteredDataList: IDataView[];
 
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
@@ -82,7 +86,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     let filterDebounceId;
     this.filterCtrl.valueChanges.subscribe(filter => {
       this.state.aux.filterKeywords = filter;
-      this.filteredDataList = this.filterListByKeywords();
+      this.filteredDataList = this.filterListByKeywords().map(dataToView)
       this.filteredList.emit(this.filteredDataList);
 
       if (!this.persistFilter) {
@@ -106,7 +110,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         this.context = this.state.context;
       }
 
-      this.filteredDataList = this.filterListByKeywords();
+      this.filteredDataList = this.filterListByKeywords().map(dataToView)
 
       this.filteredList.emit(this.filteredDataList);
     }
@@ -134,12 +138,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     const filtered = data.filter((d: IData) =>
       terms
         .filter(v => v !== undefined && v !== '')
-        .some(v =>
-          d.url.toLowerCase().includes(v) ||
-          d.requestType.toLowerCase().includes(v) ||
-          d.method.toLowerCase().includes(v) /*||
+        .some(v => {
+          const x = d.url.toLowerCase().includes(v) ||
+            d.requestType.toLowerCase().includes(v) ||
+            d.method?.toLowerCase().includes(v) /*||
           !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) TODO */
           // || !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
+          return x;
+        }
         )
     );
 
@@ -231,3 +237,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 }
 
+export function dataToView(row: IData): IDataView {
+  return {
+    ...row,
+    urlStart: row.url.substring(0, row.url.length / 2),
+    urlEnd: row.url.substring(row.url.length / 2)
+  }
+}

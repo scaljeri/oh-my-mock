@@ -215,10 +215,12 @@ span.type {
 }
 
 .url {
+  @include oh-ellipsis-middle;
+
+  display: inline-flex;
   flex: 1;
   padding-left: $spacer-2;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -348,7 +350,6 @@ span.type {
     );
   }
 }
-
 
 .row-number {
   position: absolute;

@@ -3,3 +3,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+@mixin oh-ellipsis-middle {
+  &::before, &::after {
+    display: inline-block;
+    max-width: 50%;
+    overflow: hidden;
+    white-space: pre;
+  }
+
+  &::before {
+    content: attr(data-content-start);
+    text-overflow: ellipsis;
+  }
+
+  &::after {
+    content: attr(data-content-end);
+    text-overflow: '';
+    direction: rtl;
+  }
+}

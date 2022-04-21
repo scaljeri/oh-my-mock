@@ -71,7 +71,7 @@
     <span class="row-number">{{index + 1}}</span>
     <span class="method">{{row.requestType}}</span>
     <span class="type">{{row.method}}</span>
-    <span class="url">{{row.url}}</span>
+    <span class="url" [attr.data-content-start]="row.urlStart" [attr.data-content-end]="row.urlEnd"></span>
     <span class="mock">
       <oh-my-mock-label *ngIf="row.selected[context?.preset] as mockId" [mock]="row.mocks[mockId]"></oh-my-mock-label>
     </span>
