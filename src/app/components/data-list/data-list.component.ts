@@ -5,11 +5,12 @@ import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
 import { IData, IOhMyContext, IState, ohMyDataId } from '@shared/type';
-import { Subscription } from 'rxjs';
+import { debounceTime, Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from 'src/app/constants';
 import { OhMyState } from 'src/app/services/oh-my-store';
+import { deepSearch } from '@shared/utils/deep-search';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -82,11 +83,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     private toast: HotToastService,
     private storeService: OhMyState) { }
 
-  ngOnInit(): void {
+  ngOnInit() {
     let filterDebounceId;
-    this.filterCtrl.valueChanges.subscribe(filter => {
+    this.filterCtrl.valueChanges.pipe(debounceTime(500)).subscribe(async filter => {
       this.state.aux.filterKeywords = filter;
-      this.filteredDataList = this.filterListByKeywords().map(dataToView)
+      this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
       this.filteredList.emit(this.filteredDataList);
 
       if (!this.persistFilter) {
@@ -104,15 +105,16 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
   }
 
-  ngOnChanges(): void {
+  async ngOnChanges() {
     if (this.state) {
       if (!this.context) {
         this.context = this.state.context;
       }
 
-      this.filteredDataList = this.filterListByKeywords().map(dataToView)
+      this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
 
       this.filteredList.emit(this.filteredDataList);
+      this.cdr.detectChanges();
     }
   }
 
@@ -120,7 +122,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
   }
 
-  filterListByKeywords(): IData[] {
+  async filterListByKeywords(): Promise<IData[]> {
     const data = Object.values(this.state.data).sort((a, b) => a.lastHit > b.lastHit ? -1 : 1);
     const input = this.state.aux.filterKeywords as string;
 
@@ -133,7 +135,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
     const qwords = input.match(quotedRe) || [];
     const words = input.replace(rmQuotedRe, '').split(' ');
-    const terms = [...qwords, ...words];
+    const terms = [...qwords, ...words].filter(t => !!t);
 
     const filtered = data.filter((d: IData) =>
       terms
@@ -141,15 +143,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         .some(v => {
           const x = d.url.toLowerCase().includes(v) ||
             d.requestType.toLowerCase().includes(v) ||
-            d.method?.toLowerCase().includes(v) /*||
-          !!d.mocks[d.activeMock]?.statusCode.toString().includes(v) TODO */
-          // || !!Object.keys(d.mocks).find(k => d.mocks[k].responseMock?.toLowerCase().includes(v))
+            d.method?.toLowerCase().includes(v)
           return x;
-        }
-        )
+        })
     );
 
-    return filtered;
+    let out = data.filter(d => !filtered.includes(d));
+    out = await deepSearch(out, terms);
+    return filtered.concat(await deepSearch(out, terms));
   }
 
   ngOnDestroy(): void {
