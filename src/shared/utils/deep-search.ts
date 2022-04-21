@@ -29,6 +29,7 @@ export async function deepSearch(data: IData[], words: string[]): Promise<IData[
             out.push(data[i]);
             continue dataLoop;
           }
+        // eslint-disable-next-line no-console
         } catch (err) { console.error('Ooops, something went wrong while searching. Please fill in a bug report!!', err) }
       }
     }

@@ -40,7 +40,8 @@ export class DataUtils {
         ...data.mocks, [mock.id]: {
           id: mock.id,
           statusCode: mock.statusCode,
-          label: mock.label
+          label: mock.label,
+          modifiedOn: mock.modifiedOn
         }
       }, selected: { ...data.selected },
       enabled: { ...data.enabled }
