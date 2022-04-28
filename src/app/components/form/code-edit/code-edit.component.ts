@@ -132,8 +132,8 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
 
   onInitEditor(editor: any): void {
     editor.onDidChangeModelDecorations((...args) => {
-      const model = editor.getModel();
-      const owner = model.getModeId();
+      const model = editor?.getModel?.();
+      const owner = model.getModeId?.(); // TODO: THIs code doesn't seem to work anymore
 
       this.errors.emit(monaco?.editor.getModelMarkers({ owner }));
     });

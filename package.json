@@ -1,6 +1,6 @@
 {
   "name": "oh-my-mock",
-  "version": "3.3.10",
+  "version": "3.3.11",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -67,7 +67,7 @@
     "jsonpath-plus": "^5.1.0",
     "lodash": "^4.17.21",
     "mime-types": "^2.1.31",
-    "monaco-editor": "0.29.1",
+    "monaco-editor": "0.33.0",
     "rxjs": "7.3.0",
     "sass": "^1.32.6",
     "scss-reset": "^1.1.10",

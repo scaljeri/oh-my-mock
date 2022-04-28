@@ -4,13 +4,14 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IOhMyContext, IState, ohMyDataId } from '@shared/type';
-import { debounceTime, Subscription } from 'rxjs';
+import { IData, IMock, IOhMyContext, IState, ohMyDataId } from '@shared/type';
+import { BehaviorSubject, distinctUntilChanged, filter, from, map, merge, Observable, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from 'src/app/constants';
 import { OhMyState } from 'src/app/services/oh-my-store';
-import { deepSearch } from '@shared/utils/deep-search';
+import { shallowSearch, splitIntoSearchTerms } from '@shared/utils/search';
+import { WebWorkerService } from 'src/app/services/web-worker.service';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -18,6 +19,7 @@ export const highlightSeq = [
   animate('1s ease-out', style({ backgroundColor: '*' }))
 ];
 
+type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock> };
 interface IDataView extends IData {
   urlStart: string;
   urlEnd: string;
@@ -59,6 +61,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() dataExport = new EventEmitter<IData>();
   @Output() filteredList = new EventEmitter<IData[]>();
 
+
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
   public hitcount: number[] = [];
@@ -69,6 +72,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
   filteredDataList: IDataView[];
+  mocks: Record<string, IMock>;
 
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
@@ -76,19 +80,54 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   isPresetCopy = false;
 
   public data: Record<ohMyDataId, IData>;
+  worker: Worker;
+  private workerTimeoutId: number;
+  searchSubj = new Subject();
+
+  private stateSearchSubject = new BehaviorSubject<string[]>(null);
+
+  search$ = merge(
+    this.stateSearchSubject.pipe(filter(d => !!d)),
+    this.searchSubj.asObservable().pipe(
+      map<string, SearchFilterData>((searchStr: string) =>
+      ({
+        words: splitIntoSearchTerms(searchStr),
+        data: this.state.data
+      } as SearchFilterData)
+      ),
+      distinctUntilChanged(),
+      map<SearchFilterData, SearchFilterData>(input => {
+        return { words: input.words, data: shallowSearch(input.data, input.words) } as SearchFilterData;
+      }),
+      map<SearchFilterData, SearchFilterData>(input => ({ ...input, mocks: this.mocks })),
+      switchMap<SearchFilterData, Observable<string[]>>(input =>
+        from(this.doSearch(input.data, input.words))),
+      tap(ids => {
+        this.storeService.updateAux({ filteredRequests: ids }, this.context);
+      }),
+    )).pipe(
+      map(input =>
+        Object.values(this.state.data)
+          .filter(d => !input.includes(d.id))
+          .map(dataToView)
+      )
+    );
 
   constructor(
     public dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private toast: HotToastService,
+    private webWorkerService: WebWorkerService,
     private storeService: OhMyState) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     let filterDebounceId;
-    this.filterCtrl.valueChanges.pipe(debounceTime(500)).subscribe(async filter => {
+    // this.filterCtrl.valueChanges.pipe(debounceTime(300)).subscribe(async filter => {
+    this.filterCtrl.valueChanges.subscribe(async filter => {
       this.state.aux.filterKeywords = filter;
-      this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
-      this.filteredList.emit(this.filteredDataList);
+      this.searchSubj.next(filter);
+      // this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
+      // this.filteredList.emit(this.filteredDataList);
 
       if (!this.persistFilter) {
         return;
@@ -100,9 +139,15 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
           this.storeService.updateAux({ filterKeywords: filter.toLowerCase() }, this.context);
         }, 500);
       }
+
+      this.cdr.detectChanges();
     });
 
     this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
+
+    if (this.state?.aux.filteredRequests) {
+      this.stateSearchSubject.next(this.state.aux.filteredRequests);
+    }
   }
 
   async ngOnChanges() {
@@ -110,10 +155,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       if (!this.context) {
         this.context = this.state.context;
       }
-
-      this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
-
-      this.filteredList.emit(this.filteredDataList);
       this.cdr.detectChanges();
     }
   }
@@ -122,36 +163,39 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
   }
 
-  async filterListByKeywords(): Promise<IData[]> {
-    const data = Object.values(this.state.data).sort((a, b) => a.lastHit > b.lastHit ? -1 : 1);
-    const input = this.state.aux.filterKeywords as string;
+  // async filterListByKeywords(): Promise<IData[]> {
+  //   const data = Object.values(this.state.data).sort((a, b) => a.lastHit > b.lastHit ? -1 : 1);
+  //   const input = this.state.aux.filterKeywords as string;
 
-    if (input === '' || input === undefined || input === null) {
-      return data;
-    }
+  //   if (input === '' || input === undefined || input === null) {
+  //     return data;
+  //   }
 
-    const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
-    const rmQuotedRe = /"[^"]+"\s{0,}/g;
+  //   const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
+  //   const rmQuotedRe = /"[^"]+"\s{0,}/g;
 
-    const qwords = input.match(quotedRe) || [];
-    const words = input.replace(rmQuotedRe, '').split(' ');
-    const terms = [...qwords, ...words].filter(t => !!t);
+  //   const qwords = input.match(quotedRe) || [];
+  //   const words = input.replace(rmQuotedRe, '').split(' ');
+  //   const terms = [...qwords, ...words].filter(t => !!t);
 
-    const filtered = data.filter((d: IData) =>
-      terms
-        .filter(v => v !== undefined && v !== '')
-        .some(v => {
-          const x = d.url.toLowerCase().includes(v) ||
-            d.requestType.toLowerCase().includes(v) ||
-            d.method?.toLowerCase().includes(v)
-          return x;
-        })
-    );
+  //   const filtered = data.filter((d: IData) =>
+  //     terms
+  //       .filter(v => v !== undefined && v !== '')
+  //       .some(v => {
+  //         const x = d.url.toLowerCase().includes(v) ||
+  //           d.requestType.toLowerCase().includes(v) ||
+  //           d.method?.toLowerCase().includes(v)
+  //         return x;
+  //       })
+  //   );
 
-    let out = data.filter(d => !filtered.includes(d));
-    out = await deepSearch(out, terms);
-    return filtered.concat(await deepSearch(out, terms));
-  }
+  //   const notMatched = data.filter(d => !filtered.includes(d));
+  //   // const results = await deepSearch(out, mocks, terms);
+  //   // const output = filtered.concat(await deepSearch(out, mocks, terms));
+
+  //   // return data.filter(d => filtered.includes(d) || matched.includes(d.id));
+  //   // return filtered.concat(await deepSearch(out, mocks, terms));
+  // }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -235,6 +279,10 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   trackBy(index, row): string {
     return row.id; // type + row.method + row.url;
+  }
+
+  async doSearch(data: Record<string, IData>, terms: string[]): Promise<string[]> {
+    return this.webWorkerService.search(terms, data);
   }
 }
 

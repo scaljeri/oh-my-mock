@@ -33,6 +33,7 @@ export interface IOhMyAux {
   appActive?: boolean;
   popupActive?: boolean;
   blurImages?: boolean;
+  filteredRequests?: string[]
 }
 
 export interface IOhMyContext {

@@ -18,6 +18,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+
 
 import {
   Location,
@@ -122,7 +124,8 @@ import { StatusCodeComponent } from './form/status-code/status-code.component';
     MatSelectModule,
     MatAutocompleteModule,
     MatCheckboxModule,
-    MatMenuModule
+    MatMenuModule,
+    MatProgressSpinnerModule
   ],
   exports: [
     DataListComponent,

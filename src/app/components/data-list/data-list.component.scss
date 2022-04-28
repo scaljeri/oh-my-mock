@@ -224,6 +224,13 @@ span.type {
   white-space: nowrap;
 }
 
+.search {
+  mat-spinner {
+    @include oh-position(absolute, 50% -45px 0 0);
+    transform: translateY(-50%);
+  }
+}
+
 .mock {
   flex: 0 0 120px;
   display: inline-flex;

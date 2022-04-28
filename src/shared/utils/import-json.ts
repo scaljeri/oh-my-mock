@@ -30,7 +30,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtil
 
     for (let request of requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1)) {
       request.lastHit = timestamp++; // make sure they each have a unique timestamp!
-      request = DataUtils.prefilWithPresets(request, state.presets, context.active);
+      request = DataUtils.prefillWithPresets(request, state.presets, context.active);
       state.data[request.id] = request;
     }
 

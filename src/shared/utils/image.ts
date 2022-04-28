@@ -1,6 +1,8 @@
+declare let window: any;
+
 export function blurBase64(base64, contentType: string): Promise<string> {
-  const img = new Image();
-  const canvas = document.createElement('canvas');
+  const img = new window.Image();
+  const canvas = window.document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
   return new Promise(r => {

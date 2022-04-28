@@ -18,6 +18,7 @@ import { initializeApp } from './app.initialize';
 import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
 import { IPacketPayload } from '@shared/packet-type';
+import { WebWorkerService } from './services/web-worker.service';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -53,13 +54,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private contentService: ContentService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private webWorkerService: WebWorkerService,
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog) {
     // eslint-disable-next-line no-console
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await initializeApp(this.appState, this.stateService, this.activatedRoute);
+    await initializeApp(this.appState, this.stateService, this.webWorkerService);
     // await this.contentService.activate();
 
     this.stateSub = this.stateService.state$.subscribe((state: IState) => {
