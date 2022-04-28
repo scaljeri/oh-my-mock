@@ -79,6 +79,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   presets: string[];
   isPresetCopy = false;
 
+  isSearching = false;
   public data: Record<ohMyDataId, IData>;
   worker: Worker;
   private workerTimeoutId: number;
@@ -89,6 +90,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   search$ = merge(
     this.stateSearchSubject.pipe(filter(d => !!d)),
     this.searchSubj.asObservable().pipe(
+      // tap(() => this.isSearching = true),
       map<string, SearchFilterData>((searchStr: string) =>
       ({
         words: splitIntoSearchTerms(searchStr),
@@ -105,6 +107,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       tap(ids => {
         this.storeService.updateAux({ filteredRequests: ids }, this.context);
       }),
+      // tap(() => this.isSearching = false)
     )).pipe(
       map(input =>
         Object.values(this.state.data)

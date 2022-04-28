@@ -92,7 +92,7 @@
           >
             <mat-icon>close</mat-icon>
           </button>
-          <mat-spinner *ngIf="worker" [diameter]="20"></mat-spinner>
+          <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner>
         </mat-form-field>
         <!-- <mat-icon class="search-help" color="primary"
           matTooltip="Each word in this search field is searched for independenty from other words. To combine multiple words use quotes">
