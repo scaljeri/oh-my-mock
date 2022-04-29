@@ -128,7 +128,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     // this.filterCtrl.valueChanges.pipe(debounceTime(300)).subscribe(async filter => {
     this.filterCtrl.valueChanges.subscribe(async filter => {
       this.state.aux.filterKeywords = filter;
-      this.searchSubj.next(filter);
+      this.searchSubj.next(filter.toLowerCase());
       // this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
       // this.filteredList.emit(this.filteredDataList);
 
@@ -139,7 +139,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       if (this.state.context.domain === this.context.domain) {
         clearTimeout(filterDebounceId);
         filterDebounceId = window.setTimeout(() => {
-          this.storeService.updateAux({ filterKeywords: filter.toLowerCase() }, this.context);
+          this.storeService.updateAux({ filterKeywords: filter }, this.context);
         }, 500);
       }
 
