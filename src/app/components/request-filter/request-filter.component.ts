@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
-import { debounceTime, map, merge, Observable, of, Subject, switchMap } from 'rxjs';
+import { debounceTime, map, merge, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { FILTER_OPTIONS } from '../../app.constants';
 import { WebWorkerService } from '../../services/web-worker.service';
 import { shallowSearch, splitIntoSearchTerms } from '@shared/utils/search';
@@ -20,7 +20,7 @@ type SearchFilterData = {
   styleUrls: ['./request-filter.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RequestFilterComponent implements OnInit {
+export class RequestFilterComponent implements OnInit, OnDestroy {
   @Input() data: Record<ohMyDataId, IData>;
   @Input() filterOptions: Record<string, boolean>;
   @Input() filterStr: string;
@@ -34,6 +34,8 @@ export class RequestFilterComponent implements OnInit {
   filterMappedOpts: Record<string, boolean>;
   filterTrigger$ = new Subject();
 
+  private subs = new Subscription();
+
   constructor(
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
@@ -41,10 +43,9 @@ export class RequestFilterComponent implements OnInit {
     private storeService: OhMyState) { }
 
   ngOnInit(): void {
-    this.filterCtrl.valueChanges.pipe(debounceTime(100)).subscribe(value => {
-      // this.storeService.updateAux({ filterKeywords: value }, this.context)
+    this.subs.add(this.filterCtrl.valueChanges.pipe(debounceTime(100)).subscribe(value => {
       this.cdr.detectChanges();
-    });
+    }));
 
     if (!this.filterOptions) {
       this.filterOptions = FILTER_OPTIONS.reduce((acc, fo) => {
@@ -53,36 +54,29 @@ export class RequestFilterComponent implements OnInit {
       }, {});
     }
 
-    merge(
+    this.subs.add(merge(
       this.filterTrigger$.pipe(debounceTime(50), map(() => this.filterCtrl.value)),
-      this.filterCtrl.valueChanges).pipe(debounceTime(300)
-      ).pipe(
-        map<string, SearchFilterData>((searchStr: string) =>
-        ({
-          words: splitIntoSearchTerms(searchStr),
-          data: this.data,
-          includes: this.filterMappedOpts
-        } as SearchFilterData)
-        ),
-        map<SearchFilterData, SearchFilterData>(input => this.localSearch(input)),
-        switchMap<SearchFilterData, Observable<IData[]>>(input => this.deepSearch(input))
-      ).subscribe(data => {
-        // this.storeService.updateAux({ filteredRequests: data.map(d => d.id) }, this.context)
-        this.ngZone.run(() => {
-          this.filteredData.emit(data.map(d => d.id))
-          this.updateFilterStr.emit(this.filterCtrl.value);
-        });
+      this.filterCtrl.valueChanges.pipe(debounceTime(300)),
+      this.webWorkerService.mockUpsert$
+    ).pipe(
+      map<string, SearchFilterData>(() =>
+      ({
+        words: splitIntoSearchTerms(this.filterCtrl.value),
+        data: this.data,
+        includes: this.filterMappedOpts
+      } as SearchFilterData)
+      ),
+      map<SearchFilterData, SearchFilterData>(input => this.localSearch(input)),
+      switchMap<SearchFilterData, Observable<IData[]>>(input => this.deepSearch(input))
+    ).subscribe(data => {
+      this.ngZone.run(() => {
+        this.filteredData.emit(data.map(d => d.id))
+        this.updateFilterStr.emit(this.filterCtrl.value);
       });
+    }));
 
     this.filterMappedOpts = transformFilterOptions(this.filterOptions);
     this.filterCtrl.setValue(this.filterStr, { emitEvent: false });
-
-    // if (this.filteredRequests) {
-    //   this.update.emit(this.filteredRequests.reduce((acc, fr) => {
-    //     acc.push(this.data[fr]);
-    //     return acc;
-    //   }, []));
-    // }
   }
 
   ngOnChanges({ filterOptions, data }: SimpleChanges): void {
@@ -108,7 +102,6 @@ export class RequestFilterComponent implements OnInit {
     this.filterTrigger$.next(null);
 
     this.updateFilterOptions.emit(this.filterOptions);
-    // this.storeService.updateAux({ filterOptions: this.filterOptions }, this.context)
   }
 
   // Returns SearchFilterData with `data` holding the items that did not match
@@ -135,6 +128,10 @@ export class RequestFilterComponent implements OnInit {
         return out;
       }
       ));
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 }
 

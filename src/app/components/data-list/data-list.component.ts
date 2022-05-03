@@ -172,17 +172,14 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
         this.context = this.state.context;
       }
 
-      // if (this.hasFilterOptionsChanged) {
-      //   this.searchSubj.next(this.state.aux.filterKeywords.toLowerCase());
-      // } else {
       this.requestCount = Object.keys(this.state.data).length;
+
       this.filteredRequests = this.state.aux.filteredRequests || Object.keys(this.state.data);
-      //   this.stateSearchSubject.next(this.state?.aux.filteredRequests || []);
-      // }
 
-      // if (this.state?.aux.filteredRequests) {
+      if (!this.state.aux.filterKeywords) {
+        this.filteredRequests = Object.keys(this.state.data);
+      }
 
-      // }
       this.cdr.detectChanges();
     }
   }

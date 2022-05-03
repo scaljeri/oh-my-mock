@@ -278,6 +278,10 @@ oh-my-request-filter {
   @include oh-position(absolute, 0 0 0 50%);
   transform: translateX(-50%);
   height: 50px;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 @keyframes highlight-a {

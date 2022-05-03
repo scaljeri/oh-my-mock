@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { debounce, debounceTime, Observable, Subject } from 'rxjs';
 import { IData, IMock, ohMyDataId } from '@shared/type';
 import { loadAllMocks } from '@shared/utils/load-all-mocks';
 import { OhMyStateService } from './state.service';
@@ -13,6 +13,10 @@ export class WebWorkerService {
   private worker: Worker;
   private searchSubject = new Subject<string[]>();
   public searchResults = this.searchSubject.asObservable();
+
+  private mockUpsertSubject = new Subject();
+  public mockUpsert$ = this.mockUpsertSubject.asObservable();
+
 
   constructor(private stateService: OhMyStateService) {
     stateService.response$.subscribe(update => {
@@ -43,6 +47,7 @@ export class WebWorkerService {
       body: { [mock.id]: mock }
     });
 
+    this.mockUpsertSubject.next(mock);
   }
 
   public search(data: Record<ohMyDataId, IData>, terms: string[], includes: Record<string, boolean>): Observable<string[]> {

@@ -72,7 +72,9 @@
     <div class="url">
       <span>Url</span>
       <oh-my-request-filter
-        *ngIf="state && hideFilter === false && requestCount > 0"
+        [ngClass]="{
+          hidden: !state || hideFilter === true || requestCount === 0
+        }"
         [data]="state.data"
         [filterOptions]="state.aux.filterOptions"
         [filterStr]="state.aux.filterKeywords"
