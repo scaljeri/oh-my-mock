@@ -39,6 +39,6 @@ function receivedMocks(mocks: IOhWWPacketMocks): void {
   Object.values(mocks).forEach(m => MOCKS_CACHE[m.id] = m);
 }
 
-async function doSearch({ terms, data }: IOhWWPacketSearch): Promise<string[]> {
-  return (await deepSearch(data, terms, MOCKS_CACHE)).map(d => d.id);
+async function doSearch({ terms, data, includes }: IOhWWPacketSearch): Promise<string[]> {
+  return (await deepSearch(data, terms, includes, MOCKS_CACHE)).map(d => d.id);
 }

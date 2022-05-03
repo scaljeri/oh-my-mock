@@ -7,12 +7,12 @@
           <span *ngIf="!panelOpenState">Selected domain:</span>
         </mat-panel-title>
         <mat-panel-description>
-          {{selectedDomain}}
+          {{ selectedDomain }}
         </mat-panel-description>
       </mat-expansion-panel-header>
       <ol>
         <li *ngFor="let domain of domains">
-          <a [routerLink]="" (click)="onSelectDomain(domain)">{{domain}}</a>
+          <a [routerLink]="" (click)="onSelectDomain(domain)">{{ domain }}</a>
         </li>
       </ol>
       <p *ngIf="!domains?.length">No domains available!</p>
@@ -20,17 +20,24 @@
     <mat-expansion-panel #panel (closed)="panelOpenState = true">
       <mat-expansion-panel-header *ngIf="dataItem" (click)="dataItem = null">
         <mat-panel-title>
-          {{dataItem.requestType}} {{dataItem.method}}
+          {{ dataItem.requestType }} {{ dataItem.method }}
         </mat-panel-title>
         <mat-panel-description>
-          {{dataItem.url}}
+          {{ dataItem.url }}
         </mat-panel-description>
       </mat-expansion-panel-header>
-      <button class="clone-all" *ngIf="hasSelectedStateAnyRequests" (click)="onCloneAll()" mat-mini-fab color="warn"
-        aria-label="Clone all">
-        <mat-icon>copy_all</mat-icon>
+      <button
+        class="clone-all"
+        *ngIf="hasSelectedStateAnyRequests"
+        (click)="onCloneAll()"
+        mat-mini-fab
+        color="warn"
+        aria-label="Clone all"
+      >
+        <mat-icon svgIcon="copy_all"></mat-icon>
       </button>
-      <oh-my-data-list *ngIf="selectedState"
+      <oh-my-data-list
+        *ngIf="selectedState"
         [state]="selectedState"
         [persistFilter]="false"
         [showClone]="true"
@@ -38,10 +45,11 @@
         [context]="state.context"
         [togglableRows]="false"
         [showDelete]="false"
-        [hideHeader]="true"></oh-my-data-list>
+        [hideHeader]="true"
+      ></oh-my-data-list>
     </mat-expansion-panel>
     <!-- <mat-expansion-panel> -->
-      <!-- <oh-my-request *ngIf="dataItem" [requestId]="dataItem.id" [context]="context"></oh-my-request> -->
+    <!-- <oh-my-request *ngIf="dataItem" [requestId]="dataItem.id" [context]="context"></oh-my-request> -->
     <!-- </mat-expansion-panel> -->
   </mat-accordion>
 </mat-card>

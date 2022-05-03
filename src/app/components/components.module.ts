@@ -64,6 +64,7 @@ import { FeedbackComponent } from './feedback/feedback.component';
 import { ShowErrorsComponent } from './show-errors/show-errors.component';
 import { MockImageComponent } from './mock-image/mock-image.component';
 import { StatusCodeComponent } from './form/status-code/status-code.component';
+import { RequestFilterComponent } from './request-filter/request-filter.component';
 
 @NgModule({
   declarations: [
@@ -98,7 +99,8 @@ import { StatusCodeComponent } from './form/status-code/status-code.component';
     FeedbackComponent,
     ShowErrorsComponent,
     MockImageComponent,
-    StatusCodeComponent
+    StatusCodeComponent,
+    RequestFilterComponent
   ],
   imports: [
     CommonModule,

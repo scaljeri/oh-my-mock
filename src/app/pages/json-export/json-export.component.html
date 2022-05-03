@@ -1,21 +1,36 @@
 <div class="wrapper">
-  <button class="export-all" *ngIf="hasRequests" (click)="onSelectAll()" mat-mini-fab color="warn"
-    aria-label="Clone all">
-    <mat-icon>copy_all</mat-icon>
+  <button
+    class="export-all"
+    *ngIf="hasRequests"
+    (click)="onSelectAll()"
+    mat-mini-fab
+    color="warn"
+    aria-label="Clone all"
+  >
+    <mat-icon svgIcon="copy_all"></mat-icon>
   </button>
 
-  <oh-my-data-list *ngIf="state"
-  [state]="state"
-  [persistFilter]="false"
-  [showExport]="true"
-  [togglableRows]="false"
-  [showDelete]="false"
-  (dataExport)="onRowExport($event)"
-  [hideFilter]="true"
-  [hideHeader]="true"></oh-my-data-list>
+  <oh-my-data-list
+    *ngIf="state"
+    [state]="state"
+    [persistFilter]="false"
+    [showExport]="true"
+    [togglableRows]="false"
+    [showDelete]="false"
+    (dataExport)="onRowExport($event)"
+    [hideFilter]="true"
+    [hideHeader]="true"
+  ></oh-my-data-list>
 </div>
 
-<button class="export" mat-raised-button color="primary" (click)="onExport()" [matBadge]="selectionCount"
-  matBadgePosition="after" matBadgeColor="accent">
-  <mat-icon>import_export</mat-icon><span>Export</span>
+<button
+  class="export"
+  mat-raised-button
+  color="primary"
+  (click)="onExport()"
+  [matBadge]="selectionCount"
+  matBadgePosition="after"
+  matBadgeColor="accent"
+>
+  <mat-icon svgIcon="import_export"></mat-icon><span>Export</span>
 </button>

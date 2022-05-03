@@ -29,6 +29,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() showCopy = false;
   @Input() showDelete = false;
   @Input() copyInfo;
+  @Input() theme: 'dark' | 'light' = 'dark'
 
   @Output() copy = new EventEmitter<string>();
   @Output() delete = new EventEmitter<string>();

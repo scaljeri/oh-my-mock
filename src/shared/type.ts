@@ -33,7 +33,8 @@ export interface IOhMyAux {
   appActive?: boolean;
   popupActive?: boolean;
   blurImages?: boolean;
-  filteredRequests?: string[]
+  filteredRequests?: ohMyDataId[]
+  filterOptions?: Record<string, boolean>;
 }
 
 export interface IOhMyContext {
@@ -68,6 +69,7 @@ export interface IData extends IOhMyMockContext {
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
   lastHit: number;
+  lastModified: number;
   version: string;
   type: objectTypes.REQUEST;
 }

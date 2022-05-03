@@ -106,13 +106,13 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   }
 }
 
-chrome.runtime.onInstalled.addListener(function (details) {
-  chrome.storage.local.get([STORAGE_KEY], (state) => {
-    if (!state[STORAGE_KEY]) {
-      open('/splash-screen.html', '_blank');
-    }
-  });
-});
+// chrome.runtime.onInstalled.addListener(function (details) {
+//   chrome.storage.local.get([STORAGE_KEY], (state) => {
+//     if (!state[STORAGE_KEY]) {
+//       open('/splash-screen.html', '_blank');
+//     }
+//   });
+// });
 
 chrome.runtime.onSuspend.addListener(function () {
   // eslint-disable-next-line no-console

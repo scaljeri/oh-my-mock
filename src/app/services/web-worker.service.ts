@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
-import { IData } from '@shared/type';
+import { Observable, Subject } from 'rxjs';
+import { IData, IMock, ohMyDataId } from '@shared/type';
 import { loadAllMocks } from '@shared/utils/load-all-mocks';
 import { OhMyStateService } from './state.service';
 import { OhWWPacketTypes } from '../webworkers/types';
@@ -37,17 +37,26 @@ export class WebWorkerService {
     });
   }
 
-  public async search(terms: string[], data?: Record<string, IData>): Promise<string[]> {
+  public upsertMock(mock: IMock): void {
+    this.worker.postMessage({
+      type: OhWWPacketTypes.MOCKS,
+      body: { [mock.id]: mock }
+    });
+
+  }
+
+  public search(data: Record<ohMyDataId, IData>, terms: string[], includes: Record<string, boolean>): Observable<string[]> {
     const id = uniqueId();
 
-    this.worker.postMessage({ id, type: OhWWPacketTypes.SEARCH, body: { terms, data } });
+    this.worker.postMessage({ id, type: OhWWPacketTypes.SEARCH, body: { terms, data, includes } });
 
-    return new Promise<string[]>(resolve => {
+    return new Observable<string[]>(observer => {
       this.worker.onmessage = ({ data }) => {
         if (id === data.id) {
-          resolve(data.body);
+          observer.next(data.body);
+          observer.complete();
         }
       };
-    })
+    });
   }
 }

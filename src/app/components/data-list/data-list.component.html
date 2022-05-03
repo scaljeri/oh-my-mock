@@ -15,14 +15,15 @@
       <oh-my-preset
         *ngIf="context"
         [context]="context"
+        theme="light"
         class="preset"
       ></oh-my-preset>
       <mat-icon
         class="info info-contrast scenario-help"
         color="primary"
         [matTooltip]="presetInfo"
-        >info</mat-icon
-      >
+        svgIcon="info"
+      ></mat-icon>
     </ng-container>
 
     <div class="toggle">
@@ -37,7 +38,7 @@
       </ng-container>
       <ng-container *ngIf="showMenu">
         <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu">
-          <mat-icon>more_vert</mat-icon>
+          <mat-icon svgIcon="more_vert"></mat-icon>
         </button>
         <mat-menu #menu="matMenu">
           <ul class="main-menu">
@@ -70,34 +71,16 @@
     <span class="method">Method</span>
     <div class="url">
       <span>Url</span>
-      <div
-        *ngIf="hideFilter === false"
-        class="filter-field"
-        [ngClass]="{ active: filterCtrl.value }"
-      >
-        <mat-form-field class="search" [floatLabel]="'never'">
-          <input
-            type="search"
-            matInput
-            placeholder="Filter"
-            [formControl]="filterCtrl"
-          />
-          <button
-            mat-button
-            *ngIf="filterCtrl.value"
-            matSuffix
-            mat-icon-button
-            aria-label="Clear"
-            (click)="filterCtrl.setValue('')"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
-          <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner>
-        </mat-form-field>
-        <!-- <mat-icon class="search-help" color="primary"
-          matTooltip="Each word in this search field is searched for independenty from other words. To combine multiple words use quotes">
-          info</mat-icon> -->
-      </div>
+      <oh-my-request-filter
+        *ngIf="state && hideFilter === false && requestCount > 0"
+        [data]="state.data"
+        [filterOptions]="state.aux.filterOptions"
+        [filterStr]="state.aux.filterKeywords"
+        (filteredData)="onFilterUpdateData($event)"
+        (updateFilterOptions)="onFilterUpdateOptions($event)"
+        (updateFilterStr)="onFilterUpdateStr($event)"
+      ></oh-my-request-filter>
+      <!-- <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner> -->
     </div>
     <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>
@@ -106,7 +89,11 @@
   <li
     [title]="row.id"
     class="data-row"
-    *ngFor="let row of search$ | async; index as index; trackBy: trackBy"
+    *ngFor="
+      let row of filteredRequests | dataToViewList: state.data;
+      index as index;
+      trackBy: trackBy
+    "
     (click)="onDataClick(row, index)"
     [ngClass]="{
       'row-clickable': togglableRows,
@@ -145,8 +132,16 @@
         color="primary"
         aria-label="Example icon button with a menu icon"
       >
-        <mat-icon *ngIf="!row.enabled[context?.preset]">play_arrow</mat-icon>
-        <mat-icon *ngIf="row.enabled[context?.preset]">stop</mat-icon>
+        <mat-icon
+          svgIcon="play_arrow"
+          color="primary"
+          *ngIf="!row.enabled[context?.preset]"
+        ></mat-icon>
+        <mat-icon
+          svgIcon="stop"
+          color="primary"
+          *ngIf="row.enabled[context?.preset]"
+        ></mat-icon>
       </button>
       <button
         *ngIf="showClone"
@@ -155,7 +150,7 @@
         color="primary"
         aria-label="Example icon button with a menu icon"
       >
-        <mat-icon>content_copy</mat-icon>
+        <mat-icon svgIcon="content_copy" color="primary"></mat-icon>
       </button>
       <button
         *ngIf="showDelete"
@@ -164,7 +159,7 @@
         color="primary"
         aria-label="Example icon button with a menu icon"
       >
-        <mat-icon>delete</mat-icon>
+        <mat-icon svgIcon="delete" color="primary"></mat-icon>
       </button>
       <button
         *ngIf="showExport"
@@ -173,7 +168,7 @@
         color="primary"
         aria-label="Example icon button with a menu icon"
       >
-        <mat-icon>import_export</mat-icon>
+        <mat-icon svgIcon="import_export" color="primary"></mat-icon>
       </button>
     </div>
   </div>

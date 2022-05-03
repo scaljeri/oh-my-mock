@@ -6,7 +6,7 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { IOhMyContext, IState } from '@shared/type';
+import { IMock, IOhMyContext, IState } from '@shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,6 +19,9 @@ import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
 import { IPacketPayload } from '@shared/packet-type';
 import { WebWorkerService } from './services/web-worker.service';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+import { registerIcons } from './app-icons';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -42,6 +45,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version: string;
   showDisabled = -1;
   stateSub: Subscription;
+  mockSub: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
 
@@ -56,8 +60,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private webWorkerService: WebWorkerService,
     private cdr: ChangeDetectorRef,
-    public dialog: MatDialog) {
-    // eslint-disable-next-line no-console
+    public dialog: MatDialog,
+    domSanitizer: DomSanitizer,
+    matIconRegistry: MatIconRegistry) {
+    registerIcons(matIconRegistry, domSanitizer);
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -95,6 +101,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
+    this.mockSub = this.stateService.response$.subscribe((mock: IMock) => {
+      this.webWorkerService.upsertMock(mock);
+    });
+
     this.appState.errors$.subscribe(error => {
       this.errors.push(error);
       this.cdr.detectChanges();
@@ -111,6 +121,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:beforeunload')
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
+    this.mockSub?.unsubscribe();
     this.contentService.deactivate(true);
   }
 

@@ -1,17 +1,17 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
 import { IData, IMock, IOhMyContext, IState, ohMyDataId } from '@shared/type';
-import { BehaviorSubject, distinctUntilChanged, filter, from, map, merge, Observable, Subject, Subscription, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from 'src/app/constants';
 import { OhMyState } from 'src/app/services/oh-my-store';
-import { shallowSearch, splitIntoSearchTerms } from '@shared/utils/search';
 import { WebWorkerService } from 'src/app/services/web-worker.service';
+import { RequestFilterComponent } from '../request-filter/request-filter.component';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -19,11 +19,8 @@ export const highlightSeq = [
   animate('1s ease-out', style({ backgroundColor: '*' }))
 ];
 
-type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock> };
-interface IDataView extends IData {
-  urlStart: string;
-  urlEnd: string;
-}
+type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock>, includes: Record<string, boolean> };
+
 @Component({
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
@@ -61,6 +58,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() dataExport = new EventEmitter<IData>();
   @Output() filteredList = new EventEmitter<IData[]>();
 
+  @ViewChild(RequestFilterComponent) filterComp: RequestFilterComponent;
 
   public selection = new SelectionModel<number>(true);
   public defaultList: number[];
@@ -71,50 +69,58 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
-  filteredDataList: IDataView[];
+  // filteredDataList: IDataView[];
   mocks: Record<string, IMock>;
+  requestCount = 0;
+  filteredRequests: string[];
 
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
   presets: string[];
   isPresetCopy = false;
+  hasFilterOptionsChanged = false;
 
   isSearching = false;
   public data: Record<ohMyDataId, IData>;
   worker: Worker;
   private workerTimeoutId: number;
   searchSubj = new Subject();
+  filterOptionsCtrl = new FormControl();
+  filterOptions = [];
 
   private stateSearchSubject = new BehaviorSubject<string[]>(null);
 
-  search$ = merge(
-    this.stateSearchSubject.pipe(filter(d => !!d)),
-    this.searchSubj.asObservable().pipe(
-      // tap(() => this.isSearching = true),
-      map<string, SearchFilterData>((searchStr: string) =>
-      ({
-        words: splitIntoSearchTerms(searchStr),
-        data: this.state.data
-      } as SearchFilterData)
-      ),
-      distinctUntilChanged(),
-      map<SearchFilterData, SearchFilterData>(input => {
-        return { words: input.words, data: shallowSearch(input.data, input.words) } as SearchFilterData;
-      }),
-      map<SearchFilterData, SearchFilterData>(input => ({ ...input, mocks: this.mocks })),
-      switchMap<SearchFilterData, Observable<string[]>>(input =>
-        from(this.doSearch(input.data, input.words))),
-      tap(ids => {
-        this.storeService.updateAux({ filteredRequests: ids }, this.context);
-      }),
-      // tap(() => this.isSearching = false)
-    )).pipe(
-      map(input =>
-        Object.values(this.state.data)
-          .filter(d => !input.includes(d.id))
-          .map(dataToView)
-      )
-    );
+  // search$ = merge(
+  //   this.stateSearchSubject.pipe(filter(d => !!d), debounceTime(200)),
+  //   this.searchSubj.asObservable().pipe(
+  //     // tap(() => this.isSearching = true),
+  //     map<string, SearchFilterData>((searchStr: string) =>
+  //     ({
+  //       words: splitIntoSearchTerms(searchStr),
+  //       data: this.state.data,
+  //       includes: Object.fromEntries(Object.entries(this.state.aux.filterOptions || {}).map(([k, v]) => [FILTER_OPTIONS_MAPPER[k], v]))
+  //     } as SearchFilterData)
+  //     ),
+  //     // distinctUntilChanged(),
+  //     map<SearchFilterData, SearchFilterData>(input => {
+  //       return { words: input.words, data: shallowSearch(input.data, input.words, input.includes) } as SearchFilterData;
+  //     }),
+  //     map<SearchFilterData, SearchFilterData>(input => ({ ...input, mocks: this.mocks })),
+  //     switchMap<SearchFilterData, Observable<string[]>>(input =>
+  //       from(this.doSearch(input.data, input.words))),
+  //     tap(ids => {
+  //       this.storeService.updateAux({ filteredRequests: ids }, this.context);
+  //     }),
+  //     // tap(() => this.isSearching = false)
+  //   )).pipe(
+  //     map(input => {
+  //       return Object.values(this.state.data)
+  //         .filter(d => !input.includes(d.id))
+  //         .map(dataToView)
+  //         .sort((a, b) => { return a.lastHit < b.lastHit ? 1 : -1 })
+  //     }
+  //     ),
+  //   );
 
   constructor(
     public dialog: MatDialog,
@@ -124,33 +130,40 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     private storeService: OhMyState) { }
 
   async ngOnInit() {
-    let filterDebounceId;
+    // let filterDebounceId;
     // this.filterCtrl.valueChanges.pipe(debounceTime(300)).subscribe(async filter => {
-    this.filterCtrl.valueChanges.subscribe(async filter => {
-      this.state.aux.filterKeywords = filter;
-      this.searchSubj.next(filter.toLowerCase());
-      // this.filteredDataList = (await this.filterListByKeywords()).map(dataToView)
-      // this.filteredList.emit(this.filteredDataList);
+    //   this.state.aux.filterKeywords = filter;
 
-      if (!this.persistFilter) {
-        return;
-      }
+    //   if (filter === '') {
+    //     this.state.aux.filteredRequests = [];
+    //   } else {
+    //     this.searchSubj.next(filter.toLowerCase());
+    //   }
 
-      if (this.state.context.domain === this.context.domain) {
-        clearTimeout(filterDebounceId);
-        filterDebounceId = window.setTimeout(() => {
-          this.storeService.updateAux({ filterKeywords: filter }, this.context);
-        }, 500);
-      }
+    //   // if (!this.persistFilter) {
+    //   //   return;
+    //   // }
 
-      this.cdr.detectChanges();
-    });
+    //   // if (this.state.context.domain === this.context.domain) {
+    //   //   clearTimeout(filterDebounceId);
+    //   //   filterDebounceId = window.setTimeout(() => {
+    //   //     this.storeService.updateAux({ filterKeywords: filter }, this.context);
+    //   //   }, 500);
+    //   // }
 
-    this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
+    //   this.cdr.detectChanges();
+    // });
+    this.persistFilter = this.persistFilter ?? this.state.context.domain === this.context.domain;
 
-    if (this.state?.aux.filteredRequests) {
-      this.stateSearchSubject.next(this.state.aux.filteredRequests);
-    }
+    // this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
+
+    // this.filterOptions = FILTER_OPTIONS.map(fo => {
+    //   return {
+    //     ...fo,
+    //     state: this.state?.aux.filterOptions?.[fo.id] ?? true
+    //   }
+
+    // });
   }
 
   async ngOnChanges() {
@@ -158,6 +171,18 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       if (!this.context) {
         this.context = this.state.context;
       }
+
+      // if (this.hasFilterOptionsChanged) {
+      //   this.searchSubj.next(this.state.aux.filterKeywords.toLowerCase());
+      // } else {
+      this.requestCount = Object.keys(this.state.data).length;
+      this.filteredRequests = this.state.aux.filteredRequests || Object.keys(this.state.data);
+      //   this.stateSearchSubject.next(this.state?.aux.filteredRequests || []);
+      // }
+
+      // if (this.state?.aux.filteredRequests) {
+
+      // }
       this.cdr.detectChanges();
     }
   }
@@ -165,40 +190,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   onToggleActivateNew(toggle: boolean): void {
     this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
   }
-
-  // async filterListByKeywords(): Promise<IData[]> {
-  //   const data = Object.values(this.state.data).sort((a, b) => a.lastHit > b.lastHit ? -1 : 1);
-  //   const input = this.state.aux.filterKeywords as string;
-
-  //   if (input === '' || input === undefined || input === null) {
-  //     return data;
-  //   }
-
-  //   const quotedRe = /(?<=")([^"]+)(?=")(\s|\b)/gi;
-  //   const rmQuotedRe = /"[^"]+"\s{0,}/g;
-
-  //   const qwords = input.match(quotedRe) || [];
-  //   const words = input.replace(rmQuotedRe, '').split(' ');
-  //   const terms = [...qwords, ...words].filter(t => !!t);
-
-  //   const filtered = data.filter((d: IData) =>
-  //     terms
-  //       .filter(v => v !== undefined && v !== '')
-  //       .some(v => {
-  //         const x = d.url.toLowerCase().includes(v) ||
-  //           d.requestType.toLowerCase().includes(v) ||
-  //           d.method?.toLowerCase().includes(v)
-  //         return x;
-  //       })
-  //   );
-
-  //   const notMatched = data.filter(d => !filtered.includes(d));
-  //   // const results = await deepSearch(out, mocks, terms);
-  //   // const output = filtered.concat(await deepSearch(out, mocks, terms));
-
-  //   // return data.filter(d => filtered.includes(d) || matched.includes(d.id));
-  //   // return filtered.concat(await deepSearch(out, mocks, terms));
-  // }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -284,15 +275,37 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     return row.id; // type + row.method + row.url;
   }
 
-  async doSearch(data: Record<string, IData>, terms: string[]): Promise<string[]> {
-    return this.webWorkerService.search(terms, data);
+  // async doSearch(data: Record<string, IData>, terms: string[]): Promise<string[]> {
+  //   return this.webWorkerService.search(terms, data);
+  // }
+
+  onFilterUpdateOptions(options: Record<string, boolean>): void {
+    if (this.persistFilter) {
+      this.storeService.updateAux({ filterOptions: options }, this.context);
+    }
+
+    this.state.aux.filterOptions = options;
+  }
+
+  onFilterUpdateStr(str: string): void {
+    if (this.persistFilter) {
+      this.storeService.updateAux({ filterKeywords: str }, this.context)
+    }
+  }
+
+  onFilterUpdateData(data: string[]): void {
+    if (this.persistFilter) {
+      this.storeService.updateAux({ filteredRequests: data }, this.context);
+    }
+
+    this.filteredRequests = data;
   }
 }
 
-export function dataToView(row: IData): IDataView {
-  return {
-    ...row,
-    urlStart: row.url.substring(0, row.url.length / 2),
-    urlEnd: row.url.substring(row.url.length / 2)
-  }
-}
+// export function dataToView(row: IData): IDataView {
+//   return {
+//     ...row,
+//     urlStart: row.url.substring(0, row.url.length / 2),
+//     urlEnd: row.url.substring(row.url.length / 2)
+//   }
+// }

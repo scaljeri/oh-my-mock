@@ -97,32 +97,6 @@ ol[data-table] {
       display: flex;
       height: 50px;
       position: relative;
-
-      .filter-field {
-        &.active {
-          background-color: $activeModified;
-        }
-
-        padding-left: $spacer-2;
-        padding-right: $spacer-2;
-        align-self: center;
-        height: 50px;
-        @include oh-position(absolute, 0 0 0 50%);
-        transform: translateX(-50%);
-
-        mat-form-field {
-          font-size: $oh-font-size;
-          padding-right: 30px;
-        }
-
-        // button {
-        //   @include oh-position(absolute, 8px 0px 0 0);
-        // }
-
-        .search-help {
-          @include oh-position(absolute, 8px 10px 0 0);
-        }
-      }
     }
   }
 
@@ -224,12 +198,6 @@ span.type {
   white-space: nowrap;
 }
 
-.search {
-  mat-spinner {
-    @include oh-position(absolute, 50% -45px 0 0);
-    transform: translateY(-50%);
-  }
-}
 
 .mock {
   flex: 0 0 120px;
@@ -304,6 +272,12 @@ span.type {
 
 .is-hit-b {
   animation: highlight-b 500ms ease-out;
+}
+
+oh-my-request-filter {
+  @include oh-position(absolute, 0 0 0 50%);
+  transform: translateX(-50%);
+  height: 50px;
 }
 
 @keyframes highlight-a {

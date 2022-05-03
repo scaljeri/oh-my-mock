@@ -1,0 +1,39 @@
+@import 'mixins';
+
+$activeModified: #ffff99;
+
+:host {
+  position: relative;
+
+  .filter-field.active {
+    background-color: $activeModified;
+    padding-left: $spacer-2;
+    padding-right: $spacer-2;
+  }
+
+  mat-form-field {
+    font-size: $oh-font-size;
+    margin-right: 30px; // Extra space for info icon
+  }
+}
+
+.search-help {
+  @include oh-position(absolute, 8px 35px 0 0);
+}
+
+.search-config {
+  cursor: pointer;
+}
+
+.filter-menu {
+  padding: 0 $spacer-2 $spacer-2;
+  ul {
+    @include oh-list-unstyled;
+  }
+
+  label {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: $spacer-1;
+  }
+}

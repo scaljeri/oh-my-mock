@@ -19,4 +19,5 @@ export interface IOhWWPacketSearch {
   id: string;
   terms: string[];
   data: Record<string, IData>;
+  includes: Record<string, boolean>;
 }

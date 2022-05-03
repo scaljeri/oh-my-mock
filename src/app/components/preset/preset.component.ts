@@ -24,6 +24,7 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
 })
 export class PresetComponent implements OnInit, OnChanges {
   @Input() context: IOhMyContext;
+  @Input() theme: 'dark' | 'light';
 
   presetCtrl = new FormControl();
   options: string[] = [];
