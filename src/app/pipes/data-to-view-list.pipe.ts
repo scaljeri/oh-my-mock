@@ -8,7 +8,11 @@ import { IData } from '@shared/type';
 export class DataToViewListPipe implements PipeTransform {
 
   transform(value: string[] = [], data: Record<string, IData> = {}): IOhDataView[] {
-    const out =  Object.values(data)
+    if (value === null) {
+      return [];
+    }
+
+    const out = Object.values(data)
       .filter(d => value.includes(d.id))
       .sort((a, b) => a.lastHit > b.lastHit ? 1 : -1)
       .map(data => ({
@@ -17,6 +21,6 @@ export class DataToViewListPipe implements PipeTransform {
         urlEnd: data.url.substring(data.url.length / 2)
       })) || [];
 
-      return out;
+    return out;
   }
 }

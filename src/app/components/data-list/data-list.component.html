@@ -53,7 +53,7 @@
                 Deactivate all requests
               </button>
             </li>
-            <li [ngClass]="{ 'is-selected': state.aux.blurImages }">
+            <li [ngClass]="{ 'is-selected': blurImages }">
               <button (click)="onBlurImage()" mat-menu-item>
                 <span>Blur images</span>
               </button>
@@ -65,12 +65,13 @@
   </div>
 </div>
 
-<ol data-table *ngIf="state">
+<ol data-table *ngIf="state$ | async as state">
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
     <div class="url">
       <span>Url</span>
+
       <oh-my-request-filter
         [ngClass]="{
           hidden: !state || hideFilter === true || requestCount === 0
@@ -79,11 +80,12 @@
         [filterOptions]="state.aux.filterOptions"
         [filterStr]="state.aux.filterKeywords"
         [lastResult]="filteredRequests"
-        (filteredData)="onFilterUpdateData($event)"
+        (update)="onFilterUpdate($event)"
         (updateFilterOptions)="onFilterUpdateOptions($event)"
         (updateFilterStr)="onFilterUpdateStr($event)"
       ></oh-my-request-filter>
       <!-- <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner> -->
+        <!-- (filteredData)="onFilterUpdateData($event)" -->
     </div>
     <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>

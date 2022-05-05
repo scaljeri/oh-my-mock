@@ -5,7 +5,7 @@ import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
 import { IData, IMock, IOhMyContext, IState, ohMyDataId } from '@shared/type';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from 'src/app/constants';
@@ -19,7 +19,7 @@ export const highlightSeq = [
   animate('1s ease-out', style({ backgroundColor: '*' }))
 ];
 
-type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock>, includes: Record<string, boolean> };
+// type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock>, includes: Record<string, boolean> };
 
 @Component({
   selector: 'oh-my-data-list',
@@ -38,8 +38,15 @@ type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: 
   //   ])
   // ]
 })
-export class DataListComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() state: IState;
+export class DataListComponent implements OnInit, OnDestroy {
+  stateSubject = new BehaviorSubject<IState>(undefined);
+  state$ = this.stateSubject.asObservable().pipe(filter(s => !!s), debounceTime(100));
+  @Input() set state(s: IState) {
+    if (s) {
+      this.stateSubject.next(s);
+    }
+  }
+
   @Input() context: IOhMyContext; // context !== state,context (but it can be)
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
@@ -68,6 +75,8 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   public disabled = false;
   public presetInfo = presetInfo;
 
+
+  blurImages = false;
   subscriptions = new Subscription();
   filterCtrl = new FormControl('');
   // filteredDataList: IDataView[];
@@ -89,40 +98,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   filterOptionsCtrl = new FormControl();
   filterOptions = [];
 
-  private stateSearchSubject = new BehaviorSubject<string[]>(null);
-
-  // search$ = merge(
-  //   this.stateSearchSubject.pipe(filter(d => !!d), debounceTime(200)),
-  //   this.searchSubj.asObservable().pipe(
-  //     // tap(() => this.isSearching = true),
-  //     map<string, SearchFilterData>((searchStr: string) =>
-  //     ({
-  //       words: splitIntoSearchTerms(searchStr),
-  //       data: this.state.data,
-  //       includes: Object.fromEntries(Object.entries(this.state.aux.filterOptions || {}).map(([k, v]) => [FILTER_OPTIONS_MAPPER[k], v]))
-  //     } as SearchFilterData)
-  //     ),
-  //     // distinctUntilChanged(),
-  //     map<SearchFilterData, SearchFilterData>(input => {
-  //       return { words: input.words, data: shallowSearch(input.data, input.words, input.includes) } as SearchFilterData;
-  //     }),
-  //     map<SearchFilterData, SearchFilterData>(input => ({ ...input, mocks: this.mocks })),
-  //     switchMap<SearchFilterData, Observable<string[]>>(input =>
-  //       from(this.doSearch(input.data, input.words))),
-  //     tap(ids => {
-  //       this.storeService.updateAux({ filteredRequests: ids }, this.context);
-  //     }),
-  //     // tap(() => this.isSearching = false)
-  //   )).pipe(
-  //     map(input => {
-  //       return Object.values(this.state.data)
-  //         .filter(d => !input.includes(d.id))
-  //         .map(dataToView)
-  //         .sort((a, b) => { return a.lastHit < b.lastHit ? 1 : -1 })
-  //     }
-  //     ),
-  //   );
-
   constructor(
     public dialog: MatDialog,
     private cdr: ChangeDetectorRef,
@@ -131,27 +106,27 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     private storeService: OhMyState) { }
 
   async ngOnInit() {
-    this.persistFilter = this.persistFilter ?? this.state.context.domain === this.context.domain;
+    this.persistFilter = this.persistFilter ?? this.stateSubject.value?.context.domain === this.context.domain;
 
-    if (this.state) {
-      this.filteredRequests = this.state.aux.filteredRequests || this.state.aux.filterKeywords ? [] : Object.keys(this.state.data);
-    }
-  }
+    this.subscriptions.add(this.state$.subscribe(state => {
+      if (!state.aux.filterKeywords) {
+        this.filteredRequests = Object.keys(state.data);
+      } else {
+        if (state.aux.filteredRequests) {
+          this.filteredRequests = state.aux.filteredRequests;
+        } else if (state.aux.filteredRequests !== null) {
+          this.filteredRequests = Object.keys(state.data);
+          // this.filteredRequests = state.aux.filteredRequests ?? state.aux.filteredRequests === null ? null : Object.keys(state.data);
+        }
+      }
 
-  async ngOnChanges() {
-    if (this.state) {
       if (!this.context) {
-        this.context = this.state.context;
+        this.context = state?.context;
       }
 
-      this.requestCount = Object.keys(this.state.data).length;
-
-      if (!this.state.aux.filterKeywords) {
-        this.filteredRequests = Object.keys(this.state.data);
-      }
-
-      this.cdr.detectChanges();
-    }
+      this.requestCount = Object.keys(state.data).length;
+      this.blurImages = state.aux.blurImages;
+    }));
   }
 
   onToggleActivateNew(toggle: boolean): void {
@@ -164,7 +139,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   onActivateToggle(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
-    const data = this.state.data[id];
+    const data = this.stateSubject.value.data[id];
 
     if (!Object.keys(data.mocks).length) {
       this.toast.error(`Could not activate, there are no responses available`);
@@ -180,22 +155,23 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   async onDelete(id: ohMyDataId, event) {
     event.stopPropagation();
 
-    const data = this.state.data[id];
+    const data = this.stateSubject.value.data[id];
 
     // If you click delete fast enough, you can hit it twice
     if (data) { // Is this needed
       this.toast.success('Deleted request', { duration: 2000, style: {} });
-      this.state = await this.storeService.deleteRequest(data, this.context);
+      this.stateSubject.next(await this.storeService.deleteRequest(data, this.context));
     }
   }
 
   onClone(id: ohMyDataId, event): void {
     event.stopPropagation();
+    const state = this.stateSubject.value;
 
-    this.storeService.cloneRequest(id, this.state.context, this.context);
-    this.toast.success('Cloned ' + this.state.data[id].url);
+    this.storeService.cloneRequest(id, state.context, this.context);
+    this.toast.success('Cloned ' + state.data[id].url);
 
-    this.cloned.emit(this.state.data[id]);
+    this.cloned.emit(state.data[id]);
   }
 
   onDataClick(data: IData, index: number): void {
@@ -212,11 +188,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onBlurImage(): void {
-    this.storeService.updateAux({ blurImages: !this.state.aux.blurImages }, this.context);
+    this.storeService.updateAux({ blurImages: !this.stateSubject.value.aux.blurImages }, this.context);
   }
 
   public selectAll(): void {
-    Object.keys(this.state.data).forEach((d, i) => {
+    Object.keys(this.stateSubject.value.data).forEach((d, i) => {
       this.selection.select(i);
     });
     this.cdr.detectChanges();
@@ -228,16 +204,17 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onActivateAll(isActive: boolean): void {
-    this.state = { ...this.state, data: { ...this.state.data } };
-    Object.values(this.state.data).forEach(d => {
-      if (d.selected[this.state.context.preset]) {
-        d = { ...d, enabled: { ...d.enabled, [this.state.context.preset]: isActive } };
-        this.state.data[d.id] = d;
+    const state = { ...this.stateSubject.value, data: { ...this.stateSubject.value.data } };
+    Object.values(this.stateSubject.value.data).forEach(d => {
+      if (d.selected[this.stateSubject.value.context.preset]) {
+        d = { ...d, enabled: { ...d.enabled, [this.stateSubject.value.context.preset]: isActive } };
+        state.data[d.id] = d;
       }
     });
 
     // NOTE: It is not this.context!!!!!
-    this.storeService.upsertState(this.state, this.state.context);
+    this.storeService.upsertState(state, state.context);
+    this.stateSubject.next(state);
   }
 
   trackBy(index, row): string {
@@ -253,7 +230,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       this.storeService.updateAux({ filterOptions: options }, this.context);
     }
 
-    this.state.aux.filterOptions = options;
+    // this.state.aux.filterOptions = options;
   }
 
   onFilterUpdateStr(str: string): void {
@@ -281,11 +258,3 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
 
   }
 }
-
-// export function dataToView(row: IData): IDataView {
-//   return {
-//     ...row,
-//     urlStart: row.url.substring(0, row.url.length / 2),
-//     urlEnd: row.url.substring(row.url.length / 2)
-//   }
-// }

@@ -76,13 +76,14 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       switchMap<SearchFilterData, Observable<IData[]>>(input => this.deepSearch(input))
     ).subscribe(data => {
       this.ngZone.run(() => {
-        // this.update.emit({
-        //   filterKeywords: this.filterCtrl.value,
-        //   filteredRequests: data.map(d => d.id)
-        // });
+        this.update.emit({
+          filterKeywords: this.filterCtrl.value,
+          filteredRequests: data.map(d => d.id),
+          filterOptions: this.filterOptions
+        });
 
-        this.updateFilterStr.emit(this.filterCtrl.value);
-        this.filteredData.emit(data.map(d => d.id))
+        // this.updateFilterStr.emit(this.filterCtrl.value);
+        // this.filteredData.emit(data.map(d => d.id))
       });
     }));
 
@@ -91,16 +92,19 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnChanges({ filterOptions, filterStr, lastResult }: SimpleChanges): void {
+    console.log('ngOnChanges RequestFiler', lastResult);
     try {
-      if (filterStr && !filterStr.currentValue) {
-        this.filterCtrl.setValue(filterStr.currentValue, { emitEvent: false });
-      }
 
-      if (!this.filterOptions || !Array.isArray(this.filterOptions) || this.filterOptions.length !== FILTER_OPTIONS.length ||
-        Object.entries(filterOptions.currentValue).filter(([k, v]) => filterOptions.previousValue?.[k] !== v).length > 0) {
-        this.filterTrigger$.next(null);
+      // if (filterStr && !filterStr.currentValue) {
+      //   this.filterCtrl.setValue(filterStr.currentValue, { emitEvent: false });
+      // }
 
-      } else if (lastResult && !lastResult.currentValue) {
+      // if (!thisfilterOptions || !Array.isArray(this.filterOptions) || this.filterOptions.length !== FILTER_OPTIONS.length ||
+      // Object.entries(filterOptions.currentValue).filter(([k, v]) => filterOptions.previousValue?.[k] !== v).length > 0) {
+      // this.filterTrigger$.next(null);
+
+      // } else if (lastResult && !lastResult.currentValue) {
+      if (lastResult && !lastResult.currentValue) {
         this.filterTrigger$.next(null);
       }
 
@@ -125,7 +129,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     this.filterMappedOpts = transformFilterOptions(this.filterOptions);
     this.filterTrigger$.next(null);
 
-    this.updateFilterOptions.emit(this.filterOptions);
+    // this.updateFilterOptions.emit(this.filterOptions);
   }
 
   // Returns SearchFilterData with `data` holding the items that did not match
