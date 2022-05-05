@@ -5,7 +5,7 @@ export enum OhWWPacketTypes {
   INIT_DONE = 'INIT_DONE',
   MOCKS = 'MOCKS',
   SEARCH = 'SEARCH',
-  SEARCH_RESULT = 'SEARCH_RESULT'
+  SEARCH_RESULT = 'SEARCH_RESULT',
 }
 
 export type IOhWWPacketMocks = Record<string, IMock>;

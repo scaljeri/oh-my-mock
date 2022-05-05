@@ -11,7 +11,11 @@ export enum ImportResultEnum {
 }
 
 export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
-  const state = await sUtils.get<IState>(context.domain) || StateUtils.init(context);
+  let state = await sUtils.get<IState>(context.domain);
+
+  if (!state) {
+    state = StateUtils.init(context);
+  }
 
   let status = ImportResultEnum.SUCCESS;
   let requests = data.requests as unknown as IData[];

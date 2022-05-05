@@ -57,6 +57,7 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
   @Output() selectRow = new EventEmitter<string>();
   @Output() dataExport = new EventEmitter<IData>();
   @Output() filteredList = new EventEmitter<IData[]>();
+  @Output() cloned = new EventEmitter<IData>();
 
   @ViewChild(RequestFilterComponent) filterComp: RequestFilterComponent;
 
@@ -130,40 +131,11 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     private storeService: OhMyState) { }
 
   async ngOnInit() {
-    // let filterDebounceId;
-    // this.filterCtrl.valueChanges.pipe(debounceTime(300)).subscribe(async filter => {
-    //   this.state.aux.filterKeywords = filter;
-
-    //   if (filter === '') {
-    //     this.state.aux.filteredRequests = [];
-    //   } else {
-    //     this.searchSubj.next(filter.toLowerCase());
-    //   }
-
-    //   // if (!this.persistFilter) {
-    //   //   return;
-    //   // }
-
-    //   // if (this.state.context.domain === this.context.domain) {
-    //   //   clearTimeout(filterDebounceId);
-    //   //   filterDebounceId = window.setTimeout(() => {
-    //   //     this.storeService.updateAux({ filterKeywords: filter }, this.context);
-    //   //   }, 500);
-    //   // }
-
-    //   this.cdr.detectChanges();
-    // });
     this.persistFilter = this.persistFilter ?? this.state.context.domain === this.context.domain;
 
-    // this.filterCtrl.setValue(this.state.aux.filterKeywords, { emitEvent: false });
-
-    // this.filterOptions = FILTER_OPTIONS.map(fo => {
-    //   return {
-    //     ...fo,
-    //     state: this.state?.aux.filterOptions?.[fo.id] ?? true
-    //   }
-
-    // });
+    if (this.state) {
+      this.filteredRequests = this.state.aux.filteredRequests || this.state.aux.filterKeywords ? [] : Object.keys(this.state.data);
+    }
   }
 
   async ngOnChanges() {
@@ -173,8 +145,6 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
       }
 
       this.requestCount = Object.keys(this.state.data).length;
-
-      this.filteredRequests = this.state.aux.filteredRequests || Object.keys(this.state.data);
 
       if (!this.state.aux.filterKeywords) {
         this.filteredRequests = Object.keys(this.state.data);
@@ -223,7 +193,9 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     event.stopPropagation();
 
     this.storeService.cloneRequest(id, this.state.context, this.context);
-    this.toast.success('Cloned ' + this.state.data.url);
+    this.toast.success('Cloned ' + this.state.data[id].url);
+
+    this.cloned.emit(this.state.data[id]);
   }
 
   onDataClick(data: IData, index: number): void {
@@ -296,6 +268,17 @@ export class DataListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     this.filteredRequests = data;
+  }
+
+  onFilterUpdate(update: Record<string, unknown>): void {
+    if (this.persistFilter) {
+      this.storeService.updateAux(update, this.context);
+    }
+
+    if (this.filteredRequests) {
+      this.filteredRequests = update.filteredRequests as string[];
+    }
+
   }
 }
 

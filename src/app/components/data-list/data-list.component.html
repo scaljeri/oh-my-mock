@@ -65,7 +65,7 @@
   </div>
 </div>
 
-<ol data-table>
+<ol data-table *ngIf="state">
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
@@ -78,6 +78,7 @@
         [data]="state.data"
         [filterOptions]="state.aux.filterOptions"
         [filterStr]="state.aux.filterKeywords"
+        [lastResult]="filteredRequests"
         (filteredData)="onFilterUpdateData($event)"
         (updateFilterOptions)="onFilterUpdateOptions($event)"
         (updateFilterStr)="onFilterUpdateStr($event)"

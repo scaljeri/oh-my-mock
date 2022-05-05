@@ -101,10 +101,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    this.mockSub = this.stateService.response$.subscribe((mock: IMock) => {
-      this.webWorkerService.upsertMock(mock);
-    });
-
     this.appState.errors$.subscribe(error => {
       this.errors.push(error);
       this.cdr.detectChanges();

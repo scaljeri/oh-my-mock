@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
-import { debounceTime, map, merge, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, debounceTime, filter, map, merge, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { FILTER_OPTIONS } from '../../app.constants';
 import { WebWorkerService } from '../../services/web-worker.service';
 import { shallowSearch, splitIntoSearchTerms } from '@shared/utils/search';
@@ -24,15 +24,17 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   @Input() data: Record<ohMyDataId, IData>;
   @Input() filterOptions: Record<string, boolean>;
   @Input() filterStr: string;
+  @Input() lastResult: string[];
 
   @Output() filteredData = new EventEmitter<string[]>();
   @Output() updateFilterOptions = new EventEmitter<Record<string, boolean>>();
   @Output() updateFilterStr = new EventEmitter<string>();
+  @Output() update = new EventEmitter();
 
   filterCtrl = new FormControl('');
   filterOptionsData = FILTER_OPTIONS;
   filterMappedOpts: Record<string, boolean>;
-  filterTrigger$ = new Subject();
+  filterTrigger$ = new BehaviorSubject(undefined);
 
   private subs = new Subscription();
 
@@ -47,7 +49,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }));
 
-    if (!this.filterOptions) {
+    if (!this.filterOptions || !Array.isArray(this.filterOptions) || this.filterOptions.length !== FILTER_OPTIONS.length) {
       this.filterOptions = FILTER_OPTIONS.reduce((acc, fo) => {
         acc[fo.id] = true;
         return acc;
@@ -55,9 +57,13 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     }
 
     this.subs.add(merge(
-      this.filterTrigger$.pipe(debounceTime(50), map(() => this.filterCtrl.value)),
+      this.filterTrigger$.pipe(
+        debounceTime(50),
+        filter(x => x !== undefined),
+        map(() => this.filterCtrl.value)
+      ),
       this.filterCtrl.valueChanges.pipe(debounceTime(300)),
-      this.webWorkerService.mockUpsert$
+      this.webWorkerService.mockUpsert$.pipe(debounceTime(50),)
     ).pipe(
       map<string, SearchFilterData>(() =>
       ({
@@ -70,8 +76,13 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       switchMap<SearchFilterData, Observable<IData[]>>(input => this.deepSearch(input))
     ).subscribe(data => {
       this.ngZone.run(() => {
-        this.filteredData.emit(data.map(d => d.id))
+        // this.update.emit({
+        //   filterKeywords: this.filterCtrl.value,
+        //   filteredRequests: data.map(d => d.id)
+        // });
+
         this.updateFilterStr.emit(this.filterCtrl.value);
+        this.filteredData.emit(data.map(d => d.id))
       });
     }));
 
@@ -79,21 +90,34 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     this.filterCtrl.setValue(this.filterStr, { emitEvent: false });
   }
 
-  ngOnChanges({ filterOptions, data }: SimpleChanges): void {
+  ngOnChanges({ filterOptions, filterStr, lastResult }: SimpleChanges): void {
     try {
-      if (filterOptions && !filterOptions.firstChange) {
-        if (Object.entries(filterOptions.currentValue).filter(([k, v]) => filterOptions.previousValue[k] !== v).length > 0) {
-          this.filterTrigger$.next(null);
-        }
+      if (filterStr && !filterStr.currentValue) {
+        this.filterCtrl.setValue(filterStr.currentValue, { emitEvent: false });
       }
 
-      if (data && !data.firstChange) {
-        if (Object.entries(data.currentValue).filter(([k, v]: [string, IData]) => data.previousValue[k].lastModified !== v.lastModified).length > 0) {
-          this.filterTrigger$.next(null);
-        }
+      if (!this.filterOptions || !Array.isArray(this.filterOptions) || this.filterOptions.length !== FILTER_OPTIONS.length ||
+        Object.entries(filterOptions.currentValue).filter(([k, v]) => filterOptions.previousValue?.[k] !== v).length > 0) {
+        this.filterTrigger$.next(null);
+
+      } else if (lastResult && !lastResult.currentValue) {
+        this.filterTrigger$.next(null);
       }
+
+      // if (filterKeywords.currentValue && !lastResult.currentValue) {
+      // this.filterTrigger$.next(null);
+      // }
+
+      // if (data && !data.firstChange) {
+      //   if (
+      //     Object.keys(data.currentValue).length !== Object.keys(data.previousValue || {}).length ||
+      //     Object.entries(data.currentValue).filter(([k, v]: [string, IData]) => data.previousValue[k].lastModified !== v.lastModified).length > 0) {
+      //     this.filterTrigger$.next(null);
+      //   }
+      // }
     } catch (err) {
-      this.filterTrigger$.next(null);
+      // eslint-disable-next-line no-console
+      console.log('Ooops', err)
     }
   }
 

@@ -44,6 +44,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
       const mock = mocks[dataMocks[j]];
 
       if (!mock) {
+        // eslint-disable-next-line no-console
         console.warn('WebWorker could not find mock with id ' + dataMocks[j]);
         continue;
       }
@@ -77,7 +78,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
             return true;
           }
 
-          if (includes.label && mock.label.includes(w)) {
+          if (includes.label && mock.label?.includes(w)) {
             return true;
           }
 
