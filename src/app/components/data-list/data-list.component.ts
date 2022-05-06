@@ -109,6 +109,8 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.persistFilter = this.persistFilter ?? this.stateSubject.value?.context.domain === this.context.domain;
 
     this.subscriptions.add(this.state$.subscribe(state => {
+      console.log('DL new state', state);
+
       if (!state.aux.filterKeywords) {
         this.filteredRequests = Object.keys(state.data);
       } else {
@@ -116,7 +118,6 @@ export class DataListComponent implements OnInit, OnDestroy {
           this.filteredRequests = state.aux.filteredRequests;
         } else if (state.aux.filteredRequests !== null) {
           this.filteredRequests = Object.keys(state.data);
-          // this.filteredRequests = state.aux.filteredRequests ?? state.aux.filteredRequests === null ? null : Object.keys(state.data);
         }
       }
 
@@ -126,6 +127,10 @@ export class DataListComponent implements OnInit, OnDestroy {
 
       this.requestCount = Object.keys(state.data).length;
       this.blurImages = state.aux.blurImages;
+
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      });
     }));
   }
 

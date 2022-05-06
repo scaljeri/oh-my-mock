@@ -63,7 +63,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
         map(() => this.filterCtrl.value)
       ),
       this.filterCtrl.valueChanges.pipe(debounceTime(300)),
-      this.webWorkerService.mockUpsert$.pipe(debounceTime(50),)
+      // this.webWorkerService.mockUpsert$.pipe(debounceTime(50),)
     ).pipe(
       map<string, SearchFilterData>(() =>
       ({
@@ -91,9 +91,14 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     this.filterCtrl.setValue(this.filterStr, { emitEvent: false });
   }
 
-  ngOnChanges({ filterOptions, filterStr, lastResult }: SimpleChanges): void {
-    console.log('ngOnChanges RequestFiler', lastResult);
+  ngOnChanges({ filterOptions, filterStr, lastResult, data }: SimpleChanges): void {
+    console.log('ngOnChanges RequestFiler', lastResult, data);
     try {
+
+      if (!this.filterStr) {
+        return;
+      }
+
 
       // if (filterStr && !filterStr.currentValue) {
       //   this.filterCtrl.setValue(filterStr.currentValue, { emitEvent: false });
@@ -104,7 +109,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       // this.filterTrigger$.next(null);
 
       // } else if (lastResult && !lastResult.currentValue) {
-      if (lastResult && !lastResult.currentValue) {
+      if (data || lastResult && !lastResult.currentValue) {
         this.filterTrigger$.next(null);
       }
 
