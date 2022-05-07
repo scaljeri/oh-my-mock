@@ -40,7 +40,7 @@ export const highlightSeq = [
 })
 export class DataListComponent implements OnInit, OnDestroy {
   stateSubject = new BehaviorSubject<IState>(undefined);
-  state$ = this.stateSubject.asObservable().pipe(filter(s => !!s), debounceTime(100));
+  state$ = this.stateSubject.asObservable().pipe(filter(s => !!s), debounceTime(50));
   @Input() set state(s: IState) {
     if (s) {
       this.stateSubject.next(s);
@@ -83,6 +83,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   mocks: Record<string, IMock>;
   requestCount = 0;
   filteredRequests: string[];
+  newAutoActivate = true;
 
   public viewList: ohMyDataId[];
   scenarioOptions: string[] = [];
@@ -96,7 +97,8 @@ export class DataListComponent implements OnInit, OnDestroy {
   private workerTimeoutId: number;
   searchSubj = new Subject();
   filterOptionsCtrl = new FormControl();
-  filterOptions = [];
+  filterOptions = undefined;
+  filterKeywords = '';
 
   constructor(
     public dialog: MatDialog,
@@ -108,16 +110,25 @@ export class DataListComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     this.persistFilter = this.persistFilter ?? this.stateSubject.value?.context.domain === this.context.domain;
 
-    this.subscriptions.add(this.state$.subscribe(state => {
-      console.log('DL new state', state);
+    if (!this.persistFilter) {
+      this.filterOptions = undefined;
+      this.filterKeywords = '';
+      this.filteredRequests = Object.keys(this.stateSubject.value?.data);
+    }
 
-      if (!state.aux.filterKeywords) {
-        this.filteredRequests = Object.keys(state.data);
-      } else {
-        if (state.aux.filteredRequests) {
-          this.filteredRequests = state.aux.filteredRequests;
-        } else if (state.aux.filteredRequests !== null) {
+    this.subscriptions.add(this.state$.subscribe(state => {
+      if (this.persistFilter) {
+        if (!state.aux.filterKeywords) {
           this.filteredRequests = Object.keys(state.data);
+        } else {
+          this.filterKeywords = state.aux.filterKeywords;
+          this.filteredRequests = null;
+
+          if (state.aux.filteredRequests) {
+            this.filteredRequests = state.aux.filteredRequests;
+          } else if (state.aux.filteredRequests !== null) {
+            this.filteredRequests = Object.keys(state.data);
+          }
         }
       }
 
@@ -125,11 +136,15 @@ export class DataListComponent implements OnInit, OnDestroy {
         this.context = state?.context;
       }
 
+      this.newAutoActivate = state.aux.newAutoActivate;
+      this.filterOptions = state.aux.filterOptions;
       this.requestCount = Object.keys(state.data).length;
       this.blurImages = state.aux.blurImages;
 
       setTimeout(() => {
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        });
       });
     }));
   }
@@ -149,7 +164,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     if (!Object.keys(data.mocks).length) {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
-      const isActive = data.enabled[this.state.context.preset];
+      const isActive = data.enabled[this.stateSubject.value.context.preset];
       this.storeService.upsertRequest({
         ...data, enabled:
           { ...data.enabled, [this.context.preset]: !isActive }

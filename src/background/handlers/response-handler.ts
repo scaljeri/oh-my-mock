@@ -30,6 +30,8 @@ export class OhMyResponseHandler {
         autoActivate = state.aux?.newAutoActivate;
       }
 
+      state.aux.filteredRequests = null;
+
       if (response && Object.keys(response).length === 1 && response.id) { // delete
         request = DataUtils.removeResponse(context, request, response.id);
         await OhMyResponseHandler.StorageUtils.remove(response.id);

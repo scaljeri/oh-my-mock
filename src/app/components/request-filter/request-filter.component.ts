@@ -49,11 +49,8 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }));
 
-    if (!this.filterOptions || !Array.isArray(this.filterOptions) || this.filterOptions.length !== FILTER_OPTIONS.length) {
-      this.filterOptions = FILTER_OPTIONS.reduce((acc, fo) => {
-        acc[fo.id] = true;
-        return acc;
-      }, {});
+    if (!this.filterOptions || Object.keys(this.filterOptions).length !== FILTER_OPTIONS.length) {
+      this.setFilterOptions();
     }
 
     this.subs.add(merge(
@@ -92,13 +89,13 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnChanges({ filterOptions, filterStr, lastResult, data }: SimpleChanges): void {
-    console.log('ngOnChanges RequestFiler', lastResult, data);
     try {
 
-      if (!this.filterStr) {
+      if (!this.filterCtrl.value && filterStr?.currentValue) {
+        this.filterCtrl.setValue(filterStr?.currentValue, { emitEvent: false });
+      } else if (!filterStr && !filterStr?.currentValue && !this.filterCtrl.value) {
         return;
       }
-
 
       // if (filterStr && !filterStr.currentValue) {
       //   this.filterCtrl.setValue(filterStr.currentValue, { emitEvent: false });
@@ -109,6 +106,11 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       // this.filterTrigger$.next(null);
 
       // } else if (lastResult && !lastResult.currentValue) {
+
+      if (!this.filterOptions) {
+        this.setFilterOptions();
+      }
+
       if (data || lastResult && !lastResult.currentValue) {
         this.filterTrigger$.next(null);
       }
@@ -161,6 +163,13 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
         return out;
       }
       ));
+  }
+
+  setFilterOptions() {
+    this.filterOptions = FILTER_OPTIONS.reduce((acc, fo) => {
+      acc[fo.id] = this.filterOptions?.[fo.id] || true;
+      return acc;
+    }, {});
   }
 
   ngOnDestroy(): void {

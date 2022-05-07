@@ -31,7 +31,7 @@
         <label for="show-active-list">Activate new</label>
         <mat-slide-toggle
           (change)="onToggleActivateNew($event.checked)"
-          [checked]="$any(state?.aux.newAutoActivate)"
+          [checked]="$any(newAutoActivate)"
           color="primary"
         >
         </mat-slide-toggle>
@@ -77,8 +77,8 @@
           hidden: !state || hideFilter === true || requestCount === 0
         }"
         [data]="state.data"
-        [filterOptions]="state.aux.filterOptions"
-        [filterStr]="state.aux.filterKeywords"
+        [filterOptions]="filterOptions"
+        [filterStr]="filterKeywords"
         [lastResult]="filteredRequests"
         (update)="onFilterUpdate($event)"
         (updateFilterOptions)="onFilterUpdateOptions($event)"

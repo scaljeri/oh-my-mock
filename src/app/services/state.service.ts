@@ -103,7 +103,7 @@ export class OhMyStateService {
   }
 
   private bindStreams(): void {
-    this.ngZone.runOutsideAngular(() => {
+    // this.ngZone.runOutsideAngular(() => {
       StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
         if (!this.context) {
           return;
@@ -134,6 +134,6 @@ export class OhMyStateService {
             break;
         }
       });
-    });
+    // });
   }
 }

@@ -18,6 +18,10 @@ export class OhMyStateHandler {
       if (context?.path) {
         state = await OhMyStateHandler.StorageUtils.get<IState>(context.domain) || StateUtils.init({ domain: context.domain });
         state = update<IState>(context.path, state, context.propertyName, data);
+
+        if (context.path.includes('$.data')) {
+          state.aux.filteredRequests = null;
+        }
       }
       // Is the state new, add it to the store
       let store = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
