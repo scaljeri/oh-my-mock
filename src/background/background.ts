@@ -17,13 +17,13 @@ import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
 // import { injectContent } from './inject-content';
-import { cSPRemoval } from './handlers/remove-csp-header';
+import { cSPRemoval, removeCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
-import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { connectWithLocalServer } from './dispatch-remote';
 import { error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
+import { sendMsgToContent } from '../shared/utils/send-to-content';
 
 // window.onunhandledrejection = function (event) {
 //   const { reason } = event;
@@ -37,6 +37,15 @@ import { OhMyStoreHandler } from './handlers/store-handler';
 
 //   errorHandler(queue, errorMsg, stacktrace);
 // }
+
+
+async function test() {
+  await removeCSPRules();
+  Promise.all([chrome.declarativeNetRequest.getSessionRules(), chrome.declarativeNetRequest.getDynamicRules()]).then((v) => {
+    console.log('CSP SETUP', v[0], v[1]);
+  });
+}
+test();
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
@@ -86,7 +95,10 @@ const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
   [appSources.CONTENT])
 
 domainStream$.subscribe((msg: IOhMessage) => {
-  cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
+  // cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
+
+  cSPRemoval([msg.packet.domain]);
+
   sendMsgToContent(msg.sender.tab.id, {
     source: appSources.BACKGROUND,
     payload: {
@@ -100,11 +112,11 @@ connectWithLocalServer();
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;
 
-  if (data.active) {
-    chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: packet.tabId });
-  } else {
-    chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: packet.tabId });
-  }
+  // if (data.active) {
+  //   chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: packet.tabId });
+  // } else {
+  //   chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: packet.tabId });
+  // }
 }
 
 // chrome.runtime.onInstalled.addListener(function (details) {
@@ -117,19 +129,21 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
 
 chrome.runtime.onSuspend.addListener(function () {
   // eslint-disable-next-line no-console
-  console.log("Suspending.");
-  chrome.browserAction.setBadgeText({ text: "" });
+  console.log("Suspending..............................");
+  // chrome.browserAction.setBadgeText({ text: "" });
 });
 
 // cSPRemoval('http://localhost:8000/*')
 
 
 
-chrome.browserAction.onClicked.addListener(async function (tab) {
+chrome.action.onClicked.addListener(async function (tab) {
+  // chrome.browserAction.onClicked.addListener(async function (tab) {
   // eslint-disable-next-line no-console
   console.log('OhMyMock: Extension clicked', tab.id);
 
   openPopup(tab);
+
   // webRequestListener(tab);
   // injectContent(tab.id);
 
@@ -143,7 +157,7 @@ chrome.browserAction.onClicked.addListener(async function (tab) {
   //     popupIsActive = false;
   //   } else {
 
-  chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
+  chrome.action.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: tab.id });
   //     popupIsActive = true;
   //   }
   // }
@@ -171,6 +185,29 @@ setTimeout(async () => {
   }
 });
 
-messageBus.streamByType$(payloadType.PRE_RESPONSE, appSources.CONTENT).subscribe(({ packet, sender, callback }: IOhMessage) => {
-  webRequestListener(sender.tab);
-});
+// TODO: remove??
+// messageBus.streamByType$(payloadType.PRE_RESPONSE, appSources.CONTENT).subscribe(({ packet, sender, callback }: IOhMessage) => {
+//   webRequestListener(sender.tab);
+// });
+
+// chrome.declarativeNetRequest.updateSessionRules({
+//   // removeRuleIds: [44308],
+//   addRules: [
+//     {
+//       id: 999,
+//       priority: 1,
+//       condition: {
+//         initiatorDomains: ['localhost'],
+//         resourceTypes: ['main_frame']
+//       } as any,
+//       action: {
+//         type: 'modifyHeaders',
+//         responseHeaders: [
+//           { header: 'Content-Security-Policy', operation: 'remove' },
+//           { header: 'Content-Security-Policy-Report-Only', operation: 'remove' },
+//           { header: "oh-my-mock", operation: "set", value: "true" },
+//         ],
+//       } as any
+//     }
+//   ]
+// });

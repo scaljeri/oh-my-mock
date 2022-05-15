@@ -26,6 +26,8 @@ export function patchSend() {
       body
     } as IOhMyAPIRequest, 'XHR').then(async data => {
       if (data.response.status !== ohMyMockStatus.OK) { // No cache
+        this.ohMyHasError = data.response.status === ohMyMockStatus.ERROR;
+
         this.addEventListener('load', async event => { // TODO: Should we do something with  `event`??
           // TODO: use requestType to determine what to do
           // const contentType = this.getResponseHeader('content-type');

@@ -82,7 +82,10 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
             return true;
           }
 
-          return includes.statusCode && mock.statusCode.toString().includes(w);
+          try {
+            return includes.statusCode && mock.statusCode.toString().includes(w);
+          }catch(err) {
+          }
         })) {
           out.push(values[i]);
           continue dataLoop;

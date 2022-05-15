@@ -10,7 +10,7 @@ function cspListener(event) {
   // error(`blockedURI:', event.blockedURI);
   // console.log('violatedDirective', event.violatedDirective);
   // console.log('originalPolicy', event.originalPolicy);
-
+console.log('CSO ERRORRRRRRRR', event);
   cspSubject.next(true);
 }
 
@@ -31,6 +31,7 @@ export function handleCSP(ms: OhMyMessageBus, contentState: OhMyContentState) {
     filter(([a, b]) => !!a && !!b),
     filter(() => contentState.isActive())
   ).subscribe(() => {
+    debugger;
     if (contentState.isReloaded) {
       error('Could not remove Content-Security-Policy!');
       contentState.isReloaded = false;
@@ -38,7 +39,10 @@ export function handleCSP(ms: OhMyMessageBus, contentState: OhMyContentState) {
     } else {
       error('CSP issues detected, this page will be reloaded so CSP headers can be removed!');
       contentState.isReloaded = true;
-      window.location.reload();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 200);
     }
   })
 

@@ -3,9 +3,10 @@
 import { Injectable } from '@angular/core';
 import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './app-state.service';
+import { SandboxService } from './sandbox.service';
 import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
-import { IPacket } from '@shared/packet-type';
+import { IOhMyReadyResponse, IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
@@ -17,10 +18,10 @@ export class ContentService {
 
   private listener;
 
-  constructor(private appStateService: AppStateService) {
+  constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
 
-    appStateService.domain$.subscribe(d => {
+    appStateService.domain$.subscribe((d: string) => {
       if (!d) {
         return;
       }
@@ -33,7 +34,7 @@ export class ContentService {
       this.open(true);
     });
 
-    this.listener = ({ payload, source, domain }: IPacket, sender) => {
+    this.listener = async ({ payload, source, domain }: IPacket, sender) => {
       // Only accept messages from the content script
       // const domain = payload.context?.domain;
       if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
@@ -63,6 +64,18 @@ export class ContentService {
           // this.appStateService.hit(data);
 
           // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
+        } else if (payload.type === payloadType.API_REQUEST) {
+          const output = await this.sandboxService.dispatch(payload.data as IOhMyReadyResponse);
+          send2content(this.appStateService.tabId, {
+            source: appSources.POPUP,
+            domain: this.appStateService.domain,
+            payload: {
+              context: payload.context,
+              type: payloadType.API_RESPONSE_MOCKED,
+              data: output
+            }
+          } as IPacket);
+
         }
       } else {
         // if (payload.type === payloadType.KNOCKKNOCK) {
@@ -77,6 +90,7 @@ export class ContentService {
       return true;
     };
 
+    // chrome.runtime.onMessage.addListener((packet, sender, callback) => this.listener(packet, sender, callback));
     chrome.runtime.onMessage.addListener((packet, sender) => this.listener(packet, sender));
   }
 
@@ -98,10 +112,11 @@ export class ContentService {
   }
 
   deactivate(isClosing = false): Promise<boolean> {
-    if (isClosing) {
-      this.open(false);
-    }
+    // if (isClosing) {
+    //   this.open(false);
+    // }
 
+    console.log('XXXXXXXXXXXXXXXXXXX');
     return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
   }
 

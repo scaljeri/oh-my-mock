@@ -55,6 +55,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Handle mock updates
     this.subscriptions.add(this.stateService.response$.pipe(filter(r => r && r.id === this.response?.id))
       .subscribe(r => {
         this.response = r;

@@ -64,7 +64,14 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       .pipe(take(1))
       .subscribe(({ packet }) => {
         const resp = packet.payload.data as IOhMyReadyResponse;
-        logMocked(request, requestType, resp.response);
+        try {
+          logMocked(request, requestType, resp.response);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.log('Ooops, received something unexpected: ', resp);
+          // eslint-disable-next-line no-console
+          console.error(err);
+        }
         mb.clear();
 
         if (resp.response.status === ohMyMockStatus.ERROR) {

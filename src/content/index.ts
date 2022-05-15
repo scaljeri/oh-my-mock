@@ -50,6 +50,7 @@ const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
 window[STORAGE_KEY].off.push(contentState.isActive$.subscribe(async (value: boolean) => {
+
   await inject({ active: value });
 
   if (isInjectedInjected) {
@@ -142,7 +143,7 @@ function sendKnockKnock() {
 messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subscribe(async ({ packet }: IOhMessage<IOhMyAPIRequest>) => {
   const state = await contentState.getState();
 
-  receivedApiRequest(packet, state);
+  receivedApiRequest(packet, messageBus, contentState);
 
 });
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);

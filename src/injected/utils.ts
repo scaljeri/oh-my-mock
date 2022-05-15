@@ -14,7 +14,7 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
   const msg = `Mocked ${requestType}(${request.method}) ${request.url} ->`;
   switch (data.status) {
     case ohMyMockStatus.ERROR:
-      error(data.message);
+      data.message && error(data.message);
       break;
     case ohMyMockStatus.NO_CONTENT:
       log(`${msg} New request`);

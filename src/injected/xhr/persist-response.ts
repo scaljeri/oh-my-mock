@@ -7,9 +7,10 @@ import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
 export async function persistResponse(xhr: XMLHttpRequest, request: IOhMyAPIRequest): Promise<void> {
-  if (xhr['__ohIsPerisisted'] || !window[STORAGE_KEY].state?.active) {
+  if (xhr['__ohIsPerisisted'] || !window[STORAGE_KEY].state?.active || xhr['ohMyHasError']) {
     return;
   }
+
   xhr['__ohIsPerisisted'] = true;
 
   const headers = parse(xhr['__getAllResponseHeaders']());

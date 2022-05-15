@@ -6,9 +6,13 @@ import { uniqueId } from '../shared/utils/unique-id';
 let isConnected = false;
 
 const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transports: ['websocket'] });
+// socket.on('connect_error' as any, err => (err) => {});
+// eslint-disable-next-line no-console
+// socket.on('connect_failed', err => (err) => { }); //  console.error('WebSocket connection failed', err) })
+// eslint-disable-next-line no-console
+// socket.on('disconnect', err => (err) => { });// console.log('Websocket disconnected', err) })
 
 export const connectWithLocalServer = (): void => {
-
   socket.io.on("error", (error) => {
     // eslint-disable-next-line no-console
     if (isConnected) { // state changed

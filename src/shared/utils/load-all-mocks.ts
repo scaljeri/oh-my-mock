@@ -4,18 +4,23 @@ import { StorageUtils } from './storage';
 
 export async function loadAllMocks(domain: string): Promise<Record<string, IMock>> {
   const state = await StorageUtils.get<IState>(domain);
-  const data = Object.values(state.data);
 
-  const mocks = {};
-  for (let i = 0; i < data.length; i++) {
-    const keys = Object.keys(data[i].mocks);
+  if (state) {
+    const data = Object.values(state.data);
 
-    for (let j = 0; j < keys.length; j++) {
-      mocks[keys[j]] = await StorageUtils.get(keys[j]);
+    const mocks = {};
+    for (let i = 0; i < data.length; i++) {
+      const keys = Object.keys(data[i].mocks);
+
+      for (let j = 0; j < keys.length; j++) {
+        mocks[keys[j]] = await StorageUtils.get(keys[j]);
+      }
     }
+
+    return mocks;
   }
 
-  return mocks;
+  return {};
 }
 
 export function loadAllMocks$(domain: string): Observable<Record<string, IMock>> {

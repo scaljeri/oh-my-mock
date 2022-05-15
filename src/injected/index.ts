@@ -11,56 +11,61 @@ declare let window: any & { [STORAGE_KEY]: Record<string, any> };
 
 let isOhMyMockActive = false;
 
-window[STORAGE_KEY]?.off?.forEach(c => c());
-// window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false, state: { active: false } };
-window[STORAGE_KEY].version = VERSION;
-window[STORAGE_KEY].off = [];
-window[STORAGE_KEY].cache = [];
+if (!window[STORAGE_KEY]) {
+  console.log('Oooops. Something went wrong!!!')
+} else {
 
-const streams = setupListenersMessageBus();
-const sub = streams.stateUpdate$.subscribe((state: IOhMyInjectedState) => {
-  handleStateUpdate(state);
-});
-window[STORAGE_KEY].off.push(() => sub.unsubscribe());
+  window[STORAGE_KEY]?.off?.forEach(c => c());
+  // window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
+  window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false, state: { active: false } };
+  window[STORAGE_KEY].version = VERSION;
+  window[STORAGE_KEY].off = [];
+  window[STORAGE_KEY].cache = [];
 
-patchXmlHttpRequest();
-patchFetch();
+  const streams = setupListenersMessageBus();
+  const sub = streams.stateUpdate$.subscribe((state: IOhMyInjectedState) => {
+    handleStateUpdate(state);
+  });
+  window[STORAGE_KEY].off.push(() => sub.unsubscribe());
 
-initApi(streams.externalApiResult$);
+  patchXmlHttpRequest();
+  patchFetch();
 
-function handleStateUpdate(state: IOhMyInjectedState): void {
-  if (!state) {
-    return;
-  }
-  window[STORAGE_KEY].state = state;
+  initApi(streams.externalApiResult$);
 
-  if (state.active) {
-    if (!isOhMyMockActive) {
-      isOhMyMockActive = true;
-      log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
-      // patchXmlHttpRequest();
-      // patchFetch();
-      notify(true)
+  function handleStateUpdate(state: IOhMyInjectedState): void {
+    if (!state) {
+      return;
     }
-  } else {
-    window[STORAGE_KEY].cache = [];
-    isOhMyMockActive = false;
-    // unpatchXmlHttpRequest();
-    // unpatchFetch();
-    log('*** Deactivated ***%c Removed XHR and FETCH patches', 'background: red;padding:3px;margin-right:5px', 'background-color: transparent');
-    notify(false)
+    window[STORAGE_KEY].state = state;
+
+    if (state.active) {
+      if (!isOhMyMockActive) {
+        isOhMyMockActive = true;
+        log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
+        // patchXmlHttpRequest();
+        // patchFetch();
+        notify(true)
+      }
+    } else {
+      window[STORAGE_KEY].cache = [];
+      isOhMyMockActive = false;
+      // unpatchXmlHttpRequest();
+      // unpatchFetch();
+      log('*** Deactivated ***%c Removed XHR and FETCH patches', 'background: red;padding:3px;margin-right:5px', 'background-color: transparent');
+      notify(false)
+    }
   }
-}
 
-window[STORAGE_KEY].unpatch = () => {
-  unpatchXmlHttpRequest();
-  unpatchFetch();
-  sub.unsubscribe();
-}
+  window[STORAGE_KEY].unpatch = () => {
+    unpatchXmlHttpRequest();
+    unpatchFetch();
+    sub.unsubscribe();
+  }
 
-const state = JSON.parse(document.querySelector(`#id-${STORAGE_KEY}`).getAttribute('oh-my-state'));
-handleStateUpdate(state);
+  const state = JSON.parse(document.querySelector(`#id-${STORAGE_KEY}`).getAttribute('oh-my-state'));
+  handleStateUpdate(state);
+}
 
 function notify(isActive: boolean) {
   window.postMessage({

@@ -24,10 +24,13 @@ export function patchResponseText() {
         }
       }
 
-      if (this.responseType !== '' && this.responseType !== 'text') {
-        return this.__status;
-      } else {
-        return this.ohResult.response?.response || this.__responseText;
+      try {
+        if (this.responseType !== '' && this.responseType !== 'text') {
+          return this.__status;
+        } else {
+          return this.ohResult?.response?.response || this.__responseText;
+        }
+      } catch(err) {
       }
     }
   });

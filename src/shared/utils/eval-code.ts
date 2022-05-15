@@ -1,8 +1,9 @@
 import { ohMyMockStatus } from '../constants';
 import { IMock, IOhMyAPIRequest, IOhMyMockResponse } from '../type';
 import { compileJsCode } from './eval-jscode';
+import { MockUtils } from './mock';
 
-export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<IOhMyMockResponse> => {
+export const evalCode = async (mock: IMock, request: IOhMyAPIRequest, response?: IOhMyMockResponse): Promise<IOhMyMockResponse> => {
   // TODO: Shouldn't here and shouldn't be an error just no-content for example
   if (!mock) {
     return {
@@ -12,22 +13,16 @@ export const evalCode = async (mock: IMock, request: IOhMyAPIRequest): Promise<I
   }
 
   let retVal: IOhMyMockResponse;
-  const context = {
-    response: mock.responseMock,
-    headers: mock.headersMock,
-    delay: mock.delay,
-    statusCode: mock.statusCode
-  } as Partial<IMock>;
 
   try {
-    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IMock>, request: IOhMyAPIRequest) => Partial<IMock>;
-    const result = await code(context, {
+    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IOhMyMockResponse>, request: IOhMyAPIRequest, response?: IOhMyMockResponse) => IOhMyMockResponse;
+    const result = await code(MockUtils.mockToResponse(mock), {
       requestType: request.requestType,
       url: request.url,
       method: request.method,
       body: request.body,
       headers: request.headers
-    });
+    }, response);
 
     retVal = { status: ohMyMockStatus.OK, ...result };
   } catch (err) {

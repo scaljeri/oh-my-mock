@@ -41,6 +41,7 @@ export interface IOhMyContext {
   domain: ohMyDomain;
   preset?: ohMyPresetId;
   active?: boolean;
+  id?: string;
 }
 
 export interface IState {

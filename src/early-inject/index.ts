@@ -1,5 +1,6 @@
 declare let KEY: string;
 
+console.log('EARLY INJECT!!!!!!!!!', window[KEY]);
 if (!window[KEY]) {
   window[KEY] = {};
 
@@ -31,6 +32,7 @@ if (!window[KEY]) {
         this.ohHeaders = {};
         this.ohMethod = args[0].toUpperCase();
         this.ohUrl = args[1];
+        console.log('XHR OPEN', args);
 
         this.__open(...args);
       }

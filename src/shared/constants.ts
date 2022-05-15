@@ -61,6 +61,7 @@ export enum payloadType {
   DATA = 'data',
   // DATA_DISPATCH = 'data-dispatch',
   API_REQUEST = 'api-request',
+  API_RESPONSE_MOCKED = 'api-response-mocked',
   DISPATCH_API_RESPONSE = 'api-response',
   DISPATCH_TO_SERVER = 'dispatch-to-server',
   // MOCK_RESPONSE = 'mock-response'
