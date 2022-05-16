@@ -13,17 +13,19 @@ import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
-import { webRequestListener } from './web-request-listener';
+// import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
 // import { injectContent } from './inject-content';
-import { cSPRemoval, removeCSPRules } from './handlers/remove-csp-header';
+import { removeCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { connectWithLocalServer } from './dispatch-remote';
 import { error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
-import { sendMsgToContent } from '../shared/utils/send-to-content';
+// import { sendMsgToContent } from '../shared/utils/send-to-content';
+import { contentScriptListeners } from './content-script-listeners';
+import { popupListeners } from './popup-listeners';
 
 // window.onunhandledrejection = function (event) {
 //   const { reason } = event;
@@ -70,6 +72,8 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
 // streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
+contentScriptListeners(messageBus); // TODO
+popupListeners(messageBus);
 
 const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
   [appSources.CONTENT, appSources.POPUP])
@@ -91,22 +95,22 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   });
 });
 
-const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
-  [appSources.CONTENT])
+// const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
+//   [appSources.CONTENT])
 
-domainStream$.subscribe((msg: IOhMessage) => {
-  // cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
+// domainStream$.subscribe((msg: IOhMessage) => {
+//   // cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
 
-  cSPRemoval([msg.packet.domain]);
+//   cSPRemoval([msg.packet.domain]);
 
-  sendMsgToContent(msg.sender.tab.id, {
-    source: appSources.BACKGROUND,
-    payload: {
-      type: payloadType.CSP_REMOVAL_ACTIVATED,
-      data: true
-    }
-  } as IPacket<boolean>)
-});
+//   sendMsgToContent(msg.sender.tab.id, {
+//     source: appSources.BACKGROUND,
+//     payload: {
+//       type: payloadType.CSP_REMOVAL_ACTIVATED,
+//       data: true
+//     }
+//   } as IPacket<boolean>)
+// });
 connectWithLocalServer();
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {

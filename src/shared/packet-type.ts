@@ -56,3 +56,7 @@ export interface IOhMyImportStatus {
   id?: string;
   status: ImportResultEnum;
 }
+
+export interface IOhMyCSPResponse {
+  activated: boolean;
+}

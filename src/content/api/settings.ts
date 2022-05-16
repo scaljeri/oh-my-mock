@@ -1,12 +1,12 @@
 import { IOhMyMockSettings } from "../../shared/api-types";
 import { payloadType } from "../../shared/constants";
 import { IOhMessage, IOhMyImportStatus } from "../../shared/packet-type";
+import { OhMyMessageBus } from "../../shared/utils/message-bus";
 import { OhMySendToBg } from "../../shared/utils/send-to-background";
-import { OhMyContentState } from "../content-state";
 import { injectCode } from "../inject-code";
 import { sendMessageToInjected } from "../send-to-injected";
 
-export function handleAPISettings(contentState: OhMyContentState) {
+export function handleAPISettings(messageBus: OhMyMessageBus) {
   return async ({ packet }: IOhMessage<IOhMyMockSettings>) => {
     const payload = packet.payload;
     const data = payload.data;
@@ -22,7 +22,7 @@ export function handleAPISettings(contentState: OhMyContentState) {
     }
 
     if (data.active && state.domain === window.location.origin) {
-      await injectCode({ active: true });
+      await injectCode({ active: true }, messageBus);
     }
 
     sendMessageToInjected({

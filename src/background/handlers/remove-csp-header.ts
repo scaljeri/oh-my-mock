@@ -13,7 +13,6 @@ export async function removeCSPRules(ids?: number[]) {
 }
 
 export async function cSPRemoval(urls: string[]) {
-  // console.log('CSP SETUP', urls, await chrome.declarativeNetRequest.getDynamicRules(), await chrome.declarativeNetRequest.getSessionRules() );
 
   // chrome.webRequest.onHeadersReceived.addListener(csps[urls[0]].fn, { urls }, ['blocking', 'responseHeaders']);
   const id = uniqueNum();
@@ -24,14 +23,14 @@ export async function cSPRemoval(urls: string[]) {
     removeCSPRules([id]);
   }, 30000);
 
-  return chrome.declarativeNetRequest.updateSessionRules({
+  const output = await chrome.declarativeNetRequest.updateSessionRules({
     // removeRuleIds: [44308],
     addRules: [
       {
         id,
         priority: 1,
         condition: {
-          initiatorDomains: urls.map(u => u.replace(/:.*/, '')),
+          initiatorDomains: urls,
           resourceTypes: ['main_frame']
         } as any,
         action: {
@@ -45,7 +44,10 @@ export async function cSPRemoval(urls: string[]) {
       }
     ]
   });
+  console.log('CSP SETUP', urls, await chrome.declarativeNetRequest.getDynamicRules(), await chrome.declarativeNetRequest.getSessionRules());
+  console.log('output', output);
 
+  return output;
 }
 
 chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(
