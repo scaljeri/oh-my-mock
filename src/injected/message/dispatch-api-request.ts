@@ -79,7 +79,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
           // printEvalError(resp.result as string, data);
           // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);
           // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
-          reject(null);
+          resolve(resp);
         } else {
           window[STORAGE_KEY].cache.unshift(packet.payload.data);
           resolve(resp);

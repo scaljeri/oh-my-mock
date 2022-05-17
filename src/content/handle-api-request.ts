@@ -10,7 +10,7 @@ import { StateUtils } from "../shared/utils/state";
 import { OhMyContentState } from "./content-state";
 import { sendMsg2Popup } from "./message-to-popup";
 import { sendMessageToInjected } from "./send-to-injected";
-import { error, warn } from "./utils";
+import { debug, error, warn } from "./utils";
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -46,6 +46,10 @@ export async function receivedApiRequest(
     if (mockId) {
       mock = await contentState.get<IMock>(mockId);
 
+      // HIT (handleApiRequest: shared/utils/handle-api-request.ts)
+      data.lastHit = Date.now();
+      OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
+
       if (!mock) {
         // TODO: This should never happen
       }
@@ -56,7 +60,7 @@ export async function receivedApiRequest(
     let mockResponse;
     if (response.status === ohMyMockStatus.OK) {
       // Should we do something here?
-    } else {
+    } else { // Rule: Return `response` if mock's custom code is not touched
       mockResponse = MockUtils.mockToResponse(mock);
     }
     handleResponse(request, context, response, mockResponse);
@@ -84,9 +88,12 @@ export async function receivedApiRequest(
       handleResponse(request, context, response, output.payload.data as any);
     } catch (err) {
       error(err.message);
+      await OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
+      debug('Popup cannot be reached -> OhMyMock deactivated');
       warn(err.fix);
       handleResponse(request, context, response, {
-        status: ohMyMockStatus.ERROR });
+        status: ohMyMockStatus.ERROR
+      });
     }
     // messageBus.streamById$<IOhMyMockResponse>(context.id, appSources.POPUP).pipe(take(1)).subscribe(({ packet }: IOhMessage<IOhMyMockResponse>) => {
     //   handleResponse(request, context, response, packet.payload.data);

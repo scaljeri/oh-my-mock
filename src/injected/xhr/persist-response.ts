@@ -7,7 +7,7 @@ import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
 export async function persistResponse(xhr: XMLHttpRequest, request: IOhMyAPIRequest): Promise<void> {
-  if (xhr['__ohIsPerisisted'] || !window[STORAGE_KEY].state?.active || xhr['ohMyHasError']) {
+  if (xhr['__ohIsPerisisted'] || !window[STORAGE_KEY].state?.active || xhr['__ohMyHasError']) {
     return;
   }
 

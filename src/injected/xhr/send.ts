@@ -26,20 +26,23 @@ export function patchSend() {
       body
     } as IOhMyAPIRequest, 'XHR').then(async data => {
       if (data.response.status !== ohMyMockStatus.OK) { // No cache
-        this.ohMyHasError = data.response.status === ohMyMockStatus.ERROR;
+        this.__ohMyHasError = data.response.status === ohMyMockStatus.ERROR;
 
-        this.addEventListener('load', async event => { // TODO: Should we do something with  `event`??
-          // TODO: use requestType to determine what to do
-          // const contentType = this.getResponseHeader('content-type');
-          // console.log('CCCCCCCCCCCCC', contentType);
-          // const headersStr =  this.getAllResponseHeaders();
-          // const headers =  parse(headersStr);
+        if (!this.__ohMyHasError) {
 
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
-            this.ohResult = findCachedResponse({ url: this.ohUrl, method: this.ohMethod });
-            persistResponse(this, this.ohResult.request);
-          }
-        });
+          this.addEventListener('load', async event => { // TODO: Should we do something with  `event`??
+            // TODO: use requestType to determine what to do
+            // const contentType = this.getResponseHeader('content-type');
+            // console.log('CCCCCCCCCCCCC', contentType);
+            // const headersStr =  this.getAllResponseHeaders();
+            // const headers =  parse(headersStr);
+
+            if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+              this.ohResult = findCachedResponse({ url: this.ohUrl, method: this.ohMethod });
+              persistResponse(this, this.ohResult.request);
+            }
+          });
+        }
         this.__send(body);
       } else {
         // if ((data.response as string).match(IS_BASE64_RE)) { // It is base64 => Blob
@@ -56,6 +59,7 @@ export function patchSend() {
           this.ohListeners.forEach(l => l(progressEvent));
         }, data.response.delay);
       }
+    }).catch(err => {
     });
   }
   // },

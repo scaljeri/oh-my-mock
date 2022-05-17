@@ -17,11 +17,9 @@ export async function cSPRemoval(urls: string[]) {
   // chrome.webRequest.onHeadersReceived.addListener(csps[urls[0]].fn, { urls }, ['blocking', 'responseHeaders']);
   const id = uniqueNum();
 
-  console.log('Remove CSP from ' + urls[0]);
-
   setTimeout(() => {
     removeCSPRules([id]);
-  }, 30000);
+  }, 10000);
 
   const output = await chrome.declarativeNetRequest.updateSessionRules({
     // removeRuleIds: [44308],
