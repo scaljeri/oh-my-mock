@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 
-import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
+import { appSources, packetType, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
@@ -19,6 +19,7 @@ import { BehaviorSubject } from 'rxjs';
 import { handleAPI } from './api';
 import { debug, error } from './utils';
 import { injectCode } from './inject-code';
+import { sendMsg2Popup } from './message-to-popup';
 
 declare let window: any;
 
@@ -75,6 +76,17 @@ messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subs
 
 });
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
+
+// PING PONG
+messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.PING, appSources.POPUP).subscribe(
+  () => {
+    sendMsg2Popup(messageBus, {
+      type: payloadType.PONG,
+      context: { domain: OhMyContentState.host },
+      description: 'content:pong'
+    })
+  }
+);
 
 async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpdate>) {
   const { payload } = packet;

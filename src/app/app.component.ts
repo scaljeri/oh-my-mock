@@ -48,7 +48,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   mockSub: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
-
+  connectionFailed = null;
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   constructor(
@@ -103,6 +103,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     this.appState.errors$.subscribe(error => {
       this.errors.push(error);
+      this.cdr.detectChanges();
+    });
+
+    this.contentService.pingPong().subscribe(isConnectedWithContent => {
+      this.connectionFailed = !isConnectedWithContent;
       this.cdr.detectChanges();
     });
   }

@@ -1,9 +1,11 @@
 
 import { MOCK_JS_CODE, ohMyMockStatus, payloadType, STORAGE_KEY } from "../shared/constants";
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse } from "../shared/type";
+import { IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IState } from "../shared/type";
 import { DataUtils } from "../shared/utils/data";
+import { blurBase64, isImage, stripB64Prefix } from "../shared/utils/image";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
+import { getMimeType } from "../shared/utils/mime-type";
 import { MockUtils } from "../shared/utils/mock";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
 import { StateUtils } from "../shared/utils/state";
@@ -63,7 +65,7 @@ export async function receivedApiRequest(
     } else { // Rule: Return `response` if mock's custom code is not touched
       mockResponse = MockUtils.mockToResponse(mock);
     }
-    handleResponse(request, context, response, mockResponse);
+    handleResponse(request, context, response, mockResponse, contentState.state);
     // const output = {
     //   request, response: (!!data && mock ?
     //     (response.status === ohMyMockStatus.OK ? response : MockUtils.mockToResponse(mock)) : { status: ohMyMockStatus.NO_CONTENT })
@@ -85,7 +87,8 @@ export async function receivedApiRequest(
         },
         description: 'content:dispatch-eval'
       });
-      handleResponse(request, context, response, output.payload.data as any);
+
+      handleResponse(request, context, response, output.payload.data as any, contentState.state);
     } catch (err) {
       error(err.message);
       await OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
@@ -128,8 +131,15 @@ export async function receivedApiRequest(
   }
 }
 
-function handleResponse(request: IOhMyAPIRequest, context: IOhMyContext, response?: IOhMyMockResponse, output?: IOhMyMockResponse,) {
+async function handleResponse(request: IOhMyAPIRequest, context: IOhMyContext, response?: IOhMyMockResponse, output?: IOhMyMockResponse, state?: IState) {
   const retVal = response.status === ohMyMockStatus.OK && output?.status !== ohMyMockStatus.OK ? response : output
+
+  if (state) {
+    const contentType = getMimeType(retVal.headers);
+    if (typeof retVal.response === 'string' && isImage(contentType) && state.aux.blurImages) {
+      retVal.response = stripB64Prefix(await blurBase64(retVal.response as string, contentType));
+    }
+  }
 
   const data = { request, response: retVal } as IOhMyReadyResponse;
 

@@ -32,9 +32,9 @@ export class OhMyStateHandler {
         await OhMyStateHandler.StorageUtils.setStore(store);
       }
 
-      if (state.aux.appActive && state.aux.popupActive) {
-        cSPRemoval([payload.context.domain]);
-      }
+      // if (state.aux.appActive && state.aux.popupActive) {
+      //   cSPRemoval([payload.context.domain]);
+      // }
 
       return StorageUtils.set(state.domain, state).then(() => state);
     } catch (err) {

@@ -65,6 +65,7 @@ import { ShowErrorsComponent } from './show-errors/show-errors.component';
 import { MockImageComponent } from './mock-image/mock-image.component';
 import { StatusCodeComponent } from './form/status-code/status-code.component';
 import { RequestFilterComponent } from './request-filter/request-filter.component';
+import { ConnectionFailureComponent } from './connection-failure/connection-failure.component';
 
 @NgModule({
   declarations: [
@@ -100,7 +101,8 @@ import { RequestFilterComponent } from './request-filter/request-filter.componen
     ShowErrorsComponent,
     MockImageComponent,
     StatusCodeComponent,
-    RequestFilterComponent
+    RequestFilterComponent,
+    ConnectionFailureComponent
   ],
   imports: [
     CommonModule,
@@ -151,7 +153,8 @@ import { RequestFilterComponent } from './request-filter/request-filter.componen
     DialogCodeEditorComponent,
     FeedbackComponent,
     MockImageComponent,
-    StatusCodeComponent
+    StatusCodeComponent,
+    ConnectionFailureComponent
   ],
   providers: [
     Location,

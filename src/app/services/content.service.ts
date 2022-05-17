@@ -10,6 +10,7 @@ import { IOhMyReadyResponse, IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
@@ -17,6 +18,8 @@ export class ContentService {
   static StateUtils = StateUtils;
 
   private listener;
+  private pingPongId;
+  private pingPongSubject = new Subject<boolean>();
 
   constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
@@ -51,7 +54,10 @@ export class ContentService {
           this.appStateService.domain = domain;
         }
 
-        if (payload.type === payloadType.RESPONSE) {
+        if (payload.type === payloadType.PONG) {
+          window.clearTimeout(this.pingPongId);
+          this.pingPongSubject.next(true);
+        } else if (payload.type === payloadType.RESPONSE) {
           // this.upsertMock({
           //   mock: payload.data as IMock,
           //   ...payload.context
@@ -76,6 +82,8 @@ export class ContentService {
             }
           } as IPacket);
 
+        } else if (payload.type === payloadType.KNOCKKNOCK) {
+          this.pingPong();
         }
       } else {
         // if (payload.type === payloadType.KNOCKKNOCK) {
@@ -92,6 +100,26 @@ export class ContentService {
 
     // chrome.runtime.onMessage.addListener((packet, sender, callback) => this.listener(packet, sender, callback));
     chrome.runtime.onMessage.addListener((packet, sender) => this.listener(packet, sender));
+
+  }
+
+  pingPong(): Observable<boolean> {
+    this.pingPongId = setTimeout(() => {
+      // No connection with content script
+      this.pingPongSubject.next(false);
+    }, 1000);
+
+    const packet = {
+      source: appSources.POPUP,
+      domain: this.appStateService.domain,
+      payload: {
+        type: payloadType.PING
+      }
+    } as IPacket;
+
+    send2content(this.appStateService.tabId, packet);
+
+    return this.pingPongSubject.asObservable();
   }
 
   open(isOpen = true): void {
@@ -116,7 +144,6 @@ export class ContentService {
     //   this.open(false);
     // }
 
-    console.log('XXXXXXXXXXXXXXXXXXX');
     return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
   }
 

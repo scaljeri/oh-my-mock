@@ -66,10 +66,15 @@
 </mat-drawer-container>
 
 <oh-my-feedback></oh-my-feedback>
-<oh-my-spinner *ngIf="!context" mode="dark"></oh-my-spinner>
+<oh-my-spinner
+  *ngIf="!context || connectionFailed === null"
+  mode="dark"
+></oh-my-spinner>
 
 <!-- <oh-my-disabled-enabled *ngIf="showDisabled"></oh-my-disabled-enabled> -->
 <oh-my-disabled-enabled
-  *ngIf="showDisabled === 1"
+  *ngIf="showDisabled === 1 && !connectionFailed"
   (change)="onEnableChange($event)"
 ></oh-my-disabled-enabled>
+
+<oh-my-connection-failure *ngIf="connectionFailed"></oh-my-connection-failure>
