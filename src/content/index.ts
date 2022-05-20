@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 
-import { appSources, packetType, payloadType, STORAGE_KEY } from '../shared/constants';
+import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMyAPIRequest } from '../shared/type';
 import { IOhMessage, IOhMyResponseUpdate, IPacketPayload } from '../shared/packet-type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
@@ -49,7 +49,6 @@ const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
 window[STORAGE_KEY].off.push(contentState.isActive$.subscribe(async (value: boolean) => {
-
   if (await injectCode({ active: value }, messageBus)) {
     sendMessageToInjected({
       type: payloadType.STATE,

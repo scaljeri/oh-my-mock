@@ -91,7 +91,8 @@ export async function receivedApiRequest(
       handleResponse(request, context, response, output.payload.data as any, contentState.state);
     } catch (err) {
       error(err.message);
-      await OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
+      await OhMySendToBg.patch(false, '$.aux', 'appActive', payloadType.STATE);
+
       debug('Popup cannot be reached -> OhMyMock deactivated');
       warn(err.fix);
       handleResponse(request, context, response, {
