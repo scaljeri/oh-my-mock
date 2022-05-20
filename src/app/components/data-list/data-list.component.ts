@@ -118,10 +118,10 @@ export class DataListComponent implements OnInit, OnDestroy {
 
     this.subscriptions.add(this.state$.subscribe(state => {
       if (this.persistFilter) {
+        this.filterKeywords = state.aux.filterKeywords || '';
         if (!state.aux.filterKeywords) {
           this.filteredRequests = Object.keys(state.data);
         } else {
-          this.filterKeywords = state.aux.filterKeywords;
           this.filteredRequests = null;
 
           if (state.aux.filteredRequests) {
@@ -130,6 +130,8 @@ export class DataListComponent implements OnInit, OnDestroy {
             this.filteredRequests = Object.keys(state.data);
           }
         }
+
+        this.cdr.detectChanges();
       }
 
       if (!this.context) {

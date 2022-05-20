@@ -91,21 +91,11 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   ngOnChanges({ filterOptions, filterStr, lastResult, data }: SimpleChanges): void {
     try {
 
-      if (!this.filterCtrl.value && filterStr?.currentValue) {
+      if (filterStr?.currentValue !== undefined && (filterStr.currentValue === '' || !this.filterCtrl.value.match(filterStr?.currentValue))) {
         this.filterCtrl.setValue(filterStr?.currentValue, { emitEvent: false });
       } else if (!filterStr && !filterStr?.currentValue && !this.filterCtrl.value) {
         return;
       }
-
-      // if (filterStr && !filterStr.currentValue) {
-      //   this.filterCtrl.setValue(filterStr.currentValue, { emitEvent: false });
-      // }
-
-      // if (!thisfilterOptions || !Array.isArray(this.filterOptions) || this.filterOptions.length !== FILTER_OPTIONS.length ||
-      // Object.entries(filterOptions.currentValue).filter(([k, v]) => filterOptions.previousValue?.[k] !== v).length > 0) {
-      // this.filterTrigger$.next(null);
-
-      // } else if (lastResult && !lastResult.currentValue) {
 
       if (!this.filterOptions) {
         this.setFilterOptions();
@@ -114,18 +104,6 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       if (data || lastResult && !lastResult.currentValue) {
         this.filterTrigger$.next(null);
       }
-
-      // if (filterKeywords.currentValue && !lastResult.currentValue) {
-      // this.filterTrigger$.next(null);
-      // }
-
-      // if (data && !data.firstChange) {
-      //   if (
-      //     Object.keys(data.currentValue).length !== Object.keys(data.previousValue || {}).length ||
-      //     Object.entries(data.currentValue).filter(([k, v]: [string, IData]) => data.previousValue[k].lastModified !== v.lastModified).length > 0) {
-      //     this.filterTrigger$.next(null);
-      //   }
-      // }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log('Ooops', err)
