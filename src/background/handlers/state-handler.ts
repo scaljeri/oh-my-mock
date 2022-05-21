@@ -1,15 +1,14 @@
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IOhMyMock, IState } from "../../shared/type";
+import { IData, IOhMyMock, IState } from "../../shared/type";
 import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
-import { cSPRemoval } from "./remove-csp-header";
 
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
-  static async update(payload: IPacketPayload<IState | unknown, IOhMyPacketContext>): Promise<IState> {
+  static async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IState> {
     try {
       const { data, context } = payload;
 
@@ -20,7 +19,9 @@ export class OhMyStateHandler {
         state = update<IState>(context.path, state, context.propertyName, data);
 
         if (context.path.includes('$.data')) {
-          state.aux.filteredRequests = null;
+          if (state.data && !Object.keys(state.data).find(id => (data as IData).id === id)) {
+            state.aux.filteredRequests = null;
+          }
         }
       }
       // Is the state new, add it to the store
@@ -38,6 +39,7 @@ export class OhMyStateHandler {
 
       return StorageUtils.set(state.domain, state).then(() => state);
     } catch (err) {
+      console.log(err);
     }
   }
 }
