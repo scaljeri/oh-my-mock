@@ -5,10 +5,10 @@ import { domain, IData, IOhMyContext, IState } from '@shared/type';
 
 import { Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { OhMyStateService } from 'src/app/services/state.service';
-import { StorageService } from 'src/app/services/storage.service';
-import { WebWorkerService } from 'src/app/services/web-worker.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { OhMyStateService } from '../../services/state.service';
+import { StorageService } from '../../services/storage.service';
+import { WebWorkerService } from '../../services/web-worker.service';
 
 @Component({
   selector: 'oh-my-state-explorer-page',

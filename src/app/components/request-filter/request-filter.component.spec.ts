@@ -1,4 +1,6 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatMenuModule } from '@angular/material/menu';
 import { WebWorkerService } from '../../services/web-worker.service';
 
 import { RequestFilterComponent } from './request-filter.component';
@@ -9,12 +11,14 @@ describe('RequestFilterComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ RequestFilterComponent ],
+      declarations: [RequestFilterComponent],
+      imports: [MatMenuModule],
       providers: [
-        { provide: WebWorkerService, useValue: {}}
-      ]
+        { provide: WebWorkerService, useValue: {} }
+      ],
+      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {

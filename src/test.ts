@@ -8,6 +8,11 @@ Object.defineProperty(window, 'chrome', {
       onMessage: { addListener: () => { } },
       getManifest: () => ({ version: '9.9.9' })
     },
+    storage: {
+      onChanged: {
+        addListener: () => {}
+      }
+    }
   },
 });
 Object.defineProperty(window, 'getComputedStyle', {

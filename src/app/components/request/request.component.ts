@@ -15,9 +15,9 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
-import { OhMyStateService } from 'src/app/services/state.service';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { StorageService } from 'src/app/services/storage.service';
+import { OhMyStateService } from '../../services/state.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { StorageService } from '../../services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({

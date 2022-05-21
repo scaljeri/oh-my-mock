@@ -128,7 +128,7 @@ describe('Utils/Data', () => {
   });
   describe('#prefilWithPresets', () => {
     it('should init with new preset', () => {
-      const update = DataUtils.prefilWithPresets(data, { asd: 'yolo'});
+      const update = DataUtils.prefillWithPresets(data, { asd: 'yolo'});
 
       expect(update.selected.asd).toBe('f');
       expect(update.enabled.asd).toBeFalsy();

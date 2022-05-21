@@ -1,16 +1,16 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { IData, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
-import { CreateStatusCodeComponent } from 'src/app/components/create-response/create-status-code.component';
-import { NgApiMockCreateMockDialogWrapperComponent } from 'src/app/plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
+import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
+import { NgApiMockCreateMockDialogWrapperComponent } from '../../../plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
 import { FormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { METHODS } from '@shared/constants';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { presetInfo } from '../../../constants';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { OhMyStateService } from 'src/app/services/state.service';
+import { OhMyState } from '../../../services/oh-my-store';
+// import { OhMyStateService } from 'src/app/services/state.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -107,7 +107,7 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       data: this.state
     });
 
-    dialogRef.afterClosed().subscribe(async(update: IUpsertMock) => {
+    dialogRef.afterClosed().subscribe(async (update: IUpsertMock) => {
       if (!update) {
         return;
       }

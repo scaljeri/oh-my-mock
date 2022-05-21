@@ -25,7 +25,7 @@
     svgIcon="info"
   >
   </mat-icon>
-  <mat-icon *ngIf="filterOptions"
+  <mat-icon *ngIf="filterOptions && filter"
     [matMenuTriggerFor]="filter"
     class="search-config"
     color="primary"

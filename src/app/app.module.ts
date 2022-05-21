@@ -56,7 +56,9 @@ import { ContentService } from './services/content.service';
     ComponentsModule,
     NgApimockPluginModule,
   ],
-  providers: [{ provide: Window, useValue: window }],
+  providers: [
+    { provide: Window, useValue: window },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

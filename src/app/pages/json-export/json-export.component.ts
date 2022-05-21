@@ -1,14 +1,14 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { IData, IMock, IState } from '@shared/type';
-import { DataListComponent } from 'src/app/components/data-list/data-list.component';
-import { AppStateService } from 'src/app/services/app-state.service';
+import { DataListComponent } from '../../components/data-list/data-list.component';
+import { AppStateService } from '../../services/app-state.service';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Subscription } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Router } from '@angular/router';
-import { OhMyStateService } from 'src/app/services/state.service';
+import { OhMyStateService } from '../../services/state.service';
 import { uniqueId } from '@shared/utils/unique-id';
-import { StorageService } from 'src/app/services/storage.service';
+import { StorageService } from '../../services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({

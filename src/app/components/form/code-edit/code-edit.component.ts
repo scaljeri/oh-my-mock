@@ -1,6 +1,6 @@
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
+import { PrettyPrintPipe } from '../../../pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
 

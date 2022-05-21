@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CloudSyncService } from 'src/app/services/cloud-sync.service';
+import { CloudSyncService } from '../../services/cloud-sync.service';
 
 @Component({
   selector: 'oh-my-cloud-sync-page',

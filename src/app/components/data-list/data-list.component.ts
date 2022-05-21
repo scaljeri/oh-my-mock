@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { style, animate } from "@angular/animations";
 
@@ -8,9 +8,9 @@ import { IData, IMock, IOhMyContext, IState, ohMyDataId } from '@shared/type';
 import { BehaviorSubject, debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { presetInfo } from 'src/app/constants';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { WebWorkerService } from 'src/app/services/web-worker.service';
+import { presetInfo } from '../../constants';
+import { OhMyState } from '../../services/oh-my-store';
+import { WebWorkerService } from '../../services/web-worker.service';
 import { RequestFilterComponent } from '../request-filter/request-filter.component';
 
 export const highlightSeq = [

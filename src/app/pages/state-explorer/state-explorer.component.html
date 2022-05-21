@@ -12,7 +12,7 @@
       </mat-expansion-panel-header>
       <ol>
         <li *ngFor="let domain of domains">
-          <a [routerLink]="" (click)="onSelectDomain(domain)">{{ domain }}</a>
+          <a [routerLink]="[]" (click)="onSelectDomain(domain)">{{ domain }}</a>
         </li>
       </ol>
       <p *ngIf="!domains?.length">No domains available!</p>

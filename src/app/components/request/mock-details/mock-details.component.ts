@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { REQUIRED_MSG } from '@shared/constants';
 import { IMock, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
-import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyState } from '../../../services/oh-my-store';
 
 @Component({
   selector: 'oh-my-mock-details',
