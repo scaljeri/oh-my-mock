@@ -12,6 +12,7 @@ declare let window: any & { [STORAGE_KEY]: Record<string, any> };
 let isOhMyMockActive = false;
 
 if (!window[STORAGE_KEY]) {
+  // eslint-disable-next-line no-console
   console.log('Oooops. Something went wrong!!!')
 } else {
 

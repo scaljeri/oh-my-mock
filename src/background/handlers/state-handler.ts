@@ -39,6 +39,7 @@ export class OhMyStateHandler {
 
       return StorageUtils.set(state.domain, state).then(() => state);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.log(err);
     }
   }
