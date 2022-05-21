@@ -31,7 +31,7 @@ module.exports = {
   transformIgnorePatterns: [
     `<rootDir>/node_modules/(?!.*\\.mjs$|${esModules.join('|')})`, // jest-preset-angular
   ],
-  moduleNameMapper: {
-    "@shared(.*)": "<rootDir>/src/shared/$1"
-  }
+  // moduleNameMapper: {
+  //   "@shared(.*)": "<rootDir>/src/shared/$1"
+  // }
 };
