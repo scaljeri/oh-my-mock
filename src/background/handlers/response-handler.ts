@@ -8,6 +8,7 @@ import { StorageUtils } from "../../shared/utils/storage";
 import { DataUtils } from "../../shared/utils/data";
 import { payloadType } from "../../shared/constants";
 import { timestamp } from "../../shared/utils/timestamp";
+// import { shallowSearch, splitIntoSearchTerms } from "../../shared/utils/search";
 
 export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
@@ -36,7 +37,7 @@ export class OhMyResponseHandler {
         request = DataUtils.removeResponse(context, request, response.id);
         await OhMyResponseHandler.StorageUtils.remove(response.id);
       } else {
-        if (context.path) {
+        if (context.path) { // new/update
           response = await OhMyResponseHandler.StorageUtils.get<IMock>(response.id);
           response = update<IMock>(context.path, response as IMock, context.propertyName, data.response[context.propertyName]);
           response.modifiedOn = timestamp();
@@ -49,6 +50,11 @@ export class OhMyResponseHandler {
           }
         }
         request = DataUtils.addResponse(state.context, request, response, autoActivate);
+
+        // if (state.aux.filterKeywords) { // Update filter results
+        //   const words = splitIntoSearchTerms(state.aux.filterKeywords);
+        //   const out = shallowSearch({ [request.id]: request }, words, state.aux.filterOptions);
+        // }
       }
 
       OhMyResponseHandler.queue.addPacket(payloadType.STATE, {

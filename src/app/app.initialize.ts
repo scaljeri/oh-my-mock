@@ -1,6 +1,7 @@
 import { AppStateService } from './services/app-state.service';
 import { OhMyStateService } from './services/state.service';
 import { WebWorkerService } from './services/web-worker.service';
+import { getTabId } from './utils/active-tab';
 
 export async function initializeApp(
   appStateService: AppStateService,
@@ -18,6 +19,11 @@ export async function initializeApp(
     appStateService.tabId = Number(tabId);
     appStateService.domain = domain;
     appStateService.contentVersion = contentVersion;
+  }
+
+  // This should only happen with E2E testing
+  if (!appStateService.tabId) {
+    appStateService.tabId = await getTabId();
   }
 
   await stateService.initialize(appStateService.domain).then(() => {
