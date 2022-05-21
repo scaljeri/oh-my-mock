@@ -22,7 +22,7 @@ export async function initializeApp(
 
   await stateService.initialize(appStateService.domain).then(() => {
     workerService.init(appStateService.domain);
-  })
+  });
 
   // TODO: Send msg to BG to start with CSP header removal!!
   // send2content(appStateService.tabId, {

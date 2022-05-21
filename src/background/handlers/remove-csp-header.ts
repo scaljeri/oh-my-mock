@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 
-import { uniqueId, uniqueNum } from "../../shared/utils/unique-id";
+import { uniqueNum } from "../../shared/utils/unique-id";
 
 export async function removeCSPRules(ids?: number[]) {
   if (!ids) {
@@ -42,16 +42,16 @@ export async function cSPRemoval(urls: string[]) {
       }
     ]
   });
-  console.log('CSP SETUP', urls, await chrome.declarativeNetRequest.getDynamicRules(), await chrome.declarativeNetRequest.getSessionRules());
-  console.log('output', output);
+  // console.log('CSP SETUP', urls, await chrome.declarativeNetRequest.getDynamicRules(), await chrome.declarativeNetRequest.getSessionRules());
+  // console.log('output', output);
 
   return output;
 }
 
-chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(
-  (data) => {
-  }
-)
+// chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(
+//   (data) => {
+//   }
+// )
 
 // export function clearCSPRemoval(url?: string) {
 //   if (url && csps[url]) {

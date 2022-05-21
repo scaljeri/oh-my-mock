@@ -70,7 +70,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     await initializeApp(this.appState, this.stateService, this.webWorkerService);
     // await this.contentService.activate();
 
-    this.stateSub = this.stateService.state$.subscribe((state: IState) => {
+    this.stateSub = this.stateService.state$.subscribe(async (state: IState) => {
       if (!state) {
         return this.isInitializing = true;
       }
@@ -80,6 +80,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         state.aux.popupActive = true;
         // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
         // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
+        await this.webWorkerService.init(state.domain);
 
         this.router.navigate(['/']).then(() => {
           this.cdr.detectChanges();

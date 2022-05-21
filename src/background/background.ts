@@ -43,9 +43,9 @@ import { popupListeners } from './popup-listeners';
 
 async function test() {
   await removeCSPRules();
-  Promise.all([chrome.declarativeNetRequest.getSessionRules(), chrome.declarativeNetRequest.getDynamicRules()]).then((v) => {
-    console.log('CSP SETUP', v[0], v[1]);
-  });
+  // Promise.all([chrome.declarativeNetRequest.getSessionRules(), chrome.declarativeNetRequest.getDynamicRules()]).then((v) => {
+  //   console.log('CSP SETUP', v[0], v[1]);
+  // });
 }
 test();
 
