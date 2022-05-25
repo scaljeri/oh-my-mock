@@ -1,15 +1,17 @@
 window.ohMyMockTest.xhr = (method, response, responseType, cb) => {
   const xhr = new XMLHttpRequest();
   xhr.responseType = responseType.toLowerCase(); // 'arraybuffer'; // 'blob';
-
-  xhr.open(method, ohMyMockTest.urlMap[response]);
-  xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
-
   xhr.onreadystatechange = () => {
+    console.log('READY STATE',xhr.readyState);
     if (xhr.readyState === XMLHttpRequest.DONE) {
       // cb();
     }
   };
+
+  xhr.open(method, ohMyMockTest.urlMap[response]);
+  xhr.setRequestHeader('xxxxxxxxx', 'yyyyyyyyyy');
+
+
 
   // Both methods should fire, otherwise it will not work!!
   let count = 0;

@@ -52,6 +52,11 @@ export function patchSend() {
         // injectResponse(this, data);
 
         setTimeout(() => {
+          Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.HEADERS_RECEIVED, configurable: true })
+          this.onreadystatechange?.();
+          Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.LOADING,configurable: true })
+          this.onreadystatechange?.();
+          Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.DONE })
           this.onreadystatechange?.();
           this.onload?.();
 
