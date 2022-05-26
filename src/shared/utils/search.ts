@@ -1,6 +1,7 @@
 import { IData, IMock } from "../type";
 import { isImage } from './image';
 import { getMimeType } from "./mime-type";
+import { FILTER_SEARCH_OPTIONS } from '../constants';
 
 // const QUOTE_RE = /(?<=")([^"]+)(?=")(\s|\b)/gi;
 const QUOTE_RE = /(?<=")([^"]+)(?=")/gi;
@@ -96,4 +97,11 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
   }
 
   return out;
+}
+
+export function transformFilterOptions(options: Record<string, boolean> = {}): Record<string, boolean> {
+  return Object.entries(options).reduce((acc, [k, v]) => {
+    acc[FILTER_SEARCH_OPTIONS.find(fo => fo.id === k).value] = v;
+    return acc;
+  }, {});
 }

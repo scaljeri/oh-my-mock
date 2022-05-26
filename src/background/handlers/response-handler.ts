@@ -8,7 +8,7 @@ import { StorageUtils } from "../../shared/utils/storage";
 import { DataUtils } from "../../shared/utils/data";
 import { payloadType } from "../../shared/constants";
 import { timestamp } from "../../shared/utils/timestamp";
-import { deepSearch, shallowSearch, splitIntoSearchTerms } from '../../shared/utils/search';
+import { deepSearch, shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '../../shared/utils/search';
 // import { shallowSearch, splitIntoSearchTerms } from "../../shared/utils/search";
 
 export class OhMyResponseHandler {
@@ -31,8 +31,6 @@ export class OhMyResponseHandler {
         request = DataUtils.init(data.request);
         autoActivate = state.aux?.newAutoActivate;
       }
-
-      state.aux.filteredRequests = null;
 
       if (response && Object.keys(response).length === 1 && response.id) { // delete
         request = DataUtils.removeResponse(context, request, response.id);
@@ -99,7 +97,7 @@ export class OhMyResponseHandler {
           return acc;
         }, { [response.id]: response });
 
-        const matches = await deepSearch(data, searchTerms, searchOpts, mocks);
+        const matches = await deepSearch(data, searchTerms, transformFilterOptions(searchOpts), mocks);
         addRequest = matches.length > 0;
       }
 
@@ -109,11 +107,9 @@ export class OhMyResponseHandler {
       if (addRequest && index === -1) {
         isUpdated = true;
         state.aux.filteredRequests = state.aux.filteredRequests ? [...state.aux.filteredRequests, request.id] : [request.id];
-        return state;
       } else if (!addRequest && index > -1) {
         isUpdated = true;
         state.aux.filteredRequests.splice(index, 1);
-        return state;
       }
 
       if (isUpdated) {
@@ -128,6 +124,7 @@ export class OhMyResponseHandler {
           }
         });
       }
+      return state;
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Could not update filter results', err);

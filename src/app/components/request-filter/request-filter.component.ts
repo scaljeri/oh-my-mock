@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { FormControl } from '@angular/forms';
 import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
 import { BehaviorSubject, debounceTime, filter, map, merge, Observable, of, Subscription, switchMap } from 'rxjs';
-import { FILTER_OPTIONS } from '../../app.constants';
 import { WebWorkerService } from '../../services/web-worker.service';
-import { shallowSearch, splitIntoSearchTerms } from '@shared/utils/search';
+import { shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '@shared/utils/search';
 import { OhMyState } from '../../services/oh-my-store';
+import { FILTER_SEARCH_OPTIONS } from '@shared/constants';
 
 type SearchFilterData = {
   words: string[],
@@ -32,7 +32,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   @Output() update = new EventEmitter();
 
   filterCtrl = new FormControl('');
-  filterOptionsData = FILTER_OPTIONS;
+  filterOptionsData = FILTER_SEARCH_OPTIONS;
   filterMappedOpts: Record<string, boolean>;
   filterTrigger$ = new BehaviorSubject(undefined);
 
@@ -49,7 +49,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }));
 
-    if (!this.filterOptions || Object.keys(this.filterOptions).length !== FILTER_OPTIONS.length) {
+    if (!this.filterOptions || Object.keys(this.filterOptions).length !== FILTER_SEARCH_OPTIONS.length) {
       this.setFilterOptions();
     }
 
@@ -57,9 +57,11 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       this.filterTrigger$.pipe(
         debounceTime(50),
         filter(x => x !== undefined),
-        map(() => this.filterCtrl.value)
+        map(() => this.filterCtrl.value),
       ),
-      this.filterCtrl.valueChanges.pipe(debounceTime(300)),
+      this.filterCtrl.valueChanges.pipe(
+        debounceTime(300)
+      ),
       // this.webWorkerService.mockUpsert$.pipe(debounceTime(50),)
     ).pipe(
       map<string, SearchFilterData>(() =>
@@ -144,7 +146,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   }
 
   setFilterOptions() {
-    this.filterOptions = FILTER_OPTIONS.reduce((acc, fo) => {
+    this.filterOptions = FILTER_SEARCH_OPTIONS.reduce((acc, fo) => {
       acc[fo.id] = this.filterOptions?.[fo.id] || true;
       return acc;
     }, {});
@@ -153,12 +155,4 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.unsubscribe();
   }
-}
-
-
-export function transformFilterOptions(options: Record<string, boolean> = {}): Record<string, boolean> {
-  return Object.entries(options).reduce((acc, [k, v]) => {
-    acc[FILTER_OPTIONS.find(fo => fo.id === k).value] = v;
-    return acc;
-  }, {});
 }

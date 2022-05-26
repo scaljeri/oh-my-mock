@@ -104,7 +104,6 @@ export class DataListComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private toast: HotToastService,
-    private webWorkerService: WebWorkerService,
     private storeService: OhMyState) { }
 
   async ngOnInit() {
@@ -144,10 +143,8 @@ export class DataListComponent implements OnInit, OnDestroy {
       this.blurImages = state.aux.blurImages;
 
       setTimeout(() => {
-        setTimeout(() => {
-          this.cdr.detectChanges();
-        });
-      });
+        this.cdr.detectChanges();
+      }, 50);
     }));
   }
 
@@ -277,6 +274,5 @@ export class DataListComponent implements OnInit, OnDestroy {
     if (this.filteredRequests) {
       this.filteredRequests = update.filteredRequests as string[];
     }
-
   }
 }

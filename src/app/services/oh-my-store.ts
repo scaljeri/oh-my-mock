@@ -222,7 +222,10 @@ export class OhMyState {
     // for (const item of Object.entries(aux)) {
     // state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE, undefined, 'popup;updateAux');
     // }
-    state = await OhMySendToBg.patch<IOhMyAux, IState>(state.aux, '$', 'aux', payloadType.STATE, undefined, 'popup;updateAux');
+    const keys = Object.keys(aux);
+    for (let i = 0; i < keys.length; i++) {
+      state = await OhMySendToBg.patch<IOhMyAux, IState>(aux[keys[i]], '$.aux', keys[i], payloadType.STATE, undefined, 'popup;updateAux');
+    }
 
     // (state, payloadType.STATE);
     // await this.storageService.set(state.domain, state);
