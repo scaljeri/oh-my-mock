@@ -1,0 +1,21 @@
+<!-- https://codepen.io/himalayasingh/pen/EdVzNL -->
+<div class="toggle-group">
+  <input
+    [checked]="checked"
+    (change)="onChange($event)"
+    type="checkbox"
+    name="on-off-switch"
+    id="on-off-switch"
+    checked=""
+    tabindex="1"
+  />
+  <label for="on-off-switch">
+    <!-- <span class="aural">Show:</span> Show Accessible Toggle Switch -->
+  </label>
+  <div class="onoffswitch pull-right" aria-hidden="true">
+    <div class="onoffswitch-label">
+      <div class="onoffswitch-inner"></div>
+      <div class="onoffswitch-switch"></div>
+    </div>
+  </div>
+</div>

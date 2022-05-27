@@ -16,7 +16,7 @@ mat-toolbar {
   h1 {
     @include oh-ellipsis;
     position: relative;
-    padding-right: $spacer-7 + $spacer-5;
+    padding-right: 83px;
 
     .dash {
       padding: 0 $spacer-2;
@@ -72,7 +72,7 @@ oh-my-feedback {
   z-index: 1;
 }
 
-mat-slide-toggle {
+oh-my-on-off-switch {
   @include oh-position(absolute, 50% $spacer-2 0 0);
   transform: translateY(-50%);
 }

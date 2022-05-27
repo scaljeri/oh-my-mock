@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Url } from 'url';
+// import { Url } from 'url';
 
 @Component({
   selector: 'oh-my-link',
@@ -8,11 +8,11 @@ import { Url } from 'url';
 })
 export class LinkComponent {
   @Input() text: string;
-  @Input() url: Url;
+  // @Input() url: Url;
 
   ctx: any;
 
   ngOnInit(): void {
-    this.ctx = { text: this.text, url: this.url };
+    // this.ctx = { text: this.text, url: this.url };
   }
 }

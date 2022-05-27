@@ -35,11 +35,15 @@
       <h1 class="title">
         <span>Oh My Mock</span> <span class="dash">-</span>
         <span>{{ domain }}</span>
-        <mat-slide-toggle
+        <oh-my-on-off-switch
+          (change)="onEnableChange($event)"
+          [checked]="enabled"
+        ></oh-my-on-off-switch>
+        <!-- <mat-slide-toggle
           (change)="onEnableChange($event.checked)"
           [checked]="enabled"
           [color]="color"
-        ></mat-slide-toggle>
+        ></mat-slide-toggle> -->
       </h1>
       <a
         class="buy-me-a-coffee"
