@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-## [3.3.14] - 2022-05-25
+## [3.3.14] - 2022-05-27
 
 ### Changed
 
@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 - [New installs do not activate](https://github.com/scaljeri/oh-my-mock/issues/138)
   The first time (new install) ignores the on/off toggle in the popup header
 
-## [3.3.13] - 2022-05-23
+## [3.3.13] - 2022-05-25
 
 ### Changed
 
