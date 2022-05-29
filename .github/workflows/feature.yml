@@ -24,7 +24,7 @@ jobs:
       - run: yarn
       - run: yarn build
       - run: yarn lint
-      - run: yarn e2e
+      - run: Xvfb :99 & yarn e2e
 
       - run: echo 'pass!!'
 
