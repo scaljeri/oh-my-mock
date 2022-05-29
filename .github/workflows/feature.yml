@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-node@v2
       - run: node -v
       - run: yarn
+      - run: yarn build
       - run: yarn lint
       - run: yarn e2e
 
