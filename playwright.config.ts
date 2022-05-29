@@ -12,12 +12,12 @@ import { devices } from '@playwright/test';
  */
 const config: PlaywrightTestConfig = {
   testDir: './e2e',
-  webServer: {
-    command: 'yarn start:server',
-    url: 'http://localhost:8000',
-    timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI,
-  },
+  // webServer: {
+  //   command: 'yarn start:server',
+  //   url: 'http://localhost:8000',
+  //   timeout: 120 * 1000,
+  //   reuseExistingServer: !process.env.CI,
+  // },
   testMatch: '**/*.spec.ts',
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
