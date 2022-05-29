@@ -11,14 +11,13 @@ import { devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration.
  */
 const config: PlaywrightTestConfig = {
-  globalSetup: require.resolve('./global-setup'),
+  testDir: './e2e',
   webServer: {
     command: 'yarn start:server',
     url: 'http://localhost:8000',
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
-  testDir: './tests',
   testMatch: '**/*.spec.ts',
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
@@ -27,8 +26,7 @@ const config: PlaywrightTestConfig = {
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 5000,
-    toMatchSnapshot: { maxDiffPixels: 0 },
+    timeout: 5000
   },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
@@ -47,38 +45,20 @@ const config: PlaywrightTestConfig = {
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    baseURL: 'http://localhost:8000/',
+    headless: false,
+    viewport: { width: 1280, height: 720 },
+    ignoreHTTPSErrors: true,
   },
 
   /* Configure projects for major browsers */
-
   projects: [
     {
-      ...devices['Desktop Chrome'],
-      name: 'CI',
-      retries: 0,
+      name: 'chromium',
+      testDir: './e2e',
       use: {
-        baseURL: 'https://scaljeri.github.io/oh-my-mock'
+        ...devices['Desktop Chrome'],
       },
     },
-    {
-      ...devices['Desktop Chrome'],
-      name: 'Default',
-      retries: 2,
-      use: {
-        baseURL: 'http://localhost:8000'
-      },
-    },
-
-
-
-    // {
-    //   name: 'chromium',
-    //   use: {
-    //     ...devices['Desktop Chrome'],
-    //     baseURL: 'https://scaljeri.github.io/oh-my-mock'
-    //   },
-    // },
 
     // {
     //   name: 'firefox',
