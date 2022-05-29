@@ -14,11 +14,11 @@ window.postMessage({
 
 window.postMessage({
   source: 'external',
-   payload: {
-      type: 'crud',
-       data:
-{
-   "requests": [
+  payload: {
+      type: 'upsert',
+      context: { domain: 'localhost:8000' },
+      data: {
+       "requests": [
        {
            "id": "zborm2g4g4",
            "lastHit": 1648411105428,
@@ -30,7 +30,7 @@ window.postMessage({
                    "statusCode": 200
                }
            },
-           "requestType": "XHR",
+           "requestType": "FETCH",
            "type": "request",
            "url": "/users",
            "version": "3.3.5"

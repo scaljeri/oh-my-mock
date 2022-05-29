@@ -1,4 +1,5 @@
 import { chromium, FullConfig } from '@playwright/test';
+import * as path from 'path';
 
 async function globalSetup(config: FullConfig) {
   const { baseURL, storageState } = config.projects[0].use;
