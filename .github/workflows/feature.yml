@@ -4,19 +4,18 @@ name: Feature
 on:
   push:
     branches:
-      - '*'         # matches every branch that doesn't contain a '/'
-      - '*/*'       # matches every branch containing a single '/'
-      - '**'        # matches every branch
-      - '!master'   # excludes master
+      - '*' # matches every branch that doesn't contain a '/'
+      - '*/*' # matches every branch containing a single '/'
+      - '**' # matches every branch
+      - '!master' # excludes master
 
 jobs:
   build:
-#    runs-on: ubuntu-latest
+    #    runs-on: ubuntu-latest
     runs-on: windows-2022
     strategy:
       matrix:
         node: ['15']
-
 
     steps:
       - uses: actions/checkout@v2
@@ -26,19 +25,21 @@ jobs:
       - run: yarn build
       - run: yarn lint
       - run: node --version
+      - run: apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
+      - run: export DISPLAY=:99.0 http_proxy=http://ci-proxy.irn.intel.politie:3128 https_proxy=http://ci-proxy.irn.intel.politie:3128 no_proxy=localhost,0.0.0.0,127.0.0.1,172.17.0.2,172.17.0.3,172.17.0.4,172.17.0.5,172.17.0.6,172.17.0.7,172.17.0.8,172.17.0.9,172.17.0.10
+      - run: Xvfb :99 &
       - run: npx playwright test
-#      - run: node ./node_modules/.bin/playwright test
+      #      - run: node ./node_modules/.bin/playwright test
 
       - run: echo 'pass!!'
 
- #   steps:
- #     - uses: actions/checkout@v2
- #     - uses: actions/setup-node@v2
- #       with:
- #         node-version: '15.5.x'
- #     - run: |
- #         yarn
- #         yarn lint
- #     - run: ls -lart node_modules
- #     - run: yarn lint
-
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: '15.5.x'
+  #     - run: |
+  #         yarn
+  #         yarn lint
+  #     - run: ls -lart node_modules
+  #     - run: yarn lint
