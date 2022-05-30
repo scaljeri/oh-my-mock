@@ -55,8 +55,8 @@ const test = base.extend({
     //   devtools: true,
     //   headless: false,
     //   args: [
-    //     `--disable-extensions-except=${extensionPath}`,
-    //     `--load-extension=${extensionPath}`,
+    //     `--disable-extensions-except=${EXTENSION_PATH}`,
+    //     `--load-extension=${EXTENSION_PATH}`,
     //     `--disable-dev-shm-usage`,
     //     // `--ipc=host`
     //   ],
