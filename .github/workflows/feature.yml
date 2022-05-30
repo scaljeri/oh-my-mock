@@ -24,7 +24,8 @@ jobs:
       - run: yarn build
       - run: yarn lint
       - run: node --version
-      - run: apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
+      - run: whoami
+      - run: sudo apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
       - run: export DISPLAY=:99.0 http_proxy=http://ci-proxy.irn.intel.politie:3128 https_proxy=http://ci-proxy.irn.intel.politie:3128 no_proxy=localhost,0.0.0.0,127.0.0.1,172.17.0.2,172.17.0.3,172.17.0.4,172.17.0.5,172.17.0.6,172.17.0.7,172.17.0.8,172.17.0.9,172.17.0.10
       - run: Xvfb :99 &
       - run: npx playwright test
