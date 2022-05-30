@@ -29,6 +29,7 @@ jobs:
 #      - run: sudo apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
 #      - run: export DISPLAY=:99.0
 #      - run: Xvfb :99 &
+      - run: npx playwright install chrome
       - run: xvfb-run --auto-servernum -- node ./node_modules/.bin/playwright test
       #- run: npx playwright test
       #      - run: node ./node_modules/.bin/playwright test
