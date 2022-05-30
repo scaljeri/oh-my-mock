@@ -19,16 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
+      - uses: microsoft/playwright-github-action@v1
       - run: node -v
       - run: yarn
       - run: yarn build
       - run: yarn lint
       - run: node --version
       - run: whoami
-      - run: sudo apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
-      - run: export DISPLAY=:99.0
-      - run: Xvfb :99 &
-      - run: yarn e2e
+#      - run: sudo apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
+#      - run: export DISPLAY=:99.0
+#      - run: Xvfb :99 &
+      - run: xvfb-run --auto-servernum -- yarn e2e
       #- run: npx playwright test
       #      - run: node ./node_modules/.bin/playwright test
 
