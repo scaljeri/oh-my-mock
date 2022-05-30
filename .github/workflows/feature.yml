@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      #- uses: microsoft/playwright-github-action@v1
+      - uses: microsoft/playwright-github-action@v1
       - run: node -v
       - run: yarn
       - run: yarn build
