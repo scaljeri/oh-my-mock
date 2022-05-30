@@ -1,27 +1,27 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 
-// import { test } from './setup';
+import { test } from './setup';
 
 test.describe('Popup', () => {
   test('dummy test', async ({ page, context }) => {
-    await page.goto('https://playwright.dev/');
-    const title = page.locator('.navbar__inner .navbar__title');
-    await expect(title).toHaveText('Playwright');
-    const p = page;
+    // await page.goto('https://playwright.dev/');
+    // const title = page.locator('.navbar__inner .navbar__title');
+    // await expect(title).toHaveText('Playwright');
+    // const p = page;
     /// OLD
 
     // await page.close();
-    // const pages = context.pages();
-    // const p = pages[1];
-    // await p.bringToFront();
-    // await p.waitForSelector('oh-my-disabled-enabled');
+    const pages = context.pages();
+    const p = pages[1];
+    await p.bringToFront();
+    await p.waitForSelector('oh-my-disabled-enabled');
 
     // await page.goto(
     //   'chrome-extension://<extension-id>/popup.html'
     // )
     // await page.waitForTimeout(30000) // this is here so that it won't automatically close the browser window
     // expeoct(true).toBeTruthy();
-    // await expect(p.locator('oh-my-disabled-enabled')).toHaveCount(1)
+    await expect(p.locator('oh-my-disabled-enabled')).toHaveCount(1)
   });
 });
 
