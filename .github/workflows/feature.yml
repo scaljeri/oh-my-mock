@@ -30,7 +30,8 @@ jobs:
 #      - run: export DISPLAY=:99.0
 #      - run: Xvfb :99 &
       - run: npx playwright install chrome
-      - run: xvfb-run --auto-servernum -- node ./node_modules/.bin/playwright test
+      - run: xvfb-run --auto-servernum -- npx playwright test --project=chromium
+      # - run: xvfb-run --auto-servernum -- node ./node_modules/.bin/playwright test
       #- run: npx playwright test
       #      - run: node ./node_modules/.bin/playwright test
 
