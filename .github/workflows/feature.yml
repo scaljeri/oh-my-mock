@@ -11,8 +11,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    container: mcr.microsoft.com/playwright:v1.21.1-focal
+    #runs-on: ubuntu-20.04
+    runs-on: macos-11
+    #container: mcr.microsoft.com/playwright:v1.21.1-focal
     strategy:
       matrix:
         node: ['15']
