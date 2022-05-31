@@ -75,7 +75,7 @@ const test = base.extend({
     await page.goto('http://localhost:8000')
     console.log('TEST 1');
     const extPage = await browserContext.newPage();
-    console.log('TEST 1');
+    console.log('TEST 1', extensionURL);
     await extPage.goto(extensionURL);
     console.log('TEST 1');
     await use(browserContext)
