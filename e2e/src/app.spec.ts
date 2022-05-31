@@ -8,12 +8,12 @@ test.describe('Popup',  () => {
     const pages = context.pages();
     const p = pages[1];
     await p.bringToFront();
-    // await new Promise(r => {
-    //   setTimeout(() => {
-    //     r(null);
-    //   }, 2000);
-    // });
-    await p.waitForSelector('oh-my-disabled-enabled');
+    await new Promise(r => {
+      setTimeout(() => {
+        r(null);
+      }, 2000);
+    });
+    // await p.waitForSelector('oh-my-disabled-enabled');
     // await p.screenshot({ path: 'screenshot.png', fullPage: true });
     await expect(await p.screenshot()).toMatchSnapshot('landing-page.png');
     await expect(p).toHaveTitle('OhMyMock');
