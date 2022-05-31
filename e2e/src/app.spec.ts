@@ -3,6 +3,10 @@ import { expect } from '@playwright/test';
 import { test } from './setup';
 
 test.describe('Popup', () => {
+  test('title', ({ page }) => {
+    expect(page).toHaveTitle('OhMyMock');
+  });
+
   test('dummy test', async ({ page, context }) => {
     // await page.goto('https://playwright.dev/');
     // const title = page.locator('.navbar__inner .navbar__title');
