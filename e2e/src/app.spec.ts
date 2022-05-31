@@ -7,6 +7,7 @@ test.describe('chrome extension tests', () => {
 
   test.beforeEach(async ({}, testInfo) => {
     const pathToExtension = require('path').join(__dirname,  '../../dist/');
+    console.log('PWD', process.cwd(), pathToExtension);
     const userDataDir = testInfo.outputPath('test-user-data-dir');
     browserContext = await chromium.launchPersistentContext(userDataDir, {
       args: [
