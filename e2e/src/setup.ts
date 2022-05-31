@@ -8,6 +8,7 @@ export const EXTENSION_PATH = join(
 );
 
 async function initBrowserWithExtension() {
+  console.log('------------');
   const userDataDir = `/tmp/test-user-data-${Math.random()}`; // TODO
   const browserContext = (await chromium.launchPersistentContext('', {
     devtools: true,
