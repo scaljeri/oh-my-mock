@@ -78,6 +78,7 @@ const test = base.extend({
     // ) as ChromiumBrowserContext;
     console.log('TEST 1 yolo');
     const { browserContext, extensionURL, page } = await initBrowserWithExtension();
+    console.log('xxxxxxxxxxxxaaaaa');
     console.log(extensionURL);
     await page.goto('http://localhost:8000')
     console.log('TEST 1a');
