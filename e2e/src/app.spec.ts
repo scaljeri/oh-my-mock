@@ -2,10 +2,21 @@ import { expect } from '@playwright/test';
 
 import { test } from './setup';
 
-test.describe('Popup', () => {
-  test('title', ({ page }) => {
+test.describe('Popup',  () => {
+  test.only('title', async ({ page, context }) => {
+    const pages = context.pages();
+    const p = pages[1];
+    await p.bringToFront();
+    await p.waitForSelector('oh-my-disabled-enabled');
     expect(page).toHaveTitle('OhMyMock');
   });
+  // test('title 2', async ({ page, context }) => {
+  //   const pages = context.pages();
+  //   const p = pages[1];
+  //   await p.bringToFront();
+  //   await p.waitForSelector('oh-my-disabled-enabled');
+  //   expect(page).toHaveTitle('OhMyMock');
+  // });
 
   test('dummy test', async ({ page, context }) => {
     // await page.goto('https://playwright.dev/');
