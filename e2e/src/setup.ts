@@ -24,17 +24,24 @@ async function initBrowserWithExtension() {
     //   height: 1080
     // }
   })) as ChromiumBrowserContext
+  console.log('TEST INNER A');
 
   let page = await browserContext.pages()[0]
+  console.log('TEST INNER B');
   await page.bringToFront()
+  console.log('TEST INNER C');
   await page.goto('chrome://inspect/#extensions')
+  console.log('TEST INNER D');
   await page.goto('chrome://inspect/#service-workers')
+  console.log('TEST INNER E');
   const url = await page
     .locator('#service-workers-list div[class="url"]')
     .textContent()
+  console.log('TEST INNER F');
   const [, , extensionId] = url.split('/')
   const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
   await page.waitForTimeout(500)
+  console.log('TEST INNER G');
   const pages = browserContext.pages()
   page = pages.find((x) => x.url() === extensionURL)
   if (!page) {
