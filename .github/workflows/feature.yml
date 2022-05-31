@@ -27,9 +27,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Install Playwright
-        run: npx playwright install --with-deps
+        # run: npx playwright install --with-deps
+        run: npx playwright install
       - name: Run your tests
-        run: yarn e2e
+        run: npx playwright test --headed --project=chromium
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v2
