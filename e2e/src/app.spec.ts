@@ -4,17 +4,32 @@ import { test } from './setup';
 
 test.describe('Popup',  () => {
   test.only('title', async ({ page, context }) => {
+    console.log('YOLO')
     const pages = context.pages();
     const p = pages[1];
     await p.bringToFront();
-    await new Promise(r => {
-      setTimeout(() => {
-        r(null);
-      }, 2000);
-    })
-    // await p.waitForSelector('oh-my-disabled-enabled');
-    expect(page).toHaveTitle('OhMyMock');
+    // await new Promise(r => {
+    //   setTimeout(() => {
+    //     r(null);
+    //   }, 2000);
+    // });
+    await p.waitForSelector('oh-my-disabled-enabled');
+    // await p.screenshot({ path: 'screenshot.png', fullPage: true });
+    await expect(await p.screenshot()).toMatchSnapshot('landing-page.png');
+    await expect(p).toHaveTitle('OhMyMock');
   });
+
+  // test('example test', async ({ page }) => {
+  //   await page.goto('http://localhost:8000');
+  //   await page.screenshot({ path: 'screenshot.png', fullPage: true });
+  //   // await expect(page).toHaveScreenshot('landing.png');
+  // });
+
+  // test.only('example test', async ({ page }) => {
+  //   await page.goto('https://playwright.dev', { waitUntil: 'networkidle' });
+    // await expect(page).toHaveScreenshot('landing.png');
+  //   expect(true).toBeTruthy();
+  // });
   // test('title 2', async ({ page, context }) => {
   //   const pages = context.pages();
   //   const p = pages[1];
