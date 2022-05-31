@@ -7,7 +7,12 @@ test.describe('Popup',  () => {
     const pages = context.pages();
     const p = pages[1];
     await p.bringToFront();
-    await p.waitForSelector('oh-my-disabled-enabled');
+    await new Promise(r => {
+      setTimeout(() => {
+        r(null);
+      }, 2000);
+    })
+    // await p.waitForSelector('oh-my-disabled-enabled');
     expect(page).toHaveTitle('OhMyMock');
   });
   // test('title 2', async ({ page, context }) => {
