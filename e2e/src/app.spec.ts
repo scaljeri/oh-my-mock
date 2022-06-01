@@ -50,7 +50,7 @@ test.describe('chrome extension tests', () => {
       // });
       // await p.waitForSelector('oh-my-disabled-enabled');
       // await p.screenshot({ path: 'screenshot.png', fullPage: true });
-      await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png');
+      await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 1 });
       await expect(extPage).toHaveTitle('OhMyMock');
     });
   });

@@ -27,7 +27,6 @@ const config: PlaywrightTestConfig = {
      * For example in `await expect(locator).toHaveText();`
      */
     timeout: 5000,
-    toHaveScreenshot: { maxDiffPixelRatio: 1 },
   },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: false, // !!process.env.CI,
