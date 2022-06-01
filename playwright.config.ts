@@ -26,7 +26,8 @@ const config: PlaywrightTestConfig = {
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 5000
+    timeout: 5000,
+    toHaveScreenshot: { maxDiffPixels: 100 },
   },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: false, // !!process.env.CI,
@@ -40,6 +41,7 @@ const config: PlaywrightTestConfig = {
     ['github'],
     ['html'],
   ],
+  snapshotDir: 'snaps',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
