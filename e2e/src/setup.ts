@@ -1,4 +1,4 @@
-import { test as base, chromium, webkit, ChromiumBrowserContext } from '@playwright/test';
+import { test as base, chromium, webkit, ChromiumBrowserContext, TestInfo, BrowserContext } from '@playwright/test';
 import path, { join } from 'path';
 
 // https://github.com/xcv58/Tab-Manager-v2/blob/master/packages/integration_test/util.ts#L55-L59
@@ -6,6 +6,47 @@ export const EXTENSION_PATH = join(
   __dirname,
   '../../dist/'
 );
+
+export async function setup(testInfo: TestInfo): Promise<BrowserContext> {
+  const pathToExtension = require('path').join(__dirname, '../../dist/');
+  console.log(pathToExtension);
+  console.log('PWD', process.cwd(), pathToExtension);
+  const userDataDir = testInfo.outputPath('test-user-data-dir');
+
+  console.log('TETETE');
+  const context = await chromium.launchPersistentContext(userDataDir, {
+    args: [
+      `--disable-extensions-except=${pathToExtension}`,
+      `--load-extension=${pathToExtension}`,
+    ],
+  });
+
+  await prepareTabs(context);
+
+  return context;
+}
+
+async function prepareTabs(context) {
+  console.log('XXXXXXXXX', context);
+  let page = await context.pages()[0]
+  await page.bringToFront()
+  await page.goto('chrome://inspect/#extensions')
+  await page.goto('chrome://inspect/#service-workers')
+  const url = await page
+    .locator('#service-workers-list div[class="url"]')
+    .textContent()
+  const [, , extensionId] = url.split('/')
+  const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
+  console.log('EXTENSIONURL===' + extensionURL, extensionId);
+  return extensionURL;
+  // await page.waitForTimeout(500)
+  // const pages = context.pages()
+
+  // page = pages.find((x) => x.url() === extensionURL)
+  // if (!page) {
+  //   page = pages[0]
+  // }
+}
 
 async function initBrowserWithExtension() {
   console.log('------------');
@@ -28,21 +69,15 @@ async function initBrowserWithExtension() {
   console.log('TEST INNER A');
 
   let page = await browserContext.pages()[0]
-  console.log('TEST INNER B');
   await page.bringToFront()
-  console.log('TEST INNER C');
   await page.goto('chrome://inspect/#extensions')
-  console.log('TEST INNER D');
   await page.goto('chrome://inspect/#service-workers')
-  console.log('TEST INNER E');
   const url = await page
     .locator('#service-workers-list div[class="url"]')
     .textContent()
-  console.log('TEST INNER F');
   const [, , extensionId] = url.split('/')
   const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
   await page.waitForTimeout(500)
-  console.log('TEST INNER G');
   const pages = browserContext.pages()
   page = pages.find((x) => x.url() === extensionURL)
   if (!page) {
@@ -84,7 +119,7 @@ const test = base.extend({
     await page.goto('http://localhost:8000')
     console.log('TEST 1a');
     const extPage = await browserContext.newPage();
-    console.log('TEST 1: ' +  extensionURL);
+    console.log('TEST 1: ' + extensionURL);
     await extPage.goto(extensionURL);
     console.log('TEST 1');
     await use(browserContext)
