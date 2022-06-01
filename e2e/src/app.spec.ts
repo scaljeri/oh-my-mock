@@ -1,4 +1,4 @@
-import { test, BrowserContext, expect, chromium } from '@playwright/test';
+import { test, BrowserContext, expect, chromium, Page } from '@playwright/test';
 import { setgroups } from 'process';
 import { setup } from './setup';
 
@@ -6,10 +6,11 @@ import { setup } from './setup';
 
 test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
+  let page: Page;
+  let extPage: Page;
 
   test.beforeEach(async ({ }, testInfo) => {
-    browserContext = await setup(testInfo);
-    console.log('YSSSSS');
+    ({ page, extPage, browserContext } = await setup(testInfo));
   });
 
   test.afterEach(async () => {
@@ -18,40 +19,42 @@ test.describe('chrome extension tests', () => {
     await browserContext.close();
   });
 
-  test('Should get handle to background page of extension', async () => {
-    const page = await browserContext.newPage();
-    console.log('YOLO')
+  // test('Should get handle to background page of extension', async () => {
+  //   const page = await browserContext.newPage();
+  //   console.log('YOLO')
 
-    await page.goto('http://localhost:8000');
-    await page.reload();
+  //   await page.goto('http://localhost:8000');
+  //   await page.reload();
 
-    console.log('Current workers:');
-    for (const worker of page.workers())
-      console.log('  ' + worker.url());
+  //   console.log('Current workers:');
+  //   for (const worker of page.workers())
+  //     console.log('  ' + worker.url());
 
-    expect(true).toBeTruthy();
-    // Test the background page as you would any other page.
+  //   expect(true).toBeTruthy();
+  //   // Test the background page as you would any other page.
+  // });
+  // });
+
+
+
+  test.describe('Popup', () => {
+    test.only('title', async () => {
+      console.log('YOLO')
+      // const pages = context.pages();
+      // const p = pages[1];
+      await extPage.bringToFront();
+      // await new Promise(r => {
+      //   setTimeout(() => {
+      //     r(null);
+      //   }, 2000);
+      // });
+      // await p.waitForSelector('oh-my-disabled-enabled');
+      // await p.screenshot({ path: 'screenshot.png', fullPage: true });
+      await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png');
+      await expect(extPage).toHaveTitle('OhMyMock');
+    });
   });
 });
-
-
-
-// test.describe('Popup',  () => {
-//   test.only('title', async ({ page, context }) => {
-//     console.log('YOLO')
-//     const pages = context.pages();
-//     const p = pages[1];
-//     await p.bringToFront();
-//     await new Promise(r => {
-//       setTimeout(() => {
-//         r(null);
-//       }, 2000);
-//     });
-//     // await p.waitForSelector('oh-my-disabled-enabled');
-//     // await p.screenshot({ path: 'screenshot.png', fullPage: true });
-//     await expect(await p.screenshot()).toMatchSnapshot('landing-page.png');
-//     await expect(p).toHaveTitle('OhMyMock');
-//   });
 
 //   // test('example test', async ({ page }) => {
 //   //   await page.goto('http://localhost:8000');

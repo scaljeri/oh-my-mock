@@ -1,4 +1,4 @@
-import { test as base, chromium, webkit, ChromiumBrowserContext, TestInfo, BrowserContext } from '@playwright/test';
+import { test as base, chromium, webkit, ChromiumBrowserContext, TestInfo, BrowserContext, Page } from '@playwright/test';
 import path, { join } from 'path';
 
 // https://github.com/xcv58/Tab-Manager-v2/blob/master/packages/integration_test/util.ts#L55-L59
@@ -7,7 +7,7 @@ export const EXTENSION_PATH = join(
   '../../dist/'
 );
 
-export async function setup(testInfo: TestInfo): Promise<BrowserContext> {
+export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: Page, browserContext: BrowserContext }> {
   const pathToExtension = require('path').join(__dirname, '../../dist/');
   console.log(pathToExtension);
   console.log('PWD', process.cwd(), pathToExtension);
@@ -21,13 +21,10 @@ export async function setup(testInfo: TestInfo): Promise<BrowserContext> {
     ],
   });
 
-  await prepareTabs(context);
-
-  return context;
+  return { ...(await prepareTabs(context)), browserContext: context };
 }
 
-async function prepareTabs(context) {
-  console.log('XXXXXXXXX', context);
+async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
   let page = await context.pages()[0]
   await page.bringToFront()
   await page.goto('chrome://inspect/#extensions')
@@ -37,8 +34,11 @@ async function prepareTabs(context) {
     .textContent()
   const [, , extensionId] = url.split('/')
   const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
-  console.log('EXTENSIONURL===' + extensionURL, extensionId);
-  return extensionURL;
+  await page.goto('http://localhost:8000');
+  const extPage = await context.newPage();
+  await extPage.goto(extensionURL);
+
+  return { page, extPage };
   // await page.waitForTimeout(500)
   // const pages = context.pages()
 
