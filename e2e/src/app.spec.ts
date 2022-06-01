@@ -1,4 +1,6 @@
 import { test, BrowserContext, expect, chromium } from '@playwright/test';
+import { setgroups } from 'process';
+import { setup } from './setup';
 
 // import { test } from './setup';
 
@@ -6,15 +8,8 @@ test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
 
   test.beforeEach(async ({ }, testInfo) => {
-    const pathToExtension = require('path').join(__dirname, '../../dist/');
-    console.log('PWD', process.cwd(), pathToExtension);
-    const userDataDir = testInfo.outputPath('test-user-data-dir');
-    browserContext = await chromium.launchPersistentContext(userDataDir, {
-      args: [
-        `--disable-extensions-except=${pathToExtension}`,
-        `--load-extension=${pathToExtension}`,
-      ],
-    });
+    browserContext = await setup(testInfo);
+    console.log('YSSSSS');
   });
 
   test.afterEach(async () => {
@@ -24,7 +19,17 @@ test.describe('chrome extension tests', () => {
   });
 
   test('Should get handle to background page of extension', async () => {
-    browserContext.backgroundPages()[0];
+    const page = await browserContext.newPage();
+    console.log('YOLO')
+
+    await page.goto('http://localhost:8000');
+    await page.reload();
+
+    console.log('Current workers:');
+    for (const worker of page.workers())
+      console.log('  ' + worker.url());
+
+    expect(true).toBeTruthy();
     // Test the background page as you would any other page.
   });
 });
@@ -119,22 +124,22 @@ test.describe('chrome extension tests', () => {
 //   });
 // });
 
-list();
-function list() {
-  const path = require('path');
-  const fs = require('fs');
-  //joining path of directory
-  const directoryPath = path.join(__dirname, '../..');
-  //passsing directoryPath and callback function
-  fs.readdir(directoryPath, function (err, files) {
-    //handling error
-    if (err) {
-      return console.log('Unable to scan directory: ' + err);
-    }
-    //listing all files using forEach
-    files.forEach(function (file) {
-      // Do whatever you want to do with the file
-      console.log(file);
-    });
-  });
-}
+// list();
+// function list() {
+//   const path = require('path');
+//   const fs = require('fs');
+//   //joining path of directory
+//   const directoryPath = path.join(__dirname, '../..');
+//   //passsing directoryPath and callback function
+//   fs.readdir(directoryPath, function (err, files) {
+//     //handling error
+//     if (err) {
+//       return console.log('Unable to scan directory: ' + err);
+//     }
+//     //listing all files using forEach
+//     files.forEach(function (file) {
+//       // Do whatever you want to do with the file
+//       console.log(file);
+//     });
+//   });
+// }
