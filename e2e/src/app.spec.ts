@@ -39,7 +39,6 @@ test.describe('chrome extension tests', () => {
 
   test.describe('Popup', () => {
     test.only('title', async () => {
-      console.log('YOLO')
       // const pages = context.pages();
       // const p = pages[1];
       await extPage.bringToFront();
@@ -50,6 +49,7 @@ test.describe('chrome extension tests', () => {
       // });
       // await p.waitForSelector('oh-my-disabled-enabled');
       // await p.screenshot({ path: 'screenshot.png', fullPage: true });
+      // page.pause()
       await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.05 });
       await expect(extPage).toHaveTitle('OhMyMock');
     });

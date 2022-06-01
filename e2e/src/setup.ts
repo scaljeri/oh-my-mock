@@ -9,11 +9,8 @@ export const EXTENSION_PATH = join(
 
 export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: Page, browserContext: BrowserContext }> {
   const pathToExtension = require('path').join(__dirname, '../../dist/');
-  console.log(pathToExtension);
-  console.log('PWD', process.cwd(), pathToExtension);
   const userDataDir = testInfo.outputPath('test-user-data-dir');
 
-  console.log('TETETE');
   const context = await chromium.launchPersistentContext(userDataDir, {
     args: [
       `--disable-extensions-except=${pathToExtension}`,
