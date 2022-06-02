@@ -31,7 +31,7 @@ async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
     .textContent()
   const [, , extensionId] = url.split('/')
   const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
-  await page.goto('http://localhost:8000');
+  await page.goto('http://localhost:8000/?type=xhr&method=get&response=json&responseType=json');
   const extPage = await context.newPage();
   await extPage.goto(extensionURL);
 

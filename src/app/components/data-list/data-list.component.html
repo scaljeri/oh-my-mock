@@ -94,6 +94,7 @@
   <li
     [title]="row.id"
     class="data-row"
+    x-test="list-request-item"
     *ngFor="
       let row of filteredRequests | dataToViewList: state.data;
       index as index;

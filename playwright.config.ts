@@ -40,7 +40,7 @@ const config: PlaywrightTestConfig = {
     ['github'],
     ['html'],
   ],
-  snapshotDir: 'snaps',
+  snapshotDir: 'e2e/snapshots',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */

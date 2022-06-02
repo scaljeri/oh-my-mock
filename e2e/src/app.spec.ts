@@ -1,5 +1,7 @@
 import { test, BrowserContext, expect, chromium, Page } from '@playwright/test';
 import { setgroups } from 'process';
+import { XAppPage } from './po/app.po';
+import { TestSitePo } from './po/test-site.po';
 import { setup } from './setup';
 
 // import { test } from './setup';
@@ -8,9 +10,13 @@ test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;
+  let xpo: XAppPage;
+  let tpo: TestSitePo;
 
   test.beforeEach(async ({ }, testInfo) => {
     ({ page, extPage, browserContext } = await setup(testInfo));
+    xpo = new XAppPage(extPage);
+    tpo = new TestSitePo(page);
   });
 
   test.afterEach(async () => {
@@ -41,7 +47,6 @@ test.describe('chrome extension tests', () => {
     test.only('title', async () => {
       // const pages = context.pages();
       // const p = pages[1];
-      await extPage.bringToFront();
       // await new Promise(r => {
       //   setTimeout(() => {
       //     r(null);
@@ -50,8 +55,17 @@ test.describe('chrome extension tests', () => {
       // await p.waitForSelector('oh-my-disabled-enabled');
       // await p.screenshot({ path: 'screenshot.png', fullPage: true });
       // page.pause()
+      await extPage.bringToFront();
+      await xpo.activate();
       await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.05 });
       await expect(extPage).toHaveTitle('OhMyMock');
+
+      await page.bringToFront();
+      await tpo.go();
+      await extPage.bringToFront();
+      const count = await xpo.countRequests();
+      await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
+      await expect(count).toBe(1);
     });
   });
 });
