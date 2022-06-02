@@ -57,16 +57,10 @@ test.describe('chrome extension tests', () => {
       // await p.waitForSelector('oh-my-disabled-enabled');
       // await p.screenshot({ path: 'screenshot.png', fullPage: true });
       // page.pause()
-      console.log('BEGIN TEST A');
       await extPage.bringToFront();
-      expect(await extPage.screenshot()).toMatchSnapshot('initial.png', { maxDiffPixelRatio: 0.05 });
-      console.log('BEGIN TEST B');
       await xpo.activate();
-      console.log('BEGIN TEST C');
       await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.20 });
-      console.log('BEGIN TEST CD');
       await expect(extPage).toHaveTitle('OhMyMock');
-      console.log('BEGIN TEST CE');
 
       await page.bringToFront();
       console.log('BEGIN TEST F');
@@ -76,7 +70,6 @@ test.describe('chrome extension tests', () => {
       console.log('BEGIN TEST H');
       const count = await xpo.countRequests();
       console.log('BEGIN TEST I');
-      await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
       await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
       console.log('BEGIN TEST J');
       expect(count).toBe(1);
