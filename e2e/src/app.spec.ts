@@ -44,7 +44,7 @@ test.describe('chrome extension tests', () => {
 
 
   test.describe('Popup', () => {
-    test.only('first test', async () => {
+    test.only('title', async () => {
       // const pages = context.pages();
       // const p = pages[1];
       // await new Promise(r => {
