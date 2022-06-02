@@ -63,7 +63,7 @@ test.describe('chrome extension tests', () => {
       console.log('BEGIN TEST B');
       await xpo.activate();
       console.log('BEGIN TEST C');
-      expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.20 });
+      await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.20 });
       console.log('BEGIN TEST CD');
       await expect(extPage).toHaveTitle('OhMyMock');
       console.log('BEGIN TEST CE');
@@ -76,8 +76,8 @@ test.describe('chrome extension tests', () => {
       console.log('BEGIN TEST H');
       const count = await xpo.countRequests();
       console.log('BEGIN TEST I');
-      expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
-      expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
+      await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
+      await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
       console.log('BEGIN TEST J');
       expect(count).toBe(1);
       console.log('BEGIN TEST K');
