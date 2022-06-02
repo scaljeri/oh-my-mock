@@ -73,7 +73,7 @@ test.describe('chrome extension tests', () => {
       await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.20 });
       console.log('BEGIN TEST J');
       expect(count).toBe(1);
-      console.log('BEGIN TEST K');
+      console.log('BEGIN TEST Ka');
     });
   });
 });
