@@ -23,7 +23,6 @@ export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: 
   });
 
   const output =  { ...(await prepareTabs(context)), browserContext: context };
-  console.log('SETUP IS READY NOW');
   return output;
 }
 
@@ -53,7 +52,6 @@ async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
 }
 
 async function initBrowserWithExtension() {
-  console.log('------------');
   const userDataDir = `/tmp/test-user-data-${Math.random()}`; // TODO
   const browserContext = (await chromium.launchPersistentContext('', {
     devtools: true,
@@ -70,7 +68,6 @@ async function initBrowserWithExtension() {
     //   height: 1080
     // }
   })) as ChromiumBrowserContext
-  console.log('TEST INNER A');
 
   let page = await browserContext.pages()[0]
   await page.bringToFront()
