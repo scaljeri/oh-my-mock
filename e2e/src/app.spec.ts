@@ -78,9 +78,11 @@ test.describe('chrome extension tests', () => {
       await expect(await extPage.screenshot({fullPage: true})).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
       await expect(await extPage.screenshot({fullPage: true})).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
       await expect(await extPage.screenshot({fullPage: true})).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
+      await expect(await extPage.screenshot({fullPage: true})).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
+      await expect(await extPage.screenshot({fullPage: true})).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
       console.log('BEGIN TEST J');
       expect(count).toBe(1);
-      console.log('BEGIN TEST Kax');
+      console.log('BEGIN TEST Kaxx');
     });
   });
 });
