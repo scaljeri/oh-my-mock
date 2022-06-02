@@ -30,7 +30,7 @@ jobs:
         run: yarn build
       - name: Install Playwright
         # run: npx playwright install --with-deps
-        run: npx playwright install
+        run: npx playwright install chrome
       - name: Run your tests
         run: npx playwright test --headed --project=chromium
       - name: Upload test results

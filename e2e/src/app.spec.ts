@@ -64,7 +64,7 @@ test.describe('chrome extension tests', () => {
       await tpo.go();
       await extPage.bringToFront();
       const count = await xpo.countRequests();
-      await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
+      await expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.11 });
       await expect(count).toBe(1);
     });
   });
