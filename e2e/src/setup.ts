@@ -43,6 +43,7 @@ async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
   const extPage = await context.newPage();
   console.log('TEST B');
   await extPage.goto(extensionURL);
+  await extPage.evaluate(() => document.fonts.ready);
   console.log('TEST C');
 
   return { page, extPage };
