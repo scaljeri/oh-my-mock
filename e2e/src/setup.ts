@@ -16,6 +16,10 @@ export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: 
       `--disable-extensions-except=${pathToExtension}`,
       `--load-extension=${pathToExtension}`,
     ],
+      viewport: {
+      width: 1024,
+      height: 768
+    }
   });
 
   return { ...(await prepareTabs(context)), browserContext: context };
