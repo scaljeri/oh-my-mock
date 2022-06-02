@@ -44,6 +44,11 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report
+      - name: Upload results
+        uses: actions/upload-artifact@v2
+        with:
+          name: e2e-results
+          path: ./e2e/snapshots
 
     # steps:
     #   - uses: actions/checkout@v2
