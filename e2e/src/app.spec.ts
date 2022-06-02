@@ -62,7 +62,7 @@ test.describe('chrome extension tests', () => {
       console.log('BEGIN TEST B');
       await xpo.activate();
       console.log('BEGIN TEST C');
-      expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.05 });
+      expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.20 });
       console.log('BEGIN TEST CD');
       await expect(extPage).toHaveTitle('OhMyMock');
       console.log('BEGIN TEST CE');
