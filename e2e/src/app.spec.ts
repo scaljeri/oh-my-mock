@@ -14,6 +14,7 @@ test.describe('chrome extension tests', () => {
   let tpo: TestSitePo;
 
   test.beforeEach(async ({ }, testInfo) => {
+    console.log('AAAA THE BEGINNING');
     ({ page, extPage, browserContext } = await setup(testInfo));
     console.log('DONE A')
     xpo = new XAppPage(extPage);
