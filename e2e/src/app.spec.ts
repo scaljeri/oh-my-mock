@@ -59,6 +59,7 @@ test.describe('chrome extension tests', () => {
       // page.pause()
       console.log('BEGIN TEST A');
       await extPage.bringToFront();
+      expect(await extPage.screenshot()).toMatchSnapshot('initial.png', { maxDiffPixelRatio: 0.05 });
       console.log('BEGIN TEST B');
       await xpo.activate();
       console.log('BEGIN TEST C');
