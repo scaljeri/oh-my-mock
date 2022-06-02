@@ -15,6 +15,7 @@ test.describe('chrome extension tests', () => {
 
   test.beforeEach(async ({ }, testInfo) => {
     ({ page, extPage, browserContext } = await setup(testInfo));
+    console.log('DONE A')
     xpo = new XAppPage(extPage);
     tpo = new TestSitePo(page);
   });
@@ -55,17 +56,28 @@ test.describe('chrome extension tests', () => {
       // await p.waitForSelector('oh-my-disabled-enabled');
       // await p.screenshot({ path: 'screenshot.png', fullPage: true });
       // page.pause()
+      console.log('BEGIN TEST A');
       await extPage.bringToFront();
+      console.log('BEGIN TEST B');
       await xpo.activate();
+      console.log('BEGIN TEST C');
       expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.05 });
+      console.log('BEGIN TEST CD');
       await expect(extPage).toHaveTitle('OhMyMock');
+      console.log('BEGIN TEST CE');
 
       await page.bringToFront();
+      console.log('BEGIN TEST F');
       await tpo.go();
+      console.log('BEGIN TEST G');
       await extPage.bringToFront();
+      console.log('BEGIN TEST H');
       const count = await xpo.countRequests();
+      console.log('BEGIN TEST I');
       expect(await extPage.screenshot()).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.05 });
-      await expect(count).toBe(1);
+      console.log('BEGIN TEST J');
+      expect(count).toBe(1);
+      console.log('BEGIN TEST K');
     });
   });
 });

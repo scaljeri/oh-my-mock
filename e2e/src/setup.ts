@@ -8,13 +8,13 @@ export const EXTENSION_PATH = join(
 );
 
 export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: Page, browserContext: BrowserContext }> {
-  const pathToExtension = require('path').join(__dirname, '../../dist/');
+  // const pathToExtension = require('path').join(__dirname, '../../dist/');
   const userDataDir = testInfo.outputPath('test-user-data-dir');
 
   const context = await chromium.launchPersistentContext(userDataDir, {
     args: [
-      `--disable-extensions-except=${pathToExtension}`,
-      `--load-extension=${pathToExtension}`,
+      `--disable-extensions-except=${EXTENSION_PATH}`,
+      `--load-extension=${EXTENSION_PATH}`,
     ],
       viewport: {
       width: 1024,
@@ -22,7 +22,9 @@ export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: 
     }
   });
 
-  return { ...(await prepareTabs(context)), browserContext: context };
+  const output =  { ...(await prepareTabs(context)), browserContext: context };
+  console.log('SETUP IS READY NOW');
+  return output;
 }
 
 async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
