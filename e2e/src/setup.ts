@@ -37,14 +37,10 @@ async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
     .textContent()
   const [, , extensionId] = url.split('/')
   const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
-  console.log('XXXXXXXXXXXXX', extensionId, extensionURL);
   await page.goto('http://localhost:8000/?type=xhr&method=get&response=json&responseType=json');
-  console.log('TEST A');
   const extPage = await context.newPage();
-  console.log('TEST B');
   await extPage.goto(extensionURL);
   await extPage.evaluate(() => document.fonts.ready);
-  console.log('TEST C');
 
   return { page, extPage };
   // await page.waitForTimeout(500)
