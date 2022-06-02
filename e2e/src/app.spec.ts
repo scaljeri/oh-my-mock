@@ -57,10 +57,15 @@ test.describe('chrome extension tests', () => {
       // await p.waitForSelector('oh-my-disabled-enabled');
       // await p.screenshot({ path: 'screenshot.png', fullPage: true });
       // page.pause()
+      console.log('AJAJAJAJAJ');
       await extPage.bringToFront();
+      console.log('AJAJAJAJAJa');
       await xpo.activate();
+      console.log('AJAJAJAJAJb');
       await expect(await extPage.screenshot()).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.20 });
+      console.log('AJAJAJAJAJc');
       await expect(extPage).toHaveTitle('OhMyMock');
+      console.log('AJAJAJAJAJd');
 
       await page.bringToFront();
       console.log('BEGIN TEST F');
