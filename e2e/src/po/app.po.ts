@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
 import { s } from "./utils";
 
-export class XAppPage {
+export class XAppPO {
   constructor(private page: Page) { }
 
   async activate() {
@@ -9,9 +9,10 @@ export class XAppPage {
     return toggle.click();
   }
 
-  async countRequests(): Promise<number> {
-    const requests = await this.page.locator(s('list-request-item'));
-    await requests.waitFor();
-    return requests.count();
+  get isInactive(): Promise<boolean> {
+    return (async () => {
+      await this.page.locator(s('app-inactive')).waitFor();
+      return (await this.page.locator(s('app-inactive')).count()) === 1;
+    })();
   }
 }
