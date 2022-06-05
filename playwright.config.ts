@@ -18,7 +18,7 @@ const config: PlaywrightTestConfig = {
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
-  testMatch: '**/*.spec.ts',
+  testMatch: '**/*.e2e.spec.ts',
   /* Maximum time one test can run for. */
   timeout: 100 * 1000,
   expect: {

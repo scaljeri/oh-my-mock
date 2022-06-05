@@ -6,7 +6,7 @@ import { setup } from './setup';
 
 // import { test } from './setup';
 
-test.describe.only('chrome extension tests', () => {
+test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;
