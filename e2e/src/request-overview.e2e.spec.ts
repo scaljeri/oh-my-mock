@@ -7,7 +7,7 @@ import { setup } from './setup';
 
 // import { test } from './setup';
 
-test.describe('chrome extension tests', () => {
+test.describe.only('chrome extension tests', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;
@@ -23,6 +23,7 @@ test.describe('chrome extension tests', () => {
 
     await extPage.bringToFront();
     await xpo.activate();
+    await xro.activateCustomResponsePopup();
   });
 
   test.afterEach(async () => {
@@ -33,12 +34,15 @@ test.describe('chrome extension tests', () => {
 
   test.describe('Add custom response', () => {
     test('activate dialog', async () => {
-      await xro.activateCustomResponsePopup();
       await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('add-custom-response-form.png', { maxDiffPixelRatio: 0.21 });
     });
 
-    test('with default values', () => {
+    test('with no default url', async () => {
+      await expect(await xro.url).toBe('');
+    });
 
+    test.only('with default type', async () => {
+      await expect(await xro.type).toBe('XHR');
     });
   });
 });

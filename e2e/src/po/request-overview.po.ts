@@ -21,4 +21,18 @@ export class XRequestOverviewPage {
   get isCustomResponsePopupVisible(): Promise<boolean> {
     return this.page.isVisible(s`add-custom-response-form`);
   }
+
+  get url() {
+    return (async () => {
+      await this.page.locator(s`custom-response-url`).waitFor();
+      return this.page.inputValue(s`custom-response-url`);
+    })();
+  }
+
+  get type() {
+    return (async () => {
+      await this.page.locator(s`custom-response-type`).waitFor();
+      return this.page.inputValue(s`custom-response-type`);
+    })();
+  }
 }
