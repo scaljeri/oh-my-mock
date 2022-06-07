@@ -30,13 +30,22 @@ test.describe('chrome extension tests', () => {
       await expect(extPage).toHaveTitle('OhMyMock');
     });
 
-    test('initially inactive', async () => {
+    test('initially inactive popup', async () => {
       expect(await xpo.isInactive).toBeTruthy();
     });
 
-    test('initially empty', async () => {
+    test('inactive with alert', async () => {
+      xpo.cancelActivationPopup();
+      expect(await xpo.hasNotice).toBeTruthy();
+    });
+
+    test('initially activated', async () => {
       await xpo.activate();
       await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('initially-empty.png', { maxDiffPixelRatio: 0.21 });
+    });
+
+    describe('Custom response', () => {
+
     });
 
     // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.21 });

@@ -57,6 +57,7 @@
       <div class="version">v{{ version }}</div>
     </mat-toolbar>
     <div
+      x-test="notice-disabled"
       *ngIf="!enabled && showDisabled !== 1 && domain"
       class="disabled-notification"
     >
