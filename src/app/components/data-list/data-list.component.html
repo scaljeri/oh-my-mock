@@ -12,26 +12,52 @@
 
   <div class="toggles">
     <ng-container *ngIf="showPreset">
-      <oh-my-preset *ngIf="context" [context]="context" class="preset"></oh-my-preset>
-      <mat-icon class="info info-contrast scenario-help" color="primary"
-        [matTooltip]="presetInfo">info</mat-icon>
+      <oh-my-preset
+        *ngIf="context"
+        [context]="context"
+        theme="light"
+        class="preset"
+      ></oh-my-preset>
+      <mat-icon
+        class="info info-contrast scenario-help"
+        color="primary"
+        [matTooltip]="presetInfo"
+        svgIcon="info"
+      ></mat-icon>
     </ng-container>
 
     <div class="toggle">
       <ng-container *ngIf="showActivateToggle">
         <label for="show-active-list">Activate new</label>
-        <mat-slide-toggle (change)="onToggleActivateNew($event.checked)" [checked]="$any(state?.aux.newAutoActivate)"
-          color="primary">
+        <mat-slide-toggle
+          (change)="onToggleActivateNew($event.checked)"
+          [checked]="$any(newAutoActivate)"
+          color="primary"
+        >
         </mat-slide-toggle>
       </ng-container>
       <ng-container *ngIf="showMenu">
-        <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
-        <mat-menu  #menu="matMenu">
+        <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu">
+          <mat-icon svgIcon="more_vert"></mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
           <ul class="main-menu">
             <!-- <li><button mat-menu-item>Validate requests</button></li> -->
-            <li><button mat-menu-item (click)="onActivateAll(true)">Activate all requests</button></li>
-            <li><button mat-menu-item (click)="onActivateAll(false)">Deactivate all requests</button></li>
-            <li [ngClass]="{'is-selected': state.aux.blurImages }"><button (click)="onBlurImage()"  mat-menu-item><span>Blur images</span></button></li>
+            <li>
+              <button mat-menu-item (click)="onActivateAll(true)">
+                Activate all requests
+              </button>
+            </li>
+            <li>
+              <button mat-menu-item (click)="onActivateAll(false)">
+                Deactivate all requests
+              </button>
+            </li>
+            <li [ngClass]="{ 'is-selected': blurImages }">
+              <button (click)="onBlurImage()" mat-menu-item>
+                <span>Blur images</span>
+              </button>
+            </li>
           </ul>
         </mat-menu>
       </ng-container>
@@ -39,65 +65,116 @@
   </div>
 </div>
 
-<ol data-table>
+<ol data-table *ngIf="state$ | async as state">
   <li class="header">
     <span class="type">Type</span>
     <span class="method">Method</span>
     <div class="url">
       <span>Url</span>
-      <div *ngIf="hideFilter === false" class="filter-field" [ngClass]="{'active': filterCtrl.value }">
-        <mat-form-field [floatLabel]="'never'">
-          <input type="search" matInput placeholder="Filter" [formControl]="filterCtrl">
-          <button mat-button *ngIf="filterCtrl.value" matSuffix mat-icon-button aria-label="Clear"
-            (click)="filterCtrl.setValue('')">
-            <mat-icon>close</mat-icon>
-          </button>
-        </mat-form-field>
-        <!-- <mat-icon class="search-help" color="primary"
-          matTooltip="Each word in this search field is searched for independenty from other words. To combine multiple words use quotes">
-          info</mat-icon> -->
-      </div>
+
+      <oh-my-request-filter
+        [ngClass]="{
+          hidden: !state || hideFilter === true || requestCount === 0
+        }"
+        [data]="state.data"
+        [filterOptions]="filterOptions"
+        [filterStr]="filterKeywords"
+        [lastResult]="filteredRequests"
+        (update)="onFilterUpdate($event)"
+        (updateFilterOptions)="onFilterUpdateOptions($event)"
+        (updateFilterStr)="onFilterUpdateStr($event)"
+      ></oh-my-request-filter>
+      <!-- <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner> -->
+        <!-- (filteredData)="onFilterUpdateData($event)" -->
     </div>
     <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>
   </li>
 
-  <li [title]="row.id" class="data-row" *ngFor="let row of filteredDataList; index as index; trackBy: trackBy"
-    (click)="onDataClick(row, index)" [ngClass]="{
-    'row-clickable': togglableRows,
-    'is-selected': selection.isSelected(index),
-    'is-active': row.enabled[context?.preset],
-    'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn}">
-    <span class="row-number">{{index + 1}}</span>
-    <span class="method">{{row.requestType}}</span>
-    <span class="type">{{row.method}}</span>
-    <span class="url">{{row.url}}</span>
+  <li
+    [title]="row.id"
+    class="data-row"
+    x-test="list-request-item"
+    *ngFor="
+      let row of filteredRequests | dataToViewList: state.data;
+      index as index;
+      trackBy: trackBy
+    "
+    (click)="onDataClick(row, index)"
+    [ngClass]="{
+      'row-clickable': togglableRows,
+      'is-selected': selection.isSelected(index),
+      'is-active': row.enabled[context?.preset],
+      'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn
+    }"
+  >
+    <span class="row-number">{{ index + 1 }}</span>
+    <span class="method">{{ row.requestType }}</span>
+    <span class="type">{{ row.method }}</span>
+    <span
+      class="url"
+      [attr.data-content-start]="row.urlStart"
+      [attr.data-content-end]="row.urlEnd"
+    ></span>
     <span class="mock">
-      <oh-my-mock-label *ngIf="row.selected[context?.preset] as mockId" [mock]="row.mocks[mockId]"></oh-my-mock-label>
+      <oh-my-mock-label
+        *ngIf="row.selected[context?.preset] as mockId"
+        [mock]="row.mocks[mockId]"
+      ></oh-my-mock-label>
     </span>
-    <ng-container *ngTemplateOutlet="actions; context: { row: row, index: index}"></ng-container>
+    <ng-container
+      *ngTemplateOutlet="actions; context: { row: row, index: index }"
+    ></ng-container>
   </li>
 </ol>
 
 <ng-template #actions let-row="row" let-index="index">
   <div class="actions btns-1">
     <div class="btn-wrapper">
-      <button *ngIf="showActivate" (click)="onActivateToggle(row.id, $event)" mat-icon-button color="primary"
-        aria-label="Example icon button with a menu icon">
-        <mat-icon *ngIf="!row.enabled[context?.preset]">play_arrow</mat-icon>
-        <mat-icon *ngIf="row.enabled[context?.preset]">stop</mat-icon>
+      <button
+        *ngIf="showActivate"
+        (click)="onActivateToggle(row.id, $event)"
+        mat-icon-button
+        color="primary"
+        aria-label="Example icon button with a menu icon"
+      >
+        <mat-icon
+          svgIcon="play_arrow"
+          color="primary"
+          *ngIf="!row.enabled[context?.preset]"
+        ></mat-icon>
+        <mat-icon
+          svgIcon="stop"
+          color="primary"
+          *ngIf="row.enabled[context?.preset]"
+        ></mat-icon>
       </button>
-      <button *ngIf="showClone" (click)="onClone(row.id, $event)" mat-icon-button color="primary"
-        aria-label="Example icon button with a menu icon">
-        <mat-icon>content_copy</mat-icon>
+      <button
+        *ngIf="showClone"
+        (click)="onClone(row.id, $event)"
+        mat-icon-button
+        color="primary"
+        aria-label="Example icon button with a menu icon"
+      >
+        <mat-icon svgIcon="content_copy" color="primary"></mat-icon>
       </button>
-      <button *ngIf="showDelete" (click)="onDelete(row.id, $event)" mat-icon-button color="primary"
-        aria-label="Example icon button with a menu icon">
-        <mat-icon>delete</mat-icon>
+      <button
+        *ngIf="showDelete"
+        (click)="onDelete(row.id, $event)"
+        mat-icon-button
+        color="primary"
+        aria-label="Example icon button with a menu icon"
+      >
+        <mat-icon svgIcon="delete" color="primary"></mat-icon>
       </button>
-      <button *ngIf="showExport" (click)="onExport(row, index, $event)" mat-icon-button color="primary"
-        aria-label="Example icon button with a menu icon">
-        <mat-icon>import_export</mat-icon>
+      <button
+        *ngIf="showExport"
+        (click)="onExport(row, index, $event)"
+        mat-icon-button
+        color="primary"
+        aria-label="Example icon button with a menu icon"
+      >
+        <mat-icon svgIcon="import_export" color="primary"></mat-icon>
       </button>
     </div>
   </div>

@@ -1,4 +1,4 @@
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -9,7 +9,11 @@ export function patchResponseText() {
   Object.defineProperties(window.Response.prototype, {
     text: {
       ...descriptor,
-      value: function () {
+      value: async function () {
+        if (!window[STORAGE_KEY].state.active) {
+          return this.__text();
+        }
+
         if (!this.ohResult) {
           this.oHResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),

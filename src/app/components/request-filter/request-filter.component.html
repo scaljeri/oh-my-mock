@@ -1,0 +1,49 @@
+<div class="filter-field" [ngClass]="{ active: filterCtrl.value }">
+  <mat-form-field class="search" [floatLabel]="'never'">
+    <input
+      type="search"
+      matInput
+      placeholder="Filter"
+      [formControl]="filterCtrl"
+    />
+    <button
+      class="clear"
+      mat-button
+      *ngIf="filterCtrl.value"
+      matSuffix
+      mat-icon-button
+      aria-label="Clear"
+      (click)="filterCtrl.setValue('')"
+    >
+      <mat-icon svgIcon="close" class="dark"></mat-icon>
+    </button>
+  </mat-form-field>
+  <mat-icon
+    class="search-help"
+    color="primary"
+    matTooltip="Each word in this search field is searched for independently from each other. To combine multiple words use quotes"
+    svgIcon="info"
+  >
+  </mat-icon>
+  <mat-icon *ngIf="filterOptions && filter"
+    [matMenuTriggerFor]="filter"
+    class="search-config"
+    color="primary"
+    svgIcon="filter_list"
+  ></mat-icon>
+  <mat-menu #filter="matMenu">
+    <div class="filter-menu" (click)="$event.stopPropagation()">
+      <label>Include:</label>
+      <ul *ngIf="filterOptions">
+        <li *ngFor="let option of filterOptionsData">
+          <mat-checkbox
+            class="example-margin"
+            [(ngModel)]="filterOptions[option.id]"
+            (change)="onFilterOption(option)"
+            >{{ option.label }}</mat-checkbox
+          >
+        </li>
+      </ul>
+    </div>
+  </mat-menu>
+</div>

@@ -29,20 +29,26 @@
       <mat-icon
         color="primary"
         matTooltip="The request URL is used together with the type and method to map incoming API call with a response. This field can also contain regular expressions!"
+        svgIcon="info"
       >
-        info</mat-icon
-      >
+      </mat-icon>
     </mat-form-field>
   </section>
 </div>
 
 <section class="responses-wrapper">
-  <div class="responses" [ngClass]="{ 'is-active': request.enabled[context.preset] }">
+  <div
+    class="responses"
+    [ngClass]="{ 'is-active': request.enabled[context.preset] }"
+  >
     <h3>
       Responses
-      <mat-icon color="primary"
-        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!">
-        info</mat-icon>
+      <mat-icon
+        color="primary"
+        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!"
+        svgIcon="info"
+      >
+      </mat-icon>
     </h3>
     <div class="codes-wrapper">
       <button class="inactive" mat-raised-button (click)="onDisableRequest()">
@@ -68,8 +74,15 @@
       <mat-icon
         class="info info-contrast scenario-help"
         color="primary"
-        [matTooltip]="presetInfo">info</mat-icon>
+        [matTooltip]="presetInfo"
+        svgIcon="info"
+      ></mat-icon>
     </h3>
-    <oh-my-preset *ngIf="context" class="preset" [context]="context"></oh-my-preset>
+    <oh-my-preset
+      *ngIf="context"
+      class="preset"
+      theme="dark"
+      [context]="context"
+    ></oh-my-preset>
   </div>
 </section>

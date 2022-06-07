@@ -33,12 +33,15 @@ export interface IOhMyAux {
   appActive?: boolean;
   popupActive?: boolean;
   blurImages?: boolean;
+  filteredRequests?: ohMyDataId[]
+  filterOptions?: Record<string, boolean>;
 }
 
 export interface IOhMyContext {
   domain: ohMyDomain;
   preset?: ohMyPresetId;
   active?: boolean;
+  id?: string;
 }
 
 export interface IState {
@@ -67,6 +70,7 @@ export interface IData extends IOhMyMockContext {
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
   lastHit: number;
+  lastModified: number;
   version: string;
   type: objectTypes.REQUEST;
 }

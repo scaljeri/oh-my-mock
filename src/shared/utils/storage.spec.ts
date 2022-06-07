@@ -35,7 +35,7 @@ describe('Utils/Storage', () => {
   });
 
   describe('#get', () => {
-    it('should skip data migration', async (done) => {
+    it('should skip data migration', (done) => {
       StorageUtils.MigrateUtils.shouldMigrate = jest.fn().mockReturnValue(true);
 
       StorageUtils.get('a').then(value => {

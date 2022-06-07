@@ -2,34 +2,65 @@
   "name": "Oh-my-Mock",
   "version": "0.0.0",
   "description": "Extension for caching and mocking API (XHR/Fetch) responses",
-  "manifest_version": 2,
+  "manifest_version": 3,
+  "minimum_chrome_version": "96",
   "permissions": [
     "background",
     "storage",
     "unlimitedStorage",
     "tabs",
-    "*://*/*",
-    "webRequest",
-    "webRequestBlocking"
+    "declarativeNetRequest"
   ],
-  "browser_action": {
-    "default_icon": "oh-my-mock/assets/icons/icon-off-128.png"
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "action": {
+    "default_icon": "oh-my-mock/assets/icons/icon-off-128.png",
+    "default_title": "OhMyMock"
   },
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "run_at": "document_start",
-      "js": ["content.js"]
+      "js": [
+        "content.js"
+      ]
     }
   ],
-  "web_accessible_resources": ["oh-my-mock.js.map", "oh-my-mock.js", "oh-my-mock/index.html"],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "oh-my-mock.js",
+        "oh-my-mock.js.map",
+        "early-inject.js",
+        "sandbox.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    {
+      "resources": [
+        "oh-my-mock/index.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "icons": {
     "16": "oh-my-mock/assets/icons/icon-16.png",
     "48": "oh-my-mock/assets/icons/icon-48.png",
     "128": "oh-my-mock/assets/icons/icon-128.png"
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  "sandbox": {
+    "pages": [
+      "sandbox.html"
+    ]
+  }
 }

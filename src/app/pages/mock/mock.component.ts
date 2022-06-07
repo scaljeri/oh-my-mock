@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { IData, IOhMyAux, IOhMyContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
-import { OhMyStateService } from 'src/app/services/state.service';
+import { OhMyStateService } from '../../services/state.service';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
 

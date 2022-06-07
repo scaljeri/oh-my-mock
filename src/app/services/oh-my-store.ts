@@ -209,18 +209,22 @@ export class OhMyState {
 
   async reset(context?: IOhMyContext): Promise<void> {
     if (context) {
-      OhMySendToBg.full({ type: objectTypes.STATE, domain: context.domain }, payloadType.REMOVE, context, 'popup;reset');
+      await OhMySendToBg.full({ type: objectTypes.STATE, domain: context.domain }, payloadType.REMOVE, context, 'popup;reset');
     } else {
-      OhMySendToBg.full(undefined, payloadType.RESET, context, 'popup;reset;everything');
+      await OhMySendToBg.full(undefined, payloadType.RESET, context, 'popup;reset;everything');
     }
   }
 
   async updateAux(aux: IOhMyAux, context: IOhMyContext): Promise<IState> {
     let state = await this.getState(context);
-    state.aux = { ...state.aux };
+    state.aux = { ...state.aux, ...aux };
 
-    for (const item of Object.entries(aux)) {
-      state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE, undefined, 'popup;updateAux');
+    // for (const item of Object.entries(aux)) {
+    // state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE, undefined, 'popup;updateAux');
+    // }
+    const keys = Object.keys(aux);
+    for (let i = 0; i < keys.length; i++) {
+      state = await OhMySendToBg.patch<IOhMyAux, IState>(aux[keys[i]], '$.aux', keys[i], payloadType.STATE, undefined, 'popup;updateAux');
     }
 
     // (state, payloadType.STATE);

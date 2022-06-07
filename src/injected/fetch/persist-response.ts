@@ -33,7 +33,7 @@ export async function persistResponse(response: Response, request: IOhMyAPIReque
 
   const ohResult = {
     request: { url: removeDomainFromUrl(response['ohUrl'] || response.url), method: response['ohMethod'] || request?.method, requestType: 'FETCH' },
-    response: { statusCode: clone.status, response: output, headers }
+    response: { statusCode: clone['__status'], response: output, headers }
   } as IOhMyResponseUpdate;
 
   dispatchApiResponse(ohResult);

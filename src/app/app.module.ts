@@ -56,15 +56,17 @@ import { ContentService } from './services/content.service';
     ComponentsModule,
     NgApimockPluginModule,
   ],
-  providers: [{ provide: Window, useValue: window }],
+  providers: [
+    { provide: Window, useValue: window },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {
   constructor(private contentService: ContentService) { }
 }
 
-chrome.storage.local.get(null, function (data) {
-  // eslint-disable-next-line no-console
-  console.log('window.data === ', data);
-  window['data'] = data;
-});
+// chrome.storage.local.get(null, function (data) {
+//   // eslint-disable-next-line no-console
+//   console.log('window.data === ', data);
+//   window['data'] = data;
+// });

@@ -1,23 +1,64 @@
 <mat-form-field class="method-select">
-    <mat-label>{{label}}</mat-label>
-    <input [ngClass]="{'has-errors': ngControl.hasError('noExactOptionMatch')}"
-        #input (blur)="onBlur(auto)" (focus)="onFocus($event, trigger)" type="text" matInput [formControl]="ctrl"
-        #trigger="matAutocompleteTrigger" [matAutocomplete]="auto">
-    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete" (opened)="onAutoCompleteOpened()"
-        (closed)="onAutoCompleteClose()" (optionSelected)="onOptionSelected($event)">
-        <mat-option *ngFor="let option of filteredMethodOptions || []" [value]="option">
-            {{option}}
-        </mat-option>
-    </mat-autocomplete>
+  <mat-label>{{ label }}</mat-label>
+  <input
+    [ngClass]="{ 'has-errors': ngControl.hasError('noExactOptionMatch') }"
+    #input
+    (blur)="onBlur(auto)"
+    (focus)="onFocus($event, trigger)"
+    type="text"
+    matInput
+    [formControl]="ctrl"
+    #trigger="matAutocompleteTrigger"
+    [matAutocomplete]="auto"
+  />
+  <mat-autocomplete
+    autoActiveFirstOption
+    #auto="matAutocomplete"
+    (opened)="onAutoCompleteOpened()"
+    (closed)="onAutoCompleteClose()"
+    (optionSelected)="onOptionSelected($event)"
+  >
+    <mat-option
+      *ngFor="let option of filteredMethodOptions || []"
+      [value]="option"
+      [title]="optionLabels[option] || option"
+    >
+      {{ optionLabels[option] || option }}
+    </mat-option>
+  </mat-autocomplete>
 
-    <button mat-button *ngIf="ctrl.value" matSuffix mat-icon-button aria-label="Clear"
-       (click)="onClear($event); input.focus(); trigger.openPanel();">
-        <mat-icon>close</mat-icon>
-    </button>
-    <button *ngIf="showCopy" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickEdit($event)">
-        <mat-icon [matTooltip]="copyInfo" >content_copy</mat-icon>
-    </button>
-    <button *ngIf="showDelete" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="onClickDelete($event)">
-        <mat-icon>delete</mat-icon>
-    </button>
+  <button
+    mat-button
+    *ngIf="ctrl.value"
+    matSuffix
+    mat-icon-button
+    aria-label="Clear"
+    (click)="onClear($event); input.focus(); trigger.openPanel()"
+  >
+    <mat-icon [ngClass]="theme" svgIcon="close" matTooltip="Clear"></mat-icon>
+  </button>
+  <button
+    *ngIf="showCopy"
+    mat-button
+    matSuffix
+    mat-icon-button
+    aria-label="Clear"
+    (click)="onClickEdit($event)"
+  >
+    <mat-icon
+      [ngClass]="theme"
+      [matTooltip]="copyInfo"
+      svgIcon="content_copy"
+    ></mat-icon>
+  </button>
+  <button
+    *ngIf="showDelete"
+    mat-button
+    matSuffix
+    mat-icon-button
+    aria-label="Delete"
+    (click)="onClickDelete($event)"
+  >
+    <mat-icon [ngClass]="theme" svgIcon="delete" matTooltip="Delete"></mat-icon>
+  </button>
 </mat-form-field>

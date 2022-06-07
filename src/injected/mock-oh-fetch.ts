@@ -37,10 +37,11 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
     config.body = fd;
   }
 
+  config.method = (config.method || 'get').toUpperCase() as requestMethod;
 
   const result = await dispatchApiRequest({
     url,
-    method: config.method || 'GET',
+    method: config.method,
     ...(config.body && { body: config.body }),
     ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
   } as IOhMyAPIRequest, 'FETCH');

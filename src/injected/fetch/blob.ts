@@ -1,4 +1,4 @@
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { b64ToBlob } from "../../shared/utils/binary";
 import { getMimeType } from "../../shared/utils/mime-type";
 import { findCachedResponse } from "../utils";
@@ -12,6 +12,10 @@ export function patchResponseBlob() {
     blob: {
       ...descriptor,
       value: async function () {
+        if (!window[STORAGE_KEY].state.active) {
+          return this.__blob();
+        }
+
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),

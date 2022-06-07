@@ -5,23 +5,19 @@ export const MOCK_JS_CODE = `/* This is where OhMyMock creates responses.
 Inside this sandbox you have access to the following data:
   * 'mock' - object with a cached response, header and status code
   * 'request' - details of the ongoing request
-  * Feel free to use fetch or XMLHttpRequest, but make sure to
-    return a PROMISE in that case!!
+  Feel free to use fetch or XMLHttpRequest, but make sure to
+  return a PROMISE or await in that case!!
+  NOTE: you can use \`debugger\` to inspect these objects!
 
 - Synchronous example:
-    const response = JSON.parse(mock.response);
-    response[1].name = "Sync example";
-    mock.response = JSON.stringify(response);
+    mock.response[1].name = "Sync example";
     return mock;
 
 - Asynchronous example:
 
     const response = await fetch("/users");
-    const data = await response.json();
-    data[1].name = "From custom code";
-    mock.response = JSON.stringify(r);
-
-    // No need to return a Promise here, "await" takes care o this!
+    mock.response = await response.json();
+    mock.response[1].name = "From custom code";
     return mock;
 */
 
@@ -65,6 +61,7 @@ export enum payloadType {
   DATA = 'data',
   // DATA_DISPATCH = 'data-dispatch',
   API_REQUEST = 'api-request',
+  API_RESPONSE_MOCKED = 'api-response-mocked',
   DISPATCH_API_RESPONSE = 'api-response',
   DISPATCH_TO_SERVER = 'dispatch-to-server',
   // MOCK_RESPONSE = 'mock-response'
@@ -77,9 +74,12 @@ export enum payloadType {
   UPSERT = 'upsert',
   CRUD = 'crud',
   SETTINGS = 'settings',
+  ACTIVATE_CSP_REMOVAL = 'activate-csp-removal',
   CSP_REMOVAL_ACTIVATED = 'csp-removal-started',
   READY = 'ready',
-  OHMYMOCK_API_OUTPUT = 'ohmymock-api-output'
+  OHMYMOCK_API_OUTPUT = 'ohmymock-api-output',
+  PING = 'ping',
+  PONG = 'pong'
 }
 export enum appSources {
   INJECTED = 'injected',
@@ -109,3 +109,13 @@ export enum ohMyMockStatus {
   NO_CONTENT,
   INACTIVE
 }
+
+export const FILTER_SEARCH_OPTIONS = [
+  { state: true, value: 'url', label: 'Url', id: '1' },
+  { state: true, value: 'statusCode', label: 'Status code', id: '2' },
+  { state: true, value: 'requestMethod', label: 'request method (GET/POST, etc)', id: '3' },
+  { state: true, value: 'requestType', label: 'request type (Fetch/Xhr)', id: '4' },
+  { state: true, value: 'response', label: 'Response body', id: '5' },
+  { state: true, value: 'headers', label: 'Response headers', id: '6' },
+  { state: true, value: 'label', label: 'Label', id: '7' },
+];

@@ -1,26 +1,31 @@
-  <h2>Create new Response</h2>
-  <form [formGroup]="form">
+<h2>Create new Response</h2>
+<form [formGroup]="form">
+  <oh-my-status-code [formControl]="codeCtrl"></oh-my-status-code>
+
+  <div class="label">
     <mat-form-field>
-      <mat-label>Status Code</mat-label>
-      <input type="number" matInput [formControl]="codeCtrl">
+      <mat-label>Label (optional)</mat-label>
+      <input matInput [formControl]="labelCtrl" />
     </mat-form-field>
 
-    <div class="label">
-      <mat-form-field>
-        <mat-label>Label (optional)</mat-label>
-        <input matInput [formControl]="labelCtrl">
-      </mat-form-field>
+    <mat-icon
+      color="primary"
+      matTooltip="Labels are handy when there are multiple responses with the same status code."
+      color="primary"
+      svgIcon="info"
+    >
+    </mat-icon>
+  </div>
+  <mat-slide-toggle [formControl]="cloneCtrl"
+    >Clone current response?</mat-slide-toggle
+  >
 
-      <mat-icon color="primary"
-        matTooltip="Labels are handy when there are multiple responses with the same status code.">
-        info</mat-icon>
-    </div>
-    <mat-slide-toggle [formControl]="cloneCtrl">Clone current response?</mat-slide-toggle>
+  <div class="spacer"></div>
 
-    <div class="spacer"></div>
-
-    <div class="actions">
-      <button type="button" mat-button (click)="onClose()">Cancel</button>
-      <button type="submit" mat-raised-button color="primary" (click)="onSave()">Save</button>
-    </div>
-  </form>
+  <div class="actions">
+    <button type="button" mat-button (click)="onClose()">Cancel</button>
+    <button type="submit" mat-raised-button color="primary" (click)="onSave()">
+      Save
+    </button>
+  </div>
+</form>

@@ -1,4 +1,4 @@
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import * as fetchUtils from '../../shared/utils/fetch';
 import { persistResponse } from "./persist-response";
@@ -11,6 +11,10 @@ export function patchHeaders() {
     headers: {
       ...descriptor,
       get: function () {
+        if (!window[STORAGE_KEY].state.active) {
+         return this.__headers;
+        }
+
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),

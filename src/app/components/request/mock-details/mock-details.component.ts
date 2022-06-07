@@ -1,17 +1,17 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { REQUIRED_MSG } from '@shared/constants';
 import { IMock, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
-import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyState } from '../../../services/oh-my-store';
 
 @Component({
   selector: 'oh-my-mock-details',
   templateUrl: './mock-details.component.html',
   styleUrls: ['./mock-details.component.scss']
 })
-export class MockDetailsComponent implements OnChanges {
+export class MockDetailsComponent implements OnInit, OnChanges {
   @Input() response: IMock;
   @Input() requestId: string;
   @Input() context: IOhMyContext;
@@ -31,7 +31,9 @@ export class MockDetailsComponent implements OnChanges {
   ];
   filteredMimeTypes$: Observable<string[]>;
 
-  constructor(private storeService: OhMyState, public dialog: MatDialog) { }
+  constructor(
+    private storeService: OhMyState, public dialog: MatDialog,
+    private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.form = new FormGroup({
@@ -39,7 +41,7 @@ export class MockDetailsComponent implements OnChanges {
       statusCode: new FormControl(this.response.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      label: new FormControl(this.response.label, { updateOn: 'blur'}),
+      label: new FormControl(this.response.label, { updateOn: 'blur' }),
       contentType: new FormControl(this.response.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
@@ -54,8 +56,11 @@ export class MockDetailsComponent implements OnChanges {
         ...values,
         headersMock: {
           ...this.response.headersMock,
-          'content-type': this.contentTypeCtrl.value },
-        id: this.response.id }, { id: this.requestId}, this.context);
+          'content-type': this.contentTypeCtrl.value
+        },
+        id: this.response.id
+      }, { id: this.requestId }, this.context);
+      this.cdr.detectChanges();
     }));
   }
 
@@ -65,9 +70,9 @@ export class MockDetailsComponent implements OnChanges {
     }
 
     this.delayCtrl.setValue(this.response.delay, { emitEvent: false, onlySelf: true });
-    this.statusCodeCtrl.setValue(this.response.statusCode,  { emitEvent: false, onlySelf: true });
+    this.statusCodeCtrl.setValue(this.response.statusCode, { emitEvent: false, onlySelf: true });
     this.contentTypeCtrl.setValue(this.response.headersMock['content-type'], { emitEvent: false });
-    this.labelCtrl.setValue(this.response.label,  { emitEvent: false, onlySelf: true });
+    this.labelCtrl.setValue(this.response.label, { emitEvent: false, onlySelf: true });
   }
 
   get labelCtrl(): FormControl {

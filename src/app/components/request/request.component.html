@@ -16,7 +16,7 @@
 
     <div class="mock-actions">
       <button mat-stroked-button class="delete-mock" (click)="onDelete()">
-        <mat-icon>delete_forever</mat-icon>
+        <mat-icon class="dark" svgIcon="delete_forever"></mat-icon>
       </button>
 
       <button mat-stroked-button class="anonymize-mock" (click)="onAnonymize()">
@@ -33,9 +33,8 @@
         <mat-icon
           color="primary"
           matTooltip="This is the place where OhMyMock creates responses. You can write code in here to change the default mocking behaviour. You can make Fetch/XHR request and/or change the cached responses/headers."
-        >
-          info</mat-icon
-        >
+          svgIcon="info"
+        ></mat-icon>
       </div>
     </div>
   </section>
@@ -53,7 +52,7 @@
           color="primary"
           aria-label="Example icon button with a menu icon"
         >
-          <mat-icon>fullscreen</mat-icon>
+          <mat-icon svgIcon="fullscreen"></mat-icon>
         </button>
         <oh-my-code-edit
           class="request-response"
@@ -86,7 +85,7 @@
           color="primary"
           aria-label="Example icon button with a menu icon"
         >
-          <mat-icon>fullscreen</mat-icon>
+          <mat-icon svgIcon="fullscreen"></mat-icon>
         </button>
         <oh-my-code-edit
           class="request-headers"

@@ -1,4 +1,4 @@
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -10,6 +10,10 @@ export function patchResponseJson() {
     json: {
       ...descriptor,
       value: function () {
+        if (!window[STORAGE_KEY].state.active) {
+          return this.__json();
+        }
+
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
@@ -23,7 +27,7 @@ export function patchResponseJson() {
 
         if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
           const response = this.ohResult.response?.response;
-          return Promise.resolve(JSON.parse(response));
+          return Promise.resolve(typeof response === 'string' ? JSON.parse(response) : response);
         } else {
           return this.__json();
         }

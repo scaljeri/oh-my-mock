@@ -1,0 +1,22 @@
+<!-- https://codepen.io/himalayasingh/pen/EdVzNL -->
+<!-- https://codepen.io/felipefialho/pen/zYrQOX -->
+<!-- https://codepen.io/jasontyler/pen/qEXzOQ -->
+<div class="toggle-group">
+  <input
+    [checked]="checked"
+    (change)="onChange($event)"
+    type="checkbox"
+    name="on-off-switch"
+    id="on-off-switch"
+    checked=""
+    tabindex="1"
+  />
+  <label for="on-off-switch">
+  </label>
+  <div class="onoffswitch pull-right" aria-hidden="true">
+    <div class="onoffswitch-label">
+      <div class="onoffswitch-inner"></div>
+      <div class="onoffswitch-switch"></div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,5 @@
-import { IMock, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId } from '../type'
-import { MOCK_JS_CODE, objectTypes } from '../constants';
+import { IMock, IOhMyMockResponse, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId } from '../type'
+import { MOCK_JS_CODE, objectTypes, ohMyMockStatus } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
 
@@ -30,7 +30,7 @@ export class MockUtils {
     return this.init(source, { id: uniqueId(), ...updates });
   }
 
-  static find(responses:Record<ohMyMockId, IOhMyShallowMock>, search: IOhMyMockSearch): IOhMyShallowMock | null {
+  static find(responses: Record<ohMyMockId, IOhMyShallowMock>, search: IOhMyMockSearch): IOhMyShallowMock | null {
     if (search.id) {
       return responses[search.id];
     }
@@ -48,7 +48,21 @@ export class MockUtils {
       id: mock.id,
       statusCode: mock.statusCode,
       ...(mock.label !== undefined && { label: mock.label }),
-      ...(mock.modifiedOn && { modifiedOn: mock.modifiedOn})
+      ...(mock.modifiedOn && { modifiedOn: mock.modifiedOn })
+    }
+  }
+
+  static mockToResponse(mock?: IMock): IOhMyMockResponse {
+    if (mock) {
+      return {
+        status: ohMyMockStatus.OK,
+        response: mock.responseMock,
+        headers: mock.headersMock,
+        delay: mock.delay,
+        statusCode: mock.statusCode
+      } as IOhMyMockResponse;
+    } else {
+      return { status: ohMyMockStatus.NO_CONTENT }
     }
   }
 

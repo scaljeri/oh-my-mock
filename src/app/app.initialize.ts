@@ -1,13 +1,12 @@
-import { ActivatedRoute } from '@angular/router';
-import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './services/app-state.service';
 import { OhMyStateService } from './services/state.service';
-import { send2content } from './utils/send2content';
+import { WebWorkerService } from './services/web-worker.service';
+import { getTabId } from './utils/active-tab';
 
 export async function initializeApp(
   appStateService: AppStateService,
   stateService: OhMyStateService,
-  activatedRoute: ActivatedRoute) {
+  workerService: WebWorkerService) {
   // const params = activatedRoute.snapshot.queryParams;
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -22,7 +21,15 @@ export async function initializeApp(
     appStateService.contentVersion = contentVersion;
   }
 
-  await stateService.initialize(appStateService.domain);
+  // This should only happen with E2E testing
+  if (!appStateService.tabId) {
+    appStateService.tabId = await getTabId();
+  }
+
+  await stateService.initialize(appStateService.domain).then(() => {
+    workerService.init(appStateService.domain);
+  });
+
   // TODO: Send msg to BG to start with CSP header removal!!
   // send2content(appStateService.tabId, {
   //   source: appSources.POPUP,

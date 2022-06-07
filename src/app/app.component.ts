@@ -18,6 +18,10 @@ import { initializeApp } from './app.initialize';
 import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
 import { IPacketPayload } from '@shared/packet-type';
+import { WebWorkerService } from './services/web-worker.service';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+import { registerIcons } from './app-icons';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -41,9 +45,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version: string;
   showDisabled = -1;
   stateSub: Subscription;
+  mockSub: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
-
+  connectionFailed = null;
   @ViewChild(MatDrawer) drawer: MatDrawer;
 
   constructor(
@@ -53,16 +58,19 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     private contentService: ContentService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private webWorkerService: WebWorkerService,
     private cdr: ChangeDetectorRef,
-    public dialog: MatDialog) {
-    // eslint-disable-next-line no-console
+    public dialog: MatDialog,
+    domSanitizer: DomSanitizer,
+    matIconRegistry: MatIconRegistry) {
+    registerIcons(matIconRegistry, domSanitizer);
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await initializeApp(this.appState, this.stateService, this.activatedRoute);
+    await initializeApp(this.appState, this.stateService, this.webWorkerService);
     // await this.contentService.activate();
 
-    this.stateSub = this.stateService.state$.subscribe((state: IState) => {
+    this.stateSub = this.stateService.state$.subscribe(async (state: IState) => {
       if (!state) {
         return this.isInitializing = true;
       }
@@ -72,6 +80,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         state.aux.popupActive = true;
         // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
         // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
+        await this.webWorkerService.init(state.domain);
 
         this.router.navigate(['/']).then(() => {
           this.cdr.detectChanges();
@@ -97,6 +106,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.errors.push(error);
       this.cdr.detectChanges();
     });
+
+    this.contentService.pingPong().subscribe(isConnectedWithContent => {
+      this.connectionFailed = !isConnectedWithContent;
+      this.cdr.detectChanges();
+    });
   }
 
   onEnableChange(isChecked: boolean): void {
@@ -109,6 +123,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:beforeunload')
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
+    this.mockSub?.unsubscribe();
     this.contentService.deactivate(true);
   }
 

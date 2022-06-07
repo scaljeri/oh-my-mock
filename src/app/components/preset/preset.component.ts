@@ -4,8 +4,8 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
 import { Subscription } from 'rxjs';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { OhMyStateService } from 'src/app/services/state.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { OhMyStateService } from '../../services/state.service';
 import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 
@@ -24,6 +24,7 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
 })
 export class PresetComponent implements OnInit, OnChanges {
   @Input() context: IOhMyContext;
+  @Input() theme: 'dark' | 'light';
 
   presetCtrl = new FormControl();
   options: string[] = [];

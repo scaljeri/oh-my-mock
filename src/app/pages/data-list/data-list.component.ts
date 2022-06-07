@@ -4,9 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
-import { AddDataComponent } from 'src/app/components/add-data/add-data.component';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { OhMyStateService } from 'src/app/services/state.service';
+import { AddDataComponent } from '../../components/add-data/add-data.component';
+import { OhMyState } from '../../services/oh-my-store';
+import { OhMyStateService } from '../../services/state.service';
 
 @Component({
   selector: 'oh-my-data-list-page',

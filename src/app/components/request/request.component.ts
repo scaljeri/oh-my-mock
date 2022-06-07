@@ -15,9 +15,9 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { FormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
-import { OhMyStateService } from 'src/app/services/state.service';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { StorageService } from 'src/app/services/storage.service';
+import { OhMyStateService } from '../../services/state.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { StorageService } from '../../services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -55,6 +55,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Handle mock updates
     this.subscriptions.add(this.stateService.response$.pipe(filter(r => r && r.id === this.response?.id))
       .subscribe(r => {
         this.response = r;
@@ -87,11 +88,12 @@ export class RequestComponent implements OnChanges, OnDestroy {
       }
 
       this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : this.response?.headersMock?.['content-type'];
+      this.isResponseImage = false;
       this.hasMocks = Object.keys(this.request.mocks).length > 0;
 
       this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
-      if (this.response.headersMock['content-type'].match(/image/)) {
+      if (this.response.headersMock['content-type']?.match(/image/)) {
         this.isResponseImage = true;
       }
     }

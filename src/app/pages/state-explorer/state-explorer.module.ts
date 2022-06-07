@@ -7,7 +7,7 @@ import { PageStateExplorerComponent } from './state-explorer.component';
 import { RouterModule, Routes } from '@angular/router';
 import { PageMockComponent } from '../mock/mock.component';
 import { PageDataListComponent } from '../data-list/data-list.component';
-import { ComponentsModule } from 'src/app/components/components.module';
+import { ComponentsModule } from '../../components/components.module';
 import { HotToastModule } from '@ngneat/hot-toast';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';

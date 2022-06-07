@@ -1,16 +1,21 @@
 import { IOhMyImportStatus } from '../packet-type';
-import { IData, IMock, IOhMyBackup, IOhMyContext, IState } from '../type';
+import { IData, IMock, IOhMyBackup, IOhMyContext, IOhMyMock, IState } from '../type';
 import { DataUtils } from './data';
 import { MigrateUtils } from './migrate';
 import { StateUtils } from './state';
 import { StorageUtils } from './storage';
+import { StoreUtils } from "../../shared/utils/store";
 
 export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
 }
 
 export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
-  const state = await sUtils.get<IState>(context.domain) || StateUtils.init(context);
+  let state = await sUtils.get<IState>(context.domain);
+
+  if (!state) {
+    state = StateUtils.init(context);
+  }
 
   let status = ImportResultEnum.SUCCESS;
   let requests = data.requests as unknown as IData[];
@@ -29,7 +34,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtil
 
     for (let request of requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1)) {
       request.lastHit = timestamp++; // make sure they each have a unique timestamp!
-      request = DataUtils.prefilWithPresets(request, state.presets, context.active);
+      request = DataUtils.prefillWithPresets(request, state.presets, context.active);
       state.data[request.id] = request;
     }
 
@@ -38,6 +43,14 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtil
     }
 
     await sUtils.set(state.domain, state);
+    // Is the state new, add it to the store
+    let store = await sUtils.get<IOhMyMock>();
+
+    if (!StoreUtils.hasState(store, state.domain)) {
+      store = StoreUtils.setState(store, state);
+
+      await sUtils.setStore(store);
+    }
   } else {
     status = ImportResultEnum.TOO_OLD;
   }

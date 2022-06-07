@@ -44,11 +44,19 @@ export interface IOhMyReadyResponse<T = string> {
 
 export interface IOhMyDispatchServerRequest {
   request: IData | IOhMyUpsertData,
-  context: IOhMyContext
-  mock?: { response: unknown, headers: Record<string, string>, statusCode: ohMyStatusCode };
+  context: IOhMyContext,
+  mock?: {
+    response: unknown,
+    headers: Record<string, string>,
+    statusCode: ohMyStatusCode
+  };
 }
 
 export interface IOhMyImportStatus {
   id?: string;
   status: ImportResultEnum;
+}
+
+export interface IOhMyCSPResponse {
+  activated: boolean;
 }

@@ -32,17 +32,35 @@
         <mat-icon>error</mat-icon>
       </button>
 
-      <h1>
-        <span>Oh My Mock v{{ version }}</span> <span class="dash">-</span>
+      <h1 class="title">
+        <span>Oh My Mock</span> <span class="dash">-</span>
         <span>{{ domain }}</span>
+        <oh-my-on-off-switch
+          (change)="onEnableChange($event)"
+          [checked]="enabled"
+        ></oh-my-on-off-switch>
+        <!-- <mat-slide-toggle
+          (change)="onEnableChange($event.checked)"
+          [checked]="enabled"
+          [color]="color"
+        ></mat-slide-toggle> -->
       </h1>
-      <mat-slide-toggle
-        (change)="onEnableChange($event.checked)"
-        [checked]="enabled"
-        [color]="color"
-      ></mat-slide-toggle>
+      <a
+        class="buy-me-a-coffee"
+        target="_blank"
+        href="https://www.buymeacoffee.com/ohmymock"
+      >
+        <img alt="buy me a coffee" src="assets/images/bmac-btn.png" />
+        <!-- <img src="assets/images/buy-me-a-coffee.png" /> -->
+      </a>
+
+      <div class="version">v{{ version }}</div>
     </mat-toolbar>
-    <div *ngIf="!enabled && showDisabled !== 1 && domain" class="disabled-notification">
+    <div
+      x-test="notice-disabled"
+      *ngIf="!enabled && showDisabled !== 1 && domain"
+      class="disabled-notification"
+    >
       <h3>OhMyMock is inactive</h3>
     </div>
 
@@ -53,10 +71,15 @@
 </mat-drawer-container>
 
 <oh-my-feedback></oh-my-feedback>
-<oh-my-spinner *ngIf="!context" mode="dark"></oh-my-spinner>
+<oh-my-spinner
+  *ngIf="!context || connectionFailed === null"
+  mode="dark"
+></oh-my-spinner>
 
 <!-- <oh-my-disabled-enabled *ngIf="showDisabled"></oh-my-disabled-enabled> -->
 <oh-my-disabled-enabled
-  *ngIf="showDisabled === 1"
+  *ngIf="showDisabled === 1 && !connectionFailed"
   (change)="onEnableChange($event)"
 ></oh-my-disabled-enabled>
+
+<oh-my-connection-failure *ngIf="connectionFailed"></oh-my-connection-failure>

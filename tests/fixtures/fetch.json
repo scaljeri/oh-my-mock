@@ -1,0 +1,53 @@
+{
+  "requests": [
+    {
+      "id": "yl2q6wrjpm",
+      "lastHit": 1650395117377,
+      "method": "GET",
+      "mocks": {
+        "qc5bvlkqjz": {
+          "id": "qc5bvlkqjz",
+          "statusCode": 200
+        }
+      },
+      "requestType": "FETCH",
+      "type": "request",
+      "url": "/users",
+      "version": "3.3.10"
+    }
+  ],
+  "responses": [
+    {
+      "createdOn": "2021-11-17T08:02:14.918Z",
+      "delay": 0,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "345",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Wed, 17 Nov 2021 08:02:14 GMT",
+        "etag": "W/\"159-UDsqIzQL6Dpxgnp6vckXI4BKJ0Q\"",
+        "keep-alive": "timeout=5",
+        "x-powered-by": "Express"
+      },
+      "headersMock": {
+        "connection": "keep-alive",
+        "content-length": "345",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Wed, 17 Nov 2021 08:02:14 GMT",
+        "etag": "W/\"159-UDsqIzQL6Dpxgnp6vckXI4BKJ0Q\"",
+        "keep-alive": "timeout=5",
+        "x-powered-by": "Express"
+      },
+      "id": "qc5bvlkqjz",
+      "jsCode": "/* This is where OhMyMock creates responses.\nInside this sandbox you have access to the following data:\n  * 'mock' - object with a cached response, header and status code\n  * 'request' - details of the ongoing request\n  * Feel free to use fetch or XMLHttpRequest, but make sure to\n    return a PROMISE in that case!!\n\n- Synchronous example:\n    const response = JSON.parse(mock.response);\n    response[1].name = \"Sync example\";\n    mock.response = JSON.stringify(response);\n    return mock;\n\n- Asynchronous example:\n\n    const response = await fetch(\"/users\");\n    const data = await response.json();\n    data[1].name = \"From custom code\";\n    mock.response = JSON.stringify(r);\n\n    // No need to return a Promise here, \"await\" takes care o this!\n    return mock;\n*/\n\nreturn mock;\n",
+      "modifiedOn": null,
+      "response": "{\n  \"1\": {\n    \"name\": \"king Arthur\",\n    \"password\": \"password1\",\n    \"profession\": \"king\",\n    \"id\": 1\n  },\n  \"2\": {\n    \"name\": \"rob kendal\",\n    \"password\": \"password3\",\n    \"profession\": \"code fiddler\",\n    \"id\": 2\n  },\n  \"3\": {\n    \"name\": \"teresa may\",\n    \"password\": \"password2\",\n    \"profession\": \"brexit destroyer\",\n    \"id\": 6\n  }\n}\n",
+      "responseMock": "{\n    \"1\": {\n        \"name\": \"king Arthur\",\n        \"password\": \"passwordtest\",\n        \"profession\": \"king\",\n        \"id\": 1\n    },\n    \"2\": {\n        \"name\": \"rob kendal\",\n        \"password\": \"password3\",\n        \"profession\": \"code fiddler\",\n        \"id\": 2\n    },\n    \"3\": {\n        \"name\": \"teresa may\",\n        \"password\": \"password2\",\n        \"profession\": \"brexit destroyer\",\n        \"id\": 6\n    }\n}",
+      "rules": [],
+      "statusCode": 200,
+      "type": "response",
+      "version": "3.3.11-beta.0"
+    }
+  ],
+  "version": "3.3.10"
+}

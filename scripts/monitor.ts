@@ -12,7 +12,8 @@ const PATH_TO_TASKS = {
   'src/injected': 'yarn build:injected & yarn build:content',
   'src/background': 'yarn build:background',
   'src/shared': 'yarn run-p build:*',
-  'src/app': 'yarn build:ng'
+  'src/sandbox': 'yarn build:sandbox',
+  'src/app': 'yarn build:ng && yarn build:sandbox',
 }
 
 let version = packageJson.version;

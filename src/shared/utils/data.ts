@@ -40,7 +40,8 @@ export class DataUtils {
         ...data.mocks, [mock.id]: {
           id: mock.id,
           statusCode: mock.statusCode,
-          label: mock.label
+          label: mock.label,
+          modifiedOn: mock.modifiedOn
         }
       }, selected: { ...data.selected },
       enabled: { ...data.enabled }
@@ -121,7 +122,7 @@ export class DataUtils {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  static prefilWithPresets(request: IData, presets: IOhMyPresets = {}, active?): IData {
+  static prefillWithPresets(request: IData, presets: IOhMyPresets = {}, active?): IData {
     request.selected ??= {};
     request.enabled ??= {};
 

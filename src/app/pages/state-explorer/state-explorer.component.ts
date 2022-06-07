@@ -5,9 +5,10 @@ import { domain, IData, IOhMyContext, IState } from '@shared/type';
 
 import { Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
-import { OhMyState } from 'src/app/services/oh-my-store';
-import { OhMyStateService } from 'src/app/services/state.service';
-import { StorageService } from 'src/app/services/storage.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { OhMyStateService } from '../../services/state.service';
+import { StorageService } from '../../services/storage.service';
+import { WebWorkerService } from '../../services/web-worker.service';
 
 @Component({
   selector: 'oh-my-state-explorer-page',
@@ -36,6 +37,7 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
     private storageService: StorageService,
     private storeService: OhMyState,
     private cdr: ChangeDetectorRef,
+    private webWorkerService: WebWorkerService,
     private toast: HotToastService) { }
 
   ngOnInit(): void {
@@ -43,16 +45,19 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
     this.subscriptions.add(this.stateStream.store$.pipe(
       startWith(this.stateStream.store)).subscribe(store => {
-      if (store) {
-        this.state = this.stateStream.state;
-        this.domains = store.domains.filter(d => d !== this.state.domain);
-        this.cdr.detectChanges();
-      }
-    }));
+        if (store) {
+          this.state = this.stateStream.state;
+          this.domains = store.domains.filter(d => d !== this.state.domain);
+          this.cdr.detectChanges();
+        }
+      }));
   }
 
   async onSelectDomain(domain = this.state.domain): Promise<void> {
     this.selectedDomain = domain;
+
+    await this.webWorkerService.init(domain);
+
     this.selectedState = await this.storageService.get(domain);
     this.hasSelectedStateAnyRequests = Object.keys(this.selectedState.data)?.length > 0
     this.panels.toArray()[1].open();
@@ -64,6 +69,12 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
       await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
     }
     this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);
+    await this.storeService.updateAux({ filteredRequests: null }, this.state.context);
+  }
+
+  async onRequestCloned(request: IData) {
+    // The filter must be resetted otherwise the new request will not show
+    await this.storeService.updateAux({ filteredRequests: null }, this.state.context);
   }
 
   ngOnDestroy(): void {

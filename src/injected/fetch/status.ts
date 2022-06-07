@@ -1,5 +1,5 @@
 // TODO
-import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -11,6 +11,10 @@ export function patchStatus() {
     status: {
       ...descriptor,
       get: function () {
+        if (!window[STORAGE_KEY].state.active) {
+          return this.__status;
+        }
+
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),

@@ -9,6 +9,8 @@
 /bazel-out
 stats.json
 /stats
+cypress/screenshots/*
+cypress/videos/*
 
 # dependencies
 /node_modules
@@ -35,6 +37,7 @@ speed-measure-plugin*.json
 .history/*
 
 # misc
+/.angular/cache
 /.sass-cache
 /connect.lock
 /coverage
@@ -55,3 +58,13 @@ Thumbs.db
 # stryker temp files
 .stryker-tmp
 TODO.txt
+test-results/
+playwright-report/
+test-results/
+playwright-report/
+test-results/
+playwright-report/
+test-results/
+playwright-report/
+test-results/
+playwright-report/

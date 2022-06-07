@@ -15,3 +15,5 @@ export const compareUrls = (url: string, urlRe: string): boolean => {
 
   return !!url.match(urlRe);
 };
+
+export const stripUrl = (url: string): string => url?.match(/(?:https?:\/\/)?([^:/\?\#]+)/)?.[1];

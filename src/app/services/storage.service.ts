@@ -1,8 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { StorageUtils } from '@shared/utils/storage';
-import { IMock, IOhMyMock, IState, ohMyDomain } from '@shared/type';
-import { STORAGE_KEY } from '@shared/constants';
-import { OhMySendToBg } from '@shared/utils/send-to-background';
+import { IMock, IOhMyMock, IState } from '@shared/type';
 
 @Injectable({
   providedIn: 'root'

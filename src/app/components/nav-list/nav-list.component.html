@@ -1,9 +1,52 @@
 <nav>
   <ol class="reset">
-    <li><button mat-button color="primary" (click)="onReset()">Reset state</button></li>
-    <li><button mat-button color="primary" routerLink="/state-explore">Explore state</button></li>
+    <li>
+      <button mat-button color="primary" (click)="onReset()">
+        Reset state
+      </button>
+    </li>
+    <li>
+      <button mat-button color="primary" routerLink="/state-explore">
+        Explore state
+      </button>
+    </li>
     <!-- <li><button mat-button color="primary" routerLink="/settings/ngapimock">ng-apimock settings</button></li> -->
-    <li><button mat-button color="primary" routerLink="/json-export">JSON export</button></li>
-    <li><button mat-button color="primary" (click)="onJsonImport()">JSON import</button></li>
+    <li>
+      <button mat-button color="primary" routerLink="/json-export">
+        JSON export
+      </button>
+    </li>
+    <li>
+      <button mat-button color="primary" (click)="onJsonImport()">
+        JSON import
+      </button>
+    </li>
+    <li>
+      <a
+        mat-button
+        color="primary"
+        href="https://scaljeri.github.io/oh-my-mock/documentation/index.html"
+        target="_blank"
+        >Documentation</a
+      >
+    </li>
+    <li>
+      <a
+        mat-button
+        color="primary"
+        href="https://github.com/scaljeri/oh-my-mock/blob/feature/cypress/CHANGELOG.md"
+        target="_blank"
+        >Changelog</a
+      >
+    </li>
+    <li>
+      <a
+        mat-button
+        color="primary"
+        href="https://scaljeri.github.io/oh-my-mock/index.html"
+        target="_blank"
+        >Demo Site</a
+      >
+    </li>
   </ol>
 </nav>

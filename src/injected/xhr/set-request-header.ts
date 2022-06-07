@@ -10,7 +10,6 @@ export function patchSetRequestHeader() {
       value: function (key, value) {
         this.ohHeaders[key] = value;
         return this.__setRequestHeader(key, value);
-
       }
     },
     __setRequestHeader: descriptor

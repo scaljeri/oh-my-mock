@@ -1,6 +1,6 @@
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { PrettyPrintPipe } from 'src/app/pipes/pretty-print.pipe';
+import { PrettyPrintPipe } from '../../../pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
 
@@ -132,8 +132,8 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
 
   onInitEditor(editor: any): void {
     editor.onDidChangeModelDecorations((...args) => {
-      const model = editor.getModel();
-      const owner = model.getModeId();
+      const model = editor?.getModel?.();
+      const owner = model.getModeId?.(); // TODO: THIs code doesn't seem to work anymore
 
       this.errors.emit(monaco?.editor.getModelMarkers({ owner }));
     });

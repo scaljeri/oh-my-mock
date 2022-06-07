@@ -1,14 +1,15 @@
-<article class="dialog-content">
+<article x-test="app-inactive" class="dialog-content">
   <h2>OhMyMock is disabled for this domain</h2>
 
   <p>
     <span>Enable</span>
     <mat-slide-toggle
+      x-test="activate-toggle"
       (change)="onAction($event.checked)"
       [color]="color"
     ></mat-slide-toggle>
   </p>
 
-  <button (click)="onAction()" mat-button>Continue</button>
+  <button x-test="cancel-activate-toggle" (click)="onAction()" mat-button>Continue</button>
   <span>(Hit 'Enter' to confirm and close)</span>
 </article>

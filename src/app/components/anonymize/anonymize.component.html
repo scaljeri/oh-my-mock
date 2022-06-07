@@ -6,7 +6,7 @@
   <div class="explanation">
     <div>
       <div class="badge">Rule Type</div>
-      <div>is used to anonymise the data with appropriate values </div>
+      <div>is used to anonymise the data with appropriate values</div>
     </div>
     <div>
       <div class="badge">JSON Path</div>
@@ -14,12 +14,21 @@
     </div>
 
     <div class="cheatsheet">
-      <h4>Cheat sheet (<a target="_blank" href="https://www.npmjs.com/package/jsonpath">Full description</a>):</h4>
+      <h4>
+        Cheat sheet (<a
+          target="_blank"
+          href="https://www.npmjs.com/package/jsonpath"
+          >Full description</a
+        >):
+      </h4>
       <ul>
         <li><strong>$</strong>The root object/element</li>
         <li><strong>.</strong>The current object/element</li>
         <li><strong>..</strong>Recursive descendant operator</li>
-        <li><strong class="asterisk">*</strong>Wildcard matching all objects/elements regardless their names</li>
+        <li>
+          <strong class="asterisk">*</strong>Wildcard matching all
+          objects/elements regardless their names
+        </li>
       </ul>
       <p>Example: <strong>$..accounts.*.name</strong></p>
     </div>
@@ -29,28 +38,55 @@
     <li *ngFor="let rule of rules; let i = index">
       <mat-form-field class="rule-type">
         <mat-label>Ryle type</mat-label>
-        <mat-select [ngModel]="rule.type" name="ruleType" (selectionChange)="onTypeChange($event, i)">
+        <mat-select
+          [ngModel]="rule.type"
+          name="ruleType"
+          (selectionChange)="onTypeChange($event, i)"
+        >
           <mat-option *ngFor="let type of ruleTypes" [value]="type">
-            {{mockTypes[type]}}
+            {{ mockTypes[type] }}
           </mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field class="rule-value">
         <mat-label>JSON path</mat-label>
-        <input matInput type="text" (change)="onPathChange($event, i)" [value]="rule.path">
-        <button mat-button *ngIf="newRuleValueCtrl.value" matSuffix mat-icon-button aria-label="Clear"
-          (click)="newRuleValueCtrl.setValue('')">
-          <mat-icon>close</mat-icon>
+        <input
+          #inp
+          matInput
+          type="text"
+          (change)="onPathChange($event, i)"
+          (input)="rule.path = $any($event.target).value"
+          [value]="rule.path"
+        />
+        <button
+          mat-button
+          *ngIf="rule.path"
+          matSuffix
+          mat-icon-button
+          aria-label="Clear"
+          (click)="rule.path = ''"
+        >
+          <mat-icon class="dark" svgIcon="close"></mat-icon>
         </button>
       </mat-form-field>
-      <button *ngIf="i < rules.length - 1" (click)="onDelete(i)" mat-mini-fab color="primary"
-        aria-label="Delete mock rule">
-        <mat-icon>delete</mat-icon>
+      <button
+        *ngIf="i < rules.length - 1"
+        (click)="onDelete(i)"
+        mat-mini-fab
+        color="primary"
+        aria-label="Delete mock rule"
+      >
+        <mat-icon svgIcon="delete"></mat-icon>
       </button>
     </li>
   </ol>
-  <button (click)="onAdd()" mat-mini-fab color="primary" aria-label="Save mock rule">
-    <mat-icon>add</mat-icon>
+  <button
+    (click)="onAdd()"
+    mat-mini-fab
+    color="primary"
+    aria-label="Save mock rule"
+  >
+    <mat-icon svgIcon="add"></mat-icon>
   </button>
 </section>
 

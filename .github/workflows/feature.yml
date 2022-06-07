@@ -4,37 +4,90 @@ name: Feature
 on:
   push:
     branches:
-      - '*'         # matches every branch that doesn't contain a '/'
-      - '*/*'       # matches every branch containing a single '/'
-      - '**'        # matches every branch
-      - '!master'   # excludes master
+      - '*' # matches every branch that doesn't contain a '/'
+      - '*/*' # matches every branch containing a single '/'
+      - '**' # matches every branch
+      - '!master' # excludes master
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-20.04
+    runs-on: macos-11
+    timeout-minutes: 60
+    #container: mcr.microsoft.com/playwright:v1.21.1-focal
     strategy:
       matrix:
         node: ['15']
 
-
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      - run: node -v
-      - run: yarn
-      - run: yarn lint
-      - run: yarn test
+        with:
+          node-version: '14'
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Install dependencies
+        run: yarn install  --frozen-lockfile
+      - name: Build extension
+        run: yarn build
+      - name: Install Playwright
+        # run: npx playwright install --with-deps
+        run: npx playwright install chromium
+      - name: Run your tests
+        run: npx playwright test --headed --project=chromium
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: playwright-report
+          path: playwright-report
+      - name: Upload results
+        uses: actions/upload-artifact@v2
+        with:
+          name: e2e-results
+          path: ./e2e/snapshots
 
-      - run: echo 'pass!!'
+    # steps:
+    #   - uses: actions/checkout@v2
+    #   - uses: actions/setup-node@v2
+    #   - uses: microsoft/playwright-github-action@v1
+    #   - name: Install dependencies
+    #     run: |
+    #       node -v
+    #       mkdir testing && cd testing
+    #       yarn install --frozen-lockfile
+    #       npx playwright install-deps
+    #       npx playwright install
+#      - run: yarn lint
+#      - run: sudo apt-get install xvfb xfonts-100dpi xfonts-75dpi xfonts-cyrillic  dbus-x11 fluxbox libxss1
+#      - run: export DISPLAY=:99.0
+#      - run: Xvfb :99 &
+#- run: npx playwright install chrome
+# - run: npx playwright install
+#      - run: npx playwright test --project=chromium --headed
+# - name: Run Playwright Tests
+#   continue-on-error: false
+#   working-directory: testing
+#   run: |
+#     npx playwright test e2e --reporter=html --config playwright.config.js
 
- #   steps:
- #     - uses: actions/checkout@v2
- #     - uses: actions/setup-node@v2
- #       with:
- #         node-version: '15.5.x'
- #     - run: |
- #         yarn
- #         yarn lint
- #     - run: ls -lart node_modules
- #     - run: yarn lint
+#- run: xvfb-run --auto-servernum -- npx playwright test --project=chromium --headed
+# - run: xvfb-run --auto-servernum -- node ./node_modules/.bin/playwright test
+#- run: npx playwright test
+#      - run: node ./node_modules/.bin/playwright test
 
+# - run: echo 'pass!!'
+
+#   steps:
+#     - uses: actions/checkout@v2
+#     - uses: actions/setup-node@v2
+#       with:
+#         node-version: '15.5.x'
+#     - run: |
+#         yarn
+#         yarn lint
+#     - run: ls -lart node_modules
+#     - run: yarn lint

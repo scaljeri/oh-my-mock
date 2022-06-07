@@ -18,6 +18,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 
 import {
   Location,
@@ -50,8 +52,8 @@ import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
 import { UpdateInputDirective } from './update-input/update-input.directive';
 import { ContentTypeComponent } from './form/content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatMenuModule} from '@angular/material/menu';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
 import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 import { OhMyDirectivesModule } from '../directives/directives.module';
@@ -61,6 +63,10 @@ import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
 import { ShowErrorsComponent } from './show-errors/show-errors.component';
 import { MockImageComponent } from './mock-image/mock-image.component';
+import { StatusCodeComponent } from './form/status-code/status-code.component';
+import { RequestFilterComponent } from './request-filter/request-filter.component';
+import { ConnectionFailureComponent } from './connection-failure/connection-failure.component';
+import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
 
 @NgModule({
   declarations: [
@@ -94,7 +100,11 @@ import { MockImageComponent } from './mock-image/mock-image.component';
     PresetComponent,
     FeedbackComponent,
     ShowErrorsComponent,
-    MockImageComponent
+    MockImageComponent,
+    StatusCodeComponent,
+    RequestFilterComponent,
+    ConnectionFailureComponent,
+    OnOffSwitchComponent
   ],
   imports: [
     CommonModule,
@@ -120,7 +130,8 @@ import { MockImageComponent } from './mock-image/mock-image.component';
     MatSelectModule,
     MatAutocompleteModule,
     MatCheckboxModule,
-    MatMenuModule
+    MatMenuModule,
+    MatProgressSpinnerModule
   ],
   exports: [
     DataListComponent,
@@ -143,7 +154,10 @@ import { MockImageComponent } from './mock-image/mock-image.component';
     LinkComponent,
     DialogCodeEditorComponent,
     FeedbackComponent,
-    MockImageComponent
+    MockImageComponent,
+    StatusCodeComponent,
+    ConnectionFailureComponent,
+    OnOffSwitchComponent,
   ],
   providers: [
     Location,

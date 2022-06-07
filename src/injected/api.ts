@@ -19,7 +19,9 @@ export function initApi(updates$: Observable<IOhMyImportStatus>) {
           map(output => ({
             status: output.status === 0 ? 'success' : 'failure'
           } as IOhMyStatus))
-        ).subscribe(resolve);
+        ).subscribe(out => {
+          resolve(out);
+        });
 
         send({
           id,
@@ -36,10 +38,3 @@ export function initApi(updates$: Observable<IOhMyImportStatus>) {
     }
   }
 }
-
-// function
-// window.postMessage({
-//   source: 'external',
-//    payload: {
-//       type: 'crud',
-//        data: {

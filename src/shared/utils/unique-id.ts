@@ -13,3 +13,9 @@
 export const uniqueId = (length = 10): string => {
   return [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('');
 }
+
+
+export function uniqueNum(length = 6): number {
+  const base = 10 ^ (length - 1);
+  return Math.floor(base + Math.random() * (10 ** (length - 1) - base));
+}

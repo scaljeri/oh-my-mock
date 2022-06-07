@@ -9,11 +9,11 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
 import { IOhMyContext, ResetStateOptions } from '@shared/type';
-import { OhMyState } from 'src/app/services/oh-my-store';
+import { OhMyState } from '../../services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
-import { StorageService } from 'src/app/services/storage.service';
-import { OhMyStateService } from 'src/app/services/state.service';
+import { StorageService } from '../../services/storage.service';
+import { OhMyStateService } from '../../services/state.service';
 
 @Component({
   selector: 'app-nav-list',
@@ -55,8 +55,9 @@ export class NavListComponent {
         }
 
         // Now we need to tell the content script that the popup (thats us) is still active!!
-        await this.storeService.updateAux({ popupActive: true}, this.context);
+        await this.storeService.updateAux({ popupActive: true, filterKeywords: '', filteredRequests: null, filterOptions: null }, this.context);
         this.router.navigate(['/'])
+        window.location.reload();
       });
 
     this.navigate.emit();

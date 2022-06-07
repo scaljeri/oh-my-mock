@@ -6,17 +6,18 @@ import { StorageUtils } from "../../shared/utils/storage";
 
 export class OhMyImportHandler {
   static StorageUtils = StorageUtils;
-  static async upsert(payload: IPacketPayload<OhMyAPIUpsert, IOhMyContext>): Promise<IOhMyImportStatus> {
-    const { data, context } = payload;
 
+  static async upsert(payload: IPacketPayload<OhMyAPIUpsert, IOhMyContext>): Promise<IOhMyImportStatus> {
     let result = { status: ImportResultEnum.ERROR };
+
     try {
-      const { requests, responses } = data;
+      const { data, context } = payload;
 
       result = await importJSON(data, { active: true, ...context }, OhMyImportHandler.StorageUtils);
 
       if (result.status === ImportResultEnum.SUCCESS) {
         result.status = ImportResultEnum.SUCCESS;
+
       } else if (result.status === ImportResultEnum.TOO_OLD) {
         result.status = ImportResultEnum.TOO_OLD;
       }

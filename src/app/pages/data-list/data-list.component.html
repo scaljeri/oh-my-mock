@@ -11,7 +11,10 @@
 
 <section *ngIf="!hasData" class="no-data">
   <h2>No responses available</h2>
-  <p>Any Fetch or XHR call will automatically show up here if this extension is active!</p>
+  <p>
+    Any Fetch or XHR call will automatically show up here if this extension is
+    active!
+  </p>
 
   <oh-my-arrow></oh-my-arrow>
 </section>
@@ -24,5 +27,6 @@
   color="primary"
   aria-label="Delete all mocks for a specific URL"
 >
-  <mat-icon>add</mat-icon>
+  <!-- <mat-icon>add</mat-icon> -->
+  <mat-icon x-test="add-response" class="add" svgIcon="add"></mat-icon>
 </button>

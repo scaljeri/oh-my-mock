@@ -10,7 +10,9 @@ export class StateUtils {
     return {
       version: this.version,
       views: { activity: [] },
-      aux: { newAutoActivate: true }, data: {}, presets: { default: 'Default' },
+      aux: { newAutoActivate: true },
+      data: {},
+      presets: { default: 'Default' },
       context: {
         preset: 'default',
         domain: base.domain
