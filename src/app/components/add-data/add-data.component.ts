@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { METHODS } from '@shared/constants';
 
 @Component({
   selector: 'app-add-data',
@@ -13,6 +14,8 @@ export class AddDataComponent {
     requestType: new FormControl('XHR', [Validators.required]),
     method: new FormControl('GET', [Validators.required])
   });
+
+  public availableMethods = METHODS;
 
   constructor(private dialogRef: MatDialogRef<AddDataComponent>) { }
 

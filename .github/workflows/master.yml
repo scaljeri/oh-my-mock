@@ -7,31 +7,70 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-20.04
+    runs-on: macos-11
+    timeout-minutes: 60
+    #container: mcr.microsoft.com/playwright:v1.21.1-focal
     strategy:
       matrix:
         node: ['15']
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
-    - run: yarn
-    - run: yarn lint
-    - run: yarn test
-    - run: echo 'pass!!'
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Install dependencies
+        run: yarn install  --frozen-lockfile
+      - name: Build extension
+        run: yarn build
+      - name: Install Playwright
+        # run: npx playwright install --with-deps
+        run: npx playwright install chromium
+      - name: Run your tests
+        run: npx playwright test --headed --project=chromium
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: playwright-report
+          path: playwright-report
+      - name: Upload results
+        uses: actions/upload-artifact@v2
+        with:
+          name: e2e-results
+          path: ./e2e/snapshots
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         node: ['15']
 
+#     steps:
+#     - uses: actions/checkout@v2
+#     - uses: actions/setup-node@v2
+#     - run: yarn
+#     - run: yarn lint
+#     # - run: yarn test
+#     - run: echo 'pass!!'
 
-    # steps:
-    #   - uses: actions/checkout@v2
-    #   - uses: borales/actions-yarn@v2.0.0
-    #     with:
-    #       cmd: install # will run `yarn install` command
-    #   - uses: borales/actions-yarn@v2.0.0
-    #     with:
-    #       cmd: build # will run `yarn build` command
-    #   - uses: borales/actions-yarn@v2.0.0
-    #     with:
-    #       cmd: lint # will run `yarn lint` command
-    #   - uses: borales/actions-yarn@v2.0.0
-    #     with:
-    #       cmd: test # will run `yarn test` command
+# steps:
+#   - uses: actions/checkout@v2
+#   - uses: borales/actions-yarn@v2.0.0
+#     with:
+#       cmd: install # will run `yarn install` command
+#   - uses: borales/actions-yarn@v2.0.0
+#     with:
+#       cmd: build # will run `yarn build` command
+#   - uses: borales/actions-yarn@v2.0.0
+#     with:
+#       cmd: lint # will run `yarn lint` command
+#   - uses: borales/actions-yarn@v2.0.0
+#     with:
+#       cmd: test # will run `yarn test` command
