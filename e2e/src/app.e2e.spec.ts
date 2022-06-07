@@ -6,7 +6,7 @@ import { setup } from './setup';
 
 // import { test } from './setup';
 
-test.describe('chrome extension tests', () => {
+test.describe('Popup', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;
@@ -25,36 +25,34 @@ test.describe('chrome extension tests', () => {
     await browserContext.close();
   });
 
-  test.describe('Popup', () => {
-    test('title', async () => {
-      await expect(extPage).toHaveTitle('OhMyMock');
-    });
-
-    test('initially inactive popup', async () => {
-      expect(await xpo.isInactive).toBeTruthy();
-    });
-
-    test('inactive with alert', async () => {
-      xpo.cancelActivationPopup();
-      expect(await xpo.hasNotice).toBeTruthy();
-    });
-
-    test('initially activated', async () => {
-      await xpo.activate();
-      await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('initially-empty.png', { maxDiffPixelRatio: 0.21 });
-    });
-
-    describe('Custom response', () => {
-
-    });
-
-    // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.21 });
-
-    // await tpo.go();
-    // const count = await xpo.countRequests();
-    // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
-    // expect(count).toBe(1);
+  test('title', async () => {
+    await expect(extPage).toHaveTitle('OhMyMock');
   });
+
+  test('initially inactive dialog', async () => {
+    expect(await xpo.isInactive).toBeTruthy();
+  });
+
+  test('inactive with notice', async () => {
+    xpo.cancelActivationPopup();
+    expect(await xpo.hasNotice).toBeTruthy();
+  });
+
+  test('activate', async () => {
+    await xpo.activate();
+    await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('initially-empty.png', { maxDiffPixelRatio: 0.21 });
+  });
+
+  test.describe('Custom response', () => {
+
+  });
+
+  // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.21 });
+
+  // await tpo.go();
+  // const count = await xpo.countRequests();
+  // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
+  // expect(count).toBe(1);
 });
 
 //   // test('example test', async ({ page }) => {
