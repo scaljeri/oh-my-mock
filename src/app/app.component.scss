@@ -74,6 +74,7 @@ oh-my-feedback {
 
 oh-my-on-off-switch {
   @include oh-position(absolute, 50% $spacer-2 0 0);
+  height: 100%;
   transform: translateY(-50%);
 }
 

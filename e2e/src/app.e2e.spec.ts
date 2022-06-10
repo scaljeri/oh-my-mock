@@ -28,23 +28,35 @@ test.describe('Popup', () => {
     await expect(extPage).toHaveTitle('OhMyMock');
   });
 
-  test('first show the inactive dialog', async () => {
-    expect(await xpo.isInactive).toBeTruthy();
-  });
-
-  test('close inactive-dialog -> show inactive notice', async () => {
-    xpo.cancelActivationPopup();
-    expect(await xpo.hasNotice).toBeTruthy();
-  });
-
-  test('activate', async () => {
-    await xpo.inactiveDialogActivateToggle();
-    await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('initially-empty.png', { maxDiffPixelRatio: 0.21 });
-  });
-
   test('show menu drawer', async () => {
     await xpo.inactiveDialogActivateToggle();
     await xpo.activateMenu();
     await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('main-menu-visible.png', { maxDiffPixelRatio: 0.21 });
+  });
+
+  test.describe('Inactive dialog', () => {
+    test('first show the inactive dialog', async () => {
+      expect(await xpo.isInactive).toBeTruthy();
+    });
+
+    test('activate', async () => {
+      await xpo.inactiveDialogActivateToggle();
+      await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('initially-empty.png', { maxDiffPixelRatio: 0.21 });
+    });
+  });
+
+  test.describe('Cancel inactive dialog', () => {
+    test.beforeEach(async () => {
+      await xpo.cancelActivationPopup();
+    });
+
+    test('close inactive-dialog -> show inactive notice', async () => {
+      expect(await xpo.hasNotice).toBeTruthy();
+    });
+
+    test('activate with header toggle', async () => {
+      await xpo.headerAppToggleClick();
+      await expect(await xpo.headerActivateToggle.screenshot()).toMatchSnapshot('header-app-toggle-active.png', { maxDiffPixelRatio: 0.21 });
+    });
   });
 });

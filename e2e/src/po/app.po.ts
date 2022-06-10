@@ -9,9 +9,12 @@ export class XAppPO {
     return toggle.click();
   }
 
-  async menuActivateToggle() {
-    const toggle = await this.page.locator(s`inactive-dialog-toggle`);
-    return toggle.click();
+  async headerAppToggleClick() {
+    return this.headerActivateToggle.click();
+  }
+
+  get headerActivateToggle() {
+    return this.page.locator(s`header-active-toggle`);
   }
 
   get isInactive(): Promise<boolean> {
@@ -23,7 +26,7 @@ export class XAppPO {
 
   async cancelActivationPopup() {
     await this.page.locator(s`cancel-activate-toggle`).click();
-  this.page.$
+    this.page.$
   }
 
   get hasNotice(): Promise<boolean> {
