@@ -1,5 +1,4 @@
-import { test, BrowserContext, expect, chromium, Page } from '@playwright/test';
-import { setgroups } from 'process';
+import { test, BrowserContext, expect, Page } from '@playwright/test';
 import { XAppPO } from './po/app.po';
 import { TestSitePo } from './po/test-site.po';
 import { setup } from './setup';
@@ -29,119 +28,23 @@ test.describe('Popup', () => {
     await expect(extPage).toHaveTitle('OhMyMock');
   });
 
-  test('initially inactive dialog', async () => {
+  test('first show the inactive dialog', async () => {
     expect(await xpo.isInactive).toBeTruthy();
   });
 
-  test('inactive with notice', async () => {
+  test('close inactive-dialog -> show inactive notice', async () => {
     xpo.cancelActivationPopup();
     expect(await xpo.hasNotice).toBeTruthy();
   });
 
   test('activate', async () => {
-    await xpo.activate();
+    await xpo.inactiveDialogActivateToggle();
     await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('initially-empty.png', { maxDiffPixelRatio: 0.21 });
   });
 
-  test.describe('Custom response', () => {
-
+  test('show menu drawer', async () => {
+    await xpo.inactiveDialogActivateToggle();
+    await xpo.activateMenu();
+    await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('main-menu-visible.png', { maxDiffPixelRatio: 0.21 });
   });
-
-  // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('landing-page.png', { maxDiffPixelRatio: 0.21 });
-
-  // await tpo.go();
-  // const count = await xpo.countRequests();
-  // await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('with-mock.png', { maxDiffPixelRatio: 0.21 });
-  // expect(count).toBe(1);
 });
-
-//   // test('example test', async ({ page }) => {
-//   //   await page.goto('http://localhost:8000');
-//   //   await page.screenshot({ path: 'screenshot.png', fullPage: true });
-//   //   // await expect(page).toHaveScreenshot('landing.png');
-//   // });
-
-//   // test.only('example test', async ({ page }) => {
-//   //   await page.goto('https://playwright.dev', { waitUntil: 'networkidle' });
-//     // await expect(page).toHaveScreenshot('landing.png');
-//   //   expect(true).toBeTruthy();
-//   // });
-//   // test('title 2', async ({ page, context }) => {
-//   //   const pages = context.pages();
-//   //   const p = pages[1];
-//   //   await p.bringToFront();
-//   //   await p.waitForSelector('oh-my-disabled-enabled');
-//   //   expect(page).toHaveTitle('OhMyMock');
-//   // });
-
-//   test('dummy test', async ({ page, context }) => {
-//     // await page.goto('https://playwright.dev/');
-//     // const title = page.locator('.navbar__inner .navbar__title');
-//     // await expect(title).toHaveText('Playwright');
-//     // const p = page;
-//     /// OLD
-
-//     // await page.close();
-//     const pages = context.pages();
-//     const p = pages[1];
-//     await p.bringToFront();
-//     await p.waitForSelector('oh-my-disabled-enabled');
-
-//     // await page.goto(
-//     //   'chrome-extension://<extension-id>/popup.html'
-//     // )
-//     // await page.waitForTimeout(30000) // this is here so that it won't automatically close the browser window
-//     // expeoct(true).toBeTruthy();
-//     await expect(p.locator('oh-my-disabled-enabled')).toHaveCount(1)
-//   });
-// });
-
-// test('Validate extension is active', async ({ context, browser }) => {
-//   let page = await context.newPage();
-//   await page.goto('http://localhost');
-// });
-
-// describe('workspace-project App', () => {
-//   let page: AppPage;
-
-//   beforeEach(() => {
-//     page = new AppPage();
-//   });
-
-//   it('should display welcome message', async () => {
-//     await page.navigateTo();
-//     expect(await page.getTitleText()).toEqual(
-//       'angular-chrome-extension app is running!'
-//     );
-//   });
-
-//   afterEach(async () => {
-//     // Assert that there are no errors emitted from the browser
-//     const logs = await browser.manage().logs().get(logging.Type.BROWSER);
-//     expect(logs).not.toContain(
-//       jasmine.objectContaining({
-//         level: logging.Level.SEVERE,
-//       } as logging.Entry)
-//     );
-//   });
-// });
-
-// list();
-// function list() {
-//   const path = require('path');
-//   const fs = require('fs');
-//   //joining path of directory
-//   const directoryPath = path.join(__dirname, '../..');
-//   //passsing directoryPath and callback function
-//   fs.readdir(directoryPath, function (err, files) {
-//     //handling error
-//     if (err) {
-//       return console.log('Unable to scan directory: ' + err);
-//     }
-//     //listing all files using forEach
-//     files.forEach(function (file) {
-//       // Do whatever you want to do with the file
-//       console.log(file);
-//     });
-//   });
-// }

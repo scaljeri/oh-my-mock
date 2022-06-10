@@ -5,9 +5,7 @@ import { XRequestOverviewPage } from './po/request-overview.po';
 import { TestSitePo } from './po/test-site.po';
 import { setup } from './setup';
 
-// import { test } from './setup';
-
-test.describe.only('chrome extension tests', () => {
+test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;
@@ -22,7 +20,7 @@ test.describe.only('chrome extension tests', () => {
     tpo = new TestSitePo(page);
 
     await extPage.bringToFront();
-    await xpo.activate();
+    await xpo.inactiveDialogActivateToggle();
     await xro.activateCustomResponsePopup();
   });
 
@@ -32,7 +30,7 @@ test.describe.only('chrome extension tests', () => {
     await browserContext.close();
   });
 
-  test.describe('Add custom response', () => {
+  test.describe('Custom response form/dialog', () => {
     test('activate dialog', async () => {
       await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('add-custom-response-form.png', { maxDiffPixelRatio: 0.21 });
     });
@@ -41,8 +39,16 @@ test.describe.only('chrome extension tests', () => {
       await expect(await xro.url).toBe('');
     });
 
-    test.only('with default type', async () => {
+    test('with default type', async () => {
       await expect(await xro.type).toBe('XHR');
     });
+
+    test('with default method', async () => {
+      await expect(await xro.method).toBe('GET');
+    });
+  });
+
+  test.describe('Save custom response', () => {
+
   });
 });

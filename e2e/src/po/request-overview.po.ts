@@ -18,8 +18,16 @@ export class XRequestOverviewPage {
     return this.page.locator(s`add-custom-response-form`);
   }
 
+  submitCustomResponseForm(url = '/users', type = 'FETCH', method = 'GET') {
+    // TODO
+  }
+
   get isCustomResponsePopupVisible(): Promise<boolean> {
     return this.page.isVisible(s`add-custom-response-form`);
+  }
+
+  setUrl(value: string): Promise<void> {
+    return this.page.fill(s`custom-response-url`, value);
   }
 
   get url() {
@@ -33,6 +41,13 @@ export class XRequestOverviewPage {
     return (async () => {
       await this.page.locator(s`custom-response-type`).waitFor();
       return this.page.inputValue(s`custom-response-type`);
+    })();
+  }
+
+  get method() {
+    return (async () => {
+      await this.page.locator(s`custom-response-type`).waitFor();
+      return this.page.inputValue(s`custom-response-method` + ' input');
     })();
   }
 }

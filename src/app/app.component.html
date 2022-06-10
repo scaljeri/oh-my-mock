@@ -12,7 +12,10 @@
 
   <mat-drawer-content>
     <mat-toolbar>
-      <app-header-button (menu)="drawer.toggle()"></app-header-button>
+      <app-header-button
+        x-test="hamburger-menu-btn"
+        (menu)="drawer.toggle()"
+      ></app-header-button>
       <a
         routerLink="cloud-sync"
         [routerLinkActive]="'is-syncing'"
