@@ -4,7 +4,7 @@ import { IData, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId,
 import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
 import { NgApiMockCreateMockDialogWrapperComponent } from '../../../plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { METHODS } from '@shared/constants';
 import { UntilDestroy } from '@ngneat/until-destroy';
@@ -24,11 +24,11 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
   public statusCode: statusCode;
   public mockIds: ohMyMockId[];
-  public methodCtrl = new FormControl(null, { updateOn: 'blur' });
+  public methodCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   public filteredMethodOptions: Observable<string[]>;
-  public typeCtrl = new FormControl(null, { updateOn: 'blur' });
+  public typeCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   public filteredTypeOptions: Observable<string[]>;
-  public urlCtrl = new FormControl(null, { updateOn: 'blur' });
+  public urlCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   public presetInfo = presetInfo;
 
   public oldResponses: string[];

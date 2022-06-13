@@ -6,7 +6,7 @@ import { style, animate } from "@angular/animations";
 // import { findAutoActiveMock } from 'src/app/utils/data';
 import { IData, IMock, IOhMyContext, IState, ohMyDataId } from '@shared/type';
 import { BehaviorSubject, debounceTime, filter, Subject, Subscription } from 'rxjs';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from '../../constants';
 import { OhMyState } from '../../services/oh-my-store';
@@ -78,7 +78,7 @@ export class DataListComponent implements OnInit, OnDestroy {
 
   blurImages = false;
   subscriptions = new Subscription();
-  filterCtrl = new FormControl('');
+  filterCtrl = new UntypedFormControl('');
   // filteredDataList: IDataView[];
   mocks: Record<string, IMock>;
   requestCount = 0;
@@ -96,7 +96,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   worker: Worker;
   private workerTimeoutId: number;
   searchSubj = new Subject();
-  filterOptionsCtrl = new FormControl();
+  filterOptionsCtrl = new UntypedFormControl();
   filterOptions = undefined;
   filterKeywords = '';
 

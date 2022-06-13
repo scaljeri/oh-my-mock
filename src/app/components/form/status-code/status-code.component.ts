@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, forwardRef, Input } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 const STATUS_CODES = [
   '200', '201', '204', '304', '400', '401', '403', '404', '500', '501', '503'
@@ -35,7 +35,7 @@ const STATUS_CODE_LABELS = {
 export class StatusCodeComponent implements AfterViewInit, ControlValueAccessor {
   @Input() statusCode: number;
 
-  ctrl = new FormControl(null, { updateOn: 'blur' });
+  ctrl = new UntypedFormControl(null, { updateOn: 'blur' });
   options = STATUS_CODES;
   optionLabels = STATUS_CODE_LABELS;
 

@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, Optional } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
 
@@ -10,7 +10,7 @@ import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
 export class DialogCodeEditorComponent implements OnInit {
   type: string;
   base: string;
-  ctrl = new FormControl();
+  ctrl = new UntypedFormControl();
   errors: IMarker[];
   showErrors: boolean;
 

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, UntypedFormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { PrettyPrintPipe } from '../../../pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
@@ -46,7 +46,7 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   public orig: string;
 
   value: string;
-  editorCtrl = new FormControl('', { updateOn: 'blur' });
+  editorCtrl = new UntypedFormControl('', { updateOn: 'blur' });
   onChange: any = () => { }
   onTouch: any = () => { }
 
@@ -167,7 +167,7 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   onFocus(e, t): void {
   }
 
-  validate({ value }: FormControl) {
+  validate({ value }: UntypedFormControl) {
     return null;
   }
 }

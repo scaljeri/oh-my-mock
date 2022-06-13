@@ -2,7 +2,7 @@ import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
 import { IOhMyBackup, IOhMyContext } from '@shared/type';
 import { MatDialogRef } from '@angular/material/dialog';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyStateService } from '../../services/state.service';
 import { StorageService } from '../../services/storage.service';
@@ -16,8 +16,8 @@ import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
 export class JsonImportComponent {
 
   isUploading = false;
-  skipCtrl = new FormControl(false);
-  replaceCtrl = new FormControl(false);
+  skipCtrl = new UntypedFormControl(false);
+  replaceCtrl = new UntypedFormControl(false);
   context: IOhMyContext;
 
   constructor(

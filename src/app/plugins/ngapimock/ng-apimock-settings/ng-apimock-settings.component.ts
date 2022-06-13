@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import {
@@ -15,7 +15,7 @@ import {
 export class NgApimockSettingsComponent implements OnInit {
   private apiMockSettings: NgApiMockSettings = {} as NgApiMockSettings;
 
-  public settingsForm: FormGroup;
+  public settingsForm: UntypedFormGroup;
   public loading = true;
 
   constructor(
@@ -38,10 +38,10 @@ export class NgApimockSettingsComponent implements OnInit {
   }
 
   generateForm(): void {
-    this.settingsForm = new FormGroup({
-      integrate: new FormControl(this.apiMockSettings.integrate),
-      ngApiMockHost: new FormControl(this.apiMockSettings.ngApiMockHost),
-      ngApiMockBasePath: new FormControl(
+    this.settingsForm = new UntypedFormGroup({
+      integrate: new UntypedFormControl(this.apiMockSettings.integrate),
+      ngApiMockHost: new UntypedFormControl(this.apiMockSettings.ngApiMockHost),
+      ngApiMockBasePath: new UntypedFormControl(
         this.apiMockSettings.ngApiMockBasePath || 'ngapimock'
       )
     });
@@ -61,15 +61,15 @@ export class NgApimockSettingsComponent implements OnInit {
       });
   }
 
-  get integrate(): FormControl {
-    return this.settingsForm.get('integrate') as FormControl;
+  get integrate(): UntypedFormControl {
+    return this.settingsForm.get('integrate') as UntypedFormControl;
   }
 
-  get ngApiMockHost(): FormControl {
-    return this.settingsForm.get('ngApiMockHost') as FormControl;
+  get ngApiMockHost(): UntypedFormControl {
+    return this.settingsForm.get('ngApiMockHost') as UntypedFormControl;
   }
 
-  get ngApiMockBasePath(): FormControl {
-    return this.settingsForm.get('ngApiMockBasePath') as FormControl;
+  get ngApiMockBasePath(): UntypedFormControl {
+    return this.settingsForm.get('ngApiMockBasePath') as UntypedFormControl;
   }
 }

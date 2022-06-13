@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { IData } from '@shared/type';
 import { NgApiMockApiService } from '../ng-api-mock-api.service';
@@ -12,16 +12,16 @@ export class StoreMockComponent implements OnInit {
   @Input() mockData: IData;
   @Output() done = new EventEmitter<boolean>();
 
-  public storeMockForm: FormGroup;
+  public storeMockForm: UntypedFormGroup;
   constructor(
     private ngApiMockApiService: NgApiMockApiService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
-    this.storeMockForm = new FormGroup({
-      url: new FormControl(this.mockData.url, [Validators.required]),
-      name: new FormControl(this.nameSuggestionFromMockURL(this.mockData.url))
+    this.storeMockForm = new UntypedFormGroup({
+      url: new UntypedFormControl(this.mockData.url, [Validators.required]),
+      name: new UntypedFormControl(this.nameSuggestionFromMockURL(this.mockData.url))
     });
   }
 

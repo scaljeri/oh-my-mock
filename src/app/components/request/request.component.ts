@@ -13,7 +13,7 @@ import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngneat/hot-toast';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
 import { OhMyStateService } from '../../services/state.service';
 import { OhMyState } from '../../services/oh-my-store';
@@ -40,8 +40,8 @@ export class RequestComponent implements OnChanges, OnDestroy {
   responseType: string;
   contentType: string;
 
-  responseCtrl = new FormControl(null, { updateOn: 'blur' });
-  headersCtrl = new FormControl(null, { updateOn: 'blur' });
+  responseCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
+  headersCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   hasMocks = false;
   isResponseImage = false;
 

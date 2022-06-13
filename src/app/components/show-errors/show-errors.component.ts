@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnInit, Optional } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { githubIssueUrl } from '@shared/constants';
 import { IPacketPayload } from '@shared/packet-type';
@@ -12,7 +12,7 @@ import { IPacketPayload } from '@shared/packet-type';
 })
 export class ShowErrorsComponent implements OnInit {
   url = githubIssueUrl;
-  ctrl: FormControl;
+  ctrl: UntypedFormControl;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -27,7 +27,7 @@ export class ShowErrorsComponent implements OnInit {
       return e;
     });
 
-    this.ctrl = new FormControl(this.errors);
+    this.ctrl = new UntypedFormControl(this.errors);
   }
 
   onClose(): void {

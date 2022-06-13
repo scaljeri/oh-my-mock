@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
-import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
+import { ControlValueAccessor, UntypedFormControl, NgControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
@@ -37,7 +37,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Output() clear = new EventEmitter<void>();
 
   internalValue = '';
-  _ctrl: FormControl;
+  _ctrl: UntypedFormControl;
   filteredMethodOptions: string[] = [];
 
   onChange: any = () => { }
@@ -189,9 +189,9 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     return matchedOptions;
   }
 
-  get ctrl(): FormControl {
+  get ctrl(): UntypedFormControl {
     if (!this._ctrl) {
-      this._ctrl = new FormControl(this.internalValue);
+      this._ctrl = new UntypedFormControl(this.internalValue);
     }
 
     return this._ctrl;
