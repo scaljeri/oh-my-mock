@@ -1916,26 +1916,26 @@
     reflect-metadata "0.1.13"
     uuid "8.3.2"
 
-"@ngneat/hot-toast@^3.4.2":
-  version "3.4.3"
-  resolved "https://registry.yarnpkg.com/@ngneat/hot-toast/-/hot-toast-3.4.3.tgz#4f1cdcc5abb138718697476ce757ec0417a62ea0"
-  integrity sha512-VZjk+bGqEpKTi1R0gPuYTDeezVLjqH1g1Ks2EQ3E9UeTVg1lx1RGG0oX1P8uPj/rMBmxPOeE73SUyQNOfcVimw==
+"@ngneat/hot-toast@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@ngneat/hot-toast/-/hot-toast-4.1.0.tgz#8c0cf5be445254678b782e612f4e8840bf2c8974"
+  integrity sha512-5QgxYXAGNmg0J10QjHOBu8Go5SZ9WIg5TDFm60ecMK/BUcuaHB7QeVfY/YFUPsw1iXaO3IVb81w9LdqXz2GNsg==
+  dependencies:
+    tslib "^2.3.0"
+
+"@ngneat/overview@^3.0.4":
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/@ngneat/overview/-/overview-3.0.4.tgz#bd8be61510cb83ca494db0a9c699104540c790f8"
+  integrity sha512-w5cyli3goDBegN1G/v9dCGDOQIecDN78C83nUs1STuarS/ry9kjgAp/W9IJSQhqrcVhvHhOVPIkhZ4Pj3Yw9Xg==
   dependencies:
     tslib "^2.0.0"
 
-"@ngneat/overview@^2.0.2":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@ngneat/overview/-/overview-2.1.1.tgz#52357f40a34264d59fd3be5d9673e7ab16526a6e"
-  integrity sha512-OV9FRZtCddgNWjGsqFyRtdRo4iMBwEa9KsE4Wy/Ge96b10o6QBMNKj6S4YcfTqbqSWpvZoH0B/3JmkifNGtm8w==
+"@ngneat/until-destroy@^9.2.0":
+  version "9.2.0"
+  resolved "https://registry.yarnpkg.com/@ngneat/until-destroy/-/until-destroy-9.2.0.tgz#970c1c7397f95b18c922c22765691539a61003e1"
+  integrity sha512-VbnDFsdAI0QTjz1aD+nsn/GK9j4N26YJUdQZSdL9De6zBIz/s+UtG/DXis0qY/J/kboM5wJNUZEEsTRyoyv+CQ==
   dependencies:
-    tslib "^2.0.0"
-
-"@ngneat/until-destroy@^8.0.4":
-  version "8.1.4"
-  resolved "https://registry.yarnpkg.com/@ngneat/until-destroy/-/until-destroy-8.1.4.tgz#00be5396f4c1417987d09aff227c15031f5473a8"
-  integrity sha512-Bk+jS0ZyCKvW2wLJPMJ8jr6lhYlDVVbE2/WbQ5L3eBcwmem82649o6s7G68tDNA+5UeHtfW7fbpK4Bhj8r+B9g==
-  dependencies:
-    tslib "^2.2.0"
+    tslib "^2.3.0"
 
 "@ngtools/webpack@13.3.6":
   version "13.3.6"
