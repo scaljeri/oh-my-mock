@@ -5,7 +5,7 @@ import { XRequestOverviewPage } from './po/request-overview.po';
 import { TestSitePo } from './po/test-site.po';
 import { setup } from './setup';
 
-test.describe('chrome extension tests', () => {
+test.describe.only('chrome extension tests', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;

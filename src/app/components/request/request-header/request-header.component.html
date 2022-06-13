@@ -14,7 +14,7 @@
       label="Method"
       [formControl]="methodCtrl"
       [showAllOnFocus]="true"
-      [options]="availableMethods"
+      [options]="$any(availableMethods)"
     ></oh-my-autocomplete-dropdown>
 
     <mat-form-field class="url-input">

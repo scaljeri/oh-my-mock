@@ -23,7 +23,7 @@
     label="Method"
     [formControl]="methodControl"
     [showAllOnFocus]="true"
-    [options]="availableMethods"
+    [options]="$any(availableMethods)"
   ></oh-my-autocomplete-dropdown>
 
   <div class="spacer"></div>

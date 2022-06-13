@@ -1,5 +1,9 @@
 import { Locator, Page } from "@playwright/test";
 import { s } from "./utils";
+import { METHODS, REQUEST_TYPES } from '../../../src/shared/constants';
+
+type RequestType = typeof REQUEST_TYPES[number];
+type RequestMethod = typeof METHODS[number];
 
 export class XRequestOverviewPage {
   constructor(private page: Page) { }
@@ -18,8 +22,10 @@ export class XRequestOverviewPage {
     return this.page.locator(s`add-custom-response-form`);
   }
 
-  submitCustomResponseForm(url = '/users', type = 'FETCH', method = 'GET') {
-    // TODO
+  async submitCustomResponseForm(url = '/users', type: RequestType = 'FETCH', method: RequestMethod = 'GET') {
+    await this.setUrl(url);
+    await this.setType(type);
+    await this.setMethod(method);
   }
 
   get isCustomResponsePopupVisible(): Promise<boolean> {
@@ -35,6 +41,11 @@ export class XRequestOverviewPage {
       await this.page.locator(s`custom-response-url`).waitFor();
       return this.page.inputValue(s`custom-response-url`);
     })();
+
+  }
+
+  setType(type: RequestType): Promise<void> {
+    return this.page.fill(s`custom-response-type`, type);
   }
 
   get type() {
@@ -44,9 +55,13 @@ export class XRequestOverviewPage {
     })();
   }
 
+  setMethod(type: RequestMethod): Promise<void> {
+    return this.page.fill(s`custom-response-method input`, type);
+  }
+
   get method() {
     return (async () => {
-      await this.page.locator(s`custom-response-type`).waitFor();
+      await this.page.locator(s`custom-response-method`).waitFor();
       return this.page.inputValue(s`custom-response-method` + ' input');
     })();
   }
