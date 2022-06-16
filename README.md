@@ -145,3 +145,4 @@ which responses are cached, which are active, etc. Here you can also create resp
 #### Known chrome issues
    * Manifest V3: webRequest listeners not called after service worker stops: https://bugs.chromium.org/p/chromium/issues/detail?id=1024211
    * MV3 content scripts need to add js in main world synchronously:  https://bugs.chromium.org/p/chromium/issues/detail?id=1207006
+   * Unable to modify headers: https://bugs.chromium.org/p/chromium/issues/detail?id=1254637

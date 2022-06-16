@@ -12,6 +12,7 @@ export async function setup(testInfo: TestInfo): Promise<{ page: Page, extPage: 
   const userDataDir = testInfo.outputPath('test-user-data-dir');
 
   const context = await chromium.launchPersistentContext(userDataDir, {
+    devtools: false,
     args: [
       `--disable-extensions-except=${EXTENSION_PATH}`,
       `--load-extension=${EXTENSION_PATH}`,
@@ -35,7 +36,7 @@ async function prepareTabs(context): Promise<{ page: Page, extPage: Page }> {
     .locator('#service-workers-list div[class="url"]')
     .textContent()
   const [, , extensionId] = url.split('/')
-  const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html`
+  const extensionURL = `chrome-extension://${extensionId}/oh-my-mock/index.html?domain=localhost:8000`
   await page.goto('http://localhost:8000/?type=xhr&method=get&response=json&responseType=json');
   const extPage = await context.newPage();
   await extPage.goto(extensionURL);

@@ -11,14 +11,13 @@
   <script src="fetch.js"></script>
   <script src="xhr.js"></script>
   <script src="hammer-time.js"></script>
-  <script src="main.js"></script>
   <title>OhMyMock DEMO page</title>
 </head>
 
 <body>
   <h1>Test site</h1>
 
-  <form class="selection" onsubmit="return window.onSubmit();">
+  <form class="selection">
     <div class="type">
       <h3>Type</h3>
       <select name=type>
@@ -57,7 +56,7 @@
       </select>
     </div>
 
-    <button x-test="go" class="go">GO >>></button>
+    <button type="button" x-test="go" class="go">GO >>></button>
   </form>
 
   <p class="hammer-time">
@@ -81,6 +80,7 @@
       </div>
     </article>
   </section>
+  <script src="main.js"></script>
   <script>const thisIs='CSP error';</script>
 </body>
 

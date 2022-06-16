@@ -15,6 +15,13 @@ export const appRouter = (app: any): void => {
         throw err;
       }
 
+      res.cookie("secureCookie", JSON.stringify({ x: 20 }), {
+        secure: true, // process.env.NODE_ENV !== "development",
+        httpOnly: true,
+        expires: new Date(Date.now() + 100000),
+      });
+
+
       // res.setHeader("Content-Type", 'application/json');
       res.contentType('application/json');
       res.send(data);

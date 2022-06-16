@@ -3,11 +3,14 @@ import { IMock, IState } from '../type';
 import { StorageUtils } from './storage';
 
 export async function loadAllMocks(domain: string): Promise<Record<string, IMock>> {
+  if (!domain) {
+    return {};
+  }
+
   const state = await StorageUtils.get<IState>(domain);
 
   if (state) {
     const data = Object.values(state.data);
-
     const mocks = {};
     for (let i = 0; i < data.length; i++) {
       const keys = Object.keys(data[i].mocks);

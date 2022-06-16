@@ -215,3 +215,12 @@ setTimeout(async () => {
 //     }
 //   ]
 // });
+
+// TODO
+// console.log('inininininx');
+// debugger;
+// chrome.webRequest.onHeadersReceived.addListener((details) => {
+// console.log('XXXXXXXXXXXXXXX', details);
+// debugger;
+// }, { urls: ['<all_urls>'] }, ['responseHeaders', 'extraHeaders']);
+// //

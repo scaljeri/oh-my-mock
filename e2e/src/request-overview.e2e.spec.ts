@@ -1,11 +1,10 @@
 import { test, BrowserContext, expect, chromium, Page } from '@playwright/test';
-import { setgroups } from 'process';
 import { XAppPO } from './po/app.po';
 import { XRequestOverviewPage } from './po/request-overview.po';
 import { TestSitePo } from './po/test-site.po';
 import { setup } from './setup';
 
-test.describe.only('chrome extension tests', () => {
+test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
   let page: Page;
   let extPage: Page;
