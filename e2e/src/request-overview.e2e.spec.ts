@@ -2,6 +2,7 @@ import { test, BrowserContext, expect, chromium, Page } from '@playwright/test';
 import { XAppPO } from './po/app.po';
 import { XRequestOverviewPage } from './po/request-overview.po';
 import { TestSitePo } from './po/test-site.po';
+import { wait } from './po/utils';
 import { setup } from './setup';
 
 test.describe('chrome extension tests', () => {
@@ -47,7 +48,13 @@ test.describe('chrome extension tests', () => {
     });
   });
 
-  test.describe('Save custom response', () => {
+  test.describe('Save custom response', async () => {
+    test.beforeEach(async () => {
+      await xro.submitCustomResponseForm();
+    });
 
+    test('should have a new request', async () => {
+      await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('response-details-initial.png', { maxDiffPixelRatio: 0.21 });
+    });
   });
 });
