@@ -2,7 +2,6 @@ import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { IData, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
-import { NgApiMockCreateMockDialogWrapperComponent } from '../../../plugins/ngapimock/dialog/ng-api-mock-create-mock-dialog-wrapper/ng-api-mock-create-mock-dialog-wrapper.component';
 // import { findAutoActiveMock } from '../../../utils/data';
 import { UntypedFormControl } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
@@ -119,12 +118,6 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       } else {
         this.storeService.upsertResponse(update.mock, this.request, this.context);
       }
-    });
-  }
-
-  exportNgApiMock(): void {
-    this.dialog.open(NgApiMockCreateMockDialogWrapperComponent, {
-      data: this.request
     });
   }
 

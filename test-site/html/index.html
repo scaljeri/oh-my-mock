@@ -20,7 +20,7 @@
   <form class="selection">
     <div class="type">
       <h3>Type</h3>
-      <select name=type>
+      <select x-test="type-selector" name=type>
         <option value="xhr"  selected="selected" >XHR</option>
         <option value="fetch"  >FETCH</option>
       </select>
@@ -28,7 +28,7 @@
 
     <div class="method">
       <h3>Method</h3>
-      <select name="method">
+      <select x-test="method-selector" name="method">
         <option value="get" selected="selected">GET</option>
         <option value="post">POST</option>
         <option value="put">UPDATE</option>
@@ -36,7 +36,7 @@
       </select>
     </div>
 
-    <div class="response">
+    <div x-test="source-selector" class="response">
       <h3>Response</h3>
       <select name="response">
         <option value="html">HTML</option>
@@ -48,7 +48,7 @@
 
     <div class="response">
       <h3>Response Type</h3>
-      <select class="response-type" name="responseType">
+      <select x-test="response-selector" class="response-type" name="responseType">
         <option value="text">text</option>
         <option value="json" >json</option>
         <option value="blob" >blob</option>
@@ -56,7 +56,7 @@
       </select>
     </div>
 
-    <button type="button" x-test="go" class="go">GO >>></button>
+    <button x-test="sumbit" type="button" x-test="go" class="go">GO >>></button>
   </form>
 
   <p class="hammer-time">
@@ -69,13 +69,13 @@
     <h2>Response</h2>
     <article class="data">
       <div class="fields">
-        <div class="status-code">StatusCode: <span></span></div>
-        <div class="duration">Duration: <span></span></div>
-        <pre class="headers"></pre>
+        <div x-test="output-status-code" class="status-code">StatusCode: <span></span></div>
+        <div x-test="output-duration" class="duration">Duration: <span></span></div>
+        <pre x-test="output-headers" class="headers"></pre>
       </div>
       <div class="body">
         <h3>Body</h3>
-        <pre></pre>
+        <pre x-test="output-response"></pre>
         <img/>
       </div>
     </article>
