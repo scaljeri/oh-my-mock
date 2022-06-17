@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
 import { BehaviorSubject, debounceTime, filter, map, merge, Observable, of, Subscription, switchMap } from 'rxjs';
 import { WebWorkerService } from '../../services/web-worker.service';
@@ -31,7 +31,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   @Output() updateFilterStr = new EventEmitter<string>();
   @Output() update = new EventEmitter();
 
-  filterCtrl = new FormControl('');
+  filterCtrl = new UntypedFormControl('');
   filterOptionsData = FILTER_SEARCH_OPTIONS;
   filterMappedOpts: Record<string, boolean>;
   filterTrigger$ = new BehaviorSubject(undefined);

@@ -12,7 +12,10 @@
 
   <mat-drawer-content>
     <mat-toolbar>
-      <app-header-button (menu)="drawer.toggle()"></app-header-button>
+      <app-header-button
+        x-test="hamburger-menu-btn"
+        (menu)="drawer.toggle()"
+      ></app-header-button>
       <a
         routerLink="cloud-sync"
         [routerLinkActive]="'is-syncing'"
@@ -38,6 +41,7 @@
         <oh-my-on-off-switch
           (change)="onEnableChange($event)"
           [checked]="enabled"
+          x-test="header-active-toggle"
         ></oh-my-on-off-switch>
         <!-- <mat-slide-toggle
           (change)="onEnableChange($event.checked)"

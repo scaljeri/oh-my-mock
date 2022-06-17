@@ -19,17 +19,18 @@
   </mat-form-field>
 
   <oh-my-autocomplete-dropdown
+    x-test="custom-response-method"
     label="Method"
     [formControl]="methodControl"
     [showAllOnFocus]="true"
-    [options]="availableMethods"
+    [options]="$any(availableMethods)"
   ></oh-my-autocomplete-dropdown>
 
   <div class="spacer"></div>
 
   <div class="actions">
     <button type="button" mat-button (click)="onClose()">Cancel</button>
-    <button type="submit" mat-raised-button color="primary" (click)="onSave()">
+    <button x-test="save-curstom-response" type="submit" mat-raised-button color="primary" (click)="onSave()">
       Save
     </button>
   </div>

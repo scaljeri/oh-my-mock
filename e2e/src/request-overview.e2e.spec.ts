@@ -1,11 +1,9 @@
 import { test, BrowserContext, expect, chromium, Page } from '@playwright/test';
-import { setgroups } from 'process';
 import { XAppPO } from './po/app.po';
 import { XRequestOverviewPage } from './po/request-overview.po';
 import { TestSitePo } from './po/test-site.po';
+import { wait } from './po/utils';
 import { setup } from './setup';
-
-// import { test } from './setup';
 
 test.describe('chrome extension tests', () => {
   let browserContext: BrowserContext;
@@ -22,7 +20,8 @@ test.describe('chrome extension tests', () => {
     tpo = new TestSitePo(page);
 
     await extPage.bringToFront();
-    await xpo.activate();
+    await xpo.inactiveDialogActivateToggle();
+    await xro.activateCustomResponsePopup();
   });
 
   test.afterEach(async () => {
@@ -31,14 +30,31 @@ test.describe('chrome extension tests', () => {
     await browserContext.close();
   });
 
-  test.describe('Add custom response', () => {
+  test.describe('Custom response form/dialog', () => {
     test('activate dialog', async () => {
-      await xro.activateCustomResponsePopup();
       await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('add-custom-response-form.png', { maxDiffPixelRatio: 0.21 });
     });
 
-    test('with default values', () => {
+    test('with no default url', async () => {
+      await expect(await xro.url).toBe('');
+    });
 
+    test('with default type', async () => {
+      await expect(await xro.type).toBe('XHR');
+    });
+
+    test('with default method', async () => {
+      await expect(await xro.method).toBe('GET');
+    });
+  });
+
+  test.describe('Save custom response', async () => {
+    test.beforeEach(async () => {
+      await xro.submitCustomResponseForm();
+    });
+
+    test('should have a new request', async () => {
+      await expect(await extPage.screenshot({ fullPage: true })).toMatchSnapshot('response-details-initial.png', { maxDiffPixelRatio: 0.21 });
     });
   });
 });

@@ -1,5 +1,5 @@
 import { Component, Inject, Input } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {
   REQUIRED_MSG,
@@ -17,10 +17,10 @@ export class CreateStatusCodeComponent {
   @Input() mock: IMock;
 
   public error: string;
-  public form = new FormGroup({
-    statusCode: new FormControl('', Validators.required),
-    label: new FormControl(),
-    clone: new FormControl()
+  public form = new UntypedFormGroup({
+    statusCode: new UntypedFormControl('', Validators.required),
+    label: new UntypedFormControl(),
+    clone: new UntypedFormControl()
   })
 
   public requiredError = REQUIRED_MSG;
@@ -50,15 +50,15 @@ export class CreateStatusCodeComponent {
     this.dialogRef.close();
   }
 
-  get codeCtrl(): FormControl {
-    return this.form.get('statusCode') as FormControl;
+  get codeCtrl(): UntypedFormControl {
+    return this.form.get('statusCode') as UntypedFormControl;
   }
 
-  get labelCtrl(): FormControl {
-    return this.form.get('label') as FormControl;
+  get labelCtrl(): UntypedFormControl {
+    return this.form.get('label') as UntypedFormControl;
   }
 
-  get cloneCtrl(): FormControl {
-    return this.form.get('clone') as FormControl;
+  get cloneCtrl(): UntypedFormControl {
+    return this.form.get('clone') as UntypedFormControl;
   }
 }

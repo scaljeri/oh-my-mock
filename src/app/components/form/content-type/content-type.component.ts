@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, forwardRef, Input } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import * as contentType from '@shared/utils/mime-type';
 
 const MIME_TYPES = [
@@ -33,7 +33,7 @@ const MIME_TYPES = [
 export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor {
   @Input() contentType: string;
 
-  ctrl = new FormControl(null, { updateOn: 'blur' });
+  ctrl = new UntypedFormControl(null, { updateOn: 'blur' });
   options = MIME_TYPES;
 
   private originalContentType: string;

@@ -1,12 +1,20 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import { s } from "./utils";
 
 export class XAppPO {
   constructor(private page: Page) { }
 
-  async activate() {
-    const toggle = await this.page.locator(s`activate-toggle`);
+  async inactiveDialogActivateToggle() {
+    const toggle = await this.page.locator(s`inactive-dialog-toggle`);
     return toggle.click();
+  }
+
+  async headerAppToggleClick() {
+    return this.headerActivateToggle.click();
+  }
+
+  get headerActivateToggle() {
+    return this.page.locator(s`header-active-toggle`);
   }
 
   get isInactive(): Promise<boolean> {
@@ -18,7 +26,7 @@ export class XAppPO {
 
   async cancelActivationPopup() {
     await this.page.locator(s`cancel-activate-toggle`).click();
-  this.page.$
+    this.page.$
   }
 
   get hasNotice(): Promise<boolean> {
@@ -26,5 +34,9 @@ export class XAppPO {
       await this.page.locator(s`notice-disabled`).waitFor();
       return (await this.page.locator(s`notice-disabled`).count()) === 1;
     })();
+  }
+
+  async activateMenu(): Promise<void> {
+    return this.page.locator(s`hamburger-menu-btn`).click();
   }
 }

@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { REQUIRED_MSG } from '@shared/constants';
 import { IMock, IOhMyContext } from '@shared/type';
@@ -18,7 +18,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
 
   private subscriptions = new Subscription();
   requiredMsg = REQUIRED_MSG;
-  form: FormGroup;
+  form: UntypedFormGroup;
 
   mimeTypes = [
     'text/css',
@@ -36,13 +36,13 @@ export class MockDetailsComponent implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    this.form = new FormGroup({
-      delay: new FormControl(this.response.delay, { updateOn: 'blur' }),
-      statusCode: new FormControl(this.response.statusCode, {
+    this.form = new UntypedFormGroup({
+      delay: new UntypedFormControl(this.response.delay, { updateOn: 'blur' }),
+      statusCode: new UntypedFormControl(this.response.statusCode, {
         validators: [Validators.required], updateOn: 'blur'
       }),
-      label: new FormControl(this.response.label, { updateOn: 'blur' }),
-      contentType: new FormControl(this.response.headersMock['content-type'] || '', { updateOn: 'blur' })
+      label: new UntypedFormControl(this.response.label, { updateOn: 'blur' }),
+      contentType: new UntypedFormControl(this.response.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
     this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IMock> & { contentType: string }) => {
@@ -75,20 +75,20 @@ export class MockDetailsComponent implements OnInit, OnChanges {
     this.labelCtrl.setValue(this.response.label, { emitEvent: false, onlySelf: true });
   }
 
-  get labelCtrl(): FormControl {
-    return this.form.get('label') as FormControl;
+  get labelCtrl(): UntypedFormControl {
+    return this.form.get('label') as UntypedFormControl;
   }
 
-  get statusCodeCtrl(): FormControl {
-    return this.form.get('statusCode') as FormControl;
+  get statusCodeCtrl(): UntypedFormControl {
+    return this.form.get('statusCode') as UntypedFormControl;
   }
 
-  get delayCtrl(): FormControl {
-    return this.form.get('delay') as FormControl;
+  get delayCtrl(): UntypedFormControl {
+    return this.form.get('delay') as UntypedFormControl;
   }
 
-  get contentTypeCtrl(): FormControl {
-    return this.form.get('contentType') as FormControl;
+  get contentTypeCtrl(): UntypedFormControl {
+    return this.form.get('contentType') as UntypedFormControl;
   }
 
   ngOnDestroy(): void {

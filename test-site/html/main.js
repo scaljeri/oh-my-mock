@@ -125,3 +125,5 @@ function updateForm(values) {
   document.querySelector('[name=response]').value = values.response;
   document.querySelector('[name=responseType]').value = values.responseType;
 }
+
+document.querySelector('.go').addEventListener('click', window.onSubmit);

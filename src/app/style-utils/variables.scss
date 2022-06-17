@@ -1,4 +1,4 @@
-@use '~@angular/material'as *;
+@use '@angular/material'as *;
 
 $app-primary: define-palette($indigo-palette, 500);
 $app-accent: define-palette($pink-palette, A200, A100, A400);

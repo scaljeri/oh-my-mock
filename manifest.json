@@ -9,10 +9,11 @@
     "storage",
     "unlimitedStorage",
     "tabs",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "webRequest"
   ],
   "host_permissions": [
-    "*://*/*"
+    "<all_urls>"
   ],
   "action": {
     "default_icon": "oh-my-mock/assets/icons/icon-off-128.png",

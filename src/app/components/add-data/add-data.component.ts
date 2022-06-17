@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { METHODS } from '@shared/constants';
 
@@ -9,10 +9,10 @@ import { METHODS } from '@shared/constants';
   styleUrls: ['./add-data.component.scss']
 })
 export class AddDataComponent {
-  formGroup = new FormGroup({
-    url: new FormControl('', [Validators.required]),
-    requestType: new FormControl('XHR', [Validators.required]),
-    method: new FormControl('GET', [Validators.required])
+  formGroup = new UntypedFormGroup({
+    url: new UntypedFormControl('', [Validators.required]),
+    requestType: new UntypedFormControl('XHR', [Validators.required]),
+    method: new UntypedFormControl('GET', [Validators.required])
   });
 
   public availableMethods = METHODS;
@@ -32,15 +32,15 @@ export class AddDataComponent {
     this.dialogRef.close();
   }
 
-  get urlControl(): FormControl {
-    return this.formGroup.get('url') as FormControl;
+  get urlControl(): UntypedFormControl {
+    return this.formGroup.get('url') as UntypedFormControl;
   }
 
-  get typeControl(): FormControl {
-    return this.formGroup.get('requestType') as FormControl;
+  get typeControl(): UntypedFormControl {
+    return this.formGroup.get('requestType') as UntypedFormControl;
   }
 
-  get methodControl(): FormControl {
-    return this.formGroup.get('method') as FormControl;
+  get methodControl(): UntypedFormControl {
+    return this.formGroup.get('method') as UntypedFormControl;
   }
 }

@@ -19,12 +19,12 @@ import { ComponentsModule } from './components/components.module';
 import { appRoutes } from './app.routes';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HotToastModule } from '@ngneat/hot-toast';
-import { NgApimockPluginModule } from './plugins/ngapimock/ngapimock.module';
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
 import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
 import { ContentService } from './services/content.service';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -41,6 +41,7 @@ import { ContentService } from './services/content.service';
       enableTracing: false,
       useHash: true, scrollPositionRestoration: 'enabled'
     }),
+    HttpClientModule,
     ReactiveFormsModule,
     MatToolbarModule,
     MatIconModule,
@@ -53,8 +54,7 @@ import { ContentService } from './services/content.service';
     MatBadgeModule,
     MatSnackBarModule,
     HotToastModule.forRoot(),
-    ComponentsModule,
-    NgApimockPluginModule,
+    ComponentsModule
   ],
   providers: [
     { provide: Window, useValue: window },
