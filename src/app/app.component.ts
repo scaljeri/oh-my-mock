@@ -77,7 +77,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
       // Move to somewhere else
       if (state.domain !== this.domain && this.domain) { // Domain switch
-        state.aux.popupActive = true;
         // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
         // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
         await this.webWorkerService.init(state.domain);
@@ -124,15 +123,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
     this.mockSub?.unsubscribe();
-    this.contentService.deactivate(true);
+    this.contentService.deactivate();
   }
 
   notifyDisabled(): void {
     this.showDisabled = 1;
-  }
-
-  popupActiveToggle(isActive = true) {
-    return this.storeService.updateAux({ popupActive: isActive }, this.context);
   }
 
   @HostListener('window:keyup.backspace')

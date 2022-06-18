@@ -36,11 +36,13 @@ export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new
 
 // TODO: align with payloadType
 export enum objectTypes {
+  STORE = 'store',
+  DOMAIN = 'domain',
   REQUEST = 'request',
-  MOCK = 'response', // Deprecated
   RESPONSE = 'response',
+
   STATE = 'state',
-  STORE = 'store'
+  MOCK = 'response', // Deprecated
 }
 
 export enum packetType {

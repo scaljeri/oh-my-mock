@@ -11,8 +11,9 @@ import { DataUtils } from "../shared/utils/data";
 const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
   .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
-    const request = { ...packet.payload.data, requestType: packet.payload.context.requestType } as IOhMyUpsertData;
-    const result = await dispatch2Server(request, packet.payload.context.domain);
+    const request = { ...packet.payload.data } as IOhMyUpsertData;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const result = await dispatch2Server(request, packet.payload.context!.domain);
 
     callback(result);
   });

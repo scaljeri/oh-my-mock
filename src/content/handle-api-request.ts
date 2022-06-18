@@ -32,16 +32,21 @@ export async function receivedApiRequest(
     return;
   }
 
+  if (!contentState.state) {
+    return;
+  }
+
   const { payload } = packet;
-  const inputRequest = { ...payload.data, requestType: payload.context.requestType }
+  const inputRequest = { ...payload.data  }
   const context = { ...contentState.state.context, ...payload.context };
 
   const request = { method: inputRequest.method, url: inputRequest.url } as IOhMyAPIRequest;
-  const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest, payloadType.DISPATCH_TO_SERVER, context) as IOhMyMockResponse;
+  // TODO: remove `any`
+  const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest as any, payloadType.DISPATCH_TO_SERVER, context) as IOhMyMockResponse;
   const data = StateUtils.findRequest(contentState.state, inputRequest);
 
-  let mockId: string;
-  let mock: IMock;
+  let mockId: string | undefined = undefined;
+  let mock: IMock | undefined = undefined;
 
   if (data) {
     mockId = DataUtils.activeMock(data, contentState.state.context);
@@ -50,7 +55,8 @@ export async function receivedApiRequest(
 
       // HIT (handleApiRequest: shared/utils/handle-api-request.ts)
       data.lastHit = Date.now();
-      OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      OhMySendToBg.patch(data, '$.data', data.id!, payloadType.STATE);
 
       if (!mock) {
         // TODO: This should never happen

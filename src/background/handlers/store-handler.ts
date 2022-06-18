@@ -7,22 +7,31 @@ import { StorageUtils } from "../../shared/utils/storage";
 export class OhMyStoreHandler {
   static StorageUtils = StorageUtils;
 
-  static async update({ data, context }: IPacketPayload<IOhMyMock, IOhMyPacketContext>): Promise<IOhMyMock> {
-    let store = data;
+  static async update({ data, context }: IPacketPayload<IOhMyMock | boolean, IOhMyPacketContext>): Promise<IOhMyMock | void> {
+    let store = data as IOhMyMock;
 
-    if (!data) {
+    if (data === undefined) {
       return;
     }
 
     try {
       if (context?.path) {
-        store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
-        store = update<IOhMyMock>(context.path, store, context.propertyName, data);
+        store = await this.StorageUtils.get<IOhMyMock>(STORAGE_KEY);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        store = update<IOhMyMock>(context.path, store, context.propertyName!, data);
+      } else if (context?.propertyName) {
+        throw new Error('Cannot update property without path');
       }
 
-      return StorageUtils.setStore(store).then(() => store);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return this.StorageUtils.setStore(store!).then(() => store);
     } catch (err) {
-
+      this.logError(store, context, err);
     }
+  }
+
+  static logError(store: IOhMyMock, context: IOhMyPacketContext | undefined, err: Error): void {
+    // eslint-disable-next-line no-console
+    console.log('Could not update Store', store, context, err)
   }
 }

@@ -11,6 +11,7 @@ import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
 import { Observable, Subject } from 'rxjs';
+import { OhMyState } from './oh-my-store';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
@@ -21,7 +22,7 @@ export class ContentService {
   private pingPongId;
   private pingPongSubject = new Subject<boolean>();
 
-  constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
+  constructor(private stateService: OhMyState, private appStateService: AppStateService, private sandboxService: SandboxService) {
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
 
     appStateService.domain$.subscribe((d: string) => {
@@ -135,23 +136,22 @@ export class ContentService {
     send2content(this.appStateService.tabId, packet);
   }
 
-  activate(): Promise<boolean> {
-    return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
+  activate(): Promise<void> {
+    return this.stateService.popupState(true);
+    // return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
   }
 
-  deactivate(isClosing = false): Promise<boolean> {
-    // if (isClosing) {
-    //   this.open(false);
-    // }
-
-    return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
+  deactivate(): Promise<void> {
+    return this.stateService.popupState(false);
+    // return OhMySendToBg.patch(false, '$', 'popupActive', payloadType.STORE);
   }
 
   reset(key: string): Promise<void> {
-    if (key) {
-      return OhMySendToBg.reset(key).then(() => { });
-    } else {
-      return StorageUtils.reset();
-    }
+    return this.stateService.reset({ domain: key });
+    // if (key) {
+    //   return OhMySendToBg.reset(key).then(() => { });
+    // } else {
+    //   return StorageUtils.reset();
+    // }
   }
 }

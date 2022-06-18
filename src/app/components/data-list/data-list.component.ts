@@ -10,7 +10,6 @@ import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from '../../constants';
 import { OhMyState } from '../../services/oh-my-store';
-import { WebWorkerService } from '../../services/web-worker.service';
 import { RequestFilterComponent } from '../request-filter/request-filter.component';
 
 export const highlightSeq = [

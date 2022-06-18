@@ -1,5 +1,4 @@
 import { MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, resetStateOptions, STORAGE_KEY } from './constants';
-import { ImportResultEnum } from './utils/import-json';
 
 export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
 export type requestType = 'XHR' | 'FETCH';
@@ -13,6 +12,9 @@ export type ohMyDataId = string;
 export type ohMyMockId = string;
 export type ohMyPresetId = string;
 
+export type ohMyRequestId = string;
+export type ohMyResponseId = string;
+
 export type IOhMyPresets = Record<ohMyPresetId, string>
 
 export interface IStore {
@@ -25,13 +27,53 @@ export interface IOhMyMock {
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
   modifiedOn?: string;
   type: objectTypes.STORE;
+  popupActive: boolean;
+}
+
+export interface IOhMyDomain {
+  version: string;
+  name?: string;
+  type: objectTypes.DOMAIN;
+  domain: string;
+  requests: ohMyRequestId[];
+  aux: IOhMyAux;
+  presets: Record<ohMyPresetId, string>;
+  context: IOhMyContext;
+  modifiedOn?: string;
+}
+
+export interface IOhMyRequest {
+  id: ohMyRequestId;
+  selected: Record<ohMyPresetId, ohMyMockId>;
+  enabled: Record<ohMyPresetId, boolean>;
+  responses: Record<ohMyMockId, IOhMyShallowMock>;
+  lastHit: number;
+  lastModified: number;
+  version: string;
+  type: objectTypes.REQUEST;
+}
+
+export interface IOhMyResponse {
+  id: ohMyResponseId;
+  version: string;
+  type: objectTypes.RESPONSE;
+  label?: string;
+  statusCode: statusCode;
+  response?: string;
+  responseMock?: string;
+  headers?: Record<string, string>;
+  headersMock?: Record<string, string>;
+  delay?: number;
+  jsCode?: string;
+  rules?: IOhMyMockRule[];
+  createdOn?: string;
+  modifiedOn?: string;
 }
 
 export interface IOhMyAux {
   filterKeywords?: string;
   newAutoActivate?: boolean;
   appActive?: boolean;
-  popupActive?: boolean;
   blurImages?: boolean;
   filteredRequests?: ohMyDataId[]
   filterOptions?: Record<string, boolean>;

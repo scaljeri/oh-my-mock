@@ -19,7 +19,6 @@ export interface IPacket<T = unknown, U = IOhMyContext> {
 
 export interface IOhMyPacketContext extends IOhMyContext {
   id?: string;
-  requestType?: requestType;
   path?: string;
   propertyName?: string;
 }

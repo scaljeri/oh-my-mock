@@ -32,7 +32,7 @@ export class OhMyContentState {
 
       if (key === OhMyContentState.host) {
         this.state = update.newValue as IState;
-        this.isActiveSubject.next(this.isActive(this.state));
+        // this.isActiveSubject.next(this.isActive(this.state));
       }
 
       this.subjects[key]?.next(update.newValue);
@@ -72,7 +72,8 @@ export class OhMyContentState {
   }
 
   getStreamFor<T = unknown>(key: string): Observable<T> {
-    this.subjects[key] ??= new BehaviorSubject<T>(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.subjects[key] ??= new BehaviorSubject<T>(undefined as any);
 
     return this.subjects[key].asObservable().pipe(filter(s => !!s)); // shared???
   }
@@ -93,7 +94,8 @@ export class OhMyContentState {
   // }
 
   isActive(state: IState = this.state): boolean {
-    return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
+    // return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
+    return true;
   }
 
   set forceActive(isActive: boolean) {
@@ -102,7 +104,7 @@ export class OhMyContentState {
 
     window.name = JSON.stringify(this.storage);
 
-    this.isActiveSubject.next(this.isActive(this.state));
+    // this.isActiveSubject.next(this.isActive(this.state));
   }
 
   get forceActive() {

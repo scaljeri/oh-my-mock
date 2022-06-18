@@ -232,4 +232,9 @@ export class OhMyState {
 
     return state;
   }
+
+  popupState(isActive: boolean): Promise<void> {
+    return OhMySendToBg.patch(isActive, '$', 'popupActive',
+      payloadType.STORE, null, 'popup:active-state');
+  }
 }

@@ -55,7 +55,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
     const payload = {
-      context: { id, requestType },
+      context: { id },
       type: payloadType.API_REQUEST,
       data: request
     } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;

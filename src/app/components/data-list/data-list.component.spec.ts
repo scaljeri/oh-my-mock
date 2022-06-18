@@ -7,7 +7,6 @@ import { DataListComponent } from './data-list.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AnimationBuilder } from '@angular/animations';
 import { MatDialog } from '@angular/material/dialog';
-import { WebWorkerService } from '../../services/web-worker.service';
 
 describe('DataListComponent', () => {
   let component: DataListComponent;
@@ -19,7 +18,7 @@ describe('DataListComponent', () => {
       schemas: [NO_ERRORS_SCHEMA],
       imports: [MatMenuModule, RouterTestingModule.withRoutes([]), MatTableModule],
       providers: [AnimationBuilder, { provide: MatDialog, useValue: {} },
-        { provide: WebWorkerService, useValue: {} }],
+      ],
     }).compileComponents();
   });
 
