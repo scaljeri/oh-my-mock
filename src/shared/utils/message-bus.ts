@@ -1,22 +1,23 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { filter, share } from 'rxjs/operators';
 import { appSources, payloadType } from '../constants';
 import { IOhMessage, ohMessage, IOhMyPacketContext } from '../packet-type';
 
 export class OhMyMessageBus {
-  private readonly packetSubject = new BehaviorSubject<IOhMessage<any, any>>(null);
+  private readonly packetSubject = new Subject<IOhMessage<unknown, IOhMyPacketContext>>();
   private readonly stream$ = this.packetSubject.asObservable();
-  private offs = [];
+  private offs: (() => void)[] = [];
 
   constructor() { }
 
   setTrigger(receiver: (cb: ohMessage) => () => void): OhMyMessageBus {
     if (receiver) {
-      this.offs.push(receiver((message: IOhMessage) => {
-        this.emitPacket(message);
+      this.offs.push(receiver(
+        (message: IOhMessage) => {
+          this.emitPacket(message);
 
-        return !!message?.callback;
-      }));
+          return !!message?.callback;
+        }));
     }
 
     return this;
@@ -36,15 +37,15 @@ export class OhMyMessageBus {
       source = [source];
     }
 
-    return this.stream$
-      .pipe(
-        filter(message => {
-          return message?.packet?.source && (!source || source.includes(message.packet.source))
-        }),
-        share()) as Observable<IOhMessage<T, X>>;
+    return (this.stream$ as unknown as Observable<IOhMessage<T, X>>).pipe(
+      filter((message: IOhMessage<T, X>) => {
+        return message?.packet?.source && (!source || source.includes(message.packet.source))
+      }),
+      share()
+    ) as Observable<IOhMessage<T, X>>;
   }
 
-  streamByType$<T = unknown>(type: payloadType | payloadType[], source?: appSources | appSources[]): Observable<IOhMessage<T>> {
+  streamByType$<T = unknown>(type: payloadType | payloadType[], source: appSources | appSources[]): Observable<IOhMessage<T>> {
     if (!Array.isArray(type)) {
       type = [type];
     }
@@ -54,7 +55,7 @@ export class OhMyMessageBus {
       })) as Observable<IOhMessage<T>>;
   }
 
-  streamById$<T = unknown, X = IOhMyPacketContext>(id: string, source?: appSources): Observable<IOhMessage<T, X>> {
+  streamById$<T = unknown, X = IOhMyPacketContext>(id: string, source: appSources): Observable<IOhMessage<T, X>> {
     return this.streamBySource$(source).pipe(
       filter(message => message.packet.payload.context?.id === id)) as any as Observable<IOhMessage<T, X>>;
   }

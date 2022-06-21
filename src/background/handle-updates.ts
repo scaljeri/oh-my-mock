@@ -17,7 +17,52 @@ import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { OhMyStateHandler } from './handlers/state-handler';
 import { OhMyRemoveHandler } from './handlers/remove-handler';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
-import { IOhMyBackup } from '../shared/type';
+import { IOhMyBackup, IOhMyMock } from '../shared/type';
+import { Observable } from 'rxjs';
+
+export class UpdateHandler {
+  static OhMyQueue = OhMyQueue;
+  static OhMyMessageBus = OhMyMessageBus;
+  static responseHandler = OhMyResponseHandler;
+
+  messageBus: OhMyMessageBus;
+  stream$: Observable<IOhMessage>;
+
+  constructor() {
+    const queue = new OhMyQueue();
+    OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
+
+    queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
+    queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
+    queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
+    queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
+    queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
+    queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
+      // Currently this action only supports a full reset. For a Response/State reset use REMOVE
+      try {
+        await StorageUtils.reset();
+        await initStorage(payload.context?.domain);
+        await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+      } catch (err) {
+        error('Could not initialize the store', err);
+      }
+    });
+  }
+  start() {
+    this.messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
+
+  }
+
+  createStream() {
+    this.stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
+      [appSources.CONTENT, appSources.POPUP])
+
+  }
+
+  stop() {
+    this.messageBus.clear();
+  }
+}
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
@@ -37,7 +82,6 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
     error('Could not initialize the store', err);
   }
 });
-
 
 // streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
 

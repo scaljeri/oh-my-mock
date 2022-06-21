@@ -9,9 +9,9 @@ import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
 import { connectWithLocalServer } from './dispatch-remote';
+// import { activate } from './handle-updates';
 
 import './server-dispatcher';
-import './handle-updates';
 
 connectWithLocalServer();
 
@@ -126,3 +126,43 @@ setTimeout(async () => {
 // debugger;
 // }, { urls: ['<all_urls>'] }, ['responseHeaders', 'extraHeaders']);
 // //
+
+// chrome.tabs.onUpdated.addListener(
+//   (tabId: number, changeInfo: any, tab: chrome.tabs.Tab) => {
+//     debugger;
+//   },
+// )
+
+// chrome.tabs.onActivated.addListener(function (activeInfo) {
+//   console.log(activeInfo.tabId);
+//   chrome.tabs.query({ active: true, currentWindow: false }, function (tabs) {
+//     debugger;
+//   });
+// });
+
+let id;
+let xid;
+// setInterval(() => {
+//   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+//     if (tabs[0]?.id !== xid) {
+//       xid = tabs[0]?.id;
+//       console.log('A', xid, tabs[0]);
+//     }
+//   });
+//   chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+//     if (tabs[0]?.id !== id) {
+//       id = tabs[0]?.id;
+//       console.log('B', id, tabs[0]);
+//     }
+//   });
+// }, 1000);
+
+chrome.tabs.onActivated.addListener(function (activeInfo) {
+  console.log('C', activeInfo.tabId);
+});
+
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+    console.log('X', tabs[0]?.id, windowId, tabs[0]);
+  });
+});
