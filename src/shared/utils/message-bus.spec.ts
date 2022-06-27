@@ -1,13 +1,16 @@
 import { appSources, payloadType } from "../constants";
-import { IOhMessage, ohMessage } from "../packet-type";
+import { ohMessage } from "../packet-type";
 import { OhMyMessageBus } from "./message-bus";
 
 describe('MessageBus', () => {
   let mb: OhMyMessageBus;
   let mbHandler: ohMessage;
   let closeHandler: () => void;
+  let message;
+  let test: any;
 
   beforeEach(() => {
+    test = null;
     closeHandler = jest.fn();
 
     mb = new OhMyMessageBus();
@@ -66,8 +69,6 @@ describe('MessageBus', () => {
     });
   });
   describe('#StreamByType$', () => {
-    let message;
-
     beforeEach(() => {
       message = {
         packet: {
@@ -77,11 +78,9 @@ describe('MessageBus', () => {
           }
         }
       };
-
     });
 
     it('should emit message with the matching type/source', () => {
-      let test: any = null;
       mb.streamByType$([payloadType.HIT, payloadType.DATA], appSources.CONTENT).subscribe(msg => {
         test = msg;
       });
@@ -92,7 +91,6 @@ describe('MessageBus', () => {
     });
 
     it('should not emit message with different type', () => {
-      let test: any = null;
       message.packet.payload.type = payloadType.ACTIVE;
       mb.streamByType$([payloadType.HIT, payloadType.DATA], appSources.CONTENT).subscribe(msg => {
         test = msg;
@@ -105,7 +103,44 @@ describe('MessageBus', () => {
   });
 
   describe('#StreamById$', () => {
-    it('should emit message with the same source prop', () => {
+    beforeEach(() => {
+      message = {
+        packet: {
+          source: appSources.POPUP,
+          payload: {
+            context: { id: 'a' }
+          }
+        }
+      };
+    })
+    it('should emit message when Id matches', () => {
+      mb.streamById$('a', appSources.POPUP).subscribe(msg => {
+        test = msg;
+      });
+
+      mbHandler(message as any);
+
+      expect(test).toEqual(message);
+    });
+
+    it('should not emit message when Id is different', () => {
+      mb.streamById$('b', appSources.POPUP).subscribe(msg => {
+        test = msg;
+      });
+
+      mbHandler(message as any);
+
+      expect(test).toBeNull();
+    });
+
+    it('should not emit message when source is different', () => {
+      mb.streamById$('a', appSources.CONTENT).subscribe(msg => {
+        test = msg;
+      });
+
+      mbHandler(message as any);
+
+      expect(test).toBeNull();
     });
   });
 });
