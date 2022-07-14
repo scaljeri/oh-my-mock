@@ -1,21 +1,19 @@
 import { StorageUtils } from "../../../test/mocks/storage-utils.mock";
 import { objectTypes, payloadType } from "../../shared/constants";
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IOhMyMock } from "../../shared/type";
+import { IOhMyDomain, IOhMyMock } from "../../shared/type";
 import { OhMyStoreHandler } from "./store-handler"
 
-describe('BG: Store handler', () => {
-  let store: IOhMyMock;
+describe('BG: State handler', () => {
+  let state: IOhMyDomain;
   let packet: IPacketPayload<IOhMyMock | boolean, IOhMyPacketContext>;
   let su: StorageUtils;
   let handler: OhMyStoreHandler;
 
   beforeEach(() => {
-    store = {
-      domains: ['a', 'b'],
+    state = {
       version: '1.0.1',
-      type: objectTypes.STORE,
-      popupActive: true
+      type: objectTypes.DOMAIN,
     };
 
     su = {

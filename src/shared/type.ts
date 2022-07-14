@@ -51,6 +51,8 @@ export interface IOhMyRequest {
   lastModified: number;
   version: string;
   type: objectTypes.REQUEST;
+  requestType: requestType;
+  url?: string;
 }
 
 export interface IOhMyResponse {
@@ -155,7 +157,6 @@ export interface IOhMyMockRule {
 export interface IOhMyUpsertData {
   id?: ohMyDataId;
   url?: string;
-  method?: requestMethod;
   requestType?: requestType;
 }
 

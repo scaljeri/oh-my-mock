@@ -3,11 +3,12 @@ import { update } from "../../shared/utils/partial-updater";
 import { STORAGE_KEY } from "../../shared/constants";
 import { IOhMyMock } from "../../shared/type";
 import { StorageUtils } from "../../shared/utils/storage";
+import { IOhMyHandler } from "./handler";
 
-export class OhMyStoreHandler {
+export class OhMyStoreHandler implements IOhMyHandler<IOhMyMock> {
   static StorageUtils = StorageUtils;
 
-  static async update({ data, context }: IPacketPayload<IOhMyMock | boolean, IOhMyPacketContext>): Promise<IOhMyMock | void> {
+  async update({ data, context }: IPacketPayload<IOhMyMock | boolean, IOhMyPacketContext>): Promise<IOhMyMock | void> {
     let store = data as IOhMyMock;
 
     if (data === undefined) {
@@ -16,7 +17,7 @@ export class OhMyStoreHandler {
 
     try {
       if (context?.path) {
-        store = await this.StorageUtils.get<IOhMyMock>(STORAGE_KEY);
+        store = await OhMyStoreHandler.StorageUtils.get<IOhMyMock>(STORAGE_KEY);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         store = update<IOhMyMock>(context.path, store, context.propertyName!, data);
       } else if (context?.propertyName) {
@@ -24,9 +25,9 @@ export class OhMyStoreHandler {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return this.StorageUtils.setStore(store!).then(() => store);
+      return OhMyStoreHandler.StorageUtils.setStore(store!).then(() => store);
     } catch (err) {
-      this.logError(store, context, err);
+      OhMyStoreHandler.logError(store, context, err);
     }
   }
 

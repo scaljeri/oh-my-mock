@@ -1,4 +1,4 @@
-import { IOhMyContext, IOhMyMock, IState, ohMyDomain, origin } from '../type';
+import { IOhMyContext, IOhMyDomain, IOhMyMock, IState, ohMyDomain, origin } from '../type';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
 import { objectTypes } from '../constants';
@@ -30,7 +30,7 @@ export class StoreUtils {
     return store?.domains?.indexOf(domain) >= 0;
   }
 
-  static setState(store: IOhMyMock, state: IState): IOhMyMock {
+  static setState(store: IOhMyMock, state: IOhMyDomain): IOhMyMock {
     if (!StoreUtils.hasState(store, state.domain)) {
       store.domains = [state.domain, ...store.domains];
     }

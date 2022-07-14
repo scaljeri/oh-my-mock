@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 
-import { DEMO_TEST_DOMAIN } from '../shared/constants';
+import { DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
 import { IOhMyBackup, IOhMyPopupActive, IState } from '../shared/type';
 import { StorageUtils } from '../shared/utils/storage';
 import { IPacket } from '../shared/packet-type';
@@ -12,8 +12,19 @@ import { connectWithLocalServer } from './dispatch-remote';
 // import { activate } from './handle-updates';
 
 import './server-dispatcher';
+import { UpdateHandler } from './handle-updates';
+import { OhMyStoreHandler } from './handlers/store-handler';
 
 connectWithLocalServer();
+
+const updater = new UpdateHandler();
+updater.registerHandler(payloadType.STORE, OhMyStoreHandler);
+  // queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
+  // queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
+  // queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
+  // queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
+  // queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
+  // queue.addHandler(payloadType.RESET, OhMyResetHandler.update);
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;

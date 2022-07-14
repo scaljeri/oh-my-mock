@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 import { objectTypes, STORAGE_KEY } from '../constants';
-import { IMock, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
+import { IMock, IOhMyDomain, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
 
@@ -33,7 +33,7 @@ export class StorageUtils {
     StorageUtils.chrome.storage.onChanged.removeListener(StorageUtils.callback);
   }
 
-  static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY): Promise<T> {
+  static get<T extends IOhMyMock | IOhMyDomain | IMock>(key: string = STORAGE_KEY): Promise<T> {
     // if (!key) {
     //   return Promise.resolve(undefined);
     // }

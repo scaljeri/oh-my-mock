@@ -1,22 +1,31 @@
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IOhMyMock, IState } from "../../shared/type";
+import { IData, IOhMyDomain, IOhMyMock, IState } from "../../shared/type";
 import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
+import { IOhMyHandler } from "./handler";
 
-export class OhMyStateHandler {
+export class OhMyStateHandler implements IOhMyHandler<IOhMyDomain> {
   static StorageUtils = StorageUtils;
 
-  static async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IState> {
+  async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IOhMyDomain | void> {
     try {
       const { data, context } = payload;
 
-      let state = data as IState || StateUtils.init({ domain: context.domain });
+      if (!context) {
+        return;
+      }
+
+      let state = data as IOhMyDomain || StateUtils.init({ domain: context.domain });
 
       if (context?.path) {
-        state = await OhMyStateHandler.StorageUtils.get<IState>(context.domain) || StateUtils.init({ domain: context.domain });
-        state = update<IState>(context.path, state, context.propertyName, data);
+        if (!context.propertyName) {
+          throw new Error('Found `path` without a property value');
+        }
+
+        state = await OhMyStateHandler.StorageUtils.get<IOhMyDomain>(context.domain) || StateUtils.init({ domain: context.domain });
+        state = update<IOhMyDomain>(context.path, state, context.propertyName, data);
 
         // if (context.path.includes('$.data')) {
         //   if (state.data && !Object.keys(state.data).find(id => (data as IData).id === id)) {

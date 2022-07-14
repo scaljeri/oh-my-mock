@@ -1,12 +1,12 @@
 import { objectTypes } from '../constants';
 import { timestamp } from 'rxjs';
-import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
+import { IData, IOhMyDomain, IOhMyRequest, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId, ohMyRequestId } from '../type';
 import { compareUrls } from './urls';
 
 export class StateUtils {
   static version = '__OH_MY_VERSION__';
 
-  static init(base: Partial<IState> = {}): IState {
+  static init(base: Partial<IOhMyDomain> = {}): IOhMyDomain {
     return {
       version: this.version,
       views: { activity: [] },
@@ -18,44 +18,47 @@ export class StateUtils {
         domain: base.domain
       },
       ...base,
-      type: objectTypes.STATE,
+      type: objectTypes.DOMAIN,
       onModified: timestamp()
-    } as IState;
+    } as IOhMyDomain;
   }
 
-  static isState(input: unknown): input is IState {
+  static isDomain(input: unknown): input is IOhMyDomain {
     return (input as IState).type === objectTypes.STATE;
   }
 
-  static getRequest(state: IState, id: ohMyDataId): IData | undefined {
-    const retVal = state.data[id];
+  static getRequest(state: IOhMyDomain, id: ohMyDataId): IData | undefined {
+    const retVal = state.requests[id];
     return retVal ? { ...retVal } : undefined;
   }
 
-  static setRequest(state: IState, data: IData): IState {
-    return { ...state, data: { ...state.data, [data.id]: data } };
+  static setRequest(state: IOhMyDomain, data: IOhMyRequest): IOhMyDomain {
+    return { ...state, requests: { ...state.requests, [data.id]: data } };
   }
 
-  static removeRequest(state: IState, id: ohMyDataId): IData {
-    const data = state.data[id];
+  static removeRequest(state: IOhMyDomain, id: ohMyDataId): IOhMyRequest {
+    const data = state.requests[id];
 
-    state.data = { ...state.data };
-    delete state.data[id];
+    state.requests = { ...state.requests };
+    delete state.requests[id];
 
     return data;
   }
 
-  static findRequest(state: IState, search: IOhMyUpsertData): IData | undefined {
-    const result = Object.values(state.data).find(v => {
-      return (
-        (search.id && v.id === search.id) || !search.id &&
-        (!search.method || search.method === v.method) &&
-        (!search.requestType || search.requestType === v.requestType) &&
-        (!search.url || search.url === v.url || compareUrls(search.url, v.url))
-      )
-    });
-
-    return result ? { ...result } : undefined;
+  static async findRequest(
+    state: IOhMyDomain,
+    search: IOhMyUpsertData,
+    requestLookup: (id: ohMyRequestId) => IOhMyRequest): Promise<IOhMyRequest | undefined> {
+    for (let index = 0; index < state.requests.length; index++) {
+      const request = await requestLookup(state.requests[index]);
+      if (
+        (search.id && request.id === search.id) || !search.id &&
+        (!search.requestType || search.requestType === request.requestType) &&
+        (!search.url || search.url === request.url || compareUrls(search.url, request.url))
+      ) {
+        return request ? { ...request } : undefined;
+      }
+    }
   }
 
   // static getAllResponseIds(state: IState): ohMyMockId[] {
