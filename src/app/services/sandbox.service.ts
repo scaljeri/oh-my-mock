@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { filter, map, Observable, Subject, take } from 'rxjs';
-import { IMock, IOhMyAPIRequest, IOhMyMockResponse } from '@shared/type';
+import { Subject, take } from 'rxjs';
+import { IOhMyResponse, IOhMyMockResponse, IOhMyRequest } from '@shared/type';
 import { OhMyStateService } from './state.service';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
@@ -37,9 +37,11 @@ export class SandboxService {
   }
 
   async dispatch(input: IOhMyReadyResponse): Promise<IOhMyMockResponse> {
-    const data = SandboxService.StateUtils.findRequest(this.stateService.state, input.request);
-    const mockid = SandboxService.DataUtils.activeMock(data, this.stateService.state.context);
-    const mock = await this.storageService.get<IMock>(mockid);
+    const requestLookup = (requestId) => this.storageService.get<IOhMyRequest>(requestId);
+    const data = await SandboxService.StateUtils.findRequest(
+      this.stateService.state, input.request, requestLookup);
+    const mockid = SandboxService.DataUtils.activeResponse(data, this.stateService.state.context);
+    const mock = await this.storageService.get<IOhMyResponse>(mockid);
 
     this.iframe.contentWindow.postMessage({ ...input, mock }, '*');
 

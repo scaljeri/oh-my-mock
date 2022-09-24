@@ -1,13 +1,13 @@
-import { IOhMyContext, ohMyDomain } from "../type";
+import { IOhMyContext, IOhMyDomainId } from "../type";
 import { appSources, payloadType } from "../constants";
 import { IOhMyPacketContext, IPacket } from "../packet-type";
 
 // TODO: make it a class
 export class OhMySendToBg {
   static source: appSources;
-  static domain: ohMyDomain;
+  static domain: IOhMyDomainId;
 
-  static setContext(domain: ohMyDomain, source: appSources): void {
+  static setContext(domain: IOhMyDomainId, source: appSources): void {
     this.domain = domain;
     this.source = source;
   }

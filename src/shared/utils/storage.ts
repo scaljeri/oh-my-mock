@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 import { objectTypes, STORAGE_KEY } from '../constants';
-import { IMock, IOhMyDomain, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
+import { IOhMyDomain, IOhMyMock, IOhMyResponse, IOhMyDomainId, IOhMyResponseId, IOhMyRequest } from '../type';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
 
@@ -12,6 +12,8 @@ export interface IOhMyStorageUpdate {
   key: string;
   update: IOhMyStorageChange;
 }
+
+export type IOhMyStorageTypes = IOhMyResponse | IOhMyRequest | IOhMyDomain | IOhMyMock;
 
 export class StorageUtils {
   static appVersion = '__OH_MY_VERSION__';
@@ -33,7 +35,7 @@ export class StorageUtils {
     StorageUtils.chrome.storage.onChanged.removeListener(StorageUtils.callback);
   }
 
-  static get<T extends IOhMyMock | IOhMyDomain | IMock>(key: string = STORAGE_KEY): Promise<T> {
+  static get<T = IOhMyStorageTypes>(key: string = STORAGE_KEY): Promise<T> {
     // if (!key) {
     //   return Promise.resolve(undefined);
     // }
@@ -87,7 +89,7 @@ export class StorageUtils {
     }));
   }
 
-  static async reset(key?: ohMyDomain | ohMyMockId): Promise<void> {
+  static async reset(key?: IOhMyDomainId | IOhMyResponseId): Promise<void> {
     if (key) {
       await StorageUtils.remove(key);
     } else {

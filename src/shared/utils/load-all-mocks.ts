@@ -1,32 +1,35 @@
 import { Observable } from 'rxjs';
-import { IMock, IState } from '../type';
+import { IOhMyResponse, IOhMyDomain, IOhMyDomainId, IOhMyRequestId, IOhMyRequest } from '../type';
 import { StorageUtils } from './storage';
 
-export async function loadAllMocks(domain: string): Promise<Record<string, IMock>> {
+export async function loadAllMocks(domain: IOhMyDomainId): Promise<Record<string, IOhMyResponse>> {
   if (!domain) {
     return {};
   }
 
-  const state = await StorageUtils.get<IState>(domain);
+  const state = await StorageUtils.get<IOhMyDomain>(domain);
 
-  if (state) {
-    const data = Object.values(state.data);
-    const mocks = {};
-    for (let i = 0; i < data.length; i++) {
-      const keys = Object.keys(data[i].mocks);
-
-      for (let j = 0; j < keys.length; j++) {
-        mocks[keys[j]] = await StorageUtils.get(keys[j]);
-      }
-    }
-
-    return mocks;
+  if (!state) {
+    return {};
   }
 
-  return {};
+  const requests = await Promise.all(
+    Object.values(state.requests).map(async (requestId: IOhMyRequestId) => {
+      return StorageUtils.get<IOhMyRequest>(requestId);
+    }))
+
+  const responses = {};
+
+  for (const request of requests) {
+    for (const responseId in request.responses) {
+      responses[responseId] = await StorageUtils.get<IOhMyResponse>(responseId);
+    }
+  }
+
+  return responses;
 }
 
-export function loadAllMocks$(domain: string): Observable<Record<string, IMock>> {
+export function loadAllMocks$(domain: string): Observable<Record<string, IOhMyResponse>> {
   return new Observable(observer => {
     loadAllMocks(domain).then(mocks => {
       observer.next(mocks);

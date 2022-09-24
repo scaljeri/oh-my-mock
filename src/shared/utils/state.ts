@@ -1,6 +1,6 @@
 import { objectTypes } from '../constants';
 import { timestamp } from 'rxjs';
-import { IData, IOhMyDomain, IOhMyRequest, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId, ohMyRequestId } from '../type';
+import { IOhMyDomain, IOhMyRequest, IOhMyUpsertRequest, IOhMyRequestId } from '../type';
 import { compareUrls } from './urls';
 
 export class StateUtils {
@@ -24,19 +24,19 @@ export class StateUtils {
   }
 
   static isDomain(input: unknown): input is IOhMyDomain {
-    return (input as IState).type === objectTypes.STATE;
+    return (input as IOhMyDomain).type === objectTypes.DOMAIN;
   }
 
-  static getRequest(state: IOhMyDomain, id: ohMyDataId): IData | undefined {
+  static getRequest(state: IOhMyDomain, id: IOhMyRequestId): IOhMyRequest | undefined {
     const retVal = state.requests[id];
     return retVal ? { ...retVal } : undefined;
   }
 
-  static setRequest(state: IOhMyDomain, data: IOhMyRequest): IOhMyDomain {
-    return { ...state, requests: { ...state.requests, [data.id]: data } };
+  static setRequest(domain: IOhMyDomain, data: IOhMyRequest): IOhMyDomain {
+    return { ...domain, requests: { ...domain.requests, [data.id]: data } };
   }
 
-  static removeRequest(state: IOhMyDomain, id: ohMyDataId): IOhMyRequest {
+  static removeRequest(state: IOhMyDomain, id: IOhMyRequestId): IOhMyRequest {
     const data = state.requests[id];
 
     state.requests = { ...state.requests };
@@ -47,13 +47,13 @@ export class StateUtils {
 
   static async findRequest(
     state: IOhMyDomain,
-    search: IOhMyUpsertData,
-    requestLookup: (id: ohMyRequestId) => IOhMyRequest): Promise<IOhMyRequest | undefined> {
+    search: IOhMyUpsertRequest,
+    requestLookup: (id: IOhMyRequestId) => Promise<IOhMyRequest>): Promise<IOhMyRequest | undefined> {
     for (let index = 0; index < state.requests.length; index++) {
       const request = await requestLookup(state.requests[index]);
       if (
         (search.id && request.id === search.id) || !search.id &&
-        (!search.requestType || search.requestType === request.requestType) &&
+        (!search.requestMethod || search.requestMethod === request.requestMethod) &&
         (!search.url || search.url === request.url || compareUrls(search.url, request.url))
       ) {
         return request ? { ...request } : undefined;

@@ -1,4 +1,4 @@
-import { IOhMyContext, IOhMyDomain, IOhMyMock, IState, ohMyDomain, origin } from '../type';
+import { IOhMyContext, IOhMyResponse, IOhMyDomain, IOhMyOrigin, IOhMyMock, IOhMyDomainId } from '../type';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
 import { objectTypes } from '../constants';
@@ -16,7 +16,7 @@ export class StoreUtils {
     return { ...store, domains };
   }
 
-  static init(context?: IOhMyContext, origin: origin = 'local'): IOhMyMock {
+  static init(context?: IOhMyContext, origin: IOhMyOrigin = 'local'): IOhMyMock {
     const store = { type: objectTypes.STORE, domains: [], version: this.version, origin } as IOhMyMock;
 
     if (context) {
@@ -26,7 +26,7 @@ export class StoreUtils {
     return store;
   }
 
-  static hasState(store: IOhMyMock, domain: ohMyDomain): boolean {
+  static hasState(store: IOhMyMock, domain: IOhMyDomainId): boolean {
     return store?.domains?.indexOf(domain) >= 0;
   }
 
@@ -39,7 +39,7 @@ export class StoreUtils {
   }
 
 
-  static removeState(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
+  static removeState(store: IOhMyMock, domain: IOhMyDomainId): IOhMyMock {
     const domains = [...store.domains];
     domains.splice(domains.indexOf(domain), 1);
 

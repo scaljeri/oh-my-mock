@@ -56,7 +56,7 @@ export enum payloadType {
   RESPONSE = 'response',
   REQUEST = 'request',
   NEW_RESPONSE = 'new-response',
-  STATE = 'state',
+  DOMAIN = 'domain',
   KNOCKKNOCK = 'knockknock',
   HIT = 'hit',
   // EVAL = 'execute',
@@ -98,7 +98,7 @@ export enum resetStateOptions {
   SELF = 'self'
 }
 
-export const MOCK_RULE_TYPES = {
+export const RESPONSE_RULE_TYPES = {
   firstName: 'First name',
   lastName: 'Last name',
   fullName: 'Full name',
@@ -106,7 +106,7 @@ export const MOCK_RULE_TYPES = {
   username: 'Username'
 };
 
-export enum ohMyMockStatus {
+export enum IOhMyMockResponseStatus {
   OK,
   ERROR,
   NO_CONTENT,
