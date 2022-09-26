@@ -35,6 +35,11 @@ export interface IOhMyResponseSearch {
   statusCode?: IOhMyStatusCode;
 }
 
+export interface IOhMyNewResponseStatusCode {
+  statusCode: IOhMyStatusCode,
+  label: string;
+  clone: boolean;
+}
 export interface IOhMyMockRule {
   type: IOhMyResponseRuleType;
   path: string;

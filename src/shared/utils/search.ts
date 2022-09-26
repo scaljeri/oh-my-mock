@@ -1,7 +1,7 @@
 import { isImage } from './image';
 import { getMimeType } from "./mime-type";
 import { FILTER_SEARCH_OPTIONS } from '../constants';
-import { IOhMyRequest, IOhMyResponse } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse } from '../types';
 
 // const QUOTE_RE = /(?<=")([^"]+)(?=")(\s|\b)/gi;
 const QUOTE_RE = /(?<=")([^"]+)(?=")/gi;

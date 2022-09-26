@@ -211,7 +211,7 @@ export class OhMyState {
 
   async reset(context?: IOhMyContext): Promise<void> {
     if (context) {
-      await OhMySendToBg.full({ type: objectTypes.STATE, domain: context.domain }, payloadType.REMOVE, context, 'popup;reset');
+      await OhMySendToBg.full({ type: objectTypes.DOMAIN, domain: context.domain }, payloadType.REMOVE, context, 'popup;reset');
     } else {
       await OhMySendToBg.full(undefined, payloadType.RESET, context, 'popup;reset;everything');
     }

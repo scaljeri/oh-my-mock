@@ -1,5 +1,5 @@
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IOhMyDomain, IOhMyMock, IState } from "../../shared/type";
+import { IOhMyRequest, IOhMyDomain, IOhMyMock } from "../../shared/type";
 import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
@@ -9,7 +9,7 @@ import { IOhMyHandler } from "./handler";
 export class OhMyStateHandler implements IOhMyHandler<IOhMyDomain> {
   static StorageUtils = StorageUtils;
 
-  async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IOhMyDomain | void> {
+  async update(payload: IPacketPayload<IOhMyDomain | IOhMyRequest | unknown, IOhMyPacketContext>): Promise<IOhMyDomain | void> {
     try {
       const { data, context } = payload;
 
@@ -28,7 +28,7 @@ export class OhMyStateHandler implements IOhMyHandler<IOhMyDomain> {
         state = update<IOhMyDomain>(context.path, state, context.propertyName, data);
 
         // if (context.path.includes('$.data')) {
-        //   if (state.data && !Object.keys(state.data).find(id => (data as IData).id === id)) {
+        //   if (state.data && !Object.keys(state.data).find(id => (data as IOhMyRequest).id === id)) {
         //     state.aux.filteredRequests = null;
         //   }
         // }

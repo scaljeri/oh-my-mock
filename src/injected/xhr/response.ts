@@ -1,4 +1,4 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { b64ToArrayBuffer, b64ToBlob } from "../../shared/utils/binary";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
@@ -17,15 +17,15 @@ export function patchResponse() {
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
-          method: this.ohMethod
+          requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
 
-      if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
+      if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
         let response = this.ohResult.response?.response;
         if (this.responseType === 'blob') {
           response = b64ToBlob(response);
@@ -45,6 +45,7 @@ export function patchResponse() {
 }
 
 export function unpatchResponse() {
-  Object.defineProperty(window.XMLHttpRequest.prototype, 'response', descriptor);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  Object.defineProperty(window.XMLHttpRequest.prototype, 'response', descriptor!);
   delete window.XMLHttpRequest.prototype['__response'];
 }

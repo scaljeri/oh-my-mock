@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IOhMyContext, IOhMyShallowMock, IState, IUpsertMock, ohMyMockId, statusCode } from '@shared/type';
+import { IOhMyRequest, IOhMyContext, IOhMyShallowResponse, IOhMyDomain, IOhMyStatusCode, IOhMyResponseId, IOhMyNewResponseStatusCode } from '@shared/type';
 import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
 // import { findAutoActiveMock } from '../../../utils/data';
 import { UntypedFormControl } from '@angular/forms';
@@ -18,11 +18,11 @@ import { OhMyState } from '../../../services/oh-my-store';
   styleUrls: ['./request-header.component.scss']
 })
 export class RequestHeaderComponent implements OnInit, OnChanges {
-  @Input() request: IData;
+  @Input() request: IOhMyRequest;
   @Input() context: IOhMyContext;
 
-  public statusCode: statusCode;
-  public mockIds: ohMyMockId[];
+  public statusCode: IOhMyStatusCode;
+  public mockIds: IOhMyResponseId[];
   public methodCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   public filteredMethodOptions: Observable<string[]>;
   public typeCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
@@ -34,7 +34,7 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
   public availableMethods = METHODS;
   subscriptions: Subscription[] = [];
-  state: IState;
+  state: IOhMyDomain;
 
   constructor(
     public dialog: MatDialog,
@@ -49,20 +49,21 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
     this.methodCtrl.valueChanges.subscribe(val => {
       const method = (val || '').toUpperCase();
-      if (method !== this.request.method) {
+      if (method !== this.request.requestMethod) {
         this.storeService.upsertRequest({
-          id: this.request.id, method
+          id: this.request.id, requestMethod: method,
         }, this.context)
       }
     });
 
-    this.typeCtrl.valueChanges.subscribe(type => {
-      if (type !== this.request.requestType) {
-        this.storeService.upsertRequest({
-          id: this.request.id, requestType: type
-        }, this.context)
-      }
-    });
+    // TODO: THis does not exist anymore
+    // this.typeCtrl.valueChanges.subscribe(type => {
+    //   if (type !== this.request.requestType) {
+    //     this.storeService.upsertRequest({
+    //       id: this.request.id, requestType: type
+    //     }, this.context)
+    //   }
+    // });
 
     this.urlCtrl.valueChanges.subscribe(url => {
       if (url !== this.request.url) {
@@ -75,48 +76,53 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
   ngOnChanges(): void {
     this.mockIds = this.request
-      ? Object.keys(this.request.mocks).sort((a, b) => {
-        const ma = this.request.mocks[a];
-        const mb = this.request.mocks[b];
+      ? Object.keys(this.request.responses).sort((a, b) => {
+        const ma = this.request.responses[a];
+        const mb = this.request.responses[b];
 
         return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
       }) : [];
 
-    this.methodCtrl.setValue(this.request.method);
-    this.typeCtrl.setValue(this.request.requestType);
+    this.methodCtrl.setValue(this.request.requestMethod);
+    // this.typeCtrl.setValue(this.request.requestType);
     this.urlCtrl.setValue(this.request.url);
   }
 
-  onSelectStatusCode(mockId: ohMyMockId): void {
-    const enabled = { ...this.request.enabled, [this.context.preset]: true };
-    const selected = { ...this.request.selected, [this.context.preset]: mockId };
+  onSelectStatusCode(responseId: IOhMyResponseId): void {
+    const preset = { ...this.request.presets[this.context.presetId], responseId };
+    const presets = { ...this.request.presets, [this.context.presetId]: preset };
 
-    this.storeService.upsertRequest({ ...this.request, enabled, selected }, this.context);
+    this.storeService.upsertRequest({ ...this.request, presets: { ...presets } }, this.context);
   }
 
   onDisableRequest(): void {
-    const enabled = { ...this.request.enabled, [this.context.preset]: false };
-    this.storeService.upsertRequest({ ...this.request, enabled }, this.context);
+    const presets = { ...this.request.presets };
+    presets[this.context.presetId] = { ...presets[this.context.presetId], isActive: false };
+
+    this.storeService.upsertRequest({ ...this.request, presets }, this.context);
   }
 
   openAddResponseDialog(): void {
-    const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
+    const dialogRef = this.dialog.open<CreateStatusCodeComponent, IOhMyDomain, IOhMyNewResponseStatusCode>(CreateStatusCodeComponent, {
       width: '280px',
       height: '380px',
       data: this.state
     });
 
-    dialogRef.afterClosed().subscribe(async (update: IUpsertMock) => {
+    dialogRef.afterClosed().subscribe(async (update: IOhMyNewResponseStatusCode) => {
       if (!update) {
         return;
       }
 
-      if (update.clone) {
+      const isClone = update.clone;
+      delete update.clone;
+
+      if (isClone) {
         this.storeService.cloneResponse(
-          this.request.selected[this.context.preset],
-          update.mock, this.request, this.context);
+          this.request.presets[this.context.presetId].responseId,
+          update, this.request, this.context);
       } else {
-        this.storeService.upsertResponse(update.mock, this.request, this.context);
+        this.storeService.upsertResponse(update, this.request, this.context);
       }
     });
   }
@@ -129,9 +135,9 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
     // }
   }
 
-  getMock(id: ohMyMockId): IOhMyShallowMock {
+  getMock(id: IOhMyResponseId): IOhMyShallowResponse {
 
-    return this.request.mocks[id];
+    return this.request.responses[id];
   }
 
   onMethodChange(event): void {

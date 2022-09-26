@@ -8,7 +8,6 @@ import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
 import { IOhMyReadyResponse, IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
-import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
 import { Observable, Subject } from 'rxjs';
 import { OhMyState } from './oh-my-store';

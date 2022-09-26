@@ -39,7 +39,7 @@
 <section class="responses-wrapper">
   <div
     class="responses"
-    [ngClass]="{ 'is-active': request.enabled[context.preset] }"
+    [ngClass]="{ 'is-active': request.presets[context.presetId].isActive}"
   >
     <h3>
       Responses
@@ -56,11 +56,15 @@
       </button>
       <button
         mat-raised-button
-        *ngFor="let mockId of mockIds"
-        (click)="onSelectStatusCode(mockId)"
-        [ngClass]="{ 'is-active': request.selected[context.preset] === mockId }"
+        *ngFor="let responseId of mockIds"
+        (click)="onSelectStatusCode(responseId)"
+        [ngClass]="{
+          'is-active': request.presets[context.presetId] === responseId
+        }"
       >
-        <oh-my-mock-label [mock]="request.mocks[mockId]"></oh-my-mock-label>
+        <oh-my-mock-label
+          [mock]="request.responses[responseId]"
+        ></oh-my-mock-label>
       </button>
       <button mat-raised-button (click)="openAddResponseDialog()">+</button>
     </div>

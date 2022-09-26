@@ -6,9 +6,9 @@ import { extractMimeType, isMimeTypeText } from '../../shared/utils/mime-type';
 import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
-export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<IOhMyResponseUpdate> {
+export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<IOhMyResponseUpdate | undefined> {
   if (!window[STORAGE_KEY].state?.active) {
-    return;
+    return undefined;
   }
 
   if (response['ohResult']) {
@@ -32,7 +32,7 @@ export async function persistResponse(response: Response, request: IOhMyAPIReque
   }
 
   const ohResult = {
-    request: { url: removeDomainFromUrl(response['ohUrl'] || response.url), method: response['ohMethod'] || request?.method, requestType: 'FETCH' },
+    request: { url: removeDomainFromUrl(response['ohUrl'] || response.url), requestMethod: response['ohMethod'] || request?.requestMethod, requestType: 'FETCH' },
     response: { statusCode: clone['__status'], response: output, headers }
   } as IOhMyResponseUpdate;
 

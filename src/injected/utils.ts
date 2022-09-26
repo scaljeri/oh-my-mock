@@ -1,5 +1,5 @@
-import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyMockResponse, requestType, IOhMyMockContext } from '../shared/type';
+import { IOhMyResponseStatus, STORAGE_KEY } from '../shared/constants';
+import { IOhMyAPIRequest, IOhMyMockResponse, IOhMyRequest } from '../shared/type';
 import { isImage } from '../shared/utils/image';
 import { errorBuilder, debugBuilder, logBuilder, warnBuilder } from '../shared/utils/logging';
 
@@ -10,16 +10,16 @@ export const warn = warnBuilder();
 export const log = logBuilder();
 export const error = errorBuilder();
 
-export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, data: IOhMyMockResponse): void => {
-  const msg = `Mocked ${requestType}(${request.method}) ${request.url} ->`;
+export const logMocked = (request: IOhMyAPIRequest, data: IOhMyMockResponse): void => {
+  const msg = `Mocked (${request.requestMethod}) ${request.url} ->`;
   switch (data.status) {
-    case ohMyMockStatus.ERROR:
+    case IOhMyResponseStatus.ERROR:
       data.message && error(data.message);
       break;
-    case ohMyMockStatus.NO_CONTENT:
+    case IOhMyResponseStatus.NO_CONTENT:
       log(`${msg} New request`);
       break;
-    case ohMyMockStatus.INACTIVE:
+    case IOhMyResponseStatus.INACTIVE:
       log(`${msg} Skipped / not mocked`);
       break;
     default:
@@ -32,16 +32,17 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
           response = data.response;
         }
       } else if (isImage(data?.headers?.['content-type'])) {
-        response = `Image Data (${data.headers['content-type']})`;
+        response = `Image Data (${data.headers?.['content-type']})`;
       }
-      log(`${msg} ${data.headers['content-type']}`, response);
+      log(`${msg} ${data.headers?.['content-type']}`, response);
   }
 }
 
-export function findCachedResponse(search: IOhMyMockContext, remove = true): any {
+// TODO: Not
+export function findCachedResponse(search: Partial<IOhMyRequest>, remove = true): any {
   const result = window[STORAGE_KEY].cache.find(c =>
     c && c.request.url === search.url &&
-    (!search.method || c.request.method === search.method));
+    (!search.requestMethod || c.request.method === search.requestMethod));
 
   if (result && remove) {
     const index = window[STORAGE_KEY].cache.indexOf(result);
@@ -51,7 +52,7 @@ export function findCachedResponse(search: IOhMyMockContext, remove = true): any
   return result;
 }
 
-export function findCachedResponseAsync(search: IOhMyMockContext, remove = true): Promise<any> {
+export function findCachedResponseAsync(search: Partial<IOhMyRequest>, remove = true): Promise<any> {
   return new Promise(resolve => {
     let count = 0;
     const iid = window.setInterval(() => {

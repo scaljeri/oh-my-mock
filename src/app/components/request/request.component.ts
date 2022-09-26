@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IMock, IOhMyMockRule, IOhMyContext } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyMockRule, IOhMyContext } from '@shared/type';
 import { filter, Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -26,17 +26,17 @@ import { StorageService } from '../../services/storage.service';
   styleUrls: ['./request.component.scss']
 })
 export class RequestComponent implements OnChanges, OnDestroy {
-  @Input() request: IData;
+  @Input() request: IOhMyRequest;
   @Input() context: IOhMyContext;
   @Input() blurImages = false;
 
-  response: IMock;
+  response: IOhMyResponse;
 
   public dialogIsOpen = false;
 
   subscriptions = new Subscription();
 
-  activeMock$: Observable<IMock>;
+  activeMock$: Observable<IOhMyResponse>;
   responseType: string;
   contentType: string;
 
@@ -73,7 +73,8 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   async ngOnChanges(): Promise<void> {
-    const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
+    const preset = this.request?.presets[this.context.presetId];
+    const activeResponse = this.request?.responses[preset.responseId];
 
     if (!activeResponse) {
       this.response = undefined;
@@ -89,7 +90,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
       this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : this.response?.headersMock?.['content-type'];
       this.isResponseImage = false;
-      this.hasMocks = Object.keys(this.request.mocks).length > 0;
+      this.hasMocks = Object.keys(this.request.responses).length > 0;
 
       this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
@@ -171,7 +172,8 @@ export class RequestComponent implements OnChanges, OnDestroy {
         this.storeService.upsertResponse({
           id: this.response.id,
           ...(update.data && { responseMock: update.data }),
-          rules: update.rules }, this.request, this.context);
+          rules: update.rules
+        }, this.request, this.context);
       }
     });
   }

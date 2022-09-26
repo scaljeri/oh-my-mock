@@ -6,7 +6,7 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { IOhMyContext, IState } from '@shared/type';
+import { IOhMyContext, IOhMyDomain } from '@shared/type';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -70,7 +70,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     await initializeApp(this.appState, this.stateService, this.webWorkerService);
     // await this.contentService.activate();
 
-    this.stateSub = this.stateService.state$.subscribe(async (state: IState) => {
+    this.stateSub = this.stateService.state$.subscribe(async (state: IOhMyDomain) => {
       if (!state) {
         return this.isInitializing = true;
       }

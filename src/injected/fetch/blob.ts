@@ -1,11 +1,12 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { b64ToBlob } from "../../shared/utils/binary";
 import { getMimeType } from "../../shared/utils/mime-type";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.Response.prototype.hasOwnProperty('__blob');
-const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'blob');
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'blob')!;
 
 export function patchResponseBlob() {
   Object.defineProperties(window.Response.prototype, {
@@ -19,15 +20,15 @@ export function patchResponseBlob() {
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
-            method: this.ohMethod
+            requestMethod: this.ohMethod
           });
 
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+          if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
             persistResponse(this, this.ohResult.request);
           }
         }
 
-        if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
           const response = this.ohResult.response?.response;
           const contentType = getMimeType(this.ohResult.response.headers);
           return b64ToBlob(response, contentType); // TODO: Can this also be a normal string

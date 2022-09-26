@@ -32,7 +32,7 @@ export async function persistResponse(xhr: XMLHttpRequest, request: IOhMyAPIRequ
   dispatchApiResponse({
     request: {
       url: removeDomainFromUrl(xhr['ohUrl'] || request.url),
-      method: xhr['ohMethod'] || request?.method,
+      method: xhr['ohMethod'] || request?.requestMethod,
       requestType: 'XHR'
     },
     response: { statusCode: xhr['__status'], response: output, headers },

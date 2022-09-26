@@ -1,4 +1,4 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -16,10 +16,10 @@ export function patchResponseText() {
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
-          method: this.ohMethod
+          requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
@@ -38,6 +38,7 @@ export function patchResponseText() {
 }
 
 export function unpatchResponseText() {
-  Object.defineProperty(window.XMLHttpRequest.prototype, 'responseText', descriptor);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  Object.defineProperty(window.XMLHttpRequest.prototype, 'responseText', descriptor!);
   delete window.XMLHttpRequest.prototype['__responseText'];
 }

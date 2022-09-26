@@ -1,6 +1,6 @@
 import { DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
 import { IPacketPayload } from "../../shared/packet-type";
-import { IMock, IOhMyBackup, IState } from "../../shared/type";
+import { IOhMyBackup, IOhMyDomain, IOhMyRequest, IOhMyResponse } from "../../shared/type";
 import { importJSON } from "../../shared/utils/import-json";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StorageUtils } from "../../shared/utils/storage";
@@ -12,43 +12,54 @@ export class OhMyRemoveHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<{ type: objectTypes, id: string }>): Promise<IState> {
-    const state = await OhMyRemoveHandler.StorageUtils.get<IState>(context.domain);
+  static async update({ data, context }: IPacketPayload<{ type: objectTypes, id: string }>): Promise<IOhMyDomain | undefined> {
+    const state = await OhMyRemoveHandler.StorageUtils.get<IOhMyDomain>(context?.domain);
 
     if (!data || !state) {
       return;
     }
 
     try {
-      if (data.type === objectTypes.STATE) { // Delete State
-        const responses = Object.values(state.data).flatMap(d => Object.values(d.mocks));
+      if (data.type === objectTypes.DOMAIN) { // Delete State
+        // All requests are need to be able to delete responses
+        const deletes = [] as Promise<void>[];
+        const promises = Object.values(state.requests).map(requestId => OhMyRemoveHandler.StorageUtils.get<IOhMyRequest>(requestId));
+        const responses = (await Promise.all(promises)).flatMap((request: IOhMyRequest) => {
+          deletes.push(OhMyRemoveHandler.StorageUtils.remove(request.id) as Promise<void>);
+          return Object.values(request.responses);
+        });
 
+        // Delete all requests
+        await Promise.all(deletes);
+
+        // Delete all responses
         for (const r of responses) {
           await StorageUtils.remove(r.id);
         }
 
+        // Delete domain
         await StorageUtils.remove(state.domain);
 
         if (state.domain === DEMO_TEST_DOMAIN) {
           await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
         }
-      } else if (data.type === objectTypes.REQUEST) {
-        const responses = Object.values(state.data[data.id]).flatMap(d => Object.values(d.mocks)) as IMock[];
-        for (const r of responses) {
-          await StorageUtils.remove(r.id);
+      } else if (data.type === objectTypes.REQUEST) { // Delete request
+        const request = await OhMyRemoveHandler.StorageUtils.get<IOhMyRequest>(data.id);
+        for (const responseId in request.responses) {
+          await StorageUtils.remove(responseId);
         }
 
-        delete state.data[data.id];
+        delete state.requests[data.id];
 
-        return await new Promise<IState>(r =>
-          OhMyRemoveHandler.queue.addPacket(payloadType.STATE,
-            { payload: state }, s => r(s as IState)));
+        return await new Promise<IOhMyDomain>(r =>
+          OhMyRemoveHandler.queue.addPacket(payloadType.DOMAIN,
+            { payload: state }, s => r(s as IOhMyDomain)));
       } else {
         // eslint-disable-next-line no-console
         console.log(`Cannot remove type ${data.type} (not implemented)`)
-        return null;
+        return;
       }
-    } catch(error) {
+    } catch (error) {
     }
 
     return state;

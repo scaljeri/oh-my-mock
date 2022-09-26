@@ -1,9 +1,9 @@
-import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
+import { appSources, IOhMyResponseStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyAPIRequest, IOhMyContext, requestType } from '../../shared/type';
+import { IOhMyAPIRequest } from '../../shared/type';
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
@@ -49,7 +49,7 @@ declare let window: any;
 //   });
 // }
 
-export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyReadyResponse> => {
+export const dispatchApiRequest = async (request: IOhMyAPIRequest): Promise<IOhMyReadyResponse> => {
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
   return new Promise(async (resolve, reject) => {
@@ -65,7 +65,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       .subscribe(({ packet }) => {
         const resp = packet.payload.data as IOhMyReadyResponse;
         try {
-          logMocked(request, requestType, resp.response);
+          logMocked(request, resp.response);
         } catch (err) {
           // eslint-disable-next-line no-console
           console.log('Ooops, received something unexpected: ', resp);
@@ -74,7 +74,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
         }
         mb.clear();
 
-        if (resp.response.status === ohMyMockStatus.ERROR) {
+        if (resp.response.status === IOhMyResponseStatus.ERROR) {
           // TODO: can this happen????
           // printEvalError(resp.result as string, data);
           // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);

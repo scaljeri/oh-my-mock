@@ -1,6 +1,6 @@
 import { findCachedResponse } from "../utils";
 import * as headers from '../../shared/utils/xhr-headers';
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__getResponseHeader');
@@ -18,10 +18,10 @@ export function patchResponseHeaders() {
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
-          method: this.ohMethod
+          requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
@@ -46,15 +46,15 @@ export function patchResponseHeaders() {
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
-          method: this.ohMethod
+          requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
 
-      if (this.ohResult?.response.status === ohMyMockStatus.OK) {
+      if (this.ohResult?.response.status === IOhMyResponseStatus.OK) {
         return this.ohResult.response?.headers?.[header];
       } else {
         return this.__getResponseHeader(header);
@@ -65,8 +65,10 @@ export function patchResponseHeaders() {
 }
 
 export function unpatchResponseHeaders() {
-  Object.defineProperty(window.XMLHttpRequest.prototype, 'getAllResponseHeaders', descrAllHeaders);
-  Object.defineProperty(window.XMLHttpRequest.prototype, 'getResponseHeader', descrHeader);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  Object.defineProperty(window.XMLHttpRequest.prototype, 'getAllResponseHeaders', descrAllHeaders!);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  Object.defineProperty(window.XMLHttpRequest.prototype, 'getResponseHeader', descrHeader!);
   delete window.XMLHttpRequest.prototype['__getAllResponseHeaders'];
   delete window.XMLHttpRequest.prototype['__getResponseHeader'];
 }

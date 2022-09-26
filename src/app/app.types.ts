@@ -1,6 +1,6 @@
-import { IData } from '@shared/type';
+import { IOhMyRequest } from '@shared/type';
 
-export interface IOhDataView extends IData {
+export interface IOhDataView extends IOhMyRequest {
   urlStart: string;
   urlEnd: string;
 }

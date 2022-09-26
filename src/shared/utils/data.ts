@@ -1,8 +1,10 @@
 import { objectTypes } from '../constants';
-import { IOhMyContext, IOhMyPreset, IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse } from '../type';
+import { IOhMyContext, IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse, IOhMyDomainPresets, IOhMyRequestId } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
+
+export type IOhMyRequestLookup = (requestId: IOhMyRequestId) => Promise<IOhMyRequest>;
 
 export class DataUtils {
   static StorageUtils = StorageUtils;
@@ -123,7 +125,7 @@ export class DataUtils {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  static prefillWithPresets(request: IOhMyRequest, presets: IOhMyPreset = {}, active?: boolean): IOhMyRequest {
+  static prefillWithPresets(request: IOhMyRequest, presets: IOhMyDomainPresets = {}, active?: boolean): IOhMyRequest {
     const responses = Object.values(request.responses).sort(DataUtils.statusCodeSort);
 
     Object.keys(presets).forEach((presetId: IOhMyPresetId) => {
@@ -135,5 +137,16 @@ export class DataUtils {
     });
 
     return request;
+  }
+
+  static loadRequest(requestId: IOhMyRequestId, requestLookup: IOhMyRequestLookup): Promise<IOhMyRequest> {
+    return requestLookup(requestId);
+  }
+
+
+  static loadRequests(requestIds: IOhMyRequestId[], requestLookup: IOhMyRequestLookup): Promise<IOhMyRequest[]> {
+    const otuput = requestIds.map(requestId => requestLookup(requestId));
+
+    return Promise.all(otuput);
   }
 }

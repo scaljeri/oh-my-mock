@@ -1,5 +1,5 @@
 import { IOhMyResponseUpdate, IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IMock, IState } from "../../shared/type";
+import { IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyRequestId } from "../../shared/type";
 import { MockUtils } from "../../shared/utils/mock";
 import { update } from "../../shared/utils/partial-updater";
 import { OhMyQueue } from "../../shared/utils/queue";
@@ -15,33 +15,37 @@ export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IMock> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IOhMyResponse | void> {
     try {
-      const state = await OhMyResponseHandler.StorageUtils.get<IState>(context.domain);
-      if (!data || !state) {
+      const state = await OhMyResponseHandler.StorageUtils.get<IOhMyDomain>(context?.domain);
+      if (context?.domain || !data || !state) {
         return;
       }
 
-      let request = StateUtils.findRequest(state, data.request);
+      const requestLookup = (requestId: IOhMyRequestId) => OhMyResponseHandler.StorageUtils.get<IOhMyRequest>(requestId);
+      let request = await StateUtils.findRequest(state, data.request, requestLookup);
       let response = data.response;
       let autoActivate = false;
 
 
       if (!request) {
         request = DataUtils.init(data.request);
-        autoActivate = state.aux?.newAutoActivate;
+        autoActivate = !!state.aux?.newAutoActivate;
       }
 
       if (response && Object.keys(response).length === 1 && response.id) { // delete
-        request = DataUtils.removeResponse(context, request, response.id);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        request = DataUtils.removeResponse(context!, request, response.id);
         await OhMyResponseHandler.StorageUtils.remove(response.id);
       } else {
-        if (context.path) { // new/update
-          response = await OhMyResponseHandler.StorageUtils.get<IMock>(response.id);
-          response = update<IMock>(context.path, response as IMock, context.propertyName, data.response[context.propertyName]);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        if (context!.path) { // new/update
+          response = await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id);
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          response = update<IOhMyResponse>(context!.path, response as IOhMyResponse, context!.propertyName!, data.response[context!.propertyName!]);
           response.modifiedOn = timestamp();
         } else { // new, update or delete
-          const base = response.id ? await OhMyResponseHandler.StorageUtils.get<IMock>(response.id) : null;
+          const base = response.id ? await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id) : null;
           response = MockUtils.init(base, response);
 
           if (base) {
@@ -56,9 +60,9 @@ export class OhMyResponseHandler {
         // }
       }
 
-      OhMyResponseHandler.updateFiltering(state, request, response as IMock);
+      OhMyResponseHandler.updateFiltering(state, request, response as IOhMyResponse);
 
-      OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
+      OhMyResponseHandler.queue.addPacket(payloadType.DOMAIN, {
         payload: {
           data: request,
           context: {
@@ -69,14 +73,15 @@ export class OhMyResponseHandler {
         }
       });
 
-      return StorageUtils.set(response.id, response).then(() => response as IMock);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return StorageUtils.set(response.id!, response).then(() => response as IOhMyResponse);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log('nonoo', err);
     }
   }
 
-  static async updateFiltering(state: IState, request: IData, response: IMock) {
+  static async updateFiltering(state: IOhMyDomain, request: IOhMyRequest, response: IOhMyResponse) {
     try {
       const searchTerms = splitIntoSearchTerms(state.aux.filterKeywords);
 
@@ -87,11 +92,12 @@ export class OhMyResponseHandler {
       const searchOpts = state.aux.filterOptions;
       const data = { [request.id]: request };
 
-      const results = shallowSearch(data, searchTerms, searchOpts);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const results = shallowSearch(data, searchTerms, searchOpts!);
       let addRequest = !!results[request.id];
       if (!addRequest) { // Deep search needed
-        const mocks = (await Promise.all(Object.keys(request.mocks).filter(mid => mid !== response.id).map(
-          mid => StorageUtils.get<IMock>(mid)))
+        const mocks = (await Promise.all(Object.keys(request.responses).filter(mid => mid !== response.id).map(
+          mid => StorageUtils.get<IOhMyResponse>(mid)))
         ).reduce((acc, mock) => {
           acc[mock.id] = mock;
           return acc;
@@ -109,11 +115,12 @@ export class OhMyResponseHandler {
         state.aux.filteredRequests = state.aux.filteredRequests ? [...state.aux.filteredRequests, request.id] : [request.id];
       } else if (!addRequest && index > -1) {
         isUpdated = true;
-        state.aux.filteredRequests.splice(index, 1);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        state.aux.filteredRequests!.splice(index, 1);
       }
 
       if (isUpdated) {
-        OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
+        OhMyResponseHandler.queue.addPacket(payloadType.DOMAIN, {
           payload: {
             data: state.aux.filteredRequests,
             context: {

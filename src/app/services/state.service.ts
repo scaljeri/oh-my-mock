@@ -113,7 +113,7 @@ export class OhMyStateService {
         const type = update.newValue?.type || update.oldValue?.type;
 
         switch (type) {
-          case objectTypes.STATE:
+          case objectTypes.DOMAIN:
             if (update.newValue) {
               if ((update.newValue as IOhMyDomain).domain === this.context.domain) {
                 this.state = update.newValue as IOhMyDomain;
@@ -125,7 +125,7 @@ export class OhMyStateService {
 
             this.stateSubject.next(this.state);
             break;
-          case objectTypes.MOCK:
+          case objectTypes.RESPONSE:
             this.responseSubject.next(update.newValue as IOhMyResponse);
             break;
           case objectTypes.STORE:

@@ -15,7 +15,7 @@ export function patchStatus() {
       if (!this.ohResult) {
         this.ohResult = findCachedResponse({
           url: this.ohUrl || this.responseURL.replace(window.origin, ''),
-          method: this.ohMethod
+          requestMethod: this.ohMethod
         });
       }
 
@@ -26,6 +26,7 @@ export function patchStatus() {
 }
 
 export function unpatchStatus() {
-  Object.defineProperty(window.XMLHttpRequest.prototype, 'status', descriptor);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  Object.defineProperty(window.XMLHttpRequest.prototype, 'status', descriptor!);
   delete window.XMLHttpRequest.prototype['__status'];
 }

@@ -40,9 +40,6 @@ export enum objectTypes {
   DOMAIN = 'domain',
   REQUEST = 'request',
   RESPONSE = 'response',
-
-  STATE = 'state',
-  MOCK = 'response', // Deprecated
 }
 
 export enum packetType {
@@ -106,7 +103,7 @@ export const RESPONSE_RULE_TYPES = {
   username: 'Username'
 };
 
-export enum IOhMyMockResponseStatus {
+export enum IOhMyResponseStatus {
   OK,
   ERROR,
   NO_CONTENT,

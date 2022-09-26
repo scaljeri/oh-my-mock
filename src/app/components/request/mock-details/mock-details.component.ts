@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IMock, IOhMyContext } from '@shared/type';
+import { IOhMyResponse, IOhMyContext } from '@shared/type';
 import { Observable, Subscription } from 'rxjs';
 import { OhMyState } from '../../../services/oh-my-store';
 
@@ -12,7 +12,7 @@ import { OhMyState } from '../../../services/oh-my-store';
   styleUrls: ['./mock-details.component.scss']
 })
 export class MockDetailsComponent implements OnInit, OnChanges {
-  @Input() response: IMock;
+  @Input() response: IOhMyResponse;
   @Input() requestId: string;
   @Input() context: IOhMyContext;
 
@@ -45,12 +45,12 @@ export class MockDetailsComponent implements OnInit, OnChanges {
       contentType: new UntypedFormControl(this.response.headersMock['content-type'] || '', { updateOn: 'blur' })
     });
 
-    this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IMock> & { contentType: string }) => {
+    this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IOhMyResponse> & { contentType: string }) => {
       if (this.statusCodeCtrl.hasError('required')) {
         delete values.statusCode;
       }
 
-      delete values.contentType; // is not part if IMock
+      delete values.contentType; // is not part if IOhMyResponse
 
       this.storeService.upsertResponse({
         ...values,
