@@ -2,7 +2,7 @@ import { IOhMyRequestMethod } from "./request";
 
 export interface IOhMyAPIRequest {
   url: string;
-  requestMethod: IOhMyRequestMethod;
+  requestMethod?: IOhMyRequestMethod;
   body?: unknown;
-  headers: Record<string, string>;
+  headers?: Record<string, string>;
 }

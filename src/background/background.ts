@@ -1,21 +1,21 @@
 ///<reference types="chrome"/>
 
 import { DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
-import { IOhMyBackup, IOhMyPopupActive, IState } from '../shared/type';
+import { IOhMyBackup, IOhMyPopupActive, IOhMyDomain } from '../shared/type';
 import { StorageUtils } from '../shared/utils/storage';
 import { IPacket } from '../shared/packet-type';
 import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
-import { connectWithLocalServer } from './dispatch-remote';
+// import { connectWithLocalServer } from './dispatch-remote';
 // import { activate } from './handle-updates';
 
 import './server-dispatcher';
 import { UpdateHandler } from './handle-updates';
 import { OhMyStoreHandler } from './handlers/store-handler';
 
-connectWithLocalServer();
+// connectWithLocalServer();
 
 const updater = new UpdateHandler();
 updater.registerHandler(payloadType.STORE, OhMyStoreHandler);
@@ -96,8 +96,8 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 setTimeout(async () => {
   await initStorage();
 
-  const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
-  if (!state || Object.keys(state.data).length === 0) {
+  const state = await StorageUtils.get<IOhMyDomain>(DEMO_TEST_DOMAIN)
+  if (!state || Object.keys(state.requests).length === 0) {
     await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
   }
 });
@@ -169,11 +169,13 @@ let xid;
 // }, 1000);
 
 chrome.tabs.onActivated.addListener(function (activeInfo) {
+  // eslint-disable-next-line no-console
   console.log('C', activeInfo.tabId);
 });
 
 chrome.windows.onFocusChanged.addListener((windowId) => {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+    // eslint-disable-next-line no-console
     console.log('X', tabs[0]?.id, windowId, tabs[0]);
   });
 });

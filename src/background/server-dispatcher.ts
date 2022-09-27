@@ -1,7 +1,7 @@
 import { connectWithLocalServer, dispatchRemote } from "./dispatch-remote";
-import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
+import { appSources, IOhMyResponseStatus, payloadType } from "../shared/constants";
 import { IOhMessage, IOhMyPacketContext } from "../shared/packet-type";
-import { IOhMyAPIRequest, IOhMyUpsertData, IState, IOhMyMockResponse } from "../shared/type";
+import { IOhMyAPIRequest, IOhMyUpsertRequest, IOhMyDomain, IOhMyMockResponse, IOhMyRequest } from "../shared/type";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
@@ -11,7 +11,7 @@ import { DataUtils } from "../shared/utils/data";
 const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
   .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
-    const request = { ...packet.payload.data } as IOhMyUpsertData;
+    const request = { ...packet.payload.data } as IOhMyUpsertRequest;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = await dispatch2Server(request, packet.payload.context!.domain);
 
@@ -22,16 +22,17 @@ connectWithLocalServer();
 
 // -- ******************************
 
-export async function dispatch2Server(request: IOhMyUpsertData, domain: string): Promise<IOhMyMockResponse> {
-  const state = await StorageUtils.get<IState>(domain);
+export async function dispatch2Server(request: IOhMyUpsertRequest, domain: string): Promise<IOhMyMockResponse> {
+  const state = await StorageUtils.get<IOhMyDomain>(domain);
   let data; // = request;
   let mock;
 
   try {
     if (state) {
-      data = StateUtils.findRequest(state, request);
+      const lookupRequest = (requestId) => StorageUtils.get<IOhMyRequest>(requestId);
+      data = StateUtils.findRequest(state, request, lookupRequest);
       if (data) {
-        const mockId = DataUtils.activeMock(data, state.context);
+        const mockId = DataUtils.activeResponse(data, state.context);
 
         if (mockId) {
           mock = await StorageUtils.get(mockId);
@@ -56,7 +57,7 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
       }
     });
 
-    return result || { status: ohMyMockStatus.NO_CONTENT }
+    return result || { status: IOhMyResponseStatus.NO_CONTENT }
   } catch (err) {
 
   }

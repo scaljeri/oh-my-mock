@@ -1,6 +1,6 @@
 import { BehaviorSubject, distinctUntilChanged, filter, Observable } from "rxjs";
 import { STORAGE_KEY } from "../shared/constants";
-import { IOhMyMock, IState } from "../shared/type";
+import { IOhMyResponse, IOhMyDomain, IOhMyMock } from "../shared/type";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
 export interface IOhMyCache {
@@ -20,10 +20,10 @@ export class OhMyContentState {
   private cache: IOhMyCache = {};
   private subjects: Record<string, BehaviorSubject<any>> = {};
   private storage: IOhMyStorage;
-  private isActiveSubject = new BehaviorSubject(undefined);
+  private isActiveSubject = new BehaviorSubject<boolean | undefined>(undefined);
 
   isActive$ = this.isActiveSubject.asObservable().pipe(distinctUntilChanged());
-  state: IState;
+  state: IOhMyDomain;
 
   constructor() {
     StorageUtils.listen();
@@ -31,7 +31,7 @@ export class OhMyContentState {
       this.cache[key] = update.newValue;
 
       if (key === OhMyContentState.host) {
-        this.state = update.newValue as IState;
+        this.state = update.newValue as IOhMyDomain;
         // this.isActiveSubject.next(this.isActive(this.state));
       }
 
@@ -67,7 +67,7 @@ export class OhMyContentState {
     return StorageUtils.set(key, value);
   }
 
-  getState(): Promise<IState> {
+  getState(): Promise<IOhMyDomain> {
     return this.get(OhMyContentState.host);
   }
 
@@ -93,7 +93,7 @@ export class OhMyContentState {
   //   return OhMyContentState.isPopupOpen;
   // }
 
-  isActive(state: IState = this.state): boolean {
+  isActive(state: IOhMyDomain = this.state): boolean {
     // return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
     return true;
   }
@@ -118,7 +118,7 @@ export class OhMyContentState {
     window.name = JSON.stringify(this.storage);
   }
 
-  get isReloaded() {
-    return this.storage?.isReloaded;
+  get isReloaded(): boolean {
+    return !!this.storage?.isReloaded;
   }
 }

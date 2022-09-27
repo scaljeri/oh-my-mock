@@ -3,12 +3,11 @@ import { update } from "../../shared/utils/partial-updater";
 import { STORAGE_KEY } from "../../shared/constants";
 import { IOhMyMock } from "../../shared/type";
 import { StorageUtils } from "../../shared/utils/storage";
-import { IOhMyHandler } from "./handler";
 
-export class OhMyStoreHandler implements IOhMyHandler<IOhMyMock> {
+export class OhMyStoreHandler {
   static StorageUtils = StorageUtils;
 
-  async update({ data, context }: IPacketPayload<IOhMyMock | boolean, IOhMyPacketContext>): Promise<IOhMyMock | void> {
+  static async update({ data, context }: IPacketPayload<IOhMyMock | boolean, IOhMyPacketContext>): Promise<IOhMyMock | void> {
     let store = data as IOhMyMock;
 
     if (data === undefined) {

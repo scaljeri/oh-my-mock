@@ -101,7 +101,7 @@ const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
 
 queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
-queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
+queue.addHandler(payloadType.DOMAIN, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
 queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
@@ -122,7 +122,7 @@ const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 contentScriptListeners(messageBus); // TODO
 popupListeners(messageBus);
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.DOMAIN, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
   [appSources.CONTENT, appSources.POPUP])
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {

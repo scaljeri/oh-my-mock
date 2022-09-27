@@ -9,16 +9,17 @@ import { sendMessageToInjected } from "../send-to-injected";
 export function handleAPISettings(messageBus: OhMyMessageBus) {
   return async ({ packet }: IOhMessage<IOhMyMockSettings>) => {
     const payload = packet.payload;
-    const data = payload.data;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const data = payload.data!;
 
     let state;
     if (data.active !== undefined) {
-      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'popupActive', payloadType.STATE, payload.context);
-      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
+      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'popupActive', payloadType.DOMAIN, payload.context);
+      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.active, '$.aux', 'appActive', payloadType.DOMAIN, payload.context);
     }
 
     if (data.blurImages !== undefined) {
-      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE, payload.context);
+      state = await OhMySendToBg.patch<boolean, IOhMyImportStatus>(data.blurImages, '$.aux', 'blurImages', payloadType.DOMAIN, payload.context);
     }
 
     if (data.active && state.domain === window.location.origin) {

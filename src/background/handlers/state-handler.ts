@@ -4,12 +4,11 @@ import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
-import { IOhMyHandler } from "./handler";
 
-export class OhMyStateHandler implements IOhMyHandler<IOhMyDomain> {
+export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
-  async update(payload: IPacketPayload<IOhMyDomain | IOhMyRequest | unknown, IOhMyPacketContext>): Promise<IOhMyDomain | void> {
+  static async update(payload: IPacketPayload<IOhMyDomain | IOhMyRequest | unknown, IOhMyPacketContext>): Promise<IOhMyDomain | void> {
     try {
       const { data, context } = payload;
 
