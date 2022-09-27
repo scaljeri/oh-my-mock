@@ -1,6 +1,7 @@
 import { objectTypes } from "../constants";
 import { IOhMyPreset, IOhMyPresetId } from "./preset";
 import { IOhMyRequestId } from "./request";
+import { IOhMyDomainContext } from './context';
 
 // URL of the website
 export type IOhMyDomainId = string;
@@ -13,7 +14,7 @@ export interface IOhMyDomain {
   requests: IOhMyRequestId[];
   aux: IOhMyAux;
   presets: Record<IOhMyPresetId, IOhMyPreset>;
-  context: IOhMyContext;
+  context: IOhMyDomainContext;
   modifiedOn?: string;
 }
 
@@ -28,9 +29,3 @@ export interface IOhMyAux {
   filterOptions?: Record<string, boolean>;
 }
 
-export interface IOhMyContext {
-  domain: IOhMyDomainId;
-  presetId?: IOhMyPresetId;
-  active?: boolean;
-  id?: string;
-}

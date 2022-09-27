@@ -17,17 +17,11 @@ export interface IPacket<T = unknown, U = IOhMyContext> {
   version?: string;
 }
 
-export interface IOhMyPacketContext extends IOhMyContext {
-  id?: string;
-  path?: string;
-  propertyName?: string;
-}
-
-export interface IPacketPayload<T = unknown, U = IOhMyContext> {
+export interface IPacketPayload<D = unknown, C = IOhMyContext> {
   id?: string;
   type: payloadType;
-  context?: U
-  data?: T;
+  context?: C
+  data?: D;
   description: string;
 }
 

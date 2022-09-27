@@ -7,7 +7,7 @@ import { StorageUtils } from "../../shared/utils/storage";
 export class OhMyImportHandler {
   static StorageUtils = StorageUtils;
 
-  static async upsert(payload: IPacketPayload<OhMyAPIUpsert, IOhMyContext>): Promise<IOhMyImportStatus> {
+  static async update(payload: IPacketPayload<OhMyAPIUpsert, IOhMyContext>): Promise<IOhMyImportStatus> {
     let result = { status: ImportResultEnum.ERROR };
 
     try {

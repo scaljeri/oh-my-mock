@@ -14,17 +14,22 @@ import { openPopup } from './open-popup';
 import './server-dispatcher';
 import { UpdateHandler } from './handle-updates';
 import { OhMyStoreHandler } from './handlers/store-handler';
+import { OhMyImportHandler } from './handlers/import';
+import { OhMyRemoveHandler } from './handlers/remove-handler';
+import { OhMyResetHandler } from './handlers/reset-handler';
+import { OhMyResponseHandler } from './handlers/response-handler';
+import { OhMyStateHandler } from './handlers/state-handler';
 
 // connectWithLocalServer();
 
 const updater = new UpdateHandler();
-updater.registerHandler(payloadType.STORE, OhMyStoreHandler);
-  // queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
-  // queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
-  // queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
-  // queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
-  // queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
-  // queue.addHandler(payloadType.RESET, OhMyResetHandler.update);
+updater.registerHandler(payloadType.STORE, OhMyStoreHandler)
+  .registerHandler(payloadType.STORE, OhMyStoreHandler)
+  .registerHandler(payloadType.DOMAIN, OhMyStateHandler)
+  .registerHandler(payloadType.RESPONSE, OhMyResponseHandler)
+  .registerHandler(payloadType.REMOVE, OhMyRemoveHandler)
+  // .registerHandler(payloadType.UPSERT, OhMyImportHandler)
+  .registerHandler(payloadType.RESET, OhMyResetHandler);
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;

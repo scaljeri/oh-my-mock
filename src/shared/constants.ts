@@ -42,6 +42,11 @@ export enum objectTypes {
   RESPONSE = 'response',
 }
 
+export enum contextTypes {
+  DOMAIN = 'domain',
+  PROPERTY = 'property'
+}
+
 export enum packetType {
   FULL = 'full',
   PATCH = 'patch'
