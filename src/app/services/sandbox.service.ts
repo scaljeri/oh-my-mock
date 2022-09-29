@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Subject, take } from 'rxjs';
-import { IOhMyResponse, IOhMyMockResponse, IOhMyRequest } from '@shared/type';
+import { IOhMyResponse, IOhMyMockResponse, IOhMyRequest } from '@shared/types';
 import { OhMyStateService } from './state.service';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';

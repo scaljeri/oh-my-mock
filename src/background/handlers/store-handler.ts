@@ -1,23 +1,27 @@
 import { IPacketPayload } from "../../shared/packet-type";
 import { update } from "../../shared/utils/partial-updater";
 import { STORAGE_KEY } from "../../shared/constants";
-import { IOhMyMock } from "../../shared/type";
+import { IOhMyContext, IOhMyMock, IOhMyPropertyContext } from "../../shared/types";
 import { StorageUtils } from "../../shared/utils/storage";
-import { IOhMyContext, IOhMyPropertyContext } from "../../shared/types/context";
+import { IOhMyHandlerConstructor, staticImplements } from "./handler";
 
+type IOhMyInputData = IOhMyMock | IOhMyMock[keyof IOhMyMock];
+
+@staticImplements<IOhMyHandlerConstructor<IOhMyInputData, IOhMyMock>>()
 export class OhMyStoreHandler {
   static StorageUtils = StorageUtils;
 
-  static async update({ data, context }: IPacketPayload<IOhMyMock | IOhMyMock[keyof IOhMyMock], IOhMyPropertyContext>): Promise<IOhMyMock | void> {
-    let store = data as IOhMyMock;
+  static async update(payload: IPacketPayload<IOhMyInputData, IOhMyContext>): Promise<IOhMyMock | void> {
+    let store = payload.data as IOhMyMock;
+    const context = payload.context as IOhMyPropertyContext;
 
-    if (data === undefined) {
+    if (store === undefined) {
       return; // Nothing todo
     }
 
     try { // If `path` is set, `data` !== IOhMyMock, but just a property value
       if (context && context.path) {
-        const value = data as IOhMyMock[keyof IOhMyMock];
+        const value = payload.data as IOhMyMock[keyof IOhMyMock];
         store = await OhMyStoreHandler.StorageUtils.get<IOhMyMock>(STORAGE_KEY);
         store = update<IOhMyMock>(context.path, store, context.propertyName, value);
       } else if (context?.propertyName) {

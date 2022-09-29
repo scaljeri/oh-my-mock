@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
-import { ResetStateOptions } from '@shared/type';
+import { ResetStateOptions } from '@shared/types';
 import { AppStateService } from '../../services/app-state.service';
 
 @Component({

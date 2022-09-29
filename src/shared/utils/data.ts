@@ -1,5 +1,5 @@
 import { objectTypes } from '../constants';
-import { IOhMyContext, IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse, IOhMyDomainPresets, IOhMyRequestId } from '../type';
+import { IOhMyContext, IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse, IOhMyDomainPresets, IOhMyRequestId, IOhMyDomainContext, IOhMyPreset } from '../types';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -17,7 +17,7 @@ export class DataUtils {
     return this.create(data);
   }
 
-  static getSelectedResponse(request: IOhMyRequest, context: IOhMyContext | IOhMyPresetId): IOhMyShallowResponse | undefined {
+  static getSelectedResponse(request: IOhMyRequest, context: IOhMyDomainContext | IOhMyPresetId): IOhMyShallowResponse | undefined {
     let presetId = context as IOhMyPresetId;
 
     if (typeof context === 'object') {
@@ -28,16 +28,16 @@ export class DataUtils {
     return request.responses[requestPreset.responseId];
   }
 
-  static isSPresetEnabled(data: IOhMyRequest, context: IOhMyContext): boolean {
+  static isSPresetEnabled(data: IOhMyRequest, context: IOhMyDomainContext): boolean {
     return data.presets[context.presetId].isActive;
   }
 
   // Weird function, it just returns the response for the context, not sure what `active` means!!
-  static activeResponse(request: IOhMyRequest, context: IOhMyContext): IOhMyResponseId {
+  static activeResponse(request: IOhMyRequest, context: IOhMyDomainContext): IOhMyResponseId {
     return request.presets[context.presetId].responseId;
   }
 
-  static addResponse(context: IOhMyContext, request: IOhMyRequest, response: Partial<IOhMyResponse>, autoActivate = true): IOhMyRequest {
+  static addResponse(context: IOhMyDomainContext, request: IOhMyRequest, response: Partial<IOhMyResponse>, autoActivate = true): IOhMyRequest {
     request = {
       ...request,
       responses: {
@@ -72,12 +72,12 @@ export class DataUtils {
     // TODO: The following assumes that only the active mock can be deleted
     delete request.responses[responseId];
 
-    const nextActiveResponse = DataUtils.getNextActiveResponse(request);
-
-    request.presets[context.presetId] = {
-      isActive: false,
-      responseId: nextActiveResponse?.id,
-      bodyId: 'default'
+    const [presetId, preset] = Object.entries(request.presets).find(([, value]) => value.responseId === responseId) as [string, IOhMyPreset];
+    if (presetId) {
+      request.presets[presetId] = {
+        ...preset,
+        responseId: DataUtils.getNextActiveResponse(request)?.id
+      }
     }
 
     return request;

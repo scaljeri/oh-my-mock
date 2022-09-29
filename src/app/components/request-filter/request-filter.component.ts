@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { IOhMyRequest, IOhMyResponse, IOhMyRequestId, IOhMyResponseId } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyRequestId, IOhMyResponseId } from '@shared/types';
 import { BehaviorSubject, debounceTime, filter, map, merge, Observable, of, Subscription, switchMap } from 'rxjs';
 import { WebWorkerService } from '../../services/web-worker.service';
 import { shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '@shared/utils/search';

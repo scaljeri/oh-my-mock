@@ -1,5 +1,5 @@
 import { STORAGE_KEY } from "../shared/constants";
-import { IOhMyMock, IOhMyDomain, IOhMyDomainId } from "../shared/type";
+import { IOhMyMock, IOhMyDomain, IOhMyDomainId } from "../shared/types";
 import { MigrateUtils } from "../shared/utils/migrate";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";

@@ -1,14 +1,18 @@
-import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IOhMyMock, IOhMyResponse, IOhMyDomain } from "../../shared/type";
+import { IPacketPayload } from "../../shared/packet-type";
+import { IOhMyMock, IOhMyResponse, IOhMyDomain, IOhMyContext, IOhMyPropertyContext } from "../../shared/types";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StorageUtils } from "../../shared/utils/storage";
 
-export interface IOhMyHandler<T = unknown, K = IOhMyMock | IOhMyResponse | IOhMyDomain> {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface IOhMyHandler { }
+
+export interface IOhMyHandlerConstructor<T = unknown, K = IOhMyMock | IOhMyResponse | IOhMyDomain> {
+  new(): IOhMyHandler;
+  StorageUtils: StorageUtils;
+  update: (input: IPacketPayload<T, IOhMyContext>) => Promise<K | void>;
   queue?: OhMyQueue;
-  update: (input: IPacketPayload<T, IOhMyPacketContext>) => Promise<K | void>;
 }
 
-export interface IOhMyHandlerConstructor {
-  new(hour: number, minute: number): IOhMyHandler;
-  StorageUtils: StorageUtils;
+export function staticImplements<T>() {
+  return <U extends T>(constructor: U) => { constructor };
 }

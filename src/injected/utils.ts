@@ -1,5 +1,5 @@
-import { IOhMyResponseStatus, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyMockResponse, IOhMyRequest } from '../shared/type';
+import { OhMyResponseStatus, STORAGE_KEY } from '../shared/constants';
+import { IOhMyAPIRequest, IOhMyMockResponse, IOhMyRequest } from '../shared/types';
 import { isImage } from '../shared/utils/image';
 import { errorBuilder, debugBuilder, logBuilder, warnBuilder } from '../shared/utils/logging';
 
@@ -13,13 +13,13 @@ export const error = errorBuilder();
 export const logMocked = (request: IOhMyAPIRequest, data: IOhMyMockResponse): void => {
   const msg = `Mocked (${request.requestMethod}) ${request.url} ->`;
   switch (data.status) {
-    case IOhMyResponseStatus.ERROR:
+    case OhMyResponseStatus.ERROR:
       data.message && error(data.message);
       break;
-    case IOhMyResponseStatus.NO_CONTENT:
+    case OhMyResponseStatus.NO_CONTENT:
       log(`${msg} New request`);
       break;
-    case IOhMyResponseStatus.INACTIVE:
+    case OhMyResponseStatus.INACTIVE:
       log(`${msg} Skipped / not mocked`);
       break;
     default:

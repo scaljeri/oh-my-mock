@@ -1,7 +1,7 @@
 import { connectWithLocalServer, dispatchRemote } from "./dispatch-remote";
-import { appSources, IOhMyResponseStatus, payloadType } from "../shared/constants";
-import { IOhMessage, IOhMyPacketContext } from "../shared/packet-type";
-import { IOhMyAPIRequest, IOhMyUpsertRequest, IOhMyDomain, IOhMyMockResponse, IOhMyRequest } from "../shared/type";
+import { appSources, OhMyResponseStatus, payloadType } from "../shared/constants";
+import { IOhMessage } from "../shared/packet-type";
+import { IOhMyAPIRequest, IOhMyUpsertRequest, IOhMyDomain, IOhMyMockResponse, IOhMyRequest, IOhMyDomainContext } from "../shared/types";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
@@ -10,10 +10,10 @@ import { DataUtils } from "../shared/utils/data";
 
 const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
-  .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
+  .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest>) => {
     const request = { ...packet.payload.data } as IOhMyUpsertRequest;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const result = await dispatch2Server(request, packet.payload.context!.domain);
+    const result = await dispatch2Server(request, (packet.payload.context as IOhMyDomainContext).key);
 
     callback(result);
   });
@@ -57,8 +57,8 @@ export async function dispatch2Server(request: IOhMyUpsertRequest, domain: strin
       }
     });
 
-    return result || { status: IOhMyResponseStatus.NO_CONTENT }
+    return result || { status: OhMyResponseStatus.NO_CONTENT }
   } catch (err) {
-
+    throw new Error(err);
   }
 }

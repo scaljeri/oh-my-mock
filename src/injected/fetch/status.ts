@@ -1,5 +1,5 @@
 // TODO
-import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -20,13 +20,13 @@ export function patchStatus() {
             url: this.ohUrl || this.url.replace(window.origin, ''),
             requestMethod: this.ohMethod || 'GET'
           });
-          if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
+          if (this.ohResult && this.ohResult.response.status === OhMyResponseStatus.OK) {
             return this.ohResult.response?.statusCode;
           } else {
             persistResponse(this, this.ohResult?.request);
             return this.__status;
           }
-        } else if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
+        } else if (this.ohResult && this.ohResult.response.status === OhMyResponseStatus.OK) {
           return this.ohResult.response?.statusCode;
         } else {
           return this.__status;

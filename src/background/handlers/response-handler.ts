@@ -1,12 +1,12 @@
-import { IOhMyResponseUpdate, IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyRequestId } from "../../shared/type";
+import { IOhMyResponseUpdate, IPacketPayload } from "../../shared/packet-type";
+import { IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyRequestId, IOhMyPropertyContext } from "../../shared/types";
 import { MockUtils } from "../../shared/utils/mock";
 import { update } from "../../shared/utils/partial-updater";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { DataUtils } from "../../shared/utils/data";
-import { payloadType } from "../../shared/constants";
+import { contextTypes, payloadType } from "../../shared/constants";
 import { timestamp } from "../../shared/utils/timestamp";
 import { deepSearch, shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '../../shared/utils/search';
 // import { shallowSearch, splitIntoSearchTerms } from "../../shared/utils/search";
@@ -15,10 +15,10 @@ export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IOhMyResponse | void> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPropertyContext>): Promise<IOhMyResponse | void> {
     try {
-      const state = await OhMyResponseHandler.StorageUtils.get<IOhMyDomain>(context?.domain);
-      if (context?.domain || !data || !state) {
+      const state = await OhMyResponseHandler.StorageUtils.get<IOhMyDomain>(context?.key);
+      if (context?.key || !data || !state) {
         return;
       }
 
@@ -45,7 +45,7 @@ export class OhMyResponseHandler {
           response = update<IOhMyResponse>(context!.path, response as IOhMyResponse, context!.propertyName!, data.response[context!.propertyName!]);
           response.modifiedOn = timestamp();
         } else { // new, update or delete
-          const base = response.id ? await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id) : null;
+          const base = response.id ? await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id) : undefined;
           response = MockUtils.init(base, response);
 
           if (base) {
@@ -66,10 +66,11 @@ export class OhMyResponseHandler {
         payload: {
           data: request,
           context: {
+            type: contextTypes.PROPERTY,
             path: `$.data`,
             propertyName: request.id,
             domain: state.domain
-          } as IOhMyPacketContext
+          }
         }
       });
 
@@ -124,10 +125,11 @@ export class OhMyResponseHandler {
           payload: {
             data: state.aux.filteredRequests,
             context: {
+              type: contextTypes.PROPERTY,
               path: `$.aux`,
               propertyName: 'filteredRequests',
               domain: state.domain
-            } as IOhMyPacketContext
+            }
           }
         });
       }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { objectTypes, payloadType, STORAGE_KEY } from '@shared/constants';
 
-import { IOhMyMock, IOhMyDomainId, IOhMyDomain, IOhMyResponseId, IOhMyRequest, IOhMyResponse, IOhMyContext, IOhMyRequestId, IOhMyAux, IOhMyPresetId, IOhMyShallowResponse } from '@shared/type';
+import { IOhMyMock, IOhMyDomainId, IOhMyDomain, IOhMyResponseId, IOhMyRequest, IOhMyResponse, IOhMyContext, IOhMyRequestId, IOhMyAux, IOhMyPresetId, IOhMyShallowResponse, IOhMyDomainContext } from '@shared/types';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { uniqueId } from '@shared/utils/unique-id';
@@ -25,8 +25,8 @@ export class OhMyState {
     return await this.storageService.get<IOhMyMock>(STORAGE_KEY);
   }
 
-  async getState(context: IOhMyContext): Promise<IOhMyDomain> {
-    return await this.storageService.get(context.domain) || StateUtils.init({ domain: context.domain });
+  async getState(context: IOhMyDomainContext): Promise<IOhMyDomain> {
+    return await this.storageService.get(context.key) || StateUtils.init({ domain: context.key });
   }
 
   async getResponse(id: IOhMyResponseId): Promise<IOhMyResponse | undefined> {
@@ -51,8 +51,8 @@ export class OhMyState {
     return retVal;
   }
 
-  async upsertState(state: Partial<IOhMyDomain>, context?: IOhMyContext): Promise<IOhMyDomain> {
-    const source = await this.storageService.get<IOhMyDomain>(context?.domain || state.domain);
+  async upsertState(state: Partial<IOhMyDomain>, context?: IOhMyDomainContext): Promise<IOhMyDomain> {
+    const source = await this.storageService.get<IOhMyDomain>(context?.key || state.domain);
     const retVal = {
       ...(source && { ...source }),
       ...state
@@ -64,8 +64,8 @@ export class OhMyState {
     return retVal;
   }
 
-  async newPreset(label: string, id: IOhMyPresetId, context: IOhMyContext, activate = true): Promise<IOhMyDomain> {
-    const domain = await this.storageService.get<IOhMyDomain>(context.domain);
+  async newPreset(label: string, id: IOhMyPresetId, context: IOhMyDomainContext, activate = true): Promise<IOhMyDomain> {
+    const domain = await this.storageService.get<IOhMyDomain>(context.key);
     domain.presets[id] = { id, label }
 
     if (activate) {
@@ -115,7 +115,7 @@ export class OhMyState {
     return retVal;
   }
 
-  async upsertRequest(request: Partial<IOhMyRequest>, context: IOhMyContext): Promise<IOhMyDomain> {
+  async upsertRequest(request: Partial<IOhMyRequest>, context: IOhMyDomainContext): Promise<IOhMyDomain> {
     let state = await this.getState(context);
     const requestLookup = (requestId: IOhMyRequestId) => this.storageService.get<IOhMyRequest>(requestId);
     const retVal = {
@@ -136,7 +136,7 @@ export class OhMyState {
     return state;
   }
 
-  async cloneRequest(requestId: IOhMyRequestId, sourceContext: IOhMyContext, context?: IOhMyContext): Promise<IOhMyRequest> {
+  async cloneRequest(requestId: IOhMyRequestId, sourceContext: IOhMyDomainContext, context?: IOhMyDomainContext): Promise<IOhMyRequest> {
     let domain = await this.getState(sourceContext);
     context ??= sourceContext; // If clone happens inside the same context
 
@@ -164,7 +164,7 @@ export class OhMyState {
     return request;
   }
 
-  async deleteRequest(request: Partial<IOhMyRequest>, context: IOhMyContext): Promise<IOhMyDomain> {
+  async deleteRequest(request: Partial<IOhMyRequest>, context: IOhMyDomainContext): Promise<IOhMyDomain> {
     const state = await this.getState(context);
     const requestLookup = (requestId: IOhMyRequestId) => this.storageService.get<IOhMyRequest>(requestId);
     request = await (StateUtils.findRequest(state, request, requestLookup));
@@ -186,7 +186,7 @@ export class OhMyState {
     return state;
   }
 
-  async upsertRequests(requests: Partial<IOhMyRequest> | Partial<IOhMyRequest>[], context: IOhMyContext): Promise<IOhMyDomain> {
+  async upsertRequests(requests: Partial<IOhMyRequest> | Partial<IOhMyRequest>[], context: IOhMyDomainContext): Promise<IOhMyDomain> {
     let state = await this.getState(context);
 
     if (!Array.isArray(requests)) {
@@ -200,7 +200,7 @@ export class OhMyState {
     return state;
   }
 
-  async deleteResponse(responseId: IOhMyResponseId, requestId: IOhMyRequestId, context: IOhMyContext): Promise<IOhMyDomain> {
+  async deleteResponse(responseId: IOhMyResponseId, requestId: IOhMyRequestId, context: IOhMyDomainContext): Promise<IOhMyDomain> {
     const state = await OhMySendToBg.full<IOhMyResponseUpdate, IOhMyDomain>({
       response: { id: responseId },
       request: { id: requestId }
@@ -209,15 +209,15 @@ export class OhMyState {
     return state;
   }
 
-  async reset(context?: IOhMyContext): Promise<void> {
+  async reset(context?: IOhMyDomainContext): Promise<void> {
     if (context) {
-      await OhMySendToBg.full({ type: objectTypes.DOMAIN, domain: context.domain }, payloadType.REMOVE, context, 'popup;reset');
+      await OhMySendToBg.full({ type: objectTypes.DOMAIN, domain: context.key }, payloadType.REMOVE, context, 'popup;reset');
     } else {
       await OhMySendToBg.full(undefined, payloadType.RESET, context, 'popup;reset;everything');
     }
   }
 
-  async updateAux(aux: IOhMyAux, context: IOhMyContext): Promise<IOhMyDomain> {
+  async updateAux(aux: IOhMyAux, context: IOhMyDomainContext): Promise<IOhMyDomain> {
     let state = await this.getState(context);
     state.aux = { ...state.aux, ...aux };
 

@@ -8,14 +8,15 @@ export type IOhMyContext =
 
 export interface IOhMyDomainContext {
   type: contextTypes.DOMAIN;
-  domain: IOhMyDomainId;
+  key: IOhMyDomainId;
   presetId?: IOhMyPresetId;
   active?: boolean;
   id?: string;
 }
 
 export interface IOhMyPropertyContext {
-  key?: string;
+  id?: string;
+  key?: string; // The key used to retrieve the object from Storage
   type: contextTypes.PROPERTY;
   path: string;
   propertyName: string;

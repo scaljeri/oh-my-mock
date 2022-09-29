@@ -1,8 +1,8 @@
-import { IOhMyAPIRequest, IOhMyRequestMethod } from '../shared/type';
+import { IOhMyAPIRequest, IOhMyRequestMethod } from '../shared/types';
 
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';
-import { IOhMyResponseStatus, STORAGE_KEY } from '../shared/constants';
+import { OhMyResponseStatus, STORAGE_KEY } from '../shared/constants';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
@@ -49,11 +49,11 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
 
   const { response, headers, status, statusCode, delay } = result.response;
 
-  if (status === IOhMyResponseStatus.ERROR) {
+  if (status === OhMyResponseStatus.ERROR) {
     error('Ooops, something went wrong while mocking your FETCH request!')
   }
 
-  if (status !== IOhMyResponseStatus.OK) {
+  if (status !== OhMyResponseStatus.OK) {
     return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
       response.ohResult = await persistResponse(response, result.request);
 

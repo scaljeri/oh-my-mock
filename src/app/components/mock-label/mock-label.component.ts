@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { IOhMyResponse, IOhMyShallowResponse, IOhMyStatusCode } from '@shared/type';
+import { IOhMyResponse, IOhMyShallowResponse, IOhMyStatusCode } from '@shared/types';
 
 @Component({
   selector: 'oh-my-mock-label',

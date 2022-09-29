@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IOhMyRequest, IOhMyContext, IOhMyRequestId, IOhMyDomain } from '@shared/type';
+import { IOhMyRequest, IOhMyContext, IOhMyRequestId, IOhMyDomain, IOhMyDomainContext } from '@shared/types';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
 import { StorageService } from 'src/app/services/storage.service';
@@ -23,7 +23,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   public state: IOhMyDomain;
   public domain: string;
   public navigateToData: IOhMyRequest;
-  context: IOhMyContext;
+  context: IOhMyDomainContext;
   hasData = false;
 
   constructor(

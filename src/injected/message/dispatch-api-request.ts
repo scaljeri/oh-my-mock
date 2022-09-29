@@ -1,10 +1,10 @@
-import { appSources, IOhMyResponseStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
+import { appSources, OhMyResponseStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyAPIRequest } from '../../shared/type';
-import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
+import { IOhMyAPIRequest, IOhMyContext } from '../../shared/types';
+import { IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
@@ -58,7 +58,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest): Promise<IOhM
       context: { id },
       type: payloadType.API_REQUEST,
       data: request
-    } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;
+    } as IPacketPayload<IOhMyAPIRequest, IOhMyContext>;
 
     mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))
@@ -74,7 +74,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest): Promise<IOhM
         }
         mb.clear();
 
-        if (resp.response.status === IOhMyResponseStatus.ERROR) {
+        if (resp.response.status === OhMyResponseStatus.ERROR) {
           // TODO: can this happen????
           // printEvalError(resp.result as string, data);
           // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);

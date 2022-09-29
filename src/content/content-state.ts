@@ -1,6 +1,6 @@
 import { BehaviorSubject, distinctUntilChanged, filter, Observable } from "rxjs";
 import { STORAGE_KEY } from "../shared/constants";
-import { IOhMyResponse, IOhMyDomain, IOhMyMock } from "../shared/type";
+import { IOhMyDomain, IOhMyMock } from "../shared/types";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
 export interface IOhMyCache {

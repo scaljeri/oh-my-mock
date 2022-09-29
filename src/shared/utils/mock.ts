@@ -1,5 +1,5 @@
-import { IOhMyResponse, IOhMyMockResponse, IOhMyResponseSearch, IOhMyShallowResponse, IOhMyResponseId } from '../type'
-import { MOCK_JS_CODE, objectTypes, IOhMyResponseStatus } from '../constants';
+import { IOhMyResponse, IOhMyMockResponse, IOhMyResponseSearch, IOhMyShallowResponse, IOhMyResponseId } from '../types'
+import { MOCK_JS_CODE, objectTypes, OhMyResponseStatus } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
 
@@ -55,14 +55,14 @@ export class MockUtils {
   static mockToResponse(mock?: IOhMyResponse): IOhMyMockResponse {
     if (mock) {
       return {
-        status: IOhMyResponseStatus.OK,
+        status: OhMyResponseStatus.OK,
         response: mock.responseMock,
         headers: mock.headersMock,
         delay: mock.delay,
         statusCode: mock.statusCode
       } as IOhMyMockResponse;
     } else {
-      return { status: IOhMyResponseStatus.NO_CONTENT }
+      return { status: OhMyResponseStatus.NO_CONTENT }
     }
   }
 

@@ -1,5 +1,5 @@
 import { STORAGE_KEY } from '../shared/constants';
-import { IOhMyInjectedState } from '../shared/type';
+import { IOhMyInjectedState } from '../shared/types';
 import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';

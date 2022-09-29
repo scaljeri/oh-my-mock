@@ -1,6 +1,6 @@
 import { STORAGE_KEY } from '../../shared/constants';
 import { IOhMyResponseUpdate } from '../../shared/packet-type';
-import { IOhMyAPIRequest } from '../../shared/type';
+import { IOhMyAPIRequest } from '../../shared/types';
 import { convertToB64 } from '../../shared/utils/binary';
 import { parse } from '../../shared/utils/xhr-headers';
 import { dispatchApiResponse } from '../message/dispatch-api-response';

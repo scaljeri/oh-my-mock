@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
-import { IOhMyMock, IOhMyDomain, IOhMyResponse, IOhMyResponseId, IOhMyContext, IOhMyDomainId } from '@shared/type';
+import { IOhMyMock, IOhMyDomain, IOhMyResponse, IOhMyResponseId, IOhMyContext, IOhMyDomainId, IOhMyDomainContext } from '@shared/types';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
@@ -27,7 +27,7 @@ export class OhMyStateService {
   private responseSubject = new BehaviorSubject<IOhMyResponse>(undefined)
   public response$ = this.responseSubject.asObservable().pipe(filter(m => !!m));
 
-  public context: IOhMyContext;
+  public context: IOhMyDomainContext;
   private contextSubject = new BehaviorSubject<IOhMyContext>(undefined);
   public context$ = this.contextSubject.asObservable().pipe(shareReplay(1));
 
@@ -55,15 +55,15 @@ export class OhMyStateService {
     this.contextSubject.next(this.context);
 
     this.state$ = this.appState.domain$.pipe(
-      map(domain => ({ domain })), // convert domain to context object
+      map(domain => ({ key: domain } as IOhMyDomainContext)), // convert domain to context object
       tap(async context => {
-        if (context.domain !== this.state.domain && context.domain) {
-          this.state = await this.initState(context.domain);
+        if (context.key !== this.state.domain && context.key) {
+          this.state = await this.initState(context.key);
           this.context = this.state.context;
           this.stateSubject.next(this.state);
         }
       }),
-      startWith({ domain }),
+      startWith({ key: domain } as IOhMyDomainContext),
       switchMap(context => this.getState$(context)),
       shareReplay(1));
 
@@ -96,44 +96,44 @@ export class OhMyStateService {
     return this.response$.pipe(filter(r => r?.id === responseId));
   }
 
-  public getState$(context: IOhMyContext): Observable<IOhMyDomain> {
+  public getState$(context: IOhMyDomainContext): Observable<IOhMyDomain> {
     return this.stateSubject.pipe(filter(s => {
-      return s?.domain === context.domain
+      return s?.domain === context.key
     }), shareReplay(1));
   }
 
   private bindStreams(): void {
     // this.ngZone.runOutsideAngular(() => {
-      StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
-        if (!this.context) {
-          return;
-        }
+    StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
+      if (!this.context) {
+        return;
+      }
 
-        // In case of delete/reset `newValue` will be `undefined`
-        const type = update.newValue?.type || update.oldValue?.type;
+      // In case of delete/reset `newValue` will be `undefined`
+      const type = update.newValue?.type || update.oldValue?.type;
 
-        switch (type) {
-          case objectTypes.DOMAIN:
-            if (update.newValue) {
-              if ((update.newValue as IOhMyDomain).domain === this.context.domain) {
-                this.state = update.newValue as IOhMyDomain;
-              }
-
-            } else if ((update.oldValue as IOhMyDomain).domain && !update.newValue) { // reset
-              this.state = StateUtils.init({ domain: (update.oldValue as IOhMyDomain).domain });
+      switch (type) {
+        case objectTypes.DOMAIN:
+          if (update.newValue) {
+            if ((update.newValue as IOhMyDomain).domain === this.context.key) {
+              this.state = update.newValue as IOhMyDomain;
             }
 
-            this.stateSubject.next(this.state);
-            break;
-          case objectTypes.RESPONSE:
-            this.responseSubject.next(update.newValue as IOhMyResponse);
-            break;
-          case objectTypes.STORE:
-            this.store = update.newValue as IOhMyMock;
-            this.storeSubject.next(update.newValue as IOhMyMock);
-            break;
-        }
-      });
+          } else if ((update.oldValue as IOhMyDomain).domain && !update.newValue) { // reset
+            this.state = StateUtils.init({ domain: (update.oldValue as IOhMyDomain).domain });
+          }
+
+          this.stateSubject.next(this.state);
+          break;
+        case objectTypes.RESPONSE:
+          this.responseSubject.next(update.newValue as IOhMyResponse);
+          break;
+        case objectTypes.STORE:
+          this.store = update.newValue as IOhMyMock;
+          this.storeSubject.next(update.newValue as IOhMyMock);
+          break;
+      }
+    });
     // });
   }
 }

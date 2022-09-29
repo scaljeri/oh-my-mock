@@ -1,7 +1,7 @@
 
-import { MOCK_JS_CODE, IOhMyResponseStatus, payloadType, STORAGE_KEY } from "../shared/constants";
-import { IOhMyPacketContext, IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { IOhMyAPIRequest, IOhMyResponse, IOhMyContext, IOhMyMockResponse, IOhMyDomain, IOhMyRequestId, IOhMyRequest } from "../shared/types";
+import { MOCK_JS_CODE, OhMyResponseStatus, payloadType, STORAGE_KEY } from "../shared/constants";
+import { IOhMyReadyResponse, IPacket } from "../shared/packet-type";
+import { IOhMyAPIRequest, IOhMyResponse, IOhMyContext, IOhMyMockResponse, IOhMyDomain, IOhMyRequestId, IOhMyRequest, IOhMyDomainContext } from "../shared/types";
 import { DataUtils } from "../shared/utils/data";
 import { blurBase64, isImage, stripB64Prefix } from "../shared/utils/image";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
@@ -20,7 +20,7 @@ const VERSION = '__OH_MY_VERSION__';
 //  IOhMyReadyResponse
 export async function receivedApiRequest(
   packet: IPacket<IOhMyAPIRequest,
-    IOhMyPacketContext>,
+    IOhMyContext>,
   messageBus: OhMyMessageBus,
   contentState: OhMyContentState) {
   if (packet.version !== VERSION && !VERSION.match('beta')) {
@@ -68,7 +68,7 @@ export async function receivedApiRequest(
 
   if (!data || mock?.jsCode === MOCK_JS_CODE || !mockId) { // No need to dispatch
     let mockResponse;
-    if (response.status === IOhMyResponseStatus.OK) {
+    if (response.status === OhMyResponseStatus.OK) {
       // Should we do something here?
     } else { // Rule: Return `response` if mock's custom code is not touched
       mockResponse = MockUtils.mockToResponse(mock);
@@ -87,11 +87,12 @@ export async function receivedApiRequest(
   } else {
     try {
       const output = await sendMsg2Popup(messageBus, {
-        context: payload.context,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        context: payload.context as IOhMyDomainContext,
         type: payloadType.API_REQUEST,
         data: {
           request: inputRequest,
-          ...(response.status === IOhMyResponseStatus.OK && { response }),
+          ...(response.status === OhMyResponseStatus.OK && { response }),
         },
         description: 'content:dispatch-eval'
       });
@@ -104,7 +105,7 @@ export async function receivedApiRequest(
       debug('Popup cannot be reached -> OhMyMock deactivated');
       warn(err.fix);
       handleResponse(request, context, response, {
-        status: IOhMyResponseStatus.ERROR
+        status: OhMyResponseStatus.ERROR
       });
     }
     // messageBus.streamById$<IOhMyMockResponse>(context.id, appSources.POPUP).pipe(take(1)).subscribe(({ packet }: IOhMessage<IOhMyMockResponse>) => {
@@ -140,8 +141,8 @@ export async function receivedApiRequest(
   }
 }
 
-async function handleResponse(request: IOhMyAPIRequest, context: IOhMyContext, response?: IOhMyMockResponse, output?: IOhMyMockResponse, state?: IOhMyDomain) {
-  const retVal = response?.status === IOhMyResponseStatus.OK && output?.status !== IOhMyResponseStatus.OK ? response : output
+async function handleResponse(request: IOhMyAPIRequest, context: IOhMyDomainContext, response?: IOhMyMockResponse, output?: IOhMyMockResponse, state?: IOhMyDomain) {
+  const retVal = response?.status === OhMyResponseStatus.OK && output?.status !== OhMyResponseStatus.OK ? response : output
 
   if (state) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

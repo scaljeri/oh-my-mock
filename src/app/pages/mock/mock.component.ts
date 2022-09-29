@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IOhMyRequest, IOhMyAux, IOhMyContext, IOhMyRequestId, IOhMyDomain } from '@shared/type';
+import { IOhMyRequest, IOhMyAux, IOhMyContext, IOhMyRequestId, IOhMyDomain, IOhMyDomainContext } from '@shared/types';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
 import { StorageService } from 'src/app/services/storage.service';
@@ -17,7 +17,7 @@ export class PageMockComponent implements OnInit {
   static StateUtils = StateUtils;
   public data: IOhMyRequest;
   private subscription: Subscription;
-  public context: IOhMyContext;
+  public context: IOhMyDomainContext;
 
   aux: IOhMyAux;
 

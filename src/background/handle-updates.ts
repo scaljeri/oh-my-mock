@@ -7,7 +7,7 @@ import { OhMyStoreHandler } from './handlers/store-handler';
 import { contentScriptListeners } from './content-script-listeners';
 import { popupListeners } from './popup-listeners';
 import { OhMyQueue } from '../shared/utils/queue';
-import { appSources, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
+import { appSources, contextTypes, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
 import { StorageUtils } from '../shared/utils/storage';
 import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
@@ -17,10 +17,9 @@ import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { OhMyStateHandler } from './handlers/state-handler';
 import { OhMyRemoveHandler } from './handlers/remove-handler';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
-import { IOhMyBackup, IOhMyMock } from '../shared/type';
+import { IOhMyBackup } from '../shared/types';
 import { Observable } from 'rxjs';
-import { OhMyResetHandler } from './handlers/reset-handler';
-import { IOhMyHandler } from './handlers/handler';
+import { IOhMyHandler, IOhMyHandlerConstructor } from './handlers/handler';
 
 export class UpdateHandler {
   static OhMyQueue = OhMyQueue;
@@ -35,7 +34,7 @@ export class UpdateHandler {
 
   constructor() { }
 
-  registerHandler<T>(type: payloadType, handler: IOhMyHandler<T>): UpdateHandler {
+  registerHandler<T>(type: payloadType, handler: IOhMyHandlerConstructor<T>): UpdateHandler {
     if (!this.queue) {
       this.queue = new UpdateHandler.OhMyQueue();
     }
@@ -104,13 +103,13 @@ queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
 queue.addHandler(payloadType.DOMAIN, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
-queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
+queue.addHandler(payloadType.UPSERT, OhMyImportHandler.update);
 queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
   try {
     await StorageUtils.reset();
-    await initStorage(payload.context?.domain);
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+    await initStorage(payload.context?.key);
+    await importJSON(jsonFromFile as any as IOhMyBackup, { key: DEMO_TEST_DOMAIN, active: true, type: contextTypes.DOMAIN });
   } catch (err) {
     error('Could not initialize the store', err);
   }

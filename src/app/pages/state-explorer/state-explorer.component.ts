@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngneat/hot-toast';
-import { IOhMyContext, IOhMyDomain, IOhMyDomainId, IOhMyRequest } from '@shared/type';
+import { IOhMyContext, IOhMyDomain, IOhMyDomainId, IOhMyRequest } from '@shared/types';
 
 import { Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';

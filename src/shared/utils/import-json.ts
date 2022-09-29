@@ -1,6 +1,5 @@
 import { IOhMyImportStatus } from '../packet-type';
-import { IOhMyRequest, IOhMyResponse, IOhMyBackup, IOhMyContext, IOhMyMock, IOhMyDomain } from '../type';
-import { DataUtils } from './data';
+import { IOhMyRequest, IOhMyResponse, IOhMyBackup, IOhMyMock, IOhMyDomain, IOhMyDomainContext } from '../types';
 import { MigrateUtils } from './migrate';
 import { StateUtils } from './state';
 import { StorageUtils } from './storage';
@@ -12,11 +11,11 @@ export enum ImportResultEnum {
 
 // TODO: Importing/Migrating will completely change, because Requests are not part of the IOhMyDomain anymore
 
-export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
-  let state = await sUtils.get<IOhMyDomain>(context.domain);
+export async function importJSON(data: IOhMyBackup, context: IOhMyDomainContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
+  let state = await sUtils.get<IOhMyDomain>(context.key);
 
   if (!state) {
-    state = StateUtils.init(context);
+    state = StateUtils.init({ domain: context.key }); // TODO: is domain enough here?
   }
 
   let status = ImportResultEnum.SUCCESS;

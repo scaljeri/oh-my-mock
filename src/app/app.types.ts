@@ -1,4 +1,4 @@
-import { IOhMyRequest } from '@shared/type';
+import { IOhMyRequest } from '@shared/types';
 
 export interface IOhDataView extends IOhMyRequest {
   urlStart: string;

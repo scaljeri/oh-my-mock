@@ -1,4 +1,4 @@
-import { IOhMyRequest, IOhMyResponse, IOhMyMock, IOhMyDomain } from '../type';
+import { IOhMyRequest, IOhMyResponse, IOhMyMock, IOhMyDomain } from '../types';
 import compareVersions from 'compare-versions'
 import { mockSteps } from './migrations/mock';
 import { stateSteps } from './migrations/state';

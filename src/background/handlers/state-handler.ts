@@ -1,5 +1,5 @@
 import { IPacketPayload } from "../../shared/packet-type";
-import { IOhMyDomain, IOhMyMock } from "../../shared/type";
+import { IOhMyDomain, IOhMyMock } from "../../shared/types";
 import { IOhMyPropertyContext } from "../../shared/types/context";
 import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";

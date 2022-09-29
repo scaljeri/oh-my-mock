@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { IOhMyRequest, IOhMyResponse, IOhMyRequestId } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyRequestId } from '@shared/types';
 import { loadAllMocks } from '@shared/utils/load-all-mocks';
 import { OhMyStateService } from './state.service';
 import { OhWWPacketTypes } from '../webworkers/types';

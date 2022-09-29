@@ -1,5 +1,5 @@
 import { uniqueId } from './unique-id';
-import { IOhMyDomain, IOhMyDomainPresets, IOhMyPreset, IOhMyPresetId, IOhMyRequest, IOhMyRequestId } from '../type';
+import { IOhMyDomain, IOhMyDomainPresets, IOhMyPreset, IOhMyPresetId, IOhMyRequest, IOhMyRequestId } from '../types';
 import { StorageUtils } from './storage';
 
 const IS_COPY_RE = /copy(\s\d+)?/;

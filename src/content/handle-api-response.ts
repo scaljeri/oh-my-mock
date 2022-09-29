@@ -1,4 +1,4 @@
-import { payloadType } from "../shared/constants";
+import { contextTypes, payloadType } from "../shared/constants";
 import { IOhMyResponseUpdate, IPacketPayload } from "../shared/packet-type";
 import { IOhMyRequest, IOhMyRequestId } from "../shared/types";
 import { MockUtils } from "../shared/utils/mock";
@@ -26,5 +26,5 @@ export async function handleApiResponse(payload: IPacketPayload<IOhMyResponseUpd
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   payload.data!.response.label = '';
 
-  OhMySendToBg.full(payload.data, payloadType.RESPONSE, { domain: OhMyContentState.host });
+  OhMySendToBg.full(payload.data, payloadType.RESPONSE, { key: OhMyContentState.host, type: contextTypes.DOMAIN });
 }

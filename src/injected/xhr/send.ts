@@ -1,5 +1,5 @@
-import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
-import { IOhMyAPIRequest } from "../../shared/type";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { IOhMyAPIRequest } from "../../shared/types";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
@@ -25,8 +25,8 @@ export function patchSend() {
       headers: this.ohHeaders,
       body
     } as IOhMyAPIRequest).then(async data => {
-      if (data.response.status !== IOhMyResponseStatus.OK) { // No cache
-        this.__ohMyHasError = data.response.status === IOhMyResponseStatus.ERROR;
+      if (data.response.status !== OhMyResponseStatus.OK) { // No cache
+        this.__ohMyHasError = data.response.status === OhMyResponseStatus.ERROR;
 
         if (!this.__ohMyHasError) {
 
@@ -37,7 +37,7 @@ export function patchSend() {
             // const headersStr =  this.getAllResponseHeaders();
             // const headers =  parse(headersStr);
 
-            if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
+            if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
               this.ohResult = findCachedResponse({ url: this.ohUrl, requestMethod: this.ohMethod });
               persistResponse(this, this.ohResult.request);
             }

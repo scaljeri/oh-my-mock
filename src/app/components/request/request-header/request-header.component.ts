@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IOhMyRequest, IOhMyContext, IOhMyShallowResponse, IOhMyDomain, IOhMyStatusCode, IOhMyResponseId, IOhMyNewResponseStatusCode } from '@shared/type';
+import { IOhMyRequest, IOhMyContext, IOhMyShallowResponse, IOhMyDomain, IOhMyStatusCode, IOhMyResponseId, IOhMyNewResponseStatusCode, IOhMyDomainContext } from '@shared/types';
 import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
 // import { findAutoActiveMock } from '../../../utils/data';
 import { UntypedFormControl } from '@angular/forms';
@@ -19,7 +19,7 @@ import { OhMyState } from '../../../services/oh-my-store';
 })
 export class RequestHeaderComponent implements OnInit, OnChanges {
   @Input() request: IOhMyRequest;
-  @Input() context: IOhMyContext;
+  @Input() context: IOhMyDomainContext;
 
   public statusCode: IOhMyStatusCode;
   public mockIds: IOhMyResponseId[];

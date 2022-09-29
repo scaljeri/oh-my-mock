@@ -1,6 +1,6 @@
-import { DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
+import { contextTypes, DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
 import { IPacketPayload } from "../../shared/packet-type";
-import { IOhMyBackup, IOhMyDomain, IOhMyRequest, IOhMyResponse } from "../../shared/type";
+import { IOhMyBackup, IOhMyDomain, IOhMyDomainContext, IOhMyRequest } from "../../shared/types";
 import { importJSON } from "../../shared/utils/import-json";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StorageUtils } from "../../shared/utils/storage";
@@ -12,8 +12,8 @@ export class OhMyRemoveHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<{ type: objectTypes, id: string }>): Promise<IOhMyDomain | undefined> {
-    const state = await OhMyRemoveHandler.StorageUtils.get<IOhMyDomain>(context?.domain);
+  static async update({ data, context }: IPacketPayload<{ type: objectTypes, id: string }, IOhMyDomainContext>): Promise<IOhMyDomain | undefined> {
+    const state = await OhMyRemoveHandler.StorageUtils.get<IOhMyDomain>(context?.key);
 
     if (!data || !state) {
       return;
@@ -41,7 +41,7 @@ export class OhMyRemoveHandler {
         await StorageUtils.remove(state.domain);
 
         if (state.domain === DEMO_TEST_DOMAIN) {
-          await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+          await importJSON(jsonFromFile as unknown as IOhMyBackup, { key: DEMO_TEST_DOMAIN, active: true, type: contextTypes.DOMAIN });
         }
       } else if (data.type === objectTypes.REQUEST) { // Delete request
         const request = await OhMyRemoveHandler.StorageUtils.get<IOhMyRequest>(data.id);

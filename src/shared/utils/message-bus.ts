@@ -1,10 +1,11 @@
 import { Observable, Subject } from 'rxjs';
 import { filter, share } from 'rxjs/operators';
 import { appSources, payloadType } from '../constants';
-import { IOhMessage, ohMessage, IOhMyPacketContext } from '../packet-type';
+import { IOhMessage, ohMessage } from '../packet-type';
+import { IOhMyContext } from '../types';
 
 export class OhMyMessageBus {
-  private readonly packetSubject = new Subject<IOhMessage<unknown, IOhMyPacketContext>>();
+  private readonly packetSubject = new Subject<IOhMessage<unknown, IOhMyContext>>();
   private readonly stream$ = this.packetSubject.asObservable();
   private offs: (() => void)[] = [];
 
@@ -32,7 +33,7 @@ export class OhMyMessageBus {
     message?.packet?.source && this.packetSubject.next(message);
   }
 
-  streamBySource$<T = unknown, X = IOhMyPacketContext>(source: appSources | appSources[]): Observable<IOhMessage<T, X>> {
+  streamBySource$<T = unknown, X = IOhMyContext>(source: appSources | appSources[]): Observable<IOhMessage<T, X>> {
     if (source && !Array.isArray(source)) {
       source = [source];
     }
@@ -45,18 +46,18 @@ export class OhMyMessageBus {
     ) as Observable<IOhMessage<T, X>>;
   }
 
-  streamByType$<T = unknown>(type: payloadType | payloadType[], source: appSources | appSources[]): Observable<IOhMessage<T>> {
+  streamByType$<T = unknown, X = IOhMyContext>(type: payloadType | payloadType[], source: appSources | appSources[]): Observable<IOhMessage<T, X>> {
     if (!Array.isArray(type)) {
       type = [type];
     }
     return this.streamBySource$(source).pipe(
       filter(message => {
         return type.includes(message.packet.payload.type)
-      })) as Observable<IOhMessage<T>>;
+      })) as Observable<IOhMessage<T, X>>;
   }
 
-  streamById$<T = unknown, X = IOhMyPacketContext>(id: string, source: appSources): Observable<IOhMessage<T, X>> {
+  streamById$<T = unknown, X = IOhMyContext>(id: string, source: appSources): Observable<IOhMessage<T, X>> {
     return this.streamBySource$(source).pipe(
-      filter(message => message.packet.payload.context?.id === id)) as any as Observable<IOhMessage<T, X>>;
+      filter(message => message.packet.payload.context?.id === id)) as Observable<IOhMessage<T, X>>;
   }
 }

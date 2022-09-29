@@ -6,7 +6,7 @@ import {
   STATUS_CODE_EXISTS_MSG,
   STATUS_CODE_INVALID_MSG,
 } from '@shared/constants';
-import { IOhMyNewResponseStatusCode, IOhMyResponse, } from '@shared/type';
+import { IOhMyNewResponseStatusCode, IOhMyResponse, } from '@shared/types';
 
 @Component({
   selector: 'app-create-status-code',

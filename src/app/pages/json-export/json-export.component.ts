@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { IOhMyRequest, IOhMyResponse,  IOhMyDomain } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse,  IOhMyDomain } from '@shared/types';
 import { DataListComponent } from '../../components/data-list/data-list.component';
 import { AppStateService } from '../../services/app-state.service';
 import { HotToastService } from '@ngneat/hot-toast';

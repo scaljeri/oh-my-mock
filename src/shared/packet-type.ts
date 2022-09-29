@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IOhMyContext, IOhMyAPIRequest, IOhMyMockResponse, IOhMyDomainId, IOhMyRequest, IOhMyResponse, IOhMyUpsertRequest, IOhMyStatusCode } from './type';
+import { IOhMyContext, IOhMyAPIRequest, IOhMyMockResponse, IOhMyDomainId, IOhMyRequest, IOhMyResponse, IOhMyUpsertRequest, IOhMyStatusCode, IOhMyDomainContext } from './types';
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;

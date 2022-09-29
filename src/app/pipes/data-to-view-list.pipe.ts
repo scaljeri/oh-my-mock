@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { IOhDataView } from '../app.types';
-import { IOhMyRequest, IOhMyRequestId } from '@shared/type';
+import { IOhMyRequest, IOhMyRequestId } from '@shared/types';
 
 @Pipe({
   name: 'dataToViewList'

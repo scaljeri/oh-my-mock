@@ -1,4 +1,4 @@
-import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -21,12 +21,12 @@ export function patchResponseJson() {
             requestMethod: this.ohMethod
           });
 
-          if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
+          if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
             persistResponse(this, this.ohResult.request);
           }
         }
 
-        if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status === OhMyResponseStatus.OK) {
           const response = this.ohResult.response?.response;
           return Promise.resolve(typeof response === 'string' ? JSON.parse(response) : response);
         } else {

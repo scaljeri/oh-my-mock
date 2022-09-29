@@ -1,4 +1,4 @@
-import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { b64ToArrayBuffer, b64ToBlob } from "../../shared/utils/binary";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
@@ -20,12 +20,12 @@ export function patchResponse() {
           requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
 
-      if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
+      if (this.ohResult && this.ohResult.response.status === OhMyResponseStatus.OK) {
         let response = this.ohResult.response?.response;
         if (this.responseType === 'blob') {
           response = b64ToBlob(response);

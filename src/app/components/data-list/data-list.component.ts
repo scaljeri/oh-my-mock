@@ -4,7 +4,7 @@ import { HotToastService } from '@ngneat/hot-toast';
 import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IOhMyRequest, IOhMyResponse, IOhMyContext, IOhMyDomain, IOhMyRequestId } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyContext, IOhMyDomain, IOhMyRequestId, IOhMyDomainContext } from '@shared/types';
 import { BehaviorSubject, debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -48,7 +48,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
-  @Input() context: IOhMyContext; // context !== state,context (but it can be)
+  @Input() context: IOhMyDomainContext; // context !== state,context (but it can be)
   @Input() showDelete: boolean;
   @Input() showClone: boolean;
   @Input() showActivate: boolean;
@@ -110,7 +110,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     private storeService: OhMyState) { }
 
   async ngOnInit() {
-    this.persistFilter = this.persistFilter ?? this.stateSubject.value?.context.domain === this.context.domain;
+    this.persistFilter = this.persistFilter ?? this.stateSubject.value?.context.key === this.context.key;
 
     if (!this.persistFilter) {
       this.filterOptions = undefined;

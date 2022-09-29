@@ -6,7 +6,7 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { IOhMyContext, IOhMyDomain } from '@shared/type';
+import { IOhMyContext, IOhMyDomain, IOhMyDomainContext } from '@shared/types';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -41,7 +41,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   page = '';
   dialogDone = false;
   isInitializing = true;
-  context: IOhMyContext;
+  context: IOhMyDomainContext;
   version: string;
   showDisabled = -1;
   stateSub: Subscription;
@@ -87,7 +87,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
 
       this.context = state.context;
-      this.domain = state.context.domain;
+      this.domain = state.context.key;
       this.version = state.version;
 
       this.isInitializing = false;

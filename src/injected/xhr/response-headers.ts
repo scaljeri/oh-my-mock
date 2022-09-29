@@ -1,6 +1,6 @@
 import { findCachedResponse } from "../utils";
 import * as headers from '../../shared/utils/xhr-headers';
-import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__getResponseHeader');
@@ -21,7 +21,7 @@ export function patchResponseHeaders() {
           requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
@@ -49,12 +49,12 @@ export function patchResponseHeaders() {
           requestMethod: this.ohMethod
         });
 
-        if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
           persistResponse(this, this.ohResult.request);
         }
       }
 
-      if (this.ohResult?.response.status === IOhMyResponseStatus.OK) {
+      if (this.ohResult?.response.status === OhMyResponseStatus.OK) {
         return this.ohResult.response?.headers?.[header];
       } else {
         return this.__getResponseHeader(header);

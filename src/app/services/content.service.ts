@@ -11,6 +11,7 @@ import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { send2content } from '../utils/send2content';
 import { Observable, Subject } from 'rxjs';
 import { OhMyState } from './oh-my-store';
+import { IOhMyDomainContext } from '@shared/types';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
@@ -146,7 +147,7 @@ export class ContentService {
   }
 
   reset(key: string): Promise<void> {
-    return this.stateService.reset({ domain: key });
+    return this.stateService.reset({ key } as IOhMyDomainContext);
     // if (key) {
     //   return OhMySendToBg.reset(key).then(() => { });
     // } else {

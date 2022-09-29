@@ -108,7 +108,7 @@ export const RESPONSE_RULE_TYPES = {
   username: 'Username'
 };
 
-export enum IOhMyResponseStatus {
+export enum OhMyResponseStatus {
   OK,
   ERROR,
   NO_CONTENT,

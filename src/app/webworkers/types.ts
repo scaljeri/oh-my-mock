@@ -1,4 +1,4 @@
-import { IOhMyRequest, IOhMyResponse } from "@shared/type";
+import { IOhMyRequest, IOhMyResponse } from "@shared/types";
 
 export enum OhWWPacketTypes {
   INIT = 'INIT',

@@ -2,7 +2,7 @@
 
 import { Inject, Injectable } from '@angular/core';
 import { IPacketPayload } from '@shared/packet-type';
-import { IOhMyDomain, IOhMyDomainId, IOhMyRequest } from '@shared/type';
+import { IOhMyDomainId, IOhMyRequest } from '@shared/types';
 import { BehaviorSubject, shareReplay, Subject } from 'rxjs';
 import { APP_VERSION } from '../tokens';
 

@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IOhMyRequest, IOhMyResponse, IOhMyMockRule, IOhMyContext } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyMockRule, IOhMyContext, IOhMyDomainContext } from '@shared/types';
 import { filter, Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -27,7 +27,7 @@ import { StorageService } from '../../services/storage.service';
 })
 export class RequestComponent implements OnChanges, OnDestroy {
   @Input() request: IOhMyRequest;
-  @Input() context: IOhMyContext;
+  @Input() context: IOhMyDomainContext;
   @Input() blurImages = false;
 
   response: IOhMyResponse;

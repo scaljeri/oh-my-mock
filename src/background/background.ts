@@ -1,7 +1,7 @@
 ///<reference types="chrome"/>
 
-import { DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
-import { IOhMyBackup, IOhMyPopupActive, IOhMyDomain } from '../shared/type';
+import { contextTypes, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
+import { IOhMyBackup, IOhMyPopupActive, IOhMyDomain } from '../shared/types';
 import { StorageUtils } from '../shared/utils/storage';
 import { IPacket } from '../shared/packet-type';
 import { initStorage } from './init';
@@ -14,7 +14,6 @@ import { openPopup } from './open-popup';
 import './server-dispatcher';
 import { UpdateHandler } from './handle-updates';
 import { OhMyStoreHandler } from './handlers/store-handler';
-import { OhMyImportHandler } from './handlers/import';
 import { OhMyRemoveHandler } from './handlers/remove-handler';
 import { OhMyResetHandler } from './handlers/reset-handler';
 import { OhMyResponseHandler } from './handlers/response-handler';
@@ -24,7 +23,7 @@ import { OhMyStateHandler } from './handlers/state-handler';
 
 const updater = new UpdateHandler();
 updater.registerHandler(payloadType.STORE, OhMyStoreHandler)
-  .registerHandler(payloadType.STORE, OhMyStoreHandler)
+  // .registerHandler(payloadType.STORE, OhMyStoreHandler)
   .registerHandler(payloadType.DOMAIN, OhMyStateHandler)
   .registerHandler(payloadType.RESPONSE, OhMyResponseHandler)
   .registerHandler(payloadType.REMOVE, OhMyRemoveHandler)
@@ -103,7 +102,7 @@ setTimeout(async () => {
 
   const state = await StorageUtils.get<IOhMyDomain>(DEMO_TEST_DOMAIN)
   if (!state || Object.keys(state.requests).length === 0) {
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+    await importJSON(jsonFromFile as any as IOhMyBackup, { key: DEMO_TEST_DOMAIN, active: true, type: contextTypes.DOMAIN });
   }
 });
 

@@ -1,4 +1,4 @@
-import { IOhMyMock, domain } from '@shared/type'
+import { IOhMyDomainId, IOhMyMock } from "../../shared/types";
 
 export const addCurrentDomain = (state: IOhMyMock, domain: string): IOhMyMock => {
   const domains = { ...state.domains }
@@ -7,6 +7,6 @@ export const addCurrentDomain = (state: IOhMyMock, domain: string): IOhMyMock =>
   return { ...state, domains };
 }
 
-export const createDomainState = (domain: domain) => {
-  return { domain, views: { }, toggles: { }, data: [], scenarios: { } };
+export const createDomainState = (domain: IOhMyDomainId) => {
+  return { domain, views: {}, toggles: {}, data: [], scenarios: {} };
 }

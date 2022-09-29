@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { REQUIRED_MSG } from '@shared/constants';
-import { IOhMyResponse, IOhMyContext } from '@shared/type';
+import { IOhMyResponse, IOhMyContext } from '@shared/types';
 import { Observable, Subscription } from 'rxjs';
 import { OhMyState } from '../../../services/oh-my-store';
 

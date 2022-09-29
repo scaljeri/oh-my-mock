@@ -1,6 +1,6 @@
 import { objectTypes } from '../constants';
 import { timestamp } from 'rxjs';
-import { IOhMyDomain, IOhMyRequest, IOhMyUpsertRequest, IOhMyRequestId } from '../type';
+import { IOhMyDomain, IOhMyRequest, IOhMyUpsertRequest, IOhMyRequestId } from '../types';
 import { compareUrls } from './urls';
 
 export class StateUtils {

@@ -1,4 +1,4 @@
-import { IOhMyContext, IOhMyResponse, IOhMyDomain, IOhMyOrigin, IOhMyMock, IOhMyDomainId } from '../type';
+import { IOhMyDomainContext, IOhMyDomain, IOhMyOrigin, IOhMyMock, IOhMyDomainId } from '../types';
 import { StorageUtils } from './storage';
 import { StateUtils } from './state';
 import { objectTypes } from '../constants';
@@ -16,11 +16,11 @@ export class StoreUtils {
     return { ...store, domains };
   }
 
-  static init(context?: IOhMyContext, origin: IOhMyOrigin = 'local'): IOhMyMock {
+  static init(context?: IOhMyDomainContext, origin: IOhMyOrigin = 'local'): IOhMyMock {
     const store = { type: objectTypes.STORE, domains: [], version: this.version, origin } as IOhMyMock;
 
     if (context) {
-      store.domains.push(context.domain);
+      store.domains.push(context.key);
     }
 
     return store;

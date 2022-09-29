@@ -8,7 +8,7 @@ import {
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
-import { IOhMyContext, ResetStateOptions } from '@shared/type';
+import { IOhMyContext, IOhMyDomainContext, ResetStateOptions } from '@shared/types';
 import { OhMyState } from '../../services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
@@ -21,7 +21,7 @@ import { OhMyStateService } from '../../services/state.service';
   styleUrls: ['./nav-list.component.scss']
 })
 export class NavListComponent {
-  @Input() context: IOhMyContext;
+  @Input() context: IOhMyDomainContext;
   @Output() navigate = new EventEmitter<void>();
 
   constructor(

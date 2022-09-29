@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { IOhMyResponse, IOhMyDomain, IOhMyDomainId, IOhMyRequestId, IOhMyRequest } from '../type';
+import { IOhMyResponse, IOhMyDomain, IOhMyDomainId, IOhMyRequestId, IOhMyRequest } from '../types';
 import { StorageUtils } from './storage';
 
 export async function loadAllMocks(domain: IOhMyDomainId): Promise<Record<string, IOhMyResponse>> {

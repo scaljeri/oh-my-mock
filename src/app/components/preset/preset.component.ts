@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
-import { IOhMyContext, IOhMyDomain, IOhMyDomainPresets } from '@shared/type';
+import { IOhMyContext, IOhMyDomain, IOhMyDomainContext, IOhMyDomainPresets } from '@shared/types';
 import { PresetUtils } from '@shared/utils/preset';
 import { Subscription } from 'rxjs';
 import { OhMyState } from '../../services/oh-my-store';
@@ -23,7 +23,7 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
   ]
 })
 export class PresetComponent implements OnInit, OnChanges {
-  @Input() context: IOhMyContext;
+  @Input() context: IOhMyDomainContext;
   @Input() theme: 'dark' | 'light';
 
   presetCtrl = new UntypedFormControl();

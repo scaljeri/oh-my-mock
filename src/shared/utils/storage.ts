@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 import { objectTypes, STORAGE_KEY } from '../constants';
-import { IOhMyDomain, IOhMyMock, IOhMyResponse, IOhMyDomainId, IOhMyResponseId, IOhMyRequest } from '../type';
+import { IOhMyDomain, IOhMyMock, IOhMyResponse, IOhMyDomainId, IOhMyResponseId, IOhMyRequest } from '../types';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
 

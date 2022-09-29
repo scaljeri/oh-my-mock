@@ -1,4 +1,4 @@
-import { IOhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import * as fetchUtils from '../../shared/utils/fetch';
 import { persistResponse } from "./persist-response";
@@ -21,12 +21,12 @@ export function patchHeaders() {
             url: this.ohUrl || this.url.replace(window.origin, ''),
             requestMethod: this.ohMethod
           });
-          if (this.ohResult && this.ohResult.response.status !== IOhMyResponseStatus.OK) {
+          if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
             persistResponse(this, this.ohResult.request);
           }
         }
 
-        if (this.ohResult && this.ohResult.response.status === IOhMyResponseStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status === OhMyResponseStatus.OK) {
           return fetchUtils.jsonToHeaders(this.ohResult.response.headers);
         } else {
           return this.__headers;
