@@ -1,31 +1,36 @@
 import { IPacketPayload } from "../../shared/packet-type";
 import { IOhMyDomain, IOhMyMock } from "../../shared/types";
-import { IOhMyPropertyContext } from "../../shared/types/context";
+import { IOhMyContext, IOhMyPropertyContext } from "../../shared/types/context";
 import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
+import { IOhMyHandlerConstructor, staticImplements } from "./handler";
 
+type IOhMyInputData = IOhMyDomain | IOhMyDomain[keyof IOhMyDomain];
+
+@staticImplements<IOhMyHandlerConstructor<IOhMyInputData, IOhMyDomain>>()
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
-  static async update(payload: IPacketPayload<IOhMyDomain | IOhMyDomain[keyof IOhMyDomain] | unknown, IOhMyPropertyContext>): Promise<IOhMyDomain | void> {
+  static async update(payload: IPacketPayload<IOhMyInputData, IOhMyContext>): Promise<IOhMyDomain | void> {
     try {
-      const { data, context } = payload;
+      // const { data, context } = payload as { };
+      const context = payload.context as IOhMyPropertyContext;
       let domain: IOhMyDomain;
 
-      if (StateUtils.isDomain(data)) {
-        domain = data;
+      if (StateUtils.isDomain(payload.data)) {
+        domain = payload.data || StateUtils.init({ domain: context.key });
       } else if (context) {
         if (context.path && !context.propertyName) {
           throw new Error('Found `path` without a property value');
         }
 
-        domain = data as IOhMyDomain || StateUtils.init({ domain: context.key });
-        const value = data as IOhMyDomain[keyof IOhMyDomain];
-
+        const value = payload.data as IOhMyDomain[keyof IOhMyDomain];
         domain = await OhMyStateHandler.StorageUtils.get<IOhMyDomain>(context.key) || StateUtils.init({ domain: context.key });
+
         domain = update<IOhMyDomain>(context.path, domain, context.propertyName, value);
+
       } else {
         throw new Error('Data and Context not defined');
       }
@@ -40,9 +45,11 @@ export class OhMyStateHandler {
 
       if (!StoreUtils.hasState(store, domain.domain)) {
         store = StoreUtils.setState(store, domain);
+        await OhMyStateHandler.StorageUtils.setStore(store);
       }
 
-      await OhMyStateHandler.StorageUtils.setStore(store);
+      await OhMyStateHandler.StorageUtils.set(context.key!, domain);
+
 
       // if (state.aux.appActive && state.aux.popupActive) {
       //   cSPRemoval([payload.context.domain]);
