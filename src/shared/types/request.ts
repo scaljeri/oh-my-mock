@@ -42,16 +42,3 @@ export interface IOhMyRequestContext {
   responseId?: IOhMyResponseId;
 }
 
-// Upserts
-// ????
-export interface IOhMyUpsertRequest {
-  id?: IOhMyRequestId;
-  url?: string;
-  requestMethod?: IOhMyRequestMethod;
-}
-
-export interface IUpsertResponse extends IOhMyUpsertRequest {
-  response: Partial<IOhMyResponse>;
-  clone?: boolean | IOhMyResponseId;
-  makeActive?: boolean;
-}

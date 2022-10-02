@@ -44,5 +44,3 @@ export interface IOhMyMockRule {
   type: IOhMyResponseRuleType;
   path: string;
 }
-
-// Upserts

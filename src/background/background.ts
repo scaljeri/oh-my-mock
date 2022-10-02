@@ -16,7 +16,7 @@ import { UpdateHandler } from './handle-updates';
 import { OhMyStoreHandler } from './handlers/store-handler';
 import { OhMyRemoveHandler } from './handlers/remove-handler';
 import { OhMyResetHandler } from './handlers/reset-handler';
-import { OhMyResponseHandler } from './handlers/response-handler';
+import { OhMyResponseHandler } from './handlers/response-upsert.handler';
 import { OhMyStateHandler } from './handlers/state-handler';
 
 // connectWithLocalServer();

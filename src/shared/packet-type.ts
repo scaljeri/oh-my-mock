@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IOhMyContext, IOhMyAPIRequest, IOhMyMockResponse, IOhMyDomainId, IOhMyRequest, IOhMyResponse, IOhMyUpsertRequest, IOhMyStatusCode, IOhMyDomainContext } from './types';
+import { IOhMyContext, IOhMyAPIRequest, IOhMyMockResponse, IOhMyDomainId, IOhMyRequest, IOhMyResponse, IOhMyUpsertRequest, IOhMyStatusCode, IOhMyDomainContext, IOhMyRequestId, IOhMyResponseId } from './types';
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
@@ -13,22 +13,22 @@ export interface IPacket<T = unknown, U = IOhMyContext> {
   tabId?: number;
   source: appSources;
   payload: IPacketPayload<T, U>;
-  domain?: IOhMyDomainId,
-  version?: string;
+  // domain?: IOhMyDomainId,
+  // version?: string;
 }
 
 export interface IPacketPayload<D = unknown, C = IOhMyContext> {
   id?: string;
   type: payloadType;
-  context?: C
-  data?: D;
+  context: C
+  data: D;
   description: string;
 }
 
-export interface IOhMyResponseUpdate {
-  request: Partial<IOhMyRequest>;
-  response: Partial<IOhMyResponse>;
-}
+// export interface IOhMyResponseUpdate {
+//   request: Partial<IOhMyRequest>;
+//   response: Partial<IOhMyResponse>;
+// }
 
 export interface IOhMyReadyResponse<T = string> {
   request: IOhMyAPIRequest;

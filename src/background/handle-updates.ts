@@ -1,7 +1,7 @@
 
 import { OhMyImportHandler } from './handlers/import';
 import { error } from './utils';
-import { OhMyResponseHandler } from './handlers/response-handler';
+import { OhMyResponseHandler } from './handlers/response-upsert.handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { contentScriptListeners } from './content-script-listeners';

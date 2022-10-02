@@ -1,5 +1,5 @@
 import { objectTypes } from '../constants';
-import { IOhMyContext, IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse, IOhMyDomainPresets, IOhMyRequestId, IOhMyDomainContext, IOhMyPreset } from '../types';
+import { IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse, IOhMyDomainPresets, IOhMyRequestId, IOhMyDomainContext, IOhMyPreset } from '../types';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -63,7 +63,7 @@ export class DataUtils {
     return request;
   }
 
-  static removeResponse(context: IOhMyContext, request: IOhMyRequest, responseId: IOhMyResponseId): IOhMyRequest {
+  static removeResponse(request: IOhMyRequest, responseId: IOhMyResponseId): IOhMyRequest {
     request = {
       ...request,
       presets: { ...request.presets },
@@ -104,15 +104,14 @@ export class DataUtils {
   // }
 
   static create(data: Partial<IOhMyRequest>): IOhMyRequest {
-    const output = {
+    const output: IOhMyRequest = {
       id: uniqueId(),
-      enabled: {},
-      selected: {},
-      mocks: {},
+      presets: {},
+      responses: {},
       lastHit: Date.now(),
       ...data,
       type: objectTypes.REQUEST,
-    } as IOhMyRequest;
+    };
 
     if (!data?.id && data?.url) {
       output.url = url2regex(data.url);

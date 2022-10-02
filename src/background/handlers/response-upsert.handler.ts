@@ -1,44 +1,30 @@
-import { IOhMyResponseUpdate, IPacketPayload } from "../../shared/packet-type";
-import { IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyRequestId, IOhMyPropertyContext } from "../../shared/types";
+import { IPacketPayload } from "../../shared/packet-type";
+import { IOhMyResponseUpsert, IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyContext } from "../../shared/types";
 import { MockUtils } from "../../shared/utils/mock";
 import { update } from "../../shared/utils/partial-updater";
 import { OhMyQueue } from "../../shared/utils/queue";
-import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { DataUtils } from "../../shared/utils/data";
 import { contextTypes, payloadType } from "../../shared/constants";
 import { timestamp } from "../../shared/utils/timestamp";
 import { deepSearch, shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '../../shared/utils/search';
+import { IOhMyHandlerConstructor, staticImplements } from "./handler";
+import { uniqueId } from "../../shared/utils/unique-id";
 // import { shallowSearch, splitIntoSearchTerms } from "../../shared/utils/search";
 
+@staticImplements<IOhMyHandlerConstructor<IOhMyResponseUpsert, IOhMyResponse>>()
 export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPropertyContext>): Promise<IOhMyResponse | void> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpsert, IOhMyContext>): Promise<IOhMyResponse | void> {
     try {
-      const state = await OhMyResponseHandler.StorageUtils.get<IOhMyDomain>(context?.key);
-      if (context?.key || !data || !state) {
-        return;
-      }
+      const responseId = data.responseId;
+      const requestId = data.requestId || uniqueId();
+      const state = await OhMyResponseHandler.StorageUtils.get<IOhMyDomain>(context.key);
+      let request = OhMyResponseHandler.StorageUtils.get<IOhMyRequest>(data.requestId) ||
+        DataUtils.init({ id: requestId });
 
-      const requestLookup = (requestId: IOhMyRequestId) => OhMyResponseHandler.StorageUtils.get<IOhMyRequest>(requestId);
-      let request = await StateUtils.findRequest(state, data.request, requestLookup);
-      let response = data.response;
-      let autoActivate = false;
-
-
-      if (!request) {
-        request = DataUtils.init(data.request);
-        autoActivate = !!state.aux?.newAutoActivate;
-      }
-
-      if (response && Object.keys(response).length === 1 && response.id) { // delete
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        request = DataUtils.removeResponse(context!, request, response.id);
-        await OhMyResponseHandler.StorageUtils.remove(response.id);
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         if (context!.path) { // new/update
           response = await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id);
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
