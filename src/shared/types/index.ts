@@ -8,5 +8,6 @@ export * from './preset';
 export * from './request';
 export * from './response';
 export * from './context';
+export * from './modifiers';
 
 export type ResetStateOptions = resetStateOptions; // ??

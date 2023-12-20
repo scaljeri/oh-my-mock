@@ -38,9 +38,9 @@ export class ContentService {
       this.open(true);
     });
 
-    this.listener = async ({ payload, source, domain }: IPacket, sender) => {
+    this.listener = async ({ payload, source }: IPacket, sender) => {
       // Only accept messages from the content script
-      // const domain = payload.context?.domain;
+      const domain = payload.context?.key;
       if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
         return;
       }
@@ -79,7 +79,8 @@ export class ContentService {
             payload: {
               context: payload.context,
               type: payloadType.API_RESPONSE_MOCKED,
-              data: output
+              data: output,
+              description: 'mocked sandboxed api response'
             }
           } as IPacket);
 
@@ -114,7 +115,10 @@ export class ContentService {
       source: appSources.POPUP,
       domain: this.appStateService.domain,
       payload: {
-        type: payloadType.PING
+        type: payloadType.PING,
+        data: null,
+        context: null,
+        description: 'pingpong',
       }
     } as IPacket;
 
@@ -129,7 +133,9 @@ export class ContentService {
       domain: this.appStateService.domain,
       payload: {
         type: isOpen ? payloadType.POPUP_OPEN : payloadType.POPUP_CLOSED,
-        data: { isOpen }
+        data: { isOpen },
+        description: '',
+        context: null
       }
     } as IPacket;
 

@@ -1,5 +1,5 @@
 import { IPacketPayload } from "../../shared/packet-type";
-import { IOhMyResponseUpsert, IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyContext } from "../../shared/types";
+import { IOhMyResponseUpsert, IOhMyRequest, IOhMyResponse, IOhMyDomain, IOhMyContext, IOhMyRequestId, IOhMyDomainContext, IOhMyPropertyContext } from "../../shared/types";
 import { MockUtils } from "../../shared/utils/mock";
 import { update } from "../../shared/utils/partial-updater";
 import { OhMyQueue } from "../../shared/utils/queue";
@@ -12,39 +12,41 @@ import { IOhMyHandlerConstructor, staticImplements } from "./handler";
 import { uniqueId } from "../../shared/utils/unique-id";
 // import { shallowSearch, splitIntoSearchTerms } from "../../shared/utils/search";
 
-@staticImplements<IOhMyHandlerConstructor<IOhMyResponseUpsert, IOhMyResponse>>()
+@staticImplements<IOhMyHandlerConstructor<IOhMyResponseUpsert, IOhMyResponse, IOhMyPropertyContext>>()
 export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpsert, IOhMyContext>): Promise<IOhMyResponse | void> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpsert, IOhMyPropertyContext>): Promise<IOhMyResponse | void> {
     try {
-      const responseId = data.responseId;
-      const requestId = data.requestId || uniqueId();
+      let response: IOhMyResponse;
+
       const state = await OhMyResponseHandler.StorageUtils.get<IOhMyDomain>(context.key);
-      let request = OhMyResponseHandler.StorageUtils.get<IOhMyRequest>(data.requestId) ||
-        DataUtils.init({ id: requestId });
+      const requestId = (data.request as Partial<IOhMyRequest>).id || data.request as IOhMyRequestId;
 
-        if (context!.path) { // new/update
-          response = await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id);
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          response = update<IOhMyResponse>(context!.path, response as IOhMyResponse, context!.propertyName!, data.response[context!.propertyName!]);
+      let request = await OhMyResponseHandler.StorageUtils.get<IOhMyRequest>(requestId) || DataUtils.init({ id: requestId });
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (context!.path) { // new/update.
+        response = await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(
+          (update as Partial<IOhMyResponse>)?.id);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        response = update<IOhMyResponse>(context!.path, response as IOhMyResponse, context!.propertyName!, data.response![context!.propertyName!]);
+        response.modifiedOn = timestamp();
+      } else { // new, update or delete
+        const base = data.responseId ? await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(data.responseId) : undefined;
+        response = MockUtils.init(base, data.response as Partial<IOhMyResponse>);
+
+        if (base) {
           response.modifiedOn = timestamp();
-        } else { // new, update or delete
-          const base = response.id ? await OhMyResponseHandler.StorageUtils.get<IOhMyResponse>(response.id) : undefined;
-          response = MockUtils.init(base, response);
-
-          if (base) {
-            response.modifiedOn = timestamp();
-          }
         }
-        request = DataUtils.addResponse(state.context, request, response, autoActivate);
-
-        // if (state.aux.filterKeywords) { // Update filter results
-        //   const words = splitIntoSearchTerms(state.aux.filterKeywords);
-        //   const out = shallowSearch({ [request.id]: request }, words, state.aux.filterOptions);
-        // }
       }
+      request = DataUtils.addResponse(state.context, request, response, false /*autoActivate*/);
+
+      // if (state.aux.filterKeywords) { // Update filter results
+      //   const words = splitIntoSearchTerms(state.aux.filterKeywords);
+      //   const out = shallowSearch({ [request.id]: request }, words, state.aux.filterOptions);
+      // }
 
       OhMyResponseHandler.updateFiltering(state, request, response as IOhMyResponse);
 

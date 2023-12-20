@@ -52,7 +52,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
 
       delete values.contentType; // is not part if IOhMyResponse
 
-      this.storeService.upsertResponse({
+      this.storeService.upsertResponse(this.response.id, {
         ...values,
         headersMock: {
           ...this.response.headersMock,

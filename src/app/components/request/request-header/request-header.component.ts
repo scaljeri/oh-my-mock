@@ -122,7 +122,7 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
           this.request.presets[this.context.presetId].responseId,
           update, this.request, this.context);
       } else {
-        this.storeService.upsertResponse(update, this.request, this.context);
+        this.storeService.upsertResponse(this.request.id, update, this.request, this.context);
       }
     });
   }

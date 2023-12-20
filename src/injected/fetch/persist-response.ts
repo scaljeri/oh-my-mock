@@ -1,12 +1,11 @@
 import { STORAGE_KEY } from '../../shared/constants';
-import { IOhMyResponseUpdate } from '../../shared/packet-type';
-import { IOhMyAPIRequest } from '../../shared/types';
+import { IOhMyAPIRequest, IOhMyResponseUpdate, IOhMyResponseUpsert } from '../../shared/types';
 import { convertToB64 } from '../../shared/utils/binary';
 import { extractMimeType, isMimeTypeText } from '../../shared/utils/mime-type';
 import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { removeDomainFromUrl } from '../utils';
 
-export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<IOhMyResponseUpdate | undefined> {
+export async function persistResponse(response: Response, request: IOhMyAPIRequest): Promise<IOhMyResponseUpsert | undefined> {
   if (!window[STORAGE_KEY].state?.active) {
     return undefined;
   }
@@ -32,9 +31,12 @@ export async function persistResponse(response: Response, request: IOhMyAPIReque
   }
 
   const ohResult = {
-    request: { url: removeDomainFromUrl(response['ohUrl'] || response.url), requestMethod: response['ohMethod'] || request?.requestMethod, requestType: 'FETCH' },
-    response: { statusCode: clone['__status'], response: output, headers }
-  } as IOhMyResponseUpdate;
+    request: {
+      url: removeDomainFromUrl(response['ohUrl'] || response.url),
+      requestMethod: response['ohMethod'] || request?.requestMethod,
+    },
+    update: { statusCode: clone['__status'], response: output, headers }
+  } as IOhMyResponseUpsert;
 
   dispatchApiResponse(ohResult);
   response['ohResult'] = ohResult;

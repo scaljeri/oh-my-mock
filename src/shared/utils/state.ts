@@ -1,6 +1,6 @@
 import { objectTypes } from '../constants';
 import { timestamp } from 'rxjs';
-import { IOhMyDomain, IOhMyRequest, IOhMyUpsertRequest, IOhMyRequestId } from '../types';
+import { IOhMyDomain, IOhMyRequest, IOhMyRequestId } from '../types';
 import { compareUrls } from './urls';
 
 export class StateUtils {
@@ -47,7 +47,7 @@ export class StateUtils {
 
   static async findRequest(
     state: IOhMyDomain,
-    search: IOhMyUpsertRequest,
+    search: Partial<IOhMyRequest>,
     requestLookup: (id: IOhMyRequestId) => Promise<IOhMyRequest>): Promise<IOhMyRequest | undefined> {
     for (let index = 0; index < state.requests.length; index++) {
       const request = await requestLookup(state.requests[index]);

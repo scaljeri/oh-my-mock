@@ -9,10 +9,11 @@ export interface IOhMyResponseDelete {
   responseId: IOhMyResponseId;
 }
 
+export type IOhMyResponseUpdate = Partial<IOhMyResponse> | IOhMyResponse[keyof IOhMyResponse];
 export interface IOhMyResponseUpsert {
-  update: Partial<IOhMyResponse> | IOhMyResponse[keyof IOhMyResponse]
-  responseId: IOhMyResponseId;
-  requestId?: IOhMyRequestId;
+  response?: IOhMyResponseUpdate;
+  responseId?: IOhMyResponseId; // Id is a seperate value because `response` can be just a value for update
+  request: IOhMyRequestId | Partial<IOhMyRequest>;
 }
 
 // Request

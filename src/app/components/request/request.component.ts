@@ -64,7 +64,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
       }));
 
     this.responseCtrl.valueChanges.subscribe(val => {
-      this.storeService.upsertResponse({ responseMock: val, id: this.response.id }, this.request, this.context);
+      this.storeService.upsertResponse(this.response.id, { responseMock: val, id: this.response.id }, this.request, this.context);
     });
 
     this.headersCtrl.valueChanges.subscribe(val => {
@@ -105,12 +105,12 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   onRevertResponse(): void {
-    this.storeService.upsertResponse({ responseMock: this.response.response, id: this.response.id }, this.request, this.context);
+    this.storeService.upsertResponse(this.response.id, { responseMock: this.response.response, id: this.response.id }, this.request, this.context);
   }
 
   onHeadersChange(headersMock: string): void {
     try {
-      this.storeService.upsertResponse({
+      this.storeService.upsertResponse(this.response.id, {
         id: this.response.id,
         headersMock: JSON.parse(headersMock)
       }, this.request, this.context);
@@ -120,14 +120,14 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   onRevertHeaders(): void {
-    this.storeService.upsertResponse({ headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
+    this.storeService.upsertResponse(this.response.id, { headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
   }
 
   openShowMockCode(): void {
     const data = { code: this.response.jsCode, type: 'javascript', allowErrors: false };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({ jsCode: update, id: this.response.id }, this.request, this.context);
+      this.storeService.upsertResponse(this.response.id, { jsCode: update, id: this.response.id }, this.request, this.context);
     });
   }
 
@@ -138,7 +138,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
     };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({
+      this.storeService.upsertResponse(this.response.id, {
         responseMock: update, id: this.response.id
       }, this.request, this.context);
     });
@@ -169,7 +169,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
       this.dialogIsOpen = false;
 
       if (update) {
-        this.storeService.upsertResponse({
+        this.storeService.upsertResponse(this.response.id, {
           id: this.response.id,
           ...(update.data && { responseMock: update.data }),
           rules: update.rules

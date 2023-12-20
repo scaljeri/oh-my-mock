@@ -5,6 +5,7 @@ import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
 
 export type IOhMyRequestLookup = (requestId: IOhMyRequestId) => Promise<IOhMyRequest>;
+const VERSION = '__OH_MY_VERSION__';
 
 export class DataUtils {
   static StorageUtils = StorageUtils;
@@ -104,14 +105,15 @@ export class DataUtils {
   // }
 
   static create(data: Partial<IOhMyRequest>): IOhMyRequest {
-    const output: IOhMyRequest = {
+    const output = {
       id: uniqueId(),
       presets: {},
       responses: {},
       lastHit: Date.now(),
       ...data,
       type: objectTypes.REQUEST,
-    };
+      version: VERSION
+    } as IOhMyRequest;
 
     if (!data?.id && data?.url) {
       output.url = url2regex(data.url);

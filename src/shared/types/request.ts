@@ -1,5 +1,5 @@
 import { objectTypes } from "../constants";
-import { IOhMyResponse, IOhMyResponseId, IOhMyStatusCode } from "./response";
+import { IOhMyResponseId, IOhMyStatusCode } from "./response";
 
 export type IOhMyRequestId = string;
 export type IOhMyBodyId = string;
@@ -21,7 +21,7 @@ export interface IOhMyRequest {
   // requestType: requestType;
   responses: Record<IOhMyResponseId, IOhMyShallowResponse>;
   lastHit: number;
-  lastModified: number;
+  lastModified?: number;
   version: string;
   type: objectTypes.REQUEST;
   requestMethod: IOhMyRequestMethod

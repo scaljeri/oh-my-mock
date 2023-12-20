@@ -58,6 +58,7 @@ export class OhMySendToBg {
     return OhMySendToBg.send({
       source: OhMySendToBg.source,
       payload: {
+        context: null,
         type: payloadType.RESET,
         data: key,
         description

@@ -6,10 +6,10 @@ import { StorageUtils } from "../../shared/utils/storage";
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IOhMyHandler { }
 
-export interface IOhMyHandlerConstructor<T = unknown, K = IOhMyMock | IOhMyResponse | IOhMyDomain> {
+export interface IOhMyHandlerConstructor<T = unknown, K = IOhMyMock | IOhMyResponse | IOhMyDomain, X = IOhMyContext> {
   new(): IOhMyHandler;
   StorageUtils: StorageUtils;
-  update: (input: IPacketPayload<T, IOhMyContext>) => Promise<K | void>;
+  update: (input: IPacketPayload<T, X>) => Promise<K | void>;
   queue?: OhMyQueue;
 }
 

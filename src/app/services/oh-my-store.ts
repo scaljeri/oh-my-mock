@@ -1,14 +1,28 @@
 import { Injectable } from '@angular/core';
 import { objectTypes, payloadType, STORAGE_KEY } from '@shared/constants';
 
-import { IOhMyMock, IOhMyDomainId, IOhMyDomain, IOhMyResponseId, IOhMyRequest, IOhMyResponse, IOhMyContext, IOhMyRequestId, IOhMyAux, IOhMyPresetId, IOhMyShallowResponse, IOhMyDomainContext } from '@shared/types';
+import {
+  IOhMyResponseUpdate,
+  IOhMyMock,
+  IOhMyDomainId,
+  IOhMyDomain,
+  IOhMyResponseId,
+  IOhMyRequest,
+  IOhMyResponse,
+  IOhMyContext,
+  IOhMyRequestId,
+  IOhMyAux,
+  IOhMyPresetId,
+  IOhMyShallowResponse,
+  IOhMyDomainContext,
+  IOhMyResponseUpsert
+} from '@shared/types';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { uniqueId } from '@shared/utils/unique-id';
 import { url2regex } from '@shared/utils/urls';
 import { StorageService } from './storage.service';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
-import { IOhMyResponseUpdate } from '@shared/packet-type';
 
 @Injectable({
   providedIn: 'root'
@@ -90,7 +104,7 @@ export class OhMyState {
 
   async cloneResponse(sourceId: IOhMyResponseId, update: Partial<IOhMyResponse>, request: Partial<IOhMyRequest>, context: IOhMyContext): Promise<IOhMyResponse> {
     if (!sourceId) {
-      return this.upsertResponse(update, request, context);
+      return this.upsertResponse(update.id, update as IOhMyResponseUpdate, request, context);
     }
 
     const response = { ...await this.storageService.get<IOhMyResponse>(sourceId), ...update };
@@ -103,13 +117,14 @@ export class OhMyState {
       delete response.modifiedOn;
     }
 
-    return this.upsertResponse(response, request, context);
+    return this.upsertResponse(undefined, response, request, context);
   }
 
-  async upsertResponse(response: Partial<IOhMyResponse>, request: Partial<IOhMyRequest>, context: IOhMyContext): Promise<IOhMyResponse> {
-    const retVal = await OhMySendToBg.full<IOhMyResponseUpdate, IOhMyResponse>({
-      request,
-      response
+  async upsertResponse(responseId: IOhMyResponseId, update: IOhMyResponseUpdate, request: Partial<IOhMyRequest> | IOhMyRequestId, context: IOhMyContext): Promise<IOhMyResponse> {
+    const retVal = await OhMySendToBg.full<IOhMyResponseUpsert, IOhMyResponse>({
+      response: update,
+      responseId: responseId,
+      request
     }, payloadType.RESPONSE, context, 'popup;upsertResponse');
 
     return retVal;
@@ -201,10 +216,12 @@ export class OhMyState {
   }
 
   async deleteResponse(responseId: IOhMyResponseId, requestId: IOhMyRequestId, context: IOhMyDomainContext): Promise<IOhMyDomain> {
-    const state = await OhMySendToBg.full<IOhMyResponseUpdate, IOhMyDomain>({
-      response: { id: responseId },
-      request: { id: requestId }
-    }, payloadType.RESPONSE, context, 'popup;deleteResponse');
+    const data: IOhMyResponseUpsert = {
+      responseId, request: { id: requestId }
+    };
+
+    const state = await OhMySendToBg.full<IOhMyResponseUpsert, IOhMyDomain>(
+      data, payloadType.RESPONSE, context, 'popup;deleteResponse');
 
     return state;
   }

@@ -1,10 +1,8 @@
 import { payloadType, STORAGE_KEY } from '../../shared/constants';
-import { IOhMyResponseUpdate } from '../../shared/packet-type';
-import { IOhMyDomainContext } from '../../shared/types';
-import { log } from '../utils';
+import { IOhMyDomainContext, IOhMyResponseUpsert } from '../../shared/types';
 import { send } from './send';
 
-export function dispatchApiResponse(payload: IOhMyResponseUpdate) {
+export function dispatchApiResponse(payload: IOhMyResponseUpsert) {
   window[STORAGE_KEY].cache.unshift(payload);
 
   send({
