@@ -1,14 +1,15 @@
-import { IMock, IOhMyAPIRequest, IOhMyMockResponse } from "../shared/type";
+import { IOhMyAPIRequest, IOhMyMockResponse, IOhMyResponse } from "../shared/types";
 import { evalCode } from "../shared/utils/eval-code";
 
 window.addEventListener('message', async function (event) {
-  const data = event.data as { mock: IMock, request: IOhMyAPIRequest, response: IOhMyMockResponse };
+  const data = event.data as { mock: IOhMyResponse, request: IOhMyAPIRequest, response: IOhMyMockResponse };
 
   if (data.mock) {
-    delete data.response?.status;
+    delete data.response.status;
 
     const output = await evalCode(data.mock, data.request, data.response);
-    event.source['window'].postMessage(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    event.source!['window'].postMessage(
       {
         id: event.data.mock.id,
         output

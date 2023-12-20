@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { IData, IMock, ohMyDataId } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyRequestId } from '@shared/types';
 import { loadAllMocks } from '@shared/utils/load-all-mocks';
 import { OhMyStateService } from './state.service';
 import { OhWWPacketTypes } from '../webworkers/types';
@@ -39,7 +39,7 @@ export class WebWorkerService {
     this.stateService.response$.subscribe(mock => this.upsertMock(mock));
   }
 
-  public upsertMock(mock: IMock): void {
+  public upsertMock(mock: IOhMyResponse): void {
     this.worker.postMessage({
       type: OhWWPacketTypes.MOCKS,
       body: { [mock.id]: mock }
@@ -48,7 +48,7 @@ export class WebWorkerService {
     this.mockUpsertSubject.next(mock);
   }
 
-  public search(data: Record<ohMyDataId, IData>, terms: string[], includes: Record<string, boolean>): Observable<string[]> {
+  public search(data: Record<IOhMyRequestId, IOhMyRequest>, terms: string[], includes: Record<string, boolean>): Observable<string[]> {
     const id = uniqueId();
 
     this.worker.postMessage({ id, type: OhWWPacketTypes.SEARCH, body: { terms, data, includes } });

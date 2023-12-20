@@ -1,10 +1,10 @@
-import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
+import { appSources, OhMyResponseStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyAPIRequest, IOhMyContext, requestType } from '../../shared/type';
-import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
+import { IOhMyAPIRequest, IOhMyContext } from '../../shared/types';
+import { IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
@@ -49,23 +49,23 @@ declare let window: any;
 //   });
 // }
 
-export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyReadyResponse> => {
+export const dispatchApiRequest = async (request: IOhMyAPIRequest): Promise<IOhMyReadyResponse> => {
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
   return new Promise(async (resolve, reject) => {
     const id = uniqueId();
     const payload = {
-      context: { id, requestType },
+      context: { id },
       type: payloadType.API_REQUEST,
       data: request
-    } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;
+    } as IPacketPayload<IOhMyAPIRequest, IOhMyContext>;
 
     mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))
       .subscribe(({ packet }) => {
         const resp = packet.payload.data as IOhMyReadyResponse;
         try {
-          logMocked(request, requestType, resp.response);
+          logMocked(request, resp.response);
         } catch (err) {
           // eslint-disable-next-line no-console
           console.log('Ooops, received something unexpected: ', resp);
@@ -74,7 +74,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
         }
         mb.clear();
 
-        if (resp.response.status === ohMyMockStatus.ERROR) {
+        if (resp.response.status === OhMyResponseStatus.ERROR) {
           // TODO: can this happen????
           // printEvalError(resp.result as string, data);
           // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);

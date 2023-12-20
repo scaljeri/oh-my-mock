@@ -1,7 +1,7 @@
 
-import { MOCK_JS_CODE, ohMyMockStatus, payloadType, STORAGE_KEY } from "../shared/constants";
-import { IOhMyPacketContext, IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IState } from "../shared/type";
+import { MOCK_JS_CODE, OhMyResponseStatus, payloadType, STORAGE_KEY } from "../shared/constants";
+import { IOhMyReadyResponse, IPacket } from "../shared/packet-type";
+import { IOhMyAPIRequest, IOhMyResponse, IOhMyContext, IOhMyMockResponse, IOhMyDomain, IOhMyRequestId, IOhMyRequest, IOhMyDomainContext } from "../shared/types";
 import { DataUtils } from "../shared/utils/data";
 import { blurBase64, isImage, stripB64Prefix } from "../shared/utils/image";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
@@ -9,6 +9,7 @@ import { getMimeType } from "../shared/utils/mime-type";
 import { MockUtils } from "../shared/utils/mock";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
 import { StateUtils } from "../shared/utils/state";
+import { StorageUtils } from "../shared/utils/storage";
 import { OhMyContentState } from "./content-state";
 import { sendMsg2Popup } from "./message-to-popup";
 import { sendMessageToInjected } from "./send-to-injected";
@@ -19,7 +20,7 @@ const VERSION = '__OH_MY_VERSION__';
 //  IOhMyReadyResponse
 export async function receivedApiRequest(
   packet: IPacket<IOhMyAPIRequest,
-    IOhMyPacketContext>,
+    IOhMyContext>,
   messageBus: OhMyMessageBus,
   contentState: OhMyContentState) {
   if (packet.version !== VERSION && !VERSION.match('beta')) {
@@ -32,25 +33,32 @@ export async function receivedApiRequest(
     return;
   }
 
+  if (!contentState.state) {
+    return;
+  }
+
   const { payload } = packet;
-  const inputRequest = { ...payload.data, requestType: payload.context.requestType }
+  const inputRequest = { ...payload.data }
   const context = { ...contentState.state.context, ...payload.context };
 
-  const request = { method: inputRequest.method, url: inputRequest.url } as IOhMyAPIRequest;
-  const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest, payloadType.DISPATCH_TO_SERVER, context) as IOhMyMockResponse;
-  const data = StateUtils.findRequest(contentState.state, inputRequest);
+  const request = { method: inputRequest.requestMethod, url: inputRequest.url } as IOhMyAPIRequest;
+  // TODO: remove `any`
+  const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest as any, payloadType.DISPATCH_TO_SERVER, context) as IOhMyMockResponse;
+  const lookupRequest = (requestId: IOhMyRequestId) => StorageUtils.get<IOhMyRequest>(requestId);
+  const data = await StateUtils.findRequest(contentState.state, inputRequest, lookupRequest);
 
-  let mockId: string;
-  let mock: IMock;
+  let mockId: string | undefined = undefined;
+  let mock: IOhMyResponse | undefined = undefined;
 
   if (data) {
-    mockId = DataUtils.activeMock(data, contentState.state.context);
+    mockId = DataUtils.activeResponse(data, contentState.state.context);
     if (mockId) {
-      mock = await contentState.get<IMock>(mockId);
+      mock = await contentState.get<IOhMyResponse>(mockId);
 
       // HIT (handleApiRequest: shared/utils/handle-api-request.ts)
       data.lastHit = Date.now();
-      OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      OhMySendToBg.patch(data, '$.data', data.id!, payloadType.DOMAIN);
 
       if (!mock) {
         // TODO: This should never happen
@@ -60,7 +68,7 @@ export async function receivedApiRequest(
 
   if (!data || mock?.jsCode === MOCK_JS_CODE || !mockId) { // No need to dispatch
     let mockResponse;
-    if (response.status === ohMyMockStatus.OK) {
+    if (response.status === OhMyResponseStatus.OK) {
       // Should we do something here?
     } else { // Rule: Return `response` if mock's custom code is not touched
       mockResponse = MockUtils.mockToResponse(mock);
@@ -79,11 +87,12 @@ export async function receivedApiRequest(
   } else {
     try {
       const output = await sendMsg2Popup(messageBus, {
-        context: payload.context,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        context: payload.context as IOhMyDomainContext,
         type: payloadType.API_REQUEST,
         data: {
           request: inputRequest,
-          ...(response.status === ohMyMockStatus.OK && { response }),
+          ...(response.status === OhMyResponseStatus.OK && { response }),
         },
         description: 'content:dispatch-eval'
       });
@@ -91,12 +100,12 @@ export async function receivedApiRequest(
       handleResponse(request, context, response, output.payload.data as any, contentState.state);
     } catch (err) {
       error(err.message);
-      await OhMySendToBg.patch(false, '$.aux', 'appActive', payloadType.STATE);
+      await OhMySendToBg.patch(false, '$.aux', 'appActive', payloadType.DOMAIN);
 
       debug('Popup cannot be reached -> OhMyMock deactivated');
       warn(err.fix);
       handleResponse(request, context, response, {
-        status: ohMyMockStatus.ERROR
+        status: OhMyResponseStatus.ERROR
       });
     }
     // messageBus.streamById$<IOhMyMockResponse>(context.id, appSources.POPUP).pipe(take(1)).subscribe(({ packet }: IOhMessage<IOhMyMockResponse>) => {
@@ -132,13 +141,16 @@ export async function receivedApiRequest(
   }
 }
 
-async function handleResponse(request: IOhMyAPIRequest, context: IOhMyContext, response?: IOhMyMockResponse, output?: IOhMyMockResponse, state?: IState) {
-  const retVal = response.status === ohMyMockStatus.OK && output?.status !== ohMyMockStatus.OK ? response : output
+async function handleResponse(request: IOhMyAPIRequest, context: IOhMyDomainContext, response?: IOhMyMockResponse, output?: IOhMyMockResponse, state?: IOhMyDomain) {
+  const retVal = response?.status === OhMyResponseStatus.OK && output?.status !== OhMyResponseStatus.OK ? response : output
 
   if (state) {
-    const contentType = getMimeType(retVal.headers);
-    if (typeof retVal.response === 'string' && isImage(contentType) && state.aux.blurImages) {
-      retVal.response = stripB64Prefix(await blurBase64(retVal.response as string, contentType));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const contentType = getMimeType(retVal!.headers!);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (typeof retVal!.response === 'string' && isImage(contentType) && state.aux.blurImages) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      retVal!.response = stripB64Prefix(await blurBase64(retVal!.response as string, contentType));
     }
   }
 

@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IMock, IOhMyMockRule, IOhMyContext } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyMockRule, IOhMyContext, IOhMyDomainContext } from '@shared/types';
 import { filter, Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
@@ -26,17 +26,17 @@ import { StorageService } from '../../services/storage.service';
   styleUrls: ['./request.component.scss']
 })
 export class RequestComponent implements OnChanges, OnDestroy {
-  @Input() request: IData;
-  @Input() context: IOhMyContext;
+  @Input() request: IOhMyRequest;
+  @Input() context: IOhMyDomainContext;
   @Input() blurImages = false;
 
-  response: IMock;
+  response: IOhMyResponse;
 
   public dialogIsOpen = false;
 
   subscriptions = new Subscription();
 
-  activeMock$: Observable<IMock>;
+  activeMock$: Observable<IOhMyResponse>;
   responseType: string;
   contentType: string;
 
@@ -64,7 +64,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
       }));
 
     this.responseCtrl.valueChanges.subscribe(val => {
-      this.storeService.upsertResponse({ responseMock: val, id: this.response.id }, this.request, this.context);
+      this.storeService.upsertResponse(this.response.id, { responseMock: val, id: this.response.id }, this.request, this.context);
     });
 
     this.headersCtrl.valueChanges.subscribe(val => {
@@ -73,7 +73,8 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   async ngOnChanges(): Promise<void> {
-    const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
+    const preset = this.request?.presets[this.context.presetId];
+    const activeResponse = this.request?.responses[preset.responseId];
 
     if (!activeResponse) {
       this.response = undefined;
@@ -89,7 +90,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
       this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : this.response?.headersMock?.['content-type'];
       this.isResponseImage = false;
-      this.hasMocks = Object.keys(this.request.mocks).length > 0;
+      this.hasMocks = Object.keys(this.request.responses).length > 0;
 
       this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
@@ -104,12 +105,12 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   onRevertResponse(): void {
-    this.storeService.upsertResponse({ responseMock: this.response.response, id: this.response.id }, this.request, this.context);
+    this.storeService.upsertResponse(this.response.id, { responseMock: this.response.response, id: this.response.id }, this.request, this.context);
   }
 
   onHeadersChange(headersMock: string): void {
     try {
-      this.storeService.upsertResponse({
+      this.storeService.upsertResponse(this.response.id, {
         id: this.response.id,
         headersMock: JSON.parse(headersMock)
       }, this.request, this.context);
@@ -119,14 +120,14 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   onRevertHeaders(): void {
-    this.storeService.upsertResponse({ headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
+    this.storeService.upsertResponse(this.response.id, { headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
   }
 
   openShowMockCode(): void {
     const data = { code: this.response.jsCode, type: 'javascript', allowErrors: false };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({ jsCode: update, id: this.response.id }, this.request, this.context);
+      this.storeService.upsertResponse(this.response.id, { jsCode: update, id: this.response.id }, this.request, this.context);
     });
   }
 
@@ -137,7 +138,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
     };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({
+      this.storeService.upsertResponse(this.response.id, {
         responseMock: update, id: this.response.id
       }, this.request, this.context);
     });
@@ -168,10 +169,11 @@ export class RequestComponent implements OnChanges, OnDestroy {
       this.dialogIsOpen = false;
 
       if (update) {
-        this.storeService.upsertResponse({
+        this.storeService.upsertResponse(this.response.id, {
           id: this.response.id,
           ...(update.data && { responseMock: update.data }),
-          rules: update.rules }, this.request, this.context);
+          rules: update.rules
+        }, this.request, this.context);
       }
     });
   }

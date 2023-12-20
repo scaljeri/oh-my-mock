@@ -1,13 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { IOhDataView } from '../app.types';
-import { IData } from '@shared/type';
+import { IOhMyRequest, IOhMyRequestId } from '@shared/types';
 
 @Pipe({
   name: 'dataToViewList'
 })
 export class DataToViewListPipe implements PipeTransform {
 
-  transform(value: string[] = [], data: Record<string, IData> = {}): IOhDataView[] {
+  transform(value: IOhMyRequestId[] = [], data: Record<IOhMyRequestId, IOhMyRequest> = {}): IOhDataView[] {
     if (value === null) {
       return [];
     }

@@ -76,7 +76,7 @@
         [ngClass]="{
           hidden: !state || hideFilter === true || requestCount === 0
         }"
-        [data]="state.data"
+        [data]="requests"
         [filterOptions]="filterOptions"
         [filterStr]="filterKeywords"
         [lastResult]="filteredRequests"
@@ -85,7 +85,7 @@
         (updateFilterStr)="onFilterUpdateStr($event)"
       ></oh-my-request-filter>
       <!-- <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner> -->
-        <!-- (filteredData)="onFilterUpdateData($event)" -->
+      <!-- (filteredData)="onFilterUpdateData($event)" -->
     </div>
     <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>
@@ -96,7 +96,7 @@
     class="data-row"
     x-test="list-request-item"
     *ngFor="
-      let row of filteredRequests | dataToViewList: state.data;
+      let row of filteredRequests | dataToViewList: requests;
       index as index;
       trackBy: trackBy
     "
@@ -104,13 +104,14 @@
     [ngClass]="{
       'row-clickable': togglableRows,
       'is-selected': selection.isSelected(index),
-      'is-active': row.enabled[context?.preset],
-      'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn
+      'is-active': row.presets[context?.presetId].isActive,
+      'is-modified':
+        row.responses[row.presets[context?.presetId].responseId]?.modifiedOn
     }"
   >
     <span class="row-number">{{ index + 1 }}</span>
-    <span class="method">{{ row.requestType }}</span>
-    <span class="type">{{ row.method }}</span>
+    <!-- <span class="method">{{ row.requestType }}</span> -->
+    <span class="type">{{ row.requestMethod }}</span>
     <span
       class="url"
       [attr.data-content-start]="row.urlStart"
@@ -118,8 +119,8 @@
     ></span>
     <span class="mock">
       <oh-my-mock-label
-        *ngIf="row.selected[context?.preset] as mockId"
-        [mock]="row.mocks[mockId]"
+        *ngIf="row.presets[context?.presetId].responseId"
+        [mock]="row.responses[row.presets[context?.presetId].responseId]"
       ></oh-my-mock-label>
     </span>
     <ng-container
@@ -141,12 +142,12 @@
         <mat-icon
           svgIcon="play_arrow"
           color="primary"
-          *ngIf="!row.enabled[context?.preset]"
+          *ngIf="!row.presets[context?.presetId].isActive"
         ></mat-icon>
         <mat-icon
           svgIcon="stop"
           color="primary"
-          *ngIf="row.enabled[context?.preset]"
+          *ngIf="row.presets[context?.presetId].isActive"
         ></mat-icon>
       </button>
       <button

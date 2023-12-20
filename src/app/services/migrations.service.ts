@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import compareVersions from 'compare-versions';
 
-import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './app-state.service';
 
 import { migrations, IOhMygrations } from '../migrations/'
-import * as stateUtils from '@shared/utils/store';
+// import * as stateUtils from '../../../../utils/store';
+import { IOhMyMock } from '../../shared/types';
 
 /**
  * Each new version might require the data of the previous version to be modified.
@@ -22,7 +22,7 @@ export class MigrationsService {
     this.versions = Object.keys(migrations).sort(compareVersions);
   }
 
-  update(state: IOhMyMock): IOhMyMock {
+  update(state: IOhMyMock): IOhMyMock | null {
     if (!state) {
       return null;
     }
@@ -44,7 +44,7 @@ export class MigrationsService {
         state = migrations[this.versions[i]](state);
 
         if (!state) {
-          return;
+          return null;
         }
 
         state.version = this.versions[i];

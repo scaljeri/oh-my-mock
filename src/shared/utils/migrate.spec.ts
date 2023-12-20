@@ -8,6 +8,7 @@ beforeEach(() => {
   MigrateUtils.requestSteps = [jest.fn().mockReturnValue('request')];
   MigrateUtils.mockSteps = [jest.fn().mockReturnValue('response')];
 });
+
 describe('Utils/Migrate', () => {
   describe('#shouldMigrate', () => {
     it('should migrate if version is older', () => {

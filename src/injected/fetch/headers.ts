@@ -1,10 +1,11 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import * as fetchUtils from '../../shared/utils/fetch';
 import { persistResponse } from "./persist-response";
 
 const isPatched = !!window.Response.prototype.hasOwnProperty('__headers');
-const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'headers');
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'headers')!;
 
 export function patchHeaders() {
   Object.defineProperties(window.Response.prototype, {
@@ -18,14 +19,14 @@ export function patchHeaders() {
         if (!this.ohResult) {
           this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
-            method: this.ohMethod
+            requestMethod: this.ohMethod
           });
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+          if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
             persistResponse(this, this.ohResult.request);
           }
         }
 
-        if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
+        if (this.ohResult && this.ohResult.response.status === OhMyResponseStatus.OK) {
           return fetchUtils.jsonToHeaders(this.ohResult.response.headers);
         } else {
           return this.__headers;

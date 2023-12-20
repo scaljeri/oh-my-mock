@@ -1,4 +1,4 @@
-import { IOhMyBackup } from "./type";
+import { IOhMyBackup } from "./types";
 
 export type OhMyAPIUpsert = IOhMyBackup;
 

@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ohMyMockStatus } from '../../src/shared/constants';
+import { OhMyResponseStatus } from '../../src/shared/constants';
 import { IOhMyDispatchServerRequest } from '../../src/shared/packet-type';
-import { IData, IOhMyMockContext, IOhMyMockResponse, statusCode } from '../../src/shared/type';
+import { IOhMyMockResponse, IOhMyStatusCode, IOhMyAPIRequest, IOhMyRequest } from '../../src/shared/types';
 import { compareUrls } from '../../src/shared/utils/urls';
 
 const fsPromise = fs.promises;
@@ -14,9 +14,9 @@ export interface IOhMyLocalConfig {
 export type IOhMySdkResponse = IOhMyMockResponse;
 export type IOhMySdkRequest = IOhMyDispatchServerRequest;
 
-export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
+export type IOhFileContext = Omit<IOhMyAPIRequest, 'id' | 'mockId'> &
 {
-  statusCode?: statusCode;
+  statusCode?: IOhMyStatusCode;
   headers?: Record<string, string>;
   path?: string
   handler: (output: IOhMySdkResponse, input: IOhMySdkRequest) => IOhMySdkResponse;
@@ -31,10 +31,10 @@ export class OhMyLocal {
     this.contexts.push(context);
   }
 
-  findContext(input: Partial<IData>): IOhFileContext | null {
+  findContext(input: Partial<IOhMyRequest>): IOhFileContext | null {
     return (this.contexts.filter(c => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return (!input.method || c.method === input.method) && compareUrls(input.url!, c.url!);
+      return (!input.requestMethod || c.requestMethod === input.requestMethod) && compareUrls(input.url!, c.url!);
     }) || [])[0];
   }
 
@@ -46,14 +46,14 @@ export class OhMyLocal {
       // eslint-disable-next-line no-console
       console.log(`     no response defined`);
 
-      return { status: ohMyMockStatus.NO_CONTENT };
+      return { status: OhMyResponseStatus.NO_CONTENT };
     } else {
       // eslint-disable-next-line no-console
       console.log(`     serving response from disk`);
     }
 
     const output = {
-      status: ohMyMockStatus.NO_CONTENT,
+      status: OhMyResponseStatus.NO_CONTENT,
       ...(context.statusCode && { statusCode: context.statusCode }),
       ...(context.headers && { headers: context.headers })
     } as IOhMyMockResponse;
@@ -63,11 +63,11 @@ export class OhMyLocal {
 
       if (respFromFile) {
         output.response = respFromFile;
-        output.status = ohMyMockStatus.OK;
+        output.status = OhMyResponseStatus.OK;
       }
     }
 
-    return context ? (context.handler?.(output, data) || output) : { status: ohMyMockStatus.NO_CONTENT };
+    return context ? (context.handler?.(output, data) || output) : { status: OhMyResponseStatus.NO_CONTENT };
   }
 
   static async loadFile(filename: string): Promise<string | null> {

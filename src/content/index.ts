@@ -48,10 +48,11 @@ window[STORAGE_KEY].off.push(() => messageBus.clear());
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
-window[STORAGE_KEY].off.push(contentState.isActive$.subscribe(async (value: boolean) => {
-  if (await injectCode({ active: value }, messageBus)) {
+window[STORAGE_KEY].off.push(contentState.isActive$.subscribe(async (value: boolean | undefined) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  if (await injectCode({ active: value! }, messageBus)) {
     sendMessageToInjected({
-      type: payloadType.STATE,
+      type: payloadType.DOMAIN,
       data: {
         active: value, description: 'content;contentState.isActive'
       }

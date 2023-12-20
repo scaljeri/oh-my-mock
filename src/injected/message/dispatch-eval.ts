@@ -1,5 +1,5 @@
 // import { appSources, ohMyEvalStatus, packetTypes } from '../../shared/constants';
-// import { IData, IMock, IPacket } from '../../shared/type';
+// import { IData, IMock, IPacket } from '../../shared/types';
 // import { evalCode } from '../../shared/utils/eval-code';
 // import { streamById$ } from '../../shared/utils/message-bus';
 // import { error, log, logMocked } from '../utils';

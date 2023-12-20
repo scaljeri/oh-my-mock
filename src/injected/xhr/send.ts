@@ -1,5 +1,5 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
-import { IOhMyAPIRequest } from "../../shared/type";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
+import { IOhMyAPIRequest } from "../../shared/types";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
@@ -21,12 +21,12 @@ export function patchSend() {
 
     dispatchApiRequest({
       url: this.ohUrl,
-      method: this.ohMethod,
+      requestMethod: this.ohMethod,
       headers: this.ohHeaders,
       body
-    } as IOhMyAPIRequest, 'XHR').then(async data => {
-      if (data.response.status !== ohMyMockStatus.OK) { // No cache
-        this.__ohMyHasError = data.response.status === ohMyMockStatus.ERROR;
+    } as IOhMyAPIRequest).then(async data => {
+      if (data.response.status !== OhMyResponseStatus.OK) { // No cache
+        this.__ohMyHasError = data.response.status === OhMyResponseStatus.ERROR;
 
         if (!this.__ohMyHasError) {
 
@@ -37,8 +37,8 @@ export function patchSend() {
             // const headersStr =  this.getAllResponseHeaders();
             // const headers =  parse(headersStr);
 
-            if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
-              this.ohResult = findCachedResponse({ url: this.ohUrl, method: this.ohMethod });
+            if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
+              this.ohResult = findCachedResponse({ url: this.ohUrl, requestMethod: this.ohMethod });
               persistResponse(this, this.ohResult.request);
             }
           });
@@ -54,7 +54,7 @@ export function patchSend() {
         setTimeout(() => {
           Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.HEADERS_RECEIVED, configurable: true })
           this.onreadystatechange?.();
-          Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.LOADING,configurable: true })
+          Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.LOADING, configurable: true })
           this.onreadystatechange?.();
           Object.defineProperty(this, 'readyState', { value: XMLHttpRequest.DONE })
           this.onreadystatechange?.();

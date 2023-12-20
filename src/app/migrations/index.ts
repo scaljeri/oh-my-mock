@@ -1,4 +1,4 @@
-import { IOhMyMock } from '@shared/type'
+import { IOhMyMock } from '../../shared/types';
 import { IOhMygration } from './types';
 
 

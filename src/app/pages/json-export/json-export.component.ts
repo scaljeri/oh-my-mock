@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { IData, IMock, IState } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse,  IOhMyDomain } from '@shared/types';
 import { DataListComponent } from '../../components/data-list/data-list.component';
 import { AppStateService } from '../../services/app-state.service';
 import { HotToastService } from '@ngneat/hot-toast';
@@ -17,10 +17,10 @@ import { StorageService } from '../../services/storage.service';
   styleUrls: ['./json-export.component.scss']
 })
 export class JsonExportComponent implements OnInit {
-  state: IState;
-  selected: Record<string, IData> = {};
+  state: IOhMyDomain;
+  selected: Record<string, IOhMyRequest> = {};
   subscriptions: Subscription[] = [];
-  exportList: IData[] = []
+  exportList: IOhMyRequest[] = []
   hasRequests: boolean;
 
   @ViewChild(DataListComponent) dataListRef: DataListComponent;
@@ -34,10 +34,10 @@ export class JsonExportComponent implements OnInit {
 
   ngOnInit(): void {
     this.state = this.stateService.state;
-    this.hasRequests = Object.keys(this.state.data).length > 0;
+    this.hasRequests = Object.keys(this.state.requests).length > 0;
   }
 
-  onRowExport(data: IData): void {
+  onRowExport(data: IOhMyRequest): void {
     if (this.selected[data.id]) {
       delete this.selected[data.id];
     } else {
@@ -46,13 +46,13 @@ export class JsonExportComponent implements OnInit {
   }
 
   onSelectAll(): void {
-    const hasUnselected = Object.keys(this.state.data).length -
+    const hasUnselected = Object.keys(this.state.requests).length -
       Object.keys(this.selected).length > 0;
 
     if (hasUnselected) { // select all
       this.dataListRef.selectAll();
       this.selected = {};
-      Object.values(this.state.data).forEach(this.onRowExport.bind(this));
+      Object.values(this.state.requests).forEach(this.onRowExport.bind(this));
     } else { // deselect all
       this.dataListRef.deselectAll();
       this.selected = {};
@@ -72,14 +72,15 @@ export class JsonExportComponent implements OnInit {
     }
 
     for (const r of Object.values(this.selected)) {
-      const sMocks = Object.values(r.mocks);
+      const sMocks = Object.values(r.responses);
       const request = { ...r, id: uniqueId(), mocks: {} };
-      delete request.enabled; // These have presets which belong to a state/domain
-      delete request.selected; // idem
+      // TODO: Fix presets
+      // delete request.enabled; // These have presets which belong to a state/domain
+      // delete request.selected; // idem
       request.version = this.appStateService.version;
 
       for (const sm of sMocks) {
-        const mock = await this.storageService.get<IMock>(sm.id);
+        const mock = await this.storageService.get<IOhMyResponse>(sm.id);
         mock.id = uniqueId();
         request.mocks[mock.id] = { ...sm, id: mock.id };
 

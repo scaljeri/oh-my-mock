@@ -2,7 +2,7 @@
 
 import { Inject, Injectable } from '@angular/core';
 import { IPacketPayload } from '@shared/packet-type';
-import { IData, ohMyDomain } from '@shared/type';
+import { IOhMyDomainId, IOhMyRequest } from '@shared/types';
 import { BehaviorSubject, shareReplay, Subject } from 'rxjs';
 import { APP_VERSION } from '../tokens';
 
@@ -22,12 +22,12 @@ export class AppStateService {
   private errorSubject = new Subject<IPacketPayload>();
   public errors$ = this.errorSubject.asObservable().pipe(shareReplay());
 
-  private hitSubject = new Subject<IData>();
+  private hitSubject = new Subject<IOhMyRequest>();
   public hit$ = this.hitSubject.asObservable();
   // public get version(): string {
   // return VERSION.match(/^__/) ? manifest.version : VERSION;
   // }
-  private domainChangeSubject = new BehaviorSubject<ohMyDomain>(null);
+  private domainChangeSubject = new BehaviorSubject<IOhMyDomainId>(null);
   public domain$ = this.domainChangeSubject.asObservable().pipe(shareReplay());
 
   constructor(@Inject(APP_VERSION) public version: string) {
@@ -79,7 +79,7 @@ export class AppStateService {
     return domain && this._domain === domain;
   }
 
-  hit(data: IData): void {
+  hit(data: IOhMyRequest): void {
     this.hitSubject.next(data);
   }
 

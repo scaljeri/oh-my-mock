@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
-import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
+import { IOhMyContext, IOhMyDomain, IOhMyDomainContext, IOhMyDomainPresets } from '@shared/types';
 import { PresetUtils } from '@shared/utils/preset';
 import { Subscription } from 'rxjs';
 import { OhMyState } from '../../services/oh-my-store';
@@ -23,16 +23,16 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
   ]
 })
 export class PresetComponent implements OnInit, OnChanges {
-  @Input() context: IOhMyContext;
+  @Input() context: IOhMyDomainContext;
   @Input() theme: 'dark' | 'light';
 
   presetCtrl = new UntypedFormControl();
   options: string[] = [];
   isPresetCopied = false;
   subscriptions = new Subscription();
-  presets: IOhMyPresets;
+  presets: IOhMyDomainPresets;
 
-  private state: IState;
+  private state: IOhMyDomain;
   private stateSub: Subscription;
 
   @ViewChild(AutocompleteDropdownComponent) dropdown: AutocompleteDropdownComponent;
@@ -45,7 +45,7 @@ export class PresetComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.presetCtrl.valueChanges.subscribe(preset => {
-      const oldPresetValue = this.presets[this.context.preset];
+      const oldPresetValue = this.presets[this.context.presetId];
 
       if (preset !== oldPresetValue) {
         if (preset === '') {
@@ -54,8 +54,8 @@ export class PresetComponent implements OnInit, OnChanges {
           const selected = PresetUtils.findId(this.presets, preset);
 
           this.storeService.upsertState({
-            context: { ...this.context, preset: selected || this.context.preset },
-            ...(!selected && { presets: { ...this.presets, [this.context.preset]: preset } })
+            context: { ...this.context, presetId: selected || this.context.presetId },
+            ...(!selected && { presets: { ...this.presets, [this.context.presetId]: preset } })
           }, this.context);
         }
       }
@@ -69,9 +69,9 @@ export class PresetComponent implements OnInit, OnChanges {
 
       this.context = state.context;
       this.presets = state.presets;
-      this.options = Object.values(this.presets);
+      this.options = Object.values(this.presets).map(preset => preset.label);
 
-      this.setSelectedValue(this.presets[this.context.preset]);
+      this.setSelectedValue(this.presets[this.context.presetId]);
 
       if (this.isPresetCopied) {
         this.isPresetCopied = false;
@@ -88,9 +88,9 @@ export class PresetComponent implements OnInit, OnChanges {
     this.isPresetCopied = true;
 
     const update = PresetUtils.create(this.presets, preset);
-    this.presetCtrl.setValue(update.value, { emitEvent: false });
+    this.presetCtrl.setValue(update.label, { emitEvent: false });
 
-    await this.storeService.newPreset(update.value, update.id, this.context);
+    await this.storeService.newPreset(update.label, update.id, this.context);
   }
 
   onPresetDelete(preset: string) {
@@ -100,16 +100,16 @@ export class PresetComponent implements OnInit, OnChanges {
       return this.toast.warning('Delete failed: cannot delete the last preset');
     }
 
-    delete this.presets[this.context.preset];
-    this.options = Object.values(this.presets);
-    this.context.preset = Object.keys(this.presets)[0];
+    delete this.presets[this.context.presetId];
+    this.options = Object.values(this.presets).map(preset => preset.label);
+    this.context.presetId = Object.keys(this.presets)[0];
 
-    this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
+    this.presetCtrl.setValue(this.presets[this.context.presetId], { emitEvent: false });
     this.storeService.upsertState({ context: this.context, presets: this.presets }, this.context);
   }
 
   onBlur(): void {
-    if (!this.context.preset) {
+    if (!this.context.presetId) {
       const [id, value] = Object.entries(this.presets)[0];
       this.presetCtrl.setValue(value, { emitEvent: false });
       // this.updatePresets({ id, value, activate: true });

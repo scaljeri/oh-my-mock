@@ -8,9 +8,10 @@ import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
 import { IOhMyReadyResponse, IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
-import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
 import { Observable, Subject } from 'rxjs';
+import { OhMyState } from './oh-my-store';
+import { IOhMyDomainContext } from '@shared/types';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
@@ -21,7 +22,7 @@ export class ContentService {
   private pingPongId;
   private pingPongSubject = new Subject<boolean>();
 
-  constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
+  constructor(private stateService: OhMyState, private appStateService: AppStateService, private sandboxService: SandboxService) {
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
 
     appStateService.domain$.subscribe((d: string) => {
@@ -37,9 +38,9 @@ export class ContentService {
       this.open(true);
     });
 
-    this.listener = async ({ payload, source, domain }: IPacket, sender) => {
+    this.listener = async ({ payload, source }: IPacket, sender) => {
       // Only accept messages from the content script
-      // const domain = payload.context?.domain;
+      const domain = payload.context?.key;
       if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
         return;
       }
@@ -78,7 +79,8 @@ export class ContentService {
             payload: {
               context: payload.context,
               type: payloadType.API_RESPONSE_MOCKED,
-              data: output
+              data: output,
+              description: 'mocked sandboxed api response'
             }
           } as IPacket);
 
@@ -113,7 +115,10 @@ export class ContentService {
       source: appSources.POPUP,
       domain: this.appStateService.domain,
       payload: {
-        type: payloadType.PING
+        type: payloadType.PING,
+        data: null,
+        context: null,
+        description: 'pingpong',
       }
     } as IPacket;
 
@@ -128,30 +133,31 @@ export class ContentService {
       domain: this.appStateService.domain,
       payload: {
         type: isOpen ? payloadType.POPUP_OPEN : payloadType.POPUP_CLOSED,
-        data: { isOpen }
+        data: { isOpen },
+        description: '',
+        context: null
       }
     } as IPacket;
 
     send2content(this.appStateService.tabId, packet);
   }
 
-  activate(): Promise<boolean> {
-    return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
+  activate(): Promise<void> {
+    return this.stateService.popupState(true);
+    // return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
   }
 
-  deactivate(isClosing = false): Promise<boolean> {
-    // if (isClosing) {
-    //   this.open(false);
-    // }
-
-    return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
+  deactivate(): Promise<void> {
+    return this.stateService.popupState(false);
+    // return OhMySendToBg.patch(false, '$', 'popupActive', payloadType.STORE);
   }
 
   reset(key: string): Promise<void> {
-    if (key) {
-      return OhMySendToBg.reset(key).then(() => { });
-    } else {
-      return StorageUtils.reset();
-    }
+    return this.stateService.reset({ key } as IOhMyDomainContext);
+    // if (key) {
+    //   return OhMySendToBg.reset(key).then(() => { });
+    // } else {
+    //   return StorageUtils.reset();
+    // }
   }
 }

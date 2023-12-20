@@ -6,7 +6,7 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { IOhMyContext, IState } from '@shared/type';
+import { IOhMyContext, IOhMyDomain, IOhMyDomainContext } from '@shared/types';
 import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -41,7 +41,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   page = '';
   dialogDone = false;
   isInitializing = true;
-  context: IOhMyContext;
+  context: IOhMyDomainContext;
   version: string;
   showDisabled = -1;
   stateSub: Subscription;
@@ -70,14 +70,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     await initializeApp(this.appState, this.stateService, this.webWorkerService);
     // await this.contentService.activate();
 
-    this.stateSub = this.stateService.state$.subscribe(async (state: IState) => {
+    this.stateSub = this.stateService.state$.subscribe(async (state: IOhMyDomain) => {
       if (!state) {
         return this.isInitializing = true;
       }
 
       // Move to somewhere else
       if (state.domain !== this.domain && this.domain) { // Domain switch
-        state.aux.popupActive = true;
         // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
         // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
         await this.webWorkerService.init(state.domain);
@@ -88,7 +87,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
 
       this.context = state.context;
-      this.domain = state.context.domain;
+      this.domain = state.context.key;
       this.version = state.version;
 
       this.isInitializing = false;
@@ -124,15 +123,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
     this.mockSub?.unsubscribe();
-    this.contentService.deactivate(true);
+    this.contentService.deactivate();
   }
 
   notifyDisabled(): void {
     this.showDisabled = 1;
-  }
-
-  popupActiveToggle(isActive = true) {
-    return this.storeService.updateAux({ popupActive: isActive }, this.context);
   }
 
   @HostListener('window:keyup.backspace')

@@ -1,6 +1,6 @@
 import { Component, Optional } from '@angular/core';
 import { HotToastService } from '@ngneat/hot-toast';
-import { IOhMyBackup, IOhMyContext } from '@shared/type';
+import { IOhMyBackup, IOhMyContext } from '@shared/types';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UntypedFormControl } from '@angular/forms';
 import { AppStateService } from '../../services/app-state.service';

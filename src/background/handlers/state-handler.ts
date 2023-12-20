@@ -1,46 +1,63 @@
-import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IOhMyMock, IState } from "../../shared/type";
+import { IPacketPayload } from "../../shared/packet-type";
+import { IOhMyDomain, IOhMyMock } from "../../shared/types";
+import { IOhMyContext, IOhMyPropertyContext } from "../../shared/types/context";
 import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
+import { IOhMyHandlerConstructor, staticImplements } from "./handler";
 
+type IOhMyInputData = IOhMyDomain | IOhMyDomain[keyof IOhMyDomain];
+
+@staticImplements<IOhMyHandlerConstructor<IOhMyInputData, IOhMyDomain>>()
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
-  static async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IState> {
+  static async update(payload: IPacketPayload<IOhMyInputData, IOhMyContext>): Promise<IOhMyDomain | void> {
     try {
-      const { data, context } = payload;
+      // const { data, context } = payload as { };
+      const context = payload.context as IOhMyPropertyContext;
+      let domain: IOhMyDomain;
 
-      let state = data as IState || StateUtils.init({ domain: context.domain });
+      if (StateUtils.isDomain(payload.data)) {
+        domain = payload.data || StateUtils.init({ domain: context.key });
+      } else if (context) {
+        if (context.path && !context.propertyName) {
+          throw new Error('Found `path` without a property value');
+        }
 
-      if (context?.path) {
-        state = await OhMyStateHandler.StorageUtils.get<IState>(context.domain) || StateUtils.init({ domain: context.domain });
-        state = update<IState>(context.path, state, context.propertyName, data);
+        const value = payload.data as IOhMyDomain[keyof IOhMyDomain];
+        domain = await OhMyStateHandler.StorageUtils.get<IOhMyDomain>(context.key) || StateUtils.init({ domain: context.key });
 
-        // if (context.path.includes('$.data')) {
-        //   if (state.data && !Object.keys(state.data).find(id => (data as IData).id === id)) {
-        //     state.aux.filteredRequests = null;
-        //   }
-        // }
+        domain = update<IOhMyDomain>(context.path, domain, context.propertyName, value);
+
+      } else {
+        throw new Error('Data and Context not defined');
       }
+
+      // if (context.path.includes('$.data')) {
+      //   if (state.data && !Object.keys(state.data).find(id => (data as IOhMyRequest).id === id)) {
+      //     state.aux.filteredRequests = null;
+      //   }
+      // }
       // Is the state new, add it to the store
       let store = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
 
-      if (!StoreUtils.hasState(store, state.domain)) {
-        store = StoreUtils.setState(store, state);
-
+      if (!StoreUtils.hasState(store, domain.domain)) {
+        store = StoreUtils.setState(store, domain);
         await OhMyStateHandler.StorageUtils.setStore(store);
       }
+
+      await OhMyStateHandler.StorageUtils.set(context.key!, domain);
+
 
       // if (state.aux.appActive && state.aux.popupActive) {
       //   cSPRemoval([payload.context.domain]);
       // }
 
-      return StorageUtils.set(state.domain, state).then(() => state);
+      return StorageUtils.set(domain.domain, domain).then(() => domain);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log(err);
+      throw new Error('Somthing when wrong inside StateHandler');
     }
   }
 }

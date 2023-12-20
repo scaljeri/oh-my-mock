@@ -1,8 +1,8 @@
 import { Component, Inject, OnInit, Optional } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MOCK_RULE_TYPES } from '@shared/constants';
-import { IMock, IOhMyMockRule, mockRuleType } from '@shared/type';
+import { RESPONSE_RULE_TYPES } from '@shared/constants';
+import { IOhMyResponse, IOhMyMockRule, IOhMyResponseRuleType } from '@shared/types';
 import { generators } from '../../utils/anonymizer';
 import { JSONPath } from 'jsonpath-plus';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
@@ -13,20 +13,20 @@ import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.com
   styleUrls: ['./anonymize.component.scss']
 })
 export class AnonymizeComponent implements OnInit {
-  ruleTypes: mockRuleType[];
+  ruleTypes: IOhMyResponseRuleType[];
 
   newRuleTypeCtrl = new UntypedFormControl();
   newRuleValueCtrl = new UntypedFormControl('');
 
-  mockTypes = MOCK_RULE_TYPES;
+  mockTypes = RESPONSE_RULE_TYPES;
   rules: IOhMyMockRule[];
 
   constructor(public dialog: MatDialog,
     @Optional() private dialogRef: MatDialogRef<AnonymizeComponent>,
-    @Optional() @Inject(MAT_DIALOG_DATA) public mock: IMock) { }
+    @Optional() @Inject(MAT_DIALOG_DATA) public mock: IOhMyResponse) { }
 
   ngOnInit(): void {
-    this.ruleTypes = Object.keys(MOCK_RULE_TYPES) as mockRuleType[];
+    this.ruleTypes = Object.keys(RESPONSE_RULE_TYPES) as IOhMyResponseRuleType[];
     this.rules = [...this.mock.rules || []];
     this.rules.push({ type: null, path: '' });
   }

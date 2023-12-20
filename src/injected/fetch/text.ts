@@ -1,4 +1,4 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { OhMyResponseStatus, STORAGE_KEY } from "../../shared/constants";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
@@ -17,15 +17,15 @@ export function patchResponseText() {
         if (!this.ohResult) {
           this.oHResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
-            method: this.ohMethod
+            requestMethod: this.ohMethod
           });
 
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
+          if (this.ohResult && this.ohResult.response.status !== OhMyResponseStatus.OK) {
             persistResponse(this, this.ohResult.request);
           }
         }
 
-        if (this.ohResult?.response.status === ohMyMockStatus.OK) {
+        if (this.ohResult?.response.status === OhMyResponseStatus.OK) {
           let output = this.ohResult.response?.response;
           if (typeof output !== 'string') {
             try {
@@ -38,11 +38,13 @@ export function patchResponseText() {
         }
       }
     },
-    __text: descriptor
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    __text: descriptor!
   });
 }
 
 export function unpatchResponseText() {
-  Object.defineProperty(window.Response.prototype, 'text', descriptor);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  Object.defineProperty(window.Response.prototype, 'text', descriptor!);
   delete window.Response.prototype['__text'];
 }

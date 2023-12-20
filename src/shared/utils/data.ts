@@ -1,8 +1,11 @@
 import { objectTypes } from '../constants';
-import { IData, IMock, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IOhMyPresets } from '../type';
+import { IOhMyRequest, IOhMyRequestPreset, IOhMyPresetId, IOhMyShallowResponse, IOhMyResponseId, IOhMyResponse, IOhMyDomainPresets, IOhMyRequestId, IOhMyDomainContext, IOhMyPreset } from '../types';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
+
+export type IOhMyRequestLookup = (requestId: IOhMyRequestId) => Promise<IOhMyRequest>;
+const VERSION = '__OH_MY_VERSION__';
 
 export class DataUtils {
   static StorageUtils = StorageUtils;
@@ -11,78 +14,79 @@ export class DataUtils {
   //   return { ...state.data[id], mocks: { ...state.data[id].mocks } };
   // }
 
-  static init(data: Partial<IData> = {}): IData {
+  static init(data: Partial<IOhMyRequest> = {}): IOhMyRequest {
     return this.create(data);
   }
 
-  static getSelectedResponse(data: IData, context: IOhMyContext | ohMyPresetId): IOhMyShallowMock | undefined {
-    let presetId = context as ohMyPresetId;
+  static getSelectedResponse(request: IOhMyRequest, context: IOhMyDomainContext | IOhMyPresetId): IOhMyShallowResponse | undefined {
+    let presetId = context as IOhMyPresetId;
 
     if (typeof context === 'object') {
-      presetId = context.preset;
+      presetId = context.presetId;
     }
+    const requestPreset = request.presets[presetId];
 
-    return data.mocks[data.selected[presetId]];
+    return request.responses[requestPreset.responseId];
   }
 
-  static isSPresetEnabled(data: IData, context: IOhMyContext): boolean {
-    return data.enabled[context.preset];
+  static isSPresetEnabled(data: IOhMyRequest, context: IOhMyDomainContext): boolean {
+    return data.presets[context.presetId].isActive;
   }
 
-  static activeMock(data: IData, context: IOhMyContext): ohMyMockId {
-    return data.enabled[context.preset] && data.selected[context.preset];
+  // Weird function, it just returns the response for the context, not sure what `active` means!!
+  static activeResponse(request: IOhMyRequest, context: IOhMyDomainContext): IOhMyResponseId {
+    return request.presets[context.presetId].responseId;
   }
 
-  static addResponse(context: IOhMyContext, data: IData, mock: Partial<IMock>, autoActivate = true): IData {
-    data = {
-      ...data, mocks:
-      {
-        ...data.mocks, [mock.id]: {
-          id: mock.id,
-          statusCode: mock.statusCode,
-          label: mock.label,
-          modifiedOn: mock.modifiedOn
+  static addResponse(context: IOhMyDomainContext, request: IOhMyRequest, response: Partial<IOhMyResponse>, autoActivate = true): IOhMyRequest {
+    request = {
+      ...request,
+      responses: {
+        ...request.responses,
+        [response.id]: {
+          id: response.id,
+          statusCode: response.statusCode,
+          label: response.label,
+          modifiedOn: response.modifiedOn
         }
-      }, selected: { ...data.selected },
-      enabled: { ...data.enabled }
+      }, presets: { ...request.presets },
     };
 
-    if (Object.keys(data.mocks).length === 1) {
-      data.selected[context.preset] = mock.id;
+    if (Object.keys(request.responses).length === 1) {
+      request.presets[context.presetId] = {
+        isActive: autoActivate,
+        responseId: request.id,
+        presetId: context.presetId,
+        bodyId: 'default'
+      } as IOhMyRequestPreset;
+    }
 
-      if (autoActivate) {
-        data.enabled[context.preset] = true;
+    return request;
+  }
+
+  static removeResponse(request: IOhMyRequest, responseId: IOhMyResponseId): IOhMyRequest {
+    request = {
+      ...request,
+      presets: { ...request.presets },
+      responses: { ...request.responses }
+    };
+    // TODO: The following assumes that only the active mock can be deleted
+    delete request.responses[responseId];
+
+    const [presetId, preset] = Object.entries(request.presets).find(([, value]) => value.responseId === responseId) as [string, IOhMyPreset];
+    if (presetId) {
+      request.presets[presetId] = {
+        ...preset,
+        responseId: DataUtils.getNextActiveResponse(request)?.id
       }
     }
 
-    return data;
+    return request;
   }
 
-  static removeResponse(context: IOhMyContext, data: IData, mockId: ohMyMockId): IData {
-    data = {
-      ...data,
-      selected: { ...data.selected },
-      enabled: { ...data.enabled },
-      mocks: { ...data.mocks }
-    };
-    // TODO: The following assumes that only the active mock can be deleted
-    delete data.mocks[mockId];
-    delete data.selected[context.preset];
-    delete data.enabled[context.preset];
-
-    const nextActiveMock = DataUtils.getNextActiveResponse(data);
-
-    if (nextActiveMock) {
-      data.selected[context.preset] = nextActiveMock.id;
-      data.enabled[context.preset] = false;
-    }
-
-    return data;
-  }
-
-  static getNextActiveResponse(data: IData): IOhMyShallowMock {
+  static getNextActiveResponse(data: IOhMyRequest): IOhMyShallowResponse {
     // TODO: make more advanced
-    return Object.values(data.mocks).sort(this.statusCodeSort)?.[0];
+    return Object.values(data.responses).sort(this.statusCodeSort)?.[0];
   }
 
   // static activateMock(context: IOhMyContext, data: IData, mockId: ohMyMockId, scenario = null): IData {
@@ -100,16 +104,16 @@ export class DataUtils {
   //   return data
   // }
 
-  static create(data: Partial<IData>): IData {
+  static create(data: Partial<IOhMyRequest>): IOhMyRequest {
     const output = {
       id: uniqueId(),
-      enabled: {},
-      selected: {},
-      mocks: {},
+      presets: {},
+      responses: {},
       lastHit: Date.now(),
       ...data,
       type: objectTypes.REQUEST,
-    } as IData;
+      version: VERSION
+    } as IOhMyRequest;
 
     if (!data?.id && data?.url) {
       output.url = url2regex(data.url);
@@ -122,21 +126,28 @@ export class DataUtils {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  static prefillWithPresets(request: IData, presets: IOhMyPresets = {}, active?): IData {
-    request.selected ??= {};
-    request.enabled ??= {};
+  static prefillWithPresets(request: IOhMyRequest, presets: IOhMyDomainPresets = {}, active?: boolean): IOhMyRequest {
+    const responses = Object.values(request.responses).sort(DataUtils.statusCodeSort);
 
-    const responses = Object.values(request.mocks).sort(DataUtils.statusCodeSort);
-
-    Object.keys(presets).forEach(p => {
-      if (active !== undefined) {
-        request.enabled[p] = active;
-      } else {
-        request.enabled[p] ??= false;
-      }
-      request.selected[p] ??= responses[0]?.id;
+    Object.keys(presets).forEach((presetId: IOhMyPresetId) => {
+      request.presets[presetId] = {
+        isActive: active || false,
+        responseId: responses[0].id,
+        bodyId: 'default'
+      } as IOhMyRequestPreset
     });
 
     return request;
+  }
+
+  static loadRequest(requestId: IOhMyRequestId, requestLookup: IOhMyRequestLookup): Promise<IOhMyRequest> {
+    return requestLookup(requestId);
+  }
+
+
+  static loadRequests(requestIds: IOhMyRequestId[], requestLookup: IOhMyRequestLookup): Promise<IOhMyRequest[]> {
+    const otuput = requestIds.map(requestId => requestLookup(requestId));
+
+    return Promise.all(otuput);
   }
 }

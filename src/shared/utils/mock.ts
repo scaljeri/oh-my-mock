@@ -1,10 +1,10 @@
-import { IMock, IOhMyMockResponse, IOhMyMockSearch, IOhMyShallowMock, ohMyMockId } from '../type'
-import { MOCK_JS_CODE, objectTypes, ohMyMockStatus } from '../constants';
+import { IOhMyResponse, IOhMyMockResponse, IOhMyResponseSearch, IOhMyShallowResponse, IOhMyResponseId } from '../types'
+import { MOCK_JS_CODE, objectTypes, OhMyResponseStatus } from '../constants';
 import { uniqueId } from './unique-id';
 import { timestamp } from './timestamp';
 
 export class MockUtils {
-  static init(base: Partial<IMock> = {}, update: Partial<IMock> = {}): IMock {
+  static init(base: Partial<IOhMyResponse> = {}, update: Partial<IOhMyResponse> = {}): IOhMyResponse {
     const mock = {
       jsCode: MOCK_JS_CODE,
       delay: 0,
@@ -15,7 +15,7 @@ export class MockUtils {
       id: uniqueId(),
       createdOn: timestamp(),
       ...JSON.parse(JSON.stringify(base)),
-      type: objectTypes.MOCK,
+      type: objectTypes.RESPONSE,
       modifiedOn: null,
       ...update
     };
@@ -26,11 +26,11 @@ export class MockUtils {
     return mock;
   }
 
-  static clone(source: Partial<IMock>, updates?: Partial<IMock>): IMock {
+  static clone(source: Partial<IOhMyResponse>, updates?: Partial<IOhMyResponse>): IOhMyResponse {
     return this.init(source, { id: uniqueId(), ...updates });
   }
 
-  static find(responses: Record<ohMyMockId, IOhMyShallowMock>, search: IOhMyMockSearch): IOhMyShallowMock | null {
+  static find(responses: Record<IOhMyResponseId, IOhMyShallowResponse>, search: IOhMyResponseSearch): IOhMyShallowResponse | null {
     if (search.id) {
       return responses[search.id];
     }
@@ -43,7 +43,7 @@ export class MockUtils {
     return output ? responses[output[0]] : null;
   }
 
-  static createShallowMock(mock: IOhMyShallowMock & Partial<IMock> | IMock): IOhMyShallowMock {
+  static createShallowMock(mock: IOhMyShallowResponse & Partial<IOhMyResponse> | IOhMyResponse): IOhMyShallowResponse {
     return {
       id: mock.id,
       statusCode: mock.statusCode,
@@ -52,17 +52,17 @@ export class MockUtils {
     }
   }
 
-  static mockToResponse(mock?: IMock): IOhMyMockResponse {
+  static mockToResponse(mock?: IOhMyResponse): IOhMyMockResponse {
     if (mock) {
       return {
-        status: ohMyMockStatus.OK,
+        status: OhMyResponseStatus.OK,
         response: mock.responseMock,
         headers: mock.headersMock,
         delay: mock.delay,
         statusCode: mock.statusCode
       } as IOhMyMockResponse;
     } else {
-      return { status: ohMyMockStatus.NO_CONTENT }
+      return { status: OhMyResponseStatus.NO_CONTENT }
     }
   }
 

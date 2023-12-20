@@ -1,6 +1,6 @@
 {
   "name": "oh-my-mock",
-  "version": "3.3.14",
+  "version": "4.0.0",
   "scripts": {
     "ng": "ng",
     "ci": "yarn install --frozen-lockfile",

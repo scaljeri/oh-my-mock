@@ -1,7 +1,7 @@
-import { IData, IMock } from "../type";
 import { isImage } from './image';
 import { getMimeType } from "./mime-type";
 import { FILTER_SEARCH_OPTIONS } from '../constants';
+import { IOhMyRequest, IOhMyResponse } from '../types';
 
 // const QUOTE_RE = /(?<=")([^"]+)(?=")(\s|\b)/gi;
 const QUOTE_RE = /(?<=")([^"]+)(?=")/gi;
@@ -16,21 +16,20 @@ export function splitIntoSearchTerms(input = ''): string[] {
   return [...qwords, ...words].filter(t => !!t).map(w => w.toLowerCase());
 }
 
-export function shallowSearch(data: Record<string, IData>, words: string[], includes: Record<string, boolean>): Record<string, IData> {
-  return Object.fromEntries<IData>(
+export function shallowSearch(data: Record<string, IOhMyRequest>, words: string[], includes: Record<string, boolean>): Record<string, IOhMyRequest> {
+  return Object.fromEntries<IOhMyRequest>(
     Object.entries(data).filter(kv =>
       words.some(v => {
         const value = kv[1];
         return value.url.toLowerCase().includes(v) && includes['url'] ||
-          value.requestType.toLowerCase().includes(v) && includes['requestType'] ||
-          value.method?.toLowerCase().includes(v) && includes['requestMethod']
+          value.requestMethod.toLowerCase().includes(v) && includes['requestMethod']
       })
     )
   );
 }
 
-export async function deepSearch(data: Record<string, IData>, words: string[], includes: Record<string, boolean>, mocks: Record<string, IMock> = {}): Promise<IData[]> {
-  const out: IData[] = [];
+export async function deepSearch(data: Record<string, IOhMyRequest>, words: string[], includes: Record<string, boolean>, mocks: Record<string, IOhMyResponse> = {}): Promise<IOhMyRequest[]> {
+  const out: IOhMyRequest[] = [];
   const values = Object.values(data);
 
   if (Object.keys(mocks).length === 0) {
@@ -39,7 +38,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
 
   dataLoop:
   for (let i = 0; i < values.length; i++) {
-    const dataMocks = Object.keys(values[i].mocks);
+    const dataMocks = Object.keys(values[i].responses);
 
     for (let j = 0; j < dataMocks.length; j++) {
       const mock = mocks[dataMocks[j]];
@@ -85,7 +84,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
 
           try {
             return includes.statusCode && mock.statusCode.toString().includes(w);
-          }catch(err) {
+          } catch (err) {
           }
         })) {
           out.push(values[i]);

@@ -25,6 +25,7 @@ module.exports = {
     '^.+\\.(ts|js|mjs|html|svg)$': 'jest-preset-angular'
   },
   moduleFileExtensions: ['ts', 'js', 'html', 'svg'],
+  modulePathIgnorePatterns: ['<rootDir>/src/app'],
   globals: {
     'ts-jest': {
       useESM: true // ts-jest
@@ -32,7 +33,8 @@ module.exports = {
   },
 
   transformIgnorePatterns: [
-    `<rootDir>/node_modules/(?!.*\\.mjs$|${esModules.join('|')})` // jest-preset-angular
+    // `<rootDir>/node_modules/(?!.*\\.mjs$|${esModules.join('|')})`, // jest-preset-angular
+    "node_modules/(?!@ngrx|(?!deck.gl)|ng-dynamic)"
   ],
   // moduleNameMapper: {
   //   "@shared(.*)": "<rootDir>/src/shared/$1"

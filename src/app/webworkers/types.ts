@@ -1,4 +1,4 @@
-import { IData, IMock } from "@shared/type";
+import { IOhMyRequest, IOhMyResponse } from "@shared/types";
 
 export enum OhWWPacketTypes {
   INIT = 'INIT',
@@ -8,7 +8,7 @@ export enum OhWWPacketTypes {
   SEARCH_RESULT = 'SEARCH_RESULT',
 }
 
-export type IOhWWPacketMocks = Record<string, IMock>;
+export type IOhWWPacketMocks = Record<string, IOhMyResponse>;
 export interface IOhWWPacket<T = unknown> {
   type: OhWWPacketTypes;
   id: string;
@@ -18,6 +18,6 @@ export interface IOhWWPacket<T = unknown> {
 export interface IOhWWPacketSearch {
   id: string;
   terms: string[];
-  data: Record<string, IData>;
+  data: Record<string, IOhMyRequest>;
   includes: Record<string, boolean>;
 }

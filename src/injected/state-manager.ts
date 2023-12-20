@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from 'rxjs';
 import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMessage, IOhMyImportStatus, IOhMyReadyResponse } from '../shared/packet-type';
-import { IOhMyInjectedState } from '../shared/type';
+import { IOhMyInjectedState } from '../shared/types';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { log } from './utils';
@@ -14,7 +14,7 @@ export function setupListenersMessageBus() {
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
   window[STORAGE_KEY].off.push(() => mb.clear());
 
-  mb.streamByType$(payloadType.STATE, appSources.CONTENT).subscribe(({ packet }) => {
+  mb.streamByType$(payloadType.DOMAIN, appSources.CONTENT).subscribe(({ packet }) => {
     state = packet.payload.data as IOhMyInjectedState;
     update.next(state);
   });
@@ -30,7 +30,8 @@ export function setupListenersMessageBus() {
   });
 
   mb.streamByType$<IOhMyImportStatus>(payloadType.OHMYMOCK_API_OUTPUT, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyImportStatus>) => {
-    externalApiResults.next(packet.payload.data);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    externalApiResults.next(packet.payload.data!);
   });
 
   return {

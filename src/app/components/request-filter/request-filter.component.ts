@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
+import { IOhMyRequest, IOhMyResponse, IOhMyRequestId, IOhMyResponseId } from '@shared/types';
 import { BehaviorSubject, debounceTime, filter, map, merge, Observable, of, Subscription, switchMap } from 'rxjs';
 import { WebWorkerService } from '../../services/web-worker.service';
 import { shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '@shared/utils/search';
@@ -9,8 +9,8 @@ import { FILTER_SEARCH_OPTIONS } from '@shared/constants';
 
 type SearchFilterData = {
   words: string[],
-  data: Record<ohMyDataId, IData>,
-  mocks?: Record<ohMyMockId, IMock>,
+  data: Record<IOhMyRequestId, IOhMyRequest>,
+  mocks?: Record<IOhMyResponseId, IOhMyResponse>,
   includes: Record<string, boolean>
 };
 
@@ -21,7 +21,7 @@ type SearchFilterData = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RequestFilterComponent implements OnInit, OnDestroy {
-  @Input() data: Record<ohMyDataId, IData>;
+  @Input() data: Record<IOhMyRequestId, IOhMyRequest>;
   @Input() filterOptions: Record<string, boolean>;
   @Input() filterStr: string;
   @Input() lastResult: string[];
@@ -72,7 +72,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
       } as SearchFilterData)
       ),
       map<SearchFilterData, SearchFilterData>(input => this.localSearch(input)),
-      switchMap<SearchFilterData, Observable<IData[]>>(input => this.deepSearch(input))
+      switchMap<SearchFilterData, Observable<IOhMyRequest[]>>(input => this.deepSearch(input))
     ).subscribe(data => {
       this.ngZone.run(() => {
         this.update.emit({
@@ -132,7 +132,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     return { words: input.words, data: opposite, includes: input.includes } as SearchFilterData;
   }
 
-  deepSearch(input: SearchFilterData): Observable<IData[]> {
+  deepSearch(input: SearchFilterData): Observable<IOhMyRequest[]> {
     if (input.words.length === 0) {
       return of(Object.values(this.data));
     }

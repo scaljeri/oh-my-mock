@@ -1,7 +1,7 @@
 import { take } from "rxjs";
-import { appSources, payloadType, STORAGE_KEY } from "../shared/constants";
+import { appSources, contextTypes, payloadType, STORAGE_KEY } from "../shared/constants";
 import { IOhMyCSPResponse } from "../shared/packet-type";
-import { IOhMyInjectedState } from "../shared/type";
+import { IOhMyInjectedState } from "../shared/types";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
 
@@ -60,7 +60,7 @@ export async function injectCode(state: IOhMyInjectedState, messageBus: OhMyMess
       const response = await OhMySendToBg.send<void, IOhMyCSPResponse>({
         source: appSources.CONTENT,
         payload: {
-          context: { domain: OhMySendToBg.domain },
+          context: { key: OhMySendToBg.domain, type: contextTypes.DOMAIN, },
           type: payloadType.ACTIVATE_CSP_REMOVAL,
           description: 'content:csp-errors'
         }

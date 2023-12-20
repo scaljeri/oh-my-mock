@@ -1,4 +1,4 @@
-import { IData, IMock, IOhMyMock, IState } from '../type';
+import { IOhMyRequest, IOhMyResponse, IOhMyMock, IOhMyDomain } from '../types';
 import compareVersions from 'compare-versions'
 import { mockSteps } from './migrations/mock';
 import { stateSteps } from './migrations/state';
@@ -41,13 +41,13 @@ export class MigrateUtils {
       return null;
     }
 
-    let migrateSteps = [(_) => undefined ];
+    let migrateSteps = [(_) => undefined];
 
     if (MigrateUtils.isStore(data)) {
       migrateSteps = MigrateUtils.storeSteps;
     } else if (MigrateUtils.isState(data)) {
       migrateSteps = MigrateUtils.stateSteps;
-    } else if (MigrateUtils.isMock(data)) {
+    } else if (MigrateUtils.isResponse(data)) {
       migrateSteps = MigrateUtils.mockSteps;
     } else if (MigrateUtils.isRequest(data)) {
       migrateSteps = MigrateUtils.requestSteps;
@@ -62,16 +62,16 @@ export class MigrateUtils {
     return (data as IOhMyMock).type === objectTypes.STORE;
   }
 
-  static isState(data: unknown): data is IState {
-    return (data as IState).type === objectTypes.STATE;
+  static isState(data: unknown): data is IOhMyDomain {
+    return (data as IOhMyDomain).type === objectTypes.DOMAIN;
   }
 
-  static isMock(data: unknown): data is IMock {
-    return (data as IMock).type === objectTypes.MOCK;
+  static isResponse(data: unknown): data is IOhMyResponse {
+    return (data as IOhMyResponse).type === objectTypes.RESPONSE;
   }
 
-  static isRequest(data: unknown): data is IData {
-    return (data as IData).type === objectTypes.REQUEST;
+  static isRequest(data: unknown): data is IOhMyRequest {
+    return (data as IOhMyRequest).type === objectTypes.REQUEST;
   }
 
   static isDevelopVersion(version: string): boolean {

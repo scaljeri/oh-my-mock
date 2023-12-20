@@ -1,8 +1,8 @@
-import { IOhMyAPIRequest, requestMethod } from '../shared/type';
+import { IOhMyAPIRequest, IOhMyRequestMethod } from '../shared/types';
 
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';
-import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
+import { OhMyResponseStatus, STORAGE_KEY } from '../shared/constants';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
@@ -13,7 +13,7 @@ import { persistResponse } from './fetch/persist-response';
 import { error } from './utils';
 
 interface IOhFetchConfig {
-  method?: requestMethod;
+  method?: IOhMyRequestMethod;
   headers?: Headers & { entries: () => [string, string][] }; // TODO: entries is not known in Headers
   body?: FormData | unknown;
 }
@@ -27,7 +27,7 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
 
   let url = request as string;
   if (request instanceof Request) {
-    config = { headers: request.headers as any, method: request.method as requestMethod };
+    config = { headers: request.headers as any, method: request.method as IOhMyRequestMethod };
     url = request.url;
   }
 
@@ -37,22 +37,23 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
     config.body = fd;
   }
 
-  config.method = (config.method || 'get').toUpperCase() as requestMethod;
+  config.method = (config.method || 'get').toUpperCase() as IOhMyRequestMethod;
 
   const result = await dispatchApiRequest({
     url,
-    method: config.method,
-    ...(config.body && { body: config.body }),
+    requestMethod: config.method,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    ...(config.body && { body: config.body })!,
     ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
-  } as IOhMyAPIRequest, 'FETCH');
+  } as IOhMyAPIRequest);
 
   const { response, headers, status, statusCode, delay } = result.response;
 
-  if (status === ohMyMockStatus.ERROR) {
+  if (status === OhMyResponseStatus.ERROR) {
     error('Ooops, something went wrong while mocking your FETCH request!')
   }
 
-  if (status !== ohMyMockStatus.OK) {
+  if (status !== OhMyResponseStatus.OK) {
     return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
       response.ohResult = await persistResponse(response, result.request);
 

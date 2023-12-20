@@ -1,5 +1,4 @@
 import * as faker from 'faker';
-import { IOhMyMockRule } from '@shared/type';
 
 // DOC: https://github.com/Marak/Faker.js
 

@@ -1,6 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { StorageUtils } from '@shared/utils/storage';
-import { IMock, IOhMyMock, IState } from '@shared/type';
+import { IOhMyStorageTypes, StorageUtils } from '@shared/utils/storage';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +8,7 @@ export class StorageService {
 
   constructor(private ngZone: NgZone) { }
 
-  get<T extends IMock | IOhMyMock | IState>(key: string): Promise<T> {
+  get<T = IOhMyStorageTypes>(key: string): Promise<T> {
     return new Promise(r => {
       // this.ngZone.runOutsideAngular(() => {
       StorageUtils.get<T>(key).then((out) => {
@@ -19,13 +18,12 @@ export class StorageService {
     });
   }
 
+  // REASON: Everything is stored via the background script!!
   // set(key: string, value: unknown & { version?: string }): Promise<void> {
   //   return new Promise(r => {
-  //     // this.ngZone.runOutsideAngular(() => {
-  //     // console.log('SETTER', key, value);
-  //     // StorageUtils.set(key, value).then(() => this.ngZone.run(r));
-  //     // });
-  //     OhMySendToBg.
+  //     this.ngZone.runOutsideAngular(() => {
+  //       StorageUtils.set(key, value).then(() => this.ngZone.run(r));
+  //     });
   //   });
   // }
 

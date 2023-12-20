@@ -1,12 +1,12 @@
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import {
   REQUIRED_MSG,
   STATUS_CODE_EXISTS_MSG,
   STATUS_CODE_INVALID_MSG,
 } from '@shared/constants';
-import { IMock, IState } from '@shared/type';
+import { IOhMyNewResponseStatusCode, IOhMyResponse, } from '@shared/types';
 
 @Component({
   selector: 'app-create-status-code',
@@ -14,7 +14,7 @@ import { IMock, IState } from '@shared/type';
   styleUrls: ['./create-status-code.component.scss']
 })
 export class CreateStatusCodeComponent {
-  @Input() mock: IMock;
+  @Input() mock: IOhMyResponse;
 
   public error: string;
   public form = new UntypedFormGroup({
@@ -35,12 +35,10 @@ export class CreateStatusCodeComponent {
 
     if (this.form.valid) {
       const data = {
-        mock: {
-          statusCode: this.form.value.statusCode,
-          ...(this.form.value.label && { label: this.form.value.label })
-        },
+        statusCode: this.form.value.statusCode,
+        label: this.form.value.label || '',
         clone: this.form.value.clone
-      };
+      } as IOhMyNewResponseStatusCode;
 
       this.dialogRef.close(data);
     }

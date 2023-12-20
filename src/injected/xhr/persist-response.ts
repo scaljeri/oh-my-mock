@@ -1,6 +1,5 @@
 import { STORAGE_KEY } from '../../shared/constants';
-import { IOhMyResponseUpdate } from '../../shared/packet-type';
-import { IOhMyAPIRequest } from '../../shared/type';
+import { IOhMyAPIRequest, IOhMyResponseUpdate, IOhMyResponseUpsert } from '../../shared/types';
 import { convertToB64 } from '../../shared/utils/binary';
 import { parse } from '../../shared/utils/xhr-headers';
 import { dispatchApiResponse } from '../message/dispatch-api-response';
@@ -32,9 +31,9 @@ export async function persistResponse(xhr: XMLHttpRequest, request: IOhMyAPIRequ
   dispatchApiResponse({
     request: {
       url: removeDomainFromUrl(xhr['ohUrl'] || request.url),
-      method: xhr['ohMethod'] || request?.method,
+      method: xhr['ohMethod'] || request?.requestMethod,
       requestType: 'XHR'
     },
-    response: { statusCode: xhr['__status'], response: output, headers },
-  } as IOhMyResponseUpdate);
+    update: { statusCode: xhr['__status'], response: output, headers },
+  } as IOhMyResponseUpsert);
 }

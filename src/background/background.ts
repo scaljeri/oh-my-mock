@@ -1,117 +1,34 @@
 ///<reference types="chrome"/>
 
-import { appSources, DEMO_TEST_DOMAIN, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMyBackup, IOhMyPopupActive, IState } from '../shared/type';
-import { OhMyQueue } from '../shared/utils/queue';
+import { contextTypes, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
+import { IOhMyBackup, IOhMyPopupActive, IOhMyDomain } from '../shared/types';
 import { StorageUtils } from '../shared/utils/storage';
-import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
-import { OhMyStateHandler } from './handlers/state-handler';
-import { OhMyRemoveHandler } from './handlers/remove-handler';
-import { OhMyMessageBus } from '../shared/utils/message-bus';
-import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
+import { IPacket } from '../shared/packet-type';
 import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
-// import { webRequestListener } from './web-request-listener';
+// import { connectWithLocalServer } from './dispatch-remote';
+// import { activate } from './handle-updates';
 
 import './server-dispatcher';
-// import { injectContent } from './inject-content';
-import { removeCSPRules } from './handlers/remove-csp-header';
-import { OhMyImportHandler } from './handlers/import';
-import { connectWithLocalServer } from './dispatch-remote';
-import { error } from './utils';
-import { OhMyResponseHandler } from './handlers/response-handler';
+import { UpdateHandler } from './handle-updates';
 import { OhMyStoreHandler } from './handlers/store-handler';
-// import { sendMsgToContent } from '../shared/utils/send-to-content';
-import { contentScriptListeners } from './content-script-listeners';
-import { popupListeners } from './popup-listeners';
+import { OhMyRemoveHandler } from './handlers/remove-handler';
+import { OhMyResetHandler } from './handlers/reset-handler';
+import { OhMyResponseHandler } from './handlers/response-upsert.handler';
+import { OhMyStateHandler } from './handlers/state-handler';
 
-// window.onunhandledrejection = function (event) {
-//   const { reason } = event;
-//   const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
+// connectWithLocalServer();
 
-// errorHandler(queue, errorMsg);
-// }
-
-// window.onerror = function (a, b, c, d, stacktrace) {
-//   const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
-
-//   errorHandler(queue, errorMsg, stacktrace);
-// }
-
-
-async function test() {
-  await removeCSPRules();
-  // Promise.all([chrome.declarativeNetRequest.getSessionRules(), chrome.declarativeNetRequest.getDynamicRules()]).then((v) => {
-  //   console.log('CSP SETUP', v[0], v[1]);
-  // });
-}
-test();
-
-const queue = new OhMyQueue();
-OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
-
-queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
-queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
-queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
-queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
-queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
-queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
-  // Currently this action only supports a full reset. For a Response/State reset use REMOVE
-  try {
-    await StorageUtils.reset();
-    await initStorage(payload.context?.domain);
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
-  } catch (err) {
-    error('Could not initialize the store', err);
-  }
-});
-
-
-// streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
-
-const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
-contentScriptListeners(messageBus); // TODO
-popupListeners(messageBus);
-
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
-  [appSources.CONTENT, appSources.POPUP])
-
-stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
-  // eslint-disable-next-line no-console
-  console.log('Received update', packet);
-
-  packet.tabId = sender.tab.id;
-  queue.addPacket(packet.payload.type, packet, (result) => {
-    callback(result);
-  }).catch(err => {
-    const types = queue.getActiveHandlers();
-    const packet = queue.getQueue(types?.[0])?.[0] as IPacket;
-    queue.removeFirstPacket(types?.[0]); // The first packet in this queue cannot be processed!
-    queue.resetHandler(types?.[0]);
-
-    error(`Could not process packet of type ${types?.[0]}`, packet);
-  });
-});
-
-// const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
-//   [appSources.CONTENT])
-
-// domainStream$.subscribe((msg: IOhMessage) => {
-//   // cSPRemoval([`http://${msg.packet.domain}/*`, `https://${msg.packet.domain}/*`]);
-
-//   cSPRemoval([msg.packet.domain]);
-
-//   sendMsgToContent(msg.sender.tab.id, {
-//     source: appSources.BACKGROUND,
-//     payload: {
-//       type: payloadType.CSP_REMOVAL_ACTIVATED,
-//       data: true
-//     }
-//   } as IPacket<boolean>)
-// });
-connectWithLocalServer();
+const updater = new UpdateHandler();
+updater.registerHandler(payloadType.STORE, OhMyStoreHandler)
+  // .registerHandler(payloadType.STORE, OhMyStoreHandler)
+  .registerHandler(payloadType.DOMAIN, OhMyStateHandler)
+  .registerHandler(payloadType.RESPONSE, OhMyResponseHandler)
+  .registerHandler(payloadType.REMOVE, OhMyRemoveHandler)
+  // .registerHandler(payloadType.UPSERT, OhMyImportHandler)
+  .registerHandler(payloadType.RESET, OhMyResetHandler);
 
 function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
   const data = packet.payload.data;
@@ -183,9 +100,9 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 setTimeout(async () => {
   await initStorage();
 
-  const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
-  if (!state || Object.keys(state.data).length === 0) {
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+  const state = await StorageUtils.get<IOhMyDomain>(DEMO_TEST_DOMAIN)
+  if (!state || Object.keys(state.requests).length === 0) {
+    await importJSON(jsonFromFile as any as IOhMyBackup, { key: DEMO_TEST_DOMAIN, active: true, type: contextTypes.DOMAIN });
   }
 });
 
@@ -224,3 +141,45 @@ setTimeout(async () => {
 // debugger;
 // }, { urls: ['<all_urls>'] }, ['responseHeaders', 'extraHeaders']);
 // //
+
+// chrome.tabs.onUpdated.addListener(
+//   (tabId: number, changeInfo: any, tab: chrome.tabs.Tab) => {
+//     debugger;
+//   },
+// )
+
+// chrome.tabs.onActivated.addListener(function (activeInfo) {
+//   console.log(activeInfo.tabId);
+//   chrome.tabs.query({ active: true, currentWindow: false }, function (tabs) {
+//     debugger;
+//   });
+// });
+
+let id;
+let xid;
+// setInterval(() => {
+//   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+//     if (tabs[0]?.id !== xid) {
+//       xid = tabs[0]?.id;
+//       console.log('A', xid, tabs[0]);
+//     }
+//   });
+//   chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+//     if (tabs[0]?.id !== id) {
+//       id = tabs[0]?.id;
+//       console.log('B', id, tabs[0]);
+//     }
+//   });
+// }, 1000);
+
+chrome.tabs.onActivated.addListener(function (activeInfo) {
+  // eslint-disable-next-line no-console
+  console.log('C', activeInfo.tabId);
+});
+
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+    // eslint-disable-next-line no-console
+    console.log('X', tabs[0]?.id, windowId, tabs[0]);
+  });
+});

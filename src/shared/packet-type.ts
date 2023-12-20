@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, ohMyStatusCode, requestType } from './type';
+import { IOhMyContext, IOhMyAPIRequest, IOhMyMockResponse, IOhMyRequest, IOhMyStatusCode  } from './types';
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
@@ -13,29 +13,22 @@ export interface IPacket<T = unknown, U = IOhMyContext> {
   tabId?: number;
   source: appSources;
   payload: IPacketPayload<T, U>;
-  domain?: ohMyDomain,
-  version?: string;
+  // domain?: IOhMyDomainId,
+  // version?: string;
 }
 
-export interface IOhMyPacketContext extends IOhMyContext {
-  id?: string;
-  requestType?: requestType;
-  path?: string;
-  propertyName?: string;
-}
-
-export interface IPacketPayload<T = unknown, U = IOhMyContext> {
+export interface IPacketPayload<D = unknown, C = IOhMyContext> {
   id?: string;
   type: payloadType;
-  context?: U
-  data?: T;
+  context: C
+  data: D;
   description: string;
 }
 
-export interface IOhMyResponseUpdate {
-  request: Partial<IData>;
-  response: Partial<IMock>;
-}
+// export interface IOhMyResponseUpdate {
+//   request: Partial<IOhMyRequest>;
+//   response: Partial<IOhMyResponse>;
+// }
 
 export interface IOhMyReadyResponse<T = string> {
   request: IOhMyAPIRequest;
@@ -43,12 +36,12 @@ export interface IOhMyReadyResponse<T = string> {
 }
 
 export interface IOhMyDispatchServerRequest {
-  request: IData | IOhMyUpsertData,
+  request: IOhMyRequest,
   context: IOhMyContext,
   mock?: {
     response: unknown,
     headers: Record<string, string>,
-    statusCode: ohMyStatusCode
+    statusCode: IOhMyStatusCode
   };
 }
 

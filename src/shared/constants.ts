@@ -36,11 +36,15 @@ export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new
 
 // TODO: align with payloadType
 export enum objectTypes {
+  STORE = 'store',
+  DOMAIN = 'domain',
   REQUEST = 'request',
-  MOCK = 'response', // Deprecated
   RESPONSE = 'response',
-  STATE = 'state',
-  STORE = 'store'
+}
+
+export enum contextTypes {
+  DOMAIN = 'domain',
+  PROPERTY = 'property'
 }
 
 export enum packetType {
@@ -54,7 +58,7 @@ export enum payloadType {
   RESPONSE = 'response',
   REQUEST = 'request',
   NEW_RESPONSE = 'new-response',
-  STATE = 'state',
+  DOMAIN = 'domain',
   KNOCKKNOCK = 'knockknock',
   HIT = 'hit',
   // EVAL = 'execute',
@@ -96,7 +100,7 @@ export enum resetStateOptions {
   SELF = 'self'
 }
 
-export const MOCK_RULE_TYPES = {
+export const RESPONSE_RULE_TYPES = {
   firstName: 'First name',
   lastName: 'Last name',
   fullName: 'Full name',
@@ -104,7 +108,7 @@ export const MOCK_RULE_TYPES = {
   username: 'Username'
 };
 
-export enum ohMyMockStatus {
+export enum OhMyResponseStatus {
   OK,
   ERROR,
   NO_CONTENT,
