@@ -10,7 +10,7 @@ export class StateUtils {
     return {
       version: this.version,
       views: { activity: [] },
-      aux: { newAutoActivate: true },
+      aux: { newAutoActivate: false },
       data: {},
       presets: { default: 'Default' },
       context: {

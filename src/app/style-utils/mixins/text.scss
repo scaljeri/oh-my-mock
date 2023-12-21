@@ -20,6 +20,6 @@
   &::after {
     content: attr(data-content-end);
     text-overflow: '';
-    direction: rtl;
+    // direction: rtl;
   }
 }

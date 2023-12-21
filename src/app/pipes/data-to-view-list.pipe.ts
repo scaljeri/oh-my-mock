@@ -15,11 +15,14 @@ export class DataToViewListPipe implements PipeTransform {
     const out = Object.values(data)
       .filter(d => value.includes(d.id))
       .sort((a, b) => a.lastHit > b.lastHit ? -1 : 1)
-      .map(data => ({
+      .map(data => {
+        // eslint-disable-next-line no-console
+        return {
         ...data,
         urlStart: data.url.substring(0, data.url.length / 2),
         urlEnd: data.url.substring(data.url.length / 2)
-      })) || [];
+      };
+    }) || [];
 
     return out;
   }
