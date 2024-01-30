@@ -12,7 +12,7 @@ export function errorHandler(queue: OhMyQueue, ...errors: unknown[]): void {
   // eslint-disable-next-line no-console
   console.log('Error in promise', types, ...errors);
 
-  sendMsgToPopup(packet?.tabId, packet?.payload?.context?.domain, appSources.BACKGROUND, {
+  sendMsgToPopup(packet?.tabId || null, packet?.payload?.context?.domain || '', appSources.BACKGROUND, {
     type: payloadType.ERROR,
     data: { packet, errors },
     description: 'background;errorHandler'

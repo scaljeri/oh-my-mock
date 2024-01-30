@@ -89,6 +89,9 @@
     </div>
     <span class="mock">Response</span>
     <span class="actions btns-1">Actions</span>
+    <div class="sticky" (click)="onActivateStickyRows($event)">
+      <input type="checkbox">
+    </div>
   </li>
 
   <li
@@ -125,6 +128,9 @@
     <ng-container
       *ngTemplateOutlet="actions; context: { row: row, index: index }"
     ></ng-container>
+    <div class="sticky" (click)="onSelectRow($event, row)">
+      <input type="checkbox" [ngModel]="stickyRows[row.id] ? true : false" >
+    </div>
   </li>
 </ol>
 

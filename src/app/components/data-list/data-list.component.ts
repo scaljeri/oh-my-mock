@@ -118,15 +118,17 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(this.state$.subscribe(state => {
       if (this.persistFilter) {
         this.filterKeywords = state.aux.filterKeywords || '';
-        if (!state.aux.filterKeywords) {
-          this.filteredRequests = Object.keys(state.data);
-        } else {
-          this.filteredRequests = null;
-
-          if (state.aux.filteredRequests) {
-            this.filteredRequests = state.aux.filteredRequests;
-          } else if (state.aux.filteredRequests !== null) {
+        if (!this.filterUpdate) {
+          if (!state.aux.filterKeywords) {
             this.filteredRequests = Object.keys(state.data);
+          } else {
+            this.filteredRequests = null;
+
+            if (state.aux.filteredRequests) {
+              this.filteredRequests = state.aux.filteredRequests;
+            } else if (state.aux.filteredRequests !== null) {
+              this.filteredRequests = Object.keys(state.data);
+            }
           }
         }
 
@@ -266,13 +268,36 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.filteredRequests = data;
   }
 
+  filterUpdate: Record<string, unknown>;
   onFilterUpdate(update: Record<string, unknown>): void {
+    this.filterUpdate = update;
     if (this.persistFilter) {
       this.storeService.updateAux(update, this.context);
     }
 
     if (this.filteredRequests) {
       this.filteredRequests = update.filteredRequests as string[];
+    }
+    if (this.isListSticky) {
+      this.filteredRequests = this.filteredRequests.filter(fr => this.stickyRows[fr]);
+    }
+  }
+
+  stickyRows = {};
+  isListSticky = false;
+
+  onSelectRow(event: Event, row: IData) {
+    event.stopPropagation();
+    if ((event.target as HTMLElement).tagName === 'INPUT') {
+      const checked = (event.target as HTMLInputElement).checked;
+      this.stickyRows[row.id] = checked;
+    }
+  }
+
+  onActivateStickyRows(event: Event) {
+    if ((event.target as HTMLElement).tagName === 'INPUT') {
+      this.isListSticky = (event.target as HTMLInputElement).checked;
+      this.onFilterUpdate(this.filterUpdate);
     }
   }
 }
