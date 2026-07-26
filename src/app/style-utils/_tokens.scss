@@ -1,0 +1,92 @@
+// Design tokens, taken from `design/Mock Manager v2.dc.html`.
+//
+// That mockup is the agreed direction: clean, light, modern product UI. The two
+// terminal-styled variants next to it (`Mock Manager.dc.html` and
+// `Mock Manager Light.dc.html`) are explicitly ruled out by `design/CLAUDE.md`
+// and should not be used as a reference.
+//
+// The mockup brands the product "Mockbird"; that was placeholder text. The
+// product is and stays OhMyMock.
+//
+// Values live here rather than in the Material theme because most of them are
+// used by the app's own layout, not by Material components. `src/styles.scss`
+// feeds the palette into `mat.theme()` so both stay in step.
+
+// ---- surfaces ---------------------------------------------------------
+$oh-bg-app: #eef0f3; // window background, behind the panes
+$oh-bg-surface: #ffffff; // panes, rows, inputs
+$oh-bg-subtle: #fbfbfc; // sidebar, table header
+$oh-bg-muted: #f3f4f7; // hover, inactive chips
+$oh-bg-sunken: #f1f2f6; // code editor, wells
+$oh-bg-selected: #f3f3fe; // selected row / active nav (tinted with brand)
+
+// ---- borders ----------------------------------------------------------
+$oh-border: #e0e3e9; // default hairline between panes and rows
+$oh-border-strong: #c9cdd6; // input outlines, emphasised dividers
+$oh-border-soft: #e7e9ee; // inner dividers inside a pane
+
+// ---- text -------------------------------------------------------------
+$oh-text: #16181d; // primary
+$oh-text-secondary: #3a3f4a; // headings inside panes
+$oh-text-muted: #5b616d; // labels
+$oh-text-subtle: #6b7280; // metadata, table headers
+$oh-text-faint: #9aa0ac; // placeholders, counts
+$oh-text-fainter: #a2a8b4; // disabled
+
+// ---- brand & status ---------------------------------------------------
+$oh-brand: #4b4be0; // primary action, links, selection
+$oh-brand-hover: #2f2fb8;
+$oh-brand-tint: #f3f3fe; // brand at ~4% for backgrounds
+
+$oh-success: #34c77b; // "mocking on", enabled toggles
+$oh-success-strong: #0e8a5f; // success text on light backgrounds
+$oh-success-tint: #e6f6ef;
+
+$oh-danger: #d93b4b; // 4xx/5xx status codes, destructive actions
+
+// ---- typography -------------------------------------------------------
+// Instrument Sans for UI, IBM Plex Mono for anything that is data: URLs,
+// methods, status codes, JSON bodies.
+$oh-font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+$oh-font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+$oh-size-xs: 11px; // table headers, chip captions
+$oh-size-sm: 11.5px; // secondary metadata
+$oh-size-base: 12.5px; // body text in dense areas
+$oh-size-md: 13px; // default UI text — the most used size in the mockup
+$oh-size-lg: 14.5px; // pane titles
+$oh-size-xl: 17px; // domain title in the header
+
+$oh-weight-normal: 400;
+$oh-weight-medium: 500;
+$oh-weight-semibold: 600;
+$oh-weight-bold: 700;
+
+// Uppercase micro-labels ("DOMAINS", "SAVED RESPONSES", "METHOD").
+$oh-label-tracking: 0.06em;
+
+// ---- shape ------------------------------------------------------------
+$oh-radius-sm: 6px;
+$oh-radius: 8px;
+$oh-radius-md: 9px; // cards and panes
+$oh-radius-lg: 14px;
+$oh-radius-pill: 999px; // chips, toggles, badges
+
+// ---- layout -----------------------------------------------------------
+// The popup window is opened at 900x800 (`src/background/open-popup.ts`), so
+// the three panes have to fit that. The mockup is drawn at 1280 wide; the
+// sidebar and detail pane keep their proportions and the request list takes
+// whatever is left.
+$oh-sidebar-width: 250px;
+$oh-detail-width: 436px;
+$oh-detail-min-width: 340px;
+$oh-header-height: 56px;
+$oh-row-height: 56px;
+
+// ---- spacing ----------------------------------------------------------
+$oh-space-1: 4px;
+$oh-space-2: 8px;
+$oh-space-3: 12px;
+$oh-space-4: 16px;
+$oh-space-5: 20px;
+$oh-space-6: 24px;

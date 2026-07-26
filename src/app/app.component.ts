@@ -7,7 +7,6 @@ import {
   ViewChild
 } from '@angular/core';
 import { IOhMyContext, IState } from '@shared/type';
-import { MatDrawer, MatDrawerMode } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OhMyStateService } from './services/state.service';
@@ -26,6 +25,7 @@ import { registerIcons } from './app-icons';
 const VERSION = '__OH_MY_VERSION__';
 
 @Component({
+  standalone: false,
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -35,8 +35,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   domain: string;
 
   color = 'warn';
-  drawerMode: MatDrawerMode = 'over';
-  drawerBackdrop = true;
+  // The sidebar is a permanent column in the new three-pane shell rather than
+  // an overlay drawer; the header button collapses it for narrow windows.
+  sidebarOpen = true;
 
   page = '';
   dialogDone = false;
@@ -49,7 +50,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
   connectionFailed = null;
-  @ViewChild(MatDrawer) drawer: MatDrawer;
 
   constructor(
     private appState: AppStateService,
@@ -151,6 +151,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:keydown.enter')
   onEnable(): void {
     this.onEnableChange(true);
+  }
+
+  /**
+   * Navigating from the sidebar no longer has to close an overlay. The hook is
+   * kept so the nav list does not need to know about the shell's layout.
+   */
+  onNavigate(): void {
+    // Intentionally empty: the sidebar is permanent in the three-pane shell.
   }
 
   onErrors(): void {

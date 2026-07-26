@@ -36,8 +36,10 @@ export async function openPopup(tab?: chrome.tabs.Tab) {
           // url: `chrome-extension://${chrome.runtime.id}/index.html`,
           url: `/oh-my-mock/index.html?tabId=${tab.id}&domain=${domain}`,
           type: 'popup',
-          height: 800,
-          width: 900
+          // Sized for the three-pane layout from `design/Mock Manager v2`:
+          // domains, request list and mock detail side by side.
+          height: 860,
+          width: 1280
         });
         windowId = popup?.id as number;
       }

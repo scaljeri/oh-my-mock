@@ -1,102 +1,174 @@
-@import 'mixins';
+@use 'tokens' as t;
+
+// Three-pane shell — see `app.component.html` for the layout sketch and
+// `design/Mock Manager v2.dc.html` for the source design.
+//
+// The window opens at 1280x860 (`src/background/open-popup.ts`), the size the
+// design was drawn at. Nothing scrolls the document: each pane owns its own
+// overflow so the header stays put.
 
 :host {
-  background-color: #000;
-}
-
-.is-blurred {
-  filter: blur(2px);
-}
-
-mat-toolbar {
-  max-width: 100%;
-  overflow: hidden;
-  position: relative;
-
-  h1 {
-    @include oh-ellipsis;
-    position: relative;
-    padding-right: 83px;
-
-    .dash {
-      padding: 0 $spacer-2;
-    }
-  }
-}
-
-.disabled-notification {
-  background-color: red;
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%);
-  border-radius: 5px;
-  border: 5px solid #fff;
-  padding: $spacer-2 $spacer-2 $spacer-1;
-  top: 43px;
-  z-index: 1;
-}
-
-mat-drawer-content {
-  background-color: #000;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-
-  .button-wrapper {
-    margin-right: 10px;
-  }
-
-  .header-spacer {
-    flex: 1 1 auto;
-  }
-
-  section {
-    padding: 20px;
-    flex: 1;
-    overflow: scroll;
-  }
-
-  .cloud-sync {
-    margin-right: $spacer-4;
-  }
-}
-
-oh-my-spinner {
-  @include oh-position(absolute, 50% 0 0 50%);
-  transform: translate(-50%, -50%);
-}
-
-oh-my-feedback {
-  @include oh-position(absolute, 50% 0 0 0px);
-  transform: translateY(-50%);
-  z-index: 1;
-}
-
-oh-my-on-off-switch {
-  @include oh-position(absolute, 50% $spacer-2 0 0);
+  display: block;
   height: 100%;
-  transform: translateY(-50%);
 }
 
-.buy-me-a-coffee {
+.oh-shell {
+  display: grid;
+  grid-template-rows: t.$oh-header-height 1fr;
+  height: 100%;
+  background: t.$oh-bg-app;
+
+  &.is-blurred {
+    filter: blur(2px);
+    pointer-events: none;
+  }
+}
+
+// ---- header -----------------------------------------------------------
+
+.oh-header {
+  display: grid;
+  grid-template-columns: t.$oh-sidebar-width 1fr auto;
   align-items: center;
-  display: inline-flex;
-  height: 100%;
-  margin-left: auto;
+  gap: t.$oh-space-4;
+  padding-right: t.$oh-space-5;
+  background: t.$oh-bg-surface;
+  border-bottom: 1px solid t.$oh-border;
 
-  img {
-    height: 70%;
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: t.$oh-space-2;
+    padding-left: t.$oh-space-4;
+  }
+
+  &__menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: t.$oh-radius-sm;
+    background: transparent;
+    color: t.$oh-text-subtle;
+    cursor: pointer;
 
     &:hover {
-      transform: scale(1.04);
+      background: t.$oh-bg-muted;
     }
+
+    ::ng-deep svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  }
+
+  &__name {
+    font-size: t.$oh-size-lg;
+    font-weight: t.$oh-weight-bold;
+    letter-spacing: -0.01em;
+  }
+
+  &__version {
+    font-family: t.$oh-font-mono;
+    font-size: t.$oh-size-xs;
+    color: t.$oh-text-faint;
+  }
+
+  &__context {
+    display: flex;
+    align-items: center;
+    gap: t.$oh-space-3;
+    min-width: 0;
+  }
+
+  &__domain {
+    margin: 0;
+    font-size: t.$oh-size-xl;
+    font-weight: t.$oh-weight-semibold;
+    color: t.$oh-text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__sync,
+  &__errors {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: t.$oh-text-subtle;
+    cursor: pointer;
+  }
+
+  &__errors {
+    color: t.$oh-danger;
+
+    ::ng-deep svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: t.$oh-space-4;
+  }
+
+  &__coffee img {
+    display: block;
+    height: 26px;
   }
 }
 
-.version {
-  @include oh-position(absolute, 0px 0 0 5px);
-  color: #000;
-  font-size: 10px;
-  font-weight: normal;
-  line-height: 15px;
+// ---- body: sidebar + main --------------------------------------------
+
+.oh-body {
+  display: grid;
+  grid-template-columns: t.$oh-sidebar-width 1fr;
+  min-height: 0; // lets the children scroll instead of stretching the grid
+}
+
+.oh-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  background: t.$oh-bg-subtle;
+  border-right: 1px solid t.$oh-border;
+
+  &.is-collapsed {
+    display: none;
+  }
+}
+
+.oh-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: t.$oh-bg-surface;
+
+  &__content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+// Shown when mocking is switched off for this domain.
+.oh-notice {
+  padding: t.$oh-space-2 t.$oh-space-4;
+  background: t.$oh-bg-muted;
+  border-bottom: 1px solid t.$oh-border;
+  color: t.$oh-text-muted;
+  font-size: t.$oh-size-base;
+  font-weight: t.$oh-weight-medium;
 }

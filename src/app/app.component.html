@@ -1,78 +1,90 @@
-<mat-drawer-container
-  [ngClass]="{ 'is-blurred': showDisabled || isInitializing }"
-  class="example-container"
-  [hasBackdrop]="drawerBackdrop"
->
-  <mat-drawer [mode]="drawerMode">
-    <app-nav-list
-      [context]="context"
-      (navigate)="drawer.close()"
-    ></app-nav-list>
-  </mat-drawer>
+<!--
+  Three-pane shell, following `design/Mock Manager v2.dc.html`:
 
-  <mat-drawer-content>
-    <mat-toolbar>
-      <app-header-button
+    ┌─ header ────────────────────────────────────────────────┐
+    │ brand │ domain + counts        │ preset │ mocking toggle │
+    ├─ sidebar ─┬─ main ──────────────────────┬─ detail ───────┤
+    │ domains   │ tabs, filters, request list │ mock detail    │
+    └───────────┴─────────────────────────────┴────────────────┘
+
+  The middle column holds the router outlet, so the existing pages keep
+  working while they are restyled one at a time. The detail pane is a named
+  outlet: a request row routes into it instead of navigating away from the
+  list, which is the whole point of the new layout.
+-->
+<div class="oh-shell" [ngClass]="{ 'is-blurred': showDisabled || isInitializing }">
+  <header class="oh-header">
+    <div class="oh-header__brand">
+      <button
+        class="oh-header__menu"
         x-test="hamburger-menu-btn"
-        (menu)="drawer.toggle()"
-      ></app-header-button>
+        type="button"
+        aria-label="Menu"
+        (click)="sidebarOpen = !sidebarOpen"
+      >
+        <mat-icon svgIcon="menu"></mat-icon>
+      </button>
+      <span class="oh-header__name">OhMyMock</span>
+      <span class="oh-header__version">v{{ version }}</span>
+    </div>
+
+    <div class="oh-header__context">
+      <h1 class="oh-header__domain oh-mono">{{ domain }}</h1>
       <a
         routerLink="cloud-sync"
         [routerLinkActive]="'is-syncing'"
-        class="cloud-sync"
-        mat-icon-button
+        class="oh-header__sync"
         aria-label="Cloud sync"
       >
         <oh-my-cloud-sync-svg></oh-my-cloud-sync-svg>
       </a>
-
       <button
         *ngIf="errors.length"
+        class="oh-header__errors"
+        type="button"
+        aria-label="Show errors"
         (click)="onErrors()"
-        mat-icon-button
-        color="warn"
       >
-        <mat-icon>error</mat-icon>
+        <mat-icon svgIcon="error"></mat-icon>
       </button>
+    </div>
 
-      <h1 class="title">
-        <span>Oh My Mock</span> <span class="dash">-</span>
-        <span>{{ domain }}</span>
-        <oh-my-on-off-switch
-          (change)="onEnableChange($event)"
-          [checked]="enabled"
-          x-test="header-active-toggle"
-        ></oh-my-on-off-switch>
-        <!-- <mat-slide-toggle
-          (change)="onEnableChange($event.checked)"
-          [checked]="enabled"
-          [color]="color"
-        ></mat-slide-toggle> -->
-      </h1>
+    <div class="oh-header__actions">
+      <oh-my-on-off-switch
+        (change)="onEnableChange($event)"
+        [checked]="enabled"
+        x-test="header-active-toggle"
+      ></oh-my-on-off-switch>
       <a
-        class="buy-me-a-coffee"
+        class="oh-header__coffee"
         target="_blank"
         href="https://www.buymeacoffee.com/ohmymock"
       >
-        <img alt="buy me a coffee" src="assets/images/bmac-btn.png" />
-        <!-- <img src="assets/images/buy-me-a-coffee.png" /> -->
+        <img alt="Buy me a coffee" src="assets/images/bmac-btn.png" />
       </a>
-
-      <div class="version">v{{ version }}</div>
-    </mat-toolbar>
-    <div
-      x-test="notice-disabled"
-      *ngIf="!enabled && showDisabled !== 1 && domain"
-      class="disabled-notification"
-    >
-      <h3>OhMyMock is inactive</h3>
     </div>
+  </header>
 
-    <section *ngIf="!isInitializing">
-      <router-outlet></router-outlet>
-    </section>
-  </mat-drawer-content>
-</mat-drawer-container>
+  <div class="oh-body">
+    <aside class="oh-sidebar" [class.is-collapsed]="!sidebarOpen">
+      <app-nav-list [context]="context" (navigate)="onNavigate()"></app-nav-list>
+    </aside>
+
+    <main class="oh-main">
+      <div
+        x-test="notice-disabled"
+        *ngIf="!enabled && showDisabled !== 1 && domain"
+        class="oh-notice"
+      >
+        OhMyMock is inactive
+      </div>
+
+      <section class="oh-main__content" *ngIf="!isInitializing">
+        <router-outlet></router-outlet>
+      </section>
+    </main>
+  </div>
+</div>
 
 <oh-my-feedback></oh-my-feedback>
 <oh-my-spinner
@@ -80,7 +92,6 @@
   mode="dark"
 ></oh-my-spinner>
 
-<!-- <oh-my-disabled-enabled *ngIf="showDisabled"></oh-my-disabled-enabled> -->
 <oh-my-disabled-enabled
   *ngIf="showDisabled === 1 && !connectionFailed"
   (change)="onEnableChange($event)"

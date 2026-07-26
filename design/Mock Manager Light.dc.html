@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #FBFAF8; }
+  * { box-sizing: border-box; }
+  a { color: #1F8A2E; text-decoration: none; }
+  a:hover { color: #15181C; }
+  ::selection { background: #1F8A2E; color: #FBFAF8; }
+  input, button, textarea { font: inherit; color: inherit; }
+  input:focus, button:focus { outline: none; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #FBFAF8; }
+  ::-webkit-scrollbar-thumb { background: #E5E4DF; }
+  ::-webkit-scrollbar-thumb:hover { background: #C9C8C2; }
+  @keyframes glitchShift {
+    0% { transform: translate(0,0); }
+    20% { transform: translate(-1px,1px); }
+    40% { transform: translate(1px,-1px); }
+    60% { transform: translate(-1px,0); }
+    100% { transform: translate(0,0); }
+  }
+  @keyframes cursorBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</helmet>
+
+<div style="width: 1280px; height: 860px; position: relative; overflow: hidden; background: #FBFAF8; color: #15181C; font-family: Inter, -apple-system, system-ui, sans-serif; font-size: 13px; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column;">
+
+  <div style="position: absolute; inset: 0; z-index: 60; pointer-events: none; opacity: {{ scanOpacity }}; background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1px, transparent 1px, transparent 3px); mix-blend-mode: overlay;"></div>
+
+  <header style="height: 52px; flex: 0 0 52px; border-bottom: 1px solid #E5E4DF; display: flex; align-items: center; gap: 20px; padding: 0 16px; background: #FBFAF8;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 20px; height: 20px; border: 1px solid #1F8A2E; display: grid; place-items: center; color: #1F8A2E; font-size: 11px; font-weight: 700;">▲</div>
+      <div style="font-weight: 600; letter-spacing: -0.01em; font-size: 14px;">calje·mock</div>
+      <span style="color: #A6A9AE; font-size: 11px;">v4</span>
+    </div>
+
+    <div style="width: 1px; height: 20px; background: #E5E4DF;"></div>
+
+    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+      <span style="color: #1F8A2E;">&gt;</span>
+      <span style="color: #15181C; font-weight: 500; font-family: 'JetBrains Mono', monospace;">{{ activeHost }}</span>
+      <span style="color: #8A8F97; font-size: 11px;">{{ activeMeta }}</span>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="color: #8A8F97; font-size: 11px; letter-spacing: 0.08em;">PRESET</span>
+      <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #E5E4DF; background: #FFFFFF; padding: 5px 10px; border-radius: 2px; cursor: pointer;" style-hover="border-color: #C9C8C2;">
+        <span>{{ activePreset }}</span>
+        <span style="color: #8A8F97;">▾</span>
+      </div>
+    </div>
+
+    <div onClick="{{ toggleMaster }}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid {{ masterBorder }}; padding: 5px 10px 5px 12px; border-radius: 2px; background: #FFFFFF;">
+      <span style="font-size: 11px; letter-spacing: 0.08em; color: {{ masterText }};">{{ masterLabel }}</span>
+      <div style="width: 30px; height: 14px; border-radius: 999px; background: {{ masterTrack }}; position: relative; transition: background 120ms cubic-bezier(0.22,1,0.36,1);">
+        <div style="position: absolute; top: 2px; left: {{ masterKnobX }}; width: 10px; height: 10px; border-radius: 999px; background: {{ masterKnob }}; transition: left 120ms cubic-bezier(0.22,1,0.36,1);"></div>
+      </div>
+    </div>
+  </header>
+
+  <div style="flex: 1; min-height: 0; display: flex;">
+
+    <aside style="flex: 0 0 244px; border-right: 1px solid #E5E4DF; display: flex; flex-direction: column; background: #FBFAF8;">
+      <div style="padding: 16px 16px 10px; color: #8A8F97; font-size: 11px; letter-spacing: 0.12em;">// DOMAINS</div>
+      <div style="flex: 1; overflow-y: auto; padding-bottom: 8px;">
+        <sc-for list="{{ domains }}" as="d" hint-placeholder-count="4">
+          <div onClick="{{ d.select }}" style="padding: 10px 16px 10px 15px; border-left: 1px solid {{ d.bar }}; background: {{ d.bg }}; cursor: pointer; display: flex; flex-direction: column; gap: 5px;" style-hover="background: #FFFFFF;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 5px; height: 5px; border-radius: 999px; background: {{ d.dot }}; flex: 0 0 5px;"></div>
+              <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; color: {{ d.fg }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.host }}</div>
+            </div>
+            <div style="padding-left: 13px; font-size: 10.5px; color: #8A8F97; letter-spacing: 0.04em;">{{ d.summary }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="border-top: 1px solid #E5E4DF; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="cursor: pointer; color: #1F8A2E; font-size: 12px;" style-hover="color: #15181C;">[ + add domain ]</div>
+        <div style="cursor: pointer; color: #8A8F97; font-size: 12px;" style-hover="color: #15181C;">[ import har → ]</div>
+      </div>
+      <div style="border-top: 1px solid #E5E4DF; padding: 12px 16px; color: #A6A9AE; font-size: 10.5px; line-height: 1.6;">
+        intercepting xhr · fetch · cookies<br />last sync 2026-07-26 09:41
+      </div>
+    </aside>
+
+    <main style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+
+      <div style="height: 44px; flex: 0 0 44px; border-bottom: 1px solid #E5E4DF; display: flex; align-items: stretch; gap: 0; padding: 0 16px; overflow: hidden; min-width: 0;">
+        <div onClick="{{ goRequests }}" style="display: flex; align-items: center; padding: 0 14px; cursor: pointer; font-size: 12px; color: {{ tabReqFg }}; box-shadow: inset 0 -1px 0 0 {{ tabReqBar }};" style-hover="color: #15181C;">requests <span style="color: #A6A9AE; margin-left: 8px;">{{ requestCount }}</span></div>
+        <div onClick="{{ goCookies }}" style="display: flex; align-items: center; padding: 0 14px; cursor: pointer; font-size: 12px; color: {{ tabCookFg }}; box-shadow: inset 0 -1px 0 0 {{ tabCookBar }};" style-hover="color: #15181C;">cookies <span style="color: #A6A9AE; margin-left: 8px;">{{ cookieCount }}</span></div>
+        <div onClick="{{ goPresets }}" style="display: flex; align-items: center; padding: 0 14px; cursor: pointer; font-size: 12px; color: {{ tabPreFg }}; box-shadow: inset 0 -1px 0 0 {{ tabPreBar }};" style-hover="color: #15181C;">presets <span style="color: #A6A9AE; margin-left: 8px;">4</span></div>
+        <div style="flex: 1 1 auto; min-width: 12px;"></div>
+        <div style="display: flex; align-items: center; gap: 8px; flex: 0 1 190px; min-width: 0;">
+          <span style="color: #1F8A2E; flex: 0 0 auto;">/</span>
+          <input value="{{ filter }}" onChange="{{ setFilter }}" placeholder="filter url or method" style="flex: 1 1 auto; width: 100%; min-width: 0; background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; font-size: 12px; color: #15181C;" style-focus="border-bottom-color: #1F8A2E;" />
+          <div onClick="{{ clearAll }}" style="cursor: pointer; color: #8A8F97; font-size: 11.5px; flex: 0 0 auto;" style-hover="color: #D02A45;">[ × ]</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ showRequests }}" hint-placeholder-val="{{ true }}">
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+          <div style="display: grid; grid-template-columns: 34px 58px 68px 1fr 92px 84px; align-items: center; gap: 12px; padding: 0 16px; height: 32px; border-bottom: 1px solid #E5E4DF; color: #8A8F97; font-size: 10.5px; letter-spacing: 0.1em;">
+            <div>#</div><div>TYPE</div><div>METHOD</div><div>URL</div><div>RESPONSE</div><div style="text-align: right;">STATE</div>
+          </div>
+          <div style="flex: 1; overflow-y: auto;">
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="9">
+              <div onClick="{{ r.select }}" style="display: grid; grid-template-columns: 34px 58px 68px 1fr 92px 84px; align-items: center; gap: 12px; padding: 0 16px; height: {{ rowHeight }}; border-bottom: 1px solid #EFEFEA; background: {{ r.bg }}; cursor: pointer; box-shadow: inset 1px 0 0 0 {{ r.bar }};" style-hover="background: #F5F5F1;">
+                <div style="color: #A6A9AE; font-size: 10.5px;">{{ r.num }}</div>
+                <div style="font-size: 10px; letter-spacing: 0.08em; color: #666C74; border: 1px solid #E5E4DF; padding: 2px 5px; justify-self: start; border-radius: 2px;">{{ r.type }}</div>
+                <div style="color: {{ r.methodFg }}; font-weight: 600; font-size: 11.5px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em;">{{ r.method }}</div>
+                <div style="color: {{ r.urlFg }}; font-size: 12.5px; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.url }}</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: {{ r.codeFg }}; font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 500;">{{ r.code }}</span>
+                  <span style="color: #A6A9AE; font-size: 10.5px;">{{ r.delay }}</span>
+                </div>
+                <div style="justify-self: end; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 10px; letter-spacing: 0.06em; color: {{ r.stateFg }};">{{ r.state }}</span>
+                  <div onClick="{{ r.toggle }}" style="width: 26px; height: 12px; border-radius: 999px; background: {{ r.track }}; position: relative;">
+                    <div style="position: absolute; top: 2px; left: {{ r.knobX }}; width: 8px; height: 8px; border-radius: 999px; background: {{ r.knob }}; transition: left 120ms cubic-bezier(0.22,1,0.36,1);"></div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 14px 16px; color: #A6A9AE; font-size: 11px;">{{ listFoot }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showCookies }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+          <div style="display: grid; grid-template-columns: 34px 1fr 1.3fr 96px 92px 74px; align-items: center; gap: 12px; padding: 0 16px; height: 32px; border-bottom: 1px solid #E5E4DF; color: #8A8F97; font-size: 10.5px; letter-spacing: 0.1em;">
+            <div>#</div><div>NAME</div><div>VALUE</div><div>PATH</div><div>EXPIRES</div><div style="text-align: right;">STATE</div>
+          </div>
+          <div style="flex: 1; overflow-y: auto;">
+            <sc-for list="{{ cookieRows }}" as="c" hint-placeholder-count="5">
+              <div onClick="{{ c.select }}" style="display: grid; grid-template-columns: 34px 1fr 1.3fr 96px 92px 74px; align-items: center; gap: 12px; padding: 0 16px; height: {{ rowHeight }}; border-bottom: 1px solid #EFEFEA; background: {{ c.bg }}; cursor: pointer; box-shadow: inset 1px 0 0 0 {{ c.bar }};" style-hover="background: #F5F5F1;">
+                <div style="color: #A6A9AE; font-size: 10.5px;">{{ c.num }}</div>
+                <div style="color: {{ c.nameFg }}; font-size: 12.5px; font-family: 'JetBrains Mono', monospace;">{{ c.name }}</div>
+                <div style="color: #666C74; font-size: 12px; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ c.value }}</div>
+                <div style="color: #8A8F97; font-size: 11.5px;">{{ c.path }}</div>
+                <div style="color: #8A8F97; font-size: 11.5px;">{{ c.expires }}</div>
+                <div style="justify-self: end; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 10px; color: {{ c.stateFg }};">{{ c.state }}</span>
+                  <div onClick="{{ c.toggle }}" style="width: 26px; height: 12px; border-radius: 999px; background: {{ c.track }}; position: relative;">
+                    <div style="position: absolute; top: 2px; left: {{ c.knobX }}; width: 8px; height: 8px; border-radius: 999px; background: {{ c.knob }};"></div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 14px 16px; display: flex; gap: 18px;">
+              <div style="cursor: pointer; color: #1F8A2E; font-size: 12px;" style-hover="color: #15181C;">[ + new cookie ]</div>
+              <div style="cursor: pointer; color: #8A8F97; font-size: 12px;" style-hover="color: #15181C;">[ paste set-cookie header ]</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showPresets }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px;">
+          <div style="color: #8A8F97; font-size: 11px; letter-spacing: 0.12em; margin-bottom: 14px;">// PRESETS — SNAPSHOTS OF EVERY MOCK ON THIS DOMAIN</div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+            <sc-for list="{{ presetCards }}" as="p" hint-placeholder-count="4">
+              <div onClick="{{ p.select }}" style="background: #FFFFFF; border: 1px solid {{ p.border }}; border-radius: 4px; padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px;" style-hover="border-color: #C9C8C2; transform: translateY(-2px);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <div style="font-weight: 500; font-size: 13px; color: {{ p.fg }};">{{ p.name }}</div>
+                  <div style="font-size: 10px; letter-spacing: 0.06em; color: {{ p.tagFg }}; border: 1px solid {{ p.border }}; border-radius: 999px; padding: 2px 8px;">{{ p.tag }}</div>
+                </div>
+                <div style="font-family: Inter, sans-serif; font-size: 12px; color: #666C74; line-height: 1.55;">{{ p.note }}</div>
+                <div style="display: flex; gap: 16px; color: #8A8F97; font-size: 10.5px; letter-spacing: 0.04em;">
+                  <span>{{ p.mocks }}</span><span>{{ p.cookies }}</span><span>{{ p.touched }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 18px; display: flex; gap: 18px;">
+            <div style="cursor: pointer; color: #1F8A2E; font-size: 12px;" style-hover="color: #15181C;">[ + capture current state ]</div>
+            <div style="cursor: pointer; color: #8A8F97; font-size: 12px;" style-hover="color: #15181C;">[ export json ↗ ]</div>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+
+    <sc-if value="{{ showRequests }}" hint-placeholder-val="{{ true }}">
+      <section style="flex: 0 0 452px; min-width: 0; max-width: 452px; overflow: hidden; border-left: 1px solid #E5E4DF; display: flex; flex-direction: column; background: #FFFFFF; min-height: 0;">
+        <div style="padding: 16px; border-bottom: 1px solid #E5E4DF;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="color: #8A8F97; font-size: 11px; letter-spacing: 0.12em;">// MOCK</div>
+            <div style="display: flex; gap: 12px; color: #8A8F97; font-size: 11px;">
+              <span style="cursor: pointer;" style-hover="color: #15181C;">[dup]</span>
+              <span style="cursor: pointer;" style-hover="color: #D02A45;">[del]</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;">
+            <span style="color: {{ detailMethodFg }}; font-weight: 700; font-size: 13px; font-family: 'JetBrains Mono', monospace;">{{ detailMethod }}</span>
+            <span style="font-size: 14px; color: #15181C; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ detailUrl }}</span>
+          </div>
+          <div style="color: #8A8F97; font-size: 11px;">{{ detailSubtitle }}</div>
+        </div>
+
+        <div style="padding: 16px; border-bottom: 1px solid #E5E4DF;">
+          <div style="color: #8A8F97; font-size: 11px; letter-spacing: 0.12em; margin-bottom: 10px;">// RESPONSES</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{ responses }}" as="v" hint-placeholder-count="3">
+              <div onClick="{{ v.select }}" style="border: 1px solid {{ v.border }}; background: {{ v.bg }}; color: {{ v.fg }}; border-radius: 2px; padding: 7px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;" style-hover="border-color: #C9C8C2;">
+                <span style="font-size: 12.5px; font-weight: 500;">{{ v.code }}</span>
+                <span style="font-size: 10.5px; color: #8A8F97;">{{ v.label }}</span>
+              </div>
+            </sc-for>
+            <div style="border: 1px dashed #C9C8C2; color: #8A8F97; border-radius: 2px; padding: 7px 12px; cursor: pointer; font-size: 12.5px;" style-hover="color: #1F8A2E; border-color: #1F8A2E;">+</div>
+          </div>
+        </div>
+
+        <div style="padding: 16px; border-bottom: 1px solid #E5E4DF; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px;">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">STATUS CODE</label>
+            <input value="{{ statusCode }}" onChange="{{ setStatus }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 13px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">DELAY (MS)</label>
+            <input value="{{ delayMs }}" onChange="{{ setDelay }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 13px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">CONTENT TYPE</label>
+            <input value="{{ contentType }}" onChange="{{ setContentType }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 13px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">LABEL</label>
+            <input value="{{ mockLabel }}" onChange="{{ setLabel }}" placeholder="e.g. empty list" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 13px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: stretch; height: 38px; flex: 0 0 38px; border-bottom: 1px solid #E5E4DF; padding: 0 8px;">
+          <div onClick="{{ goBody }}" style="display: flex; align-items: center; padding: 0 10px; cursor: pointer; font-size: 11.5px; color: {{ dtBodyFg }}; box-shadow: inset 0 -1px 0 0 {{ dtBodyBar }};" style-hover="color: #15181C;">body</div>
+          <div onClick="{{ goHeaders }}" style="display: flex; align-items: center; padding: 0 10px; cursor: pointer; font-size: 11.5px; color: {{ dtHeadFg }}; box-shadow: inset 0 -1px 0 0 {{ dtHeadBar }};" style-hover="color: #15181C;">headers</div>
+          <div onClick="{{ goCode }}" style="display: flex; align-items: center; padding: 0 10px; cursor: pointer; font-size: 11.5px; color: {{ dtCodeFg }}; box-shadow: inset 0 -1px 0 0 {{ dtCodeBar }};" style-hover="color: #15181C;">code</div>
+          <div style="flex: 1;"></div>
+          <div style="display: flex; align-items: center; gap: 12px; color: #8A8F97; font-size: 11px;">
+            <span style="cursor: pointer;" style-hover="color: #1F8A2E;">[format]</span>
+            <span style="cursor: pointer;" style-hover="color: #1F8A2E;">[anonymise]</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-height: 0; overflow: auto; padding: 14px 16px 16px; background: #FFFFFF;">
+          <pre style="margin: 0; padding: 12px 14px; background: #F7F7F3; border: 1px solid #E5E4DF; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; color: #3B4048; white-space: pre; tab-size: 2;">{{ editorText }}</pre>
+        </div>
+
+        <div style="flex: 0 0 auto; border-top: 1px solid #E5E4DF; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+          <div style="border: 1px solid #1F8A2E; color: #1F8A2E; border-radius: 2px; padding: 7px 14px; cursor: pointer; font-size: 12px;" style-hover="background: #EBF5EA;">[ save mock ]</div>
+          <div style="border: 1px solid #E5E4DF; color: #666C74; border-radius: 2px; padding: 7px 14px; cursor: pointer; font-size: 12px;" style-hover="border-color: #C9C8C2; color: #15181C;">[ reset ]</div>
+          <div style="flex: 1;"></div>
+          <span style="color: #A6A9AE; font-size: 10.5px;">{{ detailFooter }}</span>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ showCookies }}" hint-placeholder-val="{{ false }}">
+      <section style="flex: 0 0 452px; min-width: 0; max-width: 452px; overflow: hidden; border-left: 1px solid #E5E4DF; display: flex; flex-direction: column; background: #FFFFFF; min-height: 0;">
+        <div style="padding: 16px; border-bottom: 1px solid #E5E4DF;">
+          <div style="color: #8A8F97; font-size: 11px; letter-spacing: 0.12em; margin-bottom: 12px;">// COOKIE</div>
+          <div style="font-size: 14px; color: #15181C; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px;">{{ cookieName }}</div>
+          <div style="color: #8A8F97; font-size: 11px;">{{ cookieScope }}</div>
+        </div>
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #E5E4DF;">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">VALUE</label>
+            <input value="{{ cookieValue }}" onChange="{{ setCookieValue }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 12.5px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">DOMAIN</label>
+              <input value="{{ cookieDomain }}" onChange="{{ setCookieDomain }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 12.5px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">PATH</label>
+              <input value="{{ cookiePath }}" onChange="{{ setCookiePath }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 12.5px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">EXPIRES</label>
+              <input value="{{ cookieExpires }}" onChange="{{ setCookieExpires }}" style="background: transparent; border: none; border-bottom: 1px solid #E5E4DF; padding: 4px 0; color: #15181C; font-size: 12.5px; font-family: 'JetBrains Mono', monospace;" style-focus="border-bottom-color: #1F8A2E;" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <label style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.08em;">SAMESITE</label>
+              <div style="display: flex; gap: 6px;">
+                <sc-for list="{{ sameSiteOptions }}" as="s" hint-placeholder-count="3">
+                  <div onClick="{{ s.select }}" style="border: 1px solid {{ s.border }}; color: {{ s.fg }}; background: {{ s.bg }}; border-radius: 999px; padding: 3px 10px; font-size: 10.5px; cursor: pointer;" style-hover="border-color: #C9C8C2;">{{ s.name }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #E5E4DF;">
+          <sc-for list="{{ cookieFlags }}" as="f" hint-placeholder-count="3">
+            <div onClick="{{ f.toggle }}" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-size: 12px; color: #15181C;">{{ f.name }}</span>
+                <span style="font-family: Inter, sans-serif; font-size: 11px; color: #8A8F97;">{{ f.note }}</span>
+              </div>
+              <div style="width: 30px; height: 14px; border-radius: 999px; background: {{ f.track }}; position: relative; flex: 0 0 30px;">
+                <div style="position: absolute; top: 2px; left: {{ f.knobX }}; width: 10px; height: 10px; border-radius: 999px; background: {{ f.knob }}; transition: left 120ms cubic-bezier(0.22,1,0.36,1);"></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex: 1; min-height: 0; overflow: auto; padding: 14px 16px; background: #FFFFFF;">
+          <div style="color: #8A8F97; font-size: 10.5px; letter-spacing: 0.1em; margin-bottom: 8px;">SET-COOKIE PREVIEW</div>
+          <pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.7; color: #3B4048; white-space: pre-wrap; word-break: break-all;">{{ setCookiePreview }}</pre>
+        </div>
+        <div style="border-top: 1px solid #E5E4DF; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+          <div style="border: 1px solid #1F8A2E; color: #1F8A2E; border-radius: 2px; padding: 7px 14px; cursor: pointer; font-size: 12px;" style-hover="background: #EBF5EA;">[ save cookie ]</div>
+          <div style="border: 1px solid #E5E4DF; color: #666C74; border-radius: 2px; padding: 7px 14px; cursor: pointer; font-size: 12px;" style-hover="border-color: #C9C8C2; color: #15181C;">[ delete ]</div>
+          <div style="flex: 1;"></div>
+          <span style="color: #A6A9AE; font-size: 10.5px;">applies on next request</span>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ showPresets }}" hint-placeholder-val="{{ false }}">
+      <section style="flex: 0 0 452px; min-width: 0; max-width: 452px; overflow: hidden; border-left: 1px solid #E5E4DF; padding: 16px; background: #FFFFFF; display: flex; flex-direction: column; gap: 14px;">
+        <div style="color: #8A8F97; font-size: 11px; letter-spacing: 0.12em;">// ACTIVE PRESET</div>
+        <div style="font-size: 15px; color: #15181C;">{{ activePreset }}</div>
+        <div style="font-family: Inter, sans-serif; font-size: 12.5px; color: #666C74; line-height: 1.6; max-width: 46ch;">{{ presetNote }}</div>
+        <div style="border-top: 1px solid #E5E4DF; padding-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <sc-for list="{{ presetStats }}" as="s" hint-placeholder-count="4">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+              <span style="color: #8A8F97; font-size: 11.5px;">{{ s.k }}</span>
+              <span style="color: #15181C; font-size: 12px;">{{ s.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex: 1;"></div>
+        <div style="display: flex; gap: 12px;">
+          <div style="border: 1px solid #1F8A2E; color: #1F8A2E; border-radius: 2px; padding: 7px 14px; cursor: pointer; font-size: 12px;" style-hover="background: #EBF5EA;">[ activate ]</div>
+          <div style="border: 1px solid #E5E4DF; color: #666C74; border-radius: 2px; padding: 7px 14px; cursor: pointer; font-size: 12px;" style-hover="border-color: #C9C8C2; color: #15181C;">[ duplicate ]</div>
+        </div>
+      </section>
+    </sc-if>
+  </div>
+
+  <footer style="height: 30px; flex: 0 0 30px; border-top: 1px solid #E5E4DF; display: flex; align-items: center; gap: 16px; padding: 0 16px; color: #A6A9AE; font-size: 10.5px; letter-spacing: 0.04em;">
+    <span style="color: #1F8A2E;">●</span>
+    <span>{{ statusLine }}</span>
+    <div style="flex: 1;"></div>
+    <span>⌘K commands</span>
+    <span>⌥M toggle mocking</span>
+    <span>built by hand · calje.eu</span>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860},&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;compactRows&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const ACCENT = '#1F8A2E', DIM = '#1F8A2E', RED = '#D02A45', CYAN = '#0B7C90', AMBER = '#A96A00', FG = '#15181C', MUT = '#666C74', FAINT = '#A6A9AE', BORDER = '#E5E4DF';
+
+const METHOD_FG = { GET: ACCENT, POST: CYAN, PUT: AMBER, PATCH: AMBER, DELETE: RED, OPTIONS: MUT };
+
+function codeFg(code) {
+  const n = parseInt(code, 10);
+  if (n >= 500) return RED;
+  if (n >= 400) return RED;
+  if (n >= 300) return AMBER;
+  return ACCENT;
+}
+
+const DATA_USERS = `{
+  "users": [
+    { "id": 1, "name": "king arthur", "profession": "king" },
+    { "id": 2, "name": "rob kendal", "profession": "code fiddler" },
+    { "id": 3, "name": "ada byron",  "profession": "engineer" }
+  ],
+  "total": 3,
+  "page": 1
+}`;
+
+const DATA_EMPTY = `{
+  "users": [],
+  "total": 0,
+  "page": 1
+}`;
+
+const DATA_ERR = `{
+  "error": "not_found",
+  "message": "no user with that id",
+  "trace_id": "j4k7wr2lo7"
+}`;
+
+const HEADERS_JSON = `{
+  "connection": "keep-alive",
+  "content-length": "345",
+  "content-type": "application/json; charset=utf-8",
+  "cache-control": "no-store",
+  "x-mocked-by": "calje-mock",
+  "x-powered-by": "Express"
+}`;
+
+const CODE_MOCK = `// runs in the page context before the response resolves
+export default ({ request, response, session }) => {
+  const page = Number(new URL(request.url).searchParams.get('page') ?? 1);
+
+  response.status = page > 3 ? 404 : 200;
+  response.body = {
+    users: session.users.slice((page - 1) * 3, page * 3),
+    total: session.users.length,
+    page
+  };
+
+  return response;
+};`;
+
+function mk(id, type, method, url, code, delay, on, mocked, data, label) {
+  return {
+    id, type, method, url,
+    responses: [
+      { code: 'off', label: 'passthrough' },
+      { code: String(code), label: label || 'mocked' },
+      { code: code === 200 ? '500' : '200', label: code === 200 ? 'server error' : 'happy path' }
+    ],
+    activeResponse: 1,
+    code: String(code), delay: String(delay), on, mocked,
+    contentType: 'application/json',
+    label: label || '',
+    data: data || DATA_USERS,
+    headers: HEADERS_JSON,
+    code_: CODE_MOCK,
+    created: '2026-07-24, 18:09',
+    hits: Math.floor(Math.random() * 40) + 3
+  };
+}
+
+const DOMAINS = [
+  {
+    id: 'local', host: 'localhost:8000', preset: 'Default',
+    note: 'local dev server. everything mocked off the happy path so the ui can be driven from the panel.',
+    calls: [
+      mk('a1', 'XHR', 'GET', '/users', 200, 0, true, true, DATA_USERS, 'three users'),
+      mk('a2', 'FETCH', 'GET', '/users?page=4', 404, 120, true, true, DATA_ERR, 'out of range'),
+      mk('a3', 'XHR', 'POST', '/users', 201, 400, true, true, '{\n  "id": 4,\n  "created": true\n}', 'created'),
+      mk('a4', 'FETCH', 'PUT', '/users/2', 204, 0, false, true, '{}', 'no content'),
+      mk('a5', 'XHR', 'DELETE', '/users/2', 403, 0, true, true, DATA_ERR, 'forbidden'),
+      mk('a6', 'FETCH', 'GET', '/site/config', 200, 0, true, false, '{\n  "flags": { "newNav": true }\n}', ''),
+      mk('a7', 'XHR', 'GET', '/binary/test.png', 200, 900, false, false, '<binary · 24.1 kB>', 'slow asset'),
+      mk('a8', 'FETCH', 'GET', '/session', 200, 0, true, true, '{\n  "authenticated": true,\n  "role": "admin"\n}', 'admin'),
+      mk('a9', 'XHR', 'GET', '/users/empty', 200, 0, true, true, DATA_EMPTY, 'empty list')
+    ],
+    cookies: [
+      { id: 'c1', name: 'session_id', value: 'j4k7wr2lo7-8f21-4b0a-9c33', path: '/', expires: 'session', on: true, domain: 'localhost', sameSite: 'Lax', secure: false, httpOnly: true, hostOnly: true },
+      { id: 'c2', name: 'feature_flags', value: 'newNav=1;beta=1;mockPanel=1', path: '/', expires: '2026-12-31', on: true, domain: 'localhost', sameSite: 'Lax', secure: false, httpOnly: false, hostOnly: true },
+      { id: 'c3', name: 'role', value: 'admin', path: '/', expires: 'session', on: true, domain: 'localhost', sameSite: 'Strict', secure: false, httpOnly: false, hostOnly: true },
+      { id: 'c4', name: 'locale', value: 'nl-NL', path: '/', expires: '2027-01-14', on: false, domain: 'localhost', sameSite: 'None', secure: true, httpOnly: false, hostOnly: false },
+      { id: 'c5', name: 'consent', value: 'analytics=0;ads=0', path: '/', expires: '2026-09-01', on: false, domain: 'localhost', sameSite: 'Lax', secure: false, httpOnly: false, hostOnly: true }
+    ]
+  },
+  {
+    id: 'staging', host: 'api.staging.acme.io', preset: 'Error states',
+    note: 'staging api. used to rehearse failure paths — 500s, timeouts, expired tokens.',
+    calls: [
+      mk('b1', 'FETCH', 'GET', '/v2/orders', 500, 1500, true, true, '{\n  "error": "upstream_timeout"\n}', 'timeout'),
+      mk('b2', 'FETCH', 'POST', '/v2/orders', 422, 0, true, true, '{\n  "errors": { "sku": "unknown" }\n}', 'validation'),
+      mk('b3', 'XHR', 'GET', '/v2/me', 401, 0, true, true, '{\n  "error": "token_expired"\n}', 'expired'),
+      mk('b4', 'FETCH', 'GET', '/v2/catalog', 200, 300, false, false, DATA_USERS, '')
+    ],
+    cookies: [
+      { id: 'd1', name: 'acme_token', value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…', path: '/', expires: '2026-07-27', on: true, domain: '.acme.io', sameSite: 'None', secure: true, httpOnly: true, hostOnly: false },
+      { id: 'd2', name: 'ab_bucket', value: 'checkout_v3', path: '/', expires: '2026-08-10', on: true, domain: '.acme.io', sameSite: 'Lax', secure: true, httpOnly: false, hostOnly: false }
+    ]
+  },
+  {
+    id: 'checkout', host: 'checkout.acme.io', preset: 'Payment declined',
+    note: 'payment flow. psp responses are mocked so cards never leave the machine.',
+    calls: [
+      mk('e1', 'FETCH', 'POST', '/pay/intent', 200, 600, true, true, '{\n  "intent": "pi_3Nk",\n  "status": "requires_action"\n}', '3ds'),
+      mk('e2', 'FETCH', 'POST', '/pay/confirm', 402, 800, true, true, '{\n  "code": "card_declined"\n}', 'declined'),
+      mk('e3', 'XHR', 'GET', '/pay/methods', 200, 0, true, false, '{\n  "methods": ["ideal", "card"]\n}', '')
+    ],
+    cookies: [
+      { id: 'f1', name: 'cart', value: '2 items · €148,00', path: '/', expires: 'session', on: true, domain: 'checkout.acme.io', sameSite: 'Lax', secure: true, httpOnly: false, hostOnly: true }
+    ]
+  },
+  {
+    id: 'cdn', host: 'cdn.acme-assets.net', preset: 'Default',
+    note: 'assets only. throttled to rehearse slow networks.',
+    calls: [
+      mk('g1', 'XHR', 'GET', '/img/hero.webp', 200, 2400, true, false, '<binary · 312 kB>', 'throttled'),
+      mk('g2', 'FETCH', 'GET', '/fonts/jbmono.woff2', 200, 0, false, false, '<binary · 88 kB>', '')
+    ],
+    cookies: []
+  }
+];
+
+const PRESETS = [
+  { name: 'Default', tag: 'active', note: 'everything on the happy path. what you get on a fresh clone.', mocks: '9 mocks', cookies: '3 cookies', touched: 'today 09:41' },
+  { name: 'Error states', tag: 'saved', note: '500s and validation failures across every write endpoint.', mocks: '7 mocks', cookies: '3 cookies', touched: '2026-07-21' },
+  { name: 'Empty account', tag: 'saved', note: 'no orders, no users, no history — for empty-state work.', mocks: '9 mocks', cookies: '2 cookies', touched: '2026-07-14' },
+  { name: 'Slow network', tag: 'saved', note: 'every response delayed 800–2400ms, assets throttled.', mocks: '11 mocks', cookies: '3 cookies', touched: '2026-06-30' }
+];
+
+class Component extends DCLogic {
+  state = {
+    domainId: 'local',
+    tab: 'requests',
+    callId: 'a1',
+    cookieId: 'c1',
+    detailTab: 'body',
+    filter: '',
+    master: true,
+    presetIdx: 0,
+    overrides: {},
+    cookieOverrides: {},
+    callOn: {},
+    cookieOn: {}
+  };
+
+  domain() { return DOMAINS.find(d => d.id === this.state.domainId) || DOMAINS[0]; }
+
+  call() {
+    const d = this.domain();
+    return d.calls.find(c => c.id === this.state.callId) || d.calls[0];
+  }
+
+  cookie() {
+    const d = this.domain();
+    const list = d.cookies;
+    return list.find(c => c.id === this.state.cookieId) || list[0] || null;
+  }
+
+  ov(id, key, fallback) {
+    const o = this.state.overrides[id] || {};
+    return o[key] !== undefined ? o[key] : fallback;
+  }
+
+  setOv(id, key, val) {
+    this.setState(s => ({ overrides: Object.assign({}, s.overrides, { [id]: Object.assign({}, s.overrides[id], { [key]: val }) }) }));
+  }
+
+  cov(id, key, fallback) {
+    const o = this.state.cookieOverrides[id] || {};
+    return o[key] !== undefined ? o[key] : fallback;
+  }
+
+  setCov(id, key, val) {
+    this.setState(s => ({ cookieOverrides: Object.assign({}, s.cookieOverrides, { [id]: Object.assign({}, s.cookieOverrides[id], { [key]: val }) }) }));
+  }
+
+  callActive(c) { return this.state.callOn[c.id] !== undefined ? this.state.callOn[c.id] : c.on; }
+  cookieActive(c) { return this.state.cookieOn[c.id] !== undefined ? this.state.cookieOn[c.id] : c.on; }
+
+  renderVals() {
+    const st = this.state;
+    const dom = this.domain();
+    const call = this.call();
+    const cookie = this.cookie();
+    const preset = PRESETS[st.presetIdx] || PRESETS[0];
+
+    const domains = DOMAINS.map(d => {
+      const sel = d.id === st.domainId;
+      const mocked = d.calls.filter(c => this.callActive(c)).length;
+      return {
+        host: d.host,
+        summary: d.calls.length + ' calls · ' + mocked + ' mocked · ' + d.cookies.length + ' cookies',
+        bg: sel ? '#F2F5F0' : 'transparent',
+        bar: sel ? ACCENT : 'transparent',
+        fg: sel ? FG : MUT,
+        dot: mocked ? ACCENT : '#C9C8C2',
+        select: () => this.setState({ domainId: d.id, callId: d.calls[0].id, cookieId: d.cookies[0] ? d.cookies[0].id : null })
+      };
+    });
+
+    const f = st.filter.trim().toLowerCase();
+    const filtered = dom.calls.filter(c => !f || (c.url + ' ' + c.method + ' ' + c.type).toLowerCase().includes(f));
+
+    const rows = filtered.map((c, i) => {
+      const sel = c.id === call.id;
+      const on = this.callActive(c);
+      const code = this.ov(c.id, 'code', c.code);
+      const delay = this.ov(c.id, 'delay', c.delay);
+      return {
+        num: String(i + 1).padStart(2, '0'),
+        type: c.type, method: c.method, url: c.url,
+        methodFg: METHOD_FG[c.method] || FG,
+        urlFg: sel ? FG : '#3B4048',
+        code: on ? code : '—',
+        codeFg: on ? codeFg(code) : FAINT,
+        delay: on && delay !== '0' ? '+' + delay + 'ms' : '',
+        bg: sel ? '#F2F5F0' : 'transparent',
+        bar: sel ? ACCENT : 'transparent',
+        state: on ? (c.mocked ? 'MOCKED' : 'PASS') : 'OFF',
+        stateFg: on ? (c.mocked ? ACCENT : MUT) : FAINT,
+        track: on ? DIM : '#E5E4DF',
+        knob: on ? '#FFFFFF' : '#8A8F97',
+        knobX: on ? '16px' : '2px',
+        toggle: (e) => { e.stopPropagation(); this.setState(s => ({ callOn: Object.assign({}, s.callOn, { [c.id]: !on }) })); },
+        select: () => this.setState({ callId: c.id })
+      };
+    });
+
+    const cookieRows = dom.cookies.map((c, i) => {
+      const sel = cookie && c.id === cookie.id;
+      const on = this.cookieActive(c);
+      return {
+        num: String(i + 1).padStart(2, '0'),
+        name: c.name,
+        value: this.cov(c.id, 'value', c.value),
+        path: this.cov(c.id, 'path', c.path),
+        expires: this.cov(c.id, 'expires', c.expires),
+        nameFg: sel ? FG : '#3B4048',
+        bg: sel ? '#F2F5F0' : 'transparent',
+        bar: sel ? ACCENT : 'transparent',
+        state: on ? 'ON' : 'OFF',
+        stateFg: on ? ACCENT : FAINT,
+        track: on ? DIM : '#E5E4DF',
+        knob: on ? '#FFFFFF' : '#8A8F97',
+        knobX: on ? '16px' : '2px',
+        toggle: (e) => { e.stopPropagation(); this.setState(s => ({ cookieOn: Object.assign({}, s.cookieOn, { [c.id]: !on }) })); },
+        select: () => this.setState({ cookieId: c.id })
+      };
+    });
+
+    const activeIdx = this.ov(call.id, 'resp', call.activeResponse);
+    const responses = call.responses.map((r, i) => {
+      const sel = i === activeIdx;
+      return {
+        code: r.code, label: r.label,
+        border: sel ? ACCENT : BORDER,
+        bg: sel ? '#EBF5EA' : '#FFFFFF',
+        fg: r.code === 'off' ? (sel ? FG : MUT) : (sel ? codeFg(r.code) : '#3B4048'),
+        select: () => this.setOv(call.id, 'resp', i)
+      };
+    });
+
+    const dt = st.detailTab;
+    const editorText = dt === 'headers' ? call.headers : dt === 'code' ? call.code_ : this.ov(call.id, 'data', call.data);
+
+    const tabBar = (name) => st.tab === name ? ACCENT : 'transparent';
+    const tabFg = (name) => st.tab === name ? FG : MUT;
+    const dtBar = (name) => dt === name ? ACCENT : 'transparent';
+    const dtFg = (name) => dt === name ? FG : MUT;
+
+    const ck = cookie || { name: '—', value: '', domain: '', path: '/', expires: 'session', sameSite: 'Lax', secure: false, httpOnly: false, hostOnly: true, id: 'none' };
+    const ckVal = this.cov(ck.id, 'value', ck.value);
+    const ckPath = this.cov(ck.id, 'path', ck.path);
+    const ckDomain = this.cov(ck.id, 'domain', ck.domain);
+    const ckExp = this.cov(ck.id, 'expires', ck.expires);
+    const ckSame = this.cov(ck.id, 'sameSite', ck.sameSite);
+    const ckSecure = this.cov(ck.id, 'secure', ck.secure);
+    const ckHttp = this.cov(ck.id, 'httpOnly', ck.httpOnly);
+    const ckHost = this.cov(ck.id, 'hostOnly', ck.hostOnly);
+
+    const flag = (name, note, val, key) => ({
+      name, note,
+      track: val ? DIM : '#E5E4DF',
+      knob: val ? '#FFFFFF' : '#8A8F97',
+      knobX: val ? '18px' : '2px',
+      toggle: () => this.setCov(ck.id, key, !val)
+    });
+
+    const mockedCount = dom.calls.filter(c => this.callActive(c) && c.mocked).length;
+
+    return {
+      scanOpacity: this.props.scanlines === true ? 0.05 : 0,
+      rowHeight: this.props.compactRows ? '34px' : '42px',
+
+      activeHost: dom.host,
+      activeMeta: '· ' + dom.calls.length + ' calls · ' + mockedCount + ' mocked',
+      activePreset: preset.name,
+      presetNote: preset.note,
+
+      masterLabel: st.master ? 'MOCKING ON' : 'MOCKING OFF',
+      masterText: st.master ? ACCENT : MUT,
+      masterBorder: st.master ? DIM : BORDER,
+      masterTrack: st.master ? DIM : '#E5E4DF',
+      masterKnob: st.master ? '#FFFFFF' : '#8A8F97',
+      masterKnobX: st.master ? '18px' : '2px',
+      toggleMaster: () => this.setState(s => ({ master: !s.master })),
+
+      domains,
+      rows,
+      cookieRows,
+      requestCount: dom.calls.length,
+      cookieCount: dom.cookies.length,
+      listFoot: filtered.length === dom.calls.length
+        ? 'listening for new calls on ' + dom.host + ' …'
+        : filtered.length + ' of ' + dom.calls.length + ' calls match "' + st.filter + '"',
+
+      showRequests: st.tab === 'requests',
+      showCookies: st.tab === 'cookies',
+      showPresets: st.tab === 'presets',
+      goRequests: () => this.setState({ tab: 'requests' }),
+      goCookies: () => this.setState({ tab: 'cookies' }),
+      goPresets: () => this.setState({ tab: 'presets' }),
+      tabReqFg: tabFg('requests'), tabReqBar: tabBar('requests'),
+      tabCookFg: tabFg('cookies'), tabCookBar: tabBar('cookies'),
+      tabPreFg: tabFg('presets'), tabPreBar: tabBar('presets'),
+
+      filter: st.filter,
+      setFilter: (e) => this.setState({ filter: e.target.value }),
+      clearAll: () => this.setState({ filter: '' }),
+
+      detailMethod: call.method,
+      detailMethodFg: METHOD_FG[call.method] || FG,
+      detailUrl: call.url,
+      detailSubtitle: call.type.toLowerCase() + ' · ' + call.hits + ' hits · created ' + call.created,
+      detailFooter: 'mock id ' + call.id + ' · preset ' + preset.name,
+
+      responses,
+      statusCode: this.ov(call.id, 'code', call.code),
+      setStatus: (e) => this.setOv(call.id, 'code', e.target.value),
+      delayMs: this.ov(call.id, 'delay', call.delay),
+      setDelay: (e) => this.setOv(call.id, 'delay', e.target.value),
+      contentType: this.ov(call.id, 'contentType', call.contentType),
+      setContentType: (e) => this.setOv(call.id, 'contentType', e.target.value),
+      mockLabel: this.ov(call.id, 'label', call.label),
+      setLabel: (e) => this.setOv(call.id, 'label', e.target.value),
+
+      editorText,
+      dtBodyFg: dtFg('body'), dtBodyBar: dtBar('body'),
+      dtHeadFg: dtFg('headers'), dtHeadBar: dtBar('headers'),
+      dtCodeFg: dtFg('code'), dtCodeBar: dtBar('code'),
+      goBody: () => this.setState({ detailTab: 'body' }),
+      goHeaders: () => this.setState({ detailTab: 'headers' }),
+      goCode: () => this.setState({ detailTab: 'code' }),
+
+      cookieName: ck.name,
+      cookieScope: (ckHost ? 'host-only · ' : 'subdomains · ') + ckDomain + ckPath,
+      cookieValue: ckVal,
+      setCookieValue: (e) => this.setCov(ck.id, 'value', e.target.value),
+      cookieDomain: ckDomain,
+      setCookieDomain: (e) => this.setCov(ck.id, 'domain', e.target.value),
+      cookiePath: ckPath,
+      setCookiePath: (e) => this.setCov(ck.id, 'path', e.target.value),
+      cookieExpires: ckExp,
+      setCookieExpires: (e) => this.setCov(ck.id, 'expires', e.target.value),
+      sameSiteOptions: ['Lax', 'Strict', 'None'].map(v => ({
+        name: v,
+        border: v === ckSame ? ACCENT : BORDER,
+        bg: v === ckSame ? '#EBF5EA' : 'transparent',
+        fg: v === ckSame ? ACCENT : MUT,
+        select: () => this.setCov(ck.id, 'sameSite', v)
+      })),
+      cookieFlags: [
+        flag('secure', 'https only', ckSecure, 'secure'),
+        flag('httpOnly', 'hidden from document.cookie', ckHttp, 'httpOnly'),
+        flag('hostOnly', 'no subdomains', ckHost, 'hostOnly')
+      ],
+      setCookiePreview: 'Set-Cookie: ' + ck.name + '=' + ckVal + '; Path=' + ckPath +
+        (ckHost ? '' : '; Domain=' + ckDomain) +
+        '; SameSite=' + ckSame + (ckSecure ? '; Secure' : '') + (ckHttp ? '; HttpOnly' : '') +
+        (ckExp === 'session' ? '' : '; Expires=' + ckExp),
+
+      presetCards: PRESETS.map((p, i) => ({
+        name: p.name, note: p.note, mocks: p.mocks, cookies: p.cookies, touched: p.touched,
+        tag: i === st.presetIdx ? 'active' : p.tag,
+        border: i === st.presetIdx ? ACCENT : BORDER,
+        fg: i === st.presetIdx ? ACCENT : FG,
+        tagFg: i === st.presetIdx ? ACCENT : MUT,
+        select: () => this.setState({ presetIdx: i })
+      })),
+      presetStats: [
+        { k: 'mocked calls', v: preset.mocks },
+        { k: 'mocked cookies', v: preset.cookies },
+        { k: 'last touched', v: preset.touched },
+        { k: 'scope', v: dom.host }
+      ],
+
+      statusLine: st.master
+        ? 'intercepting ' + dom.host + ' · ' + mockedCount + ' active mocks · preset ' + preset.name
+        : 'mocking paused · requests hit the network'
+    };
+  }
+}
+
+</script>
+</body>
+</html>
