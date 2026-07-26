@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, Output, EventEmitter, ChangeDetectionStra
 import { ThemePalette } from '@angular/material/core';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-disabled-enabled',
   templateUrl: './disabled-enabled.component.html',
   styleUrls: ['./disabled-enabled.component.scss'],

@@ -4,6 +4,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { METHODS } from '@shared/constants';
 
 @Component({
+  standalone: false,
   selector: 'app-add-data',
   templateUrl: './add-data.component.html',
   styleUrls: ['./add-data.component.scss']

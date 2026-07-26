@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CloudSyncService } from '../../services/cloud-sync.service';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-cloud-sync-page',
   templateUrl: './cloud-sync-page.component.html',
   styleUrls: ['./cloud-sync-page.component.scss']

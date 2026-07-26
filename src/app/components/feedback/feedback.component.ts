@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { githubIssueUrl } from '@shared/constants';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-feedback',
   templateUrl: './feedback.component.html',
   styleUrls: ['./feedback.component.scss']

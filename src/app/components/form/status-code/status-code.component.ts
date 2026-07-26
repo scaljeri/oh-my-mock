@@ -20,6 +20,7 @@ const STATUS_CODE_LABELS = {
 }
 
 @Component({
+  standalone: false,
   selector: 'oh-my-status-code',
   templateUrl: './status-code.component.html',
   styleUrls: ['./status-code.component.scss'],

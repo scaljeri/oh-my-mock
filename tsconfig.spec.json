@@ -10,9 +10,9 @@
     "esModuleInterop": true, // 2
     "emitDecoratorMetadata": true, // 3
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "module": "es2020"
   },
-  "files": ["src/test.ts", "src/polyfills.ts"],
+  "files": ["src/test.ts"],
   "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
 }

@@ -7,6 +7,7 @@ import {
 } from '@angular/router';
 
 @Component({
+  standalone: false,
   selector: 'app-header-button',
   templateUrl: './header-button.component.html',
   styleUrls: ['./header-button.component.scss']

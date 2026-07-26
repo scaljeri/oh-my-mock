@@ -3,6 +3,7 @@ import { Component, HostBinding, Input, OnInit } from '@angular/core';
 export type SpinnerModes = 'light' | 'dark';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-spinner',
   templateUrl: './spinner.component.html',
   styleUrls: ['./spinner.component.scss']

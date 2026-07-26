@@ -16,6 +16,7 @@ import { StorageService } from '../../services/storage.service';
 import { OhMyStateService } from '../../services/state.service';
 
 @Component({
+  standalone: false,
   selector: 'app-nav-list',
   templateUrl: './nav-list.component.html',
   styleUrls: ['./nav-list.component.scss']

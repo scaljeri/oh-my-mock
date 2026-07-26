@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { IMarker } from '../form/code-edit/code-edit';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-code-errors',
   templateUrl: './code-errors.component.html',
   styleUrls: ['./code-errors.component.scss']

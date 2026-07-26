@@ -10,7 +10,7 @@ import { IData, IMock, IOhMyMockRule, IOhMyContext } from '@shared/type';
 import { filter, Observable, Subscription } from 'rxjs';
 import { IOhMyCodeEditOptions } from '../form/code-edit/code-edit';
 import { AnonymizeComponent } from '../anonymize/anonymize.component';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
 import { UntypedFormControl } from '@angular/forms';
@@ -21,6 +21,7 @@ import { StorageService } from '../../services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
+  standalone: false,
   selector: 'oh-my-request',
   templateUrl: './request.component.html',
   styleUrls: ['./request.component.scss']

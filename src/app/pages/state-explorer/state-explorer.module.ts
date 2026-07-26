@@ -8,7 +8,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { PageMockComponent } from '../mock/mock.component';
 import { PageDataListComponent } from '../data-list/data-list.component';
 import { ComponentsModule } from '../../components/components.module';
-import { HotToastModule } from '@ngneat/hot-toast';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -40,7 +39,6 @@ const routes: Routes = [
     MatButtonModule,
     RouterModule.forChild(routes),
     ComponentsModule,
-    HotToastModule
   ],
   exports: [PageStateExplorerComponent]
 })

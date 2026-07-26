@@ -1,6 +1,7 @@
 import { Directive, HostListener, Input, Output, EventEmitter, HostBinding } from '@angular/core';
 
 @Directive({
+  standalone: false,
   selector: '[ohMyFileDragDrop]'
 })
 export class FileDragDropDirective {
@@ -21,7 +22,7 @@ export class FileDragDropDirective {
 
   @HostListener('dragenter', ['$event'])
   @HostListener('dragover', ['$event'])
-  private handleDragOver(event: DragEvent): void {
+  handleDragOver(event: DragEvent): void {
     if (!this._enabled) {
       return;
     }
@@ -32,7 +33,7 @@ export class FileDragDropDirective {
 
   @HostListener('dragleave', ['$event'])
   @HostListener('dragend', ['$event'])
-  private handleDragEnd(event: DragEvent): void {
+  handleDragEnd(event: DragEvent): void {
     if (!this._enabled) {
       return;
     }
@@ -42,7 +43,7 @@ export class FileDragDropDirective {
   }
 
   @HostListener('drop', ['$event'])
-  private handleDrop(event: DragEvent): void {
+  handleDrop(event: DragEvent): void {
     this.stopAndPreventDefault(event);
     this._dragInProgress = false;
     this.dropped.emit(event);

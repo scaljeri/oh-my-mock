@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-mock-image',
   templateUrl: './mock-image.component.html',
   styleUrls: ['./mock-image.component.scss']

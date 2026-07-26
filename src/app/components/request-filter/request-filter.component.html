@@ -1,5 +1,5 @@
 <div class="filter-field" [ngClass]="{ active: filterCtrl.value }">
-  <mat-form-field class="search" [floatLabel]="'never'">
+  <mat-form-field class="search" [floatLabel]="'auto'">
     <input
       type="search"
       matInput
@@ -8,7 +8,6 @@
     />
     <button
       class="clear"
-      mat-button
       *ngIf="filterCtrl.value"
       matSuffix
       mat-icon-button

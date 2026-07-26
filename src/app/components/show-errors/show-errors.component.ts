@@ -5,6 +5,7 @@ import { githubIssueUrl } from '@shared/constants';
 import { IPacketPayload } from '@shared/packet-type';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-show-errors',
   templateUrl: './show-errors.component.html',
   styleUrls: ['./show-errors.component.scss'],

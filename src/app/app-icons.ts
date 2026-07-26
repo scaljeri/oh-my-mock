@@ -20,6 +20,7 @@ export function registerIcons(matIconRegistry: MatIconRegistry, domSanitizer: Do
   matIconRegistry.addSvgIcon('fullscreen', domSanitizer.bypassSecurityTrustResourceUrl(url('fullscreen')));
   matIconRegistry.addSvgIcon('stop', domSanitizer.bypassSecurityTrustResourceUrl(url('stop')));
   matIconRegistry.addSvgIcon('filter_list', domSanitizer.bypassSecurityTrustResourceUrl(url('filter_list')));
+  matIconRegistry.addSvgIcon('error', domSanitizer.bypassSecurityTrustResourceUrl(url('error')));
 }
 
 

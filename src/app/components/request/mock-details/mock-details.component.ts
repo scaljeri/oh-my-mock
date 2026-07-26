@@ -7,6 +7,7 @@ import { Observable, Subscription } from 'rxjs';
 import { OhMyState } from '../../../services/oh-my-store';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-mock-details',
   templateUrl: './mock-details.component.html',
   styleUrls: ['./mock-details.component.scss']

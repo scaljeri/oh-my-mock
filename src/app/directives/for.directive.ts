@@ -3,6 +3,7 @@ import { Directive, EmbeddedViewRef, Input, OnChanges, TemplateRef, ViewContaine
 // https://medium.com/angularwave/non-binary-ngif-cfdf7c474852
 
 @Directive({
+  standalone: false,
   selector: '[ngFor][ngForOf][ngForEmpty]'
 })
 export class OhMyForDirective implements OnChanges {

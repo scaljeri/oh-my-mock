@@ -4,6 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
 
 @Component({
+  standalone: false,
   templateUrl: './code-editor.component.html',
   styleUrls: ['./code-editor.component.scss']
 })

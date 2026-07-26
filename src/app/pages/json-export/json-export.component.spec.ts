@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { RouterTestingModule } from "@angular/router/testing";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { StorageService } from '../../services/storage.service';
 import { OhMyStateService } from '../../services/state.service';
 

@@ -8,60 +8,62 @@ on:
 jobs:
   build:
     #runs-on: ubuntu-20.04
-    runs-on: macos-11
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     #container: mcr.microsoft.com/playwright:v1.21.1-focal
     strategy:
       matrix:
-        node: ['15']
+        node: ['22']
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '14'
+          node-version: '22'
       - name: Cache node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
-        run: yarn install  --frozen-lockfile
+        run: npm ci
       - name: Build extension
-        run: yarn build
+        run: npm run build
       - name: Install Playwright
         # run: npx playwright install --with-deps
         run: npx playwright install chromium
-      - name: Run your tests
-        run: npx playwright test --headed --project=chromium
+      - name: Run e2e tests
+        # Headless: the fixture passes --headless=new, which supports extensions.
+        run: npx playwright test
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report
-      - name: Upload results
-        uses: actions/upload-artifact@v2
+          path: test-results/html
+      - name: Upload failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          name: e2e-results
-          path: ./e2e/snapshots
+          name: e2e-traces
+          path: test-results/artifacts
 # jobs:
 #   build:
 #     runs-on: ubuntu-latest
 #     strategy:
 #       matrix:
-#         node: ['15']
+#         node: ['22']
 
 #     steps:
-#     - uses: actions/checkout@v2
-#     - uses: actions/setup-node@v2
+#     - uses: actions/checkout@v4
+#     - uses: actions/setup-node@v4
 #     - run: yarn
 #     - run: yarn lint
 #     # - run: yarn test
 #     - run: echo 'pass!!'
 
 # steps:
-#   - uses: actions/checkout@v2
+#   - uses: actions/checkout@v4
 #   - uses: borales/actions-yarn@v2.0.0
 #     with:
 #       cmd: install # will run `yarn install` command

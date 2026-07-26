@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { IData, IMock, ohMyDataId } from '@shared/type';
 import { loadAllMocks } from '@shared/utils/load-all-mocks';
 import { OhMyStateService } from './state.service';
 import { OhWWPacketTypes } from '../webworkers/types';
 import { uniqueId } from '@shared/utils/unique-id';
+import { OH_MY_SEARCH_WORKER_FACTORY, SearchWorkerFactory } from './search-worker.token';
 
 @Injectable({
   providedIn: 'root'
@@ -17,12 +18,14 @@ export class WebWorkerService {
   private mockUpsertSubject = new Subject();
   public mockUpsert$ = this.mockUpsertSubject.asObservable();
 
-  constructor(private stateService: OhMyStateService) {
+  constructor(
+    private stateService: OhMyStateService,
+    @Inject(OH_MY_SEARCH_WORKER_FACTORY) private createWorker: SearchWorkerFactory) {
   }
 
   public async init(domain: string): Promise<void> {
     if (!this.worker) {
-      this.worker = new Worker(new URL('../webworkers/search.worker', import.meta.url), { type: 'module' });
+      this.worker = this.createWorker();
     }
     this.worker.postMessage({ type: OhWWPacketTypes.INIT, body: null });
 

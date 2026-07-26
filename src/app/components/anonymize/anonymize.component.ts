@@ -8,6 +8,7 @@ import { JSONPath } from 'jsonpath-plus';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-anonymize',
   templateUrl: './anonymize.component.html',
   styleUrls: ['./anonymize.component.scss']

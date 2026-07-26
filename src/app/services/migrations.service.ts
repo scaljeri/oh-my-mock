@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import compareVersions from 'compare-versions';
+import { compareVersions } from 'compare-versions';
 
 import { IOhMyMock } from '@shared/type';
 import { AppStateService } from './app-state.service';

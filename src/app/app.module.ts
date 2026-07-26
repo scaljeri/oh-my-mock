@@ -18,7 +18,10 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { ComponentsModule } from './components/components.module';
 import { appRoutes } from './app.routes';
 import { ReactiveFormsModule } from '@angular/forms';
-import { HotToastModule } from '@ngneat/hot-toast';
+import { provideHotToastConfig } from '@ngxpert/hot-toast';
+import { provideMonacoEditor } from 'ngx-monaco-editor-v2';
+import { OH_MY_SEARCH_WORKER_FACTORY } from './services/search-worker.token';
+import { createSearchWorker } from './services/search-worker.factory';
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
@@ -53,10 +56,12 @@ import { HttpClientModule } from '@angular/common/http';
     MatInputModule,
     MatBadgeModule,
     MatSnackBarModule,
-    HotToastModule.forRoot(),
     ComponentsModule
   ],
   providers: [
+    provideHotToastConfig(),
+    { provide: OH_MY_SEARCH_WORKER_FACTORY, useValue: createSearchWorker },
+    provideMonacoEditor(),
     { provide: Window, useValue: window },
   ],
   bootstrap: [AppComponent]

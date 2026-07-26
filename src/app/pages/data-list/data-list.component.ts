@@ -9,6 +9,7 @@ import { OhMyState } from '../../services/oh-my-store';
 import { OhMyStateService } from '../../services/state.service';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-data-list-page',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],

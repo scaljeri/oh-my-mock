@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
 import { Subscription } from 'rxjs';
@@ -10,6 +10,7 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
 
 
 @Component({
+  standalone: false,
   selector: 'oh-my-preset',
   templateUrl: './preset.component.html',
   styleUrls: ['./preset.component.scss'],

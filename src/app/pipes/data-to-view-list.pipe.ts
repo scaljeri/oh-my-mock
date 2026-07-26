@@ -3,6 +3,7 @@ import { IOhDataView } from '../app.types';
 import { IData } from '@shared/type';
 
 @Pipe({
+  standalone: false,
   name: 'dataToViewList'
 })
 export class DataToViewListPipe implements PipeTransform {

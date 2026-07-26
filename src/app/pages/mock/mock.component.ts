@@ -8,6 +8,7 @@ import { OhMyStateService } from '../../services/state.service';
 // import { findAutoActiveMock } from 'src/app/utils/data';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-page-mock',
   templateUrl: './mock.component.html',
   styleUrls: ['./mock.component.scss']

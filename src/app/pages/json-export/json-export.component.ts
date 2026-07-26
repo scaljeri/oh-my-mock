@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { IData, IMock, IState } from '@shared/type';
 import { DataListComponent } from '../../components/data-list/data-list.component';
 import { AppStateService } from '../../services/app-state.service';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { Subscription } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { StorageService } from '../../services/storage.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
+  standalone: false,
   selector: 'oh-my-json-export',
   templateUrl: './json-export.component.html',
   styleUrls: ['./json-export.component.scss']

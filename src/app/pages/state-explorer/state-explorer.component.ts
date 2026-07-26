@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { domain, IData, IOhMyContext, IState } from '@shared/type';
 
 import { Subscription } from 'rxjs';
@@ -11,6 +11,7 @@ import { StorageService } from '../../services/storage.service';
 import { WebWorkerService } from '../../services/web-worker.service';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-state-explorer-page',
   templateUrl: './state-explorer.component.html',
   styleUrls: ['./state-explorer.component.scss']

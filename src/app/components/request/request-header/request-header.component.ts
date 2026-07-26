@@ -13,6 +13,7 @@ import { OhMyState } from '../../../services/oh-my-store';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
+  standalone: false,
   selector: 'oh-request-header',
   templateUrl: './request-header.component.html',
   styleUrls: ['./request-header.component.scss']

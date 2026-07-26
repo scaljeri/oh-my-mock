@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-connection-failure',
   templateUrl: './connection-failure.component.html',
   styleUrls: ['./connection-failure.component.scss']

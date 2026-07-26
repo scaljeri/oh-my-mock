@@ -5,6 +5,7 @@ import { ResetStateOptions } from '@shared/type';
 import { AppStateService } from '../../services/app-state.service';
 
 @Component({
+  standalone: false,
   selector: 'app-reset-state',
   templateUrl: './reset-state.component.html',
   styleUrls: ['./reset-state.component.scss']

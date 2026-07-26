@@ -9,6 +9,7 @@ import { FormControlDirective, NgControl } from '@angular/forms';
  * */
 
 @Directive({
+  standalone: false,
   selector: '[ohMyUpdateInput]'
 })
 export class UpdateInputDirective {

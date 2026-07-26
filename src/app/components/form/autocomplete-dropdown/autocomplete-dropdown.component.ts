@@ -3,6 +3,7 @@ import { ControlValueAccessor, UntypedFormControl, NgControl } from '@angular/fo
 import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-autocomplete-dropdown',
   templateUrl: './autocomplete-dropdown.component.html',
   styleUrls: ['./autocomplete-dropdown.component.scss'],

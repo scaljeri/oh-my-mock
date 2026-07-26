@@ -8,6 +8,7 @@ declare let window: any;
 declare let monaco: any;
 
 @Component({
+  standalone: false,
   selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
   styleUrls: ['./code-edit.component.scss'],
@@ -40,6 +41,11 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   // vs, vs-dark
   public editorOptions = {} as any;
 
+  // ngx-monaco-editor-v2 takes `{ code, language }` models for the diff view,
+  // where the previous wrapper took two plain strings.
+  public originalModel: { code: string; language: string } = { code: '', language: 'json' };
+  public modifiedModel: { code: string; language: string } = { code: '', language: 'json' };
+
   public diffCode;
 
   public readonly = false;
@@ -67,6 +73,7 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     });
 
     this.updatedCode = this.editorCtrl.value;
+    this.syncDiffModels();
   }
 
   ngOnChanges(): void {
@@ -76,7 +83,16 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
       }
 
       this.updatedCode = this.editorCtrl.value;
+      this.syncDiffModels();
     }
+  }
+
+  /** Keeps the diff editor's two models in step with `base` and the control. */
+  private syncDiffModels(): void {
+    const language = this.editorOptions?.language ?? this.type ?? 'json';
+
+    this.originalModel = { code: this.base ?? '', language };
+    this.modifiedModel = { code: this.updatedCode ?? '', language };
   }
 
   // Wait for monaco to load

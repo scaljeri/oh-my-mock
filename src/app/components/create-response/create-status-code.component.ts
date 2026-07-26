@@ -9,6 +9,7 @@ import {
 import { IMock, IState } from '@shared/type';
 
 @Component({
+  standalone: false,
   selector: 'app-create-status-code',
   templateUrl: './create-status-code.component.html',
   styleUrls: ['./create-status-code.component.scss']

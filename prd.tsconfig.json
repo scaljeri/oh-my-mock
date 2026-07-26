@@ -1,22 +1,16 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
+    "rootDir": "./src",
     "outDir": "./dist/",
     "sourceMap": false,
     "declaration": false,
-    "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
-    "target": "es2017",
-    "module": "commonjs",
-    "lib": [
-      "es6",
-      "es2017",
-      "es2019",
-      "dom"
-    ],
+    "target": "es2020",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
     "types": [],
     "skipLibCheck": true,
     "noEmitOnError": true,

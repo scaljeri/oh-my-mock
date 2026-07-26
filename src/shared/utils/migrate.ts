@@ -1,5 +1,5 @@
 import { IData, IMock, IOhMyMock, IState } from '../type';
-import compareVersions from 'compare-versions'
+import { compareVersions } from 'compare-versions'
 import { mockSteps } from './migrations/mock';
 import { stateSteps } from './migrations/state';
 import { storeSteps } from './migrations/store';

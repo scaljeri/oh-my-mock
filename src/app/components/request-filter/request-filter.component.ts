@@ -15,6 +15,7 @@ type SearchFilterData = {
 };
 
 @Component({
+  standalone: false,
   selector: 'oh-my-request-filter',
   templateUrl: './request-filter.component.html',
   styleUrls: ['./request-filter.component.scss'],

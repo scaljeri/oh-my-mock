@@ -7,6 +7,7 @@ interface IMeta {
 }
 
 @Directive({
+  standalone: false,
   selector: '[ohMyAnimatedList]'
 })
 export class AnimatedListDirective {

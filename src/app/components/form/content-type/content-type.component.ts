@@ -13,6 +13,7 @@ const MIME_TYPES = [
 ];
 
 @Component({
+  standalone: false,
   selector: 'oh-my-content-type',
   templateUrl: './content-type.component.html',
   styleUrls: ['./content-type.component.scss'],

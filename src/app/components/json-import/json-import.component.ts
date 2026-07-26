@@ -1,5 +1,5 @@
 import { Component, Optional } from '@angular/core';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { IOhMyBackup, IOhMyContext } from '@shared/type';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UntypedFormControl } from '@angular/forms';
@@ -9,6 +9,7 @@ import { StorageService } from '../../services/storage.service';
 import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
 
 @Component({
+  standalone: false,
   selector: 'oh-my-json-import',
   templateUrl: './json-import.component.html',
   styleUrls: ['./json-import.component.scss']

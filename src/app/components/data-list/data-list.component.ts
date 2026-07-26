@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { HotToastService } from '@ngneat/hot-toast';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
@@ -22,6 +22,7 @@ export const highlightSeq = [
 // type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock>, includes: Record<string, boolean> };
 
 @Component({
+  standalone: false,
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],

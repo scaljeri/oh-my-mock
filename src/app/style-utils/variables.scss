@@ -1,31 +1,13 @@
-@use '@angular/material'as *;
-
-$app-primary: define-palette($indigo-palette, 500);
-$app-accent: define-palette($pink-palette, A200, A100, A400);
-
-// The "warn" palette is optional and defaults to red if not specified.
-$app-warn: define-palette($red-palette);
-
-$theme: define-light-theme((color: (primary: $app-primary,
-      accent: $app-accent,
-      warn: $app-warn)));
-
-// @include core-theme($theme);
-@include all-component-themes($theme);
-// $primaryPalette: mat-palette($mat-indigo);
-// $accentPalette: mat-palette($mat-indigo, A200, A100, A400);
-
-// the default warn palette is red, so use that if the theme doesn't define one
-// $warnPalette: mat-palette($mat-red);
-
-// $primary: mat-color($primaryPalette);
-// $accent: mat-color($accentPalette);
-// $warn: mat-color($warnPalette);
-
-// colors
-$primary: map_get($app-primary, 900);
-$accent: map_get($app-accent, 900);
-$warn: map_get($app-warn, 900);
+// Plain design tokens. The Material theme itself is defined once in
+// `src/styles.scss`; this file only holds values the app's own styles use.
+//
+// These were previously read out of Material's Sass palettes with
+// `map_get($app-primary, 900)`. Angular Material 22 only ships Material 3
+// palettes, which have no numeric shades to index, so the three colours are
+// now literals — the 900 shades of the indigo/pink/red palettes they came from.
+$primary: #1a237e;
+$accent: #880e4f;
+$warn: #b71c1c;
 
 $color-light: #fff;
 $color-dark: #000;

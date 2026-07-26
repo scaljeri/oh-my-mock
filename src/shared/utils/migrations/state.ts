@@ -1,4 +1,4 @@
-import compareVersions from 'compare-versions'
+import { compareVersions } from 'compare-versions'
 
 const VERSION = '__OH_MY_VERSION__';
 
