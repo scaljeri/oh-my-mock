@@ -1,5 +1,5 @@
-@import 'mixins';
-@import 'legenda';
+@use 'mixins' as *;
+@use 'legenda' as *;
 
 :host {
   --color: #{$color-light};

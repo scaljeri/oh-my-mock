@@ -1,4 +1,4 @@
-@import 'mixins';
+@use 'mixins' as *;
 
 .wrapper {
   padding-bottom: 50px;

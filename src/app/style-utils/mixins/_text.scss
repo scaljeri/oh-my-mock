@@ -1,3 +1,5 @@
+@use '../variables' as *;
+
 @mixin oh-ellipsis {
   white-space: nowrap;
   overflow: hidden;

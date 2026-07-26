@@ -1,3 +1,7 @@
+@use '../variables' as *;
+@use 'position' as *;
+@use 'size' as *;
+
 @mixin oh-dialog {
   @include oh-position(absolute, 0px 0px 0px 0px);
   display: flex;

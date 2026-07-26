@@ -1,8 +1,23 @@
-@import 'variables';
+// Entry point for the app's own Sass: variables, design tokens and mixins.
+//
+// Component stylesheets pull this in with `@use 'mixins' as *;`, resolved
+// through `stylePreprocessorOptions.includePaths` in `angular.json`.
+//
+// `as *` rather than a namespace is deliberate. This is a design-system entry
+// point whose members are referenced by bare name (`$spacer-4`,
+// `@include oh-ellipsis`) across two dozen files; namespacing every call site
+// would be churn without making anything clearer.
+//
+// `@forward` rather than `@use` here: forwarding re-exports the members, so a
+// single `@use 'mixins'` downstream sees all of them. `@use` would only make
+// them visible inside this file.
 
-@import './mixins/badge';
-@import './mixins/dialog';
-@import './mixins/list';
-@import './mixins/position';
-@import './mixins/size';
-@import './mixins/text';
+@forward 'variables';
+@forward 'tokens';
+
+@forward 'mixins/badge';
+@forward 'mixins/dialog';
+@forward 'mixins/list';
+@forward 'mixins/position';
+@forward 'mixins/size';
+@forward 'mixins/text';

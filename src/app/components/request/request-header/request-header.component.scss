@@ -1,4 +1,4 @@
-@import 'mixins';
+@use 'mixins' as *;
 
 h3 {
   margin: 0;

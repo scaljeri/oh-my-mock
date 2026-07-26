@@ -1,3 +1,8 @@
+// `darken()` and the other global colour functions are deprecated in Dart
+// Sass and removed in 3.0; `color.adjust` is the replacement.
+@use 'sass:color';
+@use 'mixins' as *;
+
 $active: #99ffcc;
 $inactive: #fff;
 $inactiveModified: #fff8ff;
@@ -52,6 +57,6 @@ $selected: #6666ff;
   }
 
   .inactive-modified::before {
-    background-color: darken($inactiveModified, 10);
+    background-color: color.adjust($inactiveModified, $lightness: -10%);
   }
 }
