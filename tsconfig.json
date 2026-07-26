@@ -1,7 +1,16 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    // Strict mode is being adopted one flag at a time rather than in a single
+    // sweep. These six cost nothing today. The two that remain are real work
+    // and are tracked separately: `noImplicitAny` (54 errors) and
+    // `strictNullChecks` (122, which also gates `strictPropertyInitialization`).
     "strict": false,
+    "alwaysStrict": true,
+    "noImplicitThis": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "useUnknownInCatchVariables": true,
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,

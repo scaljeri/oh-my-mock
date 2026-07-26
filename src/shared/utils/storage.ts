@@ -20,9 +20,18 @@ export class StorageUtils {
   static updates$ = StorageUtils.updatesSubject.asObservable();
   static chrome = chrome;
   static MigrateUtils = MigrateUtils;
-  static callback = (changes: Record<string, IOhMyStorageChange>, namespace: string) => {
+  // The signature has to match what `chrome.storage.onChanged` actually calls
+  // it with; the app's narrower view of a change is a cast at that boundary
+  // rather than a promise made to the type checker.
+  static callback = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    _areaName: chrome.storage.AreaName
+  ) => {
     Object.keys(changes).forEach(key =>
-      StorageUtils.updatesSubject.next({ key, update: changes[key] }));
+      StorageUtils.updatesSubject.next({
+        key,
+        update: changes[key] as IOhMyStorageChange
+      }));
   }
 
   static listen(): void {

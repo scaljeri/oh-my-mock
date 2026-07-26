@@ -1,6 +1,9 @@
 const { pathsToModuleNameMapper } = require('ts-jest');
 const { createCjsPreset } = require('jest-preset-angular/presets');
-const { compilerOptions } = require('./tsconfig');
+// Read through TypeScript's own parser: `tsconfig.json` is JSONC and carries
+// comments, which `require()` chokes on.
+const ts = require('typescript');
+const { compilerOptions } = ts.readConfigFile('./tsconfig.json', ts.sys.readFile).config;
 
 /**
  * Unit tests only — the browser-level suite lives in `tests/` and runs under
