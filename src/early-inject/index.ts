@@ -77,10 +77,14 @@ if (!window[KEY]) {
   window[KEY]['__fetch'] = origFetch;
 }
 
+// Addressed to this document's own origin rather than '*', so the readiness
+// ping is not readable by other frames. An opaque origin reports "null", which
+// postMessage rejects as a target, so those fall back to '*' — the receiver
+// still verifies event.source.
 window.postMessage({
   source: 'pre-injected',
   payload: {
     type: 'ready',
     data: true
   }
-}, '*');
+}, !window.location.origin || window.location.origin === 'null' ? '*' : window.location.origin);

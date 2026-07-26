@@ -13,7 +13,6 @@ import { initStorage } from './init';
 import { importJSON } from '../shared/utils/import-json';
 import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
-// import { webRequestListener } from './web-request-listener';
 
 import './server-dispatcher';
 // import { injectContent } from './inject-content';
@@ -148,7 +147,6 @@ chrome.action.onClicked.addListener(async function (tab) {
 
   openPopup(tab);
 
-  // webRequestListener(tab);
   // injectContent(tab.id);
 
 
@@ -189,10 +187,6 @@ setTimeout(async () => {
   }
 });
 
-// TODO: remove??
-// messageBus.streamByType$(payloadType.PRE_RESPONSE, appSources.CONTENT).subscribe(({ packet, sender, callback }: IOhMessage) => {
-//   webRequestListener(sender.tab);
-// });
 
 // chrome.declarativeNetRequest.updateSessionRules({
 //   // removeRuleIds: [44308],

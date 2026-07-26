@@ -1,61 +1,109 @@
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { IOhMyDispatchServerRequest, IOhMyPacketContext, IPacketPayload } from '../shared/packet-type';
 import { IOhMyMockResponse } from '../shared/type';
 import { uniqueId } from '../shared/utils/unique-id';
 
+/**
+ * Optional link to the NodeJS SDK server (`libs/nodejs-sdk`), which serves mock
+ * responses from disk.
+ *
+ * The connection is bounded on purpose. This module used to open a socket to a
+ * hard-coded `ws://localhost:8000` the moment the service worker started, with
+ * socket.io's default of unlimited reconnection attempts. For the vast majority
+ * of users — everyone who has the extension installed but never runs the SDK —
+ * that meant a connection to a port nothing is listening on, retried forever,
+ * for as long as the browser was open.
+ *
+ * Now it gives up after a few attempts and stays quiet until something asks it
+ * to try again. `dispatchRemote` already degrades gracefully when there is no
+ * server, so a failed connection costs nothing beyond the attempts themselves.
+ */
+
+/** Where the SDK server listens. Matches the port used by `createServer`. */
+export const DEFAULT_SDK_SERVER_URL = 'ws://localhost:8000';
+
+/**
+ * Enough attempts to ride out an SDK server that is still starting up, few
+ * enough that a browser with no SDK at all stops knocking almost immediately.
+ */
+const RECONNECTION_ATTEMPTS = 5;
+
 let isConnected = false;
+let socket: Socket | undefined;
 
-const socket = io("ws://localhost:8000", { query: { source: 'ohmymock' }, transports: ['websocket'] });
-// socket.on('connect_error' as any, err => (err) => {});
-// eslint-disable-next-line no-console
-// socket.on('connect_failed', err => (err) => { }); //  console.error('WebSocket connection failed', err) })
-// eslint-disable-next-line no-console
-// socket.on('disconnect', err => (err) => { });// console.log('Websocket disconnected', err) })
+function createSocket(url: string): Socket {
+  return io(url, {
+    query: { source: 'ohmymock' },
+    transports: ['websocket'],
+    reconnectionAttempts: RECONNECTION_ATTEMPTS,
+    reconnectionDelay: 1_000,
+    reconnectionDelayMax: 10_000,
+    timeout: 5_000
+  });
+}
 
-export const connectWithLocalServer = (): void => {
-  socket.io.on("error", (error) => {
-    // eslint-disable-next-line no-console
+export const connectWithLocalServer = (url: string = DEFAULT_SDK_SERVER_URL): void => {
+  // Repeated calls must not stack up sockets: `background.ts` and
+  // `server-dispatcher.ts` both call this during start-up.
+  if (socket) {
+    return;
+  }
+
+  socket = createSocket(url);
+
+  socket.io.on('error', () => {
     if (isConnected) { // state changed
       // eslint-disable-next-line no-console
-      console.log('Lost connection');
+      console.log('OhMyMock: lost connection with the SDK server');
       isConnected = false;
     }
   });
 
-  // socket.io.on("reconnect_attempt", (attempt) => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('reconnecting...');
-  // });
-
-  socket.on("connect", () => {
-    // eslint-disable-next-line no-console
-    console.log('Socket-io Transport:' + socket.io.engine.transport.name);
+  socket.on('connect', () => {
     if (!isConnected) {
       isConnected = true;
       // eslint-disable-next-line no-console
-      console.log('Found server, websocket connected');
+      console.log(`OhMyMock: connected to the SDK server on ${url}`);
     }
   });
-}
 
-export const dispatchRemote = async (payload: IPacketPayload<IOhMyDispatchServerRequest, IOhMyPacketContext>): Promise<IOhMyMockResponse> => {
-  //   const { data, request }: { data: IData, request: IOhMyEvalRequest } = payload.data;
+  socket.on('disconnect', () => {
+    isConnected = false;
+  });
+};
 
-  if (isConnected) {
-    return new Promise<IOhMyMockResponse>(resolve => {
-      const id = uniqueId();
-      socket.on(id, (result: IOhMyMockResponse) => {
-        socket.off(payload.context.id);
+/**
+ * Retries after the attempts have been exhausted — for when the SDK server is
+ * started after the browser was already running.
+ */
+export const reconnectWithLocalServer = (url: string = DEFAULT_SDK_SERVER_URL): void => {
+  socket?.close();
+  socket = undefined;
+  isConnected = false;
 
-        resolve(result);
-      });
+  connectWithLocalServer(url);
+};
 
-      payload.id = id;
+export const isConnectedWithLocalServer = (): boolean => isConnected;
 
-      socket.emit('data', payload);
-    });
-  } else {
+export const dispatchRemote = async (
+  payload: IPacketPayload<IOhMyDispatchServerRequest, IOhMyPacketContext>
+): Promise<IOhMyMockResponse> => {
+  if (!isConnected || !socket) {
     return (payload as any).data.response as IOhMyMockResponse;
   }
-}
 
+  return new Promise<IOhMyMockResponse>(resolve => {
+    const id = uniqueId();
+
+    socket.on(id, (result: IOhMyMockResponse) => {
+      socket?.off(id);
+
+      resolve(result);
+    });
+
+    payload.id = id;
+
+    socket.emit('data', payload);
+  });
+};

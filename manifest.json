@@ -9,8 +9,7 @@
     "storage",
     "unlimitedStorage",
     "tabs",
-    "declarativeNetRequest",
-    "webRequest"
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "<all_urls>"
