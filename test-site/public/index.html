@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OhMyMock test site</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:,">
+  <!--
+    harness.js must load before ui.js: the UI is only a front-end for
+    window.harness. Neither is a module, so both work under a strict
+    `script-src 'self'` CSP.
+  -->
+  <script src="/harness.js"></script>
+  <script src="/ui.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <h1>OhMyMock test site</h1>
+    <p class="tagline">
+      Every request below goes through <code>window.harness.request()</code> —
+      the same entry point the Playwright tests use.
+    </p>
+    <p class="status">
+      OhMyMock injected:
+      <strong data-testid="injected-state" class="badge">checking…</strong>
+    </p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Send a request</h2>
+      <form data-testid="request-form" autocomplete="off">
+        <div class="row">
+          <label>
+            Transport
+            <select data-testid="transport" name="transport">
+              <option value="fetch">fetch</option>
+              <option value="xhr">XMLHttpRequest</option>
+            </select>
+          </label>
+
+          <label>
+            Method
+            <select data-testid="method" name="method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>PATCH</option>
+              <option>DELETE</option>
+            </select>
+          </label>
+
+          <label>
+            Response type
+            <select data-testid="response-type" name="responseType">
+              <option value="text">text</option>
+              <option value="json">json</option>
+              <option value="blob">blob</option>
+              <option value="arraybuffer">arraybuffer</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="grow">
+            URL
+            <input data-testid="url" name="url" list="endpoints" value="/api/json">
+            <datalist id="endpoints">
+              <option value="/api/json">JSON fixture</option>
+              <option value="/api/users">Users fixture</option>
+              <option value="/api/text">Plain text</option>
+              <option value="/api/html">HTML document</option>
+              <option value="/api/image.png">PNG image</option>
+              <option value="/api/image.gif">GIF image</option>
+              <option value="/api/image.svg">SVG image</option>
+              <option value="/api/binary">Binary blob</option>
+              <option value="/api/echo">Echo request</option>
+              <option value="/api/headers">Custom headers</option>
+              <option value="/api/status/404">Status 404</option>
+              <option value="/api/status/500">Status 500</option>
+              <option value="/api/delay/1000">Delayed 1s</option>
+              <option value="/api/redirect">Redirect</option>
+              <option value="/api/cookie">Sets a cookie</option>
+              <option value="/api/large?kb=512">Large payload</option>
+            </datalist>
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="grow">
+            Request body <span class="hint">(POST/PUT/PATCH)</span>
+            <textarea data-testid="body" name="body" rows="2"
+                      placeholder='{"hello":"world"}'></textarea>
+          </label>
+        </div>
+
+        <div class="row actions">
+          <button data-testid="send" type="submit">Send</button>
+          <button data-testid="hammer" type="button">Hammer 10s</button>
+          <button data-testid="clear" type="button" class="secondary">Clear results</button>
+          <span data-testid="hammer-counter" class="counter"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Results <span data-testid="result-count" class="counter">0</span></h2>
+      <table data-testid="results">
+        <thead>
+          <tr>
+            <th>#</th><th>Transport</th><th>Method</th><th>URL</th>
+            <th>Status</th><th>Duration</th><th>Source</th><th>Body</th>
+          </tr>
+        </thead>
+        <tbody data-testid="results-body"></tbody>
+      </table>
+      <p class="empty" data-testid="results-empty">No requests yet.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Latest response</h2>
+      <pre data-testid="latest-response" class="output">—</pre>
+      <img data-testid="latest-image" alt="" hidden>
+    </section>
+  </main>
+</body>
+</html>

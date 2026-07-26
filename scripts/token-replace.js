@@ -13,6 +13,15 @@ replaceToken('./dist/oh-my-mock/main.js', 'VERSION', version);
 replaceTokenWithFileContent('INJECTED_CODE', './dist/content.js', './dist/early-inject-clean.js');
 
 function replaceToken(file, tokenKey, token) {
+  // The Angular bundle is absent when only the webpack bundles were built
+  // (`yarn build:bundles`), which is enough to run the e2e suite. Skip rather
+  // than crash, so a partial build stays usable.
+  if (!fs.existsSync(file)) {
+    // eslint-disable-next-line no-console
+    console.log(`token-replace: skipping missing ${file}`);
+    return;
+  }
+
   const data = fs.readFileSync(file, {encoding:'utf8', flag:'r'});
 
   const result = data.replace(new RegExp(`__OH_MY_${tokenKey}__`, 'g'), token);

@@ -1,121 +1,55 @@
-import type { PlaywrightTestConfig } from '@playwright/test';
-import { devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
+ * E2E configuration for the OhMyMock extension.
+ *
+ * The suite loads the built extension from `./dist`, so run `yarn build` (or
+ * `yarn build:bundles` for the non-Angular parts) before `yarn e2e`.
+ *
+ * Browser launch lives in `tests/fixtures/extension.ts` rather than here:
+ * extensions require `launchPersistentContext`, which Playwright's built-in
+ * browser fixture does not use. That also means most `use` browser options are
+ * intentionally absent — they would be silently ignored.
  */
-// require('dotenv').config();
+export default defineConfig({
+  testDir: './tests/specs',
+  testMatch: '**/*.spec.ts',
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
-const config: PlaywrightTestConfig = {
-  testDir: './e2e',
-  webServer: {
-    command: 'yarn start:server',
-    url: 'http://localhost:8000',
-    timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI,
-  },
-  testMatch: '**/*.e2e.spec.ts',
-  /* Maximum time one test can run for. */
-  timeout: 100 * 1000,
-  expect: {
-    /**
-     * Maximum time expect() should wait for the condition to be met.
-     * For example in `await expect(locator).toHaveText();`
-     */
-    timeout: 5000,
-  },
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: false, // !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 0 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  // reporter: 'html',
-  reporter: [
-    ['github'],
-    ['html'],
-  ],
-  snapshotDir: 'e2e/snapshots',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  // Launching a browser per test costs a second or two; the mocking round trips
+  // themselves are fast.
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+
+  // Single worker, deliberately.
+  //
+  // The suite's strongest assertion is "the server was never contacted", which
+  // reads a request counter held by the one shared test server. Two workers
+  // means two spec files resetting and incrementing that counter at the same
+  // time, and the count stops meaning anything. Per-test counter scoping would
+  // buy parallelism back, but the whole suite runs in about a minute as is.
+  fullyParallel: false,
+  workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  forbidOnly: Boolean(process.env.CI),
+
+  reporter: process.env.CI
+    ? [['github'], ['html', { outputFolder: 'test-results/html', open: 'never' }]]
+    : [['list'], ['html', { outputFolder: 'test-results/html', open: 'never' }]],
+
+  outputDir: 'test-results/artifacts',
+
   use: {
-    /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
-    actionTimeout: 0,
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://localhost:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on', // 'on-first-retry', // 'on',
-    headless: false,
-    viewport: { width: 1280, height: 720 },
-    ignoreHTTPSErrors: true,
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure'
   },
 
-  /* Configure projects for major browsers */
-  projects: [
-    {
-      name: 'chromium',
-      testDir: './e2e',
-      use: {
-        ...devices['Desktop Chrome'],
-      },
-    },
+  // Started with plain node: Node strips the TypeScript, so no ts-node needed.
+  webServer: {
+    command: 'node test-site/server/index.mts',
+    url: 'http://localhost:8090/_harness/health',
+    reuseExistingServer: !process.env.CI,
+    timeout: 30_000
+  },
 
-    // {
-    //   name: 'firefox',
-    //   use: {
-    //     ...devices['Desktop Firefox'],
-    //   },
-    // },
-
-    // {
-    //   name: 'webkit',
-    //   use: {
-    //     ...devices['Desktop Safari'],
-    //   },
-    // },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: {
-    //     ...devices['Pixel 5'],
-    //   },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: {
-    //     ...devices['iPhone 12'],
-    //   },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: {
-    //     channel: 'msedge',
-    //   },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: {
-    //     channel: 'chrome',
-    //   },
-    // },
-  ],
-
-  /* Folder for test artifacts such as screenshots, videos, traces, etc. */
-  // outputDir: 'test-results/',
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   port: 3000,
-  // },
-};
-
-export default config;
+  projects: [{ name: 'chromium-extension' }]
+});
