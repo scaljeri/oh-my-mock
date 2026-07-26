@@ -15,7 +15,7 @@ export function patchResponseText() {
         }
 
         if (!this.ohResult) {
-          this.oHResult = findCachedResponse({
+          this.ohResult = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
           });

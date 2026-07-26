@@ -61,12 +61,26 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
   }
 
   return new Promise(resolve => {
-    const resp = new Response();
+    // Build the Response with the mocked status rather than defaulting to 200
+    // and overriding the `status` getter afterwards. `ok` and `statusText` are
+    // native getters reading the same internal slot, and they cannot be patched
+    // into agreement — a bare `new Response()` would keep reporting `ok: true`
+    // for a mocked 500, so `if (!res.ok) throw` would never fire.
+    const resp = new Response(null, { status: toValidResponseStatus(statusCode) });
     resp['ohUrl'] = url;
     resp['ohMethod'] = config.method;
 
     setTimeout(() => resolve(resp), delay || 0);
   });
+}
+
+// The Response constructor throws a RangeError outside 200-599, so a mock with
+// a missing or nonsensical status code falls back to 200 instead of breaking
+// the request it was meant to serve.
+function toValidResponseStatus(statusCode: unknown): number {
+  const code = Number(statusCode);
+
+  return Number.isInteger(code) && code >= 200 && code <= 599 ? code : 200;
 }
 
 function patchFetch(): void {
