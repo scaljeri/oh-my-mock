@@ -6,9 +6,27 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- End-to-end test suite (Playwright) driving the real extension in Chromium,
+  with a rewritten test site and API to run it against
+- Bundled fonts and design tokens for the popup redesign
+
 ### Changed
 
+- Upgraded Angular 14 to 22 and TypeScript 4.6 to 6.0. Replaced three
+  unmaintained dependencies: `@ngneat/hot-toast`, `@materia-ui/ngx-monaco-editor`
+  and `faker`
+- The popup window opens at 1280x860 and uses a three-pane shell
+- The SDK connection no longer retries `ws://localhost:8000` indefinitely for
+  users who do not run the SDK
+- Removed the unused `webRequest` permission
+
 ### Fixed
+
+- A mocked `fetch` returned an empty body from `response.text()`
+- `Response.ok` ignored a mocked status code, so `if (!res.ok)` never fired for
+  a mocked error response
+- Messages posted on `window` are now checked for origin and source, so page
+  scripts can no longer impersonate the injected script
 
 ## [3.3.14] - 2022-05-27
 

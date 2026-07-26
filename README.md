@@ -28,33 +28,53 @@ OhMyMock can be install from the
 but you can also compile the source and use that instead if you like.
 This is what you would do if you want to do OhMyMock develop. 
 
-To install it from source checkout this repository and run the following commands
+To install it from source, check out this repository and run
 
-    $> yarn
-    $> yarn build
+    $> npm ci
+    $> npm run build
 
-The compiled code is stored in **"./dist"**
+The compiled extension is written to **"./dist"**.
 
-Navigate in Chrome to chrome://extensions and enable `development mode` and upload the **"./dist"** folder via the `Load unpacked` button. Thats it.
+In Chrome, go to `chrome://extensions`, switch on `Developer mode`, and load
+the **"./dist"** folder with the `Load unpacked` button. That is it.
+
+`npm run build:bundles` is a faster alternative that skips the Angular popup —
+about ten seconds instead of a minute. Useful while working on the mocking
+logic, but the popup UI is then missing from `dist`.
 
 ### Setup for development
-First install all dependencies
+Install the dependencies
 
-    $> yarn
+    $> npm ci
 
-Start the development web server and watchers
+Start the test site and the build watchers
 
-    $> yarn watch
+    $> npm run watch
 
-The test page will be available at http://localhost:8000
+The test site will be available at http://localhost:8090, with a second origin
+on :8091 for cross-origin cases. Port 8000 is left free for the NodeJS SDK
+server (`npm run test-site:sdk`).
 
-Everytime you hit save the project will rebuild, but after each rebuild you have to reload the extension and test page your self!
+Every save rebuilds, but Chrome does not pick that up by itself: reload the
+extension on `chrome://extensions`, then reload the test page — the content
+script is injected on page load.
+
+### Testing
+
+    $> npm test        # unit tests (Jest)
+    $> npm run e2e     # end-to-end, drives the real extension in Chromium
+
+The e2e suite needs a build first (`npm run build`) and runs headless without a
+display. See [tests/README.md](./tests/README.md) and
+[test-site/README.md](./test-site/README.md).
 
 ### Project structure
 This project consists of a couple of different part, each with a specific task. Those parts are:
 
   * ./scripts           - Tooling
-  * ./test-site         - Webserver (test/demo site)
+  * ./test-site         - Test site and API the e2e suite runs against
+  * ./tests             - End-to-end suite (Playwright)
+  * ./design            - Design mockups for the popup redesign
   * ./libs/nodejs-sdk   - sdk for serving mocks from files
   * ./src/app           - angular app, the OhMyMock popup
   * ./src/content       - the extension content script, needed to pass messages between
