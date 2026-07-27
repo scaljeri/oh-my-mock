@@ -181,6 +181,10 @@ Take the ideas as separate, tested changes.
 6. **Sticky rows — wait for the redesign.** The request list is being rebuilt;
    implementing this against the current one is work that gets thrown away.
 
+The redesign itself has since landed the request list, the filter toolbar and
+the detail-beside-the-list routing, which is why 3 and 6 are still waiting —
+see `docs/architecture/README.md` for how the pieces fit together.
+
 Note on 5: the branch's `src/app/migrations/current-domain.ts` is only twelve
 lines and addresses an older model change, so it is not the head start it might
 look like. A storage migration for the normalisation still has to be written.

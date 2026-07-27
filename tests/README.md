@@ -78,6 +78,15 @@ any stored object whose `version` differs from the extension's, and would
 rewrite what was just seeded. The driver reads the version from
 `chrome.runtime.getManifest()`.
 
+## Before you believe a red run
+
+On a loaded machine this suite drops two or three tests on timeouts — different
+ones each run, which is the tell. Check `uptime` first: above roughly load 5 it
+is unreliable, at idle it is a consistent 30/30 in about 50 seconds. Stray
+`test-site/server` processes from earlier runs are the usual cause:
+
+    pkill -f "test-site/server"
+
 ## Single worker, deliberately
 
 The "server was never contacted" assertion reads a counter on the one shared
