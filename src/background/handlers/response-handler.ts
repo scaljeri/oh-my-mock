@@ -51,9 +51,9 @@ export class OhMyResponseHandler {
 
       let response: IMock;
 
-      if (context.path) { // patch an existing mock
-        if (!responseUpdate.id || !context.propertyName) {
-          error(`Cannot patch a response at ${context.path} without a response id and a property name`);
+      if (context.kind === 'patch') { // patch an existing mock
+        if (!responseUpdate.id) {
+          error(`Cannot patch a response at ${context.path} without a response id`);
           return undefined;
         }
 

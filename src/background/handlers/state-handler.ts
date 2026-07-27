@@ -22,12 +22,7 @@ export class OhMyStateHandler {
 
       let state = data as IState || StateUtils.init({ domain });
 
-      if (context?.path) {
-        if (!context.propertyName) { // A patch without a property has nothing to write
-          error(`Cannot patch the state at ${context.path} without a property name`);
-          return undefined;
-        }
-
+      if (context?.kind === 'patch') {
         state = await OhMyStateHandler.StorageUtils.get<IState>(domain) || StateUtils.init({ domain });
         state = update<IState>(context.path, state, context.propertyName, data);
 

@@ -17,12 +17,7 @@ export class OhMyStoreHandler {
     let store: IOhMyMock = data;
 
     try {
-      if (context?.path) {
-        if (!context.propertyName) { // A patch without a property has nothing to write
-          error(`Cannot patch the store at ${context.path} without a property name`);
-          return undefined;
-        }
-
+      if (context?.kind === 'patch') {
         store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY) ?? StoreUtils.init();
         store = update<IOhMyMock>(context.path, store, context.propertyName, data);
       }

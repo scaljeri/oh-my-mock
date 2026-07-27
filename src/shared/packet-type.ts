@@ -25,15 +25,34 @@ export interface IPacket<T = unknown, U = IOhMyPacketContext> {
 }
 
 /**
- * Context travelling with a message. Only the domain is guaranteed; a packet
- * sent from the injected script has no notion of presets.
+ * Context travelling with a message.
+ *
+ * A tagged union, because a *patch* carries two extra fields that only make
+ * sense together — the JSON path to update and the property within it — while
+ * an ordinary message carries neither. Declaring them as two optional fields on
+ * one type meant every handler had to check `propertyName` by hand and hope the
+ * `path` was there too. The `kind` tag lets the compiler prove it instead.
  */
-export interface IOhMyPacketContext extends Partial<IOhMyContext> {
+export type IOhMyPacketContext = IOhMyMessageContext | IOhMyPatchContext;
+
+/** The fields both variants share — what a sender may pass along. */
+export interface IOhMyPacketContextBase extends Partial<IOhMyContext> {
+  // Added by `OhMySendToBg` on the content-script hop; a packet posted by the
+  // injected script has no notion of the domain the extension keys state on.
   domain: ohMyDomain;
   id?: string;
   requestType?: requestType;
-  path?: string;
-  propertyName?: string;
+}
+
+export interface IOhMyMessageContext extends IOhMyPacketContextBase {
+  kind?: 'message';
+}
+
+/** Updates one property, addressed by a JSON path. See `partial-updater.ts`. */
+export interface IOhMyPatchContext extends IOhMyPacketContextBase {
+  kind: 'patch';
+  path: string;
+  propertyName: string;
 }
 
 export interface IPacketPayload<T = unknown, U = IOhMyPacketContext> {
