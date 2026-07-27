@@ -1,32 +1,43 @@
+<!-- Two panes: the request list, and the detail of whichever request is
+     selected. The detail is a routed child (`request/:dataId`), so selecting a
+     row updates the url without taking the list off screen. -->
+<div class="oh-panes" [class.has-detail]="hasDetail">
+  <div class="oh-panes__list">
 <oh-my-data-list
-  [state]="state"
-  [context]="state.context"
-  [showActivate]="true"
-  [showClone]="true"
-  [showDelete]="true"
-  [showMenu]="true"
-  (selectRow)="onDataSelect($event)"
->
-</oh-my-data-list>
+      [state]="state"
+      [context]="state.context"
+      [showActivate]="true"
+      [showClone]="true"
+      [showDelete]="true"
+      [showMenu]="true"
+      (selectRow)="onDataSelect($event)"
+    >
+    </oh-my-data-list>
+    
+    <section *ngIf="!hasData" class="no-data">
+      <h2>No responses available</h2>
+      <p>
+        Any Fetch or XHR call will automatically show up here if this extension is
+        active!
+      </p>
+    
+      <oh-my-arrow></oh-my-arrow>
+    </section>
+    
+    <button
+      *ngIf="!domain"
+      (click)="onAddData()"
+      class="new-data"
+      mat-fab
+      color="primary"
+      aria-label="Delete all mocks for a specific URL"
+    >
+      <!-- <mat-icon>add</mat-icon> -->
+      <mat-icon x-test="add-response" class="add" svgIcon="add"></mat-icon>
+    </button>
+  </div>
 
-<section *ngIf="!hasData" class="no-data">
-  <h2>No responses available</h2>
-  <p>
-    Any Fetch or XHR call will automatically show up here if this extension is
-    active!
-  </p>
-
-  <oh-my-arrow></oh-my-arrow>
-</section>
-
-<button
-  *ngIf="!domain"
-  (click)="onAddData()"
-  class="new-data"
-  mat-fab
-  color="primary"
-  aria-label="Delete all mocks for a specific URL"
->
-  <!-- <mat-icon>add</mat-icon> -->
-  <mat-icon x-test="add-response" class="add" svgIcon="add"></mat-icon>
-</button>
+  <aside class="oh-panes__detail" *ngIf="hasDetail">
+    <router-outlet></router-outlet>
+  </aside>
+</div>

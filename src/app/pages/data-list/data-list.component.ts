@@ -56,6 +56,15 @@ export class PageDataListComponent implements OnInit, OnDestroy {
     }));
   }
 
+  /**
+   * Whether a request is selected, i.e. whether the detail pane has anything
+   * to show. Driven by the child route rather than by local state, so a
+   * deep-linked url opens with the pane already visible.
+   */
+  get hasDetail(): boolean {
+    return !!this.activatedRoute.firstChild;
+  }
+
   onDataSelect(id: string): void {
     this.ngZone.run(() => {
       this.router.navigate(['request', id], { relativeTo: this.activatedRoute });

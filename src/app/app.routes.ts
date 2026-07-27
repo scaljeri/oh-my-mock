@@ -11,16 +11,21 @@ const appRoutes: Routes = [
     path: '',
     children: [
       {
+        // The request detail is a *child* of the list, not a sibling: the
+        // design shows them side by side, so selecting a request must not
+        // navigate away from the list it was selected in.
         path: '',
-        component: PageDataListComponent
+        component: PageDataListComponent,
+        children: [
+          {
+            path: 'request/:dataId',
+            component: PageMockComponent
+          }
+        ]
       },
       {
         path: 'configure',
         component: ConfigComponent
-      },
-      {
-        path: 'request/:dataId',
-        component: PageMockComponent
       },
       {
         path: 'state-explore',
