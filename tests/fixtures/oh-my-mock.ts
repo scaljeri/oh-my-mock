@@ -84,8 +84,8 @@ export class OhMyMockDriver {
   /**
    * Turns mocking on or off for a domain.
    *
-   * `OhMyContentState.isActive()` requires *both* `aux.appActive` and
-   * `aux.popupActive`, which normally means "extension enabled and popup open".
+   * `OhMyContentState.isActive()` requires the domain's `aux.appActive` *and*
+   * the store's `popupActive` — "enabled for this domain" and "popup open".
    * Setting both here is what lets tests run without the popup.
    */
   async setActive(domain: string, active = true): Promise<void> {
@@ -103,7 +103,7 @@ export class OhMyMockDriver {
         };
 
         state.version = version;
-        state.aux = { ...(state.aux ?? {}), appActive: active, popupActive: active };
+        state.aux = { ...(state.aux ?? {}), appActive: active };
         state.context = { ...(state.context ?? {}), domain, preset: 'default', active };
 
         const store = (stored.OhMyMock as Record<string, any>) ?? {
@@ -111,6 +111,9 @@ export class OhMyMockDriver {
           type: 'store'
         };
         store.version = version;
+        // `popupActive` is browser-global and lives on the store; `appActive`
+        // is per domain. `isActive()` requires both.
+        store.popupActive = active;
         if (!store.domains.includes(domain)) {
           store.domains = [domain, ...store.domains];
         }

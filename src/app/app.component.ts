@@ -78,7 +78,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
       // Move to somewhere else
       if (state.domain !== this.domain && this.domain) { // Domain switch
-        state.aux.popupActive = true;
+        // The popup is open — a store-level fact, not a per-domain one.
+        this.storeService.updateStore({ popupActive: true });
         // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
         // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
         await this.webWorkerService.init(state.domain);
@@ -133,7 +134,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   popupActiveToggle(isActive = true) {
-    return this.storeService.updateAux({ popupActive: isActive }, this.context);
+    return this.storeService.updateStore({ popupActive: isActive });
   }
 
   @HostListener('window:keyup.backspace')

@@ -19,7 +19,9 @@ export function handleAPISettings(messageBus: OhMyMessageBus) {
     // answers with the patched state.
     let state: IState | undefined;
     if (data.active !== undefined) {
-      state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'popupActive', payloadType.STATE, payload.context);
+      // `popupActive` moved to the store; the external API's `active` flag is what
+      // enables mocking for this domain, which is `appActive`.
+      state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
       state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
     }
 

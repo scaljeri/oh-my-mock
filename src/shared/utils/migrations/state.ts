@@ -10,5 +10,16 @@ export const stateSteps = [
 
         data.version = VERSION;
         return data;
+    },
+    // `popupActive` moved from each domain's `aux` to the store, where it
+    // belongs: an open popup is a property of the browser, not of a domain.
+    // Dropping the stale copy keeps `isActive()` from reading a field nothing
+    // writes any more.
+    (data: any) => {
+        if (data?.aux && 'popupActive' in data.aux) {
+            delete data.aux.popupActive;
+        }
+
+        return data;
     }
 ]

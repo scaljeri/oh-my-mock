@@ -64,7 +64,8 @@ pass even if the extension fetched the real response and discarded it.
 ### Three things that bite
 
 **Activation needs two flags.** `OhMyContentState.isActive()` requires both
-`aux.appActive` and `aux.popupActive` — normally "enabled" and "popup open".
+the domain's `aux.appActive` and the store's `popupActive` — "enabled for this
+domain" and "popup open".
 `ohMy.setActive()` sets both, which is what lets these tests run without the
 popup.
 

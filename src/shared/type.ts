@@ -21,6 +21,14 @@ export interface IStore {
 
 export interface IOhMyMock {
   domains: domain[];
+  /**
+   * Whether the popup window is open.
+   *
+   * Browser-global, so it lives on the store rather than on a domain. It used
+   * to sit in each domain's `aux`, which claimed the popup could be open for
+   * one domain and closed for another — it cannot.
+   */
+  popupActive?: boolean;
   version: string;
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
   modifiedOn?: string;
@@ -31,7 +39,6 @@ export interface IOhMyAux {
   filterKeywords?: string;
   newAutoActivate?: boolean;
   appActive?: boolean;
-  popupActive?: boolean;
   blurImages?: boolean;
   filteredRequests?: ohMyDataId[]
   filterOptions?: Record<string, boolean>;

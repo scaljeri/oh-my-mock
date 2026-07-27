@@ -56,7 +56,8 @@ export class NavListComponent {
         }
 
         // Now we need to tell the content script that the popup (thats us) is still active!!
-        await this.storeService.updateAux({ popupActive: true, filterKeywords: '', filteredRequests: undefined, filterOptions: undefined }, this.context);
+        await this.storeService.updateStore({ popupActive: true });
+        await this.storeService.updateAux({ filterKeywords: '', filteredRequests: undefined, filterOptions: undefined }, this.context);
         this.router.navigate(['/'])
         window.location.reload();
       });

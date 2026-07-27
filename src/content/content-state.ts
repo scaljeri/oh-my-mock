@@ -41,6 +41,8 @@ export class OhMyContentState {
   isActive$ = this.isActiveSubject.asObservable().pipe(distinctUntilChanged());
   // Only known after `init()`, or after the first storage update for this host.
   state?: IState;
+  // The store, which carries the browser-global `popupActive`.
+  store?: IOhMyMock;
 
   constructor() {
     StorageUtils.listen();
@@ -49,6 +51,11 @@ export class OhMyContentState {
 
       if (key === OhMyContentState.host) {
         this.state = update.newValue as IState;
+        this.isActiveSubject.next(this.isActive(this.state));
+      } else if (key === STORAGE_KEY) {
+        // `popupActive` lives on the store, so a popup opening or closing
+        // arrives here rather than on the domain's own record.
+        this.store = update.newValue as IOhMyMock;
         this.isActiveSubject.next(this.isActive(this.state));
       }
 
@@ -70,6 +77,7 @@ export class OhMyContentState {
   async init() {
     this.state = await this.getState();
     this.cache[OhMyContentState.host] = this.state;
+    this.store = await this.get<IOhMyMock>(STORAGE_KEY);
   }
 
   async get<T = unknown>(key = STORAGE_KEY): Promise<T> {
@@ -112,8 +120,14 @@ export class OhMyContentState {
   //   return OhMyContentState.isPopupOpen;
   // }
 
+  /**
+   * Mocking runs only when the extension is switched on *for this domain* and
+   * the popup is open — the popup hosts the sandbox that evaluates custom mock
+   * code. The two flags live in different places for a reason: enabling is per
+   * domain, an open popup is a property of the browser.
+   */
   isActive(state: IState | undefined = this.state): boolean {
-    return !!(state?.aux.appActive && state?.aux.popupActive) || this.forceActive;
+    return !!(state?.aux.appActive && this.store?.popupActive) || this.forceActive;
   }
 
   set forceActive(isActive: boolean) {
