@@ -61,7 +61,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   try {
     await StorageUtils.reset();
     await initStorage(payload.context?.domain);
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
   } catch (err) {
     error('Could not initialize the store', err);
   }
@@ -183,7 +183,7 @@ setTimeout(async () => {
 
   const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
   if (!state || Object.keys(state.data).length === 0) {
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
   }
 });
 

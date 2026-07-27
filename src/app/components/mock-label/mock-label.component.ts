@@ -16,6 +16,6 @@ export class MockLabelComponent {
   }
 
   get label(): string {
-    return this.mock?.label;
+    return this.mock?.label ?? '';
   }
 }

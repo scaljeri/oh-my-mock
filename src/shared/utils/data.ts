@@ -1,5 +1,5 @@
 import { objectTypes } from '../constants';
-import { IData, IMock, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IOhMyPresets } from '../type';
+import { IData, IMock, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, ohMyStatusCode, IOhMyPresets } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -29,17 +29,17 @@ export class DataUtils {
     return data.enabled[context.preset];
   }
 
-  static activeMock(data: IData, context: IOhMyContext): ohMyMockId {
-    return data.enabled[context.preset] && data.selected[context.preset];
+  static activeMock(data: IData, context: IOhMyContext): ohMyMockId | undefined {
+    return data.enabled[context.preset] ? data.selected[context.preset] : undefined;
   }
 
   static addResponse(context: IOhMyContext, data: IData, mock: Partial<IMock>, autoActivate = true): IData {
     data = {
       ...data, mocks:
       {
-        ...data.mocks, [mock.id]: {
-          id: mock.id,
-          statusCode: mock.statusCode,
+        ...data.mocks, [mock.id as ohMyMockId]: {
+          id: mock.id as ohMyMockId,
+          statusCode: mock.statusCode as ohMyStatusCode,
           label: mock.label,
           modifiedOn: mock.modifiedOn
         }
@@ -48,7 +48,7 @@ export class DataUtils {
     };
 
     if (Object.keys(data.mocks).length === 1) {
-      data.selected[context.preset] = mock.id;
+      data.selected[context.preset] = mock.id as ohMyMockId;
 
       if (autoActivate) {
         data.enabled[context.preset] = true;

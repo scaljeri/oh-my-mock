@@ -23,7 +23,7 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtil
 
   if (MigrateUtils.shouldMigrate({ version: data.version })) {
     requests = requests.map((r: IData) => {
-      r.enabled = { ...r.enabled, [state.context.preset]: context.active };
+      r.enabled = { ...r.enabled, [state.context.preset]: context.active ?? false };
       return MigrateUtils.migrate(r);
     }) as IData[];
     responses = data.responses.map(MigrateUtils.migrate) as IMock[];

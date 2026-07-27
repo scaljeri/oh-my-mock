@@ -74,9 +74,10 @@ export class JsonExportComponent implements OnInit {
 
     for (const r of Object.values(this.selected)) {
       const sMocks = Object.values(r.mocks);
-      const request = { ...r, id: uniqueId(), mocks: {} as Record<string, IOhMyShallowMock> };
-      delete request.enabled; // These have presets which belong to a state/domain
-      delete request.selected; // idem
+      // enabled/selected are keyed by preset, which belongs to a state, not
+      // to an exported request.
+      const { enabled, selected, ...rest } = r;
+      const request = { ...rest, id: uniqueId(), mocks: {} as Record<string, IOhMyShallowMock> } as IData;
       request.version = this.appStateService.version;
 
       for (const sm of sMocks) {

@@ -26,13 +26,13 @@ describe('Utils/Data', () => {
       const response = DataUtils.getSelectedResponse(data,
         { preset: 'foo' } as any);
 
-      expect(response.id).toBe('f');
+      expect(response!.id).toBe('f');
     });
 
     it('should return the selected response given a presetId', () => {
       const response = DataUtils.getSelectedResponse(data, 'bar');
 
-      expect(response.id).toBe('b');
+      expect(response!.id).toBe('b');
     });
   });
   describe('#isSPresetEnabled', () => {
@@ -47,7 +47,7 @@ describe('Utils/Data', () => {
     });
 
     it('should return nothing if disabled', () => {
-      expect(DataUtils.activeMock(data, { preset: 'bar' } as any)).toBeDefined();
+      expect(DataUtils.activeMock(data, { preset: 'bar' } as any)).toBeUndefined();
     });
   });
   describe('#addResponse', () => {
@@ -58,13 +58,13 @@ describe('Utils/Data', () => {
       });
     })
     it('should add a new response', () => {
-      expect(update.mocks.x).toEqual(expect.objectContaining({
+      expect(update.mocks!.x).toEqual(expect.objectContaining({
         id: 'x', label: 'y', statusCode: 666
       }));
     });
 
     it('should not select the new response for the active preset', () => {
-      expect(update.selected.foo).not.toBe('x');
+      expect(update.selected!.foo).not.toBe('x');
     });
 
     it('should auto select a new response if it is the first', () => {
@@ -73,9 +73,9 @@ describe('Utils/Data', () => {
         id: 'z', label: 'y', statusCode: 666
       });
 
-      expect(update.mocks.z).toBeDefined();
-      expect(update.selected.moz).toBe('z');
-      expect(update.enabled.moz).toBeTruthy();
+      expect(update.mocks!.z).toBeDefined();
+      expect(update.selected!.moz).toBe('z');
+      expect(update.enabled!.moz).toBeTruthy();
 
     });
 
@@ -85,18 +85,18 @@ describe('Utils/Data', () => {
         id: 'z', label: 'y', statusCode: 666
       }, false);
 
-      expect(update.mocks.z).toBeDefined();
-      expect(update.selected.moz).toBe('z');
-      expect(update.enabled.moz).toBeFalsy();
+      expect(update.mocks!.z).toBeDefined();
+      expect(update.selected!.moz).toBe('z');
+      expect(update.enabled!.moz).toBeFalsy();
 
     });
   });
   describe('#removeResponse', () => {
     it('should cleanup a Request after delete', () => {
       const update = DataUtils.removeResponse({ preset: 'foo' } as any, data, 'f')
-      expect(update.mocks.f).not.toBeDefined();
-      expect(update.selected.foo).toBe('b');
-      expect(update.enabled.foo).toBeFalsy();
+      expect(update.mocks!.f).not.toBeDefined();
+      expect(update.selected!.foo).toBe('b');
+      expect(update.enabled!.foo).toBeFalsy();
     })
   });
   describe('#getNextActiveResponse', () => {
@@ -131,8 +131,8 @@ describe('Utils/Data', () => {
     it('should init with new preset', () => {
       const update = DataUtils.prefillWithPresets(data, { asd: 'yolo'});
 
-      expect(update.selected.asd).toBe('f');
-      expect(update.enabled.asd).toBeFalsy();
+      expect(update.selected!.asd).toBe('f');
+      expect(update.enabled!.asd).toBeFalsy();
     });
   });
 });

@@ -23,5 +23,5 @@
 </footer>
 
 <section *ngIf="showErrors" class="close-with-errors">
-  <oh-my-code-errors (done)="onDoneErrors($event)" [errors]="errors" [allowErrors]="input.allowErrors"></oh-my-code-errors>
+  <oh-my-code-errors (done)="onDoneErrors($event)" [errors]="errors" [allowErrors]="!!input.allowErrors"></oh-my-code-errors>
 </section>

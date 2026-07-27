@@ -12,7 +12,7 @@ export const parse = (headers = ''): Record<string, string> => {
 export const stringify = (headers: Record<string, string> = {}): string => {
   const entries = Object.entries(headers);
   if (entries.length) {
-    return entries.reduce((out, input) => {
+    return entries.reduce((out: string[], input) => {
         out.push(`${input[0]}: ${input[1]}`);
         return out;
       }, [])
@@ -23,9 +23,9 @@ export const stringify = (headers: Record<string, string> = {}): string => {
 };
 
 export const getHeaderKeys = (headers: string): string[] => {
-  return headers.match(/(?<=\b)(..*)(?=: )/g);
+  return headers.match(/(?<=\b)(..*)(?=: )/g) ?? [];
 };
 
 export const getHeaderValues = (headers: string): string[] => {
-  return headers.match(/(?<=: )(.*)(?=\b)/g);
+  return headers.match(/(?<=: )(.*)(?=\b)/g) ?? [];
 };

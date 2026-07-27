@@ -44,6 +44,6 @@ export class UpdateInputDirective {
   }
 
   isChildActive(): boolean {
-    return !!document.activeElement.closest(this.selector);
+    return !!document.activeElement?.closest(this.selector);
   }
 }

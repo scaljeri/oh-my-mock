@@ -37,9 +37,17 @@ export interface IOhMyAux {
   filterOptions?: Record<string, boolean>;
 }
 
+/**
+ * The state context for a domain: which preset is selected and whether mocking
+ * is on. `preset` is required — `StateUtils.init` always sets it to 'default',
+ * and every lookup into `data.selected` / `data.enabled` indexes by it.
+ *
+ * Messages carry `IOhMyPacketContext` instead, which may legitimately omit the
+ * preset; it deliberately no longer extends this type.
+ */
 export interface IOhMyContext {
   domain: ohMyDomain;
-  preset?: ohMyPresetId;
+  preset: ohMyPresetId;
   active?: boolean;
   id?: string;
 }
@@ -66,6 +74,12 @@ export interface IOhMyMockContext {
 }
 
 export interface IData extends IOhMyMockContext {
+  // `IOhMyMockContext` marks these optional because a *search* may specify only
+  // some of them. A stored request always has all three — `DataUtils.create`
+  // assigns an id and the url is what the request is keyed on.
+  id: ohMyDataId;
+  url: string;
+  method: requestMethod;
   selected: Record<ohMyPresetId, ohMyMockId>;
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
@@ -106,7 +120,8 @@ export interface IMock {
 }
 
 export interface IOhMyMockRule {
-  type: mockRuleType;
+  // null until the user picks a rule type in the anonymise dialog.
+  type: mockRuleType | null;
   path: string;
 }
 

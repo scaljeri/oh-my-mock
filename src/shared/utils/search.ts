@@ -33,7 +33,7 @@ export function shallowSearch(data: Record<string, IData>, words: string[], incl
       words.some(v => {
         const value = kv[1];
         return value.url.toLowerCase().includes(v) && includes['url'] ||
-          value.requestType.toLowerCase().includes(v) && includes['requestType'] ||
+          value.requestType?.toLowerCase().includes(v) && includes['requestType'] ||
           value.method?.toLowerCase().includes(v) && includes['requestMethod']
       })
     )
@@ -61,7 +61,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
         continue;
       }
 
-      const contentType = getMimeType(mock.headersMock);
+      const contentType = getMimeType(mock.headersMock ?? {});
       try {
         if (words.some(w => {
           if (!isImage(contentType)) {
@@ -77,7 +77,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
               normalisedForSearch.add(mock);
             }
 
-            if (includes.response && mock.responseMock.includes(w)) {
+            if (includes.response && mock.responseMock?.includes(w)) {
               return true;
             }
           }

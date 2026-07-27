@@ -9,7 +9,7 @@ export interface IOhMessage<T = unknown, X = IOhMyContext> {
   sender: chrome.runtime.MessageSender;
   callback: (data: unknown) => void;
 }
-export interface IPacket<T = unknown, U = IOhMyContext> {
+export interface IPacket<T = unknown, U = IOhMyPacketContext> {
   tabId?: number;
   source: appSources;
   payload: IPacketPayload<T, U>;
@@ -17,14 +17,19 @@ export interface IPacket<T = unknown, U = IOhMyContext> {
   version?: string;
 }
 
-export interface IOhMyPacketContext extends IOhMyContext {
+/**
+ * Context travelling with a message. Only the domain is guaranteed; a packet
+ * sent from the injected script has no notion of presets.
+ */
+export interface IOhMyPacketContext extends Partial<IOhMyContext> {
+  domain: ohMyDomain;
   id?: string;
   requestType?: requestType;
   path?: string;
   propertyName?: string;
 }
 
-export interface IPacketPayload<T = unknown, U = IOhMyContext> {
+export interface IPacketPayload<T = unknown, U = IOhMyPacketContext> {
   id?: string;
   type: payloadType;
   context?: U

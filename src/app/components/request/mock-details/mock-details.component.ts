@@ -43,7 +43,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
         validators: [Validators.required], updateOn: 'blur'
       }),
       label: new UntypedFormControl(this.response.label, { updateOn: 'blur' }),
-      contentType: new UntypedFormControl(this.response.headersMock['content-type'] || '', { updateOn: 'blur' })
+      contentType: new UntypedFormControl(this.response.headersMock?.['content-type'] || '', { updateOn: 'blur' })
     });
 
     this.subscriptions.add(this.form.valueChanges.subscribe((values: Partial<IMock> & { contentType: string }) => {
@@ -51,7 +51,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
         delete values.statusCode;
       }
 
-      delete values.contentType; // is not part if IMock
+      delete (values as Partial<typeof values>).contentType; // is not part of IMock
 
       this.storeService.upsertResponse({
         ...values,
@@ -72,7 +72,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
 
     this.delayCtrl.setValue(this.response.delay, { emitEvent: false, onlySelf: true });
     this.statusCodeCtrl.setValue(this.response.statusCode, { emitEvent: false, onlySelf: true });
-    this.contentTypeCtrl.setValue(this.response.headersMock['content-type'], { emitEvent: false });
+    this.contentTypeCtrl.setValue(this.response.headersMock?.['content-type'], { emitEvent: false });
     this.labelCtrl.setValue(this.response.label, { emitEvent: false, onlySelf: true });
   }
 

@@ -1,5 +1,5 @@
 import { uniqueId } from './unique-id';
-import { IOhMyPresetChange, IOhMyPresets, IState, ohMyPresetId } from '../type';
+import { IOhMyContext, IOhMyPresetChange, IOhMyPresets, IState, ohMyPresetId } from '../type';
 
 const IS_COPY_RE = /copy(\s\d+)?/;
 
@@ -72,7 +72,7 @@ export class PresetUtils {
     });
 
     if (state.context.preset === id) {
-      delete retVal.context.preset;
+      delete (retVal.context as Partial<IOhMyContext>).preset;
     }
 
     delete retVal.presets[id];

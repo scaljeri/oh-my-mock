@@ -33,7 +33,7 @@ export class OhMyResponseHandler {
       }
 
       if (response && Object.keys(response).length === 1 && response.id) { // delete
-        request = DataUtils.removeResponse(context, request, response.id);
+        request = DataUtils.removeResponse(state.context, request, response.id);
         await OhMyResponseHandler.StorageUtils.remove(response.id);
       } else {
         if (context.path) { // new/update

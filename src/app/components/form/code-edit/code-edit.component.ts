@@ -27,9 +27,9 @@ declare let monaco: any;
   ]
 })
 export class CodeEditComponent implements OnInit, ControlValueAccessor {
-  @Input() type: string;
+  @Input() type: string | undefined;
   @Input() theme: themes = 'vs';
-  @Input() base: string;
+  @Input() base: string | undefined;
   @Input() showMinimap = false;
 
   @Output() errors = new EventEmitter<IMarker[]>();

@@ -30,7 +30,7 @@ export class OhMyRemoveHandler {
         await StorageUtils.remove(state.domain);
 
         if (state.domain === DEMO_TEST_DOMAIN) {
-          await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, active: true });
+          await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
         }
       } else if (data.type === objectTypes.REQUEST) {
         const responses = Object.values(state.data[data.id]).flatMap(d => Object.values(d.mocks)) as IMock[];

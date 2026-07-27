@@ -8,7 +8,7 @@ export const splitMimeType = (contentType: string): { mimeType: string, mimeSubT
 
 }
 
-export function isMimeTypeJSON(contentType: string): boolean {
+export function isMimeTypeJSON(contentType?: string): boolean {
   return !!contentType?.match(/\/json/);
 }
 
@@ -16,16 +16,16 @@ export function isMimeTypeText(contentType: string): boolean {
   return !!contentType?.match(/\/text/);
 }
 
-export function extractMimeType(contentType: string | Record<string, string>): string {
+export function extractMimeType(contentType?: string | Record<string, string>): string {
   if (typeof contentType === 'object') {
     contentType = getMimeType(contentType);
   }
 
-  return (splitMimeType(contentType) || {})?.mimeSubType;
+  return (splitMimeType(contentType ?? '') || {})?.mimeSubType ?? '';
 }
 
 export function strip(ct = ''): string {
-  return ct.match(/^[^;]{0,}/)[0];
+  return ct.match(/^[^;]{0,}/)?.[0] ?? '';
 }
 
 export function update(source = '', update: string): string {

@@ -1,6 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
 import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
+import { IOhMyPacketContext } from '@shared/packet-type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
@@ -20,24 +21,24 @@ import { AppStateService } from './app-state.service';
   providedIn: 'root'
 })
 export class OhMyStateService {
-  private stateSubject = new BehaviorSubject<IState>(undefined);
+  private stateSubject = new BehaviorSubject<IState | undefined>(undefined);
   public state$: Observable<IState>; //  = this.stateSubject.asObservable().pipe(shareReplay(1));
   public state: IState;
 
-  private responseSubject = new BehaviorSubject<IMock>(undefined)
+  private responseSubject = new BehaviorSubject<IMock | undefined>(undefined)
   public response$ = this.responseSubject.asObservable().pipe(filter(m => !!m));
 
   public context: IOhMyContext;
-  private contextSubject = new BehaviorSubject<IOhMyContext>(undefined);
+  private contextSubject = new BehaviorSubject<IOhMyContext | undefined>(undefined);
   public context$ = this.contextSubject.asObservable().pipe(shareReplay(1));
 
   public domain: ohMyDomain;
-  private domainSubject = new BehaviorSubject<ohMyDomain>(undefined);
+  private domainSubject = new BehaviorSubject<ohMyDomain | undefined>(undefined);
   public domain$ = this.domainSubject.asObservable().pipe(shareReplay(1));
   private appSub: Subscription;
 
   public store: IOhMyMock;
-  private storeSubject = new BehaviorSubject<IOhMyMock>(undefined);
+  private storeSubject = new BehaviorSubject<IOhMyMock | undefined>(undefined);
   public store$ = this.storeSubject.asObservable().pipe(shareReplay(1));
 
   constructor(private ngZone: NgZone, private storageService: StorageService, private appState: AppStateService) {
@@ -55,7 +56,7 @@ export class OhMyStateService {
     this.contextSubject.next(this.context);
 
     this.state$ = this.appState.domain$.pipe(
-      map(domain => ({ domain })), // convert domain to context object
+      map(domain => ({ domain: domain ?? '' })), // convert domain to context object
       tap(async context => {
         if (context.domain !== this.state.domain && context.domain) {
           this.state = await this.initState(context.domain);
@@ -63,7 +64,7 @@ export class OhMyStateService {
           this.stateSubject.next(this.state);
         }
       }),
-      startWith({ domain }),
+      startWith({ domain: domain ?? '' }),
       switchMap(context => this.getState$(context)),
       shareReplay(1));
 
@@ -96,10 +97,10 @@ export class OhMyStateService {
     return this.response$.pipe(filter(r => r?.id === responseId));
   }
 
-  public getState$(context: IOhMyContext): Observable<IState> {
-    return this.stateSubject.pipe(filter(s => {
-      return s?.domain === context.domain
-    }), shareReplay(1));
+  public getState$(context: IOhMyPacketContext): Observable<IState> {
+    return this.stateSubject.pipe(
+      filter((s): s is IState => s?.domain === context.domain),
+      shareReplay(1));
   }
 
   private bindStreams(): void {

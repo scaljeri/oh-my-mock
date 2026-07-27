@@ -40,8 +40,19 @@ export const highlightSeq = [
   // ]
 })
 export class DataListComponent implements OnInit, OnDestroy {
-  stateSubject = new BehaviorSubject<IState>(undefined);
+  stateSubject = new BehaviorSubject<IState | undefined>(undefined);
   state$ = this.stateSubject.asObservable().pipe(filter(s => !!s), debounceTime(50));
+
+  /**
+   * The loaded state.
+   *
+   * The subject starts undefined and every handler below runs only after the
+   * list has rendered, which cannot happen before the state arrives. Asserting
+   * that once here beats a non-null assertion at each of the dozen call sites.
+   */
+  private get loadedState(): IState {
+    return this.stateSubject.value as IState;
+  }
   @Input() set state(s: IState) {
     if (s) {
       this.stateSubject.next(s);
@@ -83,7 +94,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   // filteredDataList: IDataView[];
   mocks: Record<string, IMock>;
   requestCount = 0;
-  filteredRequests: string[];
+  filteredRequests: string[] | undefined;
   newAutoActivate = true;
 
   public viewList: ohMyDataId[];
@@ -113,7 +124,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     if (!this.persistFilter) {
       this.filterOptions = undefined;
       this.filterKeywords = '';
-      this.filteredRequests = Object.keys(this.stateSubject.value?.data);
+      this.filteredRequests = Object.keys(this.loadedState.data);
     }
 
     this.subscriptions.add(this.state$.subscribe(state => {
@@ -122,7 +133,7 @@ export class DataListComponent implements OnInit, OnDestroy {
         if (!state.aux.filterKeywords) {
           this.filteredRequests = Object.keys(state.data);
         } else {
-          this.filteredRequests = null;
+          this.filteredRequests = undefined;
 
           if (state.aux.filteredRequests) {
             this.filteredRequests = state.aux.filteredRequests;
@@ -138,10 +149,10 @@ export class DataListComponent implements OnInit, OnDestroy {
         this.context = state?.context;
       }
 
-      this.newAutoActivate = state.aux.newAutoActivate;
+      this.newAutoActivate = state.aux.newAutoActivate ?? false;
       this.filterOptions = state.aux.filterOptions;
       this.requestCount = Object.keys(state.data).length;
-      this.blurImages = state.aux.blurImages;
+      this.blurImages = state.aux.blurImages ?? false;
 
       setTimeout(() => {
         this.cdr.detectChanges();
@@ -159,12 +170,12 @@ export class DataListComponent implements OnInit, OnDestroy {
 
   onActivateToggle(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
-    const data = this.stateSubject.value.data[id];
+    const data = this.loadedState.data[id];
 
     if (!Object.keys(data.mocks).length) {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
-      const isActive = data.enabled[this.stateSubject.value.context.preset];
+      const isActive = data.enabled[this.loadedState.context.preset];
       this.storeService.upsertRequest({
         ...data, enabled:
           { ...data.enabled, [this.context.preset]: !isActive }
@@ -175,7 +186,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   async onDelete(id: ohMyDataId, event: MouseEvent) {
     event.stopPropagation();
 
-    const data = this.stateSubject.value.data[id];
+    const data = this.loadedState.data[id];
 
     // If you click delete fast enough, you can hit it twice
     if (data) { // Is this needed
@@ -186,7 +197,7 @@ export class DataListComponent implements OnInit, OnDestroy {
 
   onClone(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
-    const state = this.stateSubject.value;
+    const state = this.loadedState;
 
     this.storeService.cloneRequest(id, state.context, this.context);
     this.toast.success('Cloned ' + state.data[id].url);
@@ -208,11 +219,11 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   onBlurImage(): void {
-    this.storeService.updateAux({ blurImages: !this.stateSubject.value.aux.blurImages }, this.context);
+    this.storeService.updateAux({ blurImages: !this.loadedState.aux.blurImages }, this.context);
   }
 
   public selectAll(): void {
-    Object.keys(this.stateSubject.value.data).forEach((d, i) => {
+    Object.keys(this.loadedState.data).forEach((d, i) => {
       this.selection.select(i);
     });
     this.cdr.detectChanges();
@@ -224,11 +235,11 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   onActivateAll(isActive: boolean): void {
-    const state = { ...this.stateSubject.value, data: { ...this.stateSubject.value.data } };
-    Object.values(this.stateSubject.value.data).forEach(d => {
-      if (d.selected[this.stateSubject.value.context.preset]) {
-        d = { ...d, enabled: { ...d.enabled, [this.stateSubject.value.context.preset]: isActive } };
-        state.data[d.id] = d;
+    const state: IState = { ...this.loadedState, data: { ...this.loadedState.data } };
+    Object.values(this.loadedState.data).forEach(d => {
+      if (d.selected[this.loadedState.context.preset]) {
+        d = { ...d, enabled: { ...d.enabled, [this.loadedState.context.preset]: isActive } };
+        state.data[d.id as string] = d;
       }
     });
 
@@ -238,7 +249,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   trackBy(index: number, row: IData): string {
-    return row.id; // type + row.method + row.url;
+    return row.id ?? ''; // type + row.method + row.url;
   }
 
   // async doSearch(data: Record<string, IData>, terms: string[]): Promise<string[]> {

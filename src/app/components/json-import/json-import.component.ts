@@ -37,7 +37,7 @@ export class JsonImportComponent {
 
         setTimeout(async () => {
           try {
-            const content = JSON.parse(fileLoadedEvent.target.result as string) as IOhMyBackup;
+            const content = JSON.parse(fileLoadedEvent.target?.result as string) as IOhMyBackup;
             const { requests, responses } = content;
 
             const result = await importJSON(content, this.stateService.state.context);

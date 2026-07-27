@@ -73,7 +73,9 @@ export class AnonymizeComponent implements OnInit {
     rules.forEach(r => {
       JSONPath({
         path: r.path, json, parent: true, callback: (a, b, c) => {
-          c.parent[c.parentProperty] = generators[r.type]();
+          if (r.type) {
+            c.parent[c.parentProperty] = generators[r.type]();
+          }
         }
       });
     });

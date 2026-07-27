@@ -52,7 +52,7 @@ export class OhMyState {
   }
 
   async upsertState(state: Partial<IState>, context?: IOhMyContext): Promise<IState> {
-    const source = await this.storageService.get<IState>(context?.domain || state.domain);
+    const source = await this.storageService.get<IState>(context?.domain || state.domain || '');
     const retVal = {
       ...(source && { ...source }),
       ...state
@@ -92,7 +92,7 @@ export class OhMyState {
     const response = { ...await this.storageService.get<IMock>(sourceId), ...update };
 
     if (!update.id) {
-      delete response.id;
+      delete (response as Partial<IMock>).id;
     }
 
     if (!update.modifiedOn) {
@@ -120,7 +120,7 @@ export class OhMyState {
 
 
     if (!request.id) {
-      retVal.url = url2regex(request.url);
+      retVal.url = url2regex(request.url ?? '');
       retVal.id = uniqueId();
     }
 
@@ -161,17 +161,18 @@ export class OhMyState {
 
   async deleteRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
     const state = await this.getState(context);
-    request = (StateUtils.findRequest(state, request));
+    // findRequest returns undefined when the request is already gone.
+    request = StateUtils.findRequest(state, request) as IData;
 
     // Delete all response from the request
-    for (const resp of Object.values(request.mocks)) {
+    for (const resp of Object.values(request.mocks ?? {})) {
       // await this.storageService.remove(resp.id);
       // await OhMySendToBg.full(resp, payloadType.REMOVE, undefined, 'popup;deleteRequestMock');
-      await this.deleteResponse(resp.id, request.id, context);
+      await this.deleteResponse(resp.id, request.id as string, context);
     }
 
     // Delete the request
-    delete state.data[request.id];
+    delete state.data[request.id as string];
     await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;deleteRequestFromState');
     // await this.storageService.set(state.domain, state);
 

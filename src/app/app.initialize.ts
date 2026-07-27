@@ -18,7 +18,7 @@ export async function initializeApp(
   if (domain) { // Note: on reload these params do not exist anymore!
     appStateService.tabId = Number(tabId);
     appStateService.domain = domain;
-    appStateService.contentVersion = contentVersion;
+    appStateService.contentVersion = contentVersion ?? '';
   }
 
   // This should only happen with E2E testing

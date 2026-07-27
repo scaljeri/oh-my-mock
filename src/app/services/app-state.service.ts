@@ -27,11 +27,11 @@ export class AppStateService {
   // public get version(): string {
   // return VERSION.match(/^__/) ? manifest.version : VERSION;
   // }
-  private domainChangeSubject = new BehaviorSubject<ohMyDomain>(null);
+  private domainChangeSubject = new BehaviorSubject<ohMyDomain | null>(null);
   public domain$ = this.domainChangeSubject.asObservable().pipe(shareReplay());
 
   constructor(@Inject(APP_VERSION) public version: string) {
-    this._domain = sessionStorage.getItem('domain');
+    this._domain = sessionStorage.getItem('domain') ?? '';
     const tabId = sessionStorage.getItem('tabId');
 
     if (this._domain) {
@@ -76,7 +76,7 @@ export class AppStateService {
   }
 
   isSameDomain(domain: string): boolean {
-    return domain && this._domain === domain;
+    return !!domain && this._domain === domain;
   }
 
   hit(data: IData): void {

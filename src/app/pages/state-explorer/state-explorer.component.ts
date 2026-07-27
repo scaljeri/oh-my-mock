@@ -23,7 +23,8 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
   state: IState;
   selectedState: IState;
-  dataItem: IData;
+  // null while no request is expanded in the explorer.
+  dataItem: IData | null = null;
   showRowAction = true;
   mainActionIconName = 'copy_all';
   rowActionIconName = 'content_copy';
@@ -70,12 +71,12 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
       await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
     }
     this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);
-    await this.storeService.updateAux({ filteredRequests: null }, this.state.context);
+    await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
   }
 
   async onRequestCloned(request: IData) {
     // The filter must be resetted otherwise the new request will not show
-    await this.storeService.updateAux({ filteredRequests: null }, this.state.context);
+    await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
   }
 
   ngOnDestroy(): void {

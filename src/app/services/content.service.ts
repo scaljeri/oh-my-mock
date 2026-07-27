@@ -24,7 +24,7 @@ export class ContentService {
   constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
 
-    appStateService.domain$.subscribe((d: string) => {
+    appStateService.domain$.subscribe((d: string | null) => {
       if (!d) {
         return;
       }
@@ -49,7 +49,7 @@ export class ContentService {
         if (payload.type === payloadType.ERROR) {
           this.appStateService.addError(payload);
         }
-      } else if (sender.tab.id === this.appStateService.tabId) {
+      } else if (sender.tab?.id === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
           this.appStateService.domain = domain;
         }

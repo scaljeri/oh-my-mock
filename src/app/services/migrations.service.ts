@@ -22,7 +22,7 @@ export class MigrationsService {
     this.versions = Object.keys(migrations).sort(compareVersions);
   }
 
-  update(state: IOhMyMock): IOhMyMock {
+  update(state: IOhMyMock): IOhMyMock | null {
     if (!state) {
       return null;
     }
@@ -41,10 +41,10 @@ export class MigrationsService {
 
     for (let i = 0; i < this.versions.length; i++) {
       if (compareVersions(version, this.versions[i]) === -1) {
-        state = migrations[this.versions[i]](state);
+        state = migrations[this.versions[i]](state) as IOhMyMock;
 
         if (!state) {
-          return;
+          return null;
         }
 
         state.version = this.versions[i];

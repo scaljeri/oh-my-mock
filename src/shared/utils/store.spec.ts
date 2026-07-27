@@ -27,7 +27,7 @@ describe('StoreUtils', () => {
 
   describe('#init', () => {
     it('should build a store given a context', () => {
-      const store = StoreUtils.init({domain: 'foo'});
+      const store = StoreUtils.init({ domain: 'foo', preset: 'default' });
 
       expect(store.domains).toEqual(['foo']);
       expect(store.type).toBe(objectTypes.STORE);

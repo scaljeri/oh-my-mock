@@ -20,7 +20,7 @@ describe('AutocompleteDropdownComponent', () => {
         providers: [
           {
             provide: NgControl,
-            useValue: new FormControlDirective([], [], null, null)
+            useValue: new FormControlDirective([], [], null as never, null as never)
           }
        ]
      }

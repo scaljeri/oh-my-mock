@@ -26,7 +26,9 @@ export class FileDragDropDirective {
     if (!this._enabled) {
       return;
     }
-    event.dataTransfer.dropEffect = 'move';
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
     this.stopAndPreventDefault(event);
     this._dragInProgress = true;
   }
@@ -38,7 +40,9 @@ export class FileDragDropDirective {
       return;
     }
     this.stopAndPreventDefault(event);
-    event.dataTransfer.effectAllowed = 'copy';
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+    }
     this._dragInProgress = false;
   }
 

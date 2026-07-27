@@ -21,7 +21,7 @@ export class AnimatedListDirective {
     return this.sanitizer.bypassSecurityTrustStyle(`--animation-duration: ${duration}`);
   }
 
-  private meta: IMeta[];
+  private meta: IMeta[] | null = null;
   private duration = '0.8s';
 
   constructor(private element: ElementRef, private sanitizer: DomSanitizer) {
@@ -57,7 +57,7 @@ export class AnimatedListDirective {
 
       // IF needed because filtering makes this a bit weird
       if (this.rowRefs.get(itemIndex)) {
-        this.rowRefs.get(itemIndex).nativeElement.style.transform = `translateY(${offset - meta.offset}px)`;
+        this.rowRefs.get(itemIndex)!.nativeElement.style.transform = `translateY(${offset - meta.offset}px)`;
         offset += meta.height;
       }
     });
@@ -80,6 +80,6 @@ export class AnimatedListDirective {
       this.determineMeta();
     }
 
-    return this.meta[index];
+    return this.meta![index];
   }
 }

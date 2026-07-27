@@ -23,9 +23,9 @@ type SearchFilterData = {
 })
 export class RequestFilterComponent implements OnInit, OnDestroy {
   @Input() data: Record<ohMyDataId, IData>;
-  @Input() filterOptions: Record<string, boolean>;
-  @Input() filterStr: string;
-  @Input() lastResult: string[];
+  @Input() filterOptions: Record<string, boolean> | undefined;
+  @Input() filterStr: string | undefined;
+  @Input() lastResult: string[] | undefined;
 
   @Output() filteredData = new EventEmitter<string[]>();
   @Output() updateFilterOptions = new EventEmitter<Record<string, boolean>>();
@@ -35,7 +35,8 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   filterCtrl = new UntypedFormControl('');
   filterOptionsData = FILTER_SEARCH_OPTIONS;
   filterMappedOpts: Record<string, boolean>;
-  filterTrigger$ = new BehaviorSubject(undefined);
+  // A bare trigger: subscribers react to the emission, not to its value.
+  filterTrigger$ = new BehaviorSubject<void>(undefined);
 
   private subs = new Subscription();
 
@@ -96,7 +97,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
 
       if (filterStr?.currentValue !== undefined && (filterStr.currentValue === '' || !this.filterCtrl.value.match(filterStr?.currentValue))) {
         this.filterCtrl.setValue(filterStr?.currentValue, { emitEvent: false });
-      } else if (!filterStr && !filterStr?.currentValue && !this.filterCtrl.value) {
+      } else if (!filterStr && !this.filterCtrl.value) {
         return;
       }
 
@@ -104,8 +105,8 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
         this.setFilterOptions();
       }
 
-      if (data || lastResult && !lastResult.currentValue) {
-        this.filterTrigger$.next(null);
+      if (data || (lastResult && !lastResult.currentValue)) {
+        this.filterTrigger$.next();
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -115,7 +116,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
 
   onFilterOption(option: { id: string; state: boolean }): void {
     this.filterMappedOpts = transformFilterOptions(this.filterOptions);
-    this.filterTrigger$.next(null);
+    this.filterTrigger$.next();
 
     // this.updateFilterOptions.emit(this.filterOptions);
   }
@@ -140,7 +141,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
 
     return this.webWorkerService.search(input.data, input.words, input.includes)
       .pipe(map((output: string[]) => {
-        const out = Object.values(this.data).filter(item => output.includes(item.id) || !input.data[item.id])
+        const out = Object.values(this.data).filter(item => !item.id || output.includes(item.id) || !input.data[item.id])
         return out;
       }
       ));

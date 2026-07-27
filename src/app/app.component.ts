@@ -93,7 +93,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.version = state.version;
 
       this.isInitializing = false;
-      this.enabled = state.aux.appActive;
+      this.enabled = state.aux.appActive ?? false;
 
       if (this.enabled) {
         this.showDisabled = 0;
@@ -141,6 +141,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     const el = document.activeElement;
 
     if (
+      el &&
       !el.closest('.oh-no-backspace-nav') &&
       el.tagName.toLowerCase() !== 'input' &&
       el.getAttribute('contenteditable') !== 'true'

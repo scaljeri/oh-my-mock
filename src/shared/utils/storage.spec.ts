@@ -58,7 +58,7 @@ describe('Utils/Storage', () => {
 
   describe('#setStore', () => {
     it('should set the storage key', () => {
-      jest.spyOn(StorageUtils, 'set').mockReturnValue(null);
+      jest.spyOn(StorageUtils, 'set').mockResolvedValue(undefined);
       StorageUtils.setStore('store' as any);
 
       expect(StorageUtils.set).toHaveBeenCalledWith(STORAGE_KEY, 'store');

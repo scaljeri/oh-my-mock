@@ -14,7 +14,7 @@ export class FileUploaderComponent {
 
   @ViewChild('fileInput') inputRef: ElementRef<HTMLInputElement>;
 
-  addFiles(files: FileList): void {
+  addFiles(files: FileList | undefined): void {
     this.filesChanged.emit(files);
   }
 

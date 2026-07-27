@@ -44,7 +44,13 @@ export class PageDataListComponent implements OnInit, OnDestroy {
       this.hasData = Object.keys(this.state.data).length > 0;
 
       if (this.navigateToData) {
-        this.onDataSelect(PageDataListComponent.StateUtils.findRequest(state, this.navigateToData).id);
+        // findRequest returns undefined when the target is not in this state,
+        // which happens if the request was removed while the popup was closed.
+        const request = PageDataListComponent.StateUtils.findRequest(state, this.navigateToData);
+
+        if (request?.id) {
+          this.onDataSelect(request.id);
+        }
       }
       this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
     }));

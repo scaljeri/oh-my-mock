@@ -21,7 +21,7 @@ export class MigrateUtils {
     return obj && obj.version !== MigrateUtils.version; // && MigrateUtils.version !== '__OH' + '_MY_VERSION__';
   }
 
-  static migrate<T extends { version: string }>(data: T): T | undefined {
+  static migrate<T extends { version: string }>(data: T): T | null {
     const version = data.version || '0.0.0';
 
     if (MigrateUtils.version === DEV_VERSION || version === DEV_VERSION) {

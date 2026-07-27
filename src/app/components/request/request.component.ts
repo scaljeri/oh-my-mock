@@ -31,7 +31,19 @@ export class RequestComponent implements OnChanges, OnDestroy {
   @Input() context: IOhMyContext;
   @Input() blurImages = false;
 
-  response: IMock;
+  response: IMock | undefined;
+
+  /**
+   * The response currently on display.
+   *
+   * `response` is undefined while no mock is active, but the template wraps the
+   * whole detail card in `*ngIf="response"`, so every handler below can only
+   * fire once one is shown. Asserting that here keeps the assertion in one
+   * documented place instead of at each call site.
+   */
+  private get shownResponse(): IMock {
+    return this.response as IMock;
+  }
 
   public dialogIsOpen = false;
 
@@ -65,7 +77,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
       }));
 
     this.responseCtrl.valueChanges.subscribe(val => {
-      this.storeService.upsertResponse({ responseMock: val, id: this.response.id }, this.request, this.context);
+      this.storeService.upsertResponse({ responseMock: val, id: this.shownResponse.id }, this.request, this.context);
     });
 
     this.headersCtrl.valueChanges.subscribe(val => {
@@ -88,30 +100,30 @@ export class RequestComponent implements OnChanges, OnDestroy {
         return;
       }
 
-      this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : this.response?.headersMock?.['content-type'];
+      this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : (this.response?.headersMock?.['content-type'] ?? '');
       this.isResponseImage = false;
       this.hasMocks = Object.keys(this.request.mocks).length > 0;
 
-      this.responseCtrl.setValue(this.response.responseMock, { emitEvent: false });
-      this.headersCtrl.setValue(this.response.headersMock, { emitEvent: false });
-      if (this.response.headersMock['content-type']?.match(/image/)) {
+      this.responseCtrl.setValue(this.shownResponse.responseMock, { emitEvent: false });
+      this.headersCtrl.setValue(this.shownResponse.headersMock, { emitEvent: false });
+      if (this.shownResponse.headersMock?.['content-type']?.match(/image/)) {
         this.isResponseImage = true;
       }
     }
   }
 
   onDelete(): void {
-    this.storeService.deleteResponse(this.response.id, this.request.id, this.context);
+    this.storeService.deleteResponse(this.shownResponse.id, this.request.id, this.context);
   }
 
   onRevertResponse(): void {
-    this.storeService.upsertResponse({ responseMock: this.response.response, id: this.response.id }, this.request, this.context);
+    this.storeService.upsertResponse({ responseMock: this.shownResponse.response, id: this.shownResponse.id }, this.request, this.context);
   }
 
   onHeadersChange(headersMock: string): void {
     try {
       this.storeService.upsertResponse({
-        id: this.response.id,
+        id: this.shownResponse.id,
         headersMock: JSON.parse(headersMock)
       }, this.request, this.context);
     } catch (err) {
@@ -120,39 +132,39 @@ export class RequestComponent implements OnChanges, OnDestroy {
   }
 
   onRevertHeaders(): void {
-    this.storeService.upsertResponse({ headersMock: this.response.headers, id: this.response.id }, this.request, this.context);
+    this.storeService.upsertResponse({ headersMock: this.shownResponse.headers, id: this.shownResponse.id }, this.request, this.context);
   }
 
   openShowMockCode(): void {
-    const data = { code: this.response.jsCode, type: 'javascript', allowErrors: false };
+    const data = { code: this.shownResponse.jsCode, type: 'javascript', allowErrors: false };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({ jsCode: update, id: this.response.id }, this.request, this.context);
+      this.storeService.upsertResponse({ jsCode: update, id: this.shownResponse.id }, this.request, this.context);
     });
   }
 
   onShowResponseFullscreen(): void {
     const data = {
-      code: this.response.responseMock,
-      type: extractMimeType(this.response.headersMock?.['content-type'])
+      code: this.shownResponse.responseMock,
+      type: extractMimeType(this.shownResponse.headersMock?.['content-type'])
     };
 
     this.openCodeDialog(data, (update: string) => {
       this.storeService.upsertResponse({
-        responseMock: update, id: this.response.id
+        responseMock: update, id: this.shownResponse.id
       }, this.request, this.context);
     });
   }
 
   onShowHeadersFullscreen(): void {
-    const data = { code: this.response.headersMock, type: 'json', allowErrors: false };
+    const data = { code: this.shownResponse.headersMock, type: 'json', allowErrors: false };
     this.openCodeDialog(data, (update: string) => {
       this.onHeadersChange(update);
     });
   }
 
   onAnonymize() {
-    if (!isMimeTypeJSON(this.response.headersMock?.['content-type'])) {
+    if (!isMimeTypeJSON(this.shownResponse.headersMock?.['content-type'])) {
       return this.toast.error('Content-Type should be JSON');
     }
 
@@ -170,7 +182,7 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
       if (update) {
         this.storeService.upsertResponse({
-          id: this.response.id,
+          id: this.shownResponse.id,
           ...(update.data && { responseMock: update.data }),
           rules: update.rules }, this.request, this.context);
       }

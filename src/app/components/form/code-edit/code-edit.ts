@@ -1,7 +1,8 @@
 export type themes = 'vs' | 'vs-dark' | 'hc-black';
 
 export interface IOhMyCodeEditOptions {
-  code: string | Record<string, string>;
+  // A mock may have no body or no custom code yet, so the editor opens empty.
+  code: string | Record<string, string> | undefined;
   type: string;
   allowErrors?: boolean;
   readonly?: boolean;
