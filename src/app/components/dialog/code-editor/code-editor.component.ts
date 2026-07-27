@@ -9,11 +9,11 @@ import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
   styleUrls: ['./code-editor.component.scss']
 })
 export class DialogCodeEditorComponent implements OnInit {
-  type: string;
-  base: string;
+  type!: string;
+  base!: string;
   ctrl = new UntypedFormControl();
-  errors: IMarker[];
-  showErrors: boolean;
+  errors!: IMarker[];
+  showErrors!: boolean;
 
   constructor(
     @Optional() private dialogRef: MatDialogRef<DialogCodeEditorComponent>,

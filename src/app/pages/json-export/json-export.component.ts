@@ -18,13 +18,13 @@ import { StorageService } from '../../services/storage.service';
   styleUrls: ['./json-export.component.scss']
 })
 export class JsonExportComponent implements OnInit {
-  state: IState;
+  state!: IState;
   selected: Record<string, IData> = {};
   subscriptions: Subscription[] = [];
   exportList: IData[] = []
-  hasRequests: boolean;
+  hasRequests!: boolean;
 
-  @ViewChild(DataListComponent) dataListRef: DataListComponent;
+  @ViewChild(DataListComponent) dataListRef!: DataListComponent;
 
   constructor(
     private appStateService: AppStateService,

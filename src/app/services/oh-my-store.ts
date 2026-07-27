@@ -14,7 +14,7 @@ import { IOhMyResponseUpdate } from '@shared/packet-type';
   providedIn: 'root'
 })
 export class OhMyState {
-  public store: IOhMyMock;
+  public store!: IOhMyMock;
   public states: Record<ohMyDomain, IState> = {};
   public responses: Record<ohMyMockId, IMock> = {};
 

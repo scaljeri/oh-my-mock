@@ -8,7 +8,7 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./link.component.scss']
 })
 export class LinkComponent {
-  @Input() text: string;
+  @Input() text!: string;
   // @Input() url: Url;
 
   ctx: any;

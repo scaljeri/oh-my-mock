@@ -32,7 +32,7 @@ const VERSION = '__OH_MY_VERSION__';
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   enabled = false;
-  domain: string;
+  domain!: string;
 
   color = 'warn';
   // The sidebar is a permanent column in the new three-pane shell rather than
@@ -42,11 +42,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   page = '';
   dialogDone = false;
   isInitializing = true;
-  context: IOhMyContext;
-  version: string;
+  context!: IOhMyContext;
+  version!: string;
   showDisabled = -1;
-  stateSub: Subscription;
-  mockSub: Subscription;
+  stateSub!: Subscription;
+  mockSub!: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
   // null until the first connection attempt resolves, then true/false.

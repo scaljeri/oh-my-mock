@@ -7,12 +7,12 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
   styleUrls: ['./file-uploader.component.scss']
 })
 export class FileUploaderComponent {
-  @Input() multiple: boolean;
+  @Input() multiple!: boolean;
   @Input() dragDropEnabled = true;
   @Input() fileType = 'json';
   @Output() filesChanged = new EventEmitter<FileList>();
 
-  @ViewChild('fileInput') inputRef: ElementRef<HTMLInputElement>;
+  @ViewChild('fileInput') inputRef!: ElementRef<HTMLInputElement>;
 
   addFiles(files: FileList | undefined): void {
     this.filesChanged.emit(files);

@@ -9,7 +9,7 @@ import { IMock, IOhMyShallowMock, IState, IStore, statusCode } from '@shared/typ
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MockLabelComponent {
-  @Input() mock: IOhMyShallowMock | IMock;
+  @Input() mock!: IOhMyShallowMock | IMock;
 
   get code(): statusCode {
     return this.mock?.statusCode;

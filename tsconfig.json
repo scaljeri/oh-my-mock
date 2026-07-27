@@ -1,15 +1,9 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    // Strict mode, adopted one flag at a time rather than in a single sweep.
-    //
-    // `strictPropertyInitialization` is the one exception and is still open
-    // work: it reports 117 fields that Angular assigns outside the constructor
-    // (@Input, @ViewChild, values set in ngOnInit). The idiomatic fix is a
-    // definite-assignment assertion on each, which is a mechanical but
-    // deliberate pass — not something to switch on blind.
+    // Full strict mode. It was adopted one flag at a time rather than in one
+    // sweep; the branch history records what each flag cost.
     "strict": true,
-    "strictPropertyInitialization": false,
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,

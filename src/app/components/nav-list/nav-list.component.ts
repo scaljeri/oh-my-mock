@@ -22,7 +22,7 @@ import { OhMyStateService } from '../../services/state.service';
   styleUrls: ['./nav-list.component.scss']
 })
 export class NavListComponent {
-  @Input() context: IOhMyContext;
+  @Input() context!: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
 
   constructor(

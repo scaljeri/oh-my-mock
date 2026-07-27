@@ -13,7 +13,7 @@ import { IPacketPayload } from '@shared/packet-type';
 })
 export class ShowErrorsComponent implements OnInit {
   url = githubIssueUrl;
-  ctrl: UntypedFormControl;
+  ctrl!: UntypedFormControl;
 
   constructor(
     private cdr: ChangeDetectorRef,

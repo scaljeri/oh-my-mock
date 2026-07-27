@@ -24,19 +24,19 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
   ]
 })
 export class PresetComponent implements OnInit, OnChanges {
-  @Input() context: IOhMyContext;
-  @Input() theme: 'dark' | 'light';
+  @Input() context!: IOhMyContext;
+  @Input() theme!: 'dark' | 'light';
 
   presetCtrl = new UntypedFormControl();
   options: string[] = [];
   isPresetCopied = false;
   subscriptions = new Subscription();
-  presets: IOhMyPresets;
+  presets!: IOhMyPresets;
 
-  private state: IState;
-  private stateSub: Subscription;
+  private state!: IState;
+  private stateSub!: Subscription;
 
-  @ViewChild(AutocompleteDropdownComponent) dropdown: AutocompleteDropdownComponent;
+  @ViewChild(AutocompleteDropdownComponent) dropdown!: AutocompleteDropdownComponent;
 
   constructor(private toast: HotToastService,
     private stateService: OhMyStateService,

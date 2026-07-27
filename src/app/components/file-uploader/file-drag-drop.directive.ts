@@ -6,8 +6,8 @@ import { Directive, HostListener, Input, Output, EventEmitter, HostBinding } fro
 })
 export class FileDragDropDirective {
 
-  private _enabled: boolean;
-  private _dragInProgress: boolean;
+  private _enabled!: boolean;
+  private _dragInProgress!: boolean;
 
   @Input() set ohMyFileDragDrop(value: boolean | string) {
     this._enabled = value === '' ? true : !!value;

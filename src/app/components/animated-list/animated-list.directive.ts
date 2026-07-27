@@ -11,9 +11,9 @@ interface IMeta {
   selector: '[ohMyAnimatedList]'
 })
 export class AnimatedListDirective {
-  @Input() @HostBinding('class.animated-list') ohMyAnimatedList: number[];
+  @Input() @HostBinding('class.animated-list') ohMyAnimatedList!: number[];
 
-  @ContentChildren('animatedRow', { read: ElementRef }) rowRefs: QueryList<ElementRef>;
+  @ContentChildren('animatedRow', { read: ElementRef }) rowRefs!: QueryList<ElementRef>;
 
   @HostBinding("attr.style")
   public get valueAsStyle(): SafeStyle {

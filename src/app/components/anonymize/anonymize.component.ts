@@ -15,13 +15,13 @@ import { MatSelectChange } from '@angular/material/select';
   styleUrls: ['./anonymize.component.scss']
 })
 export class AnonymizeComponent implements OnInit {
-  ruleTypes: mockRuleType[];
+  ruleTypes!: mockRuleType[];
 
   newRuleTypeCtrl = new UntypedFormControl();
   newRuleValueCtrl = new UntypedFormControl('');
 
   mockTypes = MOCK_RULE_TYPES;
-  rules: IOhMyMockRule[];
+  rules!: IOhMyMockRule[];
 
   constructor(public dialog: MatDialog,
     @Optional() private dialogRef: MatDialogRef<AnonymizeComponent>,

@@ -7,10 +7,10 @@ import { Component, Input, OnInit } from '@angular/core';
   styleUrls: ['./mock-image.component.scss']
 })
 export class MockImageComponent implements OnInit {
-  @Input() contentType: string;
-  @Input() src: string;
+  @Input() contentType!: string;
+  @Input() src!: string;
 
-  b64Src: string;
+  b64Src!: string;
 
   constructor() { }
 

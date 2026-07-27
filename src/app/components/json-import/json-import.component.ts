@@ -19,7 +19,7 @@ export class JsonImportComponent {
   isUploading = false;
   skipCtrl = new UntypedFormControl(false);
   replaceCtrl = new UntypedFormControl(false);
-  context: IOhMyContext;
+  context!: IOhMyContext;
 
   constructor(
     @Optional() public dialogRef: MatDialogRef<JsonImportComponent>,

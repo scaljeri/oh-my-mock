@@ -15,11 +15,11 @@ import { OhMyStateService } from '../../services/state.service';
 })
 export class PageMockComponent implements OnInit {
   static StateUtils = StateUtils;
-  public data: IData;
-  private subscription: Subscription;
-  public context: IOhMyContext;
+  public data!: IData;
+  private subscription!: Subscription;
+  public context!: IOhMyContext;
 
-  aux: IOhMyAux;
+  aux!: IOhMyAux;
 
   // @Dispatch() upsertData = (data: IData) => new UpsertData({ id: this.data.id, ...data }, this.context);
 

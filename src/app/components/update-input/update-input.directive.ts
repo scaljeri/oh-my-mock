@@ -13,10 +13,10 @@ import { FormControlDirective, NgControl } from '@angular/forms';
   selector: '[ohMyUpdateInput]'
 })
 export class UpdateInputDirective {
-  @Input('ohMyUpdateInput') input: string;
+  @Input('ohMyUpdateInput') input!: string;
 
   private canUpdate = () => !this.isActive();
-  private selector: string;
+  private selector!: string;
 
   constructor(
     private element: ElementRef,

@@ -13,13 +13,13 @@ import { OhMyState } from '../../../services/oh-my-store';
   styleUrls: ['./mock-details.component.scss']
 })
 export class MockDetailsComponent implements OnInit, OnChanges {
-  @Input() response: IMock;
-  @Input() requestId: string;
-  @Input() context: IOhMyContext;
+  @Input() response!: IMock;
+  @Input() requestId!: string;
+  @Input() context!: IOhMyContext;
 
   private subscriptions = new Subscription();
   requiredMsg = REQUIRED_MSG;
-  form: UntypedFormGroup;
+  form!: UntypedFormGroup;
 
   mimeTypes = [
     'text/css',
@@ -30,7 +30,7 @@ export class MockDetailsComponent implements OnInit, OnChanges {
     'text/plain',
     'application/json'
   ];
-  filteredMimeTypes$: Observable<string[]>;
+  filteredMimeTypes$!: Observable<string[]>;
 
   constructor(
     private storeService: OhMyState, public dialog: MatDialog,

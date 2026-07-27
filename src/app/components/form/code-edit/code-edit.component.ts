@@ -34,9 +34,9 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
 
   @Output() errors = new EventEmitter<IMarker[]>();
 
-  originalCode: string;
-  previousCode: string;
-  updatedCode: string;
+  originalCode!: string;
+  previousCode!: string;
+  updatedCode!: string;
 
   // vs, vs-dark
   public editorOptions = {} as any;
@@ -49,9 +49,9 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   public diffCode: string | undefined;
 
   public readonly = false;
-  public orig: string;
+  public orig!: string;
 
-  value: string;
+  value!: string;
   editorCtrl = new UntypedFormControl('', { updateOn: 'blur' });
   onChange: any = () => { }
   onTouch: any = () => { }

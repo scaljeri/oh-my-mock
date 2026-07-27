@@ -32,12 +32,12 @@ const MIME_TYPES = [
   ]
 })
 export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor {
-  @Input() contentType: string;
+  @Input() contentType!: string;
 
   ctrl = new UntypedFormControl(null, { updateOn: 'blur' });
   options = MIME_TYPES;
 
-  private originalContentType: string;
+  private originalContentType!: string;
 
   ngAfterViewInit(): void {
     this.ctrl.valueChanges.pipe(

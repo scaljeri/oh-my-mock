@@ -16,8 +16,8 @@ export interface IPage {
 })
 export class AppStateService {
   private _domain: string;
-  private _tabId: number;
-  #contentVersion: string;
+  private _tabId!: number;
+  #contentVersion!: string;
 
   private errorSubject = new Subject<IPacketPayload>();
   public errors$ = this.errorSubject.asObservable().pipe(shareReplay());

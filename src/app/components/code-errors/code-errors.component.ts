@@ -8,8 +8,8 @@ import { IMarker } from '../form/code-edit/code-edit';
   styleUrls: ['./code-errors.component.scss']
 })
 export class CodeErrorsComponent {
-  @Input() errors: IMarker[];
-  @Input() allowErrors: boolean;
+  @Input() errors!: IMarker[];
+  @Input() allowErrors!: boolean;
   @Output() done = new EventEmitter<boolean>();
 
   displayedColumns = ['startLineNumber', 'severity', 'message'];

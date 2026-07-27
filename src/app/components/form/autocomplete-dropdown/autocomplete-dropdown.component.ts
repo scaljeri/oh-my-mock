@@ -22,9 +22,9 @@ import { MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger }
   ]
 })
 export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, ControlValueAccessor {
-  @Input() options: string[];
+  @Input() options!: string[];
   @Input() optionLabels: Record<string, string> = {};
-  @Input() label: string;
+  @Input() label!: string;
   @Input() showAllOnFocus = false;
   @Input() clearOnFocus = false;
   @Input() showCopy = false;
@@ -38,7 +38,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Output() clear = new EventEmitter<void>();
 
   internalValue = '';
-  _ctrl: UntypedFormControl;
+  _ctrl!: UntypedFormControl;
   filteredMethodOptions: string[] = [];
 
   onChange: any = () => { }
@@ -46,8 +46,8 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
 
   private autoCompleteActive = false;
 
-  @ViewChild('input') inputRef: ElementRef;
-  @ViewChild('trigger', { read: MatAutocompleteTrigger }) trigger: MatAutocompleteTrigger;
+  @ViewChild('input') inputRef!: ElementRef;
+  @ViewChild('trigger', { read: MatAutocompleteTrigger }) trigger!: MatAutocompleteTrigger;
 
   constructor(@Self() public ngControl: NgControl,
     private cdr: ChangeDetectorRef) {

@@ -20,23 +20,23 @@ import { MatSelectChange } from '@angular/material/select';
   styleUrls: ['./request-header.component.scss']
 })
 export class RequestHeaderComponent implements OnInit, OnChanges {
-  @Input() request: IData;
-  @Input() context: IOhMyContext;
+  @Input() request!: IData;
+  @Input() context!: IOhMyContext;
 
-  public statusCode: statusCode;
-  public mockIds: ohMyMockId[];
+  public statusCode!: statusCode;
+  public mockIds!: ohMyMockId[];
   public methodCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
-  public filteredMethodOptions: Observable<string[]>;
+  public filteredMethodOptions!: Observable<string[]>;
   public typeCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
-  public filteredTypeOptions: Observable<string[]>;
+  public filteredTypeOptions!: Observable<string[]>;
   public urlCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   public presetInfo = presetInfo;
 
-  public oldResponses: string[];
+  public oldResponses!: string[];
 
   public availableMethods = METHODS;
   subscriptions: Subscription[] = [];
-  state: IState;
+  state!: IState;
 
   constructor(
     public dialog: MatDialog,

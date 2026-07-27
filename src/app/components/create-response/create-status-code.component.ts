@@ -15,9 +15,9 @@ import { IMock, IState } from '@shared/type';
   styleUrls: ['./create-status-code.component.scss']
 })
 export class CreateStatusCodeComponent {
-  @Input() mock: IMock;
+  @Input() mock!: IMock;
 
-  public error: string;
+  public error!: string;
   public form = new UntypedFormGroup({
     statusCode: new UntypedFormControl('', Validators.required),
     label: new UntypedFormControl(),

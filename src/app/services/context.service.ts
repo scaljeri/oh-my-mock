@@ -10,8 +10,8 @@ const VERSION = '__OH_MY_VERSION__';
 })
 export class ContextService implements IOhMyContext {
   public version = VERSION;
-  public domain: ohMyDomain;
-  public preset: string;
+  public domain!: ohMyDomain;
+  public preset!: string;
 
   private subject = new BehaviorSubject<IOhMyContext>(this);
   public stream$ = this.subject.asObservable().pipe(share());

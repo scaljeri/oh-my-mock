@@ -27,8 +27,8 @@ import { StorageService } from '../../services/storage.service';
   styleUrls: ['./request.component.scss']
 })
 export class RequestComponent implements OnChanges, OnDestroy {
-  @Input() request: IData;
-  @Input() context: IOhMyContext;
+  @Input() request!: IData;
+  @Input() context!: IOhMyContext;
   @Input() blurImages = false;
 
   response: IMock | undefined;
@@ -49,9 +49,9 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   subscriptions = new Subscription();
 
-  activeMock$: Observable<IMock>;
-  responseType: string;
-  contentType: string;
+  activeMock$!: Observable<IMock>;
+  responseType!: string;
+  contentType!: string;
 
   responseCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   headersCtrl = new UntypedFormControl(null, { updateOn: 'blur' });

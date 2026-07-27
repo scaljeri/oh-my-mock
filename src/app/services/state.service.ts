@@ -22,22 +22,22 @@ import { AppStateService } from './app-state.service';
 })
 export class OhMyStateService {
   private stateSubject = new BehaviorSubject<IState | undefined>(undefined);
-  public state$: Observable<IState>; //  = this.stateSubject.asObservable().pipe(shareReplay(1));
-  public state: IState;
+  public state$!: Observable<IState>; //  = this.stateSubject.asObservable().pipe(shareReplay(1));
+  public state!: IState;
 
   private responseSubject = new BehaviorSubject<IMock | undefined>(undefined)
   public response$ = this.responseSubject.asObservable().pipe(filter(m => !!m));
 
-  public context: IOhMyContext;
+  public context!: IOhMyContext;
   private contextSubject = new BehaviorSubject<IOhMyContext | undefined>(undefined);
   public context$ = this.contextSubject.asObservable().pipe(shareReplay(1));
 
-  public domain: ohMyDomain;
+  public domain!: ohMyDomain;
   private domainSubject = new BehaviorSubject<ohMyDomain | undefined>(undefined);
   public domain$ = this.domainSubject.asObservable().pipe(shareReplay(1));
-  private appSub: Subscription;
+  private appSub!: Subscription;
 
-  public store: IOhMyMock;
+  public store!: IOhMyMock;
   private storeSubject = new BehaviorSubject<IOhMyMock | undefined>(undefined);
   public store$ = this.storeSubject.asObservable().pipe(shareReplay(1));
 

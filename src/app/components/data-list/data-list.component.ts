@@ -59,11 +59,11 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
-  @Input() context: IOhMyContext; // context !== state,context (but it can be)
-  @Input() showDelete: boolean;
-  @Input() showClone: boolean;
-  @Input() showActivate: boolean;
-  @Input() showExport: boolean;
+  @Input() context!: IOhMyContext; // context !== state,context (but it can be)
+  @Input() showDelete!: boolean;
+  @Input() showClone!: boolean;
+  @Input() showActivate!: boolean;
+  @Input() showExport!: boolean;
   @Input() showPreset = true;
   @Input() showActivateToggle = true;
   @Input() @HostBinding('class.togglable') togglableRows = true;
@@ -78,10 +78,10 @@ export class DataListComponent implements OnInit, OnDestroy {
   @Output() filteredList = new EventEmitter<IData[]>();
   @Output() cloned = new EventEmitter<IData>();
 
-  @ViewChild(RequestFilterComponent) filterComp: RequestFilterComponent;
+  @ViewChild(RequestFilterComponent) filterComp!: RequestFilterComponent;
 
   public selection = new SelectionModel<number>(true);
-  public defaultList: number[];
+  public defaultList!: number[];
   public hitcount: number[] = [];
   public visibleBtns = 1;
   public disabled = false;
@@ -92,21 +92,21 @@ export class DataListComponent implements OnInit, OnDestroy {
   subscriptions = new Subscription();
   filterCtrl = new UntypedFormControl('');
   // filteredDataList: IDataView[];
-  mocks: Record<string, IMock>;
+  mocks!: Record<string, IMock>;
   requestCount = 0;
   filteredRequests: string[] | undefined;
   newAutoActivate = true;
 
-  public viewList: ohMyDataId[];
+  public viewList!: ohMyDataId[];
   scenarioOptions: string[] = [];
-  presets: string[];
+  presets!: string[];
   isPresetCopy = false;
   hasFilterOptionsChanged = false;
 
   isSearching = false;
-  public data: Record<ohMyDataId, IData>;
-  worker: Worker;
-  private workerTimeoutId: number;
+  public data!: Record<ohMyDataId, IData>;
+  worker!: Worker;
+  private workerTimeoutId!: number;
   searchSubj = new Subject();
   filterOptionsCtrl = new UntypedFormControl();
   filterOptions: Record<string, boolean> | undefined = undefined;

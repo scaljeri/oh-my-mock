@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./config.component.scss']
 })
 export class ConfigComponent implements OnInit {
-  test: string;
+  test!: string;
 
   ngOnInit(): void {
     chrome.debugger.onEvent.addListener((source, method, params: any) => {

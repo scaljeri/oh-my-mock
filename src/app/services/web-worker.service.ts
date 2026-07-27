@@ -11,7 +11,7 @@ import { OH_MY_SEARCH_WORKER_FACTORY, SearchWorkerFactory } from './search-worke
   providedIn: 'root'
 })
 export class WebWorkerService {
-  private worker: Worker;
+  private worker!: Worker;
   private searchSubject = new Subject<string[]>();
   public searchResults = this.searchSubject.asObservable();
 

@@ -18,21 +18,21 @@ import { WebWorkerService } from '../../services/web-worker.service';
 })
 export class PageStateExplorerComponent implements OnInit, OnDestroy {
   panelOpenState = true;
-  domains: domain[];
+  domains!: domain[];
   selectedDomain = '-';
 
-  state: IState;
-  selectedState: IState;
+  state!: IState;
+  selectedState!: IState;
   // null while no request is expanded in the explorer.
   dataItem: IData | null = null;
   showRowAction = true;
   mainActionIconName = 'copy_all';
   rowActionIconName = 'content_copy';
   subscriptions = new Subscription();
-  context: IOhMyContext;
-  hasSelectedStateAnyRequests: boolean;
+  context!: IOhMyContext;
+  hasSelectedStateAnyRequests!: boolean;
 
-  @ViewChildren(MatExpansionPanel) panels: QueryList<MatExpansionPanel>;
+  @ViewChildren(MatExpansionPanel) panels!: QueryList<MatExpansionPanel>;
 
   constructor(
     private stateStream: OhMyStateService,

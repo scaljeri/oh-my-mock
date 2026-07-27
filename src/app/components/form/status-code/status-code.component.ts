@@ -34,7 +34,7 @@ const STATUS_CODE_LABELS = {
   ]
 })
 export class StatusCodeComponent implements AfterViewInit, ControlValueAccessor {
-  @Input() statusCode: number;
+  @Input() statusCode!: number;
 
   ctrl = new UntypedFormControl(null, { updateOn: 'blur' });
   options = STATUS_CODES;

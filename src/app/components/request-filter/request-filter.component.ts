@@ -22,7 +22,7 @@ type SearchFilterData = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RequestFilterComponent implements OnInit, OnDestroy {
-  @Input() data: Record<ohMyDataId, IData>;
+  @Input() data!: Record<ohMyDataId, IData>;
   @Input() filterOptions: Record<string, boolean> | undefined;
   @Input() filterStr: string | undefined;
   @Input() lastResult: string[] | undefined;
@@ -34,7 +34,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
 
   filterCtrl = new UntypedFormControl('');
   filterOptionsData = FILTER_SEARCH_OPTIONS;
-  filterMappedOpts: Record<string, boolean>;
+  filterMappedOpts!: Record<string, boolean>;
   // A bare trigger: subscribers react to the emission, not to its value.
   filterTrigger$ = new BehaviorSubject<void>(undefined);
 

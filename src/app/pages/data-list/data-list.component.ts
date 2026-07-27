@@ -20,10 +20,10 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   public showRowAction = false;
-  public state: IState;
-  public domain: string;
-  public navigateToData: IOhMyMockContext;
-  context: IOhMyContext;
+  public state!: IState;
+  public domain!: string;
+  public navigateToData!: IOhMyMockContext;
+  context!: IOhMyContext;
   hasData = false;
 
   constructor(
