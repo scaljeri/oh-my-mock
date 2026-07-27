@@ -68,6 +68,13 @@ The e2e suite needs a build first (`npm run build`) and runs headless without a
 display. See [tests/README.md](./tests/README.md) and
 [test-site/README.md](./test-site/README.md).
 
+### Architecture
+The parts that cannot be understood from a single file — how a request travels
+from the patched `fetch` to a mocked answer, how the contexts talk to each
+other, and why interception works by injecting a script rather than through an
+extension API — are written up in
+[docs/architecture](./docs/architecture/README.md).
+
 ### Project structure
 This project consists of a couple of different part, each with a specific task. Those parts are:
 
