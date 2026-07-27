@@ -157,15 +157,29 @@ Do not merge the branch. It is 134 files against a codebase that has since moved
 through MV3, Angular 22 and full strict mode; the merge would be a rewrite with
 extra steps.
 
-Take the five ideas as separate, tested changes. Suggested order — cheapest and
-most useful first:
+Take the ideas as separate, tested changes.
 
-1. `popupActive` to the store (small, and it unblocks thinking about the popup
-   requirement)
-2. Typed action payloads + tighten `addPacket` (closes a proven bug class)
-3. Per-concept type files and naming (mechanical, no behaviour change)
-4. Context as a tagged union (replaces the current two-type split)
-5. Domain rename + request normalisation (largest; needs a storage migration)
+**Done:**
+
+1. ✅ `popupActive` moved to the store — `IOhMyMock.popupActive`, with a
+   migration dropping the stale `aux` copy.
+2. ✅ Typed the queue rather than each action payload: `OhMyQueue<T = IPacket>`
+   gives the same guarantee for far less churn.
+4. ✅ Tagged union, applied to the *packet* context (`kind: 'patch'`), which is
+   where the optional-fields-that-belong-together problem actually lives.
+
+**Left, with reasons:**
+
+3. **Per-concept type files — deliberately skipped for now.** It is the only
+   item that changes no behaviour and closes no bug class, while touching 83
+   import sites. Worse, items 4 and 5 rewrite the contents of exactly those
+   files, so splitting first means doing the work twice. Do it *after* the model
+   changes have settled.
+5. **Domain rename + request normalisation — the big one.** Today every request
+   is embedded in its domain record, so saving one mock rewrites the whole
+   domain in `chrome.storage`. Needs a storage migration written from scratch.
+6. **Sticky rows — wait for the redesign.** The request list is being rebuilt;
+   implementing this against the current one is work that gets thrown away.
 
 Note on 5: the branch's `src/app/migrations/current-domain.ts` is only twelve
 lines and addresses an older model change, so it is not the head start it might
