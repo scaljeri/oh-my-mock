@@ -248,6 +248,21 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.stateSubject.next(state);
   }
 
+  /**
+   * What the status pill reads for a row, following the design:
+   *
+   *   Off          the preset is disabled — the request goes to the server
+   *   Passthrough  enabled, but no response is selected to serve
+   *   Mocked       enabled and serving a stored response
+   */
+  rowState(row: IData): 'Mocked' | 'Passthrough' | 'Off' {
+    if (!row.enabled[this.context.preset]) {
+      return 'Off';
+    }
+
+    return row.selected[this.context.preset] ? 'Mocked' : 'Passthrough';
+  }
+
   trackBy(index: number, row: IData): string {
     return row.id ?? ''; // type + row.method + row.url;
   }

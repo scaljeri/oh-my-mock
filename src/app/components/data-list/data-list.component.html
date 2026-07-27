@@ -65,35 +65,33 @@
   </div>
 </div>
 
-<ol data-table *ngIf="state$ | async as state">
-  <li class="header">
-    <span class="type">Type</span>
-    <span class="method">Method</span>
-    <div class="url">
-      <span>Url</span>
+<ng-container *ngIf="state$ | async as state">
+<!-- Filter toolbar: its own row above the table, as in the design. It used to
+     live inside the header row's Url cell. -->
+<div class="oh-toolbar" [ngClass]="{ hidden: !state || hideFilter === true || requestCount === 0 }">
+  <oh-my-request-filter
+    [data]="state.data"
+    [filterOptions]="filterOptions"
+    [filterStr]="filterKeywords"
+    [lastResult]="filteredRequests"
+    (update)="onFilterUpdate($event)"
+    (updateFilterOptions)="onFilterUpdateOptions($event)"
+    (updateFilterStr)="onFilterUpdateStr($event)"
+  ></oh-my-request-filter>
+</div>
 
-      <oh-my-request-filter
-        [ngClass]="{
-          hidden: !state || hideFilter === true || requestCount === 0
-        }"
-        [data]="state.data"
-        [filterOptions]="filterOptions"
-        [filterStr]="filterKeywords"
-        [lastResult]="filteredRequests"
-        (update)="onFilterUpdate($event)"
-        (updateFilterOptions)="onFilterUpdateOptions($event)"
-        (updateFilterStr)="onFilterUpdateStr($event)"
-      ></oh-my-request-filter>
-      <!-- <mat-spinner *ngIf="isSearching" [diameter]="20"></mat-spinner> -->
-        <!-- (filteredData)="onFilterUpdateData($event)" -->
-    </div>
-    <span class="mock">Response</span>
-    <span class="actions btns-1">Actions</span>
+<ol data-table>
+  <li class="oh-header">
+    <span class="oh-col">Method</span>
+    <span class="oh-col">Endpoint</span>
+    <span class="oh-col">Response</span>
+    <span class="oh-col">Status</span>
+    <span class="oh-col oh-col--end">On</span>
   </li>
 
   <li
     [title]="row.id"
-    class="data-row"
+    class="oh-row"
     x-test="list-request-item"
     *ngFor="
       let row of filteredRequests | dataToViewList: state.data;
@@ -102,31 +100,50 @@
     "
     (click)="onDataClick(row, index)"
     [ngClass]="{
-      'row-clickable': togglableRows,
+      'is-clickable': togglableRows,
       'is-selected': selection.isSelected(index),
-      'is-active': row.enabled[context?.preset],
-      'is-modified': row.mocks[row.selected[context?.preset]]?.modifiedOn
+      'is-enabled': row.enabled[context.preset],
+      'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn
     }"
   >
-    <span class="row-number">{{ index + 1 }}</span>
-    <span class="method">{{ row.requestType }}</span>
-    <span class="type">{{ row.method }}</span>
-    <span
-      class="url"
-      [attr.data-content-start]="row.urlStart"
-      [attr.data-content-end]="row.urlEnd"
-    ></span>
-    <span class="mock">
-      <oh-my-mock-label
-        *ngIf="row.selected[context?.preset] as mockId"
-        [mock]="row.mocks[mockId]"
-      ></oh-my-mock-label>
+    <span class="oh-row__method" [attr.data-method]="row.method">{{ row.method }}</span>
+
+    <span class="oh-row__endpoint">
+      <span
+        class="oh-row__url"
+        [attr.data-content-start]="row.urlStart"
+        [attr.data-content-end]="row.urlEnd"
+      ></span>
+      <span class="oh-row__meta">
+        {{ row.requestType | lowercase }}
+        <ng-container *ngIf="row.lastHit"> · last hit {{ row.lastHit | date: 'shortTime' }}</ng-container>
+        <ng-container *ngIf="row.mocks[row.selected[context.preset]]?.label as label"> · {{ label }}</ng-container>
+      </span>
     </span>
+
+    <span class="oh-row__response" *ngIf="row.mocks[row.selected[context.preset]] as mock; else noResponse">
+      <span class="oh-row__code" [attr.data-tone]="mock.statusCode | ohStatusCodeTone">
+        {{ mock.statusCode || '—' }}
+      </span>
+      <span class="oh-row__delay">{{ mock.modifiedOn ? 'modified' : 'recorded' }}</span>
+    </span>
+    <ng-template #noResponse>
+      <span class="oh-row__response">
+        <span class="oh-row__code" data-tone="muted">—</span>
+        <span class="oh-row__delay">no response</span>
+      </span>
+    </ng-template>
+
+    <span class="oh-row__state">
+      <span class="oh-pill" [attr.data-state]="rowState(row)">{{ rowState(row) }}</span>
+    </span>
+
     <ng-container
       *ngTemplateOutlet="actions; context: { row: row, index: index }"
     ></ng-container>
   </li>
 </ol>
+</ng-container>
 
 <ng-template #actions let-row="row" let-index="index">
   <div class="actions btns-1">

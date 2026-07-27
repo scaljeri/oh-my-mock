@@ -1,4 +1,5 @@
 @use 'mixins' as *;
+@use 'tokens' as t;
 @use 'legenda' as *;
 
 :host {
@@ -33,125 +34,11 @@
   }
 }
 
-.is-active .mock oh-my-mock-label {
-  opacity: 1;
-}
 
-li:not(.is-selected) {
-  &.is-active {
-    &,
-    &:hover .btn-wrapper {
-      background-color: $active;
-    }
-  }
 
-  &.is-active.is-modified {
-    &,
-    &:hover .btn-wrapper {
-      background-color: $activeModified;
-    }
-  }
 
-  &.is-modified:not(.is-active) {
-    &,
-    &:hover .btn-wrapper {
-      background-color: $inactiveModified;
-    }
-  }
 
-  &:not(.is-active):not(.is-modified) {
-    &,
-    &:hover .btn-wrapper {
-      background-color: $inactive;
-    }
-  }
-}
 
-li.is-selected {
-  &,
-  .btn-wrapper {
-    background-color: $selected;
-  }
-
-  * {
-    color: #fff;
-  }
-}
-
-ol[data-table] {
-  @include oh-list-unstyled;
-  background-color: $color-light;
-
-  .header {
-    border-top: none;
-    align-items: center;
-    display: flex;
-    font-size: 12px;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.54);
-    height: 50px;
-    padding: 0 $spacer-4;
-
-    .url {
-      align-items: center;
-      display: flex;
-      height: 50px;
-      position: relative;
-    }
-  }
-
-  li {
-    border-top: 5px solid transparent;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-    padding: 0;
-    position: relative;
-  }
-
-  li.data-row {
-    display: flex;
-    padding: 0 $spacer-4;
-    position: relative;
-    transition-property: transform;
-    transition-duration: var(--animation-duration, 0.8s);
-    height: 46px;
-
-    span {
-      user-select: none;
-    }
-
-    &:hover {
-      .btn-wrapper {
-        display: flex;
-        position: absolute;
-        right: 0;
-
-        button + button {
-          display: block;
-        }
-      }
-    }
-
-    &.row-clickable {
-      cursor: pointer;
-    }
-  }
-}
-
-.data-row {
-  padding: 20px 10px;
-  border-bottom: solid 1px #ccc;
-  color: rgba(0, 0, 0, 0.87);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-  font-size: 14px;
-
-  &.togglable {
-    cursor: pointer;
-  }
-}
 
 .cdk-drag-preview {
   box-sizing: border-box;
@@ -178,38 +65,10 @@ ol[data-table] {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-span.method {
-  flex: 0 0 60px;
-  padding-left: $spacer-2;
-}
-
-span.type {
-  flex: 0 0 55px;
-  padding-left: $spacer-2;
-}
-
-.url {
-  @include oh-ellipsis-middle;
-
-  display: inline-flex;
-  flex: 1;
-  padding-left: $spacer-2;
-  overflow: hidden;
-  white-space: nowrap;
-}
 
 
-.mock {
-  flex: 0 0 120px;
-  display: inline-flex;
-  justify-content: space-between;
-  overflow: hidden;
-  padding-left: $spacer-2;
 
-  oh-my-mock-label {
-    opacity: 0.3;
-  }
-}
+
 
 .actions {
   align-items: center;
@@ -266,13 +125,7 @@ span.type {
 }
 
 // Highlight
-.is-hit-a {
-  animation: highlight-a 1000ms ease-out;
-}
 
-.is-hit-b {
-  animation: highlight-b 500ms ease-out;
-}
 
 oh-my-request-filter {
   @include oh-position(absolute, 0 0 0 50%);
@@ -336,9 +189,161 @@ oh-my-request-filter {
   }
 }
 
-.row-number {
-  position: absolute;
-  left: $spacer-1;
-  font-size: 8px;
-  top: $spacer-1;
+
+
+// ---------------------------------------------------------------------------
+// Request list, following `design/Mock Manager v2.dc.html`.
+//
+// The grid is declared once in `$oh-row-columns` and used by both the header
+// and the rows, so the two cannot drift apart.
+// ---------------------------------------------------------------------------
+
+%oh-grid-row {
+  display: grid;
+  grid-template-columns: t.$oh-row-columns;
+  align-items: center;
+  gap: t.$oh-row-gap;
+  padding: 0 t.$oh-row-padding-x;
+}
+
+li.oh-header {
+  @extend %oh-grid-row;
+
+  height: t.$oh-table-header-height;
+  background: t.$oh-bg-subtle;
+  border-bottom: 1px solid t.$oh-border-soft;
+}
+
+.oh-col {
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$oh-text-faint;
+
+  &--end {
+    text-align: right;
+  }
+}
+
+li.oh-row {
+  @extend %oh-grid-row;
+
+  height: t.$oh-row-height;
+  border-bottom: 1px solid t.$oh-row-border;
+  background: t.$oh-bg-surface;
+  // The selected marker is an inset shadow rather than a border, so the row
+  // does not shift by a pixel when it becomes selected.
+  box-shadow: inset 2px 0 0 0 transparent;
+  transition: background 120ms ease, box-shadow 120ms ease;
+
+  &.is-clickable {
+    cursor: pointer;
+  }
+
+  &:hover {
+    background: t.$oh-row-hover;
+  }
+
+  &.is-selected {
+    background: t.$oh-bg-selected;
+    box-shadow: inset 2px 0 0 0 t.$oh-brand;
+  }
+}
+
+.oh-row__method {
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  letter-spacing: 0.02em;
+  text-align: center;
+  border-radius: t.$oh-radius-sm;
+  padding: 3px 0;
+  color: t.$oh-text-subtle;
+  background: t.$oh-bg-muted;
+
+  &[data-method='GET']    { color: t.$oh-info;           background: t.$oh-info-tint; }
+  &[data-method='POST']   { color: t.$oh-success-strong; background: t.$oh-success-tint; }
+  &[data-method='PUT']    { color: t.$oh-warning;        background: t.$oh-warning-tint; }
+  &[data-method='PATCH']  { color: t.$oh-warning;        background: t.$oh-warning-tint; }
+  &[data-method='DELETE'] { color: t.$oh-danger;         background: t.$oh-danger-tint; }
+}
+
+.oh-row__endpoint {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.oh-row__url {
+  // Middle ellipsis: request urls share long prefixes, so trimming the middle
+  // keeps both the path root and the distinguishing tail readable.
+  @include oh-ellipsis-middle;
+
+  display: inline-flex;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.oh-row__meta {
+  @include oh-ellipsis;
+
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-faint;
+}
+
+.oh-row__response {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.oh-row__code {
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-base;
+  font-weight: t.$oh-weight-medium;
+
+  &[data-tone='success'] { color: t.$oh-success-strong; }
+  &[data-tone='warning'] { color: t.$oh-warning; }
+  &[data-tone='danger']  { color: t.$oh-danger; }
+  &[data-tone='muted']   { color: t.$oh-text-fainter; }
+}
+
+.oh-row__delay {
+  font-size: t.$oh-size-xs;
+  color: t.$oh-text-fainter;
+}
+
+.oh-pill {
+  display: inline-block;
+  font-size: t.$oh-size-sm;
+  font-weight: t.$oh-weight-semibold;
+  border-radius: t.$oh-radius-pill;
+  padding: 3px 9px;
+
+  &[data-state='Mocked']      { color: t.$oh-success-strong; background: t.$oh-success-tint; }
+  &[data-state='Passthrough'] { color: t.$oh-text-muted;     background: t.$oh-bg-sunken; }
+  &[data-state='Off']         { color: t.$oh-text-fainter;   background: t.$oh-bg-muted; }
+}
+
+// Filter toolbar above the table.
+.oh-toolbar {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-3;
+  padding: t.$oh-space-3 t.$oh-row-padding-x;
+  border-bottom: 1px solid t.$oh-border-soft;
+
+  &.hidden {
+    display: none;
+  }
+
+  oh-my-request-filter {
+    flex: 1;
+    min-width: 0;
+  }
 }

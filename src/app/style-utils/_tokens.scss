@@ -43,6 +43,17 @@ $oh-success-strong: #0e8a5f; // success text on light backgrounds
 $oh-success-tint: #e6f6ef;
 
 $oh-danger: #d93b4b; // 4xx/5xx status codes, destructive actions
+$oh-danger-tint: #fef0f1;
+
+$oh-warning: #b5730b; // 3xx status codes, PUT
+$oh-warning-tint: #fdf3e3;
+
+$oh-info: #2563c9; // GET
+$oh-info-tint: #eaf1fd;
+
+// Row states in the request list.
+$oh-row-border: #eef0f3;
+$oh-row-hover: #fafafc;
 
 // ---- typography -------------------------------------------------------
 // Instrument Sans for UI, IBM Plex Mono for anything that is data: URLs,
@@ -82,6 +93,11 @@ $oh-detail-width: 436px;
 $oh-detail-min-width: 340px;
 $oh-header-height: 56px;
 $oh-row-height: 56px;
+$oh-table-header-height: 34px;
+// METHOD | ENDPOINT | RESPONSE | STATUS | ON
+$oh-row-columns: 62px 1fr 96px 88px 44px;
+$oh-row-gap: 12px;
+$oh-row-padding-x: 22px;
 
 // ---- spacing ----------------------------------------------------------
 $oh-space-1: 4px;
