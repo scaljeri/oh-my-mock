@@ -8,6 +8,7 @@ because the logic is spread across contexts that do not share memory.
 | [request-flow.md](./request-flow.md) | you need to follow one request from `fetch()` to mocked answer |
 | [messaging.md](./messaging.md) | you are adding or debugging a message between contexts |
 | [interception.md](./interception.md) | you are wondering why this patches `fetch` instead of using an extension API |
+| [request-normalisation.md](./request-normalisation.md) | you are picking up the open refactor that moves requests out of the domain record |
 
 ## The shape of the thing in one paragraph
 
