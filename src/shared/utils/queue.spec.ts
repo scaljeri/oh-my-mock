@@ -3,10 +3,10 @@ import { objectTypes } from "../constants";
 import { OhMyQueue,  } from "./queue";
 
 describe('QueueUtils', () => {
-  let queue: OhMyQueue;
+  let queue: OhMyQueue<string>;
 
   beforeEach(() => {
-    queue = new OhMyQueue();
+    queue = new OhMyQueue<string>();
   });
 
   it('should add a handler', () => {

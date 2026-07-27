@@ -7,7 +7,7 @@ import { OhMyQueue } from "../../shared/utils/queue";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { DataUtils } from "../../shared/utils/data";
-import { payloadType } from "../../shared/constants";
+import { appSources, payloadType } from "../../shared/constants";
 import { timestamp } from "../../shared/utils/timestamp";
 import { deepSearch, shallowSearch, splitIntoSearchTerms, transformFilterOptions } from '../../shared/utils/search';
 // import { shallowSearch, splitIntoSearchTerms } from "../../shared/utils/search";
@@ -99,7 +99,7 @@ export class OhMyResponseHandler {
       description: 'background;response-handler;request-update'
     };
 
-    OhMyResponseHandler.queue.addPacket(payloadType.STATE, { payload });
+    OhMyResponseHandler.queue.addPacket(payloadType.STATE, { source: appSources.BACKGROUND, payload });
   }
 
   // `response` is the mock that was just written; on a delete there is none
@@ -155,7 +155,7 @@ export class OhMyResponseHandler {
           description: 'background;response-handler;filtered-requests'
         };
 
-        OhMyResponseHandler.queue.addPacket(payloadType.STATE, { payload });
+        OhMyResponseHandler.queue.addPacket(payloadType.STATE, { source: appSources.BACKGROUND, payload });
       }
       return state;
     } catch (err) {

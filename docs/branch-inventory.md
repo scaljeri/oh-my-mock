@@ -4,15 +4,17 @@ An inventory of the nine stale branches on `origin`, made before starting the
 redesign. The question was not "can we merge this" — most of it is years behind
 — but "which ideas are worth keeping".
 
-Short answer: **one branch matters**, and what is valuable in it is the data
-model, not the code.
+Short answer: **two branches carry something**. `feature/refactor-data-model-142`
+has a data model worth taking — and its type files are portable more or less
+as-is, not merely as inspiration. `feature/149-sticky-list` has one behavioural
+idea. The other seven are history.
 
 ## The branches
 
 | Branch | Last commit | Size | Verdict |
 |---|---|---|---|
 | `feature/refactor-data-model-142` | 2023-12-20 | 12 commits, 134 files | **Read it.** Ideas below |
-| `feature/149-sticky-list` | 2024-01-30 | 1 commit, 7 files | UI tweak, superseded by the redesign |
+| `feature/149-sticky-list` | 2024-01-30 | 1 commit, 7 files | **One idea worth keeping** — see below |
 | `feature/136` | 2022-06-13 | 6 commits, 18 files | merged in substance; nothing left |
 | `demo-site` | 2022-05-05 | — | flattened copy of the old test site, now replaced |
 | `migration-v3` | 2021-12-24 | 1 commit, 11 files | the MV3 move; long since done |
@@ -129,7 +131,25 @@ compiled for years and silently corrupted the store.
 
 Also worth copying, cheaply: per-concept type files (`types/request.ts`,
 `types/response.ts`, `types/domain.ts`, …) instead of one `type.ts`, and the
-consistent `IOhMy*` prefix.
+consistent `IOhMy*` prefix. These files are pure interfaces with no logic, so
+they port almost verbatim — they need only `objectTypes.DOMAIN` and the
+`contextTypes` enum added to `constants.ts`.
+
+### 6. Sticky rows (`feature/149-sticky-list`)
+
+Not styling, despite the branch name. Tick rows, switch "sticky" on, and the
+list keeps showing *only* those rows while you filter:
+
+```ts
+stickyRows = {};
+isListSticky = false;
+
+onSelectRow(event, row) { this.stickyRows[row.id] = checked; }
+```
+
+A working selection that survives filtering. Useful on a domain with dozens of
+requests, and absent from the redesign mockups. The implementation is half
+done — the selection is not persisted — but the concept stands on its own.
 
 ## What to do with it
 
@@ -147,5 +167,6 @@ most useful first:
 4. Context as a tagged union (replaces the current two-type split)
 5. Domain rename + request normalisation (largest; needs a storage migration)
 
-The branch also carries a `src/app/migrations/current-domain.ts`, so whoever
-attempts 5 should read that first rather than start from nothing.
+Note on 5: the branch's `src/app/migrations/current-domain.ts` is only twelve
+lines and addresses an older model change, so it is not the head start it might
+look like. A storage migration for the normalisation still has to be written.
