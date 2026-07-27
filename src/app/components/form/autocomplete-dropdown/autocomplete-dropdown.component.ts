@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, NgControl } from '@angular/forms';
-import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   standalone: false,
@@ -29,7 +29,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() clearOnFocus = false;
   @Input() showCopy = false;
   @Input() showDelete = false;
-  @Input() copyInfo;
+  @Input() copyInfo: string | undefined;
   @Input() theme: 'dark' | 'light' = 'dark'
 
   @Output() copy = new EventEmitter<string>();
@@ -70,12 +70,12 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     });
   }
 
-  onBlur(el): void {
+  onBlur(_el: MatAutocomplete): void {
     if (!this.autoCompleteActive) {
       this.emitChange();
     }
 
-    el?.closePanel?.();
+    this.trigger?.closePanel?.();
   }
 
   emitBlur(): void {
@@ -104,12 +104,12 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     this.inputRef.nativeElement.blur();
   }
 
-  onClickEdit(event): void {
+  onClickEdit(event: MouseEvent): void {
     event.stopPropagation();
     this.copy.emit(this.ctrl.value);
   }
 
-  onClickDelete(event): void {
+  onClickDelete(event: MouseEvent): void {
     this.delete.emit(this.ctrl.value);
   }
 
@@ -144,7 +144,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     this.inputRef.nativeElement.setSelectionRange(strLength, strLength);
   }
 
-  onFocus(e, t): void {
+  onFocus(e: FocusEvent, t: MatAutocompleteTrigger): void {
     if (this.clearOnFocus && !this.autoCompleteActive) {
       this.ctrl.setValue('');
     } else if (this.showAllOnFocus) {
@@ -152,7 +152,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     }
   }
 
-  onClear(event): void {
+  onClear(event: MouseEvent): void {
     event.stopPropagation()
 
     this.ctrl.setValue('');

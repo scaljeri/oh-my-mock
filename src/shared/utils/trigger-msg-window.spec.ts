@@ -41,7 +41,7 @@ describe('triggerWindow', () => {
   it('ignores a message from another frame', () => {
     // What an iframe or an opener posting to this window looks like: the data
     // is indistinguishable from the real thing, only the source differs.
-    post({ data: packet, source: { postMessage: () => undefined } as any });
+    post({ data: packet, source: { postMessage: (): void => undefined } as any });
 
     expect(received).toEqual([]);
   });

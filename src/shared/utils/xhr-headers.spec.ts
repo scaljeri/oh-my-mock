@@ -1,7 +1,7 @@
 import { getHeaderKeys, getHeaderValues, parse, stringify } from "./xhr-headers";
 
 describe('Utils/XhrHeaders', () => {
-  let headersStr;
+  let headersStr: string;
 
   beforeEach(() => {
     headersStr = `content-length: 345\r\ncontent-type: application/json; charset=utf-8\r\ndate: Sat, 13 Nov 2021 11:10:26 GMT\r\netag: W/"159-UDsqIzQL6Dpxgnp6vckXI4BKJ0Q"\r\nx-powered-by: Express\r\n`;
@@ -15,9 +15,9 @@ describe('Utils/XhrHeaders', () => {
     })
   });
   describe('#stringify', () => {
-    let headers;
+    let headers: Record<string, string>;
     beforeEach(() => {
-      headers = { a: 10, b: 20 };
+      headers = { a: '10', b: '20' };
     });
 
     it('should stringify a header object', () => {

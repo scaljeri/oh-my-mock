@@ -9,6 +9,7 @@ import { METHODS } from '@shared/constants';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { presetInfo } from '../../../constants';
 import { OhMyState } from '../../../services/oh-my-store';
+import { MatSelectChange } from '@angular/material/select';
 // import { OhMyStateService } from 'src/app/services/state.service';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
@@ -135,6 +136,6 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
     return this.request.mocks[id];
   }
 
-  onMethodChange(event): void {
+  onMethodChange(event: MatSelectChange): void {
   }
 }

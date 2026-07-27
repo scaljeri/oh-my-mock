@@ -46,7 +46,7 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   public originalModel: { code: string; language: string } = { code: '', language: 'json' };
   public modifiedModel: { code: string; language: string } = { code: '', language: 'json' };
 
-  public diffCode;
+  public diffCode: string | undefined;
 
   public readonly = false;
   public orig: string;
@@ -147,7 +147,7 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   }
 
   onInitEditor(editor: any): void {
-    editor.onDidChangeModelDecorations((...args) => {
+    editor.onDidChangeModelDecorations(() => {
       const model = editor?.getModel?.();
       const owner = model.getModeId?.(); // TODO: THIs code doesn't seem to work anymore
 
@@ -180,10 +180,8 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     this.onTouch = fn
   }
 
-  onFocus(e, t): void {
-  }
 
-  validate({ value }: UntypedFormControl) {
+  validate(_control: UntypedFormControl): null {
     return null;
   }
 }

@@ -9,19 +9,19 @@ describe('StoreUtils', () => {
   });
 
   describe('#clone', () => {
-    let store;
-    let clone;
+    let store: IOhMyMock;
+    let clone: IOhMyMock;
 
     beforeEach(() => {
-      store = { domains: ['a', 'b'], version: '123'};
-      clone = StoreUtils.clone(store as any as IOhMyMock);
+      store = { domains: ['a', 'b'], version: '123', type: objectTypes.STORE };
+      clone = StoreUtils.clone(store);
     });
     it('should create new object', () => {
       expect(store).not.toBe(clone);
     });
 
     it('should clone the domain array', () => {
-      expect(store.domains).not.toBe(clone.domain);
+      expect(store.domains).not.toBe(clone.domains);
     });
   });
 

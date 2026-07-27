@@ -76,7 +76,7 @@ export class OhMyStateService {
     return store;
   }
 
-  public async initState(domain): Promise<IState> {
+  public async initState(domain: ohMyDomain): Promise<IState> {
     const state = await this.storageService.get<IState>(domain) || StateUtils.init({ domain });
 
     // if (!state) { // new state

@@ -6,6 +6,7 @@ import { IMock, IOhMyMockRule, mockRuleType } from '@shared/type';
 import { generators } from '../../utils/anonymizer';
 import { JSONPath } from 'jsonpath-plus';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
+import { MatSelectChange } from '@angular/material/select';
 
 @Component({
   standalone: false,
@@ -32,11 +33,12 @@ export class AnonymizeComponent implements OnInit {
     this.rules.push({ type: null, path: '' });
   }
 
-  onTypeChange({ value }, index) {
+  onTypeChange({ value }: MatSelectChange, index: number) {
     this.rules[index].type = value;
   }
 
-  onPathChange({ target }, index) {
+  onPathChange(event: Event, index: number) {
+    const target = event.target as HTMLInputElement;
     this.rules[index].path = target.value;
   }
 

@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { IData, IMock, IState } from '@shared/type';
+import { IData, IMock, IOhMyBackup, IOhMyShallowMock, IState } from '@shared/type';
 import { DataListComponent } from '../../components/data-list/data-list.component';
 import { AppStateService } from '../../services/app-state.service';
 import { HotToastService } from '@ngxpert/hot-toast';
@@ -66,7 +66,7 @@ export class JsonExportComponent implements OnInit {
       return this.toast.warning('Nothing selected');
     }
 
-    const exportObj = {
+    const exportObj: IOhMyBackup = {
       requests: [],
       responses: [],
       version: this.appStateService.version
@@ -74,7 +74,7 @@ export class JsonExportComponent implements OnInit {
 
     for (const r of Object.values(this.selected)) {
       const sMocks = Object.values(r.mocks);
-      const request = { ...r, id: uniqueId(), mocks: {} };
+      const request = { ...r, id: uniqueId(), mocks: {} as Record<string, IOhMyShallowMock> };
       delete request.enabled; // These have presets which belong to a state/domain
       delete request.selected; // idem
       request.version = this.appStateService.version;

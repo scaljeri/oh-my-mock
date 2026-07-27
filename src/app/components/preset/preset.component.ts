@@ -81,7 +81,7 @@ export class PresetComponent implements OnInit, OnChanges {
     });
   }
 
-  setSelectedValue(value) {
+  setSelectedValue(value: string) {
     this.presetCtrl.setValue(value, { emitEvent: false });
   }
 

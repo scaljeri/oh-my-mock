@@ -18,7 +18,7 @@ export class ContentService {
   static StateUtils = StateUtils;
 
   private listener;
-  private pingPongId;
+  private pingPongId: number | undefined;
   private pingPongSubject = new Subject<boolean>();
 
   constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
@@ -37,7 +37,7 @@ export class ContentService {
       this.open(true);
     });
 
-    this.listener = async ({ payload, source, domain }: IPacket, sender) => {
+    this.listener = async ({ payload, source, domain }: IPacket, sender: chrome.runtime.MessageSender) => {
       // Only accept messages from the content script
       // const domain = payload.context?.domain;
       if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
@@ -104,7 +104,7 @@ export class ContentService {
   }
 
   pingPong(): Observable<boolean> {
-    this.pingPongId = setTimeout(() => {
+    this.pingPongId = window.setTimeout(() => {
       // No connection with content script
       this.pingPongSubject.next(false);
     }, 1000);

@@ -11,7 +11,7 @@ export async function loadAllMocks(domain: string): Promise<Record<string, IMock
 
   if (state) {
     const data = Object.values(state.data);
-    const mocks = {};
+    const mocks: Record<string, IMock> = {};
     for (let i = 0; i < data.length; i++) {
       const keys = Object.keys(data[i].mocks);
 

@@ -7,6 +7,17 @@ import { FILTER_SEARCH_OPTIONS } from '../constants';
 const QUOTE_RE = /(?<=")([^"]+)(?=")/gi;
 const RM_QUOTE_RE = /"[^"]+"\s{0,}/g;
 
+/**
+ * Mocks whose searchable fields have already been lowercased.
+ *
+ * This used to be a flag written onto the mock itself, but the guard read
+ * `responseRreadyForSearch` while the setter wrote `responseReadyForSearch` —
+ * one letter apart, so the guard never saw its own flag and every mock was
+ * re-normalised for each search word. A WeakSet also keeps a transient search
+ * concern off objects that get persisted to storage.
+ */
+const normalisedForSearch = new WeakSet<IMock>();
+
 export function splitIntoSearchTerms(input = ''): string[] {
   const qwords = (input.match(QUOTE_RE) || []);
   const words = input.replace(RM_QUOTE_RE, '').split(' ')
@@ -54,7 +65,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
       try {
         if (words.some(w => {
           if (!isImage(contentType)) {
-            if (!mock['responseRreadyForSearch'] && includes.response) {
+            if (!normalisedForSearch.has(mock) && includes.response) {
               if (typeof mock.responseMock === 'object') {
                 mock.responseMock = JSON.stringify(mock.responseMock).toLowerCase();
               } else if (typeof mock.responseMock === 'string') {
@@ -63,7 +74,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
 
               mock.label = mock.label?.toLowerCase() ?? '';
 
-              mock['responseReadyForSearch'] = true;
+              normalisedForSearch.add(mock);
             }
 
             if (includes.response && mock.responseMock.includes(w)) {
@@ -100,8 +111,13 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
 }
 
 export function transformFilterOptions(options: Record<string, boolean> = {}): Record<string, boolean> {
-  return Object.entries(options).reduce((acc, [k, v]) => {
-    acc[FILTER_SEARCH_OPTIONS.find(fo => fo.id === k).value] = v;
+  return Object.entries(options).reduce((acc: Record<string, boolean>, [k, v]) => {
+    const option = FILTER_SEARCH_OPTIONS.find(fo => fo.id === k);
+
+    if (option) {
+      acc[option.value] = v;
+    }
+
     return acc;
   }, {});
 }

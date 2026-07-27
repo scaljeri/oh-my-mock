@@ -49,7 +49,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   mockSub: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
-  connectionFailed = null;
+  // null until the first connection attempt resolves, then true/false.
+  connectionFailed: boolean | null = null;
 
   constructor(
     private appState: AppStateService,

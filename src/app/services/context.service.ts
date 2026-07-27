@@ -18,7 +18,9 @@ export class ContextService implements IOhMyContext {
 
   update(context: Partial<IOhMyContext>): void {
     if (context) {
-      Object.entries(context).forEach(([k, v]) => this[k] = v);
+      Object.entries(context).forEach(
+        ([k, v]) => ((this as unknown as Record<string, unknown>)[k] = v)
+      );
       this.subject.next(this);
     }
   }

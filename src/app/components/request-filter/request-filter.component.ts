@@ -113,7 +113,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFilterOption(option): void {
+  onFilterOption(option: { id: string; state: boolean }): void {
     this.filterMappedOpts = transformFilterOptions(this.filterOptions);
     this.filterTrigger$.next(null);
 
@@ -147,7 +147,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
   }
 
   setFilterOptions() {
-    this.filterOptions = FILTER_SEARCH_OPTIONS.reduce((acc, fo) => {
+    this.filterOptions = FILTER_SEARCH_OPTIONS.reduce((acc: Record<string, boolean>, fo) => {
       acc[fo.id] = this.filterOptions?.[fo.id] || true;
       return acc;
     }, {});

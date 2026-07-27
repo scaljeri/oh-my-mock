@@ -20,8 +20,8 @@ export class DisabledEnabledComponent {
   }
 
   @HostListener('click', ['$event'])
-  onClick(event) {
-    if (!event.target.closest('.dialog-content')) {
+  onClick(event: MouseEvent) {
+    if (!(event.target as HTMLElement).closest('.dialog-content')) {
       this.change.emit();
     }
   }

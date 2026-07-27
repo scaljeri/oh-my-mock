@@ -1,17 +1,18 @@
 import { objectTypes } from '../constants';
-import { IOhMyShallowMock } from '../type';
+import { IData, IOhMyShallowMock } from '../type';
 import { DataUtils } from './data';
 
 describe('Utils/Data', () => {
   const initFn = DataUtils.init;
-  let data;
+  let data: IData;
 
   beforeEach(() => {
     data = {
       selected: { foo: 'f', bar: 'b' },
       enabled: { foo: true, bar: false },
-      mocks: { f: { id: 'f', v: 1 }, b: { id: 'b', v: 2 } }
-    };
+      mocks: { f: { id: 'f', statusCode: 1 }, b: { id: 'b', statusCode: 2 } }
+      // Deliberately partial: only the fields the unit under test reads.
+    } as unknown as IData;
   });
 
   describe('#init', () => {
@@ -50,7 +51,7 @@ describe('Utils/Data', () => {
     });
   });
   describe('#addResponse', () => {
-    let update;
+    let update: Partial<IData>;
     beforeEach(() => {
       update = DataUtils.addResponse({ preset: 'foo' } as any, data, {
         id: 'x', label: 'y', statusCode: 666

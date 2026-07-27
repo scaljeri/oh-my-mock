@@ -224,7 +224,7 @@ export class OhMyState {
     // }
     const keys = Object.keys(aux);
     for (let i = 0; i < keys.length; i++) {
-      state = await OhMySendToBg.patch<IOhMyAux, IState>(aux[keys[i]], '$.aux', keys[i], payloadType.STATE, undefined, 'popup;updateAux');
+      state = await OhMySendToBg.patch<IOhMyAux[keyof IOhMyAux], IState>(aux[keys[i] as keyof IOhMyAux], '$.aux', keys[i], payloadType.STATE, undefined, 'popup;updateAux');
     }
 
     // (state, payloadType.STATE);

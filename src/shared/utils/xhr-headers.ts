@@ -1,5 +1,5 @@
 export const parse = (headers = ''): Record<string, string> => {
-  return headers.split('\r\n').reduce((s, n) => {
+  return headers.split('\r\n').reduce((s: Record<string, string>, n) => {
     if (n) {
       const split = n.split(': ');
       s[split[0]] = split[1];

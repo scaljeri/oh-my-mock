@@ -41,7 +41,10 @@ export class MigrateUtils {
       return null;
     }
 
-    let migrateSteps = [(_) => undefined ];
+    // The step arrays are declared over heterogeneous shapes (store, state,
+    // mock, request), so the element type stays loose here on purpose rather
+    // than claiming a precision the steps do not have.
+    let migrateSteps: ((data: any) => any)[] = [(): undefined => undefined];
 
     if (MigrateUtils.isStore(data)) {
       migrateSteps = MigrateUtils.storeSteps;

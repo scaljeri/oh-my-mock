@@ -98,7 +98,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   private workerTimeoutId: number;
   searchSubj = new Subject();
   filterOptionsCtrl = new UntypedFormControl();
-  filterOptions = undefined;
+  filterOptions: Record<string, boolean> | undefined = undefined;
   filterKeywords = '';
 
   constructor(
@@ -172,7 +172,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onDelete(id: ohMyDataId, event) {
+  async onDelete(id: ohMyDataId, event: MouseEvent) {
     event.stopPropagation();
 
     const data = this.stateSubject.value.data[id];
@@ -184,7 +184,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onClone(id: ohMyDataId, event): void {
+  onClone(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
     const state = this.stateSubject.value;
 
@@ -201,7 +201,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onExport(data: IData, rowIndex, event: MouseEvent): void {
+  onExport(data: IData, rowIndex: number, event: MouseEvent): void {
     event.stopPropagation()
     this.dataExport.emit(data);
     this.selection.toggle(rowIndex);
@@ -237,7 +237,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.stateSubject.next(state);
   }
 
-  trackBy(index, row): string {
+  trackBy(index: number, row: IData): string {
     return row.id; // type + row.method + row.url;
   }
 

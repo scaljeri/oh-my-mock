@@ -1,7 +1,7 @@
 import { arrayAddItem, arrayMoveItem } from './array';
 
 describe('Array utils', () => {
-  let input;
+  let input: unknown[];
   beforeEach(() => {
     input = [1, 2, 3, 4, 5];
   });

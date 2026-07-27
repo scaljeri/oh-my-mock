@@ -118,11 +118,11 @@ export class DataUtils {
     return output;
   }
 
-  static statusCodeSort(a, b): number {
+  static statusCodeSort(a: { statusCode: number }, b: { statusCode: number }): number {
     return a.statusCode === b.statusCode ? 0 : a.statusCode > b.statusCode ? 1 : -1;
   }
 
-  static prefillWithPresets(request: IData, presets: IOhMyPresets = {}, active?): IData {
+  static prefillWithPresets(request: IData, presets: IOhMyPresets = {}, active?: boolean): IData {
     request.selected ??= {};
     request.enabled ??= {};
 

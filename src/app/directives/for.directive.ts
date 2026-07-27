@@ -7,7 +7,7 @@ import { Directive, EmbeddedViewRef, Input, OnChanges, TemplateRef, ViewContaine
   selector: '[ngFor][ngForOf][ngForEmpty]'
 })
 export class OhMyForDirective implements OnChanges {
-  @Input() ngForOf = [];
+  @Input() ngForOf: unknown[] = [];
   @Input() ngForEmpty!: TemplateRef<unknown>;
 
   private ref?: EmbeddedViewRef<unknown>;

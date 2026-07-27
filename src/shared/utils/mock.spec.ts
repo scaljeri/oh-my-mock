@@ -1,5 +1,6 @@
 import { MOCK_JS_CODE, objectTypes } from '../constants';
 import { MockUtils } from './mock';
+import { IOhMyShallowMock, ohMyMockId } from '../type';
 
 describe('Utils/Response', () => {
   const initFn = MockUtils.init;
@@ -50,13 +51,14 @@ describe('Utils/Response', () => {
     });
   });
   describe('#find', () => {
-    let mocks;
+    // Fixtures carry only the fields `find` looks at.
+    let mocks: Record<ohMyMockId, IOhMyShallowMock>;
 
     beforeEach(() => {
       mocks = {
         a: { statusCode: 200, id: 'a' },
-        b: { statusCode: 200, label: 'yolo' },
-        c: { statusCode: 300, label: 'yolo' }
+        b: { statusCode: 200, id: 'b', label: 'yolo' },
+        c: { statusCode: 300, id: 'c', label: 'yolo' }
       }
     });
 

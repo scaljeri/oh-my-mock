@@ -63,6 +63,4 @@ export class ContentTypeComponent implements AfterViewInit, ControlValueAccessor
     this.onTouch = fn
   }
 
-  onFocus(e, t): void {
-  }
 }

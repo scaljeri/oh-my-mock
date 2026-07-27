@@ -29,7 +29,7 @@ describe('Utils/Storage', () => {
         done();
       });
       StorageUtils.listen();
-      const fn = StorageUtils.chrome.storage.onChanged.addListener['mock'].calls[0][0];
+      const fn = (StorageUtils.chrome.storage.onChanged.addListener as unknown as jest.Mock).mock.calls[0][0];
       fn({ bar: 'foo', baz: 'moz' });
     });
   });
@@ -90,7 +90,7 @@ describe('Utils/Storage', () => {
       await StorageUtils.remove(['foo', 'bar']);
 
       expect(StorageUtils.chrome.storage.local.remove).toHaveBeenCalledTimes(2);
-      expect(StorageUtils.chrome.storage.local.remove['mock'].calls).toEqual([
+      expect((StorageUtils.chrome.storage.local.remove as unknown as jest.Mock).mock.calls).toEqual([
         ['foo', expect.anything()], ['bar', expect.anything()]
       ]);
     });

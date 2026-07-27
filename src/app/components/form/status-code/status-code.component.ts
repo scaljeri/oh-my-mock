@@ -66,6 +66,4 @@ export class StatusCodeComponent implements AfterViewInit, ControlValueAccessor 
     this.onTouch = fn
   }
 
-  onFocus(e, t): void {
-  }
 }
