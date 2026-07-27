@@ -1,6 +1,5 @@
 @use 'mixins' as *;
 @use 'tokens' as t;
-@use 'legenda' as *;
 
 :host {
   --color: #{$color-light};
@@ -335,6 +334,20 @@ li.oh-row {
   display: flex;
   align-items: center;
   gap: t.$oh-space-3;
+
+  &__preset {
+    flex: 0 0 auto;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: t.$oh-space-2;
+    flex: 0 0 auto;
+    font-size: t.$oh-size-base;
+    color: t.$oh-text-muted;
+    white-space: nowrap;
+  }
   padding: t.$oh-space-3 t.$oh-row-padding-x;
   border-bottom: 1px solid t.$oh-border-soft;
 
