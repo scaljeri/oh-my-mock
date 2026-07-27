@@ -1,7 +1,8 @@
 import { connectWithLocalServer, dispatchRemote } from "./dispatch-remote";
 import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
 import { IOhMessage, IOhMyPacketContext } from "../shared/packet-type";
-import { IOhMyAPIRequest, IOhMyUpsertData, IState, IOhMyMockResponse } from "../shared/type";
+import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyUpsertData, IState, IOhMyMockResponse } from "../shared/type";
+import { error } from "./utils";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
@@ -11,8 +12,15 @@ import { DataUtils } from "../shared/utils/data";
 const mb = new OhMyMessageBus().setTrigger(triggerRuntime);
 mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CONTENT)
   .subscribe(async ({ packet, callback }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
-    const request = { ...packet.payload.data, requestType: packet.payload.context.requestType } as IOhMyUpsertData;
-    const result = await dispatch2Server(request, packet.payload.context.domain);
+    const context = packet.payload.context;
+
+    if (!context?.domain) { // Without a domain there is no state to dispatch for
+      callback({ status: ohMyMockStatus.NO_CONTENT });
+      return;
+    }
+
+    const request = { ...packet.payload.data, requestType: context.requestType } as IOhMyUpsertData;
+    const result = await dispatch2Server(request, context.domain);
 
     callback(result);
   });
@@ -22,9 +30,10 @@ connectWithLocalServer();
 // -- ******************************
 
 export async function dispatch2Server(request: IOhMyUpsertData, domain: string): Promise<IOhMyMockResponse> {
-  const state = await StorageUtils.get<IState>(domain);
-  let data; // = request;
-  let mock;
+  // Nothing has been mocked for this domain yet -> no state in storage.
+  const state: IState | undefined = await StorageUtils.get<IState>(domain);
+  let data: IData | undefined;
+  let mock: IMock | undefined;
 
   try {
     if (state) {
@@ -33,21 +42,25 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
         const mockId = DataUtils.activeMock(data, state.context);
 
         if (mockId) {
-          mock = await StorageUtils.get(mockId);
+          mock = await StorageUtils.get<IMock>(mockId);
         }
       }
     }
 
+    // The state context is the one that carries the preset; a state-less domain
+    // has never had a preset selected, so it falls back to the default one.
+    const context: IOhMyContext = state?.context ?? { domain, preset: 'default' };
+
     const result = await dispatchRemote({
       type: payloadType.API_REQUEST,
-      context: state.context,
+      context,
       description: 'background;dispatch-to-server',
       data: {
         request: data || request,
-        context: state.context,
+        context,
         ...(mock && {
           mock: {
-            headers: mock.headersMock,
+            headers: mock.headersMock ?? {},
             response: mock.responseMock,
             statusCode: mock.statusCode
           }
@@ -57,6 +70,8 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
 
     return result || { status: ohMyMockStatus.NO_CONTENT }
   } catch (err) {
+    error('Could not dispatch the request to the SDK server', err);
 
+    return { status: ohMyMockStatus.ERROR };
   }
 }

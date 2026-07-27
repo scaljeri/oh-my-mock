@@ -1,4 +1,5 @@
-import { appSources, ohMyMockStatus, payloadType, STORAGE_KEY } from '../../shared/constants';
+import { appSources, ohMyMockStatus, payloadType } from '../../shared/constants';
+import { ohMyWindow } from '../../shared/oh-my-window';
 import { logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
@@ -7,8 +8,6 @@ import { IOhMyAPIRequest, IOhMyContext, requestType } from '../../shared/type';
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
-
-declare let window: any;
 
 // export const dispatchRequest = async (request: IOhMyEvalRequest): Promise<Partial<IData>> => {
 //   return new Promise(async (resolve, reject) => {
@@ -81,7 +80,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
           // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
           resolve(resp);
         } else {
-          window[STORAGE_KEY].cache.unshift(packet.payload.data);
+          ohMyWindow().cache?.unshift(resp);
           resolve(resp);
         }
       });

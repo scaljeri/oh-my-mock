@@ -1,34 +1,40 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyWindow } from "../../shared/oh-my-window";
+import { IOhMyReadyResponse } from "../../shared/packet-type";
 import { b64ToArrayBuffer } from "../../shared/utils/binary";
 import { findCachedResponse } from "../utils";
+import { IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.Response.prototype.hasOwnProperty('__arrayBuffer');
-const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'arrayBuffer');
+const descriptor = originalDescriptor('arrayBuffer');
 
 export function patchResponseArrayBuffer() {
   Object.defineProperties(window.Response.prototype, {
     arrayBuffer: {
       ...descriptor,
-      value: function () {
-        if (!window[STORAGE_KEY].state.active) {
+      value: function (this: IOhMyResponse) {
+        if (!ohMyWindow().state?.active) {
           return this.__arrayBuffer();
         }
 
         if (!this.ohResult) {
-          this.ohResult = findCachedResponse({
+          const cached: IOhMyReadyResponse | undefined = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
           });
+          this.ohResult = cached;
 
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
-            persistResponse(this, this.ohResult.request);
+          if (cached && cached.response.status !== ohMyMockStatus.OK) {
+            persistResponse(this, cached.request);
           }
         }
 
-        if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-          const response = this.ohResult.response?.response;
-          return Promise.resolve(b64ToArrayBuffer(response));
+        const result = this.ohResult;
+
+        if (isReadyResponse(result) && result.response.status === ohMyMockStatus.OK) {
+          // A mock without a body is an empty body, not a reason to hand
+          // `undefined` to `atob`.
+          return Promise.resolve(b64ToArrayBuffer(result.response.response ?? ''));
         } else {
           return this.__arrayBuffer();
         }
@@ -40,5 +46,5 @@ export function patchResponseArrayBuffer() {
 
 export function unpatchResponseArrayBuffer() {
   Object.defineProperty(window.Response.prototype, 'arrayBuffer', descriptor);
-  delete window.Response.prototype['__arrayBuffer'];
+  Reflect.deleteProperty(window.Response.prototype, '__arrayBuffer');
 }

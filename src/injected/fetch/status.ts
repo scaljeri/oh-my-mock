@@ -1,33 +1,41 @@
 // TODO
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyWindow } from "../../shared/oh-my-window";
+import { IOhMyReadyResponse } from "../../shared/packet-type";
 import { findCachedResponse } from "../utils";
+import { IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.Response.prototype.hasOwnProperty('__status');
-const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'status');
+const descriptor = originalDescriptor('status');
 
 export function patchStatus() {
   Object.defineProperties(window.Response.prototype, {
     status: {
       ...descriptor,
-      get: function () {
-        if (!window[STORAGE_KEY].state.active) {
+      get: function (this: IOhMyResponse) {
+        if (!ohMyWindow().state?.active) {
           return this.__status;
         }
 
         if (!this.ohResult) {
-          this.ohResult = findCachedResponse({
+          const cached: IOhMyReadyResponse | undefined = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod || 'GET'
           });
-          if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-            return this.ohResult.response?.statusCode;
+          this.ohResult = cached;
+
+          if (cached && cached.response.status === ohMyMockStatus.OK) {
+            return cached.response.statusCode;
           } else {
-            persistResponse(this, this.ohResult?.request);
+            persistResponse(this, cached?.request);
             return this.__status;
           }
-        } else if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-          return this.ohResult.response?.statusCode;
+        }
+
+        const result = this.ohResult;
+
+        if (isReadyResponse(result) && result.response.status === ohMyMockStatus.OK) {
+          return result.response.statusCode;
         } else {
           return this.__status;
         }
@@ -39,5 +47,5 @@ export function patchStatus() {
 
 export function unpatchStatus() {
   Object.defineProperty(window.Response.prototype, 'status', descriptor);
-  delete window.Response.prototype['__status'];
+  Reflect.deleteProperty(window.Response.prototype, '__status');
 }

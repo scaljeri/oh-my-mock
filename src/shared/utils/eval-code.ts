@@ -15,7 +15,7 @@ export const evalCode = async (mock: IMock, request: IOhMyAPIRequest, response?:
   let retVal: IOhMyMockResponse;
 
   try {
-    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IOhMyMockResponse>, request: IOhMyAPIRequest, response?: IOhMyMockResponse) => IOhMyMockResponse;
+    const code = compileJsCode(mock.jsCode as string) as (mock: Partial<IOhMyMockResponse>, request: IOhMyAPIRequest, response?: IOhMyMockResponse) => Partial<IOhMyMockResponse>;
     const result = await code(MockUtils.mockToResponse(mock), {
       requestType: request.requestType,
       url: request.url,
@@ -30,7 +30,7 @@ export const evalCode = async (mock: IMock, request: IOhMyAPIRequest, response?:
     // eslint-disable-next-line no-console
     retVal = {
       status: ohMyMockStatus.ERROR,
-      message: err.message
+      message: err instanceof Error ? err.message : String(err)
     };
   }
 

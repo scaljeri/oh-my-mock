@@ -7,7 +7,7 @@
 */
 let windowId: number;
 
-export async function openPopup(tab?: chrome.tabs.Tab) {
+export async function openPopup(tab: chrome.tabs.Tab) {
   const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
 
   if (!domain) {
@@ -30,7 +30,7 @@ export async function openPopup(tab?: chrome.tabs.Tab) {
         await chrome.windows.update(myWindow.id, { focused: true });
         await chrome.tabs.update(myTab.id, { active: true, });
         // await chrome.tabs.reload();
-      } else if (tab) {
+      } else {
         // open the window and the tab
         const popup = await chrome.windows.create({
           // url: `chrome-extension://${chrome.runtime.id}/index.html`,

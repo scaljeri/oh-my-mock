@@ -1,32 +1,38 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyWindow } from "../../shared/oh-my-window";
+import { IOhMyReadyResponse } from "../../shared/packet-type";
 import { findCachedResponse } from "../utils";
+import { IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.Response.prototype.hasOwnProperty('__json');
-const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'json');
+const descriptor = originalDescriptor('json');
 
 export function patchResponseJson() {
   Object.defineProperties(window.Response.prototype, {
     json: {
       ...descriptor,
-      value: function () {
-        if (!window[STORAGE_KEY].state.active) {
+      value: function (this: IOhMyResponse) {
+        if (!ohMyWindow().state?.active) {
           return this.__json();
         }
 
         if (!this.ohResult) {
-          this.ohResult = findCachedResponse({
+          const cached: IOhMyReadyResponse | undefined = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
           });
+          this.ohResult = cached;
 
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
-            persistResponse(this, this.ohResult.request);
+          if (cached && cached.response.status !== ohMyMockStatus.OK) {
+            persistResponse(this, cached.request);
           }
         }
 
-        if (this.ohResult && this.ohResult.response.status === ohMyMockStatus.OK) {
-          const response = this.ohResult.response?.response;
+        const result = this.ohResult;
+
+        if (isReadyResponse(result) && result.response.status === ohMyMockStatus.OK) {
+          const response = result.response.response;
+
           return Promise.resolve(typeof response === 'string' ? JSON.parse(response) : response);
         } else {
           return this.__json();
@@ -40,5 +46,5 @@ export function patchResponseJson() {
 
 export function unpatchResponseJson() {
   Object.defineProperty(window.Response.prototype, 'json', descriptor);
-  delete window.Response.prototype['__json'];
+  Reflect.deleteProperty(window.Response.prototype, '__json');
 }

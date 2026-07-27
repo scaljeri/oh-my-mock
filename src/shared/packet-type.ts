@@ -4,7 +4,14 @@ import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUp
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = <T = unknown>(message: IOhMessage) => void;
-export interface IOhMessage<T = unknown, X = IOhMyContext> {
+/**
+ * A packet as it arrives at a subscriber.
+ *
+ * The context defaults to `IOhMyPacketContext`, matching `IPacket`. It used to
+ * default to `IOhMyContext`, which told every subscriber a `preset` was present
+ * — something no message actually carries.
+ */
+export interface IOhMessage<T = unknown, X = IOhMyPacketContext> {
   packet: IPacket<T, X>;
   sender: chrome.runtime.MessageSender;
   callback: (data: unknown) => void;

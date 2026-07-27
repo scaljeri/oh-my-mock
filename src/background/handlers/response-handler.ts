@@ -1,5 +1,6 @@
 import { IOhMyResponseUpdate, IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IMock, IState } from "../../shared/type";
+import { IData, IMock, IState, ohMyDataId, ohMyMockId } from "../../shared/type";
+import { error } from "../utils";
 import { MockUtils } from "../../shared/utils/mock";
 import { update } from "../../shared/utils/partial-updater";
 import { OhMyQueue } from "../../shared/utils/queue";
@@ -15,119 +16,153 @@ export class OhMyResponseHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IMock> {
+  static async update({ data, context }: IPacketPayload<IOhMyResponseUpdate, IOhMyPacketContext>): Promise<IMock | undefined> {
     try {
+      if (!data || !context?.domain) {
+        return undefined;
+      }
+
       const state = await OhMyResponseHandler.StorageUtils.get<IState>(context.domain);
-      if (!data || !state) {
-        return;
+      if (!state) {
+        return undefined;
       }
 
       let request = StateUtils.findRequest(state, data.request);
-      let response = data.response;
+      const responseUpdate = data.response;
       let autoActivate = false;
-
 
       if (!request) {
         request = DataUtils.init(data.request);
-        autoActivate = state.aux?.newAutoActivate;
+        autoActivate = state.aux?.newAutoActivate ?? false;
       }
 
-      if (response && Object.keys(response).length === 1 && response.id) { // delete
-        request = DataUtils.removeResponse(state.context, request, response.id);
-        await OhMyResponseHandler.StorageUtils.remove(response.id);
-      } else {
-        if (context.path) { // new/update
-          response = await OhMyResponseHandler.StorageUtils.get<IMock>(response.id);
-          response = update<IMock>(context.path, response as IMock, context.propertyName, data.response[context.propertyName]);
+      // A payload that holds nothing but an id is a delete
+      if (responseUpdate.id && Object.keys(responseUpdate).length === 1) {
+        // `state.context` is the one carrying the preset; the packet context only has the domain
+        request = DataUtils.removeResponse(state.context, request, responseUpdate.id);
+        await OhMyResponseHandler.StorageUtils.remove(responseUpdate.id);
+
+        // No mock left to hand to the filter or to write back to storage
+        await OhMyResponseHandler.updateFiltering(state, request);
+        OhMyResponseHandler.queueRequestUpdate(state, request);
+
+        return undefined;
+      }
+
+      let response: IMock;
+
+      if (context.path) { // patch an existing mock
+        if (!responseUpdate.id || !context.propertyName) {
+          error(`Cannot patch a response at ${context.path} without a response id and a property name`);
+          return undefined;
+        }
+
+        // The property being patched is a property of the mock itself
+        const propertyName = context.propertyName as keyof IMock;
+        const stored = await OhMyResponseHandler.StorageUtils.get<IMock>(responseUpdate.id);
+
+        response = update<IMock>(context.path, stored, propertyName, responseUpdate[propertyName]);
+        response.modifiedOn = timestamp();
+      } else { // new or update
+        const base = responseUpdate.id ? await OhMyResponseHandler.StorageUtils.get<IMock>(responseUpdate.id) : undefined;
+        response = MockUtils.init(base, responseUpdate);
+
+        if (base) {
           response.modifiedOn = timestamp();
-        } else { // new, update or delete
-          const base = response.id ? await OhMyResponseHandler.StorageUtils.get<IMock>(response.id) : null;
-          response = MockUtils.init(base, response);
-
-          if (base) {
-            response.modifiedOn = timestamp();
-          }
         }
-        request = DataUtils.addResponse(state.context, request, response, autoActivate);
-
-        // if (state.aux.filterKeywords) { // Update filter results
-        //   const words = splitIntoSearchTerms(state.aux.filterKeywords);
-        //   const out = shallowSearch({ [request.id]: request }, words, state.aux.filterOptions);
-        // }
       }
 
-      OhMyResponseHandler.updateFiltering(state, request, response as IMock);
+      request = DataUtils.addResponse(state.context, request, response, autoActivate);
 
-      OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
-        payload: {
-          data: request,
-          context: {
-            path: `$.data`,
-            propertyName: request.id,
-            domain: state.domain
-          } as IOhMyPacketContext
-        }
-      });
+      await OhMyResponseHandler.updateFiltering(state, request, response);
+      OhMyResponseHandler.queueRequestUpdate(state, request);
 
-      return StorageUtils.set(response.id, response).then(() => response as IMock);
+      return StorageUtils.set(response.id, response).then(() => response);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log('nonoo', err);
+
+      return undefined;
     }
   }
 
-  static async updateFiltering(state: IState, request: IData, response: IMock) {
+  // Store the (updated) request on its state
+  static queueRequestUpdate(state: IState, request: IData): void {
+    const payload: IPacketPayload<IData, IOhMyPacketContext> = {
+      type: payloadType.STATE,
+      data: request,
+      context: {
+        path: `$.data`,
+        propertyName: request.id,
+        domain: state.domain
+      },
+      description: 'background;response-handler;request-update'
+    };
+
+    OhMyResponseHandler.queue.addPacket(payloadType.STATE, { payload });
+  }
+
+  // `response` is the mock that was just written; on a delete there is none
+  static async updateFiltering(state: IState, request: IData, response?: IMock): Promise<IState | undefined> {
     try {
       const searchTerms = splitIntoSearchTerms(state.aux.filterKeywords);
 
       if (!searchTerms.length) {
-        return;
+        return undefined;
       }
 
-      const searchOpts = state.aux.filterOptions;
+      // The stored options are keyed by option id; both searches expect them
+      // keyed by what they search on (`url`, `response`, ...)
+      const searchOpts = transformFilterOptions(state.aux.filterOptions);
       const data = { [request.id]: request };
 
       const results = shallowSearch(data, searchTerms, searchOpts);
       let addRequest = !!results[request.id];
       if (!addRequest) { // Deep search needed
-        const mocks = (await Promise.all(Object.keys(request.mocks).filter(mid => mid !== response.id).map(
+        const mocks = (await Promise.all(Object.keys(request.mocks).filter(mid => mid !== response?.id).map(
           mid => StorageUtils.get<IMock>(mid)))
         ).reduce((acc, mock) => {
           acc[mock.id] = mock;
           return acc;
-        }, { [response.id]: response });
+        }, response ? { [response.id]: response } : {} as Record<ohMyMockId, IMock>);
 
-        const matches = await deepSearch(data, searchTerms, transformFilterOptions(searchOpts), mocks);
+        const matches = await deepSearch(data, searchTerms, searchOpts, mocks);
         addRequest = matches.length > 0;
       }
 
-      const index = (state.aux.filteredRequests || []).indexOf(request.id);
+      const filteredRequests = state.aux.filteredRequests ?? [];
+      const index = filteredRequests.indexOf(request.id);
 
       let isUpdated = false;
       if (addRequest && index === -1) {
         isUpdated = true;
-        state.aux.filteredRequests = state.aux.filteredRequests ? [...state.aux.filteredRequests, request.id] : [request.id];
+        state.aux.filteredRequests = [...filteredRequests, request.id];
       } else if (!addRequest && index > -1) {
         isUpdated = true;
-        state.aux.filteredRequests.splice(index, 1);
+        filteredRequests.splice(index, 1);
+        state.aux.filteredRequests = filteredRequests;
       }
 
       if (isUpdated) {
-        OhMyResponseHandler.queue.addPacket(payloadType.STATE, {
-          payload: {
-            data: state.aux.filteredRequests,
-            context: {
-              path: `$.aux`,
-              propertyName: 'filteredRequests',
-              domain: state.domain
-            } as IOhMyPacketContext
-          }
-        });
+        const payload: IPacketPayload<ohMyDataId[] | undefined, IOhMyPacketContext> = {
+          type: payloadType.STATE,
+          data: state.aux.filteredRequests,
+          context: {
+            path: `$.aux`,
+            propertyName: 'filteredRequests',
+            domain: state.domain
+          },
+          description: 'background;response-handler;filtered-requests'
+        };
+
+        OhMyResponseHandler.queue.addPacket(payloadType.STATE, { payload });
       }
       return state;
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Could not update filter results', err);
+
+      return undefined;
     }
   }
 }

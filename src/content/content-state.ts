@@ -1,11 +1,23 @@
 import { BehaviorSubject, distinctUntilChanged, filter, Observable } from "rxjs";
 import { STORAGE_KEY } from "../shared/constants";
-import { IOhMyMock, IState } from "../shared/type";
+import { ohMyWindow } from "../shared/oh-my-window";
+import { IMock, IOhMyMock, IState } from "../shared/type";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
+/**
+ * Anything that can live in `chrome.storage.local`, and therefore in the cache:
+ * the store (under `STORAGE_KEY`), a domain's state (under its host) or a mock
+ * (under its id).
+ */
+export type OhMyCacheValue = IOhMyMock | IState | IMock;
+
+/**
+ * A mirror of `chrome.storage.local`, keyed the same way. Which of the shapes
+ * above lives under a given key is only known to the caller, hence `unknown`;
+ * `get<T>()` is where that knowledge is applied.
+ */
 export interface IOhMyCache {
-  [STORAGE_KEY]?: IOhMyMock;
-  tick?: string;
+  [key: string]: unknown;
 }
 
 export interface IOhMyStorage {
@@ -18,12 +30,17 @@ export class OhMyContentState {
   static href = window.location.href;
 
   private cache: IOhMyCache = {};
-  private subjects: Record<string, BehaviorSubject<any>> = {};
-  private storage: IOhMyStorage;
-  private isActiveSubject = new BehaviorSubject(undefined);
+  private subjects: Record<string, BehaviorSubject<unknown>> = {};
+  // Absent until `window.name` holds something parsable, or until one of the
+  // setters below creates it.
+  private storage?: IOhMyStorage;
+  // `undefined` until the first state is known; `distinctUntilChanged` then
+  // makes sure subscribers only see real transitions.
+  private isActiveSubject = new BehaviorSubject<boolean | undefined>(undefined);
 
   isActive$ = this.isActiveSubject.asObservable().pipe(distinctUntilChanged());
-  state: IState;
+  // Only known after `init()`, or after the first storage update for this host.
+  state?: IState;
 
   constructor() {
     StorageUtils.listen();
@@ -38,12 +55,12 @@ export class OhMyContentState {
       this.subjects[key]?.next(update.newValue);
     });
 
-    window[STORAGE_KEY].off.push(() => StorageUtils.off())
+    ohMyWindow().off?.push(() => StorageUtils.off())
 
     // TODO: relplace with SessionStorage
     if (window.name) {
       try {
-        this.storage = window.name === '' ? { isReloaded: false } : JSON.parse(window.name) as IOhMyStorage;
+        this.storage = JSON.parse(window.name) as IOhMyStorage;
       } catch (e) {
         this.isReloaded = false;
       }
@@ -58,23 +75,26 @@ export class OhMyContentState {
   async get<T = unknown>(key = STORAGE_KEY): Promise<T> {
     this.cache[key] ??= await StorageUtils.get(key);
 
-    return this.cache[key];
+    // The cache is keyed by store key / domain / mock id, so the caller is the
+    // only one who knows which of those shapes is stored under `key`.
+    return this.cache[key] as T;
   }
 
-  set(key, value): Promise<void> {
+  set(key: string, value: OhMyCacheValue): Promise<void> {
     this.cache[key] = value;
 
     return StorageUtils.set(key, value);
   }
 
   getState(): Promise<IState> {
-    return this.get(OhMyContentState.host);
+    return this.get<IState>(OhMyContentState.host);
   }
 
   getStreamFor<T = unknown>(key: string): Observable<T> {
-    this.subjects[key] ??= new BehaviorSubject<T>(undefined);
+    const subject = (this.subjects[key] ??= new BehaviorSubject<unknown>(undefined));
 
-    return this.subjects[key].asObservable().pipe(filter(s => !!s)); // shared???
+    // Same contract as `get<T>`: the caller declares what is published on `key`.
+    return subject.asObservable().pipe(filter((s): s is T => !!s)); // shared???
   }
 
   // persist(data = {}): void {
@@ -92,8 +112,8 @@ export class OhMyContentState {
   //   return OhMyContentState.isPopupOpen;
   // }
 
-  isActive(state: IState = this.state): boolean {
-    return state?.aux.appActive && state?.aux.popupActive || this.forceActive;
+  isActive(state: IState | undefined = this.state): boolean {
+    return !!(state?.aux.appActive && state?.aux.popupActive) || this.forceActive;
   }
 
   set forceActive(isActive: boolean) {
@@ -105,7 +125,7 @@ export class OhMyContentState {
     this.isActiveSubject.next(this.isActive(this.state));
   }
 
-  get forceActive() {
+  get forceActive(): boolean {
     return this.storage?.forceActive || false;
   }
 
@@ -116,7 +136,7 @@ export class OhMyContentState {
     window.name = JSON.stringify(this.storage);
   }
 
-  get isReloaded() {
-    return this.storage?.isReloaded;
+  get isReloaded(): boolean {
+    return this.storage?.isReloaded ?? false;
   }
 }

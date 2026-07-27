@@ -1,5 +1,6 @@
 import { take } from "rxjs";
 import { appSources, payloadType, STORAGE_KEY } from "../shared/constants";
+import { ohMyWindow } from "../shared/oh-my-window";
 import { IOhMyCSPResponse } from "../shared/packet-type";
 import { IOhMyInjectedState } from "../shared/type";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
@@ -28,7 +29,7 @@ async function doInject(state: IOhMyInjectedState, messageBus: OhMyMessageBus): 
       // Async inject
       const script = document.createElement('script');
       script.onload = function () {
-        window[STORAGE_KEY].injectionDone$.next(true);
+        ohMyWindow().injectionDone$?.next(true);
         script.remove();
         r(true);
       };

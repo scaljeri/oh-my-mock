@@ -21,7 +21,7 @@ export class OhMySendToBg {
   static full<T = unknown, U = T>(
     data: T,
     type: payloadType,
-    context?: Partial<IOhMyPacketContext | IOhMyPacketContext>,
+    context?: Partial<IOhMyPacketContext>,
     description = ''
   ): Promise<U> {
     return OhMySendToBg.send<T, U>({
@@ -46,11 +46,11 @@ export class OhMySendToBg {
     return OhMySendToBg.send<T, U>({
       source: OhMySendToBg.source,
       payload: {
-        context: { domain: OhMySendToBg.domain, ...context, path, propertyName: propName },
+        context: { ...context, domain: context?.domain ?? OhMySendToBg.domain, path, propertyName: propName },
         type,
         data,
         description
-      } as any
+      }
     });
   }
 

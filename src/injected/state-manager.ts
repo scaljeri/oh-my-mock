@@ -1,18 +1,20 @@
 import { BehaviorSubject, Subject } from 'rxjs';
-import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
+import { appSources, payloadType } from '../shared/constants';
+import { ohMyWindow } from '../shared/oh-my-window';
 import { IOhMessage, IOhMyImportStatus, IOhMyReadyResponse } from '../shared/packet-type';
 import { IOhMyInjectedState } from '../shared/type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { log } from './utils';
 
-let state: IOhMyInjectedState;
+// Undefined until the content script has sent the first STATE message.
+let state: IOhMyInjectedState | undefined;
 
 export function setupListenersMessageBus() {
   const externalApiResults = new Subject<IOhMyImportStatus>();
-  const update = new BehaviorSubject<IOhMyInjectedState>(state);
+  const update = new BehaviorSubject<IOhMyInjectedState | undefined>(state);
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
-  window[STORAGE_KEY].off.push(() => mb.clear());
+  ohMyWindow().off?.push(() => mb.clear());
 
   mb.streamByType$(payloadType.STATE, appSources.CONTENT).subscribe(({ packet }) => {
     state = packet.payload.data as IOhMyInjectedState;
@@ -26,11 +28,19 @@ export function setupListenersMessageBus() {
   // });
 
   mb.streamByType$<IOhMyReadyResponse>(payloadType.RESPONSE, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyReadyResponse>) => {
-    window[STORAGE_KEY].cache.push(packet.payload.data);
+    const response = packet.payload.data;
+
+    if (response) {
+      ohMyWindow().cache?.push(response);
+    }
   });
 
   mb.streamByType$<IOhMyImportStatus>(payloadType.OHMYMOCK_API_OUTPUT, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyImportStatus>) => {
-    externalApiResults.next(packet.payload.data);
+    const status = packet.payload.data;
+
+    if (status) {
+      externalApiResults.next(status);
+    }
   });
 
   return {
@@ -39,6 +49,6 @@ export function setupListenersMessageBus() {
   }
 }
 
-export const ohMyState = (): IOhMyInjectedState => {
+export const ohMyState = (): IOhMyInjectedState | undefined => {
   return state;
 }

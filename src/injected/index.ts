@@ -1,4 +1,5 @@
 import { STORAGE_KEY } from '../shared/constants';
+import { hasOhMyWindow, ohMyWindow } from '../shared/oh-my-window';
 import { IOhMyInjectedState } from '../shared/type';
 import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
@@ -7,38 +8,39 @@ import { setupListenersMessageBus } from './state-manager';
 import { log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
-declare let window: any & { [STORAGE_KEY]: Record<string, any> };
 
 let isOhMyMockActive = false;
 
-if (!window[STORAGE_KEY]) {
+if (!hasOhMyWindow()) {
   // eslint-disable-next-line no-console
   console.log('Oooops. Something went wrong!!!')
 } else {
+  const ohMy = ohMyWindow();
 
-  window[STORAGE_KEY]?.off?.forEach(c => c());
+  // `src/early-inject` creates the namespace with nothing in it, so on the
+  // first injection there is nothing to tear down yet.
+  ohMy.off?.forEach(off => typeof off === 'function' ? off() : off.unsubscribe());
   // window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
-  window[STORAGE_KEY] ??= { cache: [], off: [], isEnabled: false, state: { active: false } };
-  window[STORAGE_KEY].version = VERSION;
-  window[STORAGE_KEY].off = [];
-  window[STORAGE_KEY].cache = [];
+  ohMy.version = VERSION;
+  ohMy.off = [];
+  ohMy.cache = [];
 
   const streams = setupListenersMessageBus();
-  const sub = streams.stateUpdate$.subscribe((state: IOhMyInjectedState) => {
+  const sub = streams.stateUpdate$.subscribe(state => {
     handleStateUpdate(state);
   });
-  window[STORAGE_KEY].off.push(() => sub.unsubscribe());
+  ohMy.off.push(() => sub.unsubscribe());
 
   patchXmlHttpRequest();
   patchFetch();
 
   initApi(streams.externalApiResult$);
 
-  function handleStateUpdate(state: IOhMyInjectedState): void {
+  function handleStateUpdate(state?: IOhMyInjectedState): void {
     if (!state) {
       return;
     }
-    window[STORAGE_KEY].state = state;
+    ohMy.state = state;
 
     if (state.active) {
       if (!isOhMyMockActive) {
@@ -49,7 +51,7 @@ if (!window[STORAGE_KEY]) {
         notify(true)
       }
     } else {
-      window[STORAGE_KEY].cache = [];
+      ohMy.cache = [];
       isOhMyMockActive = false;
       // unpatchXmlHttpRequest();
       // unpatchFetch();
@@ -58,14 +60,17 @@ if (!window[STORAGE_KEY]) {
     }
   }
 
-  window[STORAGE_KEY].unpatch = () => {
+  ohMy.unpatch = () => {
     unpatchXmlHttpRequest();
     unpatchFetch();
     sub.unsubscribe();
   }
 
-  const state = JSON.parse(document.querySelector(`#id-${STORAGE_KEY}`).getAttribute('oh-my-state'));
-  handleStateUpdate(state);
+  // The content script hands the initial state over on the <script> tag it
+  // injects this bundle with. A missing tag means the bundle was loaded some
+  // other way; the STATE message will follow regardless.
+  const stateAttribute = document.querySelector(`#id-${STORAGE_KEY}`)?.getAttribute('oh-my-state');
+  handleStateUpdate(stateAttribute ? JSON.parse(stateAttribute) as IOhMyInjectedState : undefined);
 }
 
 function notify(isActive: boolean) {

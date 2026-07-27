@@ -81,7 +81,8 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   // eslint-disable-next-line no-console
   console.log('Received update', packet);
 
-  packet.tabId = sender.tab.id;
+  // Messages from an extension page (the popup) have no `sender.tab`.
+  packet.tabId = sender.tab?.id;
   queue.addPacket(packet.payload.type, packet, (result) => {
     callback(result);
   }).catch(err => {

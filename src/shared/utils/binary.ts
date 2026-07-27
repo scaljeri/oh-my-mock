@@ -22,19 +22,24 @@ export function isBase64Str(input: string): boolean {
   return IS_BASE64_RE.test(input);
 }
 
-export function blobToDataURL(response: Blob, cb?): Promise<string> {
+// `response` is typed as `Blob | string` because the body below has always had a
+// branch for a plain string; the parameter type used to claim `Blob` only, which
+// made that branch look dead and forced the `as string` cast.
+export function blobToDataURL(response: Blob | string, cb?: (b64Str: string) => void): Promise<string> {
   return new Promise(r => {
     if (typeof response === 'object') {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const b64Str = (reader.result as string).split(',')[1];
+        // `readAsDataURL` always yields a `data:` string on `loadend`, never an
+        // ArrayBuffer and never null (that would be `onerror`).
+        const b64Str = String(reader.result).split(',')[1];
         cb?.(b64Str);
         r(b64Str);
       }
       reader.readAsDataURL(response);
     } else {
       cb?.(response);
-      r(response as string);
+      r(response);
     }
   });
 }

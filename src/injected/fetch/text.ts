@@ -1,37 +1,44 @@
-import { ohMyMockStatus, STORAGE_KEY } from "../../shared/constants";
+import { ohMyMockStatus } from "../../shared/constants";
+import { ohMyWindow } from "../../shared/oh-my-window";
+import { IOhMyReadyResponse } from "../../shared/packet-type";
 import { findCachedResponse } from "../utils";
+import { IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.Response.prototype.hasOwnProperty('__text');
-const descriptor = Object.getOwnPropertyDescriptor(window.Response.prototype, (isPatched ? '__' : '') + 'text');
+const descriptor = originalDescriptor('text');
 
 export function patchResponseText() {
   Object.defineProperties(window.Response.prototype, {
     text: {
       ...descriptor,
-      value: async function () {
-        if (!window[STORAGE_KEY].state.active) {
+      value: async function (this: IOhMyResponse) {
+        if (!ohMyWindow().state?.active) {
           return this.__text();
         }
 
         if (!this.ohResult) {
-          this.ohResult = findCachedResponse({
+          const cached: IOhMyReadyResponse | undefined = findCachedResponse({
             url: this.ohUrl || this.url.replace(window.origin, ''),
             method: this.ohMethod
           });
+          this.ohResult = cached;
 
-          if (this.ohResult && this.ohResult.response.status !== ohMyMockStatus.OK) {
-            persistResponse(this, this.ohResult.request);
+          if (cached && cached.response.status !== ohMyMockStatus.OK) {
+            persistResponse(this, cached.request);
           }
         }
 
-        if (this.ohResult?.response.status === ohMyMockStatus.OK) {
-          let output = this.ohResult.response?.response;
+        const result = this.ohResult;
+
+        if (isReadyResponse(result) && result.response.status === ohMyMockStatus.OK) {
+          let output: string | undefined = result.response.response;
+
           if (typeof output !== 'string') {
             try {
               output = JSON.stringify(output);
             } catch (err) { /* not json */ }
           }
+
           return Promise.resolve(output);
         } else {
           return this.__text();
@@ -44,5 +51,5 @@ export function patchResponseText() {
 
 export function unpatchResponseText() {
   Object.defineProperty(window.Response.prototype, 'text', descriptor);
-  delete window.Response.prototype['__text'];
+  Reflect.deleteProperty(window.Response.prototype, '__text');
 }

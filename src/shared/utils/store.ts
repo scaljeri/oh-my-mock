@@ -17,7 +17,9 @@ export class StoreUtils {
   }
 
   static init(context?: IOhMyContext, origin: origin = 'local'): IOhMyMock {
-    const store = { type: objectTypes.STORE, domains: [], version: this.version, origin } as IOhMyMock;
+    // Annotated rather than asserted: `domains: []` on its own infers `never[]`,
+    // which is what the assertion was there to paper over.
+    const store: IOhMyMock = { type: objectTypes.STORE, domains: [], version: this.version, origin };
 
     if (context) {
       store.domains.push(context.domain);

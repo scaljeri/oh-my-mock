@@ -6,9 +6,6 @@ import { patchStatus, unpatchStatus } from './xhr/status';
 import { patchResponseText, unpatchResponseText } from './xhr/response-text';
 import { patchResponse, unpatchResponse } from './xhr/response';
 import { patchResponseHeaders, unpatchResponseHeaders } from './xhr/response-headers';
-import { STORAGE_KEY } from '../shared/constants';
-
-declare let window: any;
 
 export function unpatchXmlHttpRequest() {
   // delete window[STORAGE_KEY].xhr;
@@ -24,11 +21,11 @@ export function unpatchXmlHttpRequest() {
 }
 
 export function patchXmlHttpRequest() {
-  window[STORAGE_KEY].xhr = {};
   // patchAddEventListener();
   // patchSetRequestHeader();
   // patchOpen();
   patchResponseHeaders();
+  // Publishes `xhr.send`, which `src/early-inject` is waiting for.
   patchSend();
   patchStatus();
   patchResponseText();

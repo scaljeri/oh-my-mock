@@ -1,5 +1,5 @@
 import { objectTypes } from '../constants';
-import { IData, IMock, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, ohMyStatusCode, IOhMyPresets } from '../type';
+import { IData, IMock, IOhMyShallowMock, IOhMyContext, ohMyMockId, ohMyPresetId, IOhMyPresets } from '../type';
 import { StorageUtils } from './storage';
 import { uniqueId } from './unique-id';
 import { url2regex } from './urls';
@@ -33,13 +33,16 @@ export class DataUtils {
     return data.enabled[context.preset] ? data.selected[context.preset] : undefined;
   }
 
-  static addResponse(context: IOhMyContext, data: IData, mock: Partial<IMock>, autoActivate = true): IData {
+  // A mock can only be attached to a request once it has an id and a status
+  // code, which is what makes it findable afterwards. Declaring the parameter
+  // as a bare `Partial<IMock>` forced three casts here and hid the requirement.
+  static addResponse(context: IOhMyContext, data: IData, mock: IOhMyShallowMock & Partial<IMock>, autoActivate = true): IData {
     data = {
       ...data, mocks:
       {
-        ...data.mocks, [mock.id as ohMyMockId]: {
-          id: mock.id as ohMyMockId,
-          statusCode: mock.statusCode as ohMyStatusCode,
+        ...data.mocks, [mock.id]: {
+          id: mock.id,
+          statusCode: mock.statusCode,
           label: mock.label,
           modifiedOn: mock.modifiedOn
         }
@@ -48,7 +51,7 @@ export class DataUtils {
     };
 
     if (Object.keys(data.mocks).length === 1) {
-      data.selected[context.preset] = mock.id as ohMyMockId;
+      data.selected[context.preset] = mock.id;
 
       if (autoActivate) {
         data.enabled[context.preset] = true;
@@ -80,7 +83,9 @@ export class DataUtils {
     return data;
   }
 
-  static getNextActiveResponse(data: IData): IOhMyShallowMock {
+  // Returns `undefined` when the request has no mocks left — which is exactly
+  // the case `removeResponse` below checks for.
+  static getNextActiveResponse(data: IData): IOhMyShallowMock | undefined {
     // TODO: make more advanced
     return Object.values(data.mocks).sort(this.statusCodeSort)?.[0];
   }

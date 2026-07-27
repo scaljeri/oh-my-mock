@@ -32,7 +32,9 @@ export class MockUtils {
 
   static find(responses: Record<ohMyMockId, IOhMyShallowMock>, search: IOhMyMockSearch): IOhMyShallowMock | null {
     if (search.id) {
-      return responses[search.id];
+      // An id that is not in the record is a miss, like any other failed
+      // search — the declared `null` has to be produced, not implied.
+      return responses[search.id] ?? null;
     }
 
     const output = Object.entries(responses).find(([k, v]) =>
@@ -60,7 +62,7 @@ export class MockUtils {
         headers: mock.headersMock,
         delay: mock.delay,
         statusCode: mock.statusCode
-      } as IOhMyMockResponse;
+      };
     } else {
       return { status: ohMyMockStatus.NO_CONTENT }
     }

@@ -1,62 +1,98 @@
-import { IOhMyAPIRequest, requestMethod } from '../shared/type';
+import { requestMethod } from '../shared/type';
 
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';
-import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
+import { ohMyMockStatus } from '../shared/constants';
+import { ohMyWindow } from '../shared/oh-my-window';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
 import { patchResponseJson, unpatchResponseJson } from './fetch/json';
 import { patchResponseText, unpatchResponseText } from './fetch/text';
 import { patchStatus, unpatchStatus } from './fetch/status';
+import { asOhMyResponse } from './fetch/oh-my-response';
 import { persistResponse } from './fetch/persist-response';
 import { error } from './utils';
 
-interface IOhFetchConfig {
-  method?: requestMethod;
-  headers?: Headers & { entries: () => [string, string][] }; // TODO: entries is not known in Headers
-  body?: FormData | unknown;
+/**
+ * The unpatched `fetch`, saved by `src/early-inject` before any page script
+ * could take a reference to it.
+ *
+ * It is always there — the injected bundle only runs once early-inject has
+ * created the namespace — but the shared type marks it optional because the
+ * content script's copy of the namespace has no fetch in it.
+ */
+function originalFetch(): typeof fetch {
+  const fn = ohMyWindow().__fetch;
+
+  if (!fn) {
+    throw new Error('OhMyMock: the original fetch is gone, cannot forward this request');
+  }
+
+  return fn;
 }
 
-declare let window: { fetch: any };
+/**
+ * `fetch`'s second argument as it arrives from the page: early-inject forwards
+ * whatever the caller passed, which need not be an object at all.
+ */
+function toRequestInit(init: unknown): RequestInit {
+  return typeof init === 'object' && init !== null ? init as RequestInit : {};
+}
 
-async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {}) {
-  if (!window[STORAGE_KEY].state?.active) {
-    return window[STORAGE_KEY]['__fetch'].call(window, request, config);
+async function ohMyFetch(request: string | Request, init?: unknown): Promise<unknown> {
+  let config = toRequestInit(init);
+
+  if (!ohMyWindow().state?.active) {
+    return originalFetch().call(window, request, config);
   }
 
-  let url = request as string;
+  let url: string;
+
   if (request instanceof Request) {
-    config = { headers: request.headers as any, method: request.method as requestMethod };
+    config = { headers: request.headers, method: request.method };
     url = request.url;
+  } else {
+    url = request;
   }
 
-  if (config.body instanceof FormData) {
-    const fd = {};
-    config.body.forEach((value, key) => fd[key] = value);
-    config.body = fd;
+  // A FormData body is flattened into a plain object so it survives being
+  // posted to the content script. That copy is kept *beside* `config` rather
+  // than written back into it: `config` is handed to the real fetch further
+  // down when the request turns out not to be mocked, and a plain object body
+  // would go out as the string "[object Object]", without a multipart boundary.
+  let body: unknown = config.body;
+
+  if (body instanceof FormData) {
+    const fd: Record<string, FormDataEntryValue> = {};
+    body.forEach((value, key) => fd[key] = value);
+    body = fd;
   }
 
-  config.method = (config.method || 'get').toUpperCase() as requestMethod;
+  // `requestMethod` does not cover PATCH/HEAD/OPTIONS, so this is a claim the
+  // shared type cannot back up yet — see the note in the report.
+  const method = (config.method || 'get').toUpperCase() as requestMethod;
 
   const result = await dispatchApiRequest({
     url,
-    method: config.method,
-    ...(config.body && { body: config.body }),
-    ...(config.headers && { headers: fetchUtils.headersToJson(config.headers) })
-  } as IOhMyAPIRequest, 'FETCH');
+    method,
+    requestType: 'FETCH',
+    headers: fetchUtils.headersToJson(config.headers),
+    ...(body !== undefined && { body })
+  }, 'FETCH');
 
-  const { response, headers, status, statusCode, delay } = result.response;
+  const { status, statusCode, delay } = result.response;
 
   if (status === ohMyMockStatus.ERROR) {
     error('Ooops, something went wrong while mocking your FETCH request!')
   }
 
   if (status !== ohMyMockStatus.OK) {
-    return window[STORAGE_KEY]['__fetch'].call(window, request, config).then(async response => {
-      response.ohResult = await persistResponse(response, result.request);
+    return originalFetch().call(window, request, config).then(async (response: Response) => {
+      const ohResponse = asOhMyResponse(response);
+      ohResponse.ohResult = await persistResponse(ohResponse, result.request);
 
-      return response;
+      return ohResponse;
     });
   }
 
@@ -66,9 +102,9 @@ async function ohMyFetch(request: string | Request, config: IOhFetchConfig = {})
     // native getters reading the same internal slot, and they cannot be patched
     // into agreement — a bare `new Response()` would keep reporting `ok: true`
     // for a mocked 500, so `if (!res.ok) throw` would never fire.
-    const resp = new Response(null, { status: toValidResponseStatus(statusCode) });
-    resp['ohUrl'] = url;
-    resp['ohMethod'] = config.method;
+    const resp = asOhMyResponse(new Response(null, { status: toValidResponseStatus(statusCode) }));
+    resp.ohUrl = url;
+    resp.ohMethod = method;
 
     setTimeout(() => resolve(resp), delay || 0);
   });
@@ -84,7 +120,7 @@ function toValidResponseStatus(statusCode: unknown): number {
 }
 
 function patchFetch(): void {
-  window[STORAGE_KEY].fetch = ohMyFetch;
+  ohMyWindow().fetch = ohMyFetch;
   patchResponseBlob();
   patchResponseArrayBuffer();
   patchResponseJson();
@@ -94,7 +130,11 @@ function patchFetch(): void {
 }
 
 function unpatchFetch(): void {
-  if (XMLHttpRequest.prototype['__fetch']) {
+  // Was `XMLHttpRequest.prototype['__fetch']`, which nothing ever sets — the
+  // original fetch is saved on the OhMyMock namespace by early-inject. With the
+  // XHR prototype being asked instead, the condition was always false and
+  // `window[STORAGE_KEY].unpatch()` restored none of the Response patches.
+  if (ohMyWindow().__fetch) {
     unpatchResponseBlob();
     unpatchResponseArrayBuffer();
     unpatchResponseJson();

@@ -6,7 +6,9 @@ import { StorageUtils } from "../shared/utils/storage";
 import { StoreUtils } from "../shared/utils/store";
 
 export async function initStorage(domain?: ohMyDomain): Promise<void> {
-  let store = await StorageUtils.get<IOhMyMock>();
+  // `StorageUtils.get` resolves with `undefined` on a fresh install, and
+  // `MigrateUtils.migrate` returns `null` when it gives up.
+  let store: IOhMyMock | null | undefined = await StorageUtils.get<IOhMyMock>();
 
   if (store) {
     if (MigrateUtils.shouldMigrate(store)) {
@@ -15,7 +17,8 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
       if (!store) { // If the store cannot be migrated
         await StorageUtils.reset();
       } else {
-        const allData = await StorageUtils.get(null);
+        // `null` reads the complete storage; `StorageUtils.get` only takes a key.
+        const allData = await StorageUtils.chrome.storage.local.get(null);
         for (const [k, v] of Object.entries(allData)) {
           await StorageUtils.set(k, MigrateUtils.migrate(v));
         }

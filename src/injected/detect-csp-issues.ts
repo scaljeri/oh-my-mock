@@ -1,4 +1,12 @@
-declare let window: any;
+declare global {
+	interface Window {
+		/**
+		 * Set when the page's CSP blocked something OhMyMock needs, so custom
+		 * code is evaluated in the background script instead.
+		 */
+		OhMyEvalDispatch?: boolean;
+	}
+}
 
 /* Due to CSP restrictions it might not be possible to `eval` code and use Fetch or XMLHttpRequest */
 /* This code detects if the current site has CSP restrictions */

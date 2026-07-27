@@ -1,14 +1,15 @@
-import { STORAGE_KEY } from "../../shared/constants";
+import { ohMyWindow } from "../../shared/oh-my-window";
+import { IOhMyXhr, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
 import { findCachedResponse } from "../utils";
 
 const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__status');
-const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'status');
+const descriptor = xhrDescriptor((isPatched ? '__' : '') + 'status');
 
 export function patchStatus() {
   Object.defineProperty(window.XMLHttpRequest.prototype, 'status', {
     ...descriptor,
-    get: function () {
-      if (!window[STORAGE_KEY].state.active) {
+    get: function (this: IOhMyXhr): number {
+      if (!ohMyWindow().state?.active) {
         return this.__status;
       }
 
@@ -26,6 +27,8 @@ export function patchStatus() {
 }
 
 export function unpatchStatus() {
-  Object.defineProperty(window.XMLHttpRequest.prototype, 'status', descriptor);
-  delete window.XMLHttpRequest.prototype['__status'];
+  const proto = ohMyXhrPrototype();
+
+  Object.defineProperty(proto, 'status', descriptor);
+  delete proto.__status;
 }

@@ -5,10 +5,17 @@ window.addEventListener('message', async function (event) {
   const data = event.data as { mock: IMock, request: IOhMyAPIRequest, response: IOhMyMockResponse };
 
   if (data.mock) {
-    delete data.response?.status;
+    // The caller's `status` is dropped so `evalCode` decides it; the field is
+    // required on IOhMyMockResponse, hence the cast rather than `delete`.
+    const response = data.response
+      ? ({ ...data.response, status: undefined } as unknown as IOhMyMockResponse)
+      : undefined;
 
-    const output = await evalCode(data.mock, data.request, data.response);
-    event.source['window'].postMessage(
+    const output = await evalCode(data.mock, data.request, response);
+
+    // The sandbox is only ever addressed from the popup window, never from a
+    // MessagePort or a ServiceWorker.
+    (event.source as Window | null)?.postMessage(
       {
         id: event.data.mock.id,
         output

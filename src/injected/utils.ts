@@ -1,5 +1,7 @@
-import { ohMyMockStatus, STORAGE_KEY } from '../shared/constants';
-import { IOhMyAPIRequest, IOhMyMockResponse, requestType, IOhMyMockContext } from '../shared/type';
+import { ohMyMockStatus } from '../shared/constants';
+import { ohMyWindow } from '../shared/oh-my-window';
+import { IOhMyReadyResponse } from '../shared/packet-type';
+import { IOhMyAPIRequest, IOhMyMockResponse, requestMethod, requestType, IOhMyMockContext } from '../shared/type';
 import { isImage } from '../shared/utils/image';
 import { errorBuilder, debugBuilder, logBuilder, warnBuilder } from '../shared/utils/logging';
 
@@ -22,36 +24,58 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
     case ohMyMockStatus.INACTIVE:
       log(`${msg} Skipped / not mocked`);
       break;
-    default:
+    default: {
+      // A mock does not have to carry headers, so nothing here may assume a
+      // content type is present.
+      const contentType = data.headers?.['content-type'] ?? '';
       let response = data.response;
 
-      if (data?.headers?.['content-type']?.includes('application/json')) {
+      if (contentType.includes('application/json')) {
         try {
           response = data.response ? JSON.parse(data.response as string) : '';
         } catch (e) {
           response = data.response;
         }
-      } else if (isImage(data?.headers?.['content-type'])) {
-        response = `Image Data (${data.headers['content-type']})`;
+      } else if (isImage(contentType)) {
+        response = `Image Data (${contentType})`;
       }
-      log(`${msg} ${data.headers['content-type']}`, response);
+      log(`${msg} ${contentType}`, response);
+    }
   }
 }
 
-export function findCachedResponse(search: IOhMyMockContext, remove = true): any {
-  const result = window[STORAGE_KEY].cache.find(c =>
+const REQUEST_METHODS = ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT'] as const;
+
+function isRequestMethod(method: string): method is requestMethod {
+  return (REQUEST_METHODS as readonly string[]).includes(method);
+}
+
+/**
+ * `XMLHttpRequest.open` and `fetch` accept any method string, while the store
+ * can only key a mock by one of `requestMethod`. Anything else is reported as
+ * `undefined` so the request falls through unmocked rather than being matched
+ * against a method the store cannot represent.
+ */
+export function toRequestMethod(method: string): requestMethod | undefined {
+  const upperCased = method.toUpperCase();
+
+  return isRequestMethod(upperCased) ? upperCased : undefined;
+}
+
+export function findCachedResponse(search: IOhMyMockContext, remove = true): IOhMyReadyResponse | undefined {
+  const cache = ohMyWindow().cache ?? [];
+  const result = cache.find(c =>
     c && c.request.url === search.url &&
     (!search.method || c.request.method === search.method));
 
   if (result && remove) {
-    const index = window[STORAGE_KEY].cache.indexOf(result);
-    window[STORAGE_KEY].cache.splice(index, 1);
+    cache.splice(cache.indexOf(result), 1);
   }
 
   return result;
 }
 
-export function findCachedResponseAsync(search: IOhMyMockContext, remove = true): Promise<any> {
+export function findCachedResponseAsync(search: IOhMyMockContext, remove = true): Promise<IOhMyReadyResponse | undefined> {
   return new Promise(resolve => {
     let count = 0;
     const iid = window.setInterval(() => {

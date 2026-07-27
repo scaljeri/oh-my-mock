@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { IOhMyDispatchServerRequest, IOhMyPacketContext, IPacketPayload } from '../shared/packet-type';
 import { IOhMyMockResponse } from '../shared/type';
+import { ohMyMockStatus } from '../shared/constants';
 import { uniqueId } from '../shared/utils/unique-id';
 
 /**
@@ -90,20 +91,25 @@ export const dispatchRemote = async (
   payload: IPacketPayload<IOhMyDispatchServerRequest, IOhMyPacketContext>
 ): Promise<IOhMyMockResponse> => {
   if (!isConnected || !socket) {
-    return (payload as any).data.response as IOhMyMockResponse;
+    // No SDK server to ask; the caller falls back to the locally stored mock.
+    return { status: ohMyMockStatus.NO_CONTENT };
   }
+
+  // Captured so the callbacks below cannot observe a `socket` that was replaced
+  // (or cleared) by `reconnectWithLocalServer` while the request was in flight.
+  const activeSocket = socket;
 
   return new Promise<IOhMyMockResponse>(resolve => {
     const id = uniqueId();
 
-    socket.on(id, (result: IOhMyMockResponse) => {
-      socket?.off(id);
+    activeSocket.on(id, (result: IOhMyMockResponse) => {
+      activeSocket.off(id);
 
       resolve(result);
     });
 
     payload.id = id;
 
-    socket.emit('data', payload);
+    activeSocket.emit('data', payload);
   });
 };

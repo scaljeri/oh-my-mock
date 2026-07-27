@@ -4,18 +4,31 @@ import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
+import { error } from "../utils";
 
 export class OhMyStateHandler {
   static StorageUtils = StorageUtils;
 
-  static async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IState> {
+  static async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IState | undefined> {
     try {
       const { data, context } = payload;
+      // A full state carries its own domain; a patch only has the packet context.
+      const domain = context?.domain ?? (data as IState)?.domain;
 
-      let state = data as IState || StateUtils.init({ domain: context.domain });
+      if (!domain) {
+        error('Cannot update a state without a domain', payload);
+        return undefined;
+      }
+
+      let state = data as IState || StateUtils.init({ domain });
 
       if (context?.path) {
-        state = await OhMyStateHandler.StorageUtils.get<IState>(context.domain) || StateUtils.init({ domain: context.domain });
+        if (!context.propertyName) { // A patch without a property has nothing to write
+          error(`Cannot patch the state at ${context.path} without a property name`);
+          return undefined;
+        }
+
+        state = await OhMyStateHandler.StorageUtils.get<IState>(domain) || StateUtils.init({ domain });
         state = update<IState>(context.path, state, context.propertyName, data);
 
         // if (context.path.includes('$.data')) {
@@ -27,7 +40,7 @@ export class OhMyStateHandler {
       // Is the state new, add it to the store
       let store = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
 
-      if (!StoreUtils.hasState(store, state.domain)) {
+      if (!StoreUtils.hasState(store, domain)) {
         store = StoreUtils.setState(store, state);
 
         await OhMyStateHandler.StorageUtils.setStore(store);
@@ -37,7 +50,7 @@ export class OhMyStateHandler {
       //   cSPRemoval([payload.context.domain]);
       // }
 
-      return StorageUtils.set(state.domain, state).then(() => state);
+      return StorageUtils.set(domain, state).then(() => state);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(err);

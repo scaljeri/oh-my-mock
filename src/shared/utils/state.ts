@@ -1,26 +1,28 @@
 import { objectTypes } from '../constants';
-import { timestamp } from 'rxjs';
-import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyMockId, ohMyPresetId } from '../type';
+import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyDomain, ohMyPresetId } from '../type';
+import { timestamp } from './timestamp';
 import { compareUrls } from './urls';
 
 export class StateUtils {
   static version = '__OH_MY_VERSION__';
 
   static init(base: Partial<IState> = {}): IState {
+    const domain: ohMyDomain = base.domain ?? '';
+
     return {
       version: this.version,
-      views: { activity: [] },
       aux: { newAutoActivate: false },
       data: {},
       presets: { default: 'Default' },
-      context: {
-        preset: 'default',
-        domain: base.domain
-      },
       ...base,
+      domain,
+      context: base.context ?? {
+        preset: 'default',
+        domain
+      },
       type: objectTypes.STATE,
-      onModified: timestamp()
-    } as IState;
+      modifiedOn: timestamp()
+    };
   }
 
   static isState(input: unknown): input is IState {

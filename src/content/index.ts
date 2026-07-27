@@ -1,8 +1,9 @@
 /// <reference types="chrome"/>
 
-import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
+import { appSources, payloadType } from '../shared/constants';
 import { IOhMyAPIRequest } from '../shared/type';
-import { IOhMessage, IOhMyResponseUpdate, IPacketPayload } from '../shared/packet-type';
+import { IOhMessage, IOhMyPacketContext, IOhMyResponseUpdate } from '../shared/packet-type';
+import { hasOhMyWindow, ohMyWindow, setOhMyWindow } from '../shared/oh-my-window';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 // import { debug, error } from './utils';
 import { OhMyContentState } from './content-state';
@@ -21,8 +22,6 @@ import { debug, error } from './utils';
 import { injectCode } from './inject-code';
 import { sendMsg2Popup } from './message-to-popup';
 
-declare let window: any;
-
 window.onunhandledrejection = function (event: PromiseRejectionEvent) {
   if (event.reason.message.match(/Extension context invalidated/)) {
     error('OhMyMock has been updated, this page is now invalid -> reloading....')
@@ -30,32 +29,35 @@ window.onunhandledrejection = function (event: PromiseRejectionEvent) {
   }
 }
 
-if (window[STORAGE_KEY]) {
-  window[STORAGE_KEY].off.forEach(h => {
+if (hasOhMyWindow()) {
+  ohMyWindow().off?.forEach(h => {
     typeof h === 'function' ? h() : h.unsubscribe?.();
   });
 }
 
-window[STORAGE_KEY] = { off: [], injectionDone$: new BehaviorSubject(false) };
+setOhMyWindow({ off: [], injectionDone$: new BehaviorSubject(false) });
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)
   .setTrigger(triggerRuntime);
-window[STORAGE_KEY].off.push(() => messageBus.clear());
+ohMyWindow().off?.push(() => messageBus.clear());
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
-window[STORAGE_KEY].off.push(contentState.isActive$.subscribe(async (value: boolean) => {
-  if (await injectCode({ active: value }, messageBus)) {
+// `isActive$` starts out `undefined` (nothing is known yet), which is simply
+// "not active" as far as the injected script is concerned.
+ohMyWindow().off?.push(contentState.isActive$.subscribe(async (value?: boolean) => {
+  if (await injectCode({ active: !!value }, messageBus)) {
     sendMessageToInjected({
       type: payloadType.STATE,
-      data: {
-        active: value, description: 'content;contentState.isActive'
-      }
-    } as IPacketPayload);
+      // The injected script reads this as an `IOhMyInjectedState`; the
+      // description belongs on the payload, not inside the state.
+      data: { active: !!value },
+      description: 'content;contentState.isActive'
+    });
   }
 }));
 
@@ -68,12 +70,10 @@ function sendKnockKnock() {
     { type: payloadType.KNOCKKNOCK, description: 'content;sendKnockKnock' });
 }
 
-messageBus.streamByType$<any>(payloadType.API_REQUEST, appSources.INJECTED).subscribe(async ({ packet }: IOhMessage<IOhMyAPIRequest>) => {
-  const state = await contentState.getState();
-
-  receivedApiRequest(packet, messageBus, contentState);
-
-});
+messageBus.streamByType$<IOhMyAPIRequest>(payloadType.API_REQUEST, appSources.INJECTED)
+  .subscribe(({ packet }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
+    receivedApiRequest(packet, messageBus, contentState);
+  });
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 
 // PING PONG

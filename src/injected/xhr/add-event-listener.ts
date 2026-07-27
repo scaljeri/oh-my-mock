@@ -1,26 +1,32 @@
+import { IOhMyXhr, ohMyXhrPrototype } from '../oh-my-xhr';
+
 // const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__addEventListener');
 // const descriptor = Object.getOwnPropertyDescriptor(window.XMLHttpRequest.prototype, (isPatched ? '__' : '') + 'addEventListener');
 
 // const addEventListener = window.XMLHttpRequest.prototype.addEventListener;
 
 export function patchAddEventListener() {
-  const addEventListener = window.XMLHttpRequest.prototype['__addEventListener'] ||
-    window.XMLHttpRequest.prototype.addEventListener;
+  const proto = ohMyXhrPrototype();
+  const addEventListener = proto.__addEventListener ?? proto.addEventListener;
 
-  window.XMLHttpRequest.prototype.addEventListener = function (eventName: string, callback) {
+  proto.addEventListener = function (this: IOhMyXhr, eventName: string, callback: EventListenerOrEventListenerObject) {
     if (eventName === 'load') {
-      this.ohListeners.push(callback);
+      // `open` seeds this list, but a listener can be registered on an
+      // instance that was never opened through the patch.
+      (this.ohListeners ??= []).push(callback);
     }
 
     return this.__addEventListener(eventName, callback);
   }
-  window.XMLHttpRequest.prototype['__addEventListener'] = addEventListener;
+  proto.__addEventListener = addEventListener;
 }
 
 export function unpatchAddEventListener() {
-  if (window.XMLHttpRequest.prototype['__addEventListener']) {
-    window.XMLHttpRequest.prototype.addEventListener = window.XMLHttpRequest.prototype['__addEventListener'];
-    delete window.XMLHttpRequest.prototype['__addEventListener'];
+  const proto = ohMyXhrPrototype();
+
+  if (proto.__addEventListener) {
+    proto.addEventListener = proto.__addEventListener;
+    delete proto.__addEventListener;
   }
   // Object.defineProperty(window.XMLHttpRequest.prototype, 'addEventListener', descriptor);
 }

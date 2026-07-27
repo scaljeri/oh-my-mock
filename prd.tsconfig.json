@@ -14,12 +14,11 @@
     "types": [],
     "skipLibCheck": true,
     "noEmitOnError": true,
-    // NOT strict yet, and that matters: the extension bundles (content,
-    // injected, background) compile through this config rather than through
-    // tsconfig.app.json, so the mocking logic — where the real bugs have turned
-    // up — is the one part strict mode does not cover. Switching this on
-    // reports 199 errors; that is the next piece of work, tracked, not ignored.
-    "strict": false,
+    // The extension bundles (content, injected, background) compile through
+    // this config rather than through tsconfig.app.json, so without these flags
+    // the mocking logic — where every real bug so far has been found — would be
+    // the one part strict mode does not cover.
+    "strict": true,
     "esModuleInterop": true
   },
   "files": [

@@ -1,6 +1,7 @@
 import { filter, first, map, Observable } from "rxjs"
-import { IOhMyStatus, OhMyAPIUpsert } from "../shared/api-types"
-import { payloadType, STORAGE_KEY } from "../shared/constants"
+import { IOhMyStatus } from "../shared/api-types"
+import { payloadType } from "../shared/constants"
+import { ohMyWindow } from "../shared/oh-my-window"
 import { IOhMyImportStatus } from "../shared/packet-type"
 import { IOhMyContext } from "../shared/type"
 import { uniqueId } from "../shared/utils/unique-id"
@@ -8,8 +9,10 @@ import { send } from "./message/send"
 
 // Listen for responses
 export function initApi(updates$: Observable<IOhMyImportStatus>) {
-  window[STORAGE_KEY].api = {
-    upsert: (data: OhMyAPIUpsert, context?: IOhMyContext): Promise<IOhMyStatus> => {
+  ohMyWindow().api = {
+    // Page scripts call this, so `data` is whatever they hand over; the
+    // background script is what validates it against `OhMyAPIUpsert`.
+    upsert: (data: unknown, context?: IOhMyContext): Promise<IOhMyStatus> => {
       const id = uniqueId();
 
       return new Promise<IOhMyStatus>(resolve => {
