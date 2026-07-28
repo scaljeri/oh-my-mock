@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { IState } from '@shared/type';
+import { IState } from '@shared/types/state';
 import { filter, Subscription } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
 

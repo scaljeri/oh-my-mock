@@ -1,4 +1,4 @@
-import { requestMethod } from '../shared/type';
+import { requestMethod } from '../shared/types/request';
 
 import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';

@@ -1,5 +1,5 @@
 import { objectTypes } from '@shared/constants';
-import { IOhMyCookie } from '@shared/type';
+import { IOhMyCookie } from '@shared/types/cookie';
 import { CookieTagsPipe, isOffInEveryPreset } from './cookie-tags.pipe';
 
 const cookie = (update: Partial<IOhMyCookie> = {}): IOhMyCookie => ({

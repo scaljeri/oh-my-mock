@@ -39,6 +39,37 @@ describe('#Utils/urls#url2regex', () => {
   it('should not double escape when executed twice', () => {
     expect(url2regex(url2regex('a?b.c'))).toBe('a\\?b\\.c');
   });
+
+  // Only `.` and `?` used to be escaped. Every other metacharacter stayed live,
+  // so a url containing one produced a pattern that did not match the url it
+  // was created from — silently, since nothing throws on a regex that simply
+  // matches something else.
+  it.each([
+    ['/api/items(new)'],
+    ['/api/a+b'],
+    ['/api/list[0]'],
+    ['/api/x{1}'],
+    ['/api/a|b'],
+    ['/api/^start'],
+    ['/api/end$'],
+    ['/api/a*b']
+  ])('makes a pattern that matches its own url: %s', url => {
+    expect(compareUrls(url, url2regex(url))).toBe(true);
+  });
+
+  // The louder half of the same bug: an unbalanced bracket is not a pattern
+  // that matches the wrong thing, it is a SyntaxError thrown inside the content
+  // script's lookup on every intercepted request.
+  it.each([['/api/a)b'], ['/api/a(b'], ['/api/a]b']])(
+    'does not produce an invalid regex: %s', url => {
+      expect(() => compareUrls(url, url2regex(url))).not.toThrow();
+      expect(compareUrls(url, url2regex(url))).toBe(true);
+    });
+
+  it('still escapes each character only once over its own output', () => {
+    const once = url2regex('/api/items(new)?q=1');
+    expect(url2regex(once)).toBe(once);
+  });
 });
 
 describe('#Utils/urls#compareUrls', () => {

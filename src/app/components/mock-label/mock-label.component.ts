@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { IMock, IOhMyShallowMock, statusCode } from '@shared/type';
+import { IMock, IOhMyShallowMock, ohMyStatusCode } from '@shared/types/mock';
 
 @Component({
   standalone: false,
@@ -11,7 +11,7 @@ import { IMock, IOhMyShallowMock, statusCode } from '@shared/type';
 export class MockLabelComponent {
   @Input() mock!: IOhMyShallowMock | IMock;
 
-  get code(): statusCode {
+  get code(): ohMyStatusCode {
     return this.mock?.statusCode;
   }
 

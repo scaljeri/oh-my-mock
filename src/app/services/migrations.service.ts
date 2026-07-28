@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { compareVersions } from 'compare-versions';
 
-import { IOhMyMock } from '@shared/type';
+import { IOhMyMock } from '@shared/types/store';
 import { AppStateService } from './app-state.service';
 
 import { migrations, IOhMygrations } from '../migrations/'

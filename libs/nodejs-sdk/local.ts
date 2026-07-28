@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ohMyMockStatus } from '../../src/shared/constants';
 import { IOhMyDispatchServerRequest } from '../../src/shared/packet-type';
-import { IData, IOhMyMockContext, IOhMyMockResponse, statusCode } from '../../src/shared/type';
+import { IData, IOhMyMockContext, IOhMyMockResponse, ohMyStatusCode } from '../../src/shared/type';
 import { compareUrls } from '../../src/shared/utils/urls';
 
 const fsPromise = fs.promises;
@@ -16,7 +16,7 @@ export type IOhMySdkRequest = IOhMyDispatchServerRequest;
 
 export type IOhFileContext = Omit<IOhMyMockContext, 'id' | 'mockId'> &
 {
-  statusCode?: statusCode;
+  statusCode?: ohMyStatusCode;
   headers?: Record<string, string>;
   path?: string
   handler: (output: IOhMySdkResponse, input: IOhMySdkRequest) => IOhMySdkResponse;

@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { IOhMyCookie } from '@shared/type';
+import { IOhMyCookie } from '@shared/types/cookie';
 
 /**
  * A chip under a cookie's name in the list.

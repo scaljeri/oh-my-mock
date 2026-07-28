@@ -2,7 +2,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { objectTypes } from '@shared/constants';
-import { IState } from '@shared/type';
+import { IState } from '@shared/types/state';
 import { of } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
 import { TabNavComponent } from './tab-nav.component';

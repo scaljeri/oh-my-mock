@@ -1,7 +1,7 @@
 /// <reference types="chrome"/>
 
 import { appSources, payloadType } from '../shared/constants';
-import { IOhMyAPIRequest } from '../shared/type';
+import { IOhMyAPIRequest } from '../shared/types/api-request';
 import { IOhMessage, IOhMyPacketContext, IOhMyResponseUpdate } from '../shared/packet-type';
 import { hasOhMyWindow, ohMyWindow, setOhMyWindow } from '../shared/oh-my-window';
 import { OhMyMessageBus } from '../shared/utils/message-bus';

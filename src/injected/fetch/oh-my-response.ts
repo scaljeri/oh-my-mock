@@ -1,5 +1,5 @@
 import { IOhMyReadyResponse, IOhMyResponseUpdate } from '../../shared/packet-type';
-import { requestMethod } from '../../shared/type';
+import { requestMethod } from '../../shared/types/request';
 
 /**
  * What `ohResult` holds — the two are *not* the same shape, and which one is

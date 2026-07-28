@@ -1,6 +1,6 @@
 import { IOhMyResponseUpdate } from '../../shared/packet-type';
 import { ohMyWindow } from '../../shared/oh-my-window';
-import { IOhMyAPIRequest } from '../../shared/type';
+import { IOhMyAPIRequest } from '../../shared/types/api-request';
 import { convertToB64 } from '../../shared/utils/binary';
 import { extractMimeType, isMimeTypeText } from '../../shared/utils/mime-type';
 import { dispatchApiResponse } from '../message/dispatch-api-response';

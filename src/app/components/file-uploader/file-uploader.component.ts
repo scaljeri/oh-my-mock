@@ -7,6 +7,12 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
   styleUrls: ['./file-uploader.component.scss']
 })
 export class FileUploaderComponent {
+  /**
+   * What is being uploaded. It used to be hard-coded to the JSON backup's
+   * wording, which is wrong above a HAR drop zone — the component itself does
+   * not care what the file holds.
+   */
+  @Input() heading = 'Import Requests and Responses';
   @Input() multiple!: boolean;
   @Input() dragDropEnabled = true;
   @Input() fileType = 'json';

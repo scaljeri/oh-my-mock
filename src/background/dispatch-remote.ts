@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { IOhMyDispatchServerRequest, IOhMyPacketContext, IPacketPayload } from '../shared/packet-type';
-import { IOhMyMockResponse } from '../shared/type';
+import { IOhMyMockResponse } from '../shared/types/api-response';
 import { ohMyMockStatus } from '../shared/constants';
 import { uniqueId } from '../shared/utils/unique-id';
 import { log } from './utils';

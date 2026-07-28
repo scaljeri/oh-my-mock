@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { objectTypes } from '@shared/constants';
-import { IOhMyCookie } from '@shared/type';
+import { IOhMyCookie } from '@shared/types/cookie';
 import { PipesModule } from '../../pipes/pipes.module';
 import { CookieListComponent } from './cookie-list.component';
 

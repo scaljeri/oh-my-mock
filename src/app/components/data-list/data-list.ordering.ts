@@ -1,4 +1,4 @@
-import { IData, ohMyDataId } from '@shared/type';
+import { IData, ohMyDataId } from '@shared/types/request';
 import { IOhDataView } from '../../app.types';
 
 /**

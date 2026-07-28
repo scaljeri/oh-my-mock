@@ -39,6 +39,7 @@ import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.co
 import { RequestComponent } from './request/request.component';
 import { RequestHeaderComponent } from './request/request-header/request-header.component';
 import { JsonImportComponent } from './json-import/json-import.component';
+import { HarImportComponent } from './har-import/har-import.component';
 import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { FileDragDropDirective } from './file-uploader/file-drag-drop.directive';
 import { CodeErrorsComponent } from './code-errors/code-errors.component';
@@ -81,6 +82,7 @@ import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
     RequestComponent,
     RequestHeaderComponent,
     JsonImportComponent,
+    HarImportComponent,
     FileUploaderComponent,
     FileDragDropDirective,
     CodeErrorsComponent,
@@ -144,6 +146,7 @@ import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
     RequestComponent,
     RequestHeaderComponent,
     FileUploaderComponent,
+    HarImportComponent,
     AnimatedListDirective,
     ArrowComponent,
     MockLabelComponent,

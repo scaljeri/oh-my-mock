@@ -228,12 +228,15 @@ and what the alternatives would cost.
 
 | Type | File | What it is |
 |---|---|---|
-| `IOhMyAPIRequest` | `shared/type.ts` | the intercepted request |
-| `IOhMyMockResponse` | `shared/type.ts` | an answer: status + optional body/headers/delay |
+| `IOhMyAPIRequest` | `shared/types/api-request.ts` | the intercepted request |
+| `IOhMyMockResponse` | `shared/types/api-response.ts` | an answer: status + optional body/headers/delay |
 | `IOhMyReadyResponse` | `shared/packet-type.ts` | `{ request, response }` — what travels back |
 | `IPacket` / `IPacketPayload` | `shared/packet-type.ts` | the message envelope |
-| `IOhMyContext` | `shared/type.ts` | **state** context — has a `preset` |
+| `IOhMyContext` | `shared/types/context.ts` | **state** context — has a `preset` |
 | `IOhMyPacketContext` | `shared/packet-type.ts` | **message** context — only the domain, and only after the content hop |
-| `IData` | `shared/type.ts` | a stored request, with its mocks per preset — its own storage record, listed by id in `IState.requests` |
-| `IMock` | `shared/type.ts` | one stored response |
+| `IData` | `shared/types/request.ts` | a stored request, with its mocks per preset — its own storage record, listed by id in `IState.requests` |
+| `IMock` | `shared/types/mock.ts` | one stored response |
 | `IOhMyWindow` | `shared/oh-my-window.ts` | the namespace on `window`, shared by injected and content |
+
+`shared/type.ts` is now a barrel over `shared/types/*` — importing from it still
+works everywhere, but the concept file is the clearer import.

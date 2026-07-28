@@ -1,0 +1,373 @@
+@use 'tokens' as t;
+
+// The HAR picker, in the language of `design/Mock Manager v2.dc.html`: a light
+// surface, hairline dividers, a mono column for anything that is data.
+//
+// Every BEM child is a top-level selector on purpose. Nesting `&__row` inside
+// an element selector (`li.oh-har { … }`) compiles to `li.oh-har__row`, which
+// matches nothing and fails silently.
+
+// The dialog surface has no padding of its own — Material's comes from the
+// `mat-dialog-content` directives, which this does not use — and it lays its
+// content out centred, so anything wider than the panel overflows on *both*
+// sides and is clipped by the rounded corners. Hence the explicit padding, the
+// border-box sizing and the `min-width: 0` chain down to every text cell.
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: t.$oh-space-4;
+}
+
+.oh-har {
+  display: flex;
+  flex-direction: column;
+  gap: t.$oh-space-3;
+  width: 100%;
+  min-width: 0;
+  max-height: 72vh;
+  font-family: t.$oh-font-sans;
+  color: t.$oh-text;
+}
+
+// ---- file picker ------------------------------------------------------
+
+.oh-har__hint {
+  margin: 0;
+  font-size: t.$oh-size-base;
+  line-height: 1.5;
+  color: t.$oh-text-subtle;
+
+  em {
+    font-style: normal;
+    font-weight: t.$oh-weight-semibold;
+    color: t.$oh-text-secondary;
+  }
+}
+
+.oh-har__error {
+  margin: 0;
+  padding: t.$oh-space-2 t.$oh-space-3;
+  border: 1px solid t.$oh-danger-border;
+  border-radius: t.$oh-radius;
+  background: t.$oh-danger-tint;
+  font-size: t.$oh-size-base;
+  color: t.$oh-danger;
+}
+
+// ---- header -----------------------------------------------------------
+
+.oh-har__head {
+  display: flex;
+  flex-direction: column;
+  gap: t.$oh-space-1;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.oh-har__title {
+  overflow: hidden;
+  margin: 0;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-lg;
+  font-weight: t.$oh-weight-normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: t.$oh-text;
+}
+
+.oh-har__summary {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text-subtle;
+}
+
+.oh-har__note {
+  margin: t.$oh-space-1 0 0;
+  padding: t.$oh-space-2 t.$oh-space-3;
+  border-radius: t.$oh-radius;
+  background: t.$oh-warning-tint;
+  font-size: t.$oh-size-sm;
+  line-height: 1.5;
+  color: t.$oh-warning;
+
+  code {
+    font-family: t.$oh-font-mono;
+    font-size: t.$oh-size-xs;
+  }
+}
+
+// ---- target domain ----------------------------------------------------
+
+.oh-har__domain {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: t.$oh-space-2;
+  flex: 0 0 auto;
+  padding: t.$oh-space-3;
+  border: 1px solid t.$oh-border-soft;
+  border-radius: t.$oh-radius-md;
+  background: t.$oh-bg-subtle;
+}
+
+.oh-har__label {
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  letter-spacing: t.$oh-label-tracking;
+  text-transform: uppercase;
+  color: t.$oh-text-subtle;
+}
+
+.oh-har__label-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-faint;
+}
+
+.oh-har__input {
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid t.$oh-border-strong;
+  border-radius: t.$oh-radius;
+  background: t.$oh-bg-surface;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text;
+
+  &:focus {
+    outline: none;
+    border-color: t.$oh-brand;
+  }
+}
+
+.oh-har__input--filter {
+  flex: 1;
+  font-family: t.$oh-font-sans;
+}
+
+.oh-har__suggestion {
+  padding: 5px 10px;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius-pill;
+  background: t.$oh-bg-surface;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-brand;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: t.$oh-brand-tint;
+  }
+}
+
+// ---- toolbar ----------------------------------------------------------
+
+.oh-har__tools {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-2;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.oh-har__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-base;
+  color: t.$oh-brand;
+  cursor: pointer;
+
+  &:hover {
+    color: t.$oh-brand-hover;
+    text-decoration: underline;
+  }
+}
+
+.oh-har__count {
+  margin-left: auto;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-faint;
+}
+
+// ---- the list ---------------------------------------------------------
+
+.oh-har__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid t.$oh-border-soft;
+  border-radius: t.$oh-radius-md;
+  background: t.$oh-bg-surface;
+}
+
+.oh-har__row {
+  display: grid;
+  grid-template-columns: 24px 58px minmax(0, 1fr) auto 42px;
+  align-items: center;
+  gap: t.$oh-row-gap;
+  padding: t.$oh-space-2 t.$oh-space-3;
+
+  & + & {
+    border-top: 1px solid t.$oh-row-border;
+  }
+
+  &:hover {
+    background: t.$oh-row-hover;
+  }
+}
+
+.oh-har__pick {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.oh-har__method {
+  padding: 3px 0;
+  border-radius: t.$oh-radius-sm;
+  background: t.$oh-bg-muted;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  text-align: center;
+  color: t.$oh-text-subtle;
+
+  &[data-method='GET']    { color: t.$oh-info;           background: t.$oh-info-tint; }
+  &[data-method='POST']   { color: t.$oh-success-strong; background: t.$oh-success-tint; }
+  &[data-method='PUT']    { color: t.$oh-warning;        background: t.$oh-warning-tint; }
+  &[data-method='PATCH']  { color: t.$oh-warning;        background: t.$oh-warning-tint; }
+  &[data-method='DELETE'] { color: t.$oh-danger;         background: t.$oh-danger-tint; }
+}
+
+.oh-har__endpoint {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.oh-har__path {
+  overflow: hidden;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-base;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: t.$oh-text;
+}
+
+.oh-har__meta {
+  overflow: hidden;
+  font-size: t.$oh-size-sm;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: t.$oh-text-faint;
+}
+
+.oh-har__tags {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-1;
+}
+
+.oh-har__tag {
+  padding: 2px 7px;
+  border-radius: t.$oh-radius-pill;
+  background: t.$oh-bg-muted;
+  font-size: t.$oh-size-2xs;
+  font-weight: t.$oh-weight-semibold;
+  white-space: nowrap;
+  color: t.$oh-text-subtle;
+}
+
+.oh-har__tag--warn {
+  background: t.$oh-warning-tint;
+  color: t.$oh-warning;
+}
+
+.oh-har__code {
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-base;
+  font-weight: t.$oh-weight-semibold;
+  text-align: right;
+
+  &[data-tone='success'] { color: t.$oh-success-strong; }
+  &[data-tone='warning'] { color: t.$oh-warning; }
+  &[data-tone='danger']  { color: t.$oh-danger; }
+  &[data-tone='muted']   { color: t.$oh-text-fainter; }
+}
+
+.oh-har__empty {
+  margin: 0;
+  padding: t.$oh-space-4;
+  text-align: center;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text-faint;
+}
+
+// ---- footer -----------------------------------------------------------
+
+.oh-har__foot {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-2;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-top: t.$oh-space-2;
+  border-top: 1px solid t.$oh-border-soft;
+}
+
+.oh-har__spacer {
+  flex: 1;
+}
+
+.oh-har__cancel {
+  flex: 0 0 auto;
+  padding: t.$oh-space-2 t.$oh-space-3;
+  white-space: nowrap;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius-md;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: t.$oh-bg-muted;
+    color: t.$oh-text;
+  }
+}
+
+.oh-har__confirm {
+  flex: 0 0 auto;
+  padding: t.$oh-space-2 t.$oh-space-4;
+  white-space: nowrap;
+  border: 0;
+  border-radius: t.$oh-radius-md;
+  background: t.$oh-surface-inverse;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  font-weight: t.$oh-weight-medium;
+  color: #fff;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: t.$oh-surface-inverse-hover;
+  }
+
+  &:disabled {
+    background: t.$oh-bg-muted;
+    color: t.$oh-text-fainter;
+    cursor: not-allowed;
+  }
+}

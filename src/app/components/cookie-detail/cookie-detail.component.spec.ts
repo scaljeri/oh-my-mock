@@ -2,7 +2,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { objectTypes } from '@shared/constants';
-import { IOhMyCookie } from '@shared/type';
+import { IOhMyCookie } from '@shared/types/cookie';
 import { CookieDetailComponent } from './cookie-detail.component';
 
 const cookie = (update: Partial<IOhMyCookie> = {}): IOhMyCookie => ({

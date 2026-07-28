@@ -1,4 +1,4 @@
-import { IOhMyMock } from '@shared/type';
+import { IOhMyMock } from '@shared/types/store';
 
 // A migration may return null when the store cannot be migrated at all.
 export type IOhMygration = (state: IOhMyMock) => IOhMyMock | null;

@@ -2,7 +2,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { appSources, payloadType } from '../shared/constants';
 import { ohMyWindow } from '../shared/oh-my-window';
 import { IOhMessage, IOhMyImportStatus, IOhMyReadyResponse } from '../shared/packet-type';
-import { IOhMyInjectedState } from '../shared/type';
+import { IOhMyInjectedState } from '../shared/types/store';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 

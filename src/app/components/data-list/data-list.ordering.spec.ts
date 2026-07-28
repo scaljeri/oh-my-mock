@@ -1,5 +1,5 @@
 import { objectTypes } from '@shared/constants';
-import { IData, ohMyDataId } from '@shared/type';
+import { IData, ohMyDataId } from '@shared/types/request';
 
 import { orderRequests, pruneSticky, sameSticky, toggleSticky } from './data-list.ordering';
 

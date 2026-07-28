@@ -9,6 +9,7 @@ import {
   Output,
   ViewChild
 } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { IOhMyContext, IOhMyMock, ohMyDomain } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { StorageUtils } from '@shared/utils/storage';
@@ -16,6 +17,7 @@ import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
+import { HarImportComponent } from '../har-import/har-import.component';
 import { DomainSummaryService, IOhMyDomainSummary } from './domain-summary.service';
 
 /**
@@ -65,7 +67,8 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     private appState: AppStateService,
     private storeService: OhMyState,
     private summaryService: DomainSummaryService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
@@ -146,6 +149,20 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
 
     await this.refresh();
     this.onSelect(domain);
+  }
+
+  /**
+   * Opens the HAR picker.
+   *
+   * It may import into a domain this list does not have yet — the file names
+   * the host it was recorded on — so the counts are re-read once it closes
+   * rather than waiting for the debounced storage listener.
+   */
+  onImportHar(): void {
+    this.dialog
+      .open(HarImportComponent, { width: '760px', maxWidth: '92vw', data: {} })
+      .afterClosed()
+      .subscribe(() => void this.refresh());
   }
 
   trackByDomain(_index: number, summary: IOhMyDomainSummary): string {

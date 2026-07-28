@@ -1,6 +1,6 @@
 import { MOCK_JS_CODE, objectTypes } from '../constants';
 import { MockUtils } from './mock';
-import { IOhMyShallowMock, ohMyMockId } from '../type';
+import { IOhMyShallowMock, ohMyMockId } from '../types/mock';
 
 describe('Utils/Response', () => {
   const initFn = MockUtils.init;

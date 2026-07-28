@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { domain, IData, IOhMyContext, IOhMyRequests, IState } from '@shared/type';
+import { IData, IOhMyContext, IOhMyRequests, IState, ohMyDomain } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 
 import { Subscription } from 'rxjs';
@@ -19,7 +19,7 @@ import { WebWorkerService } from '../../services/web-worker.service';
 })
 export class PageStateExplorerComponent implements OnInit, OnDestroy {
   panelOpenState = true;
-  domains!: domain[];
+  domains!: ohMyDomain[];
   selectedDomain = '-';
 
   state!: IState;

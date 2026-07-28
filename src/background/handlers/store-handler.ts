@@ -1,7 +1,7 @@
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
 import { update } from "../../shared/utils/partial-updater";
 import { STORAGE_KEY } from "../../shared/constants";
-import { IOhMyMock } from "../../shared/type";
+import { IOhMyMock } from "../../shared/types/store";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
 import { error } from "../utils";

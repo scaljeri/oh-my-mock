@@ -1,7 +1,7 @@
 ///<reference types="chrome"/>
 
 import { appSources, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
-import { IState } from '../shared/type';
+import { IState } from '../shared/types/state';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';

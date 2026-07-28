@@ -1,7 +1,7 @@
 import { IOhMyMockSettings } from "../../shared/api-types";
 import { payloadType } from "../../shared/constants";
 import { IOhMessage, IOhMyPacketContext } from "../../shared/packet-type";
-import { IState } from "../../shared/type";
+import { IState } from "../../shared/types/state";
 import { OhMyMessageBus } from "../../shared/utils/message-bus";
 import { OhMySendToBg } from "../../shared/utils/send-to-background";
 import { OhMyContentState } from "../content-state";

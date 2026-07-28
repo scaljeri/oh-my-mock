@@ -34,6 +34,20 @@ export class OhMyState {
     return await this.storageService.get(id);
   }
 
+  /**
+   * Every request record of a domain.
+   *
+   * The state holds ids only, so answering "does this domain already have this
+   * url" is a batch read. `OhMyStateService` keeps a live map for the domain
+   * the popup is *showing*; this reads any domain on demand, which is what the
+   * HAR import needs — it may be importing into another one.
+   */
+  async getRequests(context: IOhMyContext): Promise<IData[]> {
+    const state = await this.getState(context);
+
+    return Object.values(await this.storageService.getMany<IData>(state.requests ?? []));
+  }
+
   // async initState(context: IOhMyContext): Promise<IState> {
   //   let state = StateUtils.init({ domain: context.domain });
 

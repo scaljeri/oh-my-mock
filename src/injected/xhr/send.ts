@@ -1,6 +1,6 @@
 import { ohMyMockStatus } from "../../shared/constants";
 import { ohMyWindow } from "../../shared/oh-my-window";
-import { IOhMyAPIRequest } from "../../shared/type";
+import { IOhMyAPIRequest } from "../../shared/types/api-request";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
 import { asOhMyXhr, toXhrBody } from "../oh-my-xhr";
 import { error, findCachedResponse } from "../utils";

@@ -2,7 +2,7 @@ import { take } from "rxjs";
 import { appSources, payloadType, STORAGE_KEY } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
 import { IOhMyCSPResponse } from "../shared/packet-type";
-import { IOhMyInjectedState } from "../shared/type";
+import { IOhMyInjectedState } from "../shared/types/store";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
 

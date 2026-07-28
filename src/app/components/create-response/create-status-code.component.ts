@@ -6,7 +6,7 @@ import {
   STATUS_CODE_EXISTS_MSG,
   STATUS_CODE_INVALID_MSG,
 } from '@shared/constants';
-import { IMock } from '@shared/type';
+import { IMock } from '@shared/types/mock';
 
 @Component({
   standalone: false,

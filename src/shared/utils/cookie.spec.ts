@@ -1,5 +1,5 @@
 import { objectTypes } from '../constants';
-import { IOhMyCookie } from '../type';
+import { IOhMyCookie } from '../types/cookie';
 import { CookieUtils } from './cookie';
 
 function browserCookie(over: Partial<chrome.cookies.Cookie> = {}): chrome.cookies.Cookie {

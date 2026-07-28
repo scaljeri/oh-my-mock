@@ -1,10 +1,13 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import { IOhMyMock, ohMyDomain } from '@shared/type';
 import { BehaviorSubject } from 'rxjs';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
+import { HarImportComponent } from '../har-import/har-import.component';
 import { DomainSidebarComponent } from './domain-sidebar.component';
 import { DomainSummaryService, IOhMyDomainSummary } from './domain-summary.service';
 
@@ -15,6 +18,7 @@ describe('DomainSidebarComponent', () => {
   let domains: ohMyDomain[];
   let appState: { domain: ohMyDomain; domain$: BehaviorSubject<ohMyDomain | null> };
   let upserted: unknown[];
+  let opened: unknown[];
 
   beforeEach(async () => {
     domains = ['example.com', 'api.staging.acme.io'];
@@ -23,6 +27,7 @@ describe('DomainSidebarComponent', () => {
       { domain: 'api.staging.acme.io', requests: 0, cookies: 0 }
     ];
     upserted = [];
+    opened = [];
     appState = { domain: '', domain$: new BehaviorSubject<ohMyDomain | null>('example.com') };
 
     await TestBed.configureTestingModule({
@@ -37,6 +42,15 @@ describe('DomainSidebarComponent', () => {
             upsertState: (state: unknown) => {
               upserted.push(state);
               return Promise.resolve(state);
+            }
+          }
+        },
+        {
+          provide: MatDialog,
+          useValue: {
+            open: (component: unknown) => {
+              opened.push(component);
+              return { afterClosed: () => of(undefined) };
             }
           }
         },
@@ -113,6 +127,17 @@ describe('DomainSidebarComponent', () => {
     expect(appState.domain).toBe('new.example.org');
     expect(component.isAdding).toBe(false);
     expect(component.visibleDomains.map(d => d.domain)).toContain('new.example.org');
+  });
+
+  it('opens the HAR picker, which used to be a disabled button', () => {
+    const button: HTMLButtonElement = fixture.nativeElement
+      .querySelector('[x-test="import-har"]');
+
+    expect(button.disabled).toBe(false);
+
+    button.click();
+
+    expect(opened).toEqual([HarImportComponent]);
   });
 
   it('ignores an empty domain', async () => {

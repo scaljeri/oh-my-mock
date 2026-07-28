@@ -1,6 +1,6 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { hasOhMyWindow, ohMyWindow } from '../shared/oh-my-window';
-import { IOhMyInjectedState } from '../shared/type';
+import { IOhMyInjectedState } from '../shared/types/store';
 import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';

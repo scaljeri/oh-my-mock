@@ -1,4 +1,4 @@
-import { ohMyDomain } from "../type";
+import { ohMyDomain } from "../types/state";
 import { appSources, payloadType } from "../constants";
 import { IOhMyPacketContextBase, IPacket } from "../packet-type";
 

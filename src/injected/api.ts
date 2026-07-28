@@ -3,7 +3,7 @@ import { IOhMyStatus } from "../shared/api-types"
 import { payloadType } from "../shared/constants"
 import { ohMyWindow } from "../shared/oh-my-window"
 import { IOhMyImportStatus } from "../shared/packet-type"
-import { IOhMyContext } from "../shared/type"
+import { IOhMyContext } from "../shared/types/context"
 import { uniqueId } from "../shared/utils/unique-id"
 import { send } from "./message/send"
 

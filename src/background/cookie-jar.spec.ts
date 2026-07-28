@@ -1,5 +1,5 @@
 import { objectTypes } from '../shared/constants';
-import { IOhMyCookie } from '../shared/type';
+import { IOhMyCookie } from '../shared/types/cookie';
 import {
   applyCookie, consumeOwnWrite, cookieUrl, forgetDisplaced, isApplied, syncCookies, unapplyCookie
 } from './cookie-jar';

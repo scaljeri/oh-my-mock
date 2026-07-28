@@ -2,7 +2,7 @@ import { Component, Inject, OnInit, Optional } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MOCK_RULE_TYPES } from '@shared/constants';
-import { IMock, IOhMyMockRule, mockRuleType } from '@shared/type';
+import { IMock, IOhMyMockRule, mockRuleType } from '@shared/types/mock';
 import { generators } from '../../utils/anonymizer';
 import { JSONPath } from 'jsonpath-plus';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';

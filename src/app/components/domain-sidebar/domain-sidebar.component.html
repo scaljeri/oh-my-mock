@@ -78,12 +78,12 @@
     </button>
 
     <div class="oh-domain-nav__actions">
-      <!-- Not wired up yet: the button is here because the design has it. -->
       <button
         class="oh-domain-nav__import"
         type="button"
-        disabled
-        title="Importing a HAR file is not implemented yet"
+        x-test="import-har"
+        title="Import a session exported from the DevTools Network panel"
+        (click)="onImportHar()"
       >
         Import HAR file
       </button>

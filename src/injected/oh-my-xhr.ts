@@ -1,6 +1,6 @@
 import { STORAGE_KEY } from '../shared/constants';
 import { IOhMyReadyResponse } from '../shared/packet-type';
-import { requestMethod } from '../shared/type';
+import { requestMethod } from '../shared/types/request';
 
 /**
  * An `XMLHttpRequest` as OhMyMock's patches see it.
