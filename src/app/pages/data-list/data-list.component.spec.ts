@@ -19,7 +19,7 @@ describe('DataOverviewComponent', () => {
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: AppStateService, useValue: {} },
-        { provide: OhMyStateService, useValue: { state$: new Subject()} },
+        { provide: OhMyStateService, useValue: { state$: new Subject(), requests$: new Subject() } },
         { provide: OhMyState, useValue: {} },
         { provide: Router, useValue: {} },
         { provide: ActivatedRoute, useValue: {} },

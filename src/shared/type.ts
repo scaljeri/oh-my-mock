@@ -60,12 +60,29 @@ export interface IOhMyContext {
   id?: string;
 }
 
+/**
+ * The requests of a domain, keyed by id.
+ *
+ * Requests are their own `chrome.storage` records, so nothing holds all of them
+ * implicitly any more. Whoever needs to look one up passes this map alongside
+ * the state — see `StateUtils.findRequest`. Both `OhMyContentState` and the
+ * popup's `OhMyStateService` keep one, fed by `chrome.storage.onChanged`.
+ */
+export type IOhMyRequests = Record<ohMyDataId, IData>;
+
 export interface IState {
   version: string;
   name?: string;
   type: objectTypes.STATE;
   domain: string;
-  data: Record<ohMyDataId, IData>;
+  /**
+   * Ids of this domain's requests; each is its own record in `chrome.storage`.
+   *
+   * They used to be embedded here as `data: Record<ohMyDataId, IData>`, which
+   * meant every intercepted request rewrote the whole domain record just to
+   * update a `lastHit` timestamp.
+   */
+  requests: ohMyDataId[];
   aux: IOhMyAux;
   presets: Record<ohMyPresetId, string>;
   /** Ids of the cookie mocks for this domain; each is its own record. */
@@ -255,6 +272,15 @@ export interface IOhMyPresetChange {
 export interface IOhMyBackup {
   requests: IData[],
   responses: IMock[],
+  /**
+   * The domain's cookie mocks.
+   *
+   * Optional: every backup written before cookie mocking existed lacks it, and
+   * unlike requests a domain may legitimately have none. Exported whole rather
+   * than per selection — the export dialog picks requests, and a cookie is not
+   * attached to one.
+   */
+  cookies?: IOhMyCookie[],
   version: string;
 }
 

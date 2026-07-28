@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IData, IOhMyContext, IOhMyMockContext, IState } from '@shared/type';
+import { IData, IOhMyContext, IOhMyMockContext, IOhMyRequests, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
 import { AddDataComponent } from '../../components/add-data/add-data.component';
@@ -25,6 +25,8 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   public navigateToData!: IOhMyMockContext;
   context!: IOhMyContext;
   hasData = false;
+  /** Requests are their own records; the list needs them next to the state. */
+  requests: IOhMyRequests = {};
 
   constructor(
     private stateService: OhMyStateService,
@@ -37,22 +39,30 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    // `state$` first: both replay their current value on subscribe, and the
+    // template reads `state.context`, so the requests subscription must not be
+    // the one that triggers the first render.
     this.subscriptions.add(this.stateService.state$.subscribe((state: IState) => {
       this.context = state.context;
 
       this.state = state;
-      this.hasData = Object.keys(this.state.data).length > 0;
+      this.hasData = state.requests.length > 0;
 
       if (this.navigateToData) {
         // findRequest returns undefined when the target is not in this state,
         // which happens if the request was removed while the popup was closed.
-        const request = PageDataListComponent.StateUtils.findRequest(state, this.navigateToData);
+        const request = PageDataListComponent.StateUtils.findRequest(state, this.requests, this.navigateToData);
 
         if (request?.id) {
           this.onDataSelect(request.id);
         }
       }
       this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
+    }));
+
+    this.subscriptions.add(this.stateService.requests$.subscribe(requests => {
+      this.requests = requests;
+      this.cdr.detectChanges();
     }));
   }
 

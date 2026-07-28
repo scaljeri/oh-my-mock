@@ -112,10 +112,17 @@ and the content script merges in the state's `preset`. `IOhMyPacketContext` and
 ### 4. Content: find the mock
 
 ```ts
-const data = StateUtils.findRequest(contentState.state, inputRequest); // IData | undefined
-const mockId = DataUtils.activeMock(data, context);                    // undefined if the preset is disabled
-const mock = await contentState.get<IMock>(mockId);                    // IMock | undefined
+const data = StateUtils.findRequest(contentState.state, contentState.requests, inputRequest);
+const mockId = DataUtils.activeMock(data, context);   // undefined if the preset is disabled
+const mock = await contentState.get<IMock>(mockId);  // IMock | undefined
 ```
+
+`findRequest` takes the requests as an argument because they are no longer part
+of the state: each is its own `chrome.storage` record, and `OhMyContentState`
+keeps a map of them fresh from `chrome.storage.onChanged`. That keeps the
+lookup synchronous — it runs for every intercepted request — while the write
+that follows it (`lastHit`) touches one small record instead of the whole
+domain.
 
 ### 5. The fork: fast path or sandbox
 
@@ -227,6 +234,6 @@ and what the alternatives would cost.
 | `IPacket` / `IPacketPayload` | `shared/packet-type.ts` | the message envelope |
 | `IOhMyContext` | `shared/type.ts` | **state** context — has a `preset` |
 | `IOhMyPacketContext` | `shared/packet-type.ts` | **message** context — only the domain, and only after the content hop |
-| `IData` | `shared/type.ts` | a stored request, with its mocks per preset |
+| `IData` | `shared/type.ts` | a stored request, with its mocks per preset — its own storage record, listed by id in `IState.requests` |
 | `IMock` | `shared/type.ts` | one stored response |
 | `IOhMyWindow` | `shared/oh-my-window.ts` | the namespace on `window`, shared by injected and content |

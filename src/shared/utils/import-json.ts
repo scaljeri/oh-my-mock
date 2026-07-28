@@ -35,11 +35,23 @@ export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtil
     for (let request of requests.sort((a, b) => a.lastHit > b.lastHit ? 1 : -1)) {
       request.lastHit = timestamp++; // make sure they each have a unique timestamp!
       request = DataUtils.prefillWithPresets(request, state.presets, context.active);
-      state.data[request.id] = request;
+
+      // Each request is its own record; the state only lists the ids.
+      await sUtils.set(request.id, request);
+      state = StateUtils.setRequest(state, request.id);
     }
 
     for (const response of responses) {
       await sUtils.set(response.id, response);
+    }
+
+    // Cookie mocks are records of their own as well, listed on the state by id.
+    // Not run through `MigrateUtils`: cookie mocking is newer than every
+    // version the migration steps know about, so a backup old enough to need
+    // migrating cannot contain any.
+    for (const cookie of data.cookies ?? []) {
+      await sUtils.set(cookie.id, cookie);
+      state = StateUtils.setCookie(state, cookie.id);
     }
 
     await sUtils.set(state.domain, state);

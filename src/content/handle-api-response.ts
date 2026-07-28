@@ -12,7 +12,7 @@ export async function handleApiResponse(payload: IPacketPayload<IOhMyResponseUpd
 
   const { request, response } = payload.data;
   const state = await contentState.getState()
-  const data = StateUtils.findRequest(state, { ...request });
+  const data = state ? StateUtils.findRequest(state, contentState.requests, { ...request }) : undefined;
 
   if (data) {
     //   // This can only happen when the request is inactive. In which case, the response

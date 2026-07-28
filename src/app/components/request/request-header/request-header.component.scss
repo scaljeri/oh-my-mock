@@ -1,92 +1,261 @@
 @use 'mixins' as *;
+@use 'tokens' as t;
 
-h3 {
-  margin: 0;
+// Top of the request detail pane. See `design/Mock Manager v2.dc.html`.
+//
+// Every BEM child below is a top-level selector on purpose: nesting `&__foo`
+// inside an element selector compiles to `header.oh-detail__foo`, which matches
+// nothing and fails silently.
+
+:host {
+  display: block;
+  flex: 0 0 auto;
 }
 
-.request {
-  display: flex;
-  flex-direction: column;
-
-  h3 {
-    margin-bottom: $spacer-1;
-  }
-
-  section {
-    display: flex;
-  }
-
-  .method-select {
-    margin-left: $spacer-2;
-    flex: 0 0 80px;
-  }
-
-  .type-select {
-    flex: 0 0 80px;
-    margin-right: $spacer-4;
-  }
-
-  .url-input {
-    flex: 1;
-    margin: 0 $spacer-6;
-    position: relative;
-
-    mat-icon {
-      @include oh-position(absolute, 0px -30px 0 0);
-    }
-  }
+.oh-detail__head {
+  padding: t.$oh-detail-head-padding;
+  border-bottom: 1px solid t.$oh-row-border;
 }
 
-.responses-wrapper {
+.oh-detail__title {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: t.$oh-space-3;
 }
 
-.preset-selector {
+// The method + url line. A button, because it toggles the request editor.
+.oh-detail__request {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+
+  &:hover .oh-detail__url,
+  &:focus-visible .oh-detail__url {
+    color: t.$oh-brand;
+  }
 }
 
-.responses {
+.oh-detail__method {
+  flex: 0 0 auto;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  border-radius: t.$oh-radius-sm;
+  padding: 3px 7px;
+  color: t.$oh-text-subtle;
+  background: t.$oh-bg-muted;
+
+  &[data-method='GET']    { color: t.$oh-info;           background: t.$oh-info-tint; }
+  &[data-method='POST']   { color: t.$oh-success-strong; background: t.$oh-success-tint; }
+  &[data-method='PUT']    { color: t.$oh-warning;        background: t.$oh-warning-tint; }
+  &[data-method='PATCH']  { color: t.$oh-warning;        background: t.$oh-warning-tint; }
+  &[data-method='DELETE'] { color: t.$oh-danger;         background: t.$oh-danger-tint; }
+}
+
+.oh-detail__url {
+  @include oh-ellipsis;
+
+  min-width: 0;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-url;
+  color: t.$oh-text;
+}
+
+.oh-detail__head-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.oh-icon-btn {
+  width: t.$oh-icon-button-size;
+  height: t.$oh-icon-button-size;
+  border-radius: t.$oh-radius;
+  border: 1px solid t.$oh-border;
+  background: t.$oh-bg-surface;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  color: t.$oh-text-subtle;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  // `mat-icon` renders at 24px; the design's buttons are 28px squares, so the
+  // glyph has to come down to fit inside one.
+  mat-icon {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+  }
+
+  ::ng-deep svg {
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
+  }
+
+  &:hover:not(:disabled) {
+    background: t.$oh-bg-muted;
+    color: t.$oh-text;
+  }
+
+  &:disabled {
+    color: t.$oh-text-fainter;
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.oh-icon-btn--danger:hover:not(:disabled) {
+  background: t.$oh-danger-tint;
+  border-color: t.$oh-danger-border;
+  color: t.$oh-danger;
+}
+
+.oh-detail__meta {
+  margin: t.$oh-space-2 0 0;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text-faint;
+}
+
+.oh-detail__section {
+  padding: t.$oh-detail-padding-y t.$oh-detail-padding-x;
+  border-bottom: 1px solid t.$oh-row-border;
+}
+
+.oh-detail__label {
+  margin: 0 0 10px;
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$oh-text-faint;
+}
+
+// ---- saved response chips ---------------------------------------------
+
+.oh-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$oh-space-2;
+}
+
+.oh-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid t.$oh-border;
+  background: t.$oh-bg-surface;
+  border-radius: t.$oh-radius-pill;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 120ms ease, background 120ms ease;
+
+  &:hover {
+    border-color: t.$oh-border-strong;
+  }
+
+  &.is-selected {
+    border-color: t.$oh-brand;
+    background: t.$oh-brand-tint;
+  }
+}
+
+.oh-chip__code {
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-code;
+  font-weight: t.$oh-weight-semibold;
+  color: t.$oh-text-muted;
+
+  &[data-tone='success'] { color: t.$oh-success-strong; }
+  &[data-tone='warning'] { color: t.$oh-warning; }
+  &[data-tone='danger']  { color: t.$oh-danger; }
+  &[data-tone='muted']   { color: t.$oh-text-muted; }
+}
+
+.oh-chip__label {
+  font-size: t.$oh-size-code;
+  color: t.$oh-text-faint;
+}
+
+.oh-chip.is-selected .oh-chip__label {
+  color: t.$oh-text;
+}
+
+.oh-chip--add {
+  border-style: dashed;
+  border-color: t.$oh-border-strong;
+  color: t.$oh-text-dim;
+  font-size: t.$oh-size-base;
+  padding: 6px 13px;
+
+  &:hover {
+    border-color: t.$oh-brand;
+    color: t.$oh-brand;
+  }
+}
+
+// ---- inline request editor --------------------------------------------
+//
+// The same field treatment as the response settings grid in
+// `mock-details.component.scss`. Both are component-scoped, so the rules are
+// spelled out twice rather than shared through a mixin.
+
+.oh-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: t.$oh-detail-field-gap;
+}
+
+.oh-field {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
 
-  // .label {
-  //   display: flex;
-  //   flex-direction: column;
-  //   justify-content: center;
-  //   font-weight: bold;
-  //   margin-right: 20px;
-  //   margin-top: $spacer-2;
-  // }
+.oh-field--wide {
+  grid-column: 1 / -1;
+}
 
-  .codes-wrapper {
-    display: flex;
-    flex: 1;
-    flex-wrap: wrap;
-    margin-right: $spacer-2;
+.oh-field__label {
+  font-size: t.$oh-size-sm;
+  font-weight: t.$oh-weight-medium;
+  color: t.$oh-text-subtle;
+}
+
+.oh-field__input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: t.$oh-bg-subtle;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  padding: 8px 10px;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text;
+
+  &:focus {
+    outline: none;
+    border-color: t.$oh-brand;
+    background: t.$oh-bg-surface;
   }
+}
 
-  button {
-    border: 2px solid transparent;
-  }
-
-  button {
-    margin-right: $spacer-2;
-    margin-top: $spacer-2;
-  }
-
-  .is-active {
-    border: 2px solid green;
-  }
-
-  &:not(.is-active) {
-    .inactive {
-      border: 2px solid green;
-    }
-
-    .is-active {
-      border: 2px solid rgba(11, 156, 49, 0.4);
-    }
-  }
+.oh-field__input--mono {
+  font-family: t.$oh-font-mono;
 }

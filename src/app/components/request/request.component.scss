@@ -1,122 +1,104 @@
 @use 'mixins' as *;
+@use 'tokens' as t;
+
+// The request detail pane. See `design/Mock Manager v2.dc.html`.
+//
+// A column that fills the pane: the blocks above and below keep their height,
+// the editor in the middle takes the rest and scrolls inside itself.
+//
+// BEM children are top-level selectors on purpose — `&__tab` nested inside
+// `nav.oh-tabs` would compile to `nav.oh-tabs__tab` and match nothing.
 
 :host {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  min-height: 0;
+  background: t.$oh-bg-surface;
 }
 
-.action-wrapper {
+// ---- Body / Headers / Code -------------------------------------------
+
+.oh-tabs {
+  flex: 0 0 auto;
+  display: flex;
   align-items: center;
-  display: flex;
-  position: relative;
+  gap: t.$oh-space-1;
+  padding: t.$oh-space-3 t.$oh-detail-padding-x 0;
+  border-bottom: 1px solid t.$oh-row-border;
+}
 
-  & > mat-icon {
-    @include oh-position(absolute, 0px -12px 0 0);
+.oh-tabs__tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 6px 11px 11px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: t.$oh-size-md;
+  font-weight: t.$oh-weight-medium;
+  color: t.$oh-text-subtle;
+  // An inset shadow rather than a border, so the tab does not move by a pixel
+  // when it becomes the active one.
+  box-shadow: inset 0 -2px 0 0 transparent;
+  transition: color 120ms ease, box-shadow 120ms ease;
+
+  &:hover {
+    color: t.$oh-text;
+  }
+
+  &.is-active {
+    font-weight: t.$oh-weight-semibold;
+    color: t.$oh-text;
+    box-shadow: inset 0 -2px 0 0 t.$oh-brand;
   }
 }
 
-.mock-settings {
-  display: flex;
-  flex-direction: row;
+.oh-tabs__spacer {
+  flex: 1;
+}
 
-  oh-my-mock-details {
+.oh-tabs__actions {
+  display: flex;
+  gap: t.$oh-space-3;
+  padding-bottom: 9px;
+}
+
+.oh-tabs__action {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text-subtle;
+  transition: color 120ms ease;
+
+  &:hover {
+    color: t.$oh-brand;
+  }
+}
+
+// ---- the editor ------------------------------------------------------
+
+.oh-editor {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: auto;
+  background: t.$oh-bg-subtle;
+
+  oh-my-code-edit {
     flex: 1;
+    min-width: 0;
   }
 }
 
-.mock-actions {
-  align-items: flex-end;
-  align-self: flex-start;
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 100px;
-
-  .anonymize-mock {
-    margin-top: $spacer-2;
-  }
-}
-
-section {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.details {
-  padding-top: 0;
-  position: relative;
-
-  h3 {
-    @include oh-position(absolute, -$spacer-2 0 0 50%);
-    background-color: #fff;
-    border: solid 1px #ccc;
-    border-radius: 20px;
-    padding: $spacer-1 $spacer-4;
-    transform: translate(-50%, -50%);
-  }
-}
-
-mat-card + mat-card {
-  margin-top: $spacer-2;
-}
-
-.editors {
-  margin-top: -25px;
-
-  & > div {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-
-  .response {
-    header {
-      margin-left: $spacer-3;
-    }
-
-    .fullscreen {
-      right: 5px;
-    }
-
-    .request-response, oh-my-code-edit {
-      margin-left: -$spacer-7;
-    }
-  }
-
-  .headers {
-    header {
-      margin-left: $spacer-7;
-    }
-  }
-}
-.code-wrapper {
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  width: 100%;
-
-  .fullscreen {
-    @include oh-position(absolute, -35px -10px 0 0);
-    z-index: 1;
-  }
-
-  .reset {
-    align-self: flex-end;
-  }
-}
-
-.js-code-edit {
-  margin-left: $spacer-2;
-  margin-top: $spacer-2;
-}
-
-.request-response, .request-headers {
-  align-self: center;
-  height: 230px;
+.oh-editor__image {
+  display: block;
+  padding: t.$oh-space-3 t.$oh-detail-padding-x;
   max-width: 100%;
 
   &.is-blurred {
@@ -124,28 +106,65 @@ mat-card + mat-card {
   }
 }
 
-oh-my-code-edit {
-  width: 100%;
+// ---- footer ----------------------------------------------------------
+
+.oh-detail__foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px t.$oh-detail-padding-x;
+  border-top: 1px solid t.$oh-border-soft;
 }
 
-.response,
-.headers {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  justify-content: space-between;
+.oh-detail__foot-spacer {
+  flex: 1;
+}
 
-  .fullscreen {
-    align-self: flex-end;
+.oh-detail__preset {
+  @include oh-ellipsis;
+
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-fainter;
+}
+
+.oh-btn {
+  appearance: none;
+  border: 1px solid t.$oh-border;
+  background: t.$oh-bg-surface;
+  border-radius: t.$oh-radius-md;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text-muted;
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover {
+    background: t.$oh-bg-muted;
+    color: t.$oh-text;
   }
 }
 
-.no-data {
+// ---- nothing to show -------------------------------------------------
+
+.oh-empty {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: $spacer-4;
+  gap: t.$oh-space-2;
+  padding: t.$oh-space-5 t.$oh-detail-padding-x;
+  background: t.$oh-bg-subtle;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text-subtle;
 
-  ol {
-    max-width: 500px;
+  p {
+    margin: 0;
   }
+}
+
+.oh-empty__lead {
+  font-weight: t.$oh-weight-medium;
+  color: t.$oh-text-secondary;
 }

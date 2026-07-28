@@ -1,0 +1,8 @@
+// The page is nothing but a host for the detail pane; it has to pass the
+// pane's full height through so the editor inside it can scroll on its own.
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}

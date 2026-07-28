@@ -1,9 +1,10 @@
 # Cookie mocking
 
-Design notes. Nothing is implemented — there is no cookie code in `src/` and
-`manifest.json` has no `cookies` permission. The Cookies tab in
-`design/Mock Manager v2` and the `IOhMyCookie` stub on
-`feature/refactor-data-model-142` are the only traces of the idea so far.
+Design notes, and what was built from them. The background side exists:
+`background/cookie-jar.ts` applies and unapplies, `background/cookie-sync.ts`
+decides when, `background/handlers/cookie-handler.ts` is the CRUD, and
+`background/cookie-recorder.ts` picks up what a server sets. There is no UI yet
+— the Cookies tab in `design/Mock Manager v2` is still only a design.
 
 ## The constraint that shapes everything
 
@@ -25,10 +26,23 @@ the earlier attempt stalled: the stub hung `cookies: IOhMyCookie[]` off
 `secure`, `sameSite`, `path`, `domain` and `expirationDate`. It needs the
 `cookies` permission; the host permissions are already there (`<all_urls>`).
 
-For *recording* what a server sets, `declarativeNetRequest` can read and rewrite
-`Set-Cookie` on real responses. The infrastructure exists — it is what
-`background/handlers/remove-csp-header.ts` already does for
-`Content-Security-Policy`.
+For *recording* what a server sets, this document originally assumed
+`declarativeNetRequest` could read `Set-Cookie` the way
+`background/handlers/remove-csp-header.ts` rewrites `Content-Security-Policy`.
+**It cannot.** DNR is declarative in both directions: a rule says what to do
+with a header without ever seeing its value, and no event hands the extension a
+matched response. `onRuleMatchedDebug` reports that a rule matched — and only
+for unpacked extensions — never the headers. DNR can strip or overwrite a
+`Set-Cookie`; it can never say what one contained.
+
+Two APIs can. `webRequest.onHeadersReceived` gives the raw header, but needs the
+`webRequest` permission on top of what is already asked for, and `extraHeaders`
+before `Set-Cookie` is visible at all. `chrome.cookies.onChanged` needs neither:
+it fires once the browser has accepted the cookie, with everything a mock stores
+already parsed, under the `cookies` permission the jar needs anyway. That is
+what `background/cookie-recorder.ts` uses. The price is that it cannot say which
+response set the cookie, and does not distinguish `Set-Cookie` from a
+`document.cookie` write — neither of which matters for filling in a mock.
 
 ## httpOnly stays on
 
@@ -122,6 +136,27 @@ cookies are domain state, not an answer to a call.
 That last point is the one to get right. Overwriting a real session cookie and
 then deleting it on toggle-off would log the developer out of the site they were
 testing. Record the previous value before overwriting, and restore it.
+
+Its sharper form, learned while wiring this up: **only ever remove a cookie this
+service worker put there itself**. Switching off a mock that was never on, or
+deleting one, or starting a fresh worker, all reach the same "this mock should
+not be applied" branch — and in each of those the cookie sitting in the jar is
+the site's own. `syncCookies` and the delete path both check `isApplied` first.
+
+## When the sync runs
+
+Everything a sync depends on ends up in `chrome.storage`: the on/off toggle
+(`aux.appActive`) and the selected preset are on the state, and each cookie mock
+is a record of its own. So the trigger is `chrome.storage.onChanged` rather than
+a call at each site that changes something — which also catches writes the popup
+makes without a message reaching the background. `cookie-sync.ts` keeps a
+per-domain signature of `(active, preset, cookie ids)` so the many state writes
+that have nothing to do with cookies cost nothing.
+
+Cookies follow `aux.appActive` alone, not the popup. Response mocking also
+requires the popup to be open because the popup hosts the sandbox that evaluates
+mock code; a cookie needs nothing from it, and dropping a mocked session every
+time the window closes would be a surprise.
 
 ## The permission
 

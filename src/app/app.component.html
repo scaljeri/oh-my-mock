@@ -67,7 +67,10 @@
 
   <div class="oh-body">
     <aside class="oh-sidebar" [class.is-collapsed]="!sidebarOpen">
-      <app-nav-list [context]="context" (navigate)="onNavigate()"></app-nav-list>
+      <oh-my-domain-sidebar
+        [context]="context"
+        (navigate)="onNavigate()"
+      ></oh-my-domain-sidebar>
     </aside>
 
     <main class="oh-main">

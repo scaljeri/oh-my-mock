@@ -1,15 +1,15 @@
 import { BehaviorSubject, distinctUntilChanged, filter, Observable } from "rxjs";
-import { STORAGE_KEY } from "../shared/constants";
+import { objectTypes, STORAGE_KEY } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
-import { IMock, IOhMyMock, IState } from "../shared/type";
+import { IData, IMock, IOhMyMock, IOhMyRequests, IState } from "../shared/type";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
 /**
  * Anything that can live in `chrome.storage.local`, and therefore in the cache:
- * the store (under `STORAGE_KEY`), a domain's state (under its host) or a mock
- * (under its id).
+ * the store (under `STORAGE_KEY`), a domain's state (under its host), a request
+ * (under its id) or a mock (under its id).
  */
-export type OhMyCacheValue = IOhMyMock | IState | IMock;
+export type OhMyCacheValue = IOhMyMock | IState | IMock | IData;
 
 /**
  * A mirror of `chrome.storage.local`, keyed the same way. Which of the shapes
@@ -43,14 +43,33 @@ export class OhMyContentState {
   state?: IState;
   // The store, which carries the browser-global `popupActive`.
   store?: IOhMyMock;
+  /**
+   * The requests, by id — what `StateUtils.findRequest` looks through.
+   *
+   * `chrome.storage.onChanged` is browser-wide, so this can pick up requests of
+   * other domains as well. That is harmless: every lookup is scoped to
+   * `state.requests`.
+   */
+  requests: IOhMyRequests = {};
 
   constructor() {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
       this.cache[key] = update.newValue;
 
+      if (this.isRequestUpdate(update)) {
+        if (update.newValue) {
+          this.requests[key] = update.newValue as IData;
+        } else {
+          delete this.requests[key];
+        }
+      }
+
       if (key === OhMyContentState.host) {
         this.state = update.newValue as IState;
+        // A request this script has not seen before arrives as two updates -
+        // the record and the id list - in no guaranteed order.
+        this.loadRequests();
         this.isActiveSubject.next(this.isActive(this.state));
       } else if (key === STORAGE_KEY) {
         // `popupActive` lives on the store, so a popup opening or closing
@@ -78,6 +97,25 @@ export class OhMyContentState {
     this.state = await this.getState();
     this.cache[OhMyContentState.host] = this.state;
     this.store = await this.get<IOhMyMock>(STORAGE_KEY);
+
+    await this.loadRequests();
+  }
+
+  private isRequestUpdate(update: { newValue: unknown, oldValue?: unknown }): boolean {
+    const value = (update.newValue ?? update.oldValue) as { type?: objectTypes } | undefined;
+
+    return value?.type === objectTypes.REQUEST;
+  }
+
+  /** Fetches the request records this script does not hold yet. */
+  private async loadRequests(): Promise<void> {
+    const missing = (this.state?.requests ?? []).filter(id => !this.requests[id]);
+
+    if (!missing.length) {
+      return;
+    }
+
+    Object.assign(this.requests, await StorageUtils.getMany<IData>(missing));
   }
 
   async get<T = unknown>(key = STORAGE_KEY): Promise<T> {

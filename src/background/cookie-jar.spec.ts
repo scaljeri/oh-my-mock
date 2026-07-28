@@ -1,6 +1,8 @@
 import { objectTypes } from '../shared/constants';
 import { IOhMyCookie } from '../shared/type';
-import { applyCookie, cookieUrl, forgetDisplaced, syncCookies, unapplyCookie } from './cookie-jar';
+import {
+  applyCookie, consumeOwnWrite, cookieUrl, forgetDisplaced, isApplied, syncCookies, unapplyCookie
+} from './cookie-jar';
 
 function mock(over: Partial<IOhMyCookie> = {}): IOhMyCookie {
   return {
@@ -58,6 +60,24 @@ describe('cookie-jar', () => {
       expect(jar['session']).toEqual(expect.objectContaining({
         name: 'session', value: 'mocked', httpOnly: true, path: '/'
       }));
+    });
+
+    it('makes the path absolute, which `chrome.cookies.set` insists on', async () => {
+      await applyCookie('example.com', mock({ path: 'admin' }));
+
+      expect(jar['session'].path).toBe('/admin');
+    });
+
+    // A restarted service worker forgets what it displaced but the browser
+    // still holds the mock it set. Remembering that as "the original" would
+    // make unapplying restore the mock it is trying to remove.
+    it('does not mistake its own earlier write for the original', async () => {
+      jar['session'] = { name: 'session', value: 'mocked' } as chrome.cookies.Cookie;
+
+      await applyCookie('example.com', mock());
+      await unapplyCookie('example.com', mock());
+
+      expect(jar['session']).toBeUndefined();
     });
 
     // Applying twice must not record the mock's own value as "what was there
@@ -130,6 +150,16 @@ describe('cookie-jar', () => {
       expect(jar['session']).toBeUndefined();
     });
 
+    // Switching off a mock that was never on must not take the site's real
+    // cookie of the same name with it.
+    it('leaves alone a cookie it never applied', async () => {
+      jar['session'] = { name: 'session', value: 'real' } as chrome.cookies.Cookie;
+
+      await syncCookies('example.com', [mock({ enabled: { default: false } })], 'default', true);
+
+      expect(jar['session'].value).toBe('real');
+    });
+
     it('follows the preset, so a scenario can mean "logged out"', async () => {
       const cookie = mock({ enabled: { default: true, 'logged-out': false } });
 
@@ -138,6 +168,44 @@ describe('cookie-jar', () => {
 
       await syncCookies('example.com', [cookie], 'logged-out', true);
       expect(jar['session']).toBeUndefined();
+    });
+  });
+
+  describe('#isApplied', () => {
+    it('knows what this worker put in the jar', async () => {
+      expect(isApplied('example.com', 'c1')).toBe(false);
+
+      await applyCookie('example.com', mock());
+      expect(isApplied('example.com', 'c1')).toBe(true);
+
+      await unapplyCookie('example.com', mock());
+      expect(isApplied('example.com', 'c1')).toBe(false);
+    });
+  });
+
+  // The recorder listens to `chrome.cookies.onChanged` and would otherwise
+  // offer the extension's own mocks back as cookies to record.
+  describe('#consumeOwnWrite', () => {
+    it('reports a write the jar made, once', async () => {
+      await applyCookie('example.com', mock({ path: 'admin' }));
+
+      expect(consumeOwnWrite('example.com', 'session', '/admin')).toBe(true);
+      expect(consumeOwnWrite('example.com', 'session', '/admin')).toBe(false);
+    });
+
+    it('reports nothing for a cookie the jar did not write', () => {
+      expect(consumeOwnWrite('example.com', 'session')).toBe(false);
+    });
+
+    it('reports the write that restores the displaced cookie', async () => {
+      jar['session'] = { name: 'session', value: 'real', path: '/' } as chrome.cookies.Cookie;
+
+      await applyCookie('example.com', mock());
+      consumeOwnWrite('example.com', 'session');
+
+      await unapplyCookie('example.com', mock());
+
+      expect(consumeOwnWrite('example.com', 'session')).toBe(true);
     });
   });
 });

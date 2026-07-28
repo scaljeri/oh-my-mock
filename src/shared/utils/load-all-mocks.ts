@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { IMock, IState } from '../type';
+import { IData, IMock, IState } from '../type';
 import { StorageUtils } from './storage';
 
 export async function loadAllMocks(domain: string): Promise<Record<string, IMock>> {
@@ -9,21 +9,16 @@ export async function loadAllMocks(domain: string): Promise<Record<string, IMock
 
   const state = await StorageUtils.get<IState>(domain);
 
-  if (state) {
-    const data = Object.values(state.data);
-    const mocks: Record<string, IMock> = {};
-    for (let i = 0; i < data.length; i++) {
-      const keys = Object.keys(data[i].mocks);
-
-      for (let j = 0; j < keys.length; j++) {
-        mocks[keys[j]] = await StorageUtils.get(keys[j]);
-      }
-    }
-
-    return mocks;
+  if (!state) {
+    return {};
   }
 
-  return {};
+  // Requests are their own records now, so this is two batch reads instead of
+  // one read per mock: first the domain's requests, then every mock they name.
+  const requests = await StorageUtils.getMany<IData>(state.requests);
+  const mockIds = Object.values(requests).flatMap(r => Object.keys(r.mocks));
+
+  return StorageUtils.getMany<IMock>(mockIds);
 }
 
 export function loadAllMocks$(domain: string): Observable<Record<string, IMock>> {

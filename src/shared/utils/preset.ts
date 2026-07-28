@@ -1,5 +1,5 @@
 import { uniqueId } from './unique-id';
-import { IOhMyContext, IOhMyPresetChange, IOhMyPresets, IState, ohMyPresetId } from '../type';
+import { IOhMyContext, IOhMyPresetChange, IOhMyPresets, IOhMyRequests, IState, ohMyPresetId } from '../type';
 
 const IS_COPY_RE = /copy(\s\d+)?/;
 
@@ -50,15 +50,29 @@ export class PresetUtils {
     return { ...presets, [id]: value };
   }
 
-  static delete(state: IState, id: ohMyPresetId): IState {
+  /**
+   * Drops a preset from a state and from each of its requests.
+   *
+   * The requests are separate storage records now, so they come in and go out
+   * next to the state: the caller writes back both the state and every request
+   * this touched.
+   */
+  static delete(state: IState, requests: IOhMyRequests, id: ohMyPresetId): { state: IState, requests: IOhMyRequests } {
     const retVal = {
       ...state,
-      data: { ...state.data },
       presets: { ...state.presets },
       context: { ...state.context }
     };
 
-    Object.values(retVal.data).forEach(request => {
+    const retRequests: IOhMyRequests = { ...requests };
+
+    state.requests.forEach(requestId => {
+      const request = requests[requestId];
+
+      if (!request) { // not loaded, or already removed
+        return;
+      }
+
       const clone = {
         ...request,
         selected: { ...request.selected },
@@ -68,7 +82,7 @@ export class PresetUtils {
       delete clone.selected[id];
       delete clone.enabled[id];
 
-      retVal.data[clone.id] = clone;
+      retRequests[clone.id] = clone;
     });
 
     if (state.context.preset === id) {
@@ -77,6 +91,6 @@ export class PresetUtils {
 
     delete retVal.presets[id];
 
-    return retVal;
+    return { state: retVal, requests: retRequests };
   }
 }

@@ -34,6 +34,7 @@ import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { CreateStatusCodeComponent } from './create-response/create-status-code.component';
 import { AddDataComponent } from './add-data/add-data.component';
 import { NavListComponent } from './nav-list/nav-list.component';
+import { DomainSidebarComponent } from './domain-sidebar/domain-sidebar.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
 import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
 import { HeaderButtonComponent } from './header-button/header-button.component';
@@ -50,7 +51,6 @@ import { MockLabelComponent } from './mock-label/mock-label.component';
 import { MockDetailsComponent } from './request/mock-details/mock-details.component';
 import { CloudSyncComponent } from './cloud-sync/cloud-sync.component';
 import { UpdateInputDirective } from './update-input/update-input.directive';
-import { ContentTypeComponent } from './form/content-type/content-type.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
@@ -76,6 +76,7 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     CreateStatusCodeComponent,
     AddDataComponent,
     NavListComponent,
+    DomainSidebarComponent,
     ResetStateComponent,
     DisabledEnabledComponent,
     HeaderButtonComponent,
@@ -92,7 +93,6 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     MockDetailsComponent,
     CloudSyncComponent,
     UpdateInputDirective,
-    ContentTypeComponent,
     SpinnerComponent,
     AutocompleteDropdownComponent,
     LinkComponent,
@@ -125,6 +125,8 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     MatTabsModule,
     ReactiveFormsModule,
     FormsModule,
+    // Configured once, in `app.module.ts` — a `forRoot()` here would be
+    // overridden by the root module's `provideMonacoEditor()` anyway.
     MonacoEditorModule,
     DragDropModule,
     MatSelectModule,
@@ -138,6 +140,7 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     ConfigComponent,
     CodeEditComponent,
     NavListComponent,
+    DomainSidebarComponent,
     DisabledEnabledComponent,
     HeaderButtonComponent,
     RequestComponent,
@@ -148,7 +151,6 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     MockLabelComponent,
     CloudSyncComponent,
     UpdateInputDirective,
-    ContentTypeComponent,
     SpinnerComponent,
     AutocompleteDropdownComponent,
     LinkComponent,

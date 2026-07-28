@@ -1,8 +1,22 @@
 # Normalising requests out of the domain record
 
-Design notes for the largest open refactor. The analysis is done; the
-implementation is not. Written so the next attempt starts from a decision rather
-than from an investigation.
+**Status: done.** Option 3 was implemented as designed. What follows is the
+reasoning that led there, kept because it explains why the lookups take a
+requests map instead of loading one. Where the outcome differs from the plan:
+
+- **The migration is a real lift-out, and it is not a migration step.**
+  `src/background/lift-out-requests.ts` runs from `initStorage` and moves every
+  embedded request into a record of its own. It is keyed on the **shape** — a
+  state that still has `data` — rather than on the version, which makes it
+  idempotent and, unlike the step chain, guaranteed to run. See "The migration"
+  below.
+- **A `REQUEST` payload type carries request writes.** `OhMyRequestHandler`
+  (`src/background/handlers/request-handler.ts`) stores the record and, only
+  when the id is new, patches `$.requests` on the domain record through the
+  state queue. The remove handler patches the same field the same way; they are
+  the only two writers of the list.
+- `StateUtils` gained `hasRequest` and `pickRequests`, and `removeRequest` now
+  returns the state rather than the removed request.
 
 ## The problem, measured
 
@@ -83,27 +97,39 @@ thinking is concentrated in `state.ts`.
 
 ## The migration
 
-**There is no installed base** — the extension is not published — so this is a
-convenience for whoever has a development profile open, not a contract with
-users. If it turns out to be the awkward part, wiping and re-recording is a
-legitimate answer. That removes most of the risk from this refactor.
+There is no *published* installed base, but there are development profiles with
+real mocks in them — so the requests are lifted out rather than dropped. It lives
+in `src/background/lift-out-requests.ts`, called from `initStorage` before
+anything reads a domain record.
 
-If written, it belongs alongside the step that drops `aux.popupActive` in
-`src/shared/utils/migrations/state.ts`. For each stored domain record it must:
+For each stored domain record that still has `data`, it:
 
-1. write every `state.data[id]` as its own `chrome.storage` record under `id`
-2. replace `data` with `requests: Object.keys(data)`
+1. writes every `data[id]` as its own `chrome.storage` record under `id`
+2. replaces `data` with `requests: Object.keys(data)`
 
-Two things to be careful about:
+**Why not a `MigrateUtils` step.** Two independent reasons, either one fatal:
 
-- **Migrations run per record**, so a state migration cannot easily write *other*
-  keys. This one has to, which may mean doing it in `background/init.ts` where
-  `StorageUtils.get(null)` already reads everything, rather than in the per-record
-  step chain.
-- **Request ids share a keyspace with mock ids** — both come from `uniqueId()`,
-  ten characters of base 36. Collisions are unlikely but not impossible, and the
-  migration is the moment they would surface. Worth asserting no key is
-  overwritten.
+- A step is handed one record and can only return that record. Lifting requests
+  out means *creating* other records, which a step cannot do — so the step could
+  only ever have deleted `data`, losing every stored mock.
+- Steps are version-gated: `shouldMigrate` compares the stored version with the
+  extension's, and this change carries no version bump. The gate would never
+  open, leaving profiles in the old shape while the new code read
+  `state.requests` as `undefined`.
+
+Keying on the shape instead solves both. It runs whenever an old-shaped record
+is found, and once none is left it is a no-op — so it is safe on every startup.
+
+The step in `migrations/state.ts` now only guarantees the field exists
+(`requests ??= []`). It must **not** delete `data`.
+
+**Request ids share a keyspace with mock ids** — both come from `uniqueId()`, ten
+characters of base 36. A collision is unlikely but not impossible, and this is
+the moment it would surface. The lift-out checks the occupant's `type`: an
+existing *request* record is the new code's own and is left alone, while any
+other record means a genuine collision — that id is reported through `error()`
+and left out of `requests`, because overwriting would destroy a stored mock and
+listing it would point the domain at the wrong record.
 
 ## Also update
 

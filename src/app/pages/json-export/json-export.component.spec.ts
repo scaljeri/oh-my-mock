@@ -21,7 +21,7 @@ describe('JsonExportComponent', () => {
         { provide: AppStateService, useValue: {} },
         { provide: HotToastService, useValue: {} },
         { provide: StorageService, useValue: {} },
-        { provide: OhMyStateService, useValue: { state: { data: {}}} },
+        { provide: OhMyStateService, useValue: { state: { requests: [] }, requests$: new Subject() } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

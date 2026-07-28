@@ -59,6 +59,10 @@ oh-my-arrow {
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
+    // The `+` FAB and the arrow inside this column are absolutely positioned;
+    // without a positioned ancestor they anchor to the page and float over the
+    // detail pane's footer.
+    position: relative;
   }
 
   &__detail {

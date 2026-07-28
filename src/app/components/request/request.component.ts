@@ -18,6 +18,12 @@ import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.com
 import { OhMyStateService } from '../../services/state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { StorageService } from '../../services/storage.service';
+import { activeMockId } from './active-mock';
+
+/** The three editors the detail pane switches between. */
+export type OhMyDetailTab = 'Body' | 'Headers' | 'Code';
+
+export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = ['Body', 'Headers', 'Code'];
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -30,6 +36,9 @@ export class RequestComponent implements OnChanges, OnDestroy {
   @Input() request!: IData;
   @Input() context!: IOhMyContext;
   @Input() blurImages = false;
+
+  /** Shown in the footer, as `Preset: <name>` in the design. */
+  @Input() presetName = '';
 
   response: IMock | undefined;
 
@@ -55,8 +64,20 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   responseCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   headersCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
-  hasMocks = false;
+  jsCodeCtrl = new UntypedFormControl(null, { updateOn: 'blur' });
   isResponseImage = false;
+
+  /**
+   * Read off the request rather than latched while a response loads: the empty
+   * state is shown exactly when there is no response, so it has to know whether
+   * any exist without one being open.
+   */
+  get hasMocks(): boolean {
+    return Object.keys(this.request?.mocks ?? {}).length > 0;
+  }
+
+  readonly tabs = OH_MY_DETAIL_TABS;
+  activeTab: OhMyDetailTab = 'Body';
 
   constructor(
     private storeService: OhMyState,
@@ -74,27 +95,37 @@ export class RequestComponent implements OnChanges, OnDestroy {
         this.response = r;
         this.responseCtrl.setValue(r.responseMock, { emitEvent: false });
         this.headersCtrl.setValue(r.headersMock, { emitEvent: false });
+        this.jsCodeCtrl.setValue(r.jsCode, { emitEvent: false });
+        this.cdr.detectChanges();
       }));
 
-    this.responseCtrl.valueChanges.subscribe(val => {
+    this.subscriptions.add(this.responseCtrl.valueChanges.subscribe(val => {
       this.storeService.upsertResponse({ responseMock: val, id: this.shownResponse.id }, this.request, this.context);
-    });
+    }));
 
-    this.headersCtrl.valueChanges.subscribe(val => {
+    this.subscriptions.add(this.headersCtrl.valueChanges.subscribe(val => {
       this.onHeadersChange(val);
-    });
+    }));
+
+    this.subscriptions.add(this.jsCodeCtrl.valueChanges.subscribe(val => {
+      this.storeService.upsertResponse({ jsCode: val, id: this.shownResponse.id }, this.request, this.context);
+    }));
   }
 
   async ngOnChanges(): Promise<void> {
-    const activeResponse = this.request?.mocks[this.request?.selected[this.context.preset]];
+    // Switching a request off leaves its `selected` entry in place, so "is a
+    // response picked" is not the same question as "is one served". The pane
+    // must follow the second one, or it offers an editor for a mock that is
+    // not being used.
+    const mockId = activeMockId(this.request, this.context);
 
-    if (!activeResponse) {
+    if (!mockId) {
       this.response = undefined;
       return;
     }
 
-    if (this.response?.id !== activeResponse.id) {
-      this.response = await this.storageService.get(activeResponse.id);
+    if (this.response?.id !== mockId) {
+      this.response = await this.storageService.get(mockId);
 
       if (!this.response) {
         return;
@@ -102,18 +133,84 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
       this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : (this.response?.headersMock?.['content-type'] ?? '');
       this.isResponseImage = false;
-      this.hasMocks = Object.keys(this.request.mocks).length > 0;
 
       this.responseCtrl.setValue(this.shownResponse.responseMock, { emitEvent: false });
       this.headersCtrl.setValue(this.shownResponse.headersMock, { emitEvent: false });
+      this.jsCodeCtrl.setValue(this.shownResponse.jsCode, { emitEvent: false });
       if (this.shownResponse.headersMock?.['content-type']?.match(/image/)) {
         this.isResponseImage = true;
       }
+
+      // The response is fetched from `chrome.storage`, whose callbacks run
+      // outside the Angular zone, so nothing re-renders the pane on its own.
+      // Without this the pane keeps showing its "not active" empty state while
+      // a response is in fact loaded.
+      this.cdr.detectChanges();
     }
   }
 
-  onDelete(): void {
-    this.storeService.deleteResponse(this.shownResponse.id, this.request.id, this.context);
+  onSelectTab(tab: OhMyDetailTab): void {
+    this.activeTab = tab;
+  }
+
+  /**
+   * The Body tab shows a picture, not an editor, when the mock is an image.
+   * `dialogIsOpen` takes precedence: a second Monaco instance on the same
+   * content fights the one in the dialog.
+   */
+  get showImage(): boolean {
+    return this.activeTab === 'Body' && this.isResponseImage;
+  }
+
+  /** Only the two JSON-shaped tabs can be pretty-printed. */
+  get canFormat(): boolean {
+    return this.activeTab !== 'Code';
+  }
+
+  /**
+   * Pretty-prints JSON, and leaves anything else exactly as it was.
+   *
+   * Two-space indentation rather than the four of `PrettyPrintPipe`: the detail
+   * pane is 436px wide in the design, and four spaces per level pushes real
+   * payloads off the right edge.
+   */
+  static formatJson(value: unknown): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    if (typeof value === 'object') {
+      return JSON.stringify(value, null, 2);
+    }
+
+    const text = String(value);
+
+    try {
+      return JSON.stringify(JSON.parse(text), null, 2);
+    } catch {
+      return text;
+    }
+  }
+
+  onFormat(): void {
+    const control = this.activeTab === 'Headers' ? this.headersCtrl : this.responseCtrl;
+    const formatted = RequestComponent.formatJson(control.value);
+
+    if (formatted !== control.value) {
+      control.setValue(formatted);
+    }
+  }
+
+  /** Throws away the mock and puts the recorded value of this tab back. */
+  onReset(): void {
+    switch (this.activeTab) {
+      case 'Headers':
+        return this.onRevertHeaders();
+      case 'Code':
+        return this.onRevertCode();
+      default:
+        return this.onRevertResponse();
+    }
   }
 
   onRevertResponse(): void {
@@ -133,6 +230,22 @@ export class RequestComponent implements OnChanges, OnDestroy {
 
   onRevertHeaders(): void {
     this.storeService.upsertResponse({ headersMock: this.shownResponse.headers, id: this.shownResponse.id }, this.request, this.context);
+  }
+
+  onRevertCode(): void {
+    this.storeService.upsertResponse({ jsCode: '', id: this.shownResponse.id }, this.request, this.context);
+  }
+
+  /** Opens the active tab's content in the full-screen editor dialog. */
+  onExpand(): void {
+    switch (this.activeTab) {
+      case 'Headers':
+        return this.onShowHeadersFullscreen();
+      case 'Code':
+        return this.openShowMockCode();
+      default:
+        return this.onShowResponseFullscreen();
+    }
   }
 
   openShowMockCode(): void {

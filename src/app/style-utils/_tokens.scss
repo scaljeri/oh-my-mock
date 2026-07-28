@@ -32,6 +32,7 @@ $oh-text-muted: #5b616d; // labels
 $oh-text-subtle: #6b7280; // metadata, table headers
 $oh-text-faint: #9aa0ac; // placeholders, counts
 $oh-text-fainter: #a2a8b4; // disabled
+$oh-text-dim: #8c929e; // the dashed "+ Add" affordance in the detail pane
 
 // ---- brand & status ---------------------------------------------------
 $oh-brand: #4b4be0; // primary action, links, selection
@@ -44,6 +45,7 @@ $oh-success-tint: #e6f6ef;
 
 $oh-danger: #d93b4b; // 4xx/5xx status codes, destructive actions
 $oh-danger-tint: #fef0f1;
+$oh-danger-border: #f5c2c7; // outline of a destructive icon button on hover
 
 $oh-warning: #b5730b; // 3xx status codes, PUT
 $oh-warning-tint: #fdf3e3;
@@ -54,6 +56,15 @@ $oh-info-tint: #eaf1fd;
 // Row states in the request list.
 $oh-row-border: #eef0f3;
 $oh-row-hover: #fafafc;
+
+// The one inverted surface in the mockup: the primary button at the bottom of
+// the sidebar ("Add domain"). Same ink as $oh-text, but it is a surface here,
+// so it gets its own name and a hover of its own.
+$oh-surface-inverse: #16181d;
+$oh-surface-inverse-hover: #2b2e36;
+
+// The status dot in front of a domain, when that domain has nothing mocked.
+$oh-dot-idle: #cdd2da;
 
 // ---- typography -------------------------------------------------------
 // Instrument Sans for UI, IBM Plex Mono for anything that is data: URLs,
@@ -67,6 +78,8 @@ $oh-size-base: 12.5px; // body text in dense areas
 $oh-size-md: 13px; // default UI text — the most used size in the mockup
 $oh-size-lg: 14.5px; // pane titles
 $oh-size-xl: 17px; // domain title in the header
+$oh-size-url: 13.5px; // the request url in the detail pane header
+$oh-size-code: 12px; // the mock body / headers editor
 
 $oh-weight-normal: 400;
 $oh-weight-medium: 500;
@@ -98,6 +111,15 @@ $oh-table-header-height: 34px;
 $oh-row-columns: 62px 1fr 96px 88px 44px;
 $oh-row-gap: 12px;
 $oh-row-padding-x: 22px;
+
+// The request detail pane. It is a stack of blocks separated by hairlines, all
+// sharing one horizontal inset; only the editor in the middle scrolls.
+$oh-detail-padding-x: 20px;
+$oh-detail-padding-y: 16px;
+$oh-detail-head-padding: 18px 20px 16px;
+$oh-detail-field-gap: 14px;
+$oh-icon-button-size: 28px;
+$oh-editor-line-height: 1.75;
 
 // ---- spacing ----------------------------------------------------------
 $oh-space-1: 4px;

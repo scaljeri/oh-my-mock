@@ -7,6 +7,7 @@ import { StorageUtils } from '../shared/utils/storage';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
 import { OhMyStateHandler } from './handlers/state-handler';
 import { OhMyRemoveHandler } from './handlers/remove-handler';
+import { OhMyRequestHandler } from './handlers/request-handler';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { initStorage } from './init';
@@ -25,6 +26,9 @@ import { OhMyStoreHandler } from './handlers/store-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { contentScriptListeners } from './content-script-listeners';
 import { popupListeners } from './popup-listeners';
+import { OhMyCookieHandler } from './handlers/cookie-handler';
+import { initCookieSync, primeCookieSync } from './cookie-sync';
+import { initCookieRecorder } from './cookie-recorder';
 
 // window.onunhandledrejection = function (event) {
 //   const { reason } = event;
@@ -50,11 +54,21 @@ test();
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
+OhMyRequestHandler.queue = queue;
+OhMyCookieHandler.queue = queue;
+
+// Cookies are domain state, applied from here rather than per request. The sync
+// follows `chrome.storage`, so anything that writes a state or a cookie mock —
+// the popup included — triggers it. See `docs/architecture/cookie-mocking.md`.
+initCookieSync();
+initCookieRecorder(queue);
 
 queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
 queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
+queue.addHandler(payloadType.REQUEST, OhMyRequestHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
+queue.addHandler(payloadType.COOKIE, OhMyCookieHandler.update);
 queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
 queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
@@ -74,7 +88,7 @@ const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 contentScriptListeners(messageBus); // TODO
 popupListeners(messageBus);
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE],
   [appSources.CONTENT, appSources.POPUP])
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
@@ -183,9 +197,13 @@ setTimeout(async () => {
   await initStorage();
 
   const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
-  if (!state || Object.keys(state.data).length === 0) {
+  if (!state || state.requests.length === 0) {
     await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
   }
+
+  // A restarted service worker remembers nothing; the cookies it should have
+  // applied are re-applied here (never unapplied — see `primeCookieSync`).
+  await primeCookieSync();
 });
 
 

@@ -1,4 +1,4 @@
-import { IOhMyPresets, IState } from '../type';
+import { IData, IOhMyPresets, IOhMyRequests, IState } from '../type';
 import { PresetUtils } from './preset';
 
 describe('Utils/Preset', () => {
@@ -83,20 +83,25 @@ describe('Utils/Preset', () => {
   });
   describe('#delete', () => {
     let state: IState;
+    let requests: IOhMyRequests;
+    let input: IState;
+    let inputRequests: IOhMyRequests;
 
     beforeEach(() => {
-      const input = {
-        data: {
-          qwerty: {
-            id: 'qwerty',
-            enabled: { a: false, b: true },
-            selected: { a: '123', b: 456 }
-          }
-        },
+      input = {
+        requests: ['qwerty'],
         context: { preset: 'b' },
         presets: { a: '1', b: '2' }
-      } as any as IState;
-      state = PresetUtils.delete(input, 'b');
+      } as unknown as IState;
+      inputRequests = {
+        qwerty: {
+          id: 'qwerty',
+          enabled: { a: false, b: true },
+          selected: { a: '123', b: '456' }
+        } as unknown as IData
+      };
+
+      ({ state, requests } = PresetUtils.delete(input, inputRequests, 'b'));
     });
 
     it('should remove the preset from the preset list', () => {
@@ -108,8 +113,12 @@ describe('Utils/Preset', () => {
     });
 
     it('should remove the preset from the requests', () => {
-      expect(state.data.qwerty.enabled.b).toBeUndefined();
-      expect(state.data.qwerty.selected.b).toBeUndefined();
+      expect(requests.qwerty.enabled.b).toBeUndefined();
+      expect(requests.qwerty.selected.b).toBeUndefined();
+    });
+
+    it('should not modify the requests it was given', () => {
+      expect(inputRequests.qwerty.enabled.b).toBe(true);
     });
   });
 });

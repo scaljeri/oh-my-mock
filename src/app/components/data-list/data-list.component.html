@@ -13,7 +13,7 @@
   ></oh-my-preset>
 
   <oh-my-request-filter
-    [data]="state.data"
+    [data]="data"
     [filterOptions]="filterOptions"
     [filterStr]="filterKeywords"
     [lastResult]="filteredRequests"
@@ -65,7 +65,7 @@
     class="oh-row"
     x-test="list-request-item"
     *ngFor="
-      let row of filteredRequests | dataToViewList: state.data;
+      let row of filteredRequests | dataToViewList: data;
       index as index;
       trackBy: trackBy
     "

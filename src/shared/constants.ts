@@ -61,6 +61,8 @@ export enum payloadType {
   // EVAL = 'execute',
   // EVAL_RESULT = 'eval-result',
   DATA = 'data',
+  /** Adds, changes or removes one cookie mock. */
+  COOKIE = 'cookie',
   // DATA_DISPATCH = 'data-dispatch',
   API_REQUEST = 'api-request',
   API_RESPONSE_MOCKED = 'api-response-mocked',

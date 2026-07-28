@@ -62,7 +62,7 @@ export async function receivedApiRequest(
 
   const request = { method: inputRequest.method, url: inputRequest.url } as IOhMyAPIRequest;
   const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest, payloadType.DISPATCH_TO_SERVER, context);
-  const data = state ? StateUtils.findRequest(state, inputRequest) : undefined;
+  const data = state ? StateUtils.findRequest(state, contentState.requests, inputRequest) : undefined;
 
   let mockId: ohMyMockId | undefined;
   let mock: IMock | undefined;
@@ -72,9 +72,11 @@ export async function receivedApiRequest(
     if (mockId) {
       mock = await contentState.get<IMock>(mockId);
 
-      // HIT (handleApiRequest: shared/utils/handle-api-request.ts)
+      // HIT. This used to be a patch of `$.data` on the domain state, which
+      // rewrote every request the domain knows about for the sake of one
+      // timestamp. A request is its own record now, so this writes just that.
       data.lastHit = Date.now();
-      OhMySendToBg.patch(data, '$.data', data.id, payloadType.STATE);
+      OhMySendToBg.full(data, payloadType.REQUEST, context, 'content;request-hit');
 
       if (!mock) {
         // TODO: This should never happen

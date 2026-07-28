@@ -1,10 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  HostListener,
-  Input,
-  Output
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
@@ -12,9 +6,15 @@ import { IOhMyContext, ResetStateOptions } from '@shared/type';
 import { OhMyState } from '../../services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
-import { StorageService } from '../../services/storage.service';
-import { OhMyStateService } from '../../services/state.service';
 
+/**
+ * The app-wide actions: reset, state explorer, JSON import/export and the
+ * external links.
+ *
+ * These used to be the entire sidebar. The sidebar is the domain list now
+ * (`oh-my-domain-sidebar`), so this became the overflow menu in its footer —
+ * the same actions behind one button, nothing dropped.
+ */
 @Component({
   standalone: false,
   selector: 'app-nav-list',
@@ -23,20 +23,14 @@ import { OhMyStateService } from '../../services/state.service';
 })
 export class NavListComponent {
   @Input() context!: IOhMyContext;
+  /** Emitted when an action was picked, so the shell can react if it wants. */
   @Output() navigate = new EventEmitter<void>();
 
   constructor(
     private storeService: OhMyState,
-    private stateService: OhMyStateService,
-    private storageService: StorageService,
     private router: Router,
     public dialog: MatDialog,
   ) { }
-
-  @HostListener('click')
-  closeDrawer(): void {
-    this.navigate.emit();
-  }
 
   onReset(): void {
     const dialogRef = this.dialog.open(ResetStateComponent, {

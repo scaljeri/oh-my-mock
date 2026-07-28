@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
-import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain } from '@shared/type';
+import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain, IData, IOhMyRequests } from '@shared/type';
 import { IOhMyPacketContext } from '@shared/packet-type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
@@ -24,6 +24,20 @@ export class OhMyStateService {
   private stateSubject = new BehaviorSubject<IState | undefined>(undefined);
   public state$!: Observable<IState>; //  = this.stateSubject.asObservable().pipe(shareReplay(1));
   public state!: IState;
+
+  /**
+   * Every request record this popup has seen, by id.
+   *
+   * Requests live outside the domain record, so `state` alone cannot answer
+   * "which requests does this domain have". This map is what the lookups in
+   * `StateUtils` are given; it is filled from storage on `initialize` and kept
+   * current by `chrome.storage.onChanged` below. Records of other domains may
+   * end up here — the explorer page loads them deliberately — which is fine
+   * because every lookup is scoped to a state's `requests`.
+   */
+  public requests: IOhMyRequests = {};
+  private requestsSubject = new BehaviorSubject<IOhMyRequests>(this.requests);
+  public requests$ = this.requestsSubject.asObservable().pipe(shareReplay(1));
 
   private responseSubject = new BehaviorSubject<IMock | undefined>(undefined)
   public response$ = this.responseSubject.asObservable().pipe(filter(m => !!m));
@@ -80,17 +94,26 @@ export class OhMyStateService {
   public async initState(domain: ohMyDomain): Promise<IState> {
     const state = await this.storageService.get<IState>(domain) || StateUtils.init({ domain });
 
-    // if (!state) { // new state
-    //   state = StateUtils.init({ domain });
-    //   state = await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;initState');
-    // }
-
-    // const demoState = await this.storageService.get<IState>(DEMO_TEST_DOMAIN);
-    // if (!demoState || Object.keys(demoState.data).length === 0) {
-    //   await importJSON(DEMO_JSON, { domain: DEMO_TEST_DOMAIN }, { activate: true });
-    // }
+    await this.loadRequests(state);
 
     return state;
+  }
+
+  /**
+   * Fetches the request records of a state that are not in the map yet.
+   *
+   * Public because the state explorer shows another domain's requests, and it
+   * needs them loaded before it can render them.
+   */
+  public async loadRequests(state: IState): Promise<IOhMyRequests> {
+    const missing = state.requests.filter(id => !this.requests[id]);
+
+    if (missing.length) {
+      this.requests = { ...this.requests, ...await this.storageService.getMany<IData>(missing) };
+      this.requestsSubject.next(this.requests);
+    }
+
+    return this.requests;
   }
 
   public getResponse$(responseId: ohMyMockId): Observable<IMock> {
@@ -124,8 +147,27 @@ export class OhMyStateService {
               this.state = StateUtils.init({ domain: (update.oldValue as IState).domain });
             }
 
+            // The state may name requests this popup has not loaded yet
+            this.loadRequests(this.state);
+
             this.stateSubject.next(this.state);
             break;
+          case objectTypes.REQUEST: {
+            // Requests are their own records, so every change to one arrives
+            // here rather than as part of a state update.
+            const request = (update.newValue ?? update.oldValue) as IData;
+
+            this.requests = { ...this.requests };
+
+            if (update.newValue) {
+              this.requests[request.id] = update.newValue as IData;
+            } else {
+              delete this.requests[request.id];
+            }
+
+            this.requestsSubject.next(this.requests);
+            break;
+          }
           case objectTypes.MOCK:
             this.responseSubject.next(update.newValue as IMock);
             break;

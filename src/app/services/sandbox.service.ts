@@ -37,7 +37,8 @@ export class SandboxService {
   }
 
   async dispatch(input: IOhMyReadyResponse): Promise<IOhMyMockResponse> {
-    const data = SandboxService.StateUtils.findRequest(this.stateService.state, input.request) as IData;
+    const data = SandboxService.StateUtils.findRequest(
+      this.stateService.state, this.stateService.requests, input.request) as IData;
     const mockid = SandboxService.DataUtils.activeMock(data, this.stateService.state.context);
     const mock = await this.storageService.get<IMock>(mockid as string);
 

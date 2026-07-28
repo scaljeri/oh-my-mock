@@ -61,7 +61,12 @@ import { HttpClientModule } from '@angular/common/http';
   providers: [
     provideHotToastConfig(),
     { provide: OH_MY_SEARCH_WORKER_FACTORY, useValue: createSearchWorker },
-    provideMonacoEditor(),
+    // Without a `baseUrl` the loader looks for `assets/monaco/min/vs`, but
+    // `angular.json` copies Monaco to `assets/monaco-editor/min/vs`. The
+    // mismatch 404s `loader.js` and every code editor in the app then renders
+    // as an empty box — silently, because `CodeEditComponent` polls for
+    // `window.monaco` forever rather than failing.
+    provideMonacoEditor({ baseUrl: './assets/monaco-editor/min/vs' }),
     { provide: Window, useValue: window },
   ],
   bootstrap: [AppComponent]

@@ -63,8 +63,14 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
       this.base = this.format(this.base);
     }
 
+    // Before awaiting Monaco, not after: `ngx-monaco-editor` creates the editor
+    // with whatever `options` holds at that moment, and an empty object means
+    // Monaco's own defaults — which include the minimap. The detail pane is
+    // 436px wide in the design; a minimap eats a fifth of that.
+    this.setEditorOptions();
+
     await this.checkMonacoLoaded();
-    this.setEditorOptions()
+    this.setEditorOptions();
 
     this.editorCtrl.valueChanges.pipe(filter(v => v !== this.value)).subscribe(value => {
       this.value = value;
@@ -112,6 +118,13 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
       minimap: { enabled: this.showMinimap },
       automaticLayout: true,
       scrollBeyondLastLine: false,
+      // Matches `$oh-font-mono`, `$oh-size-code` and `$oh-editor-line-height`
+      // in `_tokens.scss`, so the editor reads as part of the same page as the
+      // rest of the detail pane rather than as an embedded IDE.
+      fontFamily: "'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace",
+      fontSize: 12,
+      lineHeight: 21,
+      lineNumbersMinChars: 3,
       theme: 'vs', language: 'json', readOnly: false
     };
 

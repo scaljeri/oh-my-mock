@@ -1,111 +1,86 @@
-<mat-card *ngIf="request" class="header">
-  <oh-request-header
-    [request]="request"
+<!-- The request detail pane, following `design/Mock Manager v2.dc.html`:
+     header, saved responses, response settings, then the Body/Headers/Code
+     editor. Only the editor scrolls; everything above it keeps its place. -->
+<oh-request-header
+  *ngIf="request"
+  [request]="request"
+  [context]="context"
+></oh-request-header>
+
+<ng-container *ngIf="response; else nodata">
+  <oh-my-mock-details
     [context]="context"
-  ></oh-request-header>
-</mat-card>
+    [response]="response"
+    [requestId]="request.id"
+  ></oh-my-mock-details>
 
-<mat-card *ngIf="response; else nodata" class="details">
-  <h3>Response details</h3>
-  <section class="mock-settings">
-    <oh-my-mock-details
-      [context]="context"
-      [response]="response"
-      [requestId]="request.id"
-    ></oh-my-mock-details>
+  <nav class="oh-tabs">
+    <button
+      class="oh-tabs__tab"
+      type="button"
+      *ngFor="let tab of tabs"
+      [class.is-active]="tab === activeTab"
+      (click)="onSelectTab(tab)"
+    >
+      {{ tab }}
+    </button>
 
-    <div class="mock-actions">
-      <button mat-stroked-button class="delete-mock" (click)="onDelete()">
-        <mat-icon class="dark" svgIcon="delete_forever"></mat-icon>
+    <span class="oh-tabs__spacer"></span>
+
+    <div class="oh-tabs__actions">
+      <button class="oh-tabs__action" type="button" *ngIf="canFormat" (click)="onFormat()">
+        Format
       </button>
-
-      <button mat-stroked-button class="anonymize-mock" (click)="onAnonymize()">
-        Anonymise your data
+      <button class="oh-tabs__action" type="button" (click)="onAnonymize()">
+        Anonymise
       </button>
-      <div class="action-wrapper">
-        <button
-          class="js-code-edit"
-          (click)="openShowMockCode()"
-          mat-stroked-button
-        >
-          Mocking with code
-        </button>
-        <mat-icon
-          color="primary"
-          matTooltip="This is the place where OhMyMock creates responses. You can write code in here to change the default mocking behaviour. You can make Fetch/XHR request and/or change the cached responses/headers."
-          svgIcon="info"
-        ></mat-icon>
-      </div>
+      <!-- Not in the mockup, but the pane is 436px wide and some payloads are
+           not: this reopens the same content in the full-screen editor. -->
+      <button class="oh-tabs__action" type="button" (click)="onExpand()">
+        Expand
+      </button>
     </div>
-  </section>
+  </nav>
 
-  <section class="editors">
-    <div *ngIf="!dialogIsOpen" class="response">
-      <header>
-        <h2>Data</h2>
-      </header>
-      <div class="code-wrapper">
-        <button
-          class="fullscreen"
-          (click)="onShowResponseFullscreen()"
-          mat-mini-fab
-          color="primary"
-          aria-label="Example icon button with a menu icon"
-        >
-          <mat-icon svgIcon="fullscreen"></mat-icon>
-        </button>
-        <oh-my-code-edit
-          class="request-response"
-          *ngIf="!isResponseImage"
-          [formControl]="responseCtrl"
-        ></oh-my-code-edit>
-        <oh-my-mock-image
-          class="request-response"
-          [ngClass]="{ 'is-blurred': blurImages }"
-          *ngIf="isResponseImage"
-          [contentType]="responseType"
-          [src]="responseCtrl.value"
-        >
-        </oh-my-mock-image>
-        <button class="reset" mat-button (click)="onRevertResponse()">
-          Reset
-        </button>
-      </div>
-    </div>
+  <div class="oh-editor" [ngSwitch]="activeTab" *ngIf="!dialogIsOpen">
+    <ng-container *ngSwitchCase="'Headers'">
+      <oh-my-code-edit type="json" [formControl]="headersCtrl"></oh-my-code-edit>
+    </ng-container>
 
-    <div *ngIf="!dialogIsOpen" class="headers">
-      <header>
-        <h2>Headers</h2>
-      </header>
-      <div class="code-wrapper">
-        <button
-          class="fullscreen"
-          (click)="onShowHeadersFullscreen()"
-          mat-mini-fab
-          color="primary"
-          aria-label="Example icon button with a menu icon"
-        >
-          <mat-icon svgIcon="fullscreen"></mat-icon>
-        </button>
-        <oh-my-code-edit
-          class="request-headers"
-          [formControl]="headersCtrl"
-        ></oh-my-code-edit>
-        <button class="reset" mat-button (click)="onRevertHeaders()">
-          Reset
-        </button>
-      </div>
-    </div>
-  </section>
-</mat-card>
+    <ng-container *ngSwitchCase="'Code'">
+      <oh-my-code-edit type="javascript" [formControl]="jsCodeCtrl"></oh-my-code-edit>
+    </ng-container>
+
+    <ng-container *ngSwitchDefault>
+      <oh-my-mock-image
+        *ngIf="isResponseImage; else bodyEditor"
+        class="oh-editor__image"
+        [ngClass]="{ 'is-blurred': blurImages }"
+        [contentType]="responseType"
+        [src]="responseCtrl.value"
+      ></oh-my-mock-image>
+      <ng-template #bodyEditor>
+        <oh-my-code-edit [formControl]="responseCtrl"></oh-my-code-edit>
+      </ng-template>
+    </ng-container>
+  </div>
+
+  <footer class="oh-detail__foot">
+    <button class="oh-btn" type="button" (click)="onReset()">
+      Reset {{ activeTab | lowercase }}
+    </button>
+    <span class="oh-detail__foot-spacer"></span>
+    <span class="oh-detail__preset" *ngIf="presetName">Preset: {{ presetName }}</span>
+  </footer>
+</ng-container>
 
 <ng-template #nodata>
-  <section class="no-data">
-    <p>This request is not active and OhMyMock will not serve any data.</p>
+  <section class="oh-empty">
+    <p class="oh-empty__lead">This request is not active — OhMyMock passes it through.</p>
     <p *ngIf="hasMocks">
-      To start serving data, select a response, create a new response or change
-      the preset.
+      Pick one of the saved responses above to start serving data, or change the
+      preset.
     </p>
-    <p *ngIf="!hasMocks">New responses can be created with the + button</p>
+    <p *ngIf="!hasMocks">Create a first response with <b>+ Add</b> above.</p>
   </section>
 </ng-template>

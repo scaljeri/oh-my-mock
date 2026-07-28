@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { IData, IMock, IOhMyBackup, IOhMyShallowMock, IState } from '@shared/type';
+import { IData, IMock, IOhMyBackup, IOhMyCookie, IOhMyRequests, IOhMyShallowMock, IState } from '@shared/type';
+import { StateUtils } from '@shared/utils/state';
 import { DataListComponent } from '../../components/data-list/data-list.component';
 import { AppStateService } from '../../services/app-state.service';
 import { HotToastService } from '@ngxpert/hot-toast';
@@ -23,6 +24,8 @@ export class JsonExportComponent implements OnInit {
   subscriptions: Subscription[] = [];
   exportList: IData[] = []
   hasRequests!: boolean;
+  /** This domain's request records, by id — the list renders off these. */
+  requests: IOhMyRequests = {};
 
   @ViewChild(DataListComponent) dataListRef!: DataListComponent;
 
@@ -35,7 +38,10 @@ export class JsonExportComponent implements OnInit {
 
   ngOnInit(): void {
     this.state = this.stateService.state;
-    this.hasRequests = Object.keys(this.state.data).length > 0;
+    this.hasRequests = this.state.requests.length > 0;
+    this.subscriptions.push(this.stateService.requests$.subscribe(requests => {
+      this.requests = StateUtils.pickRequests(this.state, requests);
+    }));
   }
 
   onRowExport(data: IData): void {
@@ -47,13 +53,13 @@ export class JsonExportComponent implements OnInit {
   }
 
   onSelectAll(): void {
-    const hasUnselected = Object.keys(this.state.data).length -
+    const hasUnselected = this.state.requests.length -
       Object.keys(this.selected).length > 0;
 
     if (hasUnselected) { // select all
       this.dataListRef.selectAll();
       this.selected = {};
-      Object.values(this.state.data).forEach(this.onRowExport.bind(this));
+      Object.values(this.requests).forEach(r => this.onRowExport(r));
     } else { // deselect all
       this.dataListRef.deselectAll();
       this.selected = {};
@@ -87,6 +93,19 @@ export class JsonExportComponent implements OnInit {
 
         exportObj.responses.push(mock);
         exportObj.requests.push(request);
+      }
+    }
+
+    // Cookie mocks are not attached to a request, so there is nothing in the
+    // list to select them with: the domain's cookies go along whole or not at
+    // all. Their ids are kept as they are — unlike a request, importing one
+    // twice should update it rather than produce a second cookie of the same
+    // name.
+    for (const id of this.state.cookies ?? []) {
+      const cookie = await this.storageService.get<IOhMyCookie>(id);
+
+      if (cookie) {
+        exportObj.cookies = [...(exportObj.cookies ?? []), cookie];
       }
     }
 

@@ -27,7 +27,10 @@ export class OhMyResponseHandler {
         return undefined;
       }
 
-      let request = StateUtils.findRequest(state, data.request);
+      // The background keeps no cache, so the domain's requests are read here
+      // — one batch call — and handed to the lookup.
+      const requests = await OhMyResponseHandler.StorageUtils.getMany<IData>(state.requests);
+      let request = StateUtils.findRequest(state, requests, data.request);
       const responseUpdate = data.response;
       let autoActivate = false;
 
@@ -43,8 +46,8 @@ export class OhMyResponseHandler {
         await OhMyResponseHandler.StorageUtils.remove(responseUpdate.id);
 
         // No mock left to hand to the filter or to write back to storage
+        await OhMyResponseHandler.queueRequestUpdate(state, request);
         await OhMyResponseHandler.updateFiltering(state, request);
-        OhMyResponseHandler.queueRequestUpdate(state, request);
 
         return undefined;
       }
@@ -74,8 +77,8 @@ export class OhMyResponseHandler {
 
       request = DataUtils.addResponse(state.context, request, response, autoActivate);
 
+      await OhMyResponseHandler.queueRequestUpdate(state, request);
       await OhMyResponseHandler.updateFiltering(state, request, response);
-      OhMyResponseHandler.queueRequestUpdate(state, request);
 
       return StorageUtils.set(response.id, response).then(() => response);
     } catch (err) {
@@ -86,20 +89,28 @@ export class OhMyResponseHandler {
     }
   }
 
-  // Store the (updated) request on its state
-  static queueRequestUpdate(state: IState, request: IData): void {
+  /**
+   * Stores the (updated) request. It is its own record, so this no longer
+   * rewrites the domain state — `OhMyRequestHandler` only touches that when the
+   * request is new to the domain.
+   *
+   * Awaitable, and awaited before the filter update below, because the two no
+   * longer share a queue: requests and states are separate lanes, so letting
+   * both read-modify-write the domain record at once would let one drop the
+   * other's change — losing either the filter result or, worse, the new
+   * request's id.
+   */
+  static queueRequestUpdate(state: IState, request: IData): Promise<void> {
     const payload: IPacketPayload<IData, IOhMyPacketContext> = {
-      type: payloadType.STATE,
+      type: payloadType.REQUEST,
       data: request,
-      context: {
-        path: `$.data`,
-        propertyName: request.id,
-        domain: state.domain
-      },
+      context: { domain: state.domain },
       description: 'background;response-handler;request-update'
     };
 
-    OhMyResponseHandler.queue.addPacket(payloadType.STATE, { source: appSources.BACKGROUND, payload });
+    return new Promise<void>(resolve =>
+      OhMyResponseHandler.queue.addPacket(
+        payloadType.REQUEST, { source: appSources.BACKGROUND, payload }, () => resolve()));
   }
 
   // `response` is the mock that was just written; on a delete there is none

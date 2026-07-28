@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { StorageUtils } from '@shared/utils/storage';
-import { IMock, IOhMyMock, IState } from '@shared/type';
+import { IData, IMock, IOhMyCookie, IOhMyMock, IState } from '@shared/type';
 
 @Injectable({
   providedIn: 'root'
@@ -9,13 +9,22 @@ export class StorageService {
 
   constructor(private ngZone: NgZone) { }
 
-  get<T extends IMock | IOhMyMock | IState>(key: string): Promise<T> {
+  get<T extends IMock | IOhMyMock | IState | IData | IOhMyCookie>(key: string): Promise<T> {
     return new Promise(r => {
       // this.ngZone.runOutsideAngular(() => {
       StorageUtils.get<T>(key).then((out) => {
         this.ngZone.run(() => r(out));
       });
       // });
+    });
+  }
+
+  /** Several records in one call — see `StorageUtils.getMany`. */
+  getMany<T>(keys: string[]): Promise<Record<string, T>> {
+    return new Promise(r => {
+      StorageUtils.getMany<T>(keys).then((out) => {
+        this.ngZone.run(() => r(out));
+      });
     });
   }
 

@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 import { objectTypes, STORAGE_KEY } from '../constants';
-import { IMock, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
+import { IData, IMock, IOhMyCookie, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
 
@@ -42,7 +42,7 @@ export class StorageUtils {
     StorageUtils.chrome.storage.onChanged.removeListener(StorageUtils.callback);
   }
 
-  static get<T extends IOhMyMock | IState | IMock>(key: string = STORAGE_KEY): Promise<T> {
+  static get<T extends IOhMyMock | IState | IMock | IData | IOhMyCookie>(key: string = STORAGE_KEY): Promise<T> {
     // if (!key) {
     //   return Promise.resolve(undefined);
     // }
@@ -62,6 +62,23 @@ export class StorageUtils {
     });
   }
 
+  /**
+   * Several records in one call, as a map keyed the same way as storage.
+   *
+   * Requests are their own records, so anything that needs a domain's requests
+   * needs a batch read; `chrome.storage.local.get` takes an array of keys and
+   * answers in one round trip, which is the whole reason this exists.
+   */
+  static getMany<T>(keys: string[]): Promise<Record<string, T>> {
+    if (!keys.length) {
+      return Promise.resolve({});
+    }
+
+    return new Promise<Record<string, T>>(resolve => {
+      StorageUtils.chrome.storage.local.get(keys, (data: { [key: string]: T }) => resolve(data));
+    });
+  }
+
   // static migrate(data: { version: string }): unknown | undefined {
   //   if (StorageUtils.MigrateUtils.shouldMigrate(data)) {
   //     return StorageUtils.MigrateUtils.migrate(data) as { version: string };
@@ -74,7 +91,11 @@ export class StorageUtils {
     return StorageUtils.set(STORAGE_KEY, store)
   }
 
-  static set(key: string, value: unknown & { version?: string }): Promise<void> {
+  // Generic rather than `unknown & { version?: string }`, which collapses to
+  // just `{ version?: string }` and so rejected any object literal with fields
+  // of its own — the excess-property check. Callers passing a variable slipped
+  // through, which is why it went unnoticed.
+  static set<T extends { version?: string }>(key: string, value: T): Promise<void> {
     return new Promise(resolve => {
       if (value && !value.version) {
         value.version = StorageUtils.appVersion;

@@ -1,7 +1,8 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { domain, IData, IOhMyContext, IState } from '@shared/type';
+import { domain, IData, IOhMyContext, IOhMyRequests, IState } from '@shared/type';
+import { StateUtils } from '@shared/utils/state';
 
 import { Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -31,6 +32,13 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
   subscriptions = new Subscription();
   context!: IOhMyContext;
   hasSelectedStateAnyRequests!: boolean;
+  /**
+   * The selected domain's request records, by id.
+   *
+   * This page is the one place that shows a state other than the active one,
+   * so it loads that domain's requests itself.
+   */
+  selectedRequests: IOhMyRequests = {};
 
   @ViewChildren(MatExpansionPanel) panels!: QueryList<MatExpansionPanel>;
 
@@ -61,16 +69,18 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
     await this.webWorkerService.init(domain);
 
     this.selectedState = await this.storageService.get(domain);
-    this.hasSelectedStateAnyRequests = Object.keys(this.selectedState.data)?.length > 0
+    this.selectedRequests = StateUtils.pickRequests(
+      this.selectedState, await this.stateStream.loadRequests(this.selectedState));
+    this.hasSelectedStateAnyRequests = this.selectedState.requests.length > 0;
     this.panels.toArray()[1].open();
     this.cdr.detectChanges();
   }
 
   async onCloneAll(): Promise<void> {
-    for (const request of Object.values(this.selectedState.data)) {
+    for (const request of Object.values(this.selectedRequests)) {
       await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
     }
-    this.toast.success(`Cloned ${Object.keys(this.selectedState.data).length} mocks`);
+    this.toast.success(`Cloned ${Object.keys(this.selectedRequests).length} mocks`);
     await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
   }
 

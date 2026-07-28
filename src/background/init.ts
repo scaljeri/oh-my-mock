@@ -4,8 +4,16 @@ import { MigrateUtils } from "../shared/utils/migrate";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
 import { StoreUtils } from "../shared/utils/store";
+import { liftOutRequests } from "./lift-out-requests";
 
 export async function initStorage(domain?: ohMyDomain): Promise<void> {
+  // Before anything reads a domain record: move requests that still sit inside
+  // one into records of their own. This has to happen ahead of the migration
+  // steps, which see a state as a single record and would leave the embedded
+  // requests unreachable. It is keyed on the shape, so it is a no-op once every
+  // record has been lifted.
+  await liftOutRequests();
+
   // `StorageUtils.get` resolves with `undefined` on a fresh install, and
   // `MigrateUtils.migrate` returns `null` when it gives up.
   let store: IOhMyMock | null | undefined = await StorageUtils.get<IOhMyMock>();

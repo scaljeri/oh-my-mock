@@ -1,58 +1,61 @@
 @use 'mixins' as *;
+@use 'tokens' as t;
+
+// The response settings grid in the request detail pane. See
+// `design/Mock Manager v2.dc.html`.
+//
+// BEM children stay top-level selectors: nesting `&__input` inside `label.oh-field`
+// would compile to `label.oh-field__input`, which matches nothing.
 
 :host {
-  align-items: flex-start;
-  display: flex;
-
-  .label,
-  .value {
-    font-size: $oh-font-size;
-  }
-
-  div + div {
-    margin: $spacer-4 0 0 $spacer-4 * 2;
-  }
+  display: block;
+  flex: 0 0 auto;
+  padding: t.$oh-detail-padding-y t.$oh-detail-padding-x;
+  border-bottom: 1px solid t.$oh-row-border;
 }
 
-form {
-  display: flex;
+.oh-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: t.$oh-detail-field-gap;
 }
 
-.label {
-  display: inline-flex;
-  font-weight: bold;
-  width: 120px;
-  justify-content: flex-end;
-  padding-right: 5px;
-}
-
-.details {
-  align-items: flex-start;
+.oh-field {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
 
-  p {
-    display: flex;
-    width: 100%;
+.oh-field__label {
+  font-size: t.$oh-size-sm;
+  font-weight: t.$oh-weight-medium;
+  color: t.$oh-text-subtle;
+}
 
-    &.vertical {
-      justify-content: flex-start;
-      flex-direction: column;
-    }
+.oh-field__input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: t.$oh-bg-subtle;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  padding: 8px 10px;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text;
+
+  &::placeholder {
+    color: t.$oh-text-faint;
   }
 
-  oh-my-content-type {
-    align-self: center;
-    margin-top: $spacer-2;
+  &:focus {
+    outline: none;
+    border-color: t.$oh-brand;
+    background: t.$oh-bg-surface;
   }
 }
 
-.scenario-dropdown {
-  display: flex;
-
-  p {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-  }
+.oh-field__input--mono {
+  font-family: t.$oh-font-mono;
 }

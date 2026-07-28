@@ -4,8 +4,9 @@ import { HotToastService } from '@ngxpert/hot-toast';
 import { style, animate } from "@angular/animations";
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IMock, IOhMyContext, IState, ohMyDataId } from '@shared/type';
-import { BehaviorSubject, debounceTime, filter, Subject, Subscription } from 'rxjs';
+import { IData, IMock, IOhMyContext, IOhMyRequests, IState, ohMyDataId } from '@shared/type';
+import { StateUtils } from '@shared/utils/state';
+import { BehaviorSubject, combineLatest, debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from '../../constants';
@@ -59,6 +60,20 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Every request record the caller knows about, by id.
+   *
+   * Requests are no longer part of the state, so the list needs them handed to
+   * it separately. The map may span domains — the state explorer holds the
+   * requests of two — which is why `data` below is narrowed to `state`.
+   */
+  @Input() set requests(r: IOhMyRequests) {
+    if (r) {
+      this.requestsSubject.next(r);
+    }
+  }
+  private requestsSubject = new BehaviorSubject<IOhMyRequests>({});
+
   @Input() context!: IOhMyContext; // context !== state,context (but it can be)
   @Input() showDelete!: boolean;
   @Input() showClone!: boolean;
@@ -104,7 +119,8 @@ export class DataListComponent implements OnInit, OnDestroy {
   hasFilterOptionsChanged = false;
 
   isSearching = false;
-  public data!: Record<ohMyDataId, IData>;
+  /** This state's requests, by id — the input map narrowed to one domain. */
+  public data: IOhMyRequests = {};
   worker!: Worker;
   private workerTimeoutId!: number;
   searchSubj = new Subject();
@@ -124,21 +140,23 @@ export class DataListComponent implements OnInit, OnDestroy {
     if (!this.persistFilter) {
       this.filterOptions = undefined;
       this.filterKeywords = '';
-      this.filteredRequests = Object.keys(this.loadedState.data);
+      this.filteredRequests = [...this.loadedState.requests];
     }
 
-    this.subscriptions.add(this.state$.subscribe(state => {
+    this.subscriptions.add(combineLatest([this.state$, this.requestsSubject]).subscribe(([state, requests]) => {
+      this.data = StateUtils.pickRequests(state, requests);
+
       if (this.persistFilter) {
         this.filterKeywords = state.aux.filterKeywords || '';
         if (!state.aux.filterKeywords) {
-          this.filteredRequests = Object.keys(state.data);
+          this.filteredRequests = [...state.requests];
         } else {
           this.filteredRequests = undefined;
 
           if (state.aux.filteredRequests) {
             this.filteredRequests = state.aux.filteredRequests;
           } else if (state.aux.filteredRequests !== null) {
-            this.filteredRequests = Object.keys(state.data);
+            this.filteredRequests = [...state.requests];
           }
         }
 
@@ -151,7 +169,7 @@ export class DataListComponent implements OnInit, OnDestroy {
 
       this.newAutoActivate = state.aux.newAutoActivate ?? false;
       this.filterOptions = state.aux.filterOptions;
-      this.requestCount = Object.keys(state.data).length;
+      this.requestCount = state.requests.length;
       this.blurImages = state.aux.blurImages ?? false;
 
       setTimeout(() => {
@@ -170,7 +188,7 @@ export class DataListComponent implements OnInit, OnDestroy {
 
   onActivateToggle(id: ohMyDataId, event: MouseEvent): void {
     event.stopPropagation();
-    const data = this.loadedState.data[id];
+    const data = this.data[id];
 
     if (!Object.keys(data.mocks).length) {
       this.toast.error(`Could not activate, there are no responses available`);
@@ -186,7 +204,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   async onDelete(id: ohMyDataId, event: MouseEvent) {
     event.stopPropagation();
 
-    const data = this.loadedState.data[id];
+    const data = this.data[id];
 
     // If you click delete fast enough, you can hit it twice
     if (data) { // Is this needed
@@ -200,9 +218,9 @@ export class DataListComponent implements OnInit, OnDestroy {
     const state = this.loadedState;
 
     this.storeService.cloneRequest(id, state.context, this.context);
-    this.toast.success('Cloned ' + state.data[id].url);
+    this.toast.success('Cloned ' + this.data[id].url);
 
-    this.cloned.emit(state.data[id]);
+    this.cloned.emit(this.data[id]);
   }
 
   onDataClick(data: IData, index: number): void {
@@ -223,7 +241,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   public selectAll(): void {
-    Object.keys(this.loadedState.data).forEach((d, i) => {
+    this.loadedState.requests.forEach((d, i) => {
       this.selection.select(i);
     });
     this.cdr.detectChanges();
@@ -235,17 +253,17 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   onActivateAll(isActive: boolean): void {
-    const state: IState = { ...this.loadedState, data: { ...this.loadedState.data } };
-    Object.values(this.loadedState.data).forEach(d => {
-      if (d.selected[this.loadedState.context.preset]) {
-        d = { ...d, enabled: { ...d.enabled, [this.loadedState.context.preset]: isActive } };
-        state.data[d.id as string] = d;
-      }
-    });
+    const state = this.loadedState;
+    const preset = state.context.preset;
 
+    // Each request is its own record, so activating them all is a write per
+    // request rather than one write of the domain. Only the ones that have a
+    // response to serve can be switched on at all.
     // NOTE: It is not this.context!!!!!
-    this.storeService.upsertState(state, state.context);
-    this.stateSubject.next(state);
+    Object.values(this.data)
+      .filter(d => d.selected[preset])
+      .forEach(d => this.storeService.upsertRequest(
+        { ...d, enabled: { ...d.enabled, [preset]: isActive } }, state.context));
   }
 
   /**

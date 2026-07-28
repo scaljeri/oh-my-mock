@@ -37,7 +37,11 @@ export async function dispatch2Server(request: IOhMyUpsertData, domain: string):
 
   try {
     if (state) {
-      data = StateUtils.findRequest(state, request);
+      // No cache in the background: the domain's requests are read here, in one
+      // batch call, and handed to the lookup.
+      const requests = await StorageUtils.getMany<IData>(state.requests);
+
+      data = StateUtils.findRequest(state, requests, request);
       if (data) {
         const mockId = DataUtils.activeMock(data, state.context);
 

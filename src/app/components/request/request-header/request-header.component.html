@@ -1,88 +1,120 @@
-<div class="request">
-  <h3>Request</h3>
-  <section>
-    <mat-form-field class="type-select">
-      <mat-label>Type</mat-label>
-      <mat-select [formControl]="typeCtrl" name="type">
-        <mat-option *ngFor="let type of ['FETCH', 'XHR']" [value]="type">
-          {{ type }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+<!-- Top of the detail pane, following `design/Mock Manager v2.dc.html`: the
+     method + url line with its metadata, then the saved-response chips. -->
+<header class="oh-detail__head">
+  <div class="oh-detail__title">
+    <button
+      class="oh-detail__request"
+      type="button"
+      x-test="request-edit-toggle"
+      [attr.aria-expanded]="isEditing"
+      title="Edit the method, type and url of this request"
+      (click)="onToggleEdit()"
+    >
+      <span class="oh-detail__method" [attr.data-method]="request.method">{{ request.method }}</span>
+      <span class="oh-detail__url">{{ request.url }}</span>
+    </button>
 
-    <oh-my-autocomplete-dropdown
-      label="Method"
-      [formControl]="methodCtrl"
-      [showAllOnFocus]="true"
-      [options]="$any(availableMethods)"
-    ></oh-my-autocomplete-dropdown>
-
-    <mat-form-field class="url-input">
-      <mat-label>Url</mat-label>
-      <input
-        #url
-        matInput
-        placeholder="Match API endpiont (regexp)"
-        [formControl]="urlCtrl"
-      />
-
-      <mat-icon
-        color="primary"
-        matTooltip="The request URL is used together with the type and method to map incoming API call with a response. This field can also contain regular expressions!"
-        svgIcon="info"
+    <div class="oh-detail__head-actions">
+      <button
+        class="oh-icon-btn"
+        type="button"
+        [disabled]="isPassthrough"
+        title="Duplicate the response on display"
+        aria-label="Duplicate the response on display"
+        (click)="onCloneResponse()"
       >
-      </mat-icon>
-    </mat-form-field>
-  </section>
-</div>
-
-<section class="responses-wrapper">
-  <div
-    class="responses"
-    [ngClass]="{ 'is-active': request.enabled[context.preset] }"
-  >
-    <h3>
-      Responses
-      <mat-icon
-        color="primary"
-        matTooltip="Select the response to be served for this request. Note: Each preset can have a different response!"
-        svgIcon="info"
-      >
-      </mat-icon>
-    </h3>
-    <div class="codes-wrapper">
-      <button class="inactive" mat-raised-button (click)="onDisableRequest()">
-        Off
+        <mat-icon svgIcon="content_copy"></mat-icon>
       </button>
       <button
-        mat-raised-button
-        *ngFor="let mockId of mockIds"
-        (click)="onSelectStatusCode(mockId)"
-        [ngClass]="{ 'is-active': request.selected[context.preset] === mockId }"
+        class="oh-icon-btn oh-icon-btn--danger"
+        type="button"
+        [disabled]="isPassthrough"
+        title="Delete the response on display"
+        aria-label="Delete the response on display"
+        (click)="onDeleteResponse()"
       >
-        <oh-my-mock-label [mock]="request.mocks[mockId]"></oh-my-mock-label>
+        <mat-icon svgIcon="close"></mat-icon>
       </button>
-      <button mat-raised-button (click)="openAddResponseDialog()">+</button>
-    </div>
-    <div class="exports">
-      <!-- <button mat-raised-button color="primary" (click)="exportNgApiMock()">Save as NgApiMock</button> -->
     </div>
   </div>
-  <div class="preset-selector">
-    <h3>
-      <span>Presets</span>
-      <mat-icon
-        class="info info-contrast scenario-help"
-        color="primary"
-        [matTooltip]="presetInfo"
-        svgIcon="info"
-      ></mat-icon>
-    </h3>
-    <oh-my-preset
-      *ngIf="context"
-      class="preset"
-      theme="dark"
-      [context]="context"
-    ></oh-my-preset>
+
+  <p class="oh-detail__meta">
+    {{ request.requestType | lowercase }} · {{ responseCountLabel }}
+    <ng-container *ngIf="request.lastHit"> · last hit {{ request.lastHit | date: 'shortTime' }}</ng-container>
+  </p>
+</header>
+
+<!-- Revealed by the header line. Same field styling as the response settings
+     grid below it, so the pane reads as one form. -->
+<section class="oh-detail__section oh-detail__edit" *ngIf="isEditing">
+  <div class="oh-fields">
+    <label class="oh-field">
+      <span class="oh-field__label">Type</span>
+      <select class="oh-field__input" [formControl]="typeCtrl">
+        <option *ngFor="let type of requestTypes" [value]="type">{{ type }}</option>
+      </select>
+    </label>
+
+    <label class="oh-field">
+      <span class="oh-field__label">Method</span>
+      <input
+        class="oh-field__input oh-field__input--mono"
+        type="text"
+        list="oh-request-methods"
+        [formControl]="methodCtrl"
+      />
+      <datalist id="oh-request-methods">
+        <option *ngFor="let method of availableMethods" [value]="method"></option>
+      </datalist>
+    </label>
+
+    <label class="oh-field oh-field--wide">
+      <span class="oh-field__label">Url — matched as a regular expression</span>
+      <input
+        class="oh-field__input oh-field__input--mono"
+        type="text"
+        placeholder="Match API endpoint (regexp)"
+        [formControl]="urlCtrl"
+      />
+    </label>
+  </div>
+</section>
+
+<section class="oh-detail__section">
+  <h2 class="oh-detail__label">Saved responses</h2>
+
+  <div class="oh-chips">
+    <button
+      class="oh-chip"
+      type="button"
+      [class.is-selected]="isPassthrough"
+      (click)="onDisableRequest()"
+    >
+      <span class="oh-chip__code" data-tone="muted">Off</span>
+      <span class="oh-chip__label">passthrough</span>
+    </button>
+
+    <button
+      class="oh-chip"
+      type="button"
+      x-test="saved-response"
+      *ngFor="let chip of chips"
+      [class.is-selected]="chip.isSelected"
+      (click)="onSelectStatusCode(chip.id)"
+    >
+      <span class="oh-chip__code" [attr.data-tone]="chip.statusCode | ohStatusCodeTone">
+        {{ chip.statusCode }}
+      </span>
+      <span class="oh-chip__label" *ngIf="chip.label">{{ chip.label }}</span>
+    </button>
+
+    <button
+      class="oh-chip oh-chip--add"
+      type="button"
+      x-test="add-saved-response"
+      (click)="openAddResponseDialog()"
+    >
+      + Add
+    </button>
   </div>
 </section>

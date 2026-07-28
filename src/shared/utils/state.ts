@@ -1,8 +1,20 @@
 import { objectTypes } from '../constants';
-import { IData, IOhMyUpsertData, IState, ohMyDataId, ohMyDomain, ohMyPresetId } from '../type';
+import { IData, IOhMyRequests, IOhMyUpsertData, IState, ohMyCookieId, ohMyDataId, ohMyDomain } from '../type';
 import { timestamp } from './timestamp';
 import { compareUrls } from './urls';
 
+/**
+ * Everything about a domain except its requests, which are separate records.
+ *
+ * The lookups below therefore take the requests map as an explicit argument.
+ * They stay synchronous on purpose: `findRequest` runs for every intercepted
+ * request, and an `await` per lookup would turn a cache read into a storage
+ * round trip. The callers that have a map — `OhMyContentState`,
+ * `OhMyStateService` — already keep it fresh from `chrome.storage.onChanged`.
+ *
+ * The map may hold requests of other domains (the caches are keyed by storage
+ * key, which is global), so every lookup is scoped to `state.requests`.
+ */
 export class StateUtils {
   static version = '__OH_MY_VERSION__';
 
@@ -12,7 +24,7 @@ export class StateUtils {
     return {
       version: this.version,
       aux: { newAutoActivate: false },
-      data: {},
+      requests: [],
       presets: { default: 'Default' },
       ...base,
       domain,
@@ -29,120 +41,87 @@ export class StateUtils {
     return (input as IState).type === objectTypes.STATE;
   }
 
-  static getRequest(state: IState, id: ohMyDataId): IData | undefined {
-    const retVal = state.data[id];
+  static hasRequest(state: IState, id: ohMyDataId): boolean {
+    return state.requests.includes(id);
+  }
+
+  static getRequest(state: IState, requests: IOhMyRequests, id: ohMyDataId): IData | undefined {
+    const retVal = state.requests.includes(id) ? requests[id] : undefined;
+
     return retVal ? { ...retVal } : undefined;
   }
 
-  static setRequest(state: IState, data: IData): IState {
-    return { ...state, data: { ...state.data, [data.id]: data } };
+  /** Adds the request's id to the state; the record itself is stored separately. */
+  static setRequest(state: IState, id: ohMyDataId): IState {
+    if (state.requests.includes(id)) {
+      return state;
+    }
+
+    return { ...state, requests: [...state.requests, id] };
   }
 
-  static removeRequest(state: IState, id: ohMyDataId): IData {
-    const data = state.data[id];
+  static removeRequest(state: IState, id: ohMyDataId): IState {
+    if (!state.requests.includes(id)) {
+      return state;
+    }
 
-    state.data = { ...state.data };
-    delete state.data[id];
-
-    return data;
+    return { ...state, requests: state.requests.filter(r => r !== id) };
   }
 
-  static findRequest(state: IState, search: IOhMyUpsertData): IData | undefined {
-    const result = Object.values(state.data).find(v => {
-      return (
-        (search.id && v.id === search.id) || !search.id &&
-        (!search.method || search.method === v.method) &&
-        (!search.requestType || search.requestType === v.requestType) &&
-        (!search.url || search.url === v.url || compareUrls(search.url, v.url))
-      )
-    });
+  static findRequest(state: IState, requests: IOhMyRequests, search: IOhMyUpsertData): IData | undefined {
+    const result = state.requests
+      // A request record can be missing from the map while it is still loading.
+      .map(id => requests[id]).filter((v): v is IData => !!v)
+      .find(v => {
+        return (
+          (search.id && v.id === search.id) || !search.id &&
+          (!search.method || search.method === v.method) &&
+          (!search.requestType || search.requestType === v.requestType) &&
+          (!search.url || search.url === v.url || compareUrls(search.url, v.url))
+        )
+      });
 
     return result ? { ...result } : undefined;
   }
 
-  // static getAllResponseIds(state: IState): ohMyMockId[] {
-  //   return Object.values(state.data).map(d => Object.keys(d.mocks))
-  //     .reduce((acc, mocks) => [...acc, ...mocks], []);
-  // }
+  /**
+   * The subset of `requests` that belongs to this state.
+   *
+   * The maps the caches hold are keyed by storage key, which is browser-wide,
+   * so anything that iterates requests — filtering, exporting, the list — has
+   * to narrow them to one domain first.
+   */
+  static pickRequests(state: IState, requests: IOhMyRequests): IOhMyRequests {
+    const retVal: IOhMyRequests = {};
 
-  // static activateScenario(state: IState, preset: ohMyPresetId): IState {
-  //   state = {
-  //     ...state,
-  //     context: { ...state.context, preset }
-  //   };
+    for (const id of state.requests) {
+      const request = requests[id];
 
-  //   return state;
-  // }
+      if (request) { // a record that has not been loaded yet
+        retVal[id] = request;
+      }
+    }
 
-  // static updatePreset(state: IState, update: IOhMyPresetChange): IState {
-  //   if (!update.value) {
-  //     return state;
-  //   }
+    return retVal;
+  }
 
-  //   state.presets = { ...state.presets };
-  //   state.data = { ...state.data };
+  // Cookies are ids on the state too, but unlike requests the field is optional
+  // — a domain with no cookie mocks has no reason to carry an empty array — so
+  // these exist to keep the `?? []` in one place.
 
-  //   if (update.delete) {
-  //     // Cannot delete last preset
-  //     if (Object.keys(state.presets).length === 1) {
-  //       return state;
-  //     }
+  static hasCookie(state: IState, id: ohMyCookieId): boolean {
+    return (state.cookies ?? []).includes(id);
+  }
 
-  //     delete state.presets[update.id];
-  //     Object.values(state.data).map(d => ({ ...d })).forEach(data => {
-  //       delete data.enabled[update.id]
-  //       delete data.selected[update.id];
+  static setCookie(state: IState, id: ohMyCookieId): IState {
+    const cookies = state.cookies ?? [];
 
-  //       state.data[data.id] = data;
-  //     });
+    return cookies.includes(id) ? state : { ...state, cookies: [...cookies, id] };
+  }
 
-  //     if (state.context.preset === update.id) {
-  //       state.context.preset = 'default';
-  //     }
-  //   } else {
-  //     state.presets[update.id] = update.value;
+  static removeCookie(state: IState, id: ohMyCookieId): IState {
+    const cookies = state.cookies ?? [];
 
-  //     if (!state.presets[update.id]) { // new preset
-  //       Object.values(state.data).map(d => ({ ...d })).forEach(data => {
-  //         delete data.enabled[update.id]
-  //         delete data.selected[update.id];
-
-  //         state.data[data.id] = data;
-  //       });
-  //     } else {
-  //       state.presets[update.id] = update.value;
-  //     }
-
-  //     if (update.activate) {
-  //       state.context.preset = update.id;
-  //     }
-  //   }
-
-  //   return state;
-  // }
-
-  // static async cloneRequests(state: IState, requests: Partial<IData> | Partial<IData>[]): Promise<IState> {
-  //   if (!Array.isArray(requests)) {
-  //     requests = [requests];
-  //   }
-
-  //   for (const r of requests) {
-  //     const data = { ...(this.findRequest(state, r) || DataUtils.init(r)) };
-
-  //     const entries = Object.values(r.mocks);
-
-  //     for (const e of entries) {
-  //       const respData = await StorageUtils.get<IMock>(e[0]);
-  //       respData.id = uniqueId();
-  //       await StorageUtils.set(respData.id, respData);
-  //       data.mocks[respData.id] = MockUtils.createShallowMock(respData);
-  //     }
-
-  //     state = StateUtils.setRequest(state, data);
-  //   }
-
-  //   await StorageUtils.set(state.domain, state);
-
-  //   return state;
-  // }
+    return cookies.includes(id) ? { ...state, cookies: cookies.filter(c => c !== id) } : state;
+  }
 }

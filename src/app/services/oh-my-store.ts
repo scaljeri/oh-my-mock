@@ -74,14 +74,32 @@ export class OhMyState {
 
     state.presets[id] = label;
 
-    Object.values(state.data).forEach(d => {
-      d.selected[id] = d.selected[currPreset]; // Update by reference
-    });
+    // Every request carries its selection per preset, and each is its own
+    // record, so a new preset means a write per request rather than one write
+    // of the whole domain.
+    const requests = await this.storageService.getMany<IData>(state.requests);
+
+    for (const request of Object.values(requests)) {
+      await this.upsertRequestRecord({
+        ...request,
+        selected: { ...request.selected, [id]: request.selected[currPreset] }
+      }, context);
+    }
 
     await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;newPreset');
-    // await this.storageService.set(state.domain, state);
 
     return state;
+  }
+
+  /**
+   * Stores one request record, and adds it to its domain's state if it is new.
+   *
+   * The state itself is only rewritten when the list of ids changes — see
+   * `OhMyRequestHandler`.
+   */
+  private async upsertRequestRecord(request: IData, context: IOhMyContext): Promise<IData> {
+    return OhMySendToBg.full<IData>(request, payloadType.REQUEST,
+      { domain: context.domain }, 'popup;upsertRequest');
   }
 
   async cloneResponse(sourceId: ohMyMockId, update: Partial<IMock>, request: Partial<IData>, context: IOhMyContext): Promise<IMock> {
@@ -111,29 +129,27 @@ export class OhMyState {
     return retVal;
   }
 
-  async upsertRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
-    let state = await this.getState(context);
+  async upsertRequest(request: Partial<IData>, context: IOhMyContext): Promise<IData> {
+    const state = await this.getState(context);
+    const known = await this.storageService.getMany<IData>(state.requests);
     const retVal = {
-      ...(StateUtils.findRequest(state, request) || DataUtils.init(request)),
+      ...(StateUtils.findRequest(state, known, request) || DataUtils.init(request)),
       ...request
     };
-
 
     if (!request.id) {
       retVal.url = url2regex(request.url ?? '');
       retVal.id = uniqueId();
     }
 
-    state = StateUtils.setRequest(state, retVal);
-    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;upsertRequest');
-    // await this.storageService.set(state.domain, state);
-
-    return state;
+    return this.upsertRequestRecord(retVal, context);
   }
 
-  async cloneRequest(id: ohMyMockId, sourceContext: IOhMyContext, context: IOhMyContext): Promise<IData> {
-    let state = await this.getState(sourceContext);
-    const request = { ...state.data[id], id: uniqueId() };
+  async cloneRequest(id: ohMyDataId, sourceContext: IOhMyContext, context: IOhMyContext): Promise<IData> {
+    // The source may belong to another domain (the state explorer clones across
+    // domains), but a request record is addressed by its id alone.
+    const source = await this.storageService.get<IData>(id);
+    const request = { ...source, id: uniqueId() };
     const responses = Object.values(request.mocks);
 
     request.mocks = {};
@@ -148,49 +164,28 @@ export class OhMyState {
       response.id = newId;
       request.mocks[newId] = { ...shallow, id: newId };
 
-      await OhMySendToBg.full({ response, request }, payloadType.RESPONSE, undefined, 'popup;cloneRequest');
-      // await this.storageService.set(newId, response);
+      await OhMySendToBg.full({ response, request }, payloadType.RESPONSE, context, 'popup;cloneRequest');
     }
 
-    state = await this.getState(context);
-    await OhMySendToBg.full(StateUtils.setRequest(state, request), payloadType.STATE);
-    // await this.storageService.set(state.domain, StateUtils.setRequest(state, request));
-
-    return request;
+    return this.upsertRequestRecord(request, context);
   }
 
   async deleteRequest(request: Partial<IData>, context: IOhMyContext): Promise<IState> {
     const state = await this.getState(context);
+    const known = await this.storageService.getMany<IData>(state.requests);
     // findRequest returns undefined when the request is already gone.
-    request = StateUtils.findRequest(state, request) as IData;
+    const target = StateUtils.findRequest(state, known, request);
 
-    // Delete all response from the request
-    for (const resp of Object.values(request.mocks ?? {})) {
-      // await this.storageService.remove(resp.id);
-      // await OhMySendToBg.full(resp, payloadType.REMOVE, undefined, 'popup;deleteRequestMock');
-      await this.deleteResponse(resp.id, request.id as string, context);
+    if (!target) {
+      return state;
     }
 
-    // Delete the request
-    delete state.data[request.id as string];
-    await OhMySendToBg.full(state, payloadType.STATE, undefined, 'popup;deleteRequestFromState');
-    // await this.storageService.set(state.domain, state);
-
-    return state;
-  }
-
-  async upsertRequests(requests: Partial<IData> | Partial<IData>[], context: IOhMyContext): Promise<IState> {
-    let state = await this.getState(context);
-
-    if (!Array.isArray(requests)) {
-      requests = [requests];
-    }
-
-    for (const req of requests) {
-      state = await this.upsertRequest(req, context);
-    }
-
-    return state;
+    // One message: the remove handler drops every mock the request names, the
+    // request record itself and its id from the domain state. Deleting the
+    // responses one by one here left the request record behind.
+    return OhMySendToBg.full<{ type: objectTypes, id: ohMyDataId }, IState>(
+      { type: objectTypes.REQUEST, id: target.id },
+      payloadType.REMOVE, context, 'popup;deleteRequest');
   }
 
   async deleteResponse(responseId: ohMyMockId, requestId: ohMyDataId, context: IOhMyContext): Promise<IState> {

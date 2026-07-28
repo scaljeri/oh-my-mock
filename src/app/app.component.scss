@@ -136,13 +136,15 @@
   min-height: 0; // lets the children scroll instead of stretching the grid
 }
 
+// The column itself does not scroll: `oh-my-domain-sidebar` keeps its search
+// box and its footer buttons in place and scrolls only the domain list.
 .oh-sidebar {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
-  background: t.$oh-bg-subtle;
-  border-right: 1px solid t.$oh-border;
+  overflow: hidden;
+  background: t.$oh-bg-surface;
+  border-right: 1px solid t.$oh-border-soft;
 
   &.is-collapsed {
     display: none;

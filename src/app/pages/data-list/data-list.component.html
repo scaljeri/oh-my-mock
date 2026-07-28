@@ -4,7 +4,9 @@
 <div class="oh-panes" [class.has-detail]="hasDetail">
   <div class="oh-panes__list">
 <oh-my-data-list
+      *ngIf="state"
       [state]="state"
+      [requests]="requests"
       [context]="state.context"
       [showActivate]="true"
       [showClone]="true"

@@ -10,8 +10,12 @@
  * The storage layout mirrors `src/shared/type.ts`:
  *
  *   'OhMyMock'  -> IOhMyMock   the store: which domains are known
- *   <domain>    -> IState      per-domain state, holds IData request entries
+ *   <domain>    -> IState      per-domain state; `requests` lists request ids
+ *   <dataId>    -> IData       one intercepted request, with its mocks
  *   <mockId>    -> IMock       one response body/headers/status per mock
+ *
+ * Requests are records of their own, next to the mocks — a domain record only
+ * names their ids. Seeding one therefore means two writes, not one.
  *
  * Two details are easy to get wrong and both are load-bearing:
  *
@@ -97,12 +101,13 @@ export class OhMyMockDriver {
         const state = (stored[domain] as Record<string, any>) ?? {
           type: 'state',
           domain,
-          data: {},
+          requests: [],
           presets: { default: 'Default' },
           context: { domain, preset: 'default' }
         };
 
         state.version = version;
+        state.requests = state.requests ?? [];
         state.aux = { ...(state.aux ?? {}), appActive: active };
         state.context = { ...(state.context ?? {}), domain, preset: 'default', active };
 
@@ -172,14 +177,20 @@ export class OhMyMockDriver {
       const state = (stored[opts.domain] as Record<string, any>) ?? {
         type: 'state',
         domain: opts.domain,
-        data: {},
+        requests: [],
         aux: {},
         presets: { default: 'Default' },
         context: { domain: opts.domain, preset: 'default' }
       };
       state.version = version;
-      state.data = state.data ?? {};
-      state.data[opts.dataId] = {
+
+      // The state only lists the id; the request itself is its own record.
+      state.requests = state.requests ?? [];
+      if (!state.requests.includes(opts.dataId)) {
+        state.requests = [...state.requests, opts.dataId];
+      }
+
+      const request = {
         id: opts.dataId,
         url: opts.url,
         method: opts.method,
@@ -210,6 +221,7 @@ export class OhMyMockDriver {
 
       await chrome.storage.local.set({
         [opts.mockId]: mock,
+        [opts.dataId]: request,
         [opts.domain]: state,
         OhMyMock: store
       });
@@ -226,27 +238,34 @@ export class OhMyMockDriver {
   ): Promise<void> {
     await this.worker.evaluate(
       async ({ domain, dataId, enabled }) => {
-        const stored = await chrome.storage.local.get(domain);
+        const stored = await chrome.storage.local.get([domain, dataId]);
         const state = stored[domain] as Record<string, any>;
-        if (!state?.data?.[dataId]) {
+        const request = stored[dataId] as Record<string, any>;
+
+        if (!request || !state?.requests?.includes(dataId)) {
           throw new Error(`No seeded request ${dataId} for ${domain}`);
         }
-        state.data[dataId].enabled = { default: enabled };
-        await chrome.storage.local.set({ [domain]: state });
+
+        request.enabled = { default: enabled };
+        await chrome.storage.local.set({ [dataId]: request });
       },
       { domain, dataId, enabled }
     );
   }
 
-  /** Number of times the extension recorded a hit on a seeded request. */
+  /**
+   * When the extension last recorded a hit on a seeded request.
+   *
+   * Read from the request's own record: the timestamp used to live inside the
+   * domain state, which is exactly what this refactor moved out.
+   */
   async getLastHit(domain: string, dataId: string): Promise<number> {
     return this.worker.evaluate(
-      async ({ domain, dataId }) => {
-        const stored = await chrome.storage.local.get(domain);
-        const state = stored[domain] as Record<string, any>;
-        return state?.data?.[dataId]?.lastHit ?? 0;
+      async (dataId) => {
+        const stored = await chrome.storage.local.get(dataId);
+        return (stored[dataId] as Record<string, any>)?.lastHit ?? 0;
       },
-      { domain, dataId }
+      dataId
     );
   }
 }

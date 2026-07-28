@@ -7,10 +7,6 @@ import { url2regex } from './urls';
 export class DataUtils {
   static StorageUtils = StorageUtils;
 
-  // static get(state: IState, id: ohMyDataId): IData {
-  //   return { ...state.data[id], mocks: { ...state.data[id].mocks } };
-  // }
-
   static init(data: Partial<IData> = {}): IData {
     return this.create(data);
   }

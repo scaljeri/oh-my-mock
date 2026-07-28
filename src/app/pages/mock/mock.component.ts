@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IData, IOhMyAux, IOhMyContext, IState } from '@shared/type';
+import { IData, IOhMyAux, IOhMyContext, IOhMyRequests, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
-import { Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
@@ -21,6 +21,13 @@ export class PageMockComponent implements OnInit {
 
   aux!: IOhMyAux;
 
+  /**
+   * The active preset's name, for the footer of the detail pane. Resolved here
+   * rather than in the pane itself: the name lives on the state, and this page
+   * is already subscribed to it.
+   */
+  public presetName = '';
+
   // @Dispatch() upsertData = (data: IData) => new UpsertData({ id: this.data.id, ...data }, this.context);
 
   constructor(private element: ElementRef,
@@ -32,11 +39,15 @@ export class PageMockComponent implements OnInit {
     this.element.nativeElement.parentNode.scrollTop = 0;
     const dataId = this.activeRoute.snapshot.params.dataId;
 
-    this.subscription = this.stateService.state$.subscribe((state: IState) => {
+    // Both, because the request shown here is a record of its own: editing a
+    // response changes the request without changing the state.
+    this.subscription = combineLatest([this.stateService.state$, this.stateService.requests$])
+      .subscribe(([state, requests]: [IState, IOhMyRequests]) => {
       // undefined when the request was removed while this page was open.
-      this.data = PageMockComponent.StateUtils.findRequest(state, { id: dataId }) as IData;
+      this.data = PageMockComponent.StateUtils.findRequest(state, requests, { id: dataId }) as IData;
       this.aux = state.aux;
       this.context = state.context;
+      this.presetName = state.presets?.[state.context?.preset] ?? '';
       this.cdr.detectChanges();
     });
   }

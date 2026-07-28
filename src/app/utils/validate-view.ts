@@ -1,5 +1,5 @@
 /*
-A 'View' is a projection of `state.data`, so it is important that the view
+A 'View' is a projection of a domain's requests, so it is important that the view
 correctly maps to its source of truth. But if a view gets itself in an
 invalid state, the app will completely stop working, nothing, nada, noppus.
 This, of course, shouldn't ever happen, but it does unfortunately.
