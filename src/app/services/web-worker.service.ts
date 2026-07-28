@@ -1,27 +1,30 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { IData, IMock, ohMyDataId } from '@shared/type';
 import { loadAllMocks } from '@shared/utils/load-all-mocks';
 import { OhMyStateService } from './state.service';
 import { OhWWPacketTypes } from '../webworkers/types';
 import { uniqueId } from '@shared/utils/unique-id';
-import { OH_MY_SEARCH_WORKER_FACTORY, SearchWorkerFactory } from './search-worker.token';
+import {
+  OH_MY_SEARCH_WORKER_FACTORY,
+  SearchWorkerFactory
+} from './search-worker.token';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebWorkerService {
+  private stateService = inject(OhMyStateService);
+  private createWorker = inject<SearchWorkerFactory>(
+    OH_MY_SEARCH_WORKER_FACTORY
+  );
+
   private worker!: Worker;
   private searchSubject = new Subject<string[]>();
   public searchResults = this.searchSubject.asObservable();
 
   private mockUpsertSubject = new Subject();
   public mockUpsert$ = this.mockUpsertSubject.asObservable();
-
-  constructor(
-    private stateService: OhMyStateService,
-    @Inject(OH_MY_SEARCH_WORKER_FACTORY) private createWorker: SearchWorkerFactory) {
-  }
 
   public async init(domain: string): Promise<void> {
     if (!this.worker) {
@@ -31,15 +34,18 @@ export class WebWorkerService {
 
     this.worker.postMessage({
       type: OhWWPacketTypes.MOCKS,
-      body: await loadAllMocks(domain).then(data => {
+      body: await loadAllMocks(domain).then((data) => {
         setTimeout(() => {
-          this.worker.postMessage({ type: OhWWPacketTypes.INIT_DONE, body: null });
+          this.worker.postMessage({
+            type: OhWWPacketTypes.INIT_DONE,
+            body: null
+          });
         });
-        return data
+        return data;
       })
     });
 
-    this.stateService.response$.subscribe(mock => this.upsertMock(mock));
+    this.stateService.response$.subscribe((mock) => this.upsertMock(mock));
   }
 
   public upsertMock(mock: IMock): void {
@@ -51,12 +57,20 @@ export class WebWorkerService {
     this.mockUpsertSubject.next(mock);
   }
 
-  public search(data: Record<ohMyDataId, IData>, terms: string[], includes: Record<string, boolean>): Observable<string[]> {
+  public search(
+    data: Record<ohMyDataId, IData>,
+    terms: string[],
+    includes: Record<string, boolean>
+  ): Observable<string[]> {
     const id = uniqueId();
 
-    this.worker.postMessage({ id, type: OhWWPacketTypes.SEARCH, body: { terms, data, includes } });
+    this.worker.postMessage({
+      id,
+      type: OhWWPacketTypes.SEARCH,
+      body: { terms, data, includes }
+    });
 
-    return new Observable<string[]>(observer => {
+    return new Observable<string[]>((observer) => {
       this.worker.onmessage = ({ data }) => {
         if (id === data.id) {
           observer.next(data.body);

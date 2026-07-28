@@ -5,6 +5,7 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
+  inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { IData, IMock, IOhMyMockRule, IOhMyContext } from '@shared/type';
@@ -24,7 +25,11 @@ import { activeMockId } from './active-mock';
 /** The three editors the detail pane switches between. */
 export type OhMyDetailTab = 'Body' | 'Headers' | 'Code';
 
-export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = ['Body', 'Headers', 'Code'];
+export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = [
+  'Body',
+  'Headers',
+  'Code'
+];
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
@@ -34,6 +39,13 @@ export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = ['Body', 'Headers
   styleUrls: ['./request.component.scss']
 })
 export class RequestComponent implements OnInit, OnChanges, OnDestroy {
+  private storeService = inject(OhMyState);
+  private stateService = inject(OhMyStateService);
+  dialog = inject(MatDialog);
+  private toast = inject(HotToastService);
+  private storageService = inject(StorageService);
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() request!: IData;
   @Input() context!: IOhMyContext;
   @Input() blurImages = false;
@@ -80,37 +92,45 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   readonly tabs = OH_MY_DETAIL_TABS;
   activeTab: OhMyDetailTab = 'Body';
 
-  constructor(
-    private storeService: OhMyState,
-    private stateService: OhMyStateService,
-    public dialog: MatDialog,
-    private toast: HotToastService,
-    private storageService: StorageService,
-    private cdr: ChangeDetectorRef) {
-  }
-
   ngOnInit(): void {
     // Handle mock updates
-    this.subscriptions.add(this.stateService.response$.pipe(filter(r => r && r.id === this.response?.id))
-      .subscribe(r => {
-        this.response = r;
-        this.responseCtrl.setValue(r.responseMock, { emitEvent: false });
-        this.headersCtrl.setValue(r.headersMock, { emitEvent: false });
-        this.jsCodeCtrl.setValue(r.jsCode, { emitEvent: false });
-        this.cdr.detectChanges();
-      }));
+    this.subscriptions.add(
+      this.stateService.response$
+        .pipe(filter((r) => r && r.id === this.response?.id))
+        .subscribe((r) => {
+          this.response = r;
+          this.responseCtrl.setValue(r.responseMock, { emitEvent: false });
+          this.headersCtrl.setValue(r.headersMock, { emitEvent: false });
+          this.jsCodeCtrl.setValue(r.jsCode, { emitEvent: false });
+          this.cdr.detectChanges();
+        })
+    );
 
-    this.subscriptions.add(this.responseCtrl.valueChanges.subscribe(val => {
-      this.storeService.upsertResponse({ responseMock: val, id: this.shownResponse.id }, this.request, this.context);
-    }));
+    this.subscriptions.add(
+      this.responseCtrl.valueChanges.subscribe((val) => {
+        this.storeService.upsertResponse(
+          { responseMock: val, id: this.shownResponse.id },
+          this.request,
+          this.context
+        );
+      })
+    );
 
-    this.subscriptions.add(this.headersCtrl.valueChanges.subscribe(val => {
-      this.onHeadersChange(val);
-    }));
+    this.subscriptions.add(
+      this.headersCtrl.valueChanges.subscribe((val) => {
+        this.onHeadersChange(val);
+      })
+    );
 
-    this.subscriptions.add(this.jsCodeCtrl.valueChanges.subscribe(val => {
-      this.storeService.upsertResponse({ jsCode: val, id: this.shownResponse.id }, this.request, this.context);
-    }));
+    this.subscriptions.add(
+      this.jsCodeCtrl.valueChanges.subscribe((val) => {
+        this.storeService.upsertResponse(
+          { jsCode: val, id: this.shownResponse.id },
+          this.request,
+          this.context
+        );
+      })
+    );
   }
 
   async ngOnChanges(): Promise<void> {
@@ -132,11 +152,19 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
         return;
       }
 
-      this.responseType = isMimeTypeJSON(this.response?.headersMock?.['content-type']) ? 'json' : (this.response?.headersMock?.['content-type'] ?? '');
+      this.responseType = isMimeTypeJSON(
+        this.response?.headersMock?.['content-type']
+      )
+        ? 'json'
+        : (this.response?.headersMock?.['content-type'] ?? '');
       this.isResponseImage = false;
 
-      this.responseCtrl.setValue(this.shownResponse.responseMock, { emitEvent: false });
-      this.headersCtrl.setValue(this.shownResponse.headersMock, { emitEvent: false });
+      this.responseCtrl.setValue(this.shownResponse.responseMock, {
+        emitEvent: false
+      });
+      this.headersCtrl.setValue(this.shownResponse.headersMock, {
+        emitEvent: false
+      });
       this.jsCodeCtrl.setValue(this.shownResponse.jsCode, { emitEvent: false });
       if (this.shownResponse.headersMock?.['content-type']?.match(/image/)) {
         this.isResponseImage = true;
@@ -194,7 +222,8 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onFormat(): void {
-    const control = this.activeTab === 'Headers' ? this.headersCtrl : this.responseCtrl;
+    const control =
+      this.activeTab === 'Headers' ? this.headersCtrl : this.responseCtrl;
     const formatted = RequestComponent.formatJson(control.value);
 
     if (formatted !== control.value) {
@@ -215,15 +244,23 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onRevertResponse(): void {
-    this.storeService.upsertResponse({ responseMock: this.shownResponse.response, id: this.shownResponse.id }, this.request, this.context);
+    this.storeService.upsertResponse(
+      { responseMock: this.shownResponse.response, id: this.shownResponse.id },
+      this.request,
+      this.context
+    );
   }
 
   onHeadersChange(headersMock: string): void {
     try {
-      this.storeService.upsertResponse({
-        id: this.shownResponse.id,
-        headersMock: JSON.parse(headersMock)
-      }, this.request, this.context);
+      this.storeService.upsertResponse(
+        {
+          id: this.shownResponse.id,
+          headersMock: JSON.parse(headersMock)
+        },
+        this.request,
+        this.context
+      );
     } catch {
       // Not JSON yet — the headers editor reports the parse error itself, and
       // half-typed input must not overwrite the stored headers.
@@ -231,11 +268,19 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onRevertHeaders(): void {
-    this.storeService.upsertResponse({ headersMock: this.shownResponse.headers, id: this.shownResponse.id }, this.request, this.context);
+    this.storeService.upsertResponse(
+      { headersMock: this.shownResponse.headers, id: this.shownResponse.id },
+      this.request,
+      this.context
+    );
   }
 
   onRevertCode(): void {
-    this.storeService.upsertResponse({ jsCode: '', id: this.shownResponse.id }, this.request, this.context);
+    this.storeService.upsertResponse(
+      { jsCode: '', id: this.shownResponse.id },
+      this.request,
+      this.context
+    );
   }
 
   /** Opens the active tab's content in the full-screen editor dialog. */
@@ -251,10 +296,18 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   openShowMockCode(): void {
-    const data = { code: this.shownResponse.jsCode, type: 'javascript', allowErrors: false };
+    const data = {
+      code: this.shownResponse.jsCode,
+      type: 'javascript',
+      allowErrors: false
+    };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({ jsCode: update, id: this.shownResponse.id }, this.request, this.context);
+      this.storeService.upsertResponse(
+        { jsCode: update, id: this.shownResponse.id },
+        this.request,
+        this.context
+      );
     });
   }
 
@@ -265,14 +318,23 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
     };
 
     this.openCodeDialog(data, (update: string) => {
-      this.storeService.upsertResponse({
-        responseMock: update, id: this.shownResponse.id
-      }, this.request, this.context);
+      this.storeService.upsertResponse(
+        {
+          responseMock: update,
+          id: this.shownResponse.id
+        },
+        this.request,
+        this.context
+      );
     });
   }
 
   onShowHeadersFullscreen(): void {
-    const data = { code: this.shownResponse.headersMock, type: 'json', allowErrors: false };
+    const data = {
+      code: this.shownResponse.headersMock,
+      type: 'json',
+      allowErrors: false
+    };
     this.openCodeDialog(data, (update: string) => {
       this.onHeadersChange(update);
     });
@@ -292,26 +354,36 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
       data: this.response
     });
 
-    dialogRef.afterClosed().subscribe((update: { data: string, rules: IOhMyMockRule[] }) => {
-      this.dialogIsOpen = false;
+    dialogRef
+      .afterClosed()
+      .subscribe((update: { data: string; rules: IOhMyMockRule[] }) => {
+        this.dialogIsOpen = false;
 
-      if (update) {
-        this.storeService.upsertResponse({
-          id: this.shownResponse.id,
-          ...(update.data && { responseMock: update.data }),
-          rules: update.rules }, this.request, this.context);
-      }
-    });
+        if (update) {
+          this.storeService.upsertResponse(
+            {
+              id: this.shownResponse.id,
+              ...(update.data && { responseMock: update.data }),
+              rules: update.rules
+            },
+            this.request,
+            this.context
+          );
+        }
+      });
   }
 
-  openCodeDialog(data: IOhMyCodeEditOptions, cb: (update: string) => void): void {
+  openCodeDialog(
+    data: IOhMyCodeEditOptions,
+    cb: (update: string) => void
+  ): void {
     this.dialogIsOpen = true;
     const dialogRef = this.dialog.open(DialogCodeEditorComponent, {
       width: '80%',
       data
     });
 
-    dialogRef.afterClosed().subscribe(update => {
+    dialogRef.afterClosed().subscribe((update) => {
       this.dialogIsOpen = false;
       if (update) {
         cb(update);

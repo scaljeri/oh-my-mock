@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
 import { ResetStateOptions } from '@shared/types/store';
@@ -11,12 +11,10 @@ import { AppStateService } from '../../services/app-state.service';
   styleUrls: ['./reset-state.component.scss']
 })
 export class ResetStateComponent {
-  public optionTypes = resetStateOptions;
+  appStateService = inject(AppStateService);
+  private dialogRef = inject<MatDialogRef<ResetStateComponent>>(MatDialogRef);
 
-  constructor(
-    public appStateService: AppStateService,
-    private dialogRef: MatDialogRef<ResetStateComponent>
-  ) {}
+  public optionTypes = resetStateOptions;
 
   onCancel(): void {
     this.dialogRef.close();

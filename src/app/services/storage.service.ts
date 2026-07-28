@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { StorageUtils } from '@shared/utils/storage';
 import { IData, IMock, IOhMyCookie, IOhMyMock, IState } from '@shared/type';
 
@@ -6,11 +6,12 @@ import { IData, IMock, IOhMyCookie, IOhMyMock, IState } from '@shared/type';
   providedIn: 'root'
 })
 export class StorageService {
+  private ngZone = inject(NgZone);
 
-  constructor(private ngZone: NgZone) { }
-
-  get<T extends IMock | IOhMyMock | IState | IData | IOhMyCookie>(key: string): Promise<T> {
-    return new Promise(r => {
+  get<T extends IMock | IOhMyMock | IState | IData | IOhMyCookie>(
+    key: string
+  ): Promise<T> {
+    return new Promise((r) => {
       // this.ngZone.runOutsideAngular(() => {
       StorageUtils.get<T>(key).then((out) => {
         this.ngZone.run(() => r(out));
@@ -21,7 +22,7 @@ export class StorageService {
 
   /** Several records in one call — see `StorageUtils.getMany`. */
   getMany<T>(keys: string[]): Promise<Record<string, T>> {
-    return new Promise(r => {
+    return new Promise((r) => {
       StorageUtils.getMany<T>(keys).then((out) => {
         this.ngZone.run(() => r(out));
       });
@@ -55,7 +56,7 @@ export class StorageService {
   // }
 
   remove(key: string): Promise<void> {
-    return new Promise(r => {
+    return new Promise((r) => {
       this.ngZone.runOutsideAngular(() => {
         (StorageUtils.remove(key) as Promise<void>).then(r);
       });

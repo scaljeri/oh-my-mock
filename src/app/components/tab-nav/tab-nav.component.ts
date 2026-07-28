@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject
+} from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { IState } from '@shared/types/state';
 import { filter, Subscription } from 'rxjs';
@@ -24,33 +31,39 @@ export type ohMyTab = 'requests' | 'cookies';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TabNavComponent implements OnInit, OnDestroy {
+  private stateService = inject(OhMyStateService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+
   requestCount = 0;
   cookieCount = 0;
   active: ohMyTab | null = null;
 
   private subscriptions = new Subscription();
 
-  constructor(
-    private stateService: OhMyStateService,
-    private router: Router,
-    private cdr: ChangeDetectorRef
-  ) { }
-
   ngOnInit(): void {
     this.active = TabNavComponent.activeTab(this.router.url);
 
-    this.subscriptions.add(this.stateService.state$.subscribe((state: IState) => {
-      this.requestCount = state.requests.length;
-      this.cookieCount = state.cookies?.length ?? 0;
-      this.cdr.detectChanges();
-    }));
-
-    this.subscriptions.add(this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe(event => {
-        this.active = TabNavComponent.activeTab(event.urlAfterRedirects);
+    this.subscriptions.add(
+      this.stateService.state$.subscribe((state: IState) => {
+        this.requestCount = state.requests.length;
+        this.cookieCount = state.cookies?.length ?? 0;
         this.cdr.detectChanges();
-      }));
+      })
+    );
+
+    this.subscriptions.add(
+      this.router.events
+        .pipe(
+          filter(
+            (event): event is NavigationEnd => event instanceof NavigationEnd
+          )
+        )
+        .subscribe((event) => {
+          this.active = TabNavComponent.activeTab(event.urlAfterRedirects);
+          this.cdr.detectChanges();
+        })
+    );
   }
 
   ngOnDestroy(): void {

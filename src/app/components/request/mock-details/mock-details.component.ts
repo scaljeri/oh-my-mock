@@ -1,4 +1,12 @@
-import { ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  inject
+} from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { IMock, IOhMyContext } from '@shared/type';
 import { Subscription } from 'rxjs';
@@ -6,7 +14,10 @@ import { strip, update as updateContentType } from '@shared/utils/mime-type';
 import { OhMyState } from '../../../services/oh-my-store';
 
 /** The suggestions behind the status code field. */
-export const STATUS_CODE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+export const STATUS_CODE_OPTIONS: ReadonlyArray<{
+  value: string;
+  label: string;
+}> = [
   { value: '200', label: '200 OK' },
   { value: '201', label: '201 Created' },
   { value: '204', label: '204 No Content' },
@@ -53,6 +64,9 @@ export const MIME_TYPE_OPTIONS: ReadonlyArray<string> = [
   styleUrls: ['./mock-details.component.scss']
 })
 export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
+  private storeService = inject(OhMyState);
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() response!: IMock;
   @Input() requestId!: string;
   @Input() context!: IOhMyContext;
@@ -63,19 +77,26 @@ export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
   statusCodeOptions = STATUS_CODE_OPTIONS;
   mimeTypes = MIME_TYPE_OPTIONS;
 
-  constructor(
-    private storeService: OhMyState,
-    private cdr: ChangeDetectorRef) { }
-
   ngOnInit(): void {
     this.form = new UntypedFormGroup({
-      delay: new UntypedFormControl(this.response.delay ?? '', { updateOn: 'blur' }),
-      statusCode: new UntypedFormControl(this.response.statusCode, { updateOn: 'blur' }),
-      label: new UntypedFormControl(this.response.label ?? '', { updateOn: 'blur' }),
-      contentType: new UntypedFormControl(strip(this.response.headersMock?.['content-type']), { updateOn: 'blur' })
+      delay: new UntypedFormControl(this.response.delay ?? '', {
+        updateOn: 'blur'
+      }),
+      statusCode: new UntypedFormControl(this.response.statusCode, {
+        updateOn: 'blur'
+      }),
+      label: new UntypedFormControl(this.response.label ?? '', {
+        updateOn: 'blur'
+      }),
+      contentType: new UntypedFormControl(
+        strip(this.response.headersMock?.['content-type']),
+        { updateOn: 'blur' }
+      )
     });
 
-    this.subscriptions.add(this.form.valueChanges.subscribe(() => this.persist()));
+    this.subscriptions.add(
+      this.form.valueChanges.subscribe(() => this.persist())
+    );
   }
 
   ngOnChanges(): void {
@@ -87,7 +108,10 @@ export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
     this.delayCtrl.setValue(this.response.delay ?? '', options);
     this.statusCodeCtrl.setValue(this.response.statusCode, options);
-    this.contentTypeCtrl.setValue(strip(this.response.headersMock?.['content-type']), options);
+    this.contentTypeCtrl.setValue(
+      strip(this.response.headersMock?.['content-type']),
+      options
+    );
     this.labelCtrl.setValue(this.response.label ?? '', options);
   }
 
@@ -128,17 +152,23 @@ export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
   private persist(): void {
     const statusCode = this.parseStatusCode(this.statusCodeCtrl.value);
 
-    this.storeService.upsertResponse({
-      id: this.response.id,
-      ...(statusCode !== null && { statusCode }),
-      delay: this.parseDelay(this.delayCtrl.value),
-      label: this.labelCtrl.value,
-      headersMock: {
-        ...this.response.headersMock,
-        'content-type': this.mergeContentType(
-          this.response.headersMock?.['content-type'], this.contentTypeCtrl.value)
-      }
-    }, { id: this.requestId }, this.context);
+    this.storeService.upsertResponse(
+      {
+        id: this.response.id,
+        ...(statusCode !== null && { statusCode }),
+        delay: this.parseDelay(this.delayCtrl.value),
+        label: this.labelCtrl.value,
+        headersMock: {
+          ...this.response.headersMock,
+          'content-type': this.mergeContentType(
+            this.response.headersMock?.['content-type'],
+            this.contentTypeCtrl.value
+          )
+        }
+      },
+      { id: this.requestId },
+      this.context
+    );
 
     this.cdr.detectChanges();
   }

@@ -1,4 +1,12 @@
-import { Attribute, Directive, ElementRef, Input, OnChanges, OnInit } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  Input,
+  OnChanges,
+  OnInit,
+  inject,
+  HostAttributeToken
+} from '@angular/core';
 import { FormControlDirective, NgControl } from '@angular/forms';
 
 /**
@@ -13,29 +21,31 @@ import { FormControlDirective, NgControl } from '@angular/forms';
   selector: '[ohMyUpdateInput]'
 })
 export class UpdateInputDirective implements OnInit, OnChanges {
+  private element = inject(ElementRef);
+  private control = inject(NgControl);
+  private cls = inject(new HostAttributeToken('class'), { optional: true });
+
   @Input('ohMyUpdateInput') input!: string;
 
   private canUpdate = () => !this.isActive();
   private selector!: string;
 
-  constructor(
-    private element: ElementRef,
-    private control: NgControl,
-    @Attribute('class') private cls: string) { }
-
   ngOnInit(): void {
     const elName = this.element.nativeElement.tagName.toLowerCase();
 
     if (!['input', 'textarea'].includes(elName)) {
-      this.selector = this.cls ? '.' + this.cls?.replace(/\s/g, '.') :
-        this.element.nativeElement.tagName.toLowerCase();
+      this.selector = this.cls
+        ? '.' + this.cls?.replace(/\s/g, '.')
+        : this.element.nativeElement.tagName.toLowerCase();
       this.canUpdate = () => !this.isChildActive();
     }
   }
 
   ngOnChanges(): void {
     if (this.canUpdate()) {
-      setTimeout(() => (this.control as FormControlDirective).form.setValue(this.input));
+      setTimeout(() =>
+        (this.control as FormControlDirective).form.setValue(this.input)
+      );
     }
   }
 

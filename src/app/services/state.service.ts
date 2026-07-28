@@ -1,10 +1,28 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
-import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain, IData, IOhMyRequests, IOhMyCookie, ohMyCookieId } from '@shared/type';
+import {
+  IOhMyMock,
+  IState,
+  IMock,
+  ohMyMockId,
+  IOhMyContext,
+  ohMyDomain,
+  IData,
+  IOhMyRequests,
+  IOhMyCookie,
+  ohMyCookieId
+} from '@shared/type';
 import { IOhMyPacketContext } from '@shared/packet-type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
+import {
+  filter,
+  map,
+  shareReplay,
+  startWith,
+  switchMap,
+  tap
+} from 'rxjs/operators';
 import { StateUtils } from '@shared/utils/state';
 import { StorageService } from './storage.service';
 import { AppStateService } from './app-state.service';
@@ -21,6 +39,10 @@ import { AppStateService } from './app-state.service';
   providedIn: 'root'
 })
 export class OhMyStateService {
+  private ngZone = inject(NgZone);
+  private storageService = inject(StorageService);
+  private appState = inject(AppStateService);
+
   private stateSubject = new BehaviorSubject<IState | undefined>(undefined);
   public state$!: Observable<IState>; //  = this.stateSubject.asObservable().pipe(shareReplay(1));
   public state!: IState;
@@ -45,18 +67,26 @@ export class OhMyStateService {
    * `IState.cookies` holds nothing but their ids.
    */
   public cookies: Record<ohMyCookieId, IOhMyCookie> = {};
-  private cookiesSubject = new BehaviorSubject<Record<ohMyCookieId, IOhMyCookie>>(this.cookies);
+  private cookiesSubject = new BehaviorSubject<
+    Record<ohMyCookieId, IOhMyCookie>
+  >(this.cookies);
   public cookies$ = this.cookiesSubject.asObservable().pipe(shareReplay(1));
 
-  private responseSubject = new BehaviorSubject<IMock | undefined>(undefined)
-  public response$ = this.responseSubject.asObservable().pipe(filter(m => !!m));
+  private responseSubject = new BehaviorSubject<IMock | undefined>(undefined);
+  public response$ = this.responseSubject
+    .asObservable()
+    .pipe(filter((m) => !!m));
 
   public context!: IOhMyContext;
-  private contextSubject = new BehaviorSubject<IOhMyContext | undefined>(undefined);
+  private contextSubject = new BehaviorSubject<IOhMyContext | undefined>(
+    undefined
+  );
   public context$ = this.contextSubject.asObservable().pipe(shareReplay(1));
 
   public domain!: ohMyDomain;
-  private domainSubject = new BehaviorSubject<ohMyDomain | undefined>(undefined);
+  private domainSubject = new BehaviorSubject<ohMyDomain | undefined>(
+    undefined
+  );
   public domain$ = this.domainSubject.asObservable().pipe(shareReplay(1));
   private appSub!: Subscription;
 
@@ -64,12 +94,13 @@ export class OhMyStateService {
   private storeSubject = new BehaviorSubject<IOhMyMock | undefined>(undefined);
   public store$ = this.storeSubject.asObservable().pipe(shareReplay(1));
 
-  constructor(private ngZone: NgZone, private storageService: StorageService, private appState: AppStateService) {
+  constructor() {
+    const ngZone = this.ngZone;
+
     ngZone.runOutsideAngular(() => {
       StorageUtils.listen();
       this.bindStreams();
     });
-
   }
 
   async initialize(domain: ohMyDomain): Promise<void> {
@@ -79,8 +110,8 @@ export class OhMyStateService {
     this.contextSubject.next(this.context);
 
     this.state$ = this.appState.domain$.pipe(
-      map(domain => ({ domain: domain ?? '' })), // convert domain to context object
-      tap(async context => {
+      map((domain) => ({ domain: domain ?? '' })), // convert domain to context object
+      tap(async (context) => {
         if (context.domain !== this.state.domain && context.domain) {
           this.state = await this.initState(context.domain);
           this.context = this.state.context;
@@ -88,8 +119,9 @@ export class OhMyStateService {
         }
       }),
       startWith({ domain: domain ?? '' }),
-      switchMap(context => this.getState$(context)),
-      shareReplay(1));
+      switchMap((context) => this.getState$(context)),
+      shareReplay(1)
+    );
 
     this.stateSubject.next(this.state);
   }
@@ -101,7 +133,9 @@ export class OhMyStateService {
   }
 
   public async initState(domain: ohMyDomain): Promise<IState> {
-    const state = await this.storageService.get<IState>(domain) || StateUtils.init({ domain });
+    const state =
+      (await this.storageService.get<IState>(domain)) ||
+      StateUtils.init({ domain });
 
     await this.loadRequests(state);
     await this.loadCookies(state);
@@ -116,10 +150,13 @@ export class OhMyStateService {
    * needs them loaded before it can render them.
    */
   public async loadRequests(state: IState): Promise<IOhMyRequests> {
-    const missing = state.requests.filter(id => !this.requests[id]);
+    const missing = state.requests.filter((id) => !this.requests[id]);
 
     if (missing.length) {
-      this.requests = { ...this.requests, ...await this.storageService.getMany<IData>(missing) };
+      this.requests = {
+        ...this.requests,
+        ...(await this.storageService.getMany<IData>(missing))
+      };
       this.requestsSubject.next(this.requests);
     }
 
@@ -133,11 +170,16 @@ export class OhMyStateService {
    * write and the record itself in another, so a state update may name a
    * cookie this popup has not read yet.
    */
-  public async loadCookies(state: IState): Promise<Record<ohMyCookieId, IOhMyCookie>> {
-    const missing = (state.cookies ?? []).filter(id => !this.cookies[id]);
+  public async loadCookies(
+    state: IState
+  ): Promise<Record<ohMyCookieId, IOhMyCookie>> {
+    const missing = (state.cookies ?? []).filter((id) => !this.cookies[id]);
 
     if (missing.length) {
-      this.cookies = { ...this.cookies, ...await this.storageService.getMany<IOhMyCookie>(missing) };
+      this.cookies = {
+        ...this.cookies,
+        ...(await this.storageService.getMany<IOhMyCookie>(missing))
+      };
       this.cookiesSubject.next(this.cookies);
     }
 
@@ -145,84 +187,87 @@ export class OhMyStateService {
   }
 
   public getResponse$(responseId: ohMyMockId): Observable<IMock> {
-    return this.response$.pipe(filter(r => r?.id === responseId));
+    return this.response$.pipe(filter((r) => r?.id === responseId));
   }
 
   public getState$(context: IOhMyPacketContext): Observable<IState> {
     return this.stateSubject.pipe(
       filter((s): s is IState => s?.domain === context.domain),
-      shareReplay(1));
+      shareReplay(1)
+    );
   }
 
   private bindStreams(): void {
     // this.ngZone.runOutsideAngular(() => {
-      StorageUtils.updates$.subscribe(({ update }: IOhMyStorageUpdate) => {
-        if (!this.context) {
-          return;
-        }
+    StorageUtils.updates$.subscribe(({ update }: IOhMyStorageUpdate) => {
+      if (!this.context) {
+        return;
+      }
 
-        // In case of delete/reset `newValue` will be `undefined`
-        const type = update.newValue?.type || update.oldValue?.type;
+      // In case of delete/reset `newValue` will be `undefined`
+      const type = update.newValue?.type || update.oldValue?.type;
 
-        switch (type) {
-          case objectTypes.STATE:
-            if (update.newValue) {
-              if ((update.newValue as IState).domain === this.context.domain) {
-                this.state = update.newValue as IState;
-              }
-
-            } else if ((update.oldValue as IState).domain && !update.newValue) { // reset
-              this.state = StateUtils.init({ domain: (update.oldValue as IState).domain });
+      switch (type) {
+        case objectTypes.STATE:
+          if (update.newValue) {
+            if ((update.newValue as IState).domain === this.context.domain) {
+              this.state = update.newValue as IState;
             }
-
-            // The state may name requests or cookies this popup has not loaded yet
-            this.loadRequests(this.state);
-            this.loadCookies(this.state);
-
-            this.stateSubject.next(this.state);
-            break;
-          case objectTypes.REQUEST: {
-            // Requests are their own records, so every change to one arrives
-            // here rather than as part of a state update.
-            const request = (update.newValue ?? update.oldValue) as IData;
-
-            this.requests = { ...this.requests };
-
-            if (update.newValue) {
-              this.requests[request.id] = update.newValue as IData;
-            } else {
-              delete this.requests[request.id];
-            }
-
-            this.requestsSubject.next(this.requests);
-            break;
+          } else if ((update.oldValue as IState).domain && !update.newValue) {
+            // reset
+            this.state = StateUtils.init({
+              domain: (update.oldValue as IState).domain
+            });
           }
-          case objectTypes.COOKIE: {
-            // Cookie mocks are their own records as well, so a change to one
-            // arrives here and not as part of a state update. The background
-            // handler is what adds or drops the id on the state.
-            const cookie = (update.newValue ?? update.oldValue) as IOhMyCookie;
 
-            this.cookies = { ...this.cookies };
+          // The state may name requests or cookies this popup has not loaded yet
+          this.loadRequests(this.state);
+          this.loadCookies(this.state);
 
-            if (update.newValue) {
-              this.cookies[cookie.id] = update.newValue as IOhMyCookie;
-            } else {
-              delete this.cookies[cookie.id];
-            }
+          this.stateSubject.next(this.state);
+          break;
+        case objectTypes.REQUEST: {
+          // Requests are their own records, so every change to one arrives
+          // here rather than as part of a state update.
+          const request = (update.newValue ?? update.oldValue) as IData;
 
-            this.cookiesSubject.next(this.cookies);
-            break;
+          this.requests = { ...this.requests };
+
+          if (update.newValue) {
+            this.requests[request.id] = update.newValue as IData;
+          } else {
+            delete this.requests[request.id];
           }
-          case objectTypes.MOCK:
-            this.responseSubject.next(update.newValue as IMock);
-            break;
-          case objectTypes.STORE:
-            this.store = update.newValue as IOhMyMock;
-            this.storeSubject.next(update.newValue as IOhMyMock);
-            break;
+
+          this.requestsSubject.next(this.requests);
+          break;
         }
-      });
+        case objectTypes.COOKIE: {
+          // Cookie mocks are their own records as well, so a change to one
+          // arrives here and not as part of a state update. The background
+          // handler is what adds or drops the id on the state.
+          const cookie = (update.newValue ?? update.oldValue) as IOhMyCookie;
+
+          this.cookies = { ...this.cookies };
+
+          if (update.newValue) {
+            this.cookies[cookie.id] = update.newValue as IOhMyCookie;
+          } else {
+            delete this.cookies[cookie.id];
+          }
+
+          this.cookiesSubject.next(this.cookies);
+          break;
+        }
+        case objectTypes.MOCK:
+          this.responseSubject.next(update.newValue as IMock);
+          break;
+        case objectTypes.STORE:
+          this.store = update.newValue as IOhMyMock;
+          this.storeSubject.next(update.newValue as IOhMyMock);
+          break;
+      }
+    });
     // });
   }
 }

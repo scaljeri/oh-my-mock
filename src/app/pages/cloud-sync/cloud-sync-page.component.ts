@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CloudSyncService } from '../../services/cloud-sync.service';
 
 @Component({
@@ -8,8 +8,7 @@ import { CloudSyncService } from '../../services/cloud-sync.service';
   styleUrls: ['./cloud-sync-page.component.scss']
 })
 export class CloudSyncPageComponent implements OnInit, OnDestroy {
-
-  constructor(private cloudSyncService: CloudSyncService) { }
+  private cloudSyncService = inject(CloudSyncService);
 
   ngOnInit(): void {
     this.cloudSyncService.activity(true);

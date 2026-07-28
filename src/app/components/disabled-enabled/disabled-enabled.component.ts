@@ -1,4 +1,12 @@
-import { ChangeDetectorRef, Component, Output, EventEmitter, ChangeDetectionStrategy, HostListener } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy,
+  HostListener,
+  inject
+} from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 
 @Component({
@@ -6,9 +14,11 @@ import { ThemePalette } from '@angular/material/core';
   selector: 'oh-my-disabled-enabled',
   templateUrl: './disabled-enabled.component.html',
   styleUrls: ['./disabled-enabled.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DisabledEnabledComponent {
+  private cdr = inject(ChangeDetectorRef);
+
   /**
    * The prompt was answered: mocking on this domain should follow the toggle.
    *
@@ -24,8 +34,6 @@ export class DisabledEnabledComponent {
   @Output() dismissed = new EventEmitter<void>();
 
   color: ThemePalette = 'warn';
-
-  constructor(private cdr: ChangeDetectorRef) { }
 
   onEnable(isChecked: boolean): void {
     this.cdr.detectChanges();

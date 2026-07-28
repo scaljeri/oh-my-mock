@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { filter, Subject, take } from 'rxjs';
 import { IData, IMock, IOhMyMockResponse } from '@shared/type';
@@ -17,43 +17,53 @@ interface IOhSandboxOutput {
   providedIn: 'root'
 })
 export class SandboxService {
+  private stateService = inject(OhMyStateService);
+  private storageService = inject(StorageService);
+  private document = inject<Document>(DOCUMENT);
+
   static StateUtils = StateUtils;
   static DataUtils = DataUtils;
 
   private iframe: HTMLIFrameElement;
   private outputSubject = new Subject<IOhSandboxOutput>();
 
+  constructor() {
+    const document = this.document;
 
-  constructor(
-    private stateService: OhMyStateService,
-    private storageService: StorageService,
-    @Inject(DOCUMENT) private document: Document) {
     this.iframe = document.getElementById('sandbox') as HTMLIFrameElement;
 
     window.addEventListener('message', (event) => {
       this.outputSubject.next(event.data as IOhSandboxOutput);
-    })
+    });
   }
 
   async dispatch(input: IOhMyReadyResponse): Promise<IOhMyMockResponse> {
     const data = SandboxService.StateUtils.findRequest(
-      this.stateService.state, this.stateService.requests, input.request) as IData;
-    const mockid = SandboxService.DataUtils.activeMock(data, this.stateService.state.context);
+      this.stateService.state,
+      this.stateService.requests,
+      input.request
+    ) as IData;
+    const mockid = SandboxService.DataUtils.activeMock(
+      data,
+      this.stateService.state.context
+    );
     const mock = await this.storageService.get<IMock>(mockid as string);
 
     this.iframe.contentWindow?.postMessage({ ...input, mock }, '*');
 
-    return new Promise(resolve => {
-      this.outputSubject.pipe(
-        // The sandbox echoes back the id of the mock it evaluated. Without
-        // this the first output to arrive resolved *every* pending dispatch,
-        // so two requests in flight at once could be handed each other's
-        // response.
-        filter(output => output.id === mock?.id),
-        take(1)
-      ).subscribe((result: IOhSandboxOutput) => {
-        resolve(result.output);
-      })
-    })
+    return new Promise((resolve) => {
+      this.outputSubject
+        .pipe(
+          // The sandbox echoes back the id of the mock it evaluated. Without
+          // this the first output to arrive resolved *every* pending dispatch,
+          // so two requests in flight at once could be handed each other's
+          // response.
+          filter((output) => output.id === mock?.id),
+          take(1)
+        )
+        .subscribe((result: IOhSandboxOutput) => {
+          resolve(result.output);
+        });
+    });
   }
 }

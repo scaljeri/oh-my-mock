@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, Optional } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
@@ -9,15 +9,17 @@ import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
   styleUrls: ['./code-editor.component.scss']
 })
 export class DialogCodeEditorComponent implements OnInit {
+  // Not optional — see the same note in `anonymize.component.ts`. This is only
+  // ever opened through `dialog.open(DialogCodeEditorComponent, { data })`, so
+  // `@Optional()` promised DI a nullability the types never admitted.
+  private dialogRef = inject<MatDialogRef<DialogCodeEditorComponent>>(MatDialogRef);
+  input = inject<IOhMyCodeEditOptions>(MAT_DIALOG_DATA);
+
   type!: string;
   base!: string;
   ctrl = new UntypedFormControl();
   errors!: IMarker[];
   showErrors!: boolean;
-
-  constructor(
-    @Optional() private dialogRef: MatDialogRef<DialogCodeEditorComponent>,
-    @Optional() @Inject(MAT_DIALOG_DATA) public input: IOhMyCodeEditOptions) { }
 
   ngOnInit(): void {
     this.ctrl.setValue(this.input?.code ?? '', { emitEvent: false });
@@ -33,7 +35,8 @@ export class DialogCodeEditorComponent implements OnInit {
   }
 
   onSave(): void {
-    if (this.errors?.length > 0) { // we have errors
+    if (this.errors?.length > 0) {
+      // we have errors
       this.showErrors = true;
     } else {
       this.done();

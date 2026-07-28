@@ -1,5 +1,21 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnChanges, Output, Self, ViewChild } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, NgControl } from '@angular/forms';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  ViewChild,
+  inject
+} from '@angular/core';
+import {
+  ControlValueAccessor,
+  UntypedFormControl,
+  NgControl
+} from '@angular/forms';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
@@ -21,7 +37,12 @@ import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
     // }
   ]
 })
-export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, ControlValueAccessor {
+export class AutocompleteDropdownComponent
+  implements AfterViewInit, OnChanges, ControlValueAccessor
+{
+  ngControl = inject(NgControl, { self: true });
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() options!: string[];
   @Input() optionLabels: Record<string, string> = {};
   @Input() label!: string;
@@ -30,7 +51,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() showCopy = false;
   @Input() showDelete = false;
   @Input() copyInfo: string | undefined;
-  @Input() theme: 'dark' | 'light' = 'dark'
+  @Input() theme: 'dark' | 'light' = 'dark';
 
   /**
    * `copyValue` and `inputBlur` rather than `copy` and `blur`: both of those
@@ -48,16 +69,18 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   _ctrl!: UntypedFormControl;
   filteredMethodOptions: string[] = [];
 
-  private onChange: (value: string) => void = () => { }
-  private onTouch: () => void = () => { }
+  private onChange: (value: string) => void = () => {};
+  private onTouch: () => void = () => {};
 
   private autoCompleteActive = false;
 
   @ViewChild('input') inputRef!: ElementRef;
-  @ViewChild('trigger', { read: MatAutocompleteTrigger }) trigger!: MatAutocompleteTrigger;
+  @ViewChild('trigger', { read: MatAutocompleteTrigger })
+  trigger!: MatAutocompleteTrigger;
 
-  constructor(@Self() public ngControl: NgControl,
-    private cdr: ChangeDetectorRef) {
+  constructor() {
+    const ngControl = this.ngControl;
+
     ngControl.valueAccessor = this;
   }
 
@@ -66,7 +89,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
       if (this.showAllOnFocus) {
         this.filteredMethodOptions = [...this.options].sort();
       } else {
-        this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+        this.filteredMethodOptions = this.filter(
+          this.ctrl.value,
+          this.options
+        ).sort();
       }
     }
   }
@@ -131,7 +157,10 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     if (this.showAllOnFocus) {
       this.filteredMethodOptions = [...this.options].sort();
     } else {
-      this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+      this.filteredMethodOptions = this.filter(
+        this.ctrl.value,
+        this.options
+      ).sort();
     }
 
     setTimeout(() => {
@@ -140,11 +169,11 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   }
 
   registerOnChange(fn: (value: string) => void) {
-    this.onChange = fn
+    this.onChange = fn;
   }
 
   registerOnTouched(fn: () => void) {
-    this.onTouch = fn
+    this.onTouch = fn;
   }
 
   focus(): void {
@@ -164,7 +193,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   }
 
   onClear(event: MouseEvent): void {
-    event.stopPropagation()
+    event.stopPropagation();
 
     this.ctrl.setValue('');
     this.clear.emit();
@@ -191,7 +220,9 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     }
 
     const filterValue = value.toLowerCase();
-    const matchedOptions = options.filter(option => option.toLowerCase().includes(filterValue));
+    const matchedOptions = options.filter((option) =>
+      option.toLowerCase().includes(filterValue)
+    );
 
     // If there are no options, the autocomplete dropdown closes without an close event
     if (!matchedOptions.length) {

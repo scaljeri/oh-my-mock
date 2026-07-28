@@ -1,6 +1,18 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject
+} from '@angular/core';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { IOhMyContext, IOhMyCookie, IOhMyPresets, IState, ohMyCookieId } from '@shared/type';
+import {
+  IOhMyContext,
+  IOhMyCookie,
+  IOhMyPresets,
+  IState,
+  ohMyCookieId
+} from '@shared/type';
 import { combineLatest, Subscription } from 'rxjs';
 import { IOhMyCookieToggle } from '../../components/cookie-list/cookie-list.component';
 import { OhMyState } from '../../services/oh-my-store';
@@ -21,6 +33,11 @@ import { OhMyStateService } from '../../services/state.service';
   styleUrls: ['./cookies.component.scss']
 })
 export class PageCookiesComponent implements OnInit, OnDestroy {
+  private stateService = inject(OhMyStateService);
+  private storeService = inject(OhMyState);
+  private toast = inject(HotToastService);
+  private cdr = inject(ChangeDetectorRef);
+
   cookies: IOhMyCookie[] = [];
   context!: IOhMyContext;
   presets: IOhMyPresets = {};
@@ -34,34 +51,33 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
 
-  constructor(
-    private stateService: OhMyStateService,
-    private storeService: OhMyState,
-    private toast: HotToastService,
-    private cdr: ChangeDetectorRef
-  ) { }
-
   ngOnInit(): void {
     // Both: the state holds the ids and the presets, the map holds the records,
     // and a change to either has to reach the list.
-    this.subscriptions.add(combineLatest([this.stateService.state$, this.stateService.cookies$])
-      .subscribe(([state, records]: [IState, Record<ohMyCookieId, IOhMyCookie>]) => {
-        this.context = state.context;
-        this.domain = state.domain;
-        this.presets = state.presets;
-        this.cookies = PageCookiesComponent.resolve(state, records);
+    this.subscriptions.add(
+      combineLatest([
+        this.stateService.state$,
+        this.stateService.cookies$
+      ]).subscribe(
+        ([state, records]: [IState, Record<ohMyCookieId, IOhMyCookie>]) => {
+          this.context = state.context;
+          this.domain = state.domain;
+          this.presets = state.presets;
+          this.cookies = PageCookiesComponent.resolve(state, records);
 
-        // The selection is held as the record itself, so it has to be picked up
-        // again from the new list — and dropped when the mock is gone, which
-        // happens when another popup or a reset removed it.
-        const selectedId = this.selected?.id;
+          // The selection is held as the record itself, so it has to be picked up
+          // again from the new list — and dropped when the mock is gone, which
+          // happens when another popup or a reset removed it.
+          const selectedId = this.selected?.id;
 
-        if (selectedId) {
-          this.selected = this.cookies.find(c => c.id === selectedId);
+          if (selectedId) {
+            this.selected = this.cookies.find((c) => c.id === selectedId);
+          }
+
+          this.cdr.detectChanges();
         }
-
-        this.cdr.detectChanges();
-      }));
+      )
+    );
   }
 
   ngOnDestroy(): void {
@@ -69,9 +85,12 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
   }
 
   /** A state's cookie ids as records, skipping any that has not arrived yet. */
-  static resolve(state: IState, records: Record<ohMyCookieId, IOhMyCookie>): IOhMyCookie[] {
+  static resolve(
+    state: IState,
+    records: Record<ohMyCookieId, IOhMyCookie>
+  ): IOhMyCookie[] {
     return (state.cookies ?? [])
-      .map(id => records[id])
+      .map((id) => records[id])
       .filter((cookie): cookie is IOhMyCookie => !!cookie);
   }
 
@@ -80,7 +99,7 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
   }
 
   onSelect(id: ohMyCookieId): void {
-    this.selected = this.cookies.find(c => c.id === id);
+    this.selected = this.cookies.find((c) => c.id === id);
     this.isDrafting = false;
   }
 

@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
@@ -39,14 +39,15 @@ import { HttpClientModule } from '@angular/common/http';
     PageMockComponent,
     PageDataListComponent,
     JsonExportComponent,
-    CloudSyncPageComponent,
+    CloudSyncPageComponent
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     RouterModule.forRoot(appRoutes, {
       enableTracing: false,
-      useHash: true, scrollPositionRestoration: 'enabled'
+      useHash: true,
+      scrollPositionRestoration: 'enabled'
     }),
     HttpClientModule,
     ReactiveFormsModule,
@@ -79,12 +80,12 @@ import { HttpClientModule } from '@angular/common/http';
       baseUrl: MONACO_BASE_URL,
       onMonacoLoad: installMonacoEnvironment
     }),
-    { provide: Window, useValue: window },
+    { provide: Window, useValue: window }
   ],
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor(private contentService: ContentService) { }
+  private contentService = inject(ContentService);
 }
 
 // chrome.storage.local.get(null, function (data) {

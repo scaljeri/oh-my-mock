@@ -3,7 +3,8 @@ import {
   ChangeDetectorRef,
   Component,
   HostListener,
-  OnDestroy
+  OnDestroy,
+  inject
 } from '@angular/core';
 import { IOhMyContext, IState } from '@shared/type';
 import { MatDialog } from '@angular/material/dialog';
@@ -25,9 +26,19 @@ import { registerIcons } from './app-icons';
   standalone: false,
   selector: 'oh-my-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
+  private appState = inject(AppStateService);
+  private storeService = inject(OhMyState);
+  private stateService = inject(OhMyStateService);
+  private contentService = inject(ContentService);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
+  private webWorkerService = inject(WebWorkerService);
+  private cdr = inject(ChangeDetectorRef);
+  dialog = inject(MatDialog);
+
   enabled = false;
   domain!: string;
 
@@ -49,64 +60,63 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   // null until the first connection attempt resolves, then true/false.
   connectionFailed: boolean | null = null;
 
-  constructor(
-    private appState: AppStateService,
-    private storeService: OhMyState,
-    private stateService: OhMyStateService,
-    private contentService: ContentService,
-    private router: Router,
-    private activatedRoute: ActivatedRoute,
-    private webWorkerService: WebWorkerService,
-    private cdr: ChangeDetectorRef,
-    public dialog: MatDialog,
-    domSanitizer: DomSanitizer,
-    matIconRegistry: MatIconRegistry) {
+  constructor() {
+    const domSanitizer = inject(DomSanitizer);
+    const matIconRegistry = inject(MatIconRegistry);
+
     registerIcons(matIconRegistry, domSanitizer);
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await initializeApp(this.appState, this.stateService, this.webWorkerService);
+    await initializeApp(
+      this.appState,
+      this.stateService,
+      this.webWorkerService
+    );
     // await this.contentService.activate();
 
-    this.stateSub = this.stateService.state$.subscribe(async (state: IState) => {
-      if (!state) {
-        return this.isInitializing = true;
+    this.stateSub = this.stateService.state$.subscribe(
+      async (state: IState) => {
+        if (!state) {
+          return (this.isInitializing = true);
+        }
+
+        // Move to somewhere else
+        if (state.domain !== this.domain && this.domain) {
+          // Domain switch
+          // `popupActive` is not set here. `ContentService` subscribes to the
+          // same domain change and calls `activate()`, which is the one writer of
+          // that flag — setting it here as well raced with it, and only ever ran
+          // on a *switch*, never when the popup was first opened.
+          await this.webWorkerService.init(state.domain);
+
+          this.router.navigate(['/']).then(() => {
+            this.cdr.detectChanges();
+          });
+        }
+
+        this.context = state.context;
+        this.domain = state.context.domain;
+        this.version = state.version;
+
+        this.isInitializing = false;
+        this.enabled = state.aux.appActive ?? false;
+
+        if (this.enabled) {
+          this.showDisabled = 0;
+        } else if (this.showDisabled === -1) {
+          this.notifyDisabled();
+        }
+        this.cdr.detectChanges();
       }
+    );
 
-      // Move to somewhere else
-      if (state.domain !== this.domain && this.domain) { // Domain switch
-        // `popupActive` is not set here. `ContentService` subscribes to the
-        // same domain change and calls `activate()`, which is the one writer of
-        // that flag — setting it here as well raced with it, and only ever ran
-        // on a *switch*, never when the popup was first opened.
-        await this.webWorkerService.init(state.domain);
-
-        this.router.navigate(['/']).then(() => {
-          this.cdr.detectChanges();
-        });
-      }
-
-      this.context = state.context;
-      this.domain = state.context.domain;
-      this.version = state.version;
-
-      this.isInitializing = false;
-      this.enabled = state.aux.appActive ?? false;
-
-      if (this.enabled) {
-        this.showDisabled = 0;
-      } else if (this.showDisabled === -1) {
-        this.notifyDisabled();
-      }
-      this.cdr.detectChanges();
-    });
-
-    this.appState.errors$.subscribe(error => {
+    this.appState.errors$.subscribe((error) => {
       this.errors.push(error);
       this.cdr.detectChanges();
     });
 
-    this.contentService.pingPong().subscribe(isConnectedWithContent => {
+    this.contentService.pingPong().subscribe((isConnectedWithContent) => {
       this.connectionFailed = !isConnectedWithContent;
       this.cdr.detectChanges();
     });

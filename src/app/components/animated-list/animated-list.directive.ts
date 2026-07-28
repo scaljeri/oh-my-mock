@@ -1,4 +1,14 @@
-import { AfterViewInit, ContentChildren, Directive, ElementRef, HostBinding, Input, OnChanges, QueryList } from '@angular/core';
+import {
+  AfterViewInit,
+  ContentChildren,
+  Directive,
+  ElementRef,
+  HostBinding,
+  Input,
+  OnChanges,
+  QueryList,
+  inject
+} from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 
 interface IMeta {
@@ -11,27 +21,30 @@ interface IMeta {
   selector: '[ohMyAnimatedList]'
 })
 export class AnimatedListDirective implements OnChanges, AfterViewInit {
+  private element = inject(ElementRef);
+  private sanitizer = inject(DomSanitizer);
+
   @Input() @HostBinding('class.animated-list') ohMyAnimatedList!: number[];
 
-  @ContentChildren('animatedRow', { read: ElementRef }) rowRefs!: QueryList<ElementRef>;
+  @ContentChildren('animatedRow', { read: ElementRef })
+  rowRefs!: QueryList<ElementRef>;
 
-  @HostBinding("attr.style")
+  @HostBinding('attr.style')
   public get valueAsStyle(): SafeStyle {
     const duration = this.ohMyAnimatedList ? this.duration : '0';
-    return this.sanitizer.bypassSecurityTrustStyle(`--animation-duration: ${duration}`);
+    return this.sanitizer.bypassSecurityTrustStyle(
+      `--animation-duration: ${duration}`
+    );
   }
 
   private meta: IMeta[] | null = null;
   private duration = '0.8s';
 
-  constructor(private element: ElementRef, private sanitizer: DomSanitizer) {
-  }
-
   ngOnChanges(): void {
     setTimeout(() => {
       this.meta = null;
       this.calcAndSetTransforms();
-      setTimeout(() => this.duration = '0.8s');
+      setTimeout(() => (this.duration = '0.8s'));
     });
   }
 
@@ -40,7 +53,7 @@ export class AnimatedListDirective implements OnChanges, AfterViewInit {
       this.meta = null;
       this.calcAndSetTransforms();
       this.duration = '0s';
-      setTimeout(() => this.duration = '0.8s');
+      setTimeout(() => (this.duration = '0.8s'));
     });
 
     this.calcAndSetTransforms();
@@ -52,12 +65,13 @@ export class AnimatedListDirective implements OnChanges, AfterViewInit {
     }
 
     let offset = 0;
-    this.ohMyAnimatedList.forEach(itemIndex => {
+    this.ohMyAnimatedList.forEach((itemIndex) => {
       const meta = this.getMeta(itemIndex);
 
       // IF needed because filtering makes this a bit weird
       if (this.rowRefs.get(itemIndex)) {
-        this.rowRefs.get(itemIndex)!.nativeElement.style.transform = `translateY(${offset - meta.offset}px)`;
+        this.rowRefs.get(itemIndex)!.nativeElement.style.transform =
+          `translateY(${offset - meta.offset}px)`;
         offset += meta.height;
       }
     });
@@ -66,7 +80,7 @@ export class AnimatedListDirective implements OnChanges, AfterViewInit {
   private determineMeta(): void {
     let offset = 0;
 
-    this.meta = [...this.rowRefs.toArray()].map(item => {
+    this.meta = [...this.rowRefs.toArray()].map((item) => {
       const height = item.nativeElement.offsetHeight;
       const out = { offset, height: item.nativeElement.offsetHeight };
       offset += height;

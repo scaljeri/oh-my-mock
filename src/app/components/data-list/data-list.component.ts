@@ -1,18 +1,50 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  HostBinding,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+  inject
+} from '@angular/core';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { style, animate } from "@angular/animations";
+import { style, animate } from '@angular/animations';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
-import { IData, IMock, IOhMyContext, IOhMyRequests, IState, ohMyDataId } from '@shared/type';
+import {
+  IData,
+  IMock,
+  IOhMyContext,
+  IOhMyRequests,
+  IState,
+  ohMyDataId
+} from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
-import { BehaviorSubject, combineLatest, debounceTime, filter, Subject, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  debounceTime,
+  filter,
+  Subject,
+  Subscription
+} from 'rxjs';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from '../../constants';
 import { OhMyState } from '../../services/oh-my-store';
 import { RequestFilterComponent } from '../request-filter/request-filter.component';
-import { IOhMyListRow, orderRequests, pruneSticky, sameSticky, toggleSticky } from './data-list.ordering';
+import {
+  IOhMyListRow,
+  orderRequests,
+  pruneSticky,
+  sameSticky,
+  toggleSticky
+} from './data-list.ordering';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -27,7 +59,7 @@ export const highlightSeq = [
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
   // animations: [
   //   trigger("inOutAnimation", [
   //     transition(":leave", [
@@ -41,8 +73,16 @@ export const highlightSeq = [
   // ]
 })
 export class DataListComponent implements OnInit, OnDestroy {
+  dialog = inject(MatDialog);
+  private cdr = inject(ChangeDetectorRef);
+  private toast = inject(HotToastService);
+  private storeService = inject(OhMyState);
+
   stateSubject = new BehaviorSubject<IState | undefined>(undefined);
-  state$ = this.stateSubject.asObservable().pipe(filter(s => !!s), debounceTime(50));
+  state$ = this.stateSubject.asObservable().pipe(
+    filter((s) => !!s),
+    debounceTime(50)
+  );
 
   /**
    * The loaded state.
@@ -108,7 +148,6 @@ export class DataListComponent implements OnInit, OnDestroy {
   public disabled = false;
   public presetInfo = presetInfo;
 
-
   blurImages = false;
   subscriptions = new Subscription();
   filterCtrl = new UntypedFormControl('');
@@ -156,14 +195,10 @@ export class DataListComponent implements OnInit, OnDestroy {
   filterOptions: Record<string, boolean> | undefined = undefined;
   filterKeywords = '';
 
-  constructor(
-    public dialog: MatDialog,
-    private cdr: ChangeDetectorRef,
-    private toast: HotToastService,
-    private storeService: OhMyState) { }
-
   async ngOnInit() {
-    this.persistFilter = this.persistFilter ?? this.stateSubject.value?.context.domain === this.context.domain;
+    this.persistFilter =
+      this.persistFilter ??
+      this.stateSubject.value?.context.domain === this.context.domain;
 
     if (!this.persistFilter) {
       this.filterOptions = undefined;
@@ -171,47 +206,51 @@ export class DataListComponent implements OnInit, OnDestroy {
       this.filteredRequests = [...this.loadedState.requests];
     }
 
-    this.subscriptions.add(combineLatest([this.state$, this.requestsSubject]).subscribe(([state, requests]) => {
-      this.data = StateUtils.pickRequests(state, requests);
+    this.subscriptions.add(
+      combineLatest([this.state$, this.requestsSubject]).subscribe(
+        ([state, requests]) => {
+          this.data = StateUtils.pickRequests(state, requests);
 
-      if (this.persistFilter) {
-        this.filterKeywords = state.aux.filterKeywords || '';
-        if (!state.aux.filterKeywords) {
-          this.filteredRequests = [...state.requests];
-        } else {
-          this.filteredRequests = undefined;
+          if (this.persistFilter) {
+            this.filterKeywords = state.aux.filterKeywords || '';
+            if (!state.aux.filterKeywords) {
+              this.filteredRequests = [...state.requests];
+            } else {
+              this.filteredRequests = undefined;
 
-          if (state.aux.filteredRequests) {
-            this.filteredRequests = state.aux.filteredRequests;
-          } else if (state.aux.filteredRequests !== null) {
-            this.filteredRequests = [...state.requests];
+              if (state.aux.filteredRequests) {
+                this.filteredRequests = state.aux.filteredRequests;
+              } else if (state.aux.filteredRequests !== null) {
+                this.filteredRequests = [...state.requests];
+              }
+            }
           }
+
+          if (!this.context) {
+            this.context = state?.context;
+          }
+
+          this.newAutoActivate = state.aux.newAutoActivate ?? false;
+          this.filterOptions = state.aux.filterOptions;
+          this.requestCount = state.requests.length;
+          this.blurImages = state.aux.blurImages ?? false;
+
+          // After the context fallback above: a write-back needs one.
+          if (this.persistFilter) {
+            this.readSticky(state);
+          }
+
+          // Ordering last: it reads the filter, the requests and the pins, all of
+          // which the lines above may just have changed.
+          this.recompute();
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 50);
         }
-      }
-
-      if (!this.context) {
-        this.context = state?.context;
-      }
-
-      this.newAutoActivate = state.aux.newAutoActivate ?? false;
-      this.filterOptions = state.aux.filterOptions;
-      this.requestCount = state.requests.length;
-      this.blurImages = state.aux.blurImages ?? false;
-
-      // After the context fallback above: a write-back needs one.
-      if (this.persistFilter) {
-        this.readSticky(state);
-      }
-
-      // Ordering last: it reads the filter, the requests and the pins, all of
-      // which the lines above may just have changed.
-      this.recompute();
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-        this.cdr.detectChanges();
-      }, 50);
-    }));
+      )
+    );
   }
 
   /**
@@ -319,10 +358,13 @@ export class DataListComponent implements OnInit, OnDestroy {
       this.toast.error(`Could not activate, there are no responses available`);
     } else {
       const isActive = data.enabled[this.loadedState.context.preset];
-      this.storeService.upsertRequest({
-        ...data, enabled:
-          { ...data.enabled, [this.context.preset]: !isActive }
-      }, this.context);
+      this.storeService.upsertRequest(
+        {
+          ...data,
+          enabled: { ...data.enabled, [this.context.preset]: !isActive }
+        },
+        this.context
+      );
     }
   }
 
@@ -332,9 +374,12 @@ export class DataListComponent implements OnInit, OnDestroy {
     const data = this.data[id];
 
     // If you click delete fast enough, you can hit it twice
-    if (data) { // Is this needed
+    if (data) {
+      // Is this needed
       this.toast.success('Deleted request', { duration: 2000, style: {} });
-      this.stateSubject.next(await this.storeService.deleteRequest(data, this.context));
+      this.stateSubject.next(
+        await this.storeService.deleteRequest(data, this.context)
+      );
     }
   }
 
@@ -379,18 +424,21 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   onExport(data: IData, event: MouseEvent): void {
-    event.stopPropagation()
+    event.stopPropagation();
     this.dataExport.emit(data);
     this.selection.toggle(data.id);
     this.recompute();
   }
 
   onBlurImage(): void {
-    this.storeService.updateAux({ blurImages: !this.loadedState.aux.blurImages }, this.context);
+    this.storeService.updateAux(
+      { blurImages: !this.loadedState.aux.blurImages },
+      this.context
+    );
   }
 
   public selectAll(): void {
-    this.loadedState.requests.forEach(id => {
+    this.loadedState.requests.forEach((id) => {
       this.selection.select(id);
     });
     this.recompute();
@@ -412,9 +460,13 @@ export class DataListComponent implements OnInit, OnDestroy {
     // response to serve can be switched on at all.
     // NOTE: It is not this.context!!!!!
     Object.values(this.data)
-      .filter(d => d.selected[preset])
-      .forEach(d => this.storeService.upsertRequest(
-        { ...d, enabled: { ...d.enabled, [preset]: isActive } }, state.context));
+      .filter((d) => d.selected[preset])
+      .forEach((d) =>
+        this.storeService.upsertRequest(
+          { ...d, enabled: { ...d.enabled, [preset]: isActive } },
+          state.context
+        )
+      );
   }
 
   /**
@@ -450,7 +502,7 @@ export class DataListComponent implements OnInit, OnDestroy {
 
   onFilterUpdateStr(str: string): void {
     if (this.persistFilter) {
-      this.storeService.updateAux({ filterKeywords: str }, this.context)
+      this.storeService.updateAux({ filterKeywords: str }, this.context);
     }
   }
 

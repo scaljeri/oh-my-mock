@@ -1,7 +1,21 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChildren,
+  inject
+} from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { IData, IOhMyContext, IOhMyRequests, IState, ohMyDomain } from '@shared/type';
+import {
+  IData,
+  IOhMyContext,
+  IOhMyRequests,
+  IState,
+  ohMyDomain
+} from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 
 import { Subscription } from 'rxjs';
@@ -18,6 +32,13 @@ import { WebWorkerService } from '../../services/web-worker.service';
   styleUrls: ['./state-explorer.component.scss']
 })
 export class PageStateExplorerComponent implements OnInit, OnDestroy {
+  private stateStream = inject(OhMyStateService);
+  private storageService = inject(StorageService);
+  private storeService = inject(OhMyState);
+  private cdr = inject(ChangeDetectorRef);
+  private webWorkerService = inject(WebWorkerService);
+  private toast = inject(HotToastService);
+
   panelOpenState = true;
   domains!: ohMyDomain[];
   selectedDomain = '-';
@@ -42,25 +63,20 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
   @ViewChildren(MatExpansionPanel) panels!: QueryList<MatExpansionPanel>;
 
-  constructor(
-    private stateStream: OhMyStateService,
-    private storageService: StorageService,
-    private storeService: OhMyState,
-    private cdr: ChangeDetectorRef,
-    private webWorkerService: WebWorkerService,
-    private toast: HotToastService) { }
-
   ngOnInit(): void {
     // TODO: listen for domain change??
 
-    this.subscriptions.add(this.stateStream.store$.pipe(
-      startWith(this.stateStream.store)).subscribe(store => {
-        if (store) {
-          this.state = this.stateStream.state;
-          this.domains = store.domains.filter(d => d !== this.state.domain);
-          this.cdr.detectChanges();
-        }
-      }));
+    this.subscriptions.add(
+      this.stateStream.store$
+        .pipe(startWith(this.stateStream.store))
+        .subscribe((store) => {
+          if (store) {
+            this.state = this.stateStream.state;
+            this.domains = store.domains.filter((d) => d !== this.state.domain);
+            this.cdr.detectChanges();
+          }
+        })
+    );
   }
 
   async onSelectDomain(domain = this.state.domain): Promise<void> {
@@ -70,7 +86,9 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
     this.selectedState = await this.storageService.get(domain);
     this.selectedRequests = StateUtils.pickRequests(
-      this.selectedState, await this.stateStream.loadRequests(this.selectedState));
+      this.selectedState,
+      await this.stateStream.loadRequests(this.selectedState)
+    );
     this.hasSelectedStateAnyRequests = this.selectedState.requests.length > 0;
     this.panels.toArray()[1].open();
     this.cdr.detectChanges();
@@ -78,15 +96,27 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
 
   async onCloneAll(): Promise<void> {
     for (const request of Object.values(this.selectedRequests)) {
-      await this.storeService.cloneRequest(request.id, this.selectedState.context, this.state.context)
+      await this.storeService.cloneRequest(
+        request.id,
+        this.selectedState.context,
+        this.state.context
+      );
     }
-    this.toast.success(`Cloned ${Object.keys(this.selectedRequests).length} mocks`);
-    await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
+    this.toast.success(
+      `Cloned ${Object.keys(this.selectedRequests).length} mocks`
+    );
+    await this.storeService.updateAux(
+      { filteredRequests: undefined },
+      this.state.context
+    );
   }
 
   async onRequestCloned() {
     // The filter must be resetted otherwise the new request will not show
-    await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
+    await this.storeService.updateAux(
+      { filteredRequests: undefined },
+      this.state.context
+    );
   }
 
   ngOnDestroy(): void {

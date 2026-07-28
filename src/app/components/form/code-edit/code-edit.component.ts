@@ -1,5 +1,19 @@
-import { Component, EventEmitter, forwardRef, Input, OnChanges, OnInit, Output } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  inject
+} from '@angular/core';
+import {
+  ControlValueAccessor,
+  UntypedFormControl,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR
+} from '@angular/forms';
 import { PrettyPrintPipe } from '../../../pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
@@ -35,7 +49,11 @@ declare global {
     }
   ]
 })
-export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccessor {
+export class CodeEditComponent
+  implements OnInit, OnChanges, ControlValueAccessor
+{
+  private prettyPrintPipe = inject(PrettyPrintPipe);
+
   @Input() type: string | undefined;
   @Input() theme: themes = 'vs';
   @Input() base: string | undefined;
@@ -52,8 +70,14 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
 
   // ngx-monaco-editor-v2 takes `{ code, language }` models for the diff view,
   // where the previous wrapper took two plain strings.
-  public originalModel: { code: string; language: string } = { code: '', language: 'json' };
-  public modifiedModel: { code: string; language: string } = { code: '', language: 'json' };
+  public originalModel: { code: string; language: string } = {
+    code: '',
+    language: 'json'
+  };
+  public modifiedModel: { code: string; language: string } = {
+    code: '',
+    language: 'json'
+  };
 
   public diffCode: string | undefined;
 
@@ -62,10 +86,8 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
 
   value!: string;
   editorCtrl = new UntypedFormControl('', { updateOn: 'blur' });
-  private onChange: (value: string) => void = () => { }
-  private onTouch: () => void = () => { }
-
-  constructor(private prettyPrintPipe: PrettyPrintPipe) { }
+  private onChange: (value: string) => void = () => {};
+  private onTouch: () => void = () => {};
 
   async ngOnInit() {
     if (this.base) {
@@ -81,13 +103,15 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
     await this.checkMonacoLoaded();
     this.setEditorOptions();
 
-    this.editorCtrl.valueChanges.pipe(filter(v => v !== this.value)).subscribe((value: string) => {
-      this.value = value;
-      this.onChange(value);
-      // `registerOnTouched` hands over a zero-argument callback; the value it
-      // used to be called with was thrown away.
-      this.onTouch();
-    });
+    this.editorCtrl.valueChanges
+      .pipe(filter((v) => v !== this.value))
+      .subscribe((value: string) => {
+        this.value = value;
+        this.onChange(value);
+        // `registerOnTouched` hands over a zero-argument callback; the value it
+        // used to be called with was thrown away.
+        this.onTouch();
+      });
 
     this.updatedCode = this.editorCtrl.value;
     this.syncDiffModels();
@@ -114,7 +138,7 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
 
   // Wait for monaco to load
   checkMonacoLoaded(): Promise<void> {
-    return new Promise(r => {
+    return new Promise((r) => {
       const id = window.setInterval(() => {
         if (window.monaco) {
           window.clearInterval(id);
@@ -132,11 +156,14 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
       // Matches `$oh-font-mono`, `$oh-size-code` and `$oh-editor-line-height`
       // in `_tokens.scss`, so the editor reads as part of the same page as the
       // rest of the detail pane rather than as an embedded IDE.
-      fontFamily: "'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace",
+      fontFamily:
+        "'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace",
       fontSize: 12,
       lineHeight: 21,
       lineNumbersMinChars: 3,
-      theme: 'vs', language: 'json', readOnly: false
+      theme: 'vs',
+      language: 'json',
+      readOnly: false
     };
 
     if (this.type) {
@@ -153,7 +180,10 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
   }
 
   // If no type is set, JSON is assumed
-  private format(code: string | Record<string, string>, type = this.type): string {
+  private format(
+    code: string | Record<string, string>,
+    type = this.type
+  ): string {
     if (type && type !== 'json') {
       return code as string;
     }
@@ -161,7 +191,8 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
     if (typeof code === 'string') {
       try {
         code = JSON.parse(code);
-      } catch { // It is not JSON or it is invalid, leave it as is
+      } catch {
+        // It is not JSON or it is invalid, leave it as is
         return code as string;
       }
     }
@@ -183,7 +214,9 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
       // was always `undefined`, which asks for the markers of *every* model on
       // the page rather than this editor's. The uri is what identifies one
       // editor's document.
-      this.errors.emit(window.monaco?.editor.getModelMarkers({ resource: model.uri }) ?? []);
+      this.errors.emit(
+        window.monaco?.editor.getModelMarkers({ resource: model.uri }) ?? []
+      );
     });
   }
 
@@ -208,15 +241,14 @@ export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccesso
   }
 
   registerOnChange(fn: (value: string) => void) {
-    this.onChange = fn
+    this.onChange = fn;
   }
 
   registerOnTouched(fn: () => void) {
-    this.onTouch = fn
+    this.onTouch = fn;
   }
 
   validate(): null {
     return null;
   }
 }
-

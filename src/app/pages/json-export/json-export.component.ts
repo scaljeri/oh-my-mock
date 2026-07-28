@@ -1,5 +1,13 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { IData, IMock, IOhMyBackup, IOhMyCookie, IOhMyRequests, IOhMyShallowMock, IState } from '@shared/type';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  IData,
+  IMock,
+  IOhMyBackup,
+  IOhMyCookie,
+  IOhMyRequests,
+  IOhMyShallowMock,
+  IState
+} from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { DataListComponent } from '../../components/data-list/data-list.component';
 import { AppStateService } from '../../services/app-state.service';
@@ -19,29 +27,30 @@ import { StorageService } from '../../services/storage.service';
   styleUrls: ['./json-export.component.scss']
 })
 export class JsonExportComponent implements OnInit {
+  private appStateService = inject(AppStateService);
+  private stateService = inject(OhMyStateService);
+  private storageService = inject(StorageService);
+  private toast = inject(HotToastService);
+  private router = inject(Router);
+
   state!: IState;
   selected: Record<string, IData> = {};
   subscriptions: Subscription[] = [];
-  exportList: IData[] = []
+  exportList: IData[] = [];
   hasRequests!: boolean;
   /** This domain's request records, by id — the list renders off these. */
   requests: IOhMyRequests = {};
 
   @ViewChild(DataListComponent) dataListRef!: DataListComponent;
 
-  constructor(
-    private appStateService: AppStateService,
-    private stateService: OhMyStateService,
-    private storageService: StorageService,
-    private toast: HotToastService,
-    private router: Router) { }
-
   ngOnInit(): void {
     this.state = this.stateService.state;
     this.hasRequests = this.state.requests.length > 0;
-    this.subscriptions.push(this.stateService.requests$.subscribe(requests => {
-      this.requests = StateUtils.pickRequests(this.state, requests);
-    }));
+    this.subscriptions.push(
+      this.stateService.requests$.subscribe((requests) => {
+        this.requests = StateUtils.pickRequests(this.state, requests);
+      })
+    );
   }
 
   onRowExport(data: IData): void {
@@ -53,14 +62,16 @@ export class JsonExportComponent implements OnInit {
   }
 
   onSelectAll(): void {
-    const hasUnselected = this.state.requests.length -
-      Object.keys(this.selected).length > 0;
+    const hasUnselected =
+      this.state.requests.length - Object.keys(this.selected).length > 0;
 
-    if (hasUnselected) { // select all
+    if (hasUnselected) {
+      // select all
       this.dataListRef.selectAll();
       this.selected = {};
-      Object.values(this.requests).forEach(r => this.onRowExport(r));
-    } else { // deselect all
+      Object.values(this.requests).forEach((r) => this.onRowExport(r));
+    } else {
+      // deselect all
       this.dataListRef.deselectAll();
       this.selected = {};
     }
@@ -76,7 +87,7 @@ export class JsonExportComponent implements OnInit {
       requests: [],
       responses: [],
       version: this.appStateService.version
-    }
+    };
 
     for (const r of Object.values(this.selected)) {
       const sMocks = Object.values(r.mocks);
@@ -117,11 +128,13 @@ export class JsonExportComponent implements OnInit {
       }
     }
 
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(exportObj));
 
     const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", 'oh-my-mock-export.json');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute('download', 'oh-my-mock-export.json');
     document.body.appendChild(downloadAnchorNode); // required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();

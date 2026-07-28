@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './app-state.service';
 import { SandboxService } from './sandbox.service';
@@ -14,6 +14,9 @@ import { Observable, Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
+  private appStateService = inject(AppStateService);
+  private sandboxService = inject(SandboxService);
+
   static DataUtils = DataUtils;
   static StateUtils = StateUtils;
 
@@ -21,7 +24,9 @@ export class ContentService {
   private pingPongId: number | undefined;
   private pingPongSubject = new Subject<boolean>();
 
-  constructor(private appStateService: AppStateService, private sandboxService: SandboxService) {
+  constructor() {
+    const appStateService = this.appStateService;
+
     OhMySendToBg.setContext(appStateService.domain, appSources.POPUP);
 
     appStateService.domain$.subscribe((d: string | null) => {
@@ -37,10 +42,16 @@ export class ContentService {
       this.open(true);
     });
 
-    this.listener = async ({ payload, source, domain }: IPacket, sender: chrome.runtime.MessageSender) => {
+    this.listener = async (
+      { payload, source, domain }: IPacket,
+      sender: chrome.runtime.MessageSender
+    ) => {
       // Only accept messages from the content script
       // const domain = payload.context?.domain;
-      if (source !== appSources.CONTENT && source !== appSources.BACKGROUND || !domain) {
+      if (
+        (source !== appSources.CONTENT && source !== appSources.BACKGROUND) ||
+        !domain
+      ) {
         return;
       }
 
@@ -65,13 +76,13 @@ export class ContentService {
         } else if (payload.type === payloadType.HIT) {
           // const state = this.getActiveStateSnapshot();
           // const data = ContentService.StateUtils.findData(state, payload.context);
-
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           // this.appStateService.hit(data);
-
           // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
         } else if (payload.type === payloadType.API_REQUEST) {
-          const output = await this.sandboxService.dispatch(payload.data as IOhMyReadyResponse);
+          const output = await this.sandboxService.dispatch(
+            payload.data as IOhMyReadyResponse
+          );
           send2content(this.appStateService.tabId, {
             source: appSources.POPUP,
             domain: this.appStateService.domain,
@@ -81,7 +92,6 @@ export class ContentService {
               data: output
             }
           } as IPacket);
-
         } else if (payload.type === payloadType.KNOCKKNOCK) {
           this.pingPong();
         }
@@ -90,7 +100,6 @@ export class ContentService {
         //   if (tabId && this.appStateService.isSameDomain(domain)) {
         //     this.appStateService.domain = domain;
         //   }
-
         //   this.sendActiveState(true);
         // }
       }
@@ -99,8 +108,9 @@ export class ContentService {
     };
 
     // chrome.runtime.onMessage.addListener((packet, sender, callback) => this.listener(packet, sender, callback));
-    chrome.runtime.onMessage.addListener((packet, sender) => this.listener(packet, sender));
-
+    chrome.runtime.onMessage.addListener((packet, sender) =>
+      this.listener(packet, sender)
+    );
   }
 
   pingPong(): Observable<boolean> {
@@ -158,7 +168,7 @@ export class ContentService {
 
   reset(key: string): Promise<void> {
     if (key) {
-      return OhMySendToBg.reset(key).then(() => { });
+      return OhMySendToBg.reset(key).then(() => {});
     } else {
       return StorageUtils.reset();
     }

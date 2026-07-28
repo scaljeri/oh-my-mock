@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { IState, ohMyDomain } from '@shared/type';
 import { StorageService } from '../../services/storage.service';
 
@@ -42,7 +42,9 @@ export interface IOhMyCountableState {
  * Prefers the id list, falls back to the legacy embedded map, and answers 0
  * for a domain that is listed in the store but has no record yet.
  */
-export function countRequests(state: IOhMyCountableState | null | undefined): number {
+export function countRequests(
+  state: IOhMyCountableState | null | undefined
+): number {
   if (!state) {
     return 0;
   }
@@ -55,7 +57,9 @@ export function countRequests(state: IOhMyCountableState | null | undefined): nu
 }
 
 /** How many cookie mocks a domain has. */
-export function countCookies(state: IOhMyCountableState | null | undefined): number {
+export function countCookies(
+  state: IOhMyCountableState | null | undefined
+): number {
   return state?.cookies?.length ?? 0;
 }
 
@@ -70,13 +74,14 @@ export function countCookies(state: IOhMyCountableState | null | undefined): num
  */
 @Injectable({ providedIn: 'root' })
 export class DomainSummaryService {
-  constructor(private storageService: StorageService) { }
+  private storageService = inject(StorageService);
 
   async summarise(domain: ohMyDomain): Promise<IOhMyDomainSummary> {
     // Typed as always resolving a state, but `chrome.storage` resolves
     // `undefined` for a key it does not hold — and a domain can be listed in
     // the store before anything was ever mocked on it.
-    const state: IState | undefined = await this.storageService.get<IState>(domain);
+    const state: IState | undefined =
+      await this.storageService.get<IState>(domain);
 
     return {
       domain,
@@ -92,10 +97,12 @@ export class DomainSummaryService {
    * sidebar recounts on every write, and a browser with twenty domains would
    * otherwise do twenty reads each time.
    */
-  async summariseAll(domains: readonly ohMyDomain[]): Promise<IOhMyDomainSummary[]> {
+  async summariseAll(
+    domains: readonly ohMyDomain[]
+  ): Promise<IOhMyDomainSummary[]> {
     const states = await this.storageService.getMany<IState>([...domains]);
 
-    return domains.map(domain => {
+    return domains.map((domain) => {
       // A domain listed in the store without a record of its own is simply
       // absent from the result.
       const state: IState | undefined = states[domain];

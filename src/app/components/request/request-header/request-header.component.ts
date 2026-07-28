@@ -1,6 +1,13 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IData, IOhMyContext, IOhMyShallowMock, IUpsertMock, ohMyMockId, ohMyStatusCode } from '@shared/type';
+import {
+  IData,
+  IOhMyContext,
+  IOhMyShallowMock,
+  IUpsertMock,
+  ohMyMockId,
+  ohMyStatusCode
+} from '@shared/type';
 import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
 import { UntypedFormControl } from '@angular/forms';
 import { METHODS } from '@shared/constants';
@@ -30,6 +37,9 @@ export interface IOhMyResponseChip {
   styleUrls: ['./request-header.component.scss']
 })
 export class RequestHeaderComponent implements OnInit, OnChanges {
+  dialog = inject(MatDialog);
+  private storeService = inject(OhMyState);
+
   @Input() request!: IData;
   @Input() context!: IOhMyContext;
 
@@ -58,35 +68,49 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
   // Read by `@UntilDestroy({ arrayName: 'subscriptions' })`.
   subscriptions: Subscription[] = [];
 
-  constructor(
-    public dialog: MatDialog,
-    private storeService: OhMyState) { }
-
   ngOnInit(): void {
-    this.subscriptions.push(this.methodCtrl.valueChanges.subscribe(val => {
-      const method = (val || '').toUpperCase();
-      if (method !== this.request.method) {
-        this.storeService.upsertRequest({
-          id: this.request.id, method
-        }, this.context)
-      }
-    }));
+    this.subscriptions.push(
+      this.methodCtrl.valueChanges.subscribe((val) => {
+        const method = (val || '').toUpperCase();
+        if (method !== this.request.method) {
+          this.storeService.upsertRequest(
+            {
+              id: this.request.id,
+              method
+            },
+            this.context
+          );
+        }
+      })
+    );
 
-    this.subscriptions.push(this.typeCtrl.valueChanges.subscribe(type => {
-      if (type !== this.request.requestType) {
-        this.storeService.upsertRequest({
-          id: this.request.id, requestType: type
-        }, this.context)
-      }
-    }));
+    this.subscriptions.push(
+      this.typeCtrl.valueChanges.subscribe((type) => {
+        if (type !== this.request.requestType) {
+          this.storeService.upsertRequest(
+            {
+              id: this.request.id,
+              requestType: type
+            },
+            this.context
+          );
+        }
+      })
+    );
 
-    this.subscriptions.push(this.urlCtrl.valueChanges.subscribe(url => {
-      if (url !== this.request.url) {
-        this.storeService.upsertRequest({
-          id: this.request.id, url: url
-        }, this.context)
-      }
-    }));
+    this.subscriptions.push(
+      this.urlCtrl.valueChanges.subscribe((url) => {
+        if (url !== this.request.url) {
+          this.storeService.upsertRequest(
+            {
+              id: this.request.id,
+              url: url
+            },
+            this.context
+          );
+        }
+      })
+    );
   }
 
   ngOnChanges(): void {
@@ -100,7 +124,9 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
   }
 
   /** Saved responses read best in status-code order, lowest first. */
-  static sortMockIds(mocks: Record<ohMyMockId, IOhMyShallowMock> | undefined): ohMyMockId[] {
+  static sortMockIds(
+    mocks: Record<ohMyMockId, IOhMyShallowMock> | undefined
+  ): ohMyMockId[] {
     if (!mocks) {
       return [];
     }
@@ -109,7 +135,11 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       const ma = mocks[a];
       const mb = mocks[b];
 
-      return ma.statusCode === mb.statusCode ? 0 : ma.statusCode > mb.statusCode ? 1 : -1;
+      return ma.statusCode === mb.statusCode
+        ? 0
+        : ma.statusCode > mb.statusCode
+          ? 1
+          : -1;
     });
   }
 
@@ -141,7 +171,7 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
     const active = this.activeMockId;
 
-    return this.mockIds.map(id => ({
+    return this.mockIds.map((id) => ({
       id,
       statusCode: mocks[id].statusCode,
       label: mocks[id].label ?? '',
@@ -155,9 +185,15 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
   onSelectStatusCode(mockId: ohMyMockId): void {
     const enabled = { ...this.request.enabled, [this.context.preset]: true };
-    const selected = { ...this.request.selected, [this.context.preset]: mockId };
+    const selected = {
+      ...this.request.selected,
+      [this.context.preset]: mockId
+    };
 
-    this.storeService.upsertRequest({ ...this.request, enabled, selected }, this.context);
+    this.storeService.upsertRequest(
+      { ...this.request, enabled, selected },
+      this.context
+    );
   }
 
   onDisableRequest(): void {
@@ -175,10 +211,15 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
 
     const source = this.request.mocks[id];
 
-    this.storeService.cloneResponse(id, {
-      statusCode: source.statusCode,
-      label: source.label ? `${source.label} (copy)` : 'copy'
-    }, this.request, this.context);
+    this.storeService.cloneResponse(
+      id,
+      {
+        statusCode: source.statusCode,
+        label: source.label ? `${source.label} (copy)` : 'copy'
+      },
+      this.request,
+      this.context
+    );
   }
 
   onDeleteResponse(): void {
@@ -205,9 +246,16 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       if (update.clone) {
         this.storeService.cloneResponse(
           this.request.selected[this.context.preset],
-          update.mock, this.request, this.context);
+          update.mock,
+          this.request,
+          this.context
+        );
       } else {
-        this.storeService.upsertResponse(update.mock, this.request, this.context);
+        this.storeService.upsertResponse(
+          update.mock,
+          this.request,
+          this.context
+        );
       }
     });
   }

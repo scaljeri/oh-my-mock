@@ -7,7 +7,8 @@ import {
   OnDestroy,
   OnInit,
   Output,
-  ViewChild
+  ViewChild,
+  inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { IOhMyContext, IOhMyMock, ohMyDomain } from '@shared/type';
@@ -18,7 +19,10 @@ import { debounceTime } from 'rxjs/operators';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { HarImportComponent } from '../har-import/har-import.component';
-import { DomainSummaryService, IOhMyDomainSummary } from './domain-summary.service';
+import {
+  DomainSummaryService,
+  IOhMyDomainSummary
+} from './domain-summary.service';
 
 /**
  * Several records are written in a row for a single user action (a state, a
@@ -45,6 +49,12 @@ const REFRESH_DEBOUNCE = 200;
   styleUrls: ['./domain-sidebar.component.scss']
 })
 export class DomainSidebarComponent implements OnInit, OnDestroy {
+  private appState = inject(AppStateService);
+  private storeService = inject(OhMyState);
+  private summaryService = inject(DomainSummaryService);
+  private cdr = inject(ChangeDetectorRef);
+  private dialog = inject(MatDialog);
+
   /** The active domain's context — passed on to the overflow menu. */
   @Input() context!: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
@@ -63,23 +73,19 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
   private isDestroyed = false;
 
-  constructor(
-    private appState: AppStateService,
-    private storeService: OhMyState,
-    private summaryService: DomainSummaryService,
-    private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
-  ) { }
-
   ngOnInit(): void {
-    this.subscriptions.add(this.appState.domain$.subscribe(domain => {
-      this.activeDomain = domain ?? '';
-      this.detectChanges();
-    }));
+    this.subscriptions.add(
+      this.appState.domain$.subscribe((domain) => {
+        this.activeDomain = domain ?? '';
+        this.detectChanges();
+      })
+    );
 
-    this.subscriptions.add(StorageUtils.updates$
-      .pipe(debounceTime(REFRESH_DEBOUNCE))
-      .subscribe(() => void this.refresh()));
+    this.subscriptions.add(
+      StorageUtils.updates$
+        .pipe(debounceTime(REFRESH_DEBOUNCE))
+        .subscribe(() => void this.refresh())
+    );
 
     void this.refresh();
   }
@@ -101,7 +107,7 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     const needle = this.filter.trim().toLowerCase();
 
     this.visibleDomains = needle
-      ? this.domains.filter(d => d.domain.toLowerCase().includes(needle))
+      ? this.domains.filter((d) => d.domain.toLowerCase().includes(needle))
       : this.domains;
 
     this.detectChanges();

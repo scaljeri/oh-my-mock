@@ -1,7 +1,20 @@
-import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  inject
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IData, IOhMyContext, IOhMyMockContext, IOhMyRequests, IState } from '@shared/type';
+import {
+  IData,
+  IOhMyContext,
+  IOhMyMockContext,
+  IOhMyRequests,
+  IState
+} from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { Subscription } from 'rxjs';
 import { AddDataComponent } from '../../components/add-data/add-data.component';
@@ -12,9 +25,17 @@ import { OhMyStateService } from '../../services/state.service';
   standalone: false,
   selector: 'oh-my-data-list-page',
   templateUrl: './data-list.component.html',
-  styleUrls: ['./data-list.component.scss'],
+  styleUrls: ['./data-list.component.scss']
 })
 export class PageDataListComponent implements OnInit, OnDestroy {
+  private stateService = inject(OhMyStateService);
+  private storeService = inject(OhMyState);
+  dialog = inject(MatDialog);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
+
   static StateUtils = StateUtils;
 
   private subscriptions = new Subscription();
@@ -28,42 +49,40 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   /** Requests are their own records; the list needs them next to the state. */
   requests: IOhMyRequests = {};
 
-  constructor(
-    private stateService: OhMyStateService,
-    private storeService: OhMyState,
-    public dialog: MatDialog,
-    private router: Router,
-    private activatedRoute: ActivatedRoute,
-    private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
-  ) { }
-
   ngOnInit(): void {
     // `state$` first: both replay their current value on subscribe, and the
     // template reads `state.context`, so the requests subscription must not be
     // the one that triggers the first render.
-    this.subscriptions.add(this.stateService.state$.subscribe((state: IState) => {
-      this.context = state.context;
+    this.subscriptions.add(
+      this.stateService.state$.subscribe((state: IState) => {
+        this.context = state.context;
 
-      this.state = state;
-      this.hasData = state.requests.length > 0;
+        this.state = state;
+        this.hasData = state.requests.length > 0;
 
-      if (this.navigateToData) {
-        // findRequest returns undefined when the target is not in this state,
-        // which happens if the request was removed while the popup was closed.
-        const request = PageDataListComponent.StateUtils.findRequest(state, this.requests, this.navigateToData);
+        if (this.navigateToData) {
+          // findRequest returns undefined when the target is not in this state,
+          // which happens if the request was removed while the popup was closed.
+          const request = PageDataListComponent.StateUtils.findRequest(
+            state,
+            this.requests,
+            this.navigateToData
+          );
 
-        if (request?.id) {
-          this.onDataSelect(request.id);
+          if (request?.id) {
+            this.onDataSelect(request.id);
+          }
         }
-      }
-      this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
-    }));
+        this.cdr.detectChanges(); // Otherwise the change doesn't propagate to child
+      })
+    );
 
-    this.subscriptions.add(this.stateService.requests$.subscribe(requests => {
-      this.requests = requests;
-      this.cdr.detectChanges();
-    }));
+    this.subscriptions.add(
+      this.stateService.requests$.subscribe((requests) => {
+        this.requests = requests;
+        this.cdr.detectChanges();
+      })
+    );
   }
 
   /**
@@ -77,7 +96,9 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
   onDataSelect(id: string): void {
     this.ngZone.run(() => {
-      this.router.navigate(['request', id], { relativeTo: this.activatedRoute });
+      this.router.navigate(['request', id], {
+        relativeTo: this.activatedRoute
+      });
     });
   }
 
@@ -87,7 +108,7 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
   onAddData(): void {
     const dialogRef = this.dialog.open(AddDataComponent, {
-      width: '30%',
+      width: '30%'
     });
 
     dialogRef.afterClosed().subscribe((data: IData) => {

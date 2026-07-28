@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  forwardRef,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  inject
+} from '@angular/core';
 import { UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
@@ -7,7 +18,6 @@ import { Subscription } from 'rxjs';
 import { OhMyState } from '../../services/oh-my-store';
 import { OhMyStateService } from '../../services/state.service';
 import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/autocomplete-dropdown.component';
-
 
 @Component({
   standalone: false,
@@ -24,6 +34,11 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
   ]
 })
 export class PresetComponent implements OnInit, OnChanges, OnDestroy {
+  private toast = inject(HotToastService);
+  private stateService = inject(OhMyStateService);
+  private storeService = inject(OhMyState);
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() context!: IOhMyContext;
   @Input() theme!: 'dark' | 'light';
 
@@ -36,16 +51,11 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
   private state!: IState;
   private stateSub!: Subscription;
 
-  @ViewChild(AutocompleteDropdownComponent) dropdown!: AutocompleteDropdownComponent;
-
-  constructor(private toast: HotToastService,
-    private stateService: OhMyStateService,
-    private storeService: OhMyState,
-    private cdr: ChangeDetectorRef) {
-  }
+  @ViewChild(AutocompleteDropdownComponent)
+  dropdown!: AutocompleteDropdownComponent;
 
   ngOnInit(): void {
-    this.presetCtrl.valueChanges.subscribe(preset => {
+    this.presetCtrl.valueChanges.subscribe((preset) => {
       const oldPresetValue = this.presets[this.context.preset];
 
       if (preset !== oldPresetValue) {
@@ -54,10 +64,18 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
         } else {
           const selected = PresetUtils.findId(this.presets, preset);
 
-          this.storeService.upsertState({
-            context: { ...this.context, preset: selected || this.context.preset },
-            ...(!selected && { presets: { ...this.presets, [this.context.preset]: preset } })
-          }, this.context);
+          this.storeService.upsertState(
+            {
+              context: {
+                ...this.context,
+                preset: selected || this.context.preset
+              },
+              ...(!selected && {
+                presets: { ...this.presets, [this.context.preset]: preset }
+              })
+            },
+            this.context
+          );
         }
       }
     });
@@ -65,20 +83,22 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     this.stateSub?.unsubscribe();
-    this.stateSub = this.stateService.getState$(this.context).subscribe(state => {
-      this.state = state;
+    this.stateSub = this.stateService
+      .getState$(this.context)
+      .subscribe((state) => {
+        this.state = state;
 
-      this.context = state.context;
-      this.presets = state.presets;
-      this.options = Object.values(this.presets);
+        this.context = state.context;
+        this.presets = state.presets;
+        this.options = Object.values(this.presets);
 
-      this.setSelectedValue(this.presets[this.context.preset]);
+        this.setSelectedValue(this.presets[this.context.preset]);
 
-      if (this.isPresetCopied) {
-        this.isPresetCopied = false;
-        this.dropdown.focus();
-      }
-    });
+        if (this.isPresetCopied) {
+          this.isPresetCopied = false;
+          this.dropdown.focus();
+        }
+      });
   }
 
   setSelectedValue(value: string) {
@@ -105,8 +125,13 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
     this.options = Object.values(this.presets);
     this.context.preset = Object.keys(this.presets)[0];
 
-    this.presetCtrl.setValue(this.presets[this.context.preset], { emitEvent: false });
-    this.storeService.upsertState({ context: this.context, presets: this.presets }, this.context);
+    this.presetCtrl.setValue(this.presets[this.context.preset], {
+      emitEvent: false
+    });
+    this.storeService.upsertState(
+      { context: this.context, presets: this.presets },
+      this.context
+    );
   }
 
   onBlur(): void {

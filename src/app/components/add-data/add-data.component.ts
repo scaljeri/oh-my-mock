@@ -1,5 +1,9 @@
-import { Component } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import {
+  UntypedFormControl,
+  UntypedFormGroup,
+  Validators
+} from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { METHODS } from '@shared/constants';
 
@@ -10,6 +14,8 @@ import { METHODS } from '@shared/constants';
   styleUrls: ['./add-data.component.scss']
 })
 export class AddDataComponent {
+  private dialogRef = inject<MatDialogRef<AddDataComponent>>(MatDialogRef);
+
   formGroup = new UntypedFormGroup({
     url: new UntypedFormControl('', [Validators.required]),
     requestType: new UntypedFormControl('XHR', [Validators.required]),
@@ -17,8 +23,6 @@ export class AddDataComponent {
   });
 
   public availableMethods = METHODS;
-
-  constructor(private dialogRef: MatDialogRef<AddDataComponent>) { }
 
   onSave(): void {
     this.formGroup.markAsTouched();

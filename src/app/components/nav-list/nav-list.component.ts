@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
@@ -22,15 +22,13 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
   styleUrls: ['./nav-list.component.scss']
 })
 export class NavListComponent {
+  private storeService = inject(OhMyState);
+  private router = inject(Router);
+  dialog = inject(MatDialog);
+
   @Input() context!: IOhMyContext;
   /** Emitted when an action was picked, so the shell can react if it wants. */
   @Output() navigate = new EventEmitter<void>();
-
-  constructor(
-    private storeService: OhMyState,
-    private router: Router,
-    public dialog: MatDialog,
-  ) { }
 
   onReset(): void {
     const dialogRef = this.dialog.open(ResetStateComponent, {
@@ -51,8 +49,15 @@ export class NavListComponent {
 
         // Now we need to tell the content script that the popup (thats us) is still active!!
         await this.storeService.updateStore({ popupActive: true });
-        await this.storeService.updateAux({ filterKeywords: '', filteredRequests: undefined, filterOptions: undefined }, this.context);
-        this.router.navigate(['/'])
+        await this.storeService.updateAux(
+          {
+            filterKeywords: '',
+            filteredRequests: undefined,
+            filterOptions: undefined
+          },
+          this.context
+        );
+        this.router.navigate(['/']);
         window.location.reload();
       });
 

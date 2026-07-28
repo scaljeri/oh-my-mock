@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { IPacketPayload } from '@shared/packet-type';
 import { IData, ohMyDomain } from '@shared/type';
 import { BehaviorSubject, shareReplay, Subject } from 'rxjs';
@@ -13,6 +13,8 @@ export interface IPage {
   providedIn: 'root'
 })
 export class AppStateService {
+  version = inject(APP_VERSION);
+
   private _domain: string;
   private _tabId!: number;
   #contentVersion!: string;
@@ -25,7 +27,7 @@ export class AppStateService {
   private domainChangeSubject = new BehaviorSubject<ohMyDomain | null>(null);
   public domain$ = this.domainChangeSubject.asObservable().pipe(shareReplay());
 
-  constructor(@Inject(APP_VERSION) public version: string) {
+  constructor() {
     this._domain = sessionStorage.getItem('domain') ?? '';
     const tabId = sessionStorage.getItem('tabId');
 

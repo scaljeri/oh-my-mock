@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, Optional } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { IData } from '@shared/types/request';
@@ -44,6 +44,14 @@ export type harImportPhase = 'pick' | 'review' | 'importing';
   styleUrls: ['./har-import.component.scss']
 })
 export class HarImportComponent implements OnDestroy {
+  dialogRef = inject<MatDialogRef<HarImportComponent>>(MatDialogRef, {
+    optional: true
+  });
+  private appState = inject(AppStateService);
+  private storeService = inject(OhMyState);
+  private toast = inject(HotToastService);
+  private cdr = inject(ChangeDetectorRef);
+
   phase: harImportPhase = 'pick';
   /** Set when a file could not be read or is not a HAR. Shown, never swallowed. */
   error?: string;
@@ -76,13 +84,7 @@ export class HarImportComponent implements OnDestroy {
   private touched = new Set<string>();
   private isDestroyed = false;
 
-  constructor(
-    @Optional() public dialogRef: MatDialogRef<HarImportComponent>,
-    private appState: AppStateService,
-    private storeService: OhMyState,
-    private toast: HotToastService,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.targetDomain = this.appState.domain ?? '';
   }
 
@@ -91,11 +93,14 @@ export class HarImportComponent implements OnDestroy {
   }
 
   get selectedCount(): number {
-    return this.rows.reduce((count, row) => row.selected ? count + 1 : count, 0);
+    return this.rows.reduce(
+      (count, row) => (row.selected ? count + 1 : count),
+      0
+    );
   }
 
   get skipSummary(): string {
-    return this.skips.map(s => `${s.count} ${s.label}`).join(', ');
+    return this.skips.map((s) => `${s.count} ${s.label}`).join(', ');
   }
 
   /**
@@ -127,10 +132,12 @@ export class HarImportComponent implements OnDestroy {
     const needle = this.filter.trim().toLowerCase();
 
     this.visibleRows = needle
-      ? this.rows.filter(({ candidate }) =>
-        candidate.path.toLowerCase().includes(needle) ||
-        candidate.host.toLowerCase().includes(needle) ||
-        candidate.method.toLowerCase().includes(needle))
+      ? this.rows.filter(
+          ({ candidate }) =>
+            candidate.path.toLowerCase().includes(needle) ||
+            candidate.host.toLowerCase().includes(needle) ||
+            candidate.method.toLowerCase().includes(needle)
+        )
       : this.rows;
 
     this.detectChanges();
@@ -164,7 +171,9 @@ export class HarImportComponent implements OnDestroy {
   }
 
   async onImport(): Promise<void> {
-    const picked = this.rows.filter(row => row.selected).map(row => row.candidate);
+    const picked = this.rows
+      .filter((row) => row.selected)
+      .map((row) => row.candidate);
     const domain = this.targetDomain.trim();
 
     if (!picked.length || !domain) {
@@ -177,12 +186,16 @@ export class HarImportComponent implements OnDestroy {
     try {
       // The preset of the *target* state, which need not be the one the popup
       // is showing: the imported requests are selected and enabled in it.
-      const state = await this.storeService.getState({ domain, preset: 'default' });
+      const state = await this.storeService.getState({
+        domain,
+        preset: 'default'
+      });
       const preset = state.context?.preset ?? 'default';
 
       const result = await importJSON(
         harCandidatesToBackup(picked, { preset, label: this.fileName }),
-        { domain, preset, active: true });
+        { domain, preset, active: true }
+      );
 
       if (result.status !== ImportResultEnum.SUCCESS) {
         this.phase = 'review';
@@ -192,7 +205,8 @@ export class HarImportComponent implements OnDestroy {
       }
 
       this.toast.success(
-        `Imported ${picked.length} request${picked.length === 1 ? '' : 's'} from ${this.fileName} into ${domain}`);
+        `Imported ${picked.length} request${picked.length === 1 ? '' : 's'} from ${this.fileName} into ${domain}`
+      );
 
       if (domain !== this.appState.domain) {
         // Otherwise the import lands in a domain the user is not looking at.
@@ -250,15 +264,16 @@ export class HarImportComponent implements OnDestroy {
     const candidates = groupHarEntries(result.entries);
 
     this.touched.clear();
-    this.rows = candidates.map(candidate => ({ candidate, selected: false }));
+    this.rows = candidates.map((candidate) => ({ candidate, selected: false }));
 
     if (!this.targetDomain && result.pageHost) {
       this.targetDomain = result.pageHost;
     }
 
-    this.suggestedDomain = result.pageHost && result.pageHost !== this.targetDomain
-      ? result.pageHost
-      : undefined;
+    this.suggestedDomain =
+      result.pageHost && result.pageHost !== this.targetDomain
+        ? result.pageHost
+        : undefined;
 
     this.phase = 'review';
     await this.refreshExisting();
