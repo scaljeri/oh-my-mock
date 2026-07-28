@@ -1,5 +1,8 @@
-<oh-my-request *ngIf="data"
-  [request]="data"
-  [context]="context"
-  [presetName]="presetName"
-  [blurImages]="!!aux?.blurImages"></oh-my-request>
+@if (data) {
+  <oh-my-request
+    [request]="data"
+    [context]="context"
+    [presetName]="presetName"
+    [blurImages]="!!aux?.blurImages"
+  ></oh-my-request>
+}

@@ -1,8 +1,8 @@
 <!--
-  The sidebar of `design/Mock Manager v2.dc.html`: search, the DOMAINS list
-  with a count per domain, and the two actions at the bottom. The old nav links
-  (reset, explore, import/export, docs) live in the overflow menu next to
-  "Import HAR file" — see `oh-my-nav-list`.
+The sidebar of `design/Mock Manager v2.dc.html`: search, the DOMAINS list
+with a count per domain, and the two actions at the bottom. The old nav links
+(reset, explore, import/export, docs) live in the overflow menu next to
+"Import HAR file" — see `oh-my-nav-list`.
 -->
 <div class="oh-domain-nav">
   <div class="oh-domain-nav__search">
@@ -21,61 +21,76 @@
   <h2 class="oh-domain-nav__heading">Domains</h2>
 
   <ul class="oh-domain-nav__list">
-    <li *ngFor="let summary of visibleDomains; trackBy: trackByDomain">
-      <button
-        class="oh-domain-nav__item"
-        type="button"
-        x-test="domain-item"
-        [class.is-active]="summary.domain === activeDomain"
-        (click)="onSelect(summary.domain)"
-      >
-        <span class="oh-domain-nav__row">
-          <span
-            class="oh-domain-nav__dot"
-            [class.is-mocking]="summary.requests > 0 || summary.cookies > 0"
-          ></span>
-          <span class="oh-domain-nav__host" [title]="summary.domain">{{ summary.domain }}</span>
-          <span class="oh-domain-nav__badge" *ngIf="summary.requests">{{ summary.requests }}</span>
-        </span>
-        <span class="oh-domain-nav__meta">
-          {{ summary.requests }} calls · {{ summary.cookies }} cookies
-        </span>
-      </button>
-    </li>
+    @for (summary of visibleDomains; track trackByDomain($index, summary)) {
+      <li>
+        <button
+          class="oh-domain-nav__item"
+          type="button"
+          x-test="domain-item"
+          [class.is-active]="summary.domain === activeDomain"
+          (click)="onSelect(summary.domain)"
+        >
+          <span class="oh-domain-nav__row">
+            <span
+              class="oh-domain-nav__dot"
+              [class.is-mocking]="summary.requests > 0 || summary.cookies > 0"
+            ></span>
+            <span class="oh-domain-nav__host" [title]="summary.domain">{{
+              summary.domain
+            }}</span>
+            @if (summary.requests) {
+              <span class="oh-domain-nav__badge">{{ summary.requests }}</span>
+            }
+          </span>
+          <span class="oh-domain-nav__meta">
+            {{ summary.requests }} calls · {{ summary.cookies }} cookies
+          </span>
+        </button>
+      </li>
+    }
   </ul>
 
-  <p class="oh-domain-nav__empty" *ngIf="!visibleDomains.length">
-    {{ filter ? 'No domain matches' : 'No domains yet' }}
-  </p>
+  @if (!visibleDomains.length) {
+    <p class="oh-domain-nav__empty">
+      {{ filter ? 'No domain matches' : 'No domains yet' }}
+    </p>
+  }
 
   <div class="oh-domain-nav__footer">
-    <form class="oh-domain-nav__new" *ngIf="isAdding" (ngSubmit)="onAddDomain()">
-      <input
-        #newDomainInput
-        class="oh-domain-nav__new-input"
-        name="newDomain"
-        placeholder="example.com"
-        aria-label="Domain to add"
-        x-test="new-domain"
-        [ngModel]="newDomain"
-        (ngModelChange)="newDomain = $event"
-        (keyup.escape)="onCancelAdd()"
-      />
-      <button class="oh-domain-nav__new-confirm" type="submit">Add</button>
-      <button class="oh-domain-nav__new-cancel" type="button" (click)="onCancelAdd()">
-        Cancel
-      </button>
-    </form>
+    @if (isAdding) {
+      <form class="oh-domain-nav__new" (ngSubmit)="onAddDomain()">
+        <input
+          #newDomainInput
+          class="oh-domain-nav__new-input"
+          name="newDomain"
+          placeholder="example.com"
+          aria-label="Domain to add"
+          x-test="new-domain"
+          [ngModel]="newDomain"
+          (ngModelChange)="newDomain = $event"
+          (keyup.escape)="onCancelAdd()"
+        />
+        <button class="oh-domain-nav__new-confirm" type="submit">Add</button>
+        <button
+          class="oh-domain-nav__new-cancel"
+          type="button"
+          (click)="onCancelAdd()"
+        >
+          Cancel
+        </button>
+      </form>
+    }
 
-    <button
-      class="oh-domain-nav__add"
-      type="button"
-      x-test="add-domain"
-      *ngIf="!isAdding"
-      (click)="onStartAdd()"
-    >
-      <span class="oh-domain-nav__add-sign">+</span> Add domain
-    </button>
+    @if (!isAdding) {
+      <button
+        class="oh-domain-nav__add"
+        type="button"
+        x-test="add-domain"
+        (click)="onStartAdd()"
+      >
+        <span class="oh-domain-nav__add-sign">+</span> Add domain
+      </button>
+    }
 
     <div class="oh-domain-nav__actions">
       <button

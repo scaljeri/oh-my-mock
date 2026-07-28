@@ -1,5 +1,5 @@
 <!-- Top of the detail pane, following `design/Mock Manager v2.dc.html`: the
-     method + url line with its metadata, then the saved-response chips. -->
+method + url line with its metadata, then the saved-response chips. -->
 <header class="oh-detail__head">
   <div class="oh-detail__title">
     <button
@@ -10,7 +10,9 @@
       title="Edit the method, type and url of this request"
       (click)="onToggleEdit()"
     >
-      <span class="oh-detail__method" [attr.data-method]="request.method">{{ request.method }}</span>
+      <span class="oh-detail__method" [attr.data-method]="request.method">{{
+        request.method
+      }}</span>
       <span class="oh-detail__url">{{ request.url }}</span>
     </button>
 
@@ -40,45 +42,53 @@
 
   <p class="oh-detail__meta">
     {{ request.requestType | lowercase }} · {{ responseCountLabel }}
-    <ng-container *ngIf="request.lastHit"> · last hit {{ request.lastHit | date: 'shortTime' }}</ng-container>
+    @if (request.lastHit) {
+      · last hit {{ request.lastHit | date: 'shortTime' }}
+    }
   </p>
 </header>
 
 <!-- Revealed by the header line. Same field styling as the response settings
-     grid below it, so the pane reads as one form. -->
-<section class="oh-detail__section oh-detail__edit" *ngIf="isEditing">
-  <div class="oh-fields">
-    <label class="oh-field">
-      <span class="oh-field__label">Type</span>
-      <select class="oh-field__input" [formControl]="typeCtrl">
-        <option *ngFor="let type of requestTypes" [value]="type">{{ type }}</option>
-      </select>
-    </label>
-
-    <label class="oh-field">
-      <span class="oh-field__label">Method</span>
-      <input
-        class="oh-field__input oh-field__input--mono"
-        type="text"
-        list="oh-request-methods"
-        [formControl]="methodCtrl"
-      />
-      <datalist id="oh-request-methods">
-        <option *ngFor="let method of availableMethods" [value]="method"></option>
-      </datalist>
-    </label>
-
-    <label class="oh-field oh-field--wide">
-      <span class="oh-field__label">Url — matched as a regular expression</span>
-      <input
-        class="oh-field__input oh-field__input--mono"
-        type="text"
-        placeholder="Match API endpoint (regexp)"
-        [formControl]="urlCtrl"
-      />
-    </label>
-  </div>
-</section>
+grid below it, so the pane reads as one form. -->
+@if (isEditing) {
+  <section class="oh-detail__section oh-detail__edit">
+    <div class="oh-fields">
+      <label class="oh-field">
+        <span class="oh-field__label">Type</span>
+        <select class="oh-field__input" [formControl]="typeCtrl">
+          @for (type of requestTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </label>
+      <label class="oh-field">
+        <span class="oh-field__label">Method</span>
+        <input
+          class="oh-field__input oh-field__input--mono"
+          type="text"
+          list="oh-request-methods"
+          [formControl]="methodCtrl"
+        />
+        <datalist id="oh-request-methods">
+          @for (method of availableMethods; track method) {
+            <option [value]="method"></option>
+          }
+        </datalist>
+      </label>
+      <label class="oh-field oh-field--wide">
+        <span class="oh-field__label"
+          >Url — matched as a regular expression</span
+        >
+        <input
+          class="oh-field__input oh-field__input--mono"
+          type="text"
+          placeholder="Match API endpoint (regexp)"
+          [formControl]="urlCtrl"
+        />
+      </label>
+    </div>
+  </section>
+}
 
 <section class="oh-detail__section">
   <h2 class="oh-detail__label">Saved responses</h2>
@@ -94,19 +104,25 @@
       <span class="oh-chip__label">passthrough</span>
     </button>
 
-    <button
-      class="oh-chip"
-      type="button"
-      x-test="saved-response"
-      *ngFor="let chip of chips"
-      [class.is-selected]="chip.isSelected"
-      (click)="onSelectStatusCode(chip.id)"
-    >
-      <span class="oh-chip__code" [attr.data-tone]="chip.statusCode | ohStatusCodeTone">
-        {{ chip.statusCode }}
-      </span>
-      <span class="oh-chip__label" *ngIf="chip.label">{{ chip.label }}</span>
-    </button>
+    @for (chip of chips; track chip) {
+      <button
+        class="oh-chip"
+        type="button"
+        x-test="saved-response"
+        [class.is-selected]="chip.isSelected"
+        (click)="onSelectStatusCode(chip.id)"
+      >
+        <span
+          class="oh-chip__code"
+          [attr.data-tone]="chip.statusCode | ohStatusCodeTone"
+        >
+          {{ chip.statusCode }}
+        </span>
+        @if (chip.label) {
+          <span class="oh-chip__label">{{ chip.label }}</span>
+        }
+      </button>
+    }
 
     <button
       class="oh-chip oh-chip--add"

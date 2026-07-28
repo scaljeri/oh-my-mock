@@ -1,21 +1,22 @@
-<nav class="oh-tabs" *ngIf="active">
-  <a
-    class="oh-tabs__tab"
-    x-test="tab-requests"
-    routerLink="/"
-    [class.is-active]="active === 'requests'"
-  >
-    Requests
-    <span class="oh-tabs__count">{{ requestCount }}</span>
-  </a>
-
-  <a
-    class="oh-tabs__tab"
-    x-test="tab-cookies"
-    routerLink="/cookies"
-    [class.is-active]="active === 'cookies'"
-  >
-    Cookies
-    <span class="oh-tabs__count">{{ cookieCount }}</span>
-  </a>
-</nav>
+@if (active) {
+  <nav class="oh-tabs">
+    <a
+      class="oh-tabs__tab"
+      x-test="tab-requests"
+      routerLink="/"
+      [class.is-active]="active === 'requests'"
+    >
+      Requests
+      <span class="oh-tabs__count">{{ requestCount }}</span>
+    </a>
+    <a
+      class="oh-tabs__tab"
+      x-test="tab-cookies"
+      routerLink="/cookies"
+      [class.is-active]="active === 'cookies'"
+    >
+      Cookies
+      <span class="oh-tabs__count">{{ cookieCount }}</span>
+    </a>
+  </nav>
+}

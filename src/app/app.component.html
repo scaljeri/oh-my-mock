@@ -1,18 +1,21 @@
 <!--
-  Three-pane shell, following `design/Mock Manager v2.dc.html`:
+Three-pane shell, following `design/Mock Manager v2.dc.html`:
 
-    ┌─ header ────────────────────────────────────────────────┐
-    │ brand │ domain + counts        │ preset │ mocking toggle │
-    ├─ sidebar ─┬─ main ──────────────────────┬─ detail ───────┤
-    │ domains   │ tabs, filters, request list │ mock detail    │
-    └───────────┴─────────────────────────────┴────────────────┘
+┌─ header ────────────────────────────────────────────────┐
+│ brand │ domain + counts        │ preset │ mocking toggle │
+├─ sidebar ─┬─ main ──────────────────────┬─ detail ───────┤
+│ domains   │ tabs, filters, request list │ mock detail    │
+└───────────┴─────────────────────────────┴────────────────┘
 
-  The middle column holds the router outlet, so the existing pages keep
-  working while they are restyled one at a time. The detail pane is a named
-  outlet: a request row routes into it instead of navigating away from the
-  list, which is the whole point of the new layout.
+The middle column holds the router outlet, so the existing pages keep
+working while they are restyled one at a time. The detail pane is a named
+outlet: a request row routes into it instead of navigating away from the
+list, which is the whole point of the new layout.
 -->
-<div class="oh-shell" [ngClass]="{ 'is-blurred': showDisabled || isInitializing }">
+<div
+  class="oh-shell"
+  [ngClass]="{ 'is-blurred': showDisabled || isInitializing }"
+>
   <header class="oh-header">
     <div class="oh-header__brand">
       <button
@@ -38,15 +41,16 @@
       >
         <oh-my-cloud-sync-svg></oh-my-cloud-sync-svg>
       </a>
-      <button
-        *ngIf="errors.length"
-        class="oh-header__errors"
-        type="button"
-        aria-label="Show errors"
-        (click)="onErrors()"
-      >
-        <mat-icon svgIcon="error"></mat-icon>
-      </button>
+      @if (errors.length) {
+        <button
+          class="oh-header__errors"
+          type="button"
+          aria-label="Show errors"
+          (click)="onErrors()"
+        >
+          <mat-icon svgIcon="error"></mat-icon>
+        </button>
+      }
     </div>
 
     <div class="oh-header__actions">
@@ -74,36 +78,40 @@
     </aside>
 
     <main class="oh-main">
-      <div
-        x-test="notice-disabled"
-        *ngIf="!enabled && showDisabled !== 1 && domain"
-        class="oh-notice"
-      >
-        OhMyMock is inactive
-      </div>
+      @if (!enabled && showDisabled !== 1 && domain) {
+        <div x-test="notice-disabled" class="oh-notice">
+          OhMyMock is inactive
+        </div>
+      }
 
       <!-- Requests / Cookies. Rendered only once the state has arrived: the
-           strip reads its counts from `state$`, which does not exist before
-           `initializeApp` has run. -->
-      <oh-my-tab-nav *ngIf="!isInitializing"></oh-my-tab-nav>
+      strip reads its counts from `state$`, which does not exist before
+      `initializeApp` has run. -->
+      @if (!isInitializing) {
+        <oh-my-tab-nav></oh-my-tab-nav>
+      }
 
-      <section class="oh-main__content" *ngIf="!isInitializing">
-        <router-outlet></router-outlet>
-      </section>
+      @if (!isInitializing) {
+        <section class="oh-main__content">
+          <router-outlet></router-outlet>
+        </section>
+      }
     </main>
   </div>
 </div>
 
 <oh-my-feedback></oh-my-feedback>
-<oh-my-spinner
-  *ngIf="!context || connectionFailed === null"
-  mode="dark"
-></oh-my-spinner>
+@if (!context || connectionFailed === null) {
+  <oh-my-spinner mode="dark"></oh-my-spinner>
+}
 
-<oh-my-disabled-enabled
-  *ngIf="showDisabled === 1 && !connectionFailed"
-  (enable)="onEnableChange($event)"
-  (dismissed)="onDismissDisabled()"
-></oh-my-disabled-enabled>
+@if (showDisabled === 1 && !connectionFailed) {
+  <oh-my-disabled-enabled
+    (enable)="onEnableChange($event)"
+    (dismissed)="onDismissDisabled()"
+  ></oh-my-disabled-enabled>
+}
 
-<oh-my-connection-failure *ngIf="connectionFailed"></oh-my-connection-failure>
+@if (connectionFailed) {
+  <oh-my-connection-failure></oh-my-connection-failure>
+}

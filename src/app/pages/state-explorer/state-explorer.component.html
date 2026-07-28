@@ -3,52 +3,66 @@
     <mat-expansion-panel [expanded]="true">
       <mat-expansion-panel-header>
         <mat-panel-title>
-          <span *ngIf="panelOpenState">Available domains:</span>
-          <span *ngIf="!panelOpenState">Selected domain:</span>
+          @if (panelOpenState) {
+            <span>Available domains:</span>
+          }
+          @if (!panelOpenState) {
+            <span>Selected domain:</span>
+          }
         </mat-panel-title>
         <mat-panel-description>
           {{ selectedDomain }}
         </mat-panel-description>
       </mat-expansion-panel-header>
       <ol>
-        <li *ngFor="let domain of domains">
-          <a [routerLink]="[]" (click)="onSelectDomain(domain)">{{ domain }}</a>
-        </li>
+        @for (domain of domains; track domain) {
+          <li>
+            <a [routerLink]="[]" (click)="onSelectDomain(domain)">{{
+              domain
+            }}</a>
+          </li>
+        }
       </ol>
-      <p *ngIf="!domains?.length">No domains available!</p>
+      @if (!domains?.length) {
+        <p>No domains available!</p>
+      }
     </mat-expansion-panel>
     <mat-expansion-panel #panel (closed)="panelOpenState = true">
-      <mat-expansion-panel-header *ngIf="dataItem" (click)="dataItem = null">
-        <mat-panel-title>
-          {{ dataItem.requestType }} {{ dataItem.method }}
-        </mat-panel-title>
-        <mat-panel-description>
-          {{ dataItem.url }}
-        </mat-panel-description>
-      </mat-expansion-panel-header>
-      <button
-        class="clone-all"
-        *ngIf="hasSelectedStateAnyRequests"
-        (click)="onCloneAll()"
-        mat-mini-fab
-        color="warn"
-        aria-label="Clone all"
-      >
-        <mat-icon svgIcon="copy_all"></mat-icon>
-      </button>
-      <oh-my-data-list
-        *ngIf="selectedState"
-        [state]="selectedState"
-        [requests]="selectedRequests"
-        [persistFilter]="false"
-        [showClone]="true"
-        [showDelete]="true"
-        [context]="state.context"
-        [togglableRows]="false"
-        [showDelete]="false"
-        [hideHeader]="true"
-        (cloned)="onRequestCloned()"
-      ></oh-my-data-list>
+      @if (dataItem) {
+        <mat-expansion-panel-header (click)="dataItem = null">
+          <mat-panel-title>
+            {{ dataItem.requestType }} {{ dataItem.method }}
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ dataItem.url }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+      }
+      @if (hasSelectedStateAnyRequests) {
+        <button
+          class="clone-all"
+          (click)="onCloneAll()"
+          mat-mini-fab
+          color="warn"
+          aria-label="Clone all"
+        >
+          <mat-icon svgIcon="copy_all"></mat-icon>
+        </button>
+      }
+      @if (selectedState) {
+        <oh-my-data-list
+          [state]="selectedState"
+          [requests]="selectedRequests"
+          [persistFilter]="false"
+          [showClone]="true"
+          [showDelete]="true"
+          [context]="state.context"
+          [togglableRows]="false"
+          [showDelete]="false"
+          [hideHeader]="true"
+          (cloned)="onRequestCloned()"
+        ></oh-my-data-list>
+      }
     </mat-expansion-panel>
     <!-- <mat-expansion-panel> -->
     <!-- <oh-my-request *ngIf="dataItem" [requestId]="dataItem.id" [context]="context"></oh-my-request> -->

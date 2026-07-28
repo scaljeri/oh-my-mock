@@ -1,6 +1,6 @@
 <!--
-  The cookie detail pane of `design/Mock Manager v2.dc.html`: a stack of blocks
-  sharing one inset, of which only the preview scrolls.
+The cookie detail pane of `design/Mock Manager v2.dc.html`: a stack of blocks
+sharing one inset, of which only the preview scrolls.
 -->
 <form class="oh-cookie" [formGroup]="form" (ngSubmit)="onSubmit()">
   <header class="oh-cookie__head">
@@ -58,15 +58,16 @@
     <div class="oh-field">
       <span class="oh-field__label">SameSite</span>
       <div class="oh-choices">
-        <button
-          class="oh-choices__option"
-          type="button"
-          *ngFor="let option of sameSiteOptions"
-          [class.is-selected]="form.controls.sameSite.value === option.value"
-          (click)="onSameSite(option.value)"
-        >
-          {{ option.name }}
-        </button>
+        @for (option of sameSiteOptions; track option) {
+          <button
+            class="oh-choices__option"
+            type="button"
+            [class.is-selected]="form.controls.sameSite.value === option.value"
+            (click)="onSameSite(option.value)"
+          >
+            {{ option.name }}
+          </button>
+        }
       </div>
     </div>
   </div>
@@ -86,10 +87,10 @@
     </div>
 
     <!--
-      HttpOnly is a property of the mock and is never stripped. The extension
-      writes cookies with `chrome.cookies` from the background, which can set
-      and read httpOnly ones — see `docs/architecture/cookie-mocking.md`. So
-      the note says what the flag does to the *page*, not to the extension.
+    HttpOnly is a property of the mock and is never stripped. The extension
+    writes cookies with `chrome.cookies` from the background, which can set
+    and read httpOnly ones — see `docs/architecture/cookie-mocking.md`. So
+    the note says what the flag does to the *page*, not to the extension.
     -->
     <div class="oh-setting">
       <span class="oh-setting__text">
@@ -109,27 +110,31 @@
   </div>
 
   <!--
-    A cookie is enabled per preset, exactly like a request: "logged out" is as
-    much a cookie state as a response state. A mock that is off in every preset
-    below does nothing at all — which is how recorded cookies arrive.
+  A cookie is enabled per preset, exactly like a request: "logged out" is as
+  much a cookie state as a response state. A mock that is off in every preset
+  below does nothing at all — which is how recorded cookies arrive.
   -->
   <div class="oh-cookie__presets">
     <h3 class="oh-cookie__caption">Enabled in</h3>
 
-    <div class="oh-setting" *ngFor="let preset of presetIds">
-      <span class="oh-setting__text">
-        <span class="oh-setting__name">
-          {{ presets[preset] }}
-          <span class="oh-setting__badge" *ngIf="preset === activePreset">active</span>
+    @for (preset of presetIds; track preset) {
+      <div class="oh-setting">
+        <span class="oh-setting__text">
+          <span class="oh-setting__name">
+            {{ presets[preset] }}
+            @if (preset === activePreset) {
+              <span class="oh-setting__badge">active</span>
+            }
+          </span>
         </span>
-      </span>
-      <oh-my-toggle
-        x-test="cookie-preset-toggle"
-        [label]="'Enabled in preset ' + presets[preset]"
-        [checked]="isEnabledIn(preset)"
-        (toggled)="onPresetToggle(preset, $event)"
-      ></oh-my-toggle>
-    </div>
+        <oh-my-toggle
+          x-test="cookie-preset-toggle"
+          [label]="'Enabled in preset ' + presets[preset]"
+          [checked]="isEnabledIn(preset)"
+          (toggled)="onPresetToggle(preset, $event)"
+        ></oh-my-toggle>
+      </div>
+    }
   </div>
 
   <div class="oh-cookie__preview">
@@ -146,7 +151,12 @@
     >
       Save cookie
     </button>
-    <button class="oh-btn oh-btn--danger" type="button" x-test="delete-cookie" (click)="onDelete()">
+    <button
+      class="oh-btn oh-btn--danger"
+      type="button"
+      x-test="delete-cookie"
+      (click)="onDelete()"
+    >
       {{ isNew ? 'Cancel' : 'Delete' }}
     </button>
     <span class="oh-cookie__hint">Applies while mocking is on</span>

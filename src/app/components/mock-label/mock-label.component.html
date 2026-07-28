@@ -1,1 +1,4 @@
-<span>{{code}}</span><span *ngIf="label"> - {{label}}</span>
+<span>{{ code }}</span>
+@if (label) {
+  <span> - {{ label }}</span>
+}

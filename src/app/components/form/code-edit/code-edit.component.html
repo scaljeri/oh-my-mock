@@ -1,13 +1,14 @@
+@if (!base) {
   <ngx-monaco-editor
-    *ngIf="!base"
     class="oh-no-backspace-nav"
     [options]="editorOptions"
     [formControl]="editorCtrl"
     (onInit)="onInitEditor($event)"
   ></ngx-monaco-editor>
+}
 
+@if (base) {
   <ngx-monaco-diff-editor
-    *ngIf="base"
     class="oh-no-backspace-nav"
     [options]="editorOptions"
     [originalModel]="originalModel"
@@ -15,3 +16,4 @@
     (onInit)="onInitDiffEditor($event)"
   >
   </ngx-monaco-diff-editor>
+}

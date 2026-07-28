@@ -1,86 +1,99 @@
 <!-- The request detail pane, following `design/Mock Manager v2.dc.html`:
-     header, saved responses, response settings, then the Body/Headers/Code
-     editor. Only the editor scrolls; everything above it keeps its place. -->
-<oh-my-request-header
-  *ngIf="request"
-  [request]="request"
-  [context]="context"
-></oh-my-request-header>
+header, saved responses, response settings, then the Body/Headers/Code
+editor. Only the editor scrolls; everything above it keeps its place. -->
+@if (request) {
+  <oh-my-request-header
+    [request]="request"
+    [context]="context"
+  ></oh-my-request-header>
+}
 
-<ng-container *ngIf="response; else nodata">
+@if (response) {
   <oh-my-mock-details
     [context]="context"
     [response]="response"
     [requestId]="request.id"
   ></oh-my-mock-details>
-
   <nav class="oh-tabs">
-    <button
-      class="oh-tabs__tab"
-      type="button"
-      *ngFor="let tab of tabs"
-      [class.is-active]="tab === activeTab"
-      (click)="onSelectTab(tab)"
-    >
-      {{ tab }}
-    </button>
-
-    <span class="oh-tabs__spacer"></span>
-
-    <div class="oh-tabs__actions">
-      <button class="oh-tabs__action" type="button" *ngIf="canFormat" (click)="onFormat()">
-        Format
+    @for (tab of tabs; track tab) {
+      <button
+        class="oh-tabs__tab"
+        type="button"
+        [class.is-active]="tab === activeTab"
+        (click)="onSelectTab(tab)"
+      >
+        {{ tab }}
       </button>
+    }
+    <span class="oh-tabs__spacer"></span>
+    <div class="oh-tabs__actions">
+      @if (canFormat) {
+        <button class="oh-tabs__action" type="button" (click)="onFormat()">
+          Format
+        </button>
+      }
       <button class="oh-tabs__action" type="button" (click)="onAnonymize()">
         Anonymise
       </button>
       <!-- Not in the mockup, but the pane is 436px wide and some payloads are
-           not: this reopens the same content in the full-screen editor. -->
+      not: this reopens the same content in the full-screen editor. -->
       <button class="oh-tabs__action" type="button" (click)="onExpand()">
         Expand
       </button>
     </div>
   </nav>
-
-  <div class="oh-editor" [ngSwitch]="activeTab" *ngIf="!dialogIsOpen">
-    <ng-container *ngSwitchCase="'Headers'">
-      <oh-my-code-edit type="json" [formControl]="headersCtrl"></oh-my-code-edit>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'Code'">
-      <oh-my-code-edit type="javascript" [formControl]="jsCodeCtrl"></oh-my-code-edit>
-    </ng-container>
-
-    <ng-container *ngSwitchDefault>
-      <oh-my-mock-image
-        *ngIf="isResponseImage; else bodyEditor"
-        class="oh-editor__image"
-        [ngClass]="{ 'is-blurred': blurImages }"
-        [contentType]="responseType"
-        [src]="responseCtrl.value"
-      ></oh-my-mock-image>
-      <ng-template #bodyEditor>
-        <oh-my-code-edit [formControl]="responseCtrl"></oh-my-code-edit>
-      </ng-template>
-    </ng-container>
-  </div>
-
+  @if (!dialogIsOpen) {
+    <div class="oh-editor">
+      @switch (activeTab) {
+        @case ('Headers') {
+          <oh-my-code-edit
+            type="json"
+            [formControl]="headersCtrl"
+          ></oh-my-code-edit>
+        }
+        @case ('Code') {
+          <oh-my-code-edit
+            type="javascript"
+            [formControl]="jsCodeCtrl"
+          ></oh-my-code-edit>
+        }
+        @default {
+          @if (isResponseImage) {
+            <oh-my-mock-image
+              class="oh-editor__image"
+              [ngClass]="{ 'is-blurred': blurImages }"
+              [contentType]="responseType"
+              [src]="responseCtrl.value"
+            ></oh-my-mock-image>
+          } @else {
+            <oh-my-code-edit [formControl]="responseCtrl"></oh-my-code-edit>
+          }
+        }
+      }
+    </div>
+  }
   <footer class="oh-detail__foot">
     <button class="oh-btn" type="button" (click)="onReset()">
       Reset {{ activeTab | lowercase }}
     </button>
     <span class="oh-detail__foot-spacer"></span>
-    <span class="oh-detail__preset" *ngIf="presetName">Preset: {{ presetName }}</span>
+    @if (presetName) {
+      <span class="oh-detail__preset">Preset: {{ presetName }}</span>
+    }
   </footer>
-</ng-container>
-
-<ng-template #nodata>
+} @else {
   <section class="oh-empty">
-    <p class="oh-empty__lead">This request is not active — OhMyMock passes it through.</p>
-    <p *ngIf="hasMocks">
-      Pick one of the saved responses above to start serving data, or change the
-      preset.
+    <p class="oh-empty__lead">
+      This request is not active — OhMyMock passes it through.
     </p>
-    <p *ngIf="!hasMocks">Create a first response with <b>+ Add</b> above.</p>
+    @if (hasMocks) {
+      <p>
+        Pick one of the saved responses above to start serving data, or change
+        the preset.
+      </p>
+    }
+    @if (!hasMocks) {
+      <p>Create a first response with <b>+ Add</b> above.</p>
+    }
   </section>
-</ng-template>
+}

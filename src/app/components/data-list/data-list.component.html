@@ -1,207 +1,234 @@
 <!-- The colour legend that used to sit here explained a row-shading scheme the
-     new list replaced with explicit Method, Response and Status columns. The
-     preset selector and the overflow menu moved into the toolbar below. -->
-<ng-container *ngIf="state$ | async as state">
-<!-- Filter toolbar: its own row above the table, as in the design. It used to
-     live inside the header row's Url cell. -->
-<div class="oh-toolbar" [ngClass]="{ hidden: !state || hideFilter === true || requestCount === 0 }">
-  <oh-my-preset
-    *ngIf="showPreset && context"
-    [context]="context"
-    theme="light"
-    class="oh-toolbar__preset"
-  ></oh-my-preset>
-
-  <oh-my-request-filter
-    [data]="data"
-    [filterOptions]="filterOptions"
-    [filterStr]="filterKeywords"
-    [lastResult]="filteredRequests"
-    (update)="onFilterUpdate($event)"
-    (updateFilterOptions)="onFilterUpdateOptions($event)"
-    (updateFilterStr)="onFilterUpdateStr($event)"
-  ></oh-my-request-filter>
-
-  <!-- The text is projected into the toggle rather than wrapped around it in a
-       <label> of our own: `mat-slide-toggle` renders its content inside the
-       label it already binds to its switch, so this is what actually names the
-       control. The outer <label> named nothing — a slide toggle is a <button
-       role="switch">, which a <label> cannot be for. -->
-  <mat-slide-toggle
-    class="oh-toolbar__toggle"
-    *ngIf="showActivateToggle"
-    (change)="onToggleActivateNew($event.checked)"
-    [checked]="newAutoActivate"
-    color="primary"
-  >Activate new</mat-slide-toggle>
-
-  <!-- Only worth offering once something is pinned; before that it would empty
-       the list. -->
-  <mat-slide-toggle
-    class="oh-toolbar__toggle"
-    *ngIf="stickyIds.length"
-    x-test="sticky-only-toggle"
-    (change)="onToggleStickyOnly($event.checked)"
-    [checked]="stickyOnly"
-    color="primary"
-  >Pinned only ({{ stickyIds.length }})</mat-slide-toggle>
-
-  <button
-    *ngIf="showMenu"
-    mat-icon-button
-    aria-label="menu"
-    [matMenuTriggerFor]="menu"
+new list replaced with explicit Method, Response and Status columns. The
+preset selector and the overflow menu moved into the toolbar below. -->
+@if (state$ | async; as state) {
+  <!-- Filter toolbar: its own row above the table, as in the design. It used to
+  live inside the header row's Url cell. -->
+  <div
+    class="oh-toolbar"
+    [ngClass]="{ hidden: !state || hideFilter === true || requestCount === 0 }"
   >
-    <mat-icon svgIcon="more_vert"></mat-icon>
-  </button>
-
-  <mat-menu #menu="matMenu">
-    <ul class="main-menu">
-      <li><button mat-menu-item (click)="onActivateAll(true)">Activate all requests</button></li>
-      <li><button mat-menu-item (click)="onActivateAll(false)">Deactivate all requests</button></li>
-      <li [ngClass]="{ 'is-selected': blurImages }">
-        <button (click)="onBlurImage()" mat-menu-item><span>Blur images</span></button>
+    @if (showPreset && context) {
+      <oh-my-preset
+        [context]="context"
+        theme="light"
+        class="oh-toolbar__preset"
+      ></oh-my-preset>
+    }
+    <oh-my-request-filter
+      [data]="data"
+      [filterOptions]="filterOptions"
+      [filterStr]="filterKeywords"
+      [lastResult]="filteredRequests"
+      (update)="onFilterUpdate($event)"
+      (updateFilterOptions)="onFilterUpdateOptions($event)"
+      (updateFilterStr)="onFilterUpdateStr($event)"
+    ></oh-my-request-filter>
+    <!-- The text is projected into the toggle rather than wrapped around it in a
+    <label> of our own: `mat-slide-toggle` renders its content inside the
+      label it already binds to its switch, so this is what actually names the
+      control. The outer <label> named nothing — a slide toggle is a <button
+      role="switch">, which a <label> cannot be for. -->
+    @if (showActivateToggle) {
+      <mat-slide-toggle
+        class="oh-toolbar__toggle"
+        (change)="onToggleActivateNew($event.checked)"
+        [checked]="newAutoActivate"
+        color="primary"
+        >Activate new</mat-slide-toggle
+      >
+    }
+    <!-- Only worth offering once something is pinned; before that it would empty
+      the list. -->
+    @if (stickyIds.length) {
+      <mat-slide-toggle
+        class="oh-toolbar__toggle"
+        x-test="sticky-only-toggle"
+        (change)="onToggleStickyOnly($event.checked)"
+        [checked]="stickyOnly"
+        color="primary"
+        >Pinned only ({{ stickyIds.length }})</mat-slide-toggle
+      >
+    }
+    @if (showMenu) {
+      <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu">
+        <mat-icon svgIcon="more_vert"></mat-icon>
+      </button>
+    }
+    <mat-menu #menu="matMenu">
+      <ul class="main-menu">
+        <li>
+          <button mat-menu-item (click)="onActivateAll(true)">
+            Activate all requests
+          </button>
+        </li>
+        <li>
+          <button mat-menu-item (click)="onActivateAll(false)">
+            Deactivate all requests
+          </button>
+        </li>
+        <li [ngClass]="{ 'is-selected': blurImages }">
+          <button (click)="onBlurImage()" mat-menu-item>
+            <span>Blur images</span>
+          </button>
+        </li>
+      </ul>
+    </mat-menu>
+  </div>
+  <ol data-table>
+    <li class="oh-header">
+      <!-- The pin column: a header cell so the grid lines up, with a label only
+        a screen reader reads. -->
+      <span class="oh-col"><span class="oh-visually-hidden">Pinned</span></span>
+      <span class="oh-col">Method</span>
+      <span class="oh-col">Endpoint</span>
+      <span class="oh-col">Response</span>
+      <span class="oh-col">Status</span>
+      <span class="oh-col oh-col--end">On</span>
+    </li>
+    <!-- Focusable and answerable with Enter/Space: selecting a request is what
+      the row is for, and it used to be reachable with a mouse only. -->
+    @for (row of viewRows; track trackBy($index, row)) {
+      <li
+        [title]="row.id"
+        class="oh-row"
+        x-test="list-request-item"
+        [attr.tabindex]="togglableRows ? 0 : null"
+        (click)="onDataClick(row)"
+        (keydown.enter)="onRowKey(row, $event)"
+        (keydown.space)="onRowKey(row, $event)"
+        [ngClass]="{
+          'is-clickable': togglableRows,
+          'is-selected': selection.isSelected(row.id),
+          'is-sticky': row.isSticky,
+          'is-enabled': row.enabled[context.preset],
+          'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn
+        }"
+      >
+        <!-- Pins the row to the top of the list and exempts it from the filter, so
+          it cannot be pushed away or hidden by arriving traffic. -->
+        <button
+          type="button"
+          class="oh-row__pin"
+          x-test="sticky-toggle"
+          [attr.aria-pressed]="row.isSticky"
+          [attr.aria-label]="
+            row.isSticky ? 'Unpin this request' : 'Pin this request to the top'
+          "
+          [title]="
+            row.isSticky ? 'Unpin this request' : 'Pin this request to the top'
+          "
+          (click)="onToggleSticky(row.id, $event)"
+        >
+          <svg
+            class="oh-row__pin-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"
+            ></path>
+          </svg>
+        </button>
+        <span class="oh-row__method" [attr.data-method]="row.method">{{
+          row.method
+        }}</span>
+        <span class="oh-row__endpoint">
+          <span
+            class="oh-row__url"
+            [attr.data-content-start]="row.urlStart"
+            [attr.data-content-end]="row.urlEnd"
+          ></span>
+          <span class="oh-row__meta">
+            {{ row.requestType | lowercase }}
+            @if (row.lastHit) {
+              · last hit {{ row.lastHit | date: 'shortTime' }}
+            }
+            @if (row.mocks[row.selected[context.preset]]?.label; as label) {
+              · {{ label }}
+            }
+          </span>
+        </span>
+        @if (row.mocks[row.selected[context.preset]]; as mock) {
+          <span class="oh-row__response">
+            <span
+              class="oh-row__code"
+              [attr.data-tone]="mock.statusCode | ohStatusCodeTone"
+            >
+              {{ mock.statusCode || '—' }}
+            </span>
+            <span class="oh-row__delay">{{
+              mock.modifiedOn ? 'modified' : 'recorded'
+            }}</span>
+          </span>
+        } @else {
+          <span class="oh-row__response">
+            <span class="oh-row__code" data-tone="muted">—</span>
+            <span class="oh-row__delay">no response</span>
+          </span>
+        }
+        <span class="oh-row__state">
+          <span class="oh-pill" [attr.data-state]="rowState(row)">{{
+            rowState(row)
+          }}</span>
+        </span>
+        <ng-container
+          *ngTemplateOutlet="actions; context: { row: row }"
+        ></ng-container>
       </li>
-    </ul>
-  </mat-menu>
-</div>
-
-<ol data-table>
-  <li class="oh-header">
-    <!-- The pin column: a header cell so the grid lines up, with a label only
-         a screen reader reads. -->
-    <span class="oh-col"><span class="oh-visually-hidden">Pinned</span></span>
-    <span class="oh-col">Method</span>
-    <span class="oh-col">Endpoint</span>
-    <span class="oh-col">Response</span>
-    <span class="oh-col">Status</span>
-    <span class="oh-col oh-col--end">On</span>
-  </li>
-
-  <!-- Focusable and answerable with Enter/Space: selecting a request is what
-       the row is for, and it used to be reachable with a mouse only. -->
-  <li
-    [title]="row.id"
-    class="oh-row"
-    x-test="list-request-item"
-    *ngFor="let row of viewRows; trackBy: trackBy"
-    [attr.tabindex]="togglableRows ? 0 : null"
-    (click)="onDataClick(row)"
-    (keydown.enter)="onRowKey(row, $event)"
-    (keydown.space)="onRowKey(row, $event)"
-    [ngClass]="{
-      'is-clickable': togglableRows,
-      'is-selected': selection.isSelected(row.id),
-      'is-sticky': row.isSticky,
-      'is-enabled': row.enabled[context.preset],
-      'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn
-    }"
-  >
-    <!-- Pins the row to the top of the list and exempts it from the filter, so
-         it cannot be pushed away or hidden by arriving traffic. -->
-    <button
-      type="button"
-      class="oh-row__pin"
-      x-test="sticky-toggle"
-      [attr.aria-pressed]="row.isSticky"
-      [attr.aria-label]="row.isSticky ? 'Unpin this request' : 'Pin this request to the top'"
-      [title]="row.isSticky ? 'Unpin this request' : 'Pin this request to the top'"
-      (click)="onToggleSticky(row.id, $event)"
-    >
-      <svg class="oh-row__pin-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path
-          d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"
-        ></path>
-      </svg>
-    </button>
-
-    <span class="oh-row__method" [attr.data-method]="row.method">{{ row.method }}</span>
-
-    <span class="oh-row__endpoint">
-      <span
-        class="oh-row__url"
-        [attr.data-content-start]="row.urlStart"
-        [attr.data-content-end]="row.urlEnd"
-      ></span>
-      <span class="oh-row__meta">
-        {{ row.requestType | lowercase }}
-        <ng-container *ngIf="row.lastHit"> · last hit {{ row.lastHit | date: 'shortTime' }}</ng-container>
-        <ng-container *ngIf="row.mocks[row.selected[context.preset]]?.label as label"> · {{ label }}</ng-container>
-      </span>
-    </span>
-
-    <span class="oh-row__response" *ngIf="row.mocks[row.selected[context.preset]] as mock; else noResponse">
-      <span class="oh-row__code" [attr.data-tone]="mock.statusCode | ohStatusCodeTone">
-        {{ mock.statusCode || '—' }}
-      </span>
-      <span class="oh-row__delay">{{ mock.modifiedOn ? 'modified' : 'recorded' }}</span>
-    </span>
-    <ng-template #noResponse>
-      <span class="oh-row__response">
-        <span class="oh-row__code" data-tone="muted">—</span>
-        <span class="oh-row__delay">no response</span>
-      </span>
-    </ng-template>
-
-    <span class="oh-row__state">
-      <span class="oh-pill" [attr.data-state]="rowState(row)">{{ rowState(row) }}</span>
-    </span>
-
-    <ng-container
-      *ngTemplateOutlet="actions; context: { row: row }"
-    ></ng-container>
-  </li>
-</ol>
-</ng-container>
+    }
+  </ol>
+}
 
 <ng-template #actions let-row="row">
   <div class="actions btns-1">
     <div class="btn-wrapper">
-      <button
-        *ngIf="showActivate"
-        (click)="onActivateToggle(row.id, $event)"
-        mat-icon-button
-        color="primary"
-        aria-label="Example icon button with a menu icon"
-      >
-        <mat-icon
-          svgIcon="play_arrow"
+      @if (showActivate) {
+        <button
+          (click)="onActivateToggle(row.id, $event)"
+          mat-icon-button
           color="primary"
-          *ngIf="!row.enabled[context?.preset]"
-        ></mat-icon>
-        <mat-icon
-          svgIcon="stop"
+          aria-label="Example icon button with a menu icon"
+        >
+          @if (!row.enabled[context?.preset]) {
+            <mat-icon svgIcon="play_arrow" color="primary"></mat-icon>
+          }
+          @if (row.enabled[context?.preset]) {
+            <mat-icon svgIcon="stop" color="primary"></mat-icon>
+          }
+        </button>
+      }
+      @if (showClone) {
+        <button
+          (click)="onClone(row.id, $event)"
+          mat-icon-button
           color="primary"
-          *ngIf="row.enabled[context?.preset]"
-        ></mat-icon>
-      </button>
-      <button
-        *ngIf="showClone"
-        (click)="onClone(row.id, $event)"
-        mat-icon-button
-        color="primary"
-        aria-label="Example icon button with a menu icon"
-      >
-        <mat-icon svgIcon="content_copy" color="primary"></mat-icon>
-      </button>
-      <button
-        *ngIf="showDelete"
-        (click)="onDelete(row.id, $event)"
-        mat-icon-button
-        color="primary"
-        aria-label="Example icon button with a menu icon"
-      >
-        <mat-icon svgIcon="delete" color="primary"></mat-icon>
-      </button>
-      <button
-        *ngIf="showExport"
-        (click)="onExport(row, $event)"
-        mat-icon-button
-        color="primary"
-        aria-label="Example icon button with a menu icon"
-      >
-        <mat-icon svgIcon="import_export" color="primary"></mat-icon>
-      </button>
+          aria-label="Example icon button with a menu icon"
+        >
+          <mat-icon svgIcon="content_copy" color="primary"></mat-icon>
+        </button>
+      }
+      @if (showDelete) {
+        <button
+          (click)="onDelete(row.id, $event)"
+          mat-icon-button
+          color="primary"
+          aria-label="Example icon button with a menu icon"
+        >
+          <mat-icon svgIcon="delete" color="primary"></mat-icon>
+        </button>
+      }
+      @if (showExport) {
+        <button
+          (click)="onExport(row, $event)"
+          mat-icon-button
+          color="primary"
+          aria-label="Example icon button with a menu icon"
+        >
+          <mat-icon svgIcon="import_export" color="primary"></mat-icon>
+        </button>
+      }
     </div>
   </div>
 </ng-template>

@@ -1,55 +1,58 @@
 <!-- The four response settings, as a 2x2 grid of plain inputs. See
-     `design/Mock Manager v2.dc.html`. -->
-<form class="oh-fields" [formGroup]="form" *ngIf="form">
-  <label class="oh-field">
-    <span class="oh-field__label">Status code</span>
-    <input
-      class="oh-field__input oh-field__input--mono"
-      type="text"
-      inputmode="numeric"
-      list="oh-status-codes"
-      x-test="mock-status-code"
-      formControlName="statusCode"
-    />
-    <datalist id="oh-status-codes">
-      <option *ngFor="let option of statusCodeOptions" [value]="option.value" [label]="option.label"></option>
-    </datalist>
-  </label>
-
-  <label class="oh-field">
-    <span class="oh-field__label">Delay (ms)</span>
-    <input
-      class="oh-field__input oh-field__input--mono"
-      type="text"
-      inputmode="numeric"
-      placeholder="0"
-      x-test="mock-delay"
-      formControlName="delay"
-    />
-  </label>
-
-  <label class="oh-field">
-    <span class="oh-field__label">Content type</span>
-    <input
-      class="oh-field__input"
-      type="text"
-      list="oh-mime-types"
-      x-test="mock-content-type"
-      formControlName="contentType"
-    />
-    <datalist id="oh-mime-types">
-      <option *ngFor="let mimeType of mimeTypes" [value]="mimeType"></option>
-    </datalist>
-  </label>
-
-  <label class="oh-field">
-    <span class="oh-field__label">Label</span>
-    <input
-      class="oh-field__input"
-      type="text"
-      placeholder="e.g. empty list"
-      x-test="mock-label"
-      formControlName="label"
-    />
-  </label>
-</form>
+`design/Mock Manager v2.dc.html`. -->
+@if (form) {
+  <form class="oh-fields" [formGroup]="form">
+    <label class="oh-field">
+      <span class="oh-field__label">Status code</span>
+      <input
+        class="oh-field__input oh-field__input--mono"
+        type="text"
+        inputmode="numeric"
+        list="oh-status-codes"
+        x-test="mock-status-code"
+        formControlName="statusCode"
+      />
+      <datalist id="oh-status-codes">
+        @for (option of statusCodeOptions; track option) {
+          <option [value]="option.value" [label]="option.label"></option>
+        }
+      </datalist>
+    </label>
+    <label class="oh-field">
+      <span class="oh-field__label">Delay (ms)</span>
+      <input
+        class="oh-field__input oh-field__input--mono"
+        type="text"
+        inputmode="numeric"
+        placeholder="0"
+        x-test="mock-delay"
+        formControlName="delay"
+      />
+    </label>
+    <label class="oh-field">
+      <span class="oh-field__label">Content type</span>
+      <input
+        class="oh-field__input"
+        type="text"
+        list="oh-mime-types"
+        x-test="mock-content-type"
+        formControlName="contentType"
+      />
+      <datalist id="oh-mime-types">
+        @for (mimeType of mimeTypes; track mimeType) {
+          <option [value]="mimeType"></option>
+        }
+      </datalist>
+    </label>
+    <label class="oh-field">
+      <span class="oh-field__label">Label</span>
+      <input
+        class="oh-field__input"
+        type="text"
+        placeholder="e.g. empty list"
+        x-test="mock-label"
+        formControlName="label"
+      />
+    </label>
+  </form>
+}

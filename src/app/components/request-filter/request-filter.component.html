@@ -6,16 +6,17 @@
       placeholder="Filter"
       [formControl]="filterCtrl"
     />
-    <button
-      class="clear"
-      *ngIf="filterCtrl.value"
-      matSuffix
-      mat-icon-button
-      aria-label="Clear"
-      (click)="filterCtrl.setValue('')"
-    >
-      <mat-icon svgIcon="close" class="dark"></mat-icon>
-    </button>
+    @if (filterCtrl.value) {
+      <button
+        class="clear"
+        matSuffix
+        mat-icon-button
+        aria-label="Clear"
+        (click)="filterCtrl.setValue('')"
+      >
+        <mat-icon svgIcon="close" class="dark"></mat-icon>
+      </button>
+    }
   </mat-form-field>
   <mat-icon
     class="search-help"
@@ -24,33 +25,39 @@
     svgIcon="info"
   >
   </mat-icon>
-  <mat-icon *ngIf="filterOptions && filter"
-    [matMenuTriggerFor]="filter"
-    class="search-config"
-    color="primary"
-    svgIcon="filter_list"
-  ></mat-icon>
+  @if (filterOptions && filter) {
+    <mat-icon
+      [matMenuTriggerFor]="filter"
+      class="search-config"
+      color="primary"
+      svgIcon="filter_list"
+    ></mat-icon>
+  }
   <mat-menu #filter="matMenu">
     <!-- The click guard is what keeps the menu open while options are ticked:
-         `mat-menu`'s panel closes on *any* click inside it. `role="presentation"`
-         says what this wrapper is — a propagation guard around the options, not
-         a control of its own. -->
+    `mat-menu`'s panel closes on *any* click inside it. `role="presentation"`
+    says what this wrapper is — a propagation guard around the options, not
+    a control of its own. -->
     <div
       class="filter-menu"
       role="presentation"
       (click)="$event.stopPropagation()"
     >
       <p class="filter-menu__title">Include:</p>
-      <ul *ngIf="filterOptions" aria-label="Include">
-        <li *ngFor="let option of filterOptionsData">
-          <mat-checkbox
-            class="example-margin"
-            [(ngModel)]="filterOptions[option.id]"
-            (change)="onFilterOption()"
-            >{{ option.label }}</mat-checkbox
-          >
-        </li>
-      </ul>
+      @if (filterOptions) {
+        <ul aria-label="Include">
+          @for (option of filterOptionsData; track option) {
+            <li>
+              <mat-checkbox
+                class="example-margin"
+                [(ngModel)]="filterOptions[option.id]"
+                (change)="onFilterOption()"
+                >{{ option.label }}</mat-checkbox
+              >
+            </li>
+          }
+        </ul>
+      }
     </div>
   </mat-menu>
 </div>

@@ -1,27 +1,29 @@
 <div class="wrapper">
-  <button
-    class="export-all"
-    *ngIf="hasRequests"
-    (click)="onSelectAll()"
-    mat-mini-fab
-    color="warn"
-    aria-label="Clone all"
-  >
-    <mat-icon svgIcon="copy_all"></mat-icon>
-  </button>
+  @if (hasRequests) {
+    <button
+      class="export-all"
+      (click)="onSelectAll()"
+      mat-mini-fab
+      color="warn"
+      aria-label="Clone all"
+    >
+      <mat-icon svgIcon="copy_all"></mat-icon>
+    </button>
+  }
 
-  <oh-my-data-list
-    *ngIf="state"
-    [state]="state"
-    [requests]="requests"
-    [persistFilter]="false"
-    [showExport]="true"
-    [togglableRows]="false"
-    [showDelete]="false"
-    (dataExport)="onRowExport($event)"
-    [hideFilter]="true"
-    [hideHeader]="true"
-  ></oh-my-data-list>
+  @if (state) {
+    <oh-my-data-list
+      [state]="state"
+      [requests]="requests"
+      [persistFilter]="false"
+      [showExport]="true"
+      [togglableRows]="false"
+      [showDelete]="false"
+      (dataExport)="onRowExport($event)"
+      [hideFilter]="true"
+      [hideHeader]="true"
+    ></oh-my-data-list>
+  }
 </div>
 
 <button

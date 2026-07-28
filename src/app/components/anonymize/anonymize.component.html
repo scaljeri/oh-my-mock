@@ -35,49 +35,55 @@
   </div>
 
   <ol class="rules-list">
-    <li *ngFor="let rule of rules; let i = index">
-      <mat-form-field class="rule-type">
-        <mat-label>Ryle type</mat-label>
-        <mat-select
-          [ngModel]="rule.type"
-          name="ruleType"
-          (selectionChange)="onTypeChange($event, i)"
-        >
-          <mat-option *ngFor="let type of ruleTypes" [value]="type">
-            {{ mockTypes[type] }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field class="rule-value">
-        <mat-label>JSON path</mat-label>
-        <input
-          #inp
-          matInput
-          type="text"
-          (change)="onPathChange($event, i)"
-          (input)="rule.path = $any($event.target).value"
-          [value]="rule.path"
-        />
-        <button
-          *ngIf="rule.path"
-          matSuffix
-          mat-icon-button
-          aria-label="Clear"
-          (click)="rule.path = ''"
-        >
-          <mat-icon class="dark" svgIcon="close"></mat-icon>
-        </button>
-      </mat-form-field>
-      <button
-        *ngIf="i < rules.length - 1"
-        (click)="onDelete(i)"
-        mat-mini-fab
-        color="primary"
-        aria-label="Delete mock rule"
-      >
-        <mat-icon svgIcon="delete"></mat-icon>
-      </button>
-    </li>
+    @for (rule of rules; track rule; let i = $index) {
+      <li>
+        <mat-form-field class="rule-type">
+          <mat-label>Ryle type</mat-label>
+          <mat-select
+            [ngModel]="rule.type"
+            name="ruleType"
+            (selectionChange)="onTypeChange($event, i)"
+          >
+            @for (type of ruleTypes; track type) {
+              <mat-option [value]="type">
+                {{ mockTypes[type] }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="rule-value">
+          <mat-label>JSON path</mat-label>
+          <input
+            #inp
+            matInput
+            type="text"
+            (change)="onPathChange($event, i)"
+            (input)="rule.path = $any($event.target).value"
+            [value]="rule.path"
+          />
+          @if (rule.path) {
+            <button
+              matSuffix
+              mat-icon-button
+              aria-label="Clear"
+              (click)="rule.path = ''"
+            >
+              <mat-icon class="dark" svgIcon="close"></mat-icon>
+            </button>
+          }
+        </mat-form-field>
+        @if (i < rules.length - 1) {
+          <button
+            (click)="onDelete(i)"
+            mat-mini-fab
+            color="primary"
+            aria-label="Delete mock rule"
+          >
+            <mat-icon svgIcon="delete"></mat-icon>
+          </button>
+        }
+      </li>
+    }
   </ol>
   <button
     (click)="onAdd()"

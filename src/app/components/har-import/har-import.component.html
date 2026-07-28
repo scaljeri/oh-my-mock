@@ -1,148 +1,211 @@
 <!--
-  Two phases in one dialog: pick a file, then pick what to import from it.
-  Every BEM child below is a top-level selector in the stylesheet — nesting one
-  under an element selector compiles to a class that matches nothing.
+Two phases in one dialog: pick a file, then pick what to import from it.
+Every BEM child below is a top-level selector in the stylesheet — nesting one
+under an element selector compiles to a class that matches nothing.
 -->
 <div class="oh-har">
-  <ng-container *ngIf="phase === 'pick'">
+  @if (phase === 'pick') {
     <oh-my-file-uploader
       heading="Import a HAR file"
       fileType=".har,.json,application/json"
       (filesChanged)="onUploadFile($event)"
     ></oh-my-file-uploader>
-
     <p class="oh-har__hint">
       Export one from the DevTools Network panel — right click a request,
       <em>Save all as HAR with content</em>. Requests that carry no body are
       exported without one, and are offered here unselected.
     </p>
-
-    <p class="oh-har__error" *ngIf="error" x-test="har-error">{{ error }}</p>
-
+    @if (error) {
+      <p class="oh-har__error" x-test="har-error">{{ error }}</p>
+    }
     <div class="oh-har__foot">
-      <button class="oh-har__cancel" type="button" (click)="onCancel()">Cancel</button>
-    </div>
-  </ng-container>
-
-  <!-- Two `ngIf`s rather than one `&&`: `as` would bind the boolean, not the
-       result of the file, and the template type checker is right to say so. -->
-  <ng-container *ngIf="phase !== 'pick'">
-  <ng-container *ngIf="parsed as parsed">
-    <div class="oh-har__head">
-      <h2 class="oh-har__title" [title]="fileName">{{ fileName }}</h2>
-      <p class="oh-har__summary">
-        {{ rows.length }} of {{ parsed.total }} entries can be mocked<ng-container
-          *ngIf="skips.length"> · skipped {{ skipSummary }}</ng-container>
-      </p>
-      <p class="oh-har__note" *ngIf="!parsed.hasResourceTypes">
-        This file does not say which calls were <code>fetch</code> and which were
-        <code>XMLHttpRequest</code>, so every one of them is imported as a
-        <code>fetch</code>. A HAR from Chrome DevTools does say.
-      </p>
-      <p class="oh-har__error" *ngIf="error" x-test="har-error">{{ error }}</p>
-    </div>
-
-    <div class="oh-har__domain">
-      <label class="oh-har__label" for="oh-har-domain">Import into domain</label>
-      <input
-        id="oh-har-domain"
-        class="oh-har__input"
-        type="text"
-        placeholder="example.com"
-        x-test="har-domain"
-        [ngModel]="targetDomain"
-        (ngModelChange)="onDomainChange($event)"
-      />
-      <button
-        class="oh-har__suggestion"
-        type="button"
-        *ngIf="suggestedDomain"
-        (click)="useSuggestedDomain()"
-      >Recorded on {{ suggestedDomain }} — use that</button>
-      <p class="oh-har__label-hint">
-        The page's own host, not the API's: a mock is found by the domain of the
-        tab that makes the call.
-      </p>
-    </div>
-
-    <div class="oh-har__tools">
-      <input
-        class="oh-har__input oh-har__input--filter"
-        type="text"
-        placeholder="Filter by path, host or method"
-        aria-label="Filter the entries"
-        x-test="har-filter"
-        [ngModel]="filter"
-        (ngModelChange)="filter = $event; applyFilter()"
-      />
-      <button class="oh-har__link" type="button" (click)="onSelectAll(true)">Select all</button>
-      <button class="oh-har__link" type="button" (click)="onSelectAll(false)">Clear</button>
-      <span class="oh-har__count" x-test="har-selected">{{ selectedCount }} selected</span>
-    </div>
-
-    <ul class="oh-har__list">
-      <li class="oh-har__row" *ngFor="let row of visibleRows; trackBy: trackByKey">
-        <label class="oh-har__pick">
-          <input
-            type="checkbox"
-            x-test="har-row"
-            [checked]="row.selected"
-            [attr.aria-label]="row.candidate.method + ' ' + row.candidate.path"
-            (change)="onToggle(row)"
-          />
-        </label>
-
-        <span class="oh-har__method" [attr.data-method]="row.candidate.method">
-          {{ row.candidate.method }}
-        </span>
-
-        <span class="oh-har__endpoint">
-          <span class="oh-har__path" [title]="row.candidate.url">{{ row.candidate.path }}</span>
-          <span class="oh-har__meta">
-            {{ row.candidate.host }}
-            <ng-container *ngIf="row.candidate.mimeType"> · {{ row.candidate.mimeType }}</ng-container>
-            <ng-container *ngIf="row.candidate.hasBody"> · {{ formatBytes(row.candidate.size) }}</ng-container>
-          </span>
-        </span>
-
-        <span class="oh-har__tags">
-          <span class="oh-har__tag" *ngIf="row.candidate.occurrences > 1"
-            [title]="'Called ' + row.candidate.occurrences + ' times; the last response of each status code is kept'"
-          >x{{ row.candidate.occurrences }}</span>
-          <span class="oh-har__tag" *ngIf="row.candidate.responses.length > 1"
-          >{{ row.candidate.responses.length }} responses</span>
-          <span class="oh-har__tag oh-har__tag--warn" *ngIf="!row.candidate.hasBody"
-            title="The file recorded no body for this call — it would be mocked with an empty one"
-          >no body</span>
-          <span class="oh-har__tag oh-har__tag--warn" *ngIf="row.existing"
-            title="This domain already has a request for this url"
-          >already mocked</span>
-        </span>
-
-        <span class="oh-har__code" [attr.data-tone]="row.candidate.statusCode | ohStatusCodeTone">
-          {{ row.candidate.statusCode }}
-        </span>
-      </li>
-    </ul>
-
-    <p class="oh-har__empty" *ngIf="!visibleRows.length">
-      {{ rows.length ? 'No entry matches the filter' : 'This file holds nothing that can be mocked' }}
-    </p>
-
-    <div class="oh-har__foot">
-      <button class="oh-har__cancel" type="button" (click)="onStartOver()">Another file</button>
-      <span class="oh-har__spacer"></span>
-      <button class="oh-har__cancel" type="button" (click)="onCancel()">Cancel</button>
-      <button
-        class="oh-har__confirm"
-        type="button"
-        x-test="har-confirm"
-        [disabled]="!selectedCount || !targetDomain.trim() || phase === 'importing'"
-        (click)="onImport()"
-      >
-        {{ phase === 'importing' ? 'Importing…' : 'Import ' + selectedCount + ' request' + (selectedCount === 1 ? '' : 's') }}
+      <button class="oh-har__cancel" type="button" (click)="onCancel()">
+        Cancel
       </button>
     </div>
-  </ng-container>
-  </ng-container>
+  }
+
+  <!-- Two `ngIf`s rather than one `&&`: `as` would bind the boolean, not the
+  result of the file, and the template type checker is right to say so. -->
+  @if (phase !== 'pick') {
+    @if (parsed; as parsed) {
+      <div class="oh-har__head">
+        <h2 class="oh-har__title" [title]="fileName">{{ fileName }}</h2>
+        <p class="oh-har__summary">
+          {{ rows.length }} of {{ parsed.total }} entries can be mocked
+          @if (skips.length) {
+            · skipped {{ skipSummary }}
+          }
+        </p>
+        @if (!parsed.hasResourceTypes) {
+          <p class="oh-har__note">
+            This file does not say which calls were <code>fetch</code> and which
+            were <code>XMLHttpRequest</code>, so every one of them is imported
+            as a <code>fetch</code>. A HAR from Chrome DevTools does say.
+          </p>
+        }
+        @if (error) {
+          <p class="oh-har__error" x-test="har-error">{{ error }}</p>
+        }
+      </div>
+      <div class="oh-har__domain">
+        <label class="oh-har__label" for="oh-har-domain"
+          >Import into domain</label
+        >
+        <input
+          id="oh-har-domain"
+          class="oh-har__input"
+          type="text"
+          placeholder="example.com"
+          x-test="har-domain"
+          [ngModel]="targetDomain"
+          (ngModelChange)="onDomainChange($event)"
+        />
+        @if (suggestedDomain) {
+          <button
+            class="oh-har__suggestion"
+            type="button"
+            (click)="useSuggestedDomain()"
+          >
+            Recorded on {{ suggestedDomain }} — use that
+          </button>
+        }
+        <p class="oh-har__label-hint">
+          The page's own host, not the API's: a mock is found by the domain of
+          the tab that makes the call.
+        </p>
+      </div>
+      <div class="oh-har__tools">
+        <input
+          class="oh-har__input oh-har__input--filter"
+          type="text"
+          placeholder="Filter by path, host or method"
+          aria-label="Filter the entries"
+          x-test="har-filter"
+          [ngModel]="filter"
+          (ngModelChange)="filter = $event; applyFilter()"
+        />
+        <button class="oh-har__link" type="button" (click)="onSelectAll(true)">
+          Select all
+        </button>
+        <button class="oh-har__link" type="button" (click)="onSelectAll(false)">
+          Clear
+        </button>
+        <span class="oh-har__count" x-test="har-selected"
+          >{{ selectedCount }} selected</span
+        >
+      </div>
+      <ul class="oh-har__list">
+        @for (row of visibleRows; track trackByKey($index, row)) {
+          <li class="oh-har__row">
+            <label class="oh-har__pick">
+              <input
+                type="checkbox"
+                x-test="har-row"
+                [checked]="row.selected"
+                [attr.aria-label]="
+                  row.candidate.method + ' ' + row.candidate.path
+                "
+                (change)="onToggle(row)"
+              />
+            </label>
+            <span
+              class="oh-har__method"
+              [attr.data-method]="row.candidate.method"
+            >
+              {{ row.candidate.method }}
+            </span>
+            <span class="oh-har__endpoint">
+              <span class="oh-har__path" [title]="row.candidate.url">{{
+                row.candidate.path
+              }}</span>
+              <span class="oh-har__meta">
+                {{ row.candidate.host }}
+                @if (row.candidate.mimeType) {
+                  · {{ row.candidate.mimeType }}
+                }
+                @if (row.candidate.hasBody) {
+                  · {{ formatBytes(row.candidate.size) }}
+                }
+              </span>
+            </span>
+            <span class="oh-har__tags">
+              @if (row.candidate.occurrences > 1) {
+                <span
+                  class="oh-har__tag"
+                  [title]="
+                    'Called ' +
+                    row.candidate.occurrences +
+                    ' times; the last response of each status code is kept'
+                  "
+                  >x{{ row.candidate.occurrences }}</span
+                >
+              }
+              @if (row.candidate.responses.length > 1) {
+                <span class="oh-har__tag"
+                  >{{ row.candidate.responses.length }} responses</span
+                >
+              }
+              @if (!row.candidate.hasBody) {
+                <span
+                  class="oh-har__tag oh-har__tag--warn"
+                  title="The file recorded no body for this call — it would be mocked with an empty one"
+                  >no body</span
+                >
+              }
+              @if (row.existing) {
+                <span
+                  class="oh-har__tag oh-har__tag--warn"
+                  title="This domain already has a request for this url"
+                  >already mocked</span
+                >
+              }
+            </span>
+            <span
+              class="oh-har__code"
+              [attr.data-tone]="row.candidate.statusCode | ohStatusCodeTone"
+            >
+              {{ row.candidate.statusCode }}
+            </span>
+          </li>
+        }
+      </ul>
+      @if (!visibleRows.length) {
+        <p class="oh-har__empty">
+          {{
+            rows.length
+              ? 'No entry matches the filter'
+              : 'This file holds nothing that can be mocked'
+          }}
+        </p>
+      }
+      <div class="oh-har__foot">
+        <button class="oh-har__cancel" type="button" (click)="onStartOver()">
+          Another file
+        </button>
+        <span class="oh-har__spacer"></span>
+        <button class="oh-har__cancel" type="button" (click)="onCancel()">
+          Cancel
+        </button>
+        <button
+          class="oh-har__confirm"
+          type="button"
+          x-test="har-confirm"
+          [disabled]="
+            !selectedCount || !targetDomain.trim() || phase === 'importing'
+          "
+          (click)="onImport()"
+        >
+          {{
+            phase === 'importing'
+              ? 'Importing…'
+              : 'Import ' +
+                selectedCount +
+                ' request' +
+                (selectedCount === 1 ? '' : 's')
+          }}
+        </button>
+      </div>
+    }
+  }
 </div>
