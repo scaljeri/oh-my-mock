@@ -15,8 +15,7 @@ const pipes = [
 ];
 
 @NgModule({
-  declarations: [...pipes],
-  imports: [CommonModule],
+  imports: [CommonModule, ...pipes],
   providers: [PrettyPrintPipe],
   exports: [...pipes]
 })

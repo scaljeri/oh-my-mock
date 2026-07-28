@@ -15,8 +15,7 @@ describe('JsonExportComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [JsonExportComponent],
-      imports: [RouterTestingModule.withRoutes([])],
+      imports: [RouterTestingModule.withRoutes([]), JsonExportComponent],
       providers: [
         { provide: AppStateService, useValue: {} },
         { provide: HotToastService, useValue: {} },

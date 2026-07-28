@@ -1,5 +1,6 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
@@ -31,9 +32,11 @@ describe('DomainSidebarComponent', () => {
     appState = { domain: '', domain$: new BehaviorSubject<ohMyDomain | null>('example.com') };
 
     await TestBed.configureTestingModule({
-      declarations: [DomainSidebarComponent],
-      imports: [FormsModule],
+      imports: [FormsModule, DomainSidebarComponent],
       providers: [
+        // `routerLink` in the template needs a router; the component used to
+        // get one from the module graph and now carries its own imports.
+        provideRouter([]),
         { provide: AppStateService, useValue: appState },
         {
           provide: OhMyState,

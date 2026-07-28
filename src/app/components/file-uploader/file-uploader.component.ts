@@ -1,10 +1,18 @@
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild
+} from '@angular/core';
+import { FileDragDropDirective } from './file-drag-drop.directive';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-file-uploader',
   templateUrl: './file-uploader.component.html',
-  styleUrls: ['./file-uploader.component.scss']
+  styleUrls: ['./file-uploader.component.scss'],
+  imports: [FileDragDropDirective]
 })
 export class FileUploaderComponent {
   /**

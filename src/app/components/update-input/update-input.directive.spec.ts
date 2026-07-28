@@ -26,8 +26,8 @@ describe('UpdateInputDirective', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [UpdateInputDirective, HostComponent],
-      imports: [FormsModule]
+      declarations: [HostComponent],
+      imports: [FormsModule, UpdateInputDirective]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);

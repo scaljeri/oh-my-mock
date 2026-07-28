@@ -12,7 +12,11 @@ export const SESSION_COOKIE = 'Session';
  * which is why the conversion lives in one tested place.
  */
 export function formatCookieExpiry(expirationDate?: number | null): string {
-  if (expirationDate === undefined || expirationDate === null || !Number.isFinite(expirationDate)) {
+  if (
+    expirationDate === undefined ||
+    expirationDate === null ||
+    !Number.isFinite(expirationDate)
+  ) {
     return SESSION_COOKIE;
   }
 
@@ -23,7 +27,7 @@ export function formatCookieExpiry(expirationDate?: number | null): string {
   }).format(new Date(expirationDate * 1000));
 }
 
-@Pipe({ name: 'ohCookieExpiry', standalone: false })
+@Pipe({ name: 'ohCookieExpiry' })
 export class CookieExpiryPipe implements PipeTransform {
   transform(expirationDate?: number | null): string {
     return formatCookieExpiry(expirationDate);

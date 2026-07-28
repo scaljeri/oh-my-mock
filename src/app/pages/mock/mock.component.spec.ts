@@ -12,8 +12,7 @@ describe('MockComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ PageMockComponent ],
-      imports: [RouterTestingModule.withRoutes([])],
+      imports: [RouterTestingModule.withRoutes([]), PageMockComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: OhMyStateService, useValue: { state$: new Subject()}}

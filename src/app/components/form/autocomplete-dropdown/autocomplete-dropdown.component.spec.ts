@@ -11,8 +11,7 @@ describe('AutocompleteDropdownComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AutocompleteDropdownComponent ],
-      imports: [ FormsModule,  MatAutocompleteModule, ReactiveFormsModule],
+      imports: [FormsModule, MatAutocompleteModule, ReactiveFormsModule, AutocompleteDropdownComponent],
       providers: [{provide: NgControl, useValue: {}}],
       schemas: [NO_ERRORS_SCHEMA]
     }).overrideComponent(AutocompleteDropdownComponent, {

@@ -14,6 +14,9 @@ import { IOhMyHarParseSuccess, parseHar } from '@shared/utils/har-parse';
 import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
+import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { StatusCodeTonePipe } from '../../pipes/status-code-tone.pipe';
 
 /** One row of the picker: a request that will be created, and whether it will. */
 export interface IOhMyHarRow {
@@ -38,10 +41,15 @@ export type harImportPhase = 'pick' | 'review' | 'importing';
  * backup lands through, so there is one way to create requests, not two.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-har-import',
   templateUrl: './har-import.component.html',
-  styleUrls: ['./har-import.component.scss']
+  styleUrls: ['./har-import.component.scss'],
+  imports: [
+    FileUploaderComponent,
+    ReactiveFormsModule,
+    FormsModule,
+    StatusCodeTonePipe
+  ]
 })
 export class HarImportComponent implements OnDestroy {
   dialogRef = inject<MatDialogRef<HarImportComponent>>(MatDialogRef, {

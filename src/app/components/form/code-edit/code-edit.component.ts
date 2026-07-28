@@ -12,12 +12,14 @@ import {
   ControlValueAccessor,
   UntypedFormControl,
   NG_VALIDATORS,
-  NG_VALUE_ACCESSOR
+  NG_VALUE_ACCESSOR,
+  ReactiveFormsModule
 } from '@angular/forms';
 import { PrettyPrintPipe } from '../../../pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
 import type * as Monaco from 'monaco-editor';
+import { EditorComponent, DiffEditorComponent } from 'ngx-monaco-editor-v2';
 
 declare global {
   interface Window {
@@ -31,7 +33,6 @@ declare global {
 }
 
 @Component({
-  standalone: false,
   selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
   styleUrls: ['./code-edit.component.scss'],
@@ -46,8 +47,15 @@ declare global {
       provide: NG_VALIDATORS,
       useExisting: CodeEditComponent,
       multi: true
-    }
-  ]
+    },
+    // `inject(PrettyPrintPipe)` below needs the pipe as a *provider*, which it
+    // used to get from `PipesModule` by way of `ComponentsModule`. Standalone
+    // components carry their own dependencies, and importing a pipe class only
+    // makes it usable in the template — not injectable. Without this the
+    // editor throws NG0201 at runtime while the build stays clean.
+    PrettyPrintPipe
+  ],
+  imports: [EditorComponent, ReactiveFormsModule, DiffEditorComponent]
 })
 export class CodeEditComponent
   implements OnInit, OnChanges, ControlValueAccessor

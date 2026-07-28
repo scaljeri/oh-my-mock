@@ -6,7 +6,7 @@ import {
   OnInit,
   inject
 } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { IState } from '@shared/types/state';
 import { filter, Subscription } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
@@ -24,11 +24,11 @@ export type ohMyTab = 'requests' | 'cookies';
  * soon as a request is opened at `/request/:id`.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-tab-nav',
   templateUrl: './tab-nav.component.html',
   styleUrls: ['./tab-nav.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink]
 })
 export class TabNavComponent implements OnInit, OnDestroy {
   private stateService = inject(OhMyStateService);

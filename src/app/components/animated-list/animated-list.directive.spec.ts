@@ -25,7 +25,8 @@ describe('AnimatedListDirective', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AnimatedListDirective, HostComponent]
+      imports: [AnimatedListDirective],
+      declarations: [HostComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);

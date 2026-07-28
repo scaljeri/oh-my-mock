@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output
+} from '@angular/core';
 
 /**
  * The small pill switch of `design/Mock Manager v2.dc.html` — 32x19 with a
@@ -10,7 +16,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
  * clickable row without a label stealing the click.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-toggle',
   templateUrl: './toggle.component.html',
   styleUrls: ['./toggle.component.scss'],

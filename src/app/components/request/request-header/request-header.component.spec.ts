@@ -18,8 +18,7 @@ describe('MockHeaderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [RequestHeaderComponent],
-      imports: [MatAutocompleteModule],
+      imports: [MatAutocompleteModule, RequestHeaderComponent],
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: OhMyState, useValue: {} },

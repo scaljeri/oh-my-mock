@@ -8,8 +8,8 @@ describe('ArrowComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ArrowComponent ]
-    })
+      imports: [ArrowComponent],
+      })
     .compileComponents();
   });
 

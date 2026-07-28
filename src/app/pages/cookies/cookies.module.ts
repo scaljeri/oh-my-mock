@@ -22,14 +22,14 @@ const routes: Routes = [
  * popup opens on the Requests tab.
  */
 @NgModule({
-  declarations: [PageCookiesComponent],
   imports: [
     CommonModule,
     FormsModule,
     MatIconModule,
     ComponentsModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    PageCookiesComponent
   ],
   exports: [PageCookiesComponent]
 })
-export class CookiesModule { }
+export class CookiesModule {}

@@ -13,7 +13,10 @@ export interface IOhMyCookieTag {
 }
 
 /** What a `chrome.cookies` SameSite value is called in the UI. */
-export const SAME_SITE_LABELS: Record<NonNullable<IOhMyCookie['sameSite']>, string> = {
+export const SAME_SITE_LABELS: Record<
+  NonNullable<IOhMyCookie['sameSite']>,
+  string
+> = {
   no_restriction: 'None',
   lax: 'Lax',
   strict: 'Strict'
@@ -27,7 +30,9 @@ export const SAME_SITE_LABELS: Record<NonNullable<IOhMyCookie['sameSite']>, stri
  * The list has to say so, because otherwise those cookies look like mocks that
  * are simply off in the preset that happens to be selected.
  */
-export function isOffInEveryPreset(cookie: Pick<IOhMyCookie, 'enabled'>): boolean {
+export function isOffInEveryPreset(
+  cookie: Pick<IOhMyCookie, 'enabled'>
+): boolean {
   return !Object.values(cookie.enabled ?? {}).some(Boolean);
 }
 
@@ -63,7 +68,7 @@ export function cookieTags(cookie: IOhMyCookie): IOhMyCookieTag[] {
  * every change detection run otherwise, and `*ngFor` would re-create the chips
  * each time.
  */
-@Pipe({ name: 'ohCookieTags', standalone: false })
+@Pipe({ name: 'ohCookieTags' })
 export class CookieTagsPipe implements PipeTransform {
   transform(cookie: IOhMyCookie): IOhMyCookieTag[] {
     return cookieTags(cookie);

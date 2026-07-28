@@ -10,7 +10,11 @@ import {
   ViewChild,
   inject
 } from '@angular/core';
-import { UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import {
+  UntypedFormControl,
+  NG_VALUE_ACCESSOR,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
 import { PresetUtils } from '@shared/utils/preset';
@@ -20,7 +24,6 @@ import { OhMyStateService } from '../../services/state.service';
 import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/autocomplete-dropdown.component';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-preset',
   templateUrl: './preset.component.html',
   styleUrls: ['./preset.component.scss'],
@@ -31,7 +34,8 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
       useExisting: forwardRef(() => PresetComponent),
       multi: true
     }
-  ]
+  ],
+  imports: [AutocompleteDropdownComponent, ReactiveFormsModule]
 })
 export class PresetComponent implements OnInit, OnChanges, OnDestroy {
   private toast = inject(HotToastService);

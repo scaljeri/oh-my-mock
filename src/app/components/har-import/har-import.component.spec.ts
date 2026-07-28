@@ -95,10 +95,9 @@ describe('HarImportComponent', () => {
     importJSONMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS });
 
     await TestBed.configureTestingModule({
-      declarations: [HarImportComponent],
       // `ohStatusCodeTone` is a real pipe: an unknown one throws even under
       // NO_ERRORS_SCHEMA, and every row would silently fail to render.
-      imports: [FormsModule, PipesModule],
+      imports: [FormsModule, PipesModule, HarImportComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: AppStateService, useValue: appState },

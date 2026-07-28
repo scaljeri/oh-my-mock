@@ -19,7 +19,7 @@ describe('AnonymizeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AnonymizeComponent],
+      imports: [AnonymizeComponent],
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: MatDialogRef, useValue: { close: () => undefined } },

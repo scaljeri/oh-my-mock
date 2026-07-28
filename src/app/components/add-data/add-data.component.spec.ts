@@ -10,7 +10,7 @@ describe('AddDataComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AddDataComponent],
+      imports: [AddDataComponent],
       providers: [{ provide: MatDialogRef, useValue: {} }],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();

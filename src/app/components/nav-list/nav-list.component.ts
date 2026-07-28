@@ -1,11 +1,13 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
 import { IOhMyContext, ResetStateOptions } from '@shared/type';
 import { OhMyState } from '../../services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatIcon } from '@angular/material/icon';
 
 /**
  * The app-wide actions: reset, state explorer, JSON import/export and the
@@ -16,10 +18,10 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
  * the same actions behind one button, nothing dropped.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-nav-list',
   templateUrl: './nav-list.component.html',
-  styleUrls: ['./nav-list.component.scss']
+  styleUrls: ['./nav-list.component.scss'],
+  imports: [MatMenuTrigger, MatIcon, MatMenu, MatMenuItem, RouterLink]
 })
 export class NavListComponent {
   private storeService = inject(OhMyState);

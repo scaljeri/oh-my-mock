@@ -5,10 +5,13 @@ import {
   OnInit,
   inject
 } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { githubIssueUrl } from '@shared/constants';
 import { IPacketPayload } from '@shared/packet-type';
+import { MatIcon } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
+import { CodeEditComponent } from '../form/code-edit/code-edit.component';
 
 /**
  * The reasons an error packet carries, if it carries any.
@@ -47,11 +50,11 @@ function toLines(reason: unknown): string[] {
 }
 
 @Component({
-  standalone: false,
   selector: 'oh-my-show-errors',
   templateUrl: './show-errors.component.html',
   styleUrls: ['./show-errors.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MatIcon, MatIconButton, CodeEditComponent, ReactiveFormsModule]
 })
 export class ShowErrorsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);

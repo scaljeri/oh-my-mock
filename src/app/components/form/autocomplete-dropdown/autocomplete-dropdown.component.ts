@@ -14,12 +14,26 @@ import {
 import {
   ControlValueAccessor,
   UntypedFormControl,
-  NgControl
+  NgControl,
+  ReactiveFormsModule
 } from '@angular/forms';
-import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteTrigger,
+  MatAutocomplete
+} from '@angular/material/autocomplete';
+import {
+  MatFormField,
+  MatLabel,
+  MatSuffix
+} from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { NgClass } from '@angular/common';
+import { MatOption } from '@angular/material/select';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-autocomplete-dropdown',
   templateUrl: './autocomplete-dropdown.component.html',
   styleUrls: ['./autocomplete-dropdown.component.scss'],
@@ -35,6 +49,20 @@ import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
     //   useExisting: AutocompleteDropdownComponent,
     //   multi: true
     // }
+  ],
+  imports: [
+    MatFormField,
+    MatLabel,
+    MatInput,
+    ReactiveFormsModule,
+    MatAutocompleteTrigger,
+    NgClass,
+    MatAutocomplete,
+    MatOption,
+    MatIconButton,
+    MatSuffix,
+    MatIcon,
+    MatTooltip
   ]
 })
 export class AutocompleteDropdownComponent

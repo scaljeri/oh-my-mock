@@ -7,7 +7,11 @@ import {
   OnInit,
   inject
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import {
+  UntypedFormControl,
+  UntypedFormGroup,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { IMock, IOhMyContext } from '@shared/type';
 import { Subscription } from 'rxjs';
 import { strip, update as updateContentType } from '@shared/utils/mime-type';
@@ -58,10 +62,10 @@ export const MIME_TYPE_OPTIONS: ReadonlyArray<string> = [
  * `oh-my-status-code` stays, the create-response dialog still uses it.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-mock-details',
   templateUrl: './mock-details.component.html',
-  styleUrls: ['./mock-details.component.scss']
+  styleUrls: ['./mock-details.component.scss'],
+  imports: [ReactiveFormsModule]
 })
 export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
   private storeService = inject(OhMyState);

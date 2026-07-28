@@ -12,9 +12,8 @@ describe('MockDetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [MockDetailsComponent],
       schemas: [NO_ERRORS_SCHEMA],
-      imports: [MatAutocompleteModule],
+      imports: [MatAutocompleteModule, MockDetailsComponent],
       providers: [
         {provide: OhMyState, useValue: {}},
         {provide: MatDialog, useValue: {}}]

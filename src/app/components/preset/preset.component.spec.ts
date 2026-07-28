@@ -12,7 +12,7 @@ describe('PresetComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PresetComponent],
+      imports: [PresetComponent],
       providers: [
         { provide: HotToastService, useValue: {} },
         { provide: OhMyStateService, useValue: {} },

@@ -1,18 +1,20 @@
-import { Directive, HostListener, Input, Output, EventEmitter, HostBinding } from '@angular/core';
+import {
+  Directive,
+  HostListener,
+  Input,
+  Output,
+  EventEmitter,
+  HostBinding
+} from '@angular/core';
 
-@Directive({
-  standalone: false,
-  selector: '[ohMyFileDragDrop]'
-})
+@Directive({ selector: '[ohMyFileDragDrop]' })
 export class FileDragDropDirective {
-
   private _enabled!: boolean;
   private _dragInProgress!: boolean;
 
   @Input() set ohMyFileDragDrop(value: boolean | string) {
     this._enabled = value === '' ? true : !!value;
   }
-
 
   @HostBinding('class.dragging') get dragInProgress() {
     return this._dragInProgress;

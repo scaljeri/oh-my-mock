@@ -53,7 +53,7 @@ describe('PageCookiesComponent', () => {
     cookies$ = new BehaviorSubject(records);
 
     TestBed.configureTestingModule({
-      declarations: [PageCookiesComponent],
+      imports: [PageCookiesComponent],
       providers: [
         { provide: OhMyStateService, useValue: { state$, cookies$ } },
         { provide: OhMyState, useValue: store },

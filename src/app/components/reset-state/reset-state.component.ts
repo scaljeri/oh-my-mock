@@ -3,12 +3,14 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { resetStateOptions } from '@shared/constants';
 import { ResetStateOptions } from '@shared/types/store';
 import { AppStateService } from '../../services/app-state.service';
+import { MatButton } from '@angular/material/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-reset-state',
   templateUrl: './reset-state.component.html',
-  styleUrls: ['./reset-state.component.scss']
+  styleUrls: ['./reset-state.component.scss'],
+  imports: [MatButton, AsyncPipe]
 })
 export class ResetStateComponent {
   appStateService = inject(AppStateService);

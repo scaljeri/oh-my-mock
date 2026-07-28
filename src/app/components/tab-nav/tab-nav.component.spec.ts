@@ -24,8 +24,7 @@ describe('TabNavComponent', () => {
 
   const create = (s: IState) => {
     TestBed.configureTestingModule({
-      declarations: [TabNavComponent],
-      imports: [RouterTestingModule.withRoutes([])],
+      imports: [RouterTestingModule.withRoutes([]), TabNavComponent],
       providers: [{ provide: OhMyStateService, useValue: { state$: of(s) } }],
       schemas: [NO_ERRORS_SCHEMA]
     });

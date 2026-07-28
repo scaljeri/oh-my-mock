@@ -15,7 +15,6 @@ describe('MockComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [RequestComponent],
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: Router, useValue: {} },
@@ -25,7 +24,7 @@ describe('MockComponent', () => {
         { provide: HotToastService, useValue: {} },
         { provide: ActivatedRoute, useValue: { snapshot: { params: {} } } },
       ],
-      imports: [],
+      imports: [RequestComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });

@@ -8,8 +8,8 @@ describe('OnOffSwitchComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ OnOffSwitchComponent ]
-    })
+      imports: [OnOffSwitchComponent],
+      })
     .compileComponents();
   });
 

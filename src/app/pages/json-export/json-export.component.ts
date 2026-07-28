@@ -18,13 +18,16 @@ import { Router } from '@angular/router';
 import { OhMyStateService } from '../../services/state.service';
 import { uniqueId } from '@shared/utils/unique-id';
 import { StorageService } from '../../services/storage.service';
+import { MatMiniFabButton, MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatBadge } from '@angular/material/badge';
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
-  standalone: false,
   selector: 'oh-my-json-export',
   templateUrl: './json-export.component.html',
-  styleUrls: ['./json-export.component.scss']
+  styleUrls: ['./json-export.component.scss'],
+  imports: [MatMiniFabButton, MatIcon, DataListComponent, MatButton, MatBadge]
 })
 export class JsonExportComponent implements OnInit {
   private appStateService = inject(AppStateService);

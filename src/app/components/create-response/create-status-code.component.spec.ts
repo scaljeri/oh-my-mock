@@ -10,7 +10,7 @@ describe('CreateStatusCodeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CreateStatusCodeComponent],
+      imports: [CreateStatusCodeComponent],
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },

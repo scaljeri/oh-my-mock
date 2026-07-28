@@ -7,8 +7,8 @@ describe('CloudSyncComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CloudSyncPageComponent ]
-    })
+      imports: [CloudSyncPageComponent],
+      })
     .compileComponents();
   });
 

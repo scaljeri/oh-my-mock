@@ -1,9 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({
-  standalone: false,
-  name: 'prettyPrint'
-})
+@Pipe({ name: 'prettyPrint' })
 export class PrettyPrintPipe implements PipeTransform {
   transform(value: Record<string, string> | string, indent = 4): string {
     if (value === null || value === undefined) {

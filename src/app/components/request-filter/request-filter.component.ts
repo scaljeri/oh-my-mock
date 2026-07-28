@@ -12,7 +12,11 @@ import {
   SimpleChanges,
   inject
 } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import {
+  UntypedFormControl,
+  ReactiveFormsModule,
+  FormsModule
+} from '@angular/forms';
 import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
 import {
   BehaviorSubject,
@@ -33,6 +37,14 @@ import {
 } from '@shared/utils/search';
 import { OhMyState } from '../../services/oh-my-store';
 import { FILTER_SEARCH_OPTIONS } from '@shared/constants';
+import { NgClass } from '@angular/common';
+import { MatFormField, MatSuffix } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatMenuTrigger, MatMenu } from '@angular/material/menu';
+import { MatCheckbox } from '@angular/material/checkbox';
 
 type SearchFilterData = {
   words: string[];
@@ -42,11 +54,24 @@ type SearchFilterData = {
 };
 
 @Component({
-  standalone: false,
   selector: 'oh-my-request-filter',
   templateUrl: './request-filter.component.html',
   styleUrls: ['./request-filter.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    NgClass,
+    MatFormField,
+    MatInput,
+    ReactiveFormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatIcon,
+    MatTooltip,
+    MatMenuTrigger,
+    MatMenu,
+    MatCheckbox,
+    FormsModule
+  ]
 })
 export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
   private ngZone = inject(NgZone);

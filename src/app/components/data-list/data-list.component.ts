@@ -45,6 +45,19 @@ import {
   sameSticky,
   toggleSticky
 } from './data-list.ordering';
+import {
+  NgClass,
+  NgTemplateOutlet,
+  AsyncPipe,
+  LowerCasePipe,
+  DatePipe
+} from '@angular/common';
+import { PresetComponent } from '../preset/preset.component';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatIconButton } from '@angular/material/button';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatIcon } from '@angular/material/icon';
+import { StatusCodeTonePipe } from '../../pipes/status-code-tone.pipe';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -55,11 +68,10 @@ export const highlightSeq = [
 // type SearchFilterData = { words: string[], data: Record<string, IData>, mocks?: Record<string, IMock>, includes: Record<string, boolean> };
 
 @Component({
-  standalone: false,
   selector: 'oh-my-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
   // animations: [
   //   trigger("inOutAnimation", [
   //     transition(":leave", [
@@ -71,6 +83,27 @@ export const highlightSeq = [
   //     ])
   //   ])
   // ]
+  // Deliberately *not* `ComponentsModule`, which the standalone migration
+  // added here: that module imports this component, so the two form a cycle
+  // and one of them evaluates to `undefined` (TestBed then dies in
+  // `isModuleWithProviders`). The template only needs `oh-my-preset` and
+  // `oh-my-request-filter`, both listed below.
+  imports: [
+    NgClass,
+    PresetComponent,
+    RequestFilterComponent,
+    MatSlideToggle,
+    MatIconButton,
+    MatMenuTrigger,
+    MatIcon,
+    MatMenu,
+    MatMenuItem,
+    NgTemplateOutlet,
+    AsyncPipe,
+    LowerCasePipe,
+    DatePipe,
+    StatusCodeTonePipe
+  ]
 })
 export class DataListComponent implements OnInit, OnDestroy {
   dialog = inject(MatDialog);

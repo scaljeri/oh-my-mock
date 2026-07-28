@@ -1,8 +1,30 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, forwardRef, Input } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  forwardRef,
+  Input
+} from '@angular/core';
+import {
+  ControlValueAccessor,
+  UntypedFormControl,
+  NG_VALUE_ACCESSOR,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { AutocompleteDropdownComponent } from '../autocomplete-dropdown/autocomplete-dropdown.component';
 
 const STATUS_CODES = [
-  '200', '201', '204', '304', '400', '401', '403', '404', '500', '501', '503'
+  '200',
+  '201',
+  '204',
+  '304',
+  '400',
+  '401',
+  '403',
+  '404',
+  '500',
+  '501',
+  '503'
 ];
 
 const STATUS_CODE_LABELS = {
@@ -17,10 +39,9 @@ const STATUS_CODE_LABELS = {
   '500': '500 Internal Server Error',
   '501': '501 Not Implemented',
   '503': '503 Service Unavailable'
-}
+};
 
 @Component({
-  standalone: false,
   selector: 'oh-my-status-code',
   templateUrl: './status-code.component.html',
   styleUrls: ['./status-code.component.scss'],
@@ -30,10 +51,13 @@ const STATUS_CODE_LABELS = {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => StatusCodeComponent),
       multi: true
-    },
-  ]
+    }
+  ],
+  imports: [AutocompleteDropdownComponent, ReactiveFormsModule]
 })
-export class StatusCodeComponent implements AfterViewInit, ControlValueAccessor {
+export class StatusCodeComponent
+  implements AfterViewInit, ControlValueAccessor
+{
   @Input() statusCode!: number;
 
   ctrl = new UntypedFormControl(null, { updateOn: 'blur' });
@@ -56,19 +80,18 @@ export class StatusCodeComponent implements AfterViewInit, ControlValueAccessor 
     });
   }
 
-  private onChange: (value: number) => void = () => { }
-  private onTouch: () => void = () => { }
+  private onChange: (value: number) => void = () => {};
+  private onTouch: () => void = () => {};
 
   writeValue(value: number | null) {
     this.ctrl.setValue(value, { emitEvent: false });
   }
 
   registerOnChange(fn: (value: number) => void) {
-    this.onChange = fn
+    this.onChange = fn;
   }
 
   registerOnTouched(fn: () => void) {
-    this.onTouch = fn
+    this.onTouch = fn;
   }
-
 }

@@ -21,8 +21,7 @@ describe('CookieListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CookieListComponent],
-      imports: [PipesModule],
+      imports: [PipesModule, CookieListComponent],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

@@ -13,7 +13,7 @@ describe('JsonImportComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [JsonImportComponent],
+      imports: [JsonImportComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: AppStateService, useValue: {} },

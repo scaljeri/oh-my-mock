@@ -30,7 +30,6 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [PageStateExplorerComponent],
   imports: [
     CommonModule,
     MatCardModule,
@@ -39,7 +38,8 @@ const routes: Routes = [
     MatButtonModule,
     RouterModule.forChild(routes),
     ComponentsModule,
+    PageStateExplorerComponent
   ],
   exports: [PageStateExplorerComponent]
 })
-export class StateExplorerModule { }
+export class StateExplorerModule {}

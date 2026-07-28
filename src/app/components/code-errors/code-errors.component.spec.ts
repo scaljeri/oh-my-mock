@@ -10,8 +10,7 @@ describe('CodeErrorsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CodeErrorsComponent],
-      imports: [MatTableModule],
+      imports: [MatTableModule, CodeErrorsComponent],
       schemas: [NO_ERRORS_SCHEMA]
     })
       .compileComponents();

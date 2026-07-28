@@ -14,9 +14,16 @@ import {
   ohMyCookieId
 } from '@shared/type';
 import { combineLatest, Subscription } from 'rxjs';
-import { IOhMyCookieToggle } from '../../components/cookie-list/cookie-list.component';
+import {
+  IOhMyCookieToggle,
+  CookieListComponent
+} from '../../components/cookie-list/cookie-list.component';
 import { OhMyState } from '../../services/oh-my-store';
 import { OhMyStateService } from '../../services/state.service';
+import { PresetComponent } from '../../components/preset/preset.component';
+import { MatIcon } from '@angular/material/icon';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { CookieDetailComponent } from '../../components/cookie-detail/cookie-detail.component';
 
 /**
  * The Cookies tab: this domain's cookie mocks on the left, the selected one
@@ -27,10 +34,17 @@ import { OhMyStateService } from '../../services/state.service';
  * maintains that list, and doing it from here as well would race with it.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-cookies-page',
   templateUrl: './cookies.component.html',
-  styleUrls: ['./cookies.component.scss']
+  styleUrls: ['./cookies.component.scss'],
+  imports: [
+    PresetComponent,
+    MatIcon,
+    ReactiveFormsModule,
+    FormsModule,
+    CookieListComponent,
+    CookieDetailComponent
+  ]
 })
 export class PageCookiesComponent implements OnInit, OnDestroy {
   private stateService = inject(OhMyStateService);

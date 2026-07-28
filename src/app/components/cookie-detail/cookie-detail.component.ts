@@ -1,8 +1,27 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { IOhMyCookie, IOhMyPresets, ohMyCookieId, ohMyDomain, ohMyPresetId } from '@shared/type';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output
+} from '@angular/core';
+import {
+  FormControl,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import {
+  IOhMyCookie,
+  IOhMyPresets,
+  ohMyCookieId,
+  ohMyDomain,
+  ohMyPresetId
+} from '@shared/type';
 import { CookieUtils } from '@shared/utils/cookie';
 import { SAME_SITE_LABELS } from '../../pipes/cookie-tags.pipe';
+import { ToggleComponent } from '../toggle/toggle.component';
 
 /** `''` is "no SameSite attribute", which is not the same as `None`. */
 type sameSiteChoice = '' | NonNullable<IOhMyCookie['sameSite']>;
@@ -29,11 +48,11 @@ export const SAME_SITE_OPTIONS: ISameSiteOption[] = [
  * that list itself.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-cookie-detail',
   templateUrl: './cookie-detail.component.html',
   styleUrls: ['./cookie-detail.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ReactiveFormsModule, ToggleComponent]
 })
 export class CookieDetailComponent implements OnChanges {
   /** The mock being edited, or `undefined` while a new one is being drafted. */
@@ -53,7 +72,10 @@ export class CookieDetailComponent implements OnChanges {
   readonly sameSiteOptions = SAME_SITE_OPTIONS;
 
   form = new FormGroup({
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    }),
     value: new FormControl('', { nonNullable: true }),
     path: new FormControl('/', { nonNullable: true }),
     expires: new FormControl('', { nonNullable: true }),
@@ -211,8 +233,10 @@ export class CookieDetailComponent implements OnChanges {
     const date = new Date(expirationDate * 1000);
     const pad = (n: number): string => `${n}`.padStart(2, '0');
 
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-      `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return (
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+      `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+    );
   }
 
   /** The reverse; an empty input means a session cookie. */
@@ -254,7 +278,9 @@ export class CookieDetailComponent implements OnChanges {
     }
 
     if (cookie.expirationDate !== undefined) {
-      parts.push(`Expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`);
+      parts.push(
+        `Expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`
+      );
     }
 
     return `Set-Cookie: ${parts.join('; ')}`;

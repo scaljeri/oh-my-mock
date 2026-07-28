@@ -23,6 +23,9 @@ import {
   DomainSummaryService,
   IOhMyDomainSummary
 } from './domain-summary.service';
+import { MatIcon } from '@angular/material/icon';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { NavListComponent } from '../nav-list/nav-list.component';
 
 /**
  * Several records are written in a row for a single user action (a state, a
@@ -43,10 +46,10 @@ const REFRESH_DEBOUNCE = 200;
  * told about it.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-domain-sidebar',
   templateUrl: './domain-sidebar.component.html',
-  styleUrls: ['./domain-sidebar.component.scss']
+  styleUrls: ['./domain-sidebar.component.scss'],
+  imports: [MatIcon, ReactiveFormsModule, FormsModule, NavListComponent]
 })
 export class DomainSidebarComponent implements OnInit, OnDestroy {
   private appState = inject(AppStateService);

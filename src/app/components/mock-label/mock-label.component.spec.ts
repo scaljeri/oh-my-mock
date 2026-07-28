@@ -8,8 +8,8 @@ describe('MockLabelComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ MockLabelComponent ]
-    })
+      imports: [MockLabelComponent],
+      })
     .compileComponents();
   });
 

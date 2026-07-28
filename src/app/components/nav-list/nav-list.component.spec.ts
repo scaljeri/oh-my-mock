@@ -1,8 +1,8 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
-import { Router } from '@angular/router';
 
 import { NavListComponent } from './nav-list.component';
 import { OhMyState } from '../../services/oh-my-store';
@@ -13,13 +13,14 @@ describe('NavListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [NavListComponent],
       // The actions are a `mat-menu` now.
-      imports: [MatMenuModule],
+      imports: [MatMenuModule, NavListComponent],
       providers: [
+        // `routerLink` in the template needs a router; the component used to
+        // get one from the module graph and now carries its own imports.
+        provideRouter([]),
         { provide: OhMyState, useValue: {} },
         { provide: MatDialog, useValue: {} },
-        { provide: Router, useValue: {} },
       ],
       schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();

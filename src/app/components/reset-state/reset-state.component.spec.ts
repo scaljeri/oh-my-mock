@@ -10,7 +10,7 @@ describe('ResetStateComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ResetStateComponent],
+      imports: [ResetStateComponent],
       providers: [
         { provide: AppStateService, useValue: {} },
         { provide: MatDialogRef, useValue: {} },

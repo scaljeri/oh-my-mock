@@ -8,8 +8,8 @@ describe('ConnectionFailureComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ConnectionFailureComponent ]
-    })
+      imports: [ConnectionFailureComponent],
+      })
     .compileComponents();
   });
 

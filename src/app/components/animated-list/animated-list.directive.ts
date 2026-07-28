@@ -16,10 +16,7 @@ interface IMeta {
   height: number;
 }
 
-@Directive({
-  standalone: false,
-  selector: '[ohMyAnimatedList]'
-})
+@Directive({ selector: '[ohMyAnimatedList]' })
 export class AnimatedListDirective implements OnChanges, AfterViewInit {
   private element = inject(ElementRef);
   private sanitizer = inject(DomSanitizer);

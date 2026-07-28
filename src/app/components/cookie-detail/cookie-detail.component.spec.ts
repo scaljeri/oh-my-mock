@@ -21,8 +21,7 @@ describe('CookieDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CookieDetailComponent],
-      imports: [ReactiveFormsModule],
+      imports: [ReactiveFormsModule, CookieDetailComponent],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

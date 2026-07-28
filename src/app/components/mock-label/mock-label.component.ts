@@ -2,11 +2,10 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { IMock, IOhMyShallowMock, ohMyStatusCode } from '@shared/types/mock';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-mock-label',
   templateUrl: './mock-label.component.html',
   styleUrls: ['./mock-label.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MockLabelComponent {
   @Input() mock!: IOhMyShallowMock | IMock;

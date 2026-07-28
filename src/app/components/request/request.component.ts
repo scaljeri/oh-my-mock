@@ -15,12 +15,17 @@ import { AnonymizeComponent } from '../anonymize/anonymize.component';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { extractMimeType, isMimeTypeJSON } from '@shared/utils/mime-type';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
 import { OhMyStateService } from '../../services/state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { StorageService } from '../../services/storage.service';
 import { activeMockId } from './active-mock';
+import { RequestHeaderComponent } from './request-header/request-header.component';
+import { MockDetailsComponent } from './mock-details/mock-details.component';
+import { CodeEditComponent } from '../form/code-edit/code-edit.component';
+import { MockImageComponent } from '../mock-image/mock-image.component';
+import { NgClass, LowerCasePipe } from '@angular/common';
 
 /** The three editors the detail pane switches between. */
 export type OhMyDetailTab = 'Body' | 'Headers' | 'Code';
@@ -33,10 +38,18 @@ export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = [
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
-  standalone: false,
   selector: 'oh-my-request',
   templateUrl: './request.component.html',
-  styleUrls: ['./request.component.scss']
+  styleUrls: ['./request.component.scss'],
+  imports: [
+    RequestHeaderComponent,
+    MockDetailsComponent,
+    CodeEditComponent,
+    ReactiveFormsModule,
+    MockImageComponent,
+    NgClass,
+    LowerCasePipe
+  ]
 })
 export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   private storeService = inject(OhMyState);

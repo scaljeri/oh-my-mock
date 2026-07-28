@@ -15,7 +15,6 @@ describe('DataOverviewComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PageDataListComponent],
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: AppStateService, useValue: {} },
@@ -24,7 +23,7 @@ describe('DataOverviewComponent', () => {
         { provide: Router, useValue: {} },
         { provide: ActivatedRoute, useValue: {} },
       ],
-      imports: [RouterTestingModule.withRoutes([]) ],
+      imports: [RouterTestingModule.withRoutes([]), PageDataListComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });

@@ -2,7 +2,6 @@ import { EventEmitter, Input, Output } from '@angular/core';
 import { Component } from '@angular/core';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-on-off-switch',
   templateUrl: './on-off-switch.component.html',
   styleUrls: ['./on-off-switch.component.scss']

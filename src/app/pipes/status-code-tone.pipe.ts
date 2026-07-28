@@ -11,7 +11,7 @@ export type OhMyTone = 'success' | 'warning' | 'danger' | 'muted';
  * is needed for the code itself, for the row it sits in, and for the detail
  * pane — and because it is the kind of boundary logic that is worth a test.
  */
-@Pipe({ name: 'ohStatusCodeTone', standalone: false })
+@Pipe({ name: 'ohStatusCodeTone' })
 export class StatusCodeTonePipe implements PipeTransform {
   transform(code: number | null | undefined): OhMyTone {
     if (code === null || code === undefined || !Number.isFinite(code)) {

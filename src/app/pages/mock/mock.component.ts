@@ -17,14 +17,15 @@ import {
 import { StateUtils } from '@shared/utils/state';
 import { combineLatest, Subscription } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
+import { RequestComponent } from '../../components/request/request.component';
 
 // import { findAutoActiveMock } from 'src/app/utils/data';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-page-mock',
   templateUrl: './mock.component.html',
-  styleUrls: ['./mock.component.scss']
+  styleUrls: ['./mock.component.scss'],
+  imports: [RequestComponent]
 })
 export class PageMockComponent implements OnInit, OnDestroy {
   private element = inject(ElementRef);

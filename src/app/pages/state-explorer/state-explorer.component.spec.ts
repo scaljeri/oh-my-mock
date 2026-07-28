@@ -15,10 +15,7 @@ describe('StateExplorerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PageStateExplorerComponent],
-      imports: [
-        RouterTestingModule.withRoutes([])
-      ],
+      imports: [RouterTestingModule.withRoutes([]), PageStateExplorerComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: OhMyStateService, useValue: { store$: new Subject() } },

@@ -11,8 +11,7 @@ describe('RequestFilterComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [RequestFilterComponent],
-      imports: [MatMenuModule],
+      imports: [MatMenuModule, RequestFilterComponent],
       providers: [
         { provide: WebWorkerService, useValue: {} }
       ],

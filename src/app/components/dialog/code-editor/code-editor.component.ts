@@ -1,18 +1,27 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { IMarker, IOhMyCodeEditOptions } from '../../form/code-edit/code-edit';
+import { CodeEditComponent } from '../../form/code-edit/code-edit.component';
+import { MatButton } from '@angular/material/button';
+import { CodeErrorsComponent } from '../../code-errors/code-errors.component';
 
 @Component({
-  standalone: false,
   templateUrl: './code-editor.component.html',
-  styleUrls: ['./code-editor.component.scss']
+  styleUrls: ['./code-editor.component.scss'],
+  imports: [
+    CodeEditComponent,
+    ReactiveFormsModule,
+    MatButton,
+    CodeErrorsComponent
+  ]
 })
 export class DialogCodeEditorComponent implements OnInit {
   // Not optional — see the same note in `anonymize.component.ts`. This is only
   // ever opened through `dialog.open(DialogCodeEditorComponent, { data })`, so
   // `@Optional()` promised DI a nullability the types never admitted.
-  private dialogRef = inject<MatDialogRef<DialogCodeEditorComponent>>(MatDialogRef);
+  private dialogRef =
+    inject<MatDialogRef<DialogCodeEditorComponent>>(MatDialogRef);
   input = inject<IOhMyCodeEditOptions>(MAT_DIALOG_DATA);
 
   type!: string;

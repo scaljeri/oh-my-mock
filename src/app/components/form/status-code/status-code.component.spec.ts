@@ -9,7 +9,7 @@ describe('StatusCodeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [StatusCodeComponent],
+      imports: [StatusCodeComponent],
       schemas: [NO_ERRORS_SCHEMA]
     })
       .compileComponents();

@@ -9,7 +9,7 @@ describe('FileUploaderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ FileUploaderComponent ],
+      imports: [FileUploaderComponent],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

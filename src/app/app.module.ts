@@ -34,13 +34,7 @@ import { ContentService } from './services/content.service';
 import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    PageMockComponent,
-    PageDataListComponent,
-    JsonExportComponent,
-    CloudSyncPageComponent
-  ],
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -61,7 +55,11 @@ import { HttpClientModule } from '@angular/common/http';
     MatInputModule,
     MatBadgeModule,
     MatSnackBarModule,
-    ComponentsModule
+    ComponentsModule,
+    PageMockComponent,
+    PageDataListComponent,
+    JsonExportComponent,
+    CloudSyncPageComponent
   ],
   providers: [
     provideHotToastConfig(),

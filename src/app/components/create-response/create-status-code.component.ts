@@ -2,7 +2,8 @@ import { Component, Input, inject } from '@angular/core';
 import {
   UntypedFormControl,
   UntypedFormGroup,
-  Validators
+  Validators,
+  ReactiveFormsModule
 } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import {
@@ -11,12 +12,29 @@ import {
   STATUS_CODE_INVALID_MSG
 } from '@shared/constants';
 import { IMock } from '@shared/types/mock';
+import { StatusCodeComponent } from '../form/status-code/status-code.component';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatIcon } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatButton } from '@angular/material/button';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-create-status-code',
   templateUrl: './create-status-code.component.html',
-  styleUrls: ['./create-status-code.component.scss']
+  styleUrls: ['./create-status-code.component.scss'],
+  imports: [
+    ReactiveFormsModule,
+    StatusCodeComponent,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatIcon,
+    MatTooltip,
+    MatSlideToggle,
+    MatButton
+  ]
 })
 export class CreateStatusCodeComponent {
   private dialogRef =

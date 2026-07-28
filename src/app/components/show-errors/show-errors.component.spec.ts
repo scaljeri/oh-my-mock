@@ -1,5 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { ShowErrorsComponent } from './show-errors.component';
@@ -15,9 +16,14 @@ describe('ShowErrorsComponent', () => {
 
   function build(errors: unknown[]): void {
     TestBed.configureTestingModule({
-      declarations: [ShowErrorsComponent],
+      imports: [ShowErrorsComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
+        // The editor's own config token. It comes from `provideMonacoEditor()`
+        // at bootstrap in the real app; standalone components render their
+        // real children, so `EditorComponent` is instantiated here too —
+        // `NO_ERRORS_SCHEMA` used to make it an ignored unknown element.
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: MatDialogRef, useValue: { close: () => undefined } },
         { provide: MAT_DIALOG_DATA, useValue: errors }
       ]

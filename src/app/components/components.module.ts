@@ -19,7 +19,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-
 import {
   Location,
   LocationStrategy,
@@ -70,7 +69,33 @@ import { CookieListComponent } from './cookie-list/cookie-list.component';
 import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
 
 @NgModule({
-  declarations: [
+  imports: [
+    CommonModule,
+    RouterModule.forChild([]),
+    MatTableModule,
+    MatIconModule,
+    PipesModule,
+    RouterModule,
+    MatFormFieldModule,
+    MatCardModule,
+    MatInputModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatSlideToggleModule,
+    MatExpansionModule,
+    MatDialogModule,
+    MatTabsModule,
+    ReactiveFormsModule,
+    FormsModule,
+    // Configured once, in `app.module.ts` — a `forRoot()` here would be
+    // overridden by the root module's `provideMonacoEditor()` anyway.
+    MonacoEditorModule,
+    DragDropModule,
+    MatSelectModule,
+    MatAutocompleteModule,
+    MatCheckboxModule,
+    MatMenuModule,
+    MatProgressSpinnerModule,
     DataListComponent,
     CodeEditComponent,
     CreateStatusCodeComponent,
@@ -109,34 +134,6 @@ import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
     CookieListComponent,
     CookieDetailComponent
   ],
-  imports: [
-    CommonModule,
-    RouterModule.forChild([]),
-    MatTableModule,
-    MatIconModule,
-    PipesModule,
-    RouterModule,
-    MatFormFieldModule,
-    MatCardModule,
-    MatInputModule,
-    MatButtonModule,
-    MatTooltipModule,
-    MatSlideToggleModule,
-    MatExpansionModule,
-    MatDialogModule,
-    MatTabsModule,
-    ReactiveFormsModule,
-    FormsModule,
-    // Configured once, in `app.module.ts` — a `forRoot()` here would be
-    // overridden by the root module's `provideMonacoEditor()` anyway.
-    MonacoEditorModule,
-    DragDropModule,
-    MatSelectModule,
-    MatAutocompleteModule,
-    MatCheckboxModule,
-    MatMenuModule,
-    MatProgressSpinnerModule
-  ],
   exports: [
     DataListComponent,
     CodeEditComponent,
@@ -166,10 +163,11 @@ import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
     // toolbar shows the same preset selector as the request list's.
     PresetComponent,
     CookieListComponent,
-    CookieDetailComponent,
+    CookieDetailComponent
   ],
   providers: [
     Location,
-    { provide: LocationStrategy, useClass: PathLocationStrategy }]
+    { provide: LocationStrategy, useClass: PathLocationStrategy }
+  ]
 })
-export class ComponentsModule { }
+export class ComponentsModule {}

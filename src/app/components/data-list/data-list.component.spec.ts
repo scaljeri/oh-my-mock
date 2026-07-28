@@ -49,9 +49,8 @@ describe('DataListComponent', () => {
     updateAux = jest.fn().mockResolvedValue(undefined);
 
     await TestBed.configureTestingModule({
-      declarations: [DataListComponent],
       schemas: [NO_ERRORS_SCHEMA],
-      imports: [MatMenuModule, RouterTestingModule.withRoutes([]), MatTableModule],
+      imports: [MatMenuModule, RouterTestingModule.withRoutes([]), MatTableModule, DataListComponent],
       providers: [AnimationBuilder, { provide: MatDialog, useValue: {} },
         { provide: WebWorkerService, useValue: {} },
         // The real store would go to `chrome.storage`, which is not there.

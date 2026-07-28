@@ -7,7 +7,7 @@ import {
   inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
   IData,
   IOhMyContext,
@@ -20,12 +20,22 @@ import { Subscription } from 'rxjs';
 import { AddDataComponent } from '../../components/add-data/add-data.component';
 import { OhMyState } from '../../services/oh-my-store';
 import { OhMyStateService } from '../../services/state.service';
+import { DataListComponent } from '../../components/data-list/data-list.component';
+import { ArrowComponent } from '../../components/arrow/arrow.component';
+import { MatFabButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-data-list-page',
   templateUrl: './data-list.component.html',
-  styleUrls: ['./data-list.component.scss']
+  styleUrls: ['./data-list.component.scss'],
+  imports: [
+    DataListComponent,
+    ArrowComponent,
+    MatFabButton,
+    MatIcon,
+    RouterOutlet
+  ]
 })
 export class PageDataListComponent implements OnInit, OnDestroy {
   private stateService = inject(OhMyStateService);

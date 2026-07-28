@@ -1,5 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import {
+  UntypedFormControl,
+  ReactiveFormsModule,
+  FormsModule
+} from '@angular/forms';
 import {
   MatDialog,
   MatDialogRef,
@@ -10,13 +14,42 @@ import { IMock, IOhMyMockRule, mockRuleType } from '@shared/types/mock';
 import { generators } from '../../utils/anonymizer';
 import { JSONPath } from 'jsonpath-plus';
 import { DialogCodeEditorComponent } from '../dialog/code-editor/code-editor.component';
-import { MatSelectChange } from '@angular/material/select';
+import {
+  MatSelectChange,
+  MatSelect,
+  MatOption
+} from '@angular/material/select';
+import {
+  MatFormField,
+  MatLabel,
+  MatSuffix
+} from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import {
+  MatIconButton,
+  MatMiniFabButton,
+  MatButton
+} from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-anonymize',
   templateUrl: './anonymize.component.html',
-  styleUrls: ['./anonymize.component.scss']
+  styleUrls: ['./anonymize.component.scss'],
+  imports: [
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    ReactiveFormsModule,
+    FormsModule,
+    MatOption,
+    MatInput,
+    MatIconButton,
+    MatSuffix,
+    MatIcon,
+    MatMiniFabButton,
+    MatButton
+  ]
 })
 export class AnonymizeComponent implements OnInit {
   dialog = inject(MatDialog);

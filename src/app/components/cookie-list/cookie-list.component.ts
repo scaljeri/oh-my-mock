@@ -1,7 +1,19 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output
+} from '@angular/core';
 import { IOhMyCookie, ohMyCookieId, ohMyPresetId } from '@shared/type';
 import { CookieUtils } from '@shared/utils/cookie';
-import { isOffInEveryPreset } from '../../pipes/cookie-tags.pipe';
+import {
+  isOffInEveryPreset,
+  CookieTagsPipe
+} from '../../pipes/cookie-tags.pipe';
+import { NgClass } from '@angular/common';
+import { ToggleComponent } from '../toggle/toggle.component';
+import { CookieExpiryPipe } from '../../pipes/cookie-expiry.pipe';
 
 /** What a row's switch asks for: this cookie, on or off, in the shown preset. */
 export interface IOhMyCookieToggle {
@@ -18,11 +30,11 @@ export interface IOhMyCookieToggle {
  * maintains `IState.cookies`.
  */
 @Component({
-  standalone: false,
   selector: 'oh-my-cookie-list',
   templateUrl: './cookie-list.component.html',
   styleUrls: ['./cookie-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgClass, ToggleComponent, CookieExpiryPipe, CookieTagsPipe]
 })
 export class CookieListComponent {
   /** This domain's cookie mocks, already resolved from `IState.cookies`. */
@@ -58,8 +70,11 @@ export class CookieListComponent {
       return cookies;
     }
 
-    return cookies.filter(c =>
-      `${c.name} ${c.value} ${CookieUtils.path(c.path)}`.toLowerCase().includes(needle));
+    return cookies.filter((c) =>
+      `${c.name} ${c.value} ${CookieUtils.path(c.path)}`
+        .toLowerCase()
+        .includes(needle)
+    );
   }
 
   isEnabled(cookie: IOhMyCookie): boolean {

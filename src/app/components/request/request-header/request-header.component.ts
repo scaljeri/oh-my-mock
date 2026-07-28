@@ -9,12 +9,15 @@ import {
   ohMyStatusCode
 } from '@shared/type';
 import { CreateStatusCodeComponent } from '../../../components/create-response/create-status-code.component';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { METHODS } from '@shared/constants';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Subscription } from 'rxjs';
 import { OhMyState } from '../../../services/oh-my-store';
 import { activeMockId } from '../active-mock';
+import { MatIcon } from '@angular/material/icon';
+import { LowerCasePipe, DatePipe } from '@angular/common';
+import { StatusCodeTonePipe } from '../../../pipes/status-code-tone.pipe';
 
 /**
  * One saved response, as the chip row renders it.
@@ -31,10 +34,16 @@ export interface IOhMyResponseChip {
 
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
-  standalone: false,
   selector: 'oh-my-request-header',
   templateUrl: './request-header.component.html',
-  styleUrls: ['./request-header.component.scss']
+  styleUrls: ['./request-header.component.scss'],
+  imports: [
+    MatIcon,
+    ReactiveFormsModule,
+    LowerCasePipe,
+    DatePipe,
+    StatusCodeTonePipe
+  ]
 })
 export class RequestHeaderComponent implements OnInit, OnChanges {
   dialog = inject(MatDialog);

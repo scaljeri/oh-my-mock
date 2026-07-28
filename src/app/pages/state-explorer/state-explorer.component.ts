@@ -7,7 +7,13 @@ import {
   ViewChildren,
   inject
 } from '@angular/core';
-import { MatExpansionPanel } from '@angular/material/expansion';
+import {
+  MatExpansionPanel,
+  MatAccordion,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+  MatExpansionPanelDescription
+} from '@angular/material/expansion';
 import { HotToastService } from '@ngxpert/hot-toast';
 import {
   IData,
@@ -24,12 +30,28 @@ import { OhMyState } from '../../services/oh-my-store';
 import { OhMyStateService } from '../../services/state.service';
 import { StorageService } from '../../services/storage.service';
 import { WebWorkerService } from '../../services/web-worker.service';
+import { MatCard } from '@angular/material/card';
+import { RouterLink } from '@angular/router';
+import { MatMiniFabButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { DataListComponent } from '../../components/data-list/data-list.component';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-state-explorer-page',
   templateUrl: './state-explorer.component.html',
-  styleUrls: ['./state-explorer.component.scss']
+  styleUrls: ['./state-explorer.component.scss'],
+  imports: [
+    MatCard,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    RouterLink,
+    MatMiniFabButton,
+    MatIcon,
+    DataListComponent
+  ]
 })
 export class PageStateExplorerComponent implements OnInit, OnDestroy {
   private stateStream = inject(OhMyStateService);

@@ -7,12 +7,15 @@ import { AppStateService } from '../../services/app-state.service';
 import { OhMyStateService } from '../../services/state.service';
 import { StorageService } from '../../services/storage.service';
 import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
+import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
+import { NgClass } from '@angular/common';
+import { SpinnerComponent } from '../spinner/spinner.component';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-json-import',
   templateUrl: './json-import.component.html',
-  styleUrls: ['./json-import.component.scss']
+  styleUrls: ['./json-import.component.scss'],
+  imports: [FileUploaderComponent, NgClass, SpinnerComponent]
 })
 export class JsonImportComponent {
   dialogRef = inject<MatDialogRef<JsonImportComponent>>(MatDialogRef, {

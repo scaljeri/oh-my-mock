@@ -16,10 +16,7 @@ import { FormControlDirective, NgControl } from '@angular/forms';
  * makes sure that the element with focus will not be updated
  * */
 
-@Directive({
-  standalone: false,
-  selector: '[ohMyUpdateInput]'
-})
+@Directive({ selector: '[ohMyUpdateInput]' })
 export class UpdateInputDirective implements OnInit, OnChanges {
   private element = inject(ElementRef);
   private control = inject(NgControl);
