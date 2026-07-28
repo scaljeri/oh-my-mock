@@ -83,8 +83,13 @@ thinking is concentrated in `state.ts`.
 
 ## The migration
 
-A step in `src/shared/utils/migrations/state.ts`, alongside the one that drops
-`aux.popupActive`. For each stored domain record it must:
+**There is no installed base** — the extension is not published — so this is a
+convenience for whoever has a development profile open, not a contract with
+users. If it turns out to be the awkward part, wiping and re-recording is a
+legitimate answer. That removes most of the risk from this refactor.
+
+If written, it belongs alongside the step that drops `aux.popupActive` in
+`src/shared/utils/migrations/state.ts`. For each stored domain record it must:
 
 1. write every `state.data[id]` as its own `chrome.storage` record under `id`
 2. replace `data` with `requests: Object.keys(data)`

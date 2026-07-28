@@ -123,12 +123,12 @@ That last point is the one to get right. Overwriting a real session cookie and
 then deleting it on toggle-off would log the developer out of the site they were
 testing. Record the previous value before overwriting, and restore it.
 
-## The cost to be explicit about
+## The permission
 
-Adding `cookies` to `permissions` means **every existing user has to re-accept
-the permissions on update**, and Chrome will show the extension as requesting
-access to cookies. That is a product decision, not a technical one, and it
-should be made before the work starts rather than discovered at release.
+`cookies` has to be added to `manifest.json`. Normally that would force every
+existing user to re-accept the permissions on update, which is a product call
+rather than a technical one — but the extension is no longer published and has
+no installed base, so it is free to take.
 
 > Written against MV3 as of mid-2026; these APIs move. Re-verify
 > `chrome.cookies` and the `declarativeNetRequest` response-header capabilities
