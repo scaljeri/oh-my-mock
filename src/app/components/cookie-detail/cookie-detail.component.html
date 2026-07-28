@@ -1,0 +1,154 @@
+<!--
+  The cookie detail pane of `design/Mock Manager v2.dc.html`: a stack of blocks
+  sharing one inset, of which only the preview scrolls.
+-->
+<form class="oh-cookie" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <header class="oh-cookie__head">
+    <h2 class="oh-cookie__title" x-test="cookie-detail-title">{{ title }}</h2>
+    <p class="oh-cookie__scope">{{ scope }}</p>
+  </header>
+
+  <div class="oh-cookie__fields">
+    <label class="oh-field">
+      <span class="oh-field__label">Name</span>
+      <input
+        class="oh-field__input oh-field__input--mono"
+        type="text"
+        x-test="cookie-name-input"
+        autocomplete="off"
+        placeholder="session_id"
+        formControlName="name"
+      />
+    </label>
+
+    <label class="oh-field">
+      <span class="oh-field__label">Value</span>
+      <input
+        class="oh-field__input oh-field__input--mono"
+        type="text"
+        x-test="cookie-value-input"
+        autocomplete="off"
+        formControlName="value"
+      />
+    </label>
+
+    <div class="oh-cookie__grid">
+      <label class="oh-field">
+        <span class="oh-field__label">Path</span>
+        <input
+          class="oh-field__input oh-field__input--mono"
+          type="text"
+          x-test="cookie-path-input"
+          autocomplete="off"
+          formControlName="path"
+        />
+      </label>
+
+      <label class="oh-field">
+        <span class="oh-field__label">Expires</span>
+        <input
+          class="oh-field__input"
+          type="datetime-local"
+          x-test="cookie-expires-input"
+          formControlName="expires"
+        />
+      </label>
+    </div>
+
+    <div class="oh-field">
+      <span class="oh-field__label">SameSite</span>
+      <div class="oh-choices">
+        <button
+          class="oh-choices__option"
+          type="button"
+          *ngFor="let option of sameSiteOptions"
+          [class.is-selected]="form.controls.sameSite.value === option.value"
+          (click)="onSameSite(option.value)"
+        >
+          {{ option.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="oh-cookie__flags">
+    <div class="oh-setting">
+      <span class="oh-setting__text">
+        <span class="oh-setting__name">Secure</span>
+        <span class="oh-setting__note">Only sent over HTTPS</span>
+      </span>
+      <oh-my-toggle
+        label="Secure"
+        x-test="cookie-secure"
+        [checked]="flag('secure')"
+        (toggled)="setFlag('secure', $event)"
+      ></oh-my-toggle>
+    </div>
+
+    <!--
+      HttpOnly is a property of the mock and is never stripped. The extension
+      writes cookies with `chrome.cookies` from the background, which can set
+      and read httpOnly ones — see `docs/architecture/cookie-mocking.md`. So
+      the note says what the flag does to the *page*, not to the extension.
+    -->
+    <div class="oh-setting">
+      <span class="oh-setting__text">
+        <span class="oh-setting__name">HttpOnly</span>
+        <span class="oh-setting__note">
+          Hidden from document.cookie. Kept exactly as set — OhMyMock never
+          strips it; mock the cookie without it if the page has to read it.
+        </span>
+      </span>
+      <oh-my-toggle
+        label="HttpOnly"
+        x-test="cookie-http-only"
+        [checked]="flag('httpOnly')"
+        (toggled)="setFlag('httpOnly', $event)"
+      ></oh-my-toggle>
+    </div>
+  </div>
+
+  <!--
+    A cookie is enabled per preset, exactly like a request: "logged out" is as
+    much a cookie state as a response state. A mock that is off in every preset
+    below does nothing at all — which is how recorded cookies arrive.
+  -->
+  <div class="oh-cookie__presets">
+    <h3 class="oh-cookie__caption">Enabled in</h3>
+
+    <div class="oh-setting" *ngFor="let preset of presetIds">
+      <span class="oh-setting__text">
+        <span class="oh-setting__name">
+          {{ presets[preset] }}
+          <span class="oh-setting__badge" *ngIf="preset === activePreset">active</span>
+        </span>
+      </span>
+      <oh-my-toggle
+        x-test="cookie-preset-toggle"
+        [label]="'Enabled in preset ' + presets[preset]"
+        [checked]="isEnabledIn(preset)"
+        (toggled)="onPresetToggle(preset, $event)"
+      ></oh-my-toggle>
+    </div>
+  </div>
+
+  <div class="oh-cookie__preview">
+    <h3 class="oh-cookie__caption">Set-Cookie preview</h3>
+    <pre class="oh-cookie__code" x-test="cookie-preview">{{ preview }}</pre>
+  </div>
+
+  <footer class="oh-cookie__foot">
+    <button
+      class="oh-btn oh-btn--primary"
+      type="submit"
+      x-test="save-cookie"
+      [disabled]="form.invalid"
+    >
+      Save cookie
+    </button>
+    <button class="oh-btn oh-btn--danger" type="button" x-test="delete-cookie" (click)="onDelete()">
+      {{ isNew ? 'Cancel' : 'Delete' }}
+    </button>
+    <span class="oh-cookie__hint">Applies while mocking is on</span>
+  </footer>
+</form>

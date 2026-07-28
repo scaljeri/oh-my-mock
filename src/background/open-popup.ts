@@ -8,7 +8,7 @@
 let windowId: number;
 
 export async function openPopup(tab: chrome.tabs.Tab) {
-  const domain = tab.url ? (tab.url.match(/^https?\:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
+  const domain = tab.url ? (tab.url.match(/^https?:\/\/([^/]+)/) || [])[1] : 'OhMyMock';
 
   if (!domain) {
     return;

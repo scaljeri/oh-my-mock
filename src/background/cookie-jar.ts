@@ -88,10 +88,20 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
       name: cookie.name
     });
 
+    // `chrome.cookies.get` matches **parent paths**: asking for `/admin` finds
+    // a cookie set on `/`. `set` does not — it adds a second cookie at
+    // `/admin`. So a parent-path cookie is not displaced by this mock and must
+    // not be recorded as such, or unapplying takes the restore branch, rewrites
+    // an untouched cookie and never removes the one the mock actually wrote.
+    // The mock would then survive every way of switching it off.
+    const displacedByThis = !!existing &&
+      CookieUtils.path(existing.path) === CookieUtils.path(cookie.path);
+
     // A cookie already holding the mock's own value is this mock, applied
     // before the service worker was torn down and restarted. Remembering it
     // would make unapplying restore the very mock it is removing.
-    forDomain.set(cookie.id, existing && existing.value !== cookie.value ? existing : null);
+    forDomain.set(cookie.id,
+      displacedByThis && existing.value !== cookie.value ? existing : null);
   }
 
   ownWrites.add(ownWriteKey(domain, cookie.name, cookie.path));
@@ -112,13 +122,15 @@ export async function unapplyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Pr
 
   forDomain?.delete(cookie.id);
 
+  // Only a cookie on the *same* path is ever recorded as displaced (see
+  // `applyCookie`), so writing it back here lands on the mock and replaces it.
   if (previous) {
     ownWrites.add(ownWriteKey(domain, previous.name, previous.path));
     await chrome.cookies.set({
       url,
       name: previous.name,
       value: previous.value,
-      path: previous.path,
+      path: CookieUtils.path(previous.path),
       httpOnly: previous.httpOnly,
       secure: previous.secure,
       ...(previous.sameSite && { sameSite: previous.sameSite }),

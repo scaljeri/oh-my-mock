@@ -4,6 +4,7 @@ import {
   Input,
   OnChanges,
   OnDestroy,
+  OnInit,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { IData, IMock, IOhMyMockRule, IOhMyContext } from '@shared/type';
@@ -32,7 +33,7 @@ export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = ['Body', 'Headers
   templateUrl: './request.component.html',
   styleUrls: ['./request.component.scss']
 })
-export class RequestComponent implements OnChanges, OnDestroy {
+export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   @Input() request!: IData;
   @Input() context!: IOhMyContext;
   @Input() blurImages = false;
@@ -223,8 +224,9 @@ export class RequestComponent implements OnChanges, OnDestroy {
         id: this.shownResponse.id,
         headersMock: JSON.parse(headersMock)
       }, this.request, this.context);
-    } catch (err) {
-      // TODO
+    } catch {
+      // Not JSON yet — the headers editor reports the parse error itself, and
+      // half-typed input must not overwrite the stored headers.
     }
   }
 

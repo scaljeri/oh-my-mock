@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { IOhMyStorageUpdate, StorageUtils } from '@shared/utils/storage';
-import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain, IData, IOhMyRequests } from '@shared/type';
+import { IOhMyMock, IState, IMock, ohMyMockId, IOhMyContext, ohMyDomain, IData, IOhMyRequests, IOhMyCookie, ohMyCookieId } from '@shared/type';
 import { IOhMyPacketContext } from '@shared/packet-type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
@@ -38,6 +38,15 @@ export class OhMyStateService {
   public requests: IOhMyRequests = {};
   private requestsSubject = new BehaviorSubject<IOhMyRequests>(this.requests);
   public requests$ = this.requestsSubject.asObservable().pipe(shareReplay(1));
+
+  /**
+   * Every cookie mock this popup has seen, by id — the same arrangement as
+   * `requests` above, because cookie mocks are records of their own too and
+   * `IState.cookies` holds nothing but their ids.
+   */
+  public cookies: Record<ohMyCookieId, IOhMyCookie> = {};
+  private cookiesSubject = new BehaviorSubject<Record<ohMyCookieId, IOhMyCookie>>(this.cookies);
+  public cookies$ = this.cookiesSubject.asObservable().pipe(shareReplay(1));
 
   private responseSubject = new BehaviorSubject<IMock | undefined>(undefined)
   public response$ = this.responseSubject.asObservable().pipe(filter(m => !!m));
@@ -95,6 +104,7 @@ export class OhMyStateService {
     const state = await this.storageService.get<IState>(domain) || StateUtils.init({ domain });
 
     await this.loadRequests(state);
+    await this.loadCookies(state);
 
     return state;
   }
@@ -116,6 +126,24 @@ export class OhMyStateService {
     return this.requests;
   }
 
+  /**
+   * Fetches the cookie records of a state that are not in the map yet.
+   *
+   * The same two-step as requests: a new mock's id reaches the state in one
+   * write and the record itself in another, so a state update may name a
+   * cookie this popup has not read yet.
+   */
+  public async loadCookies(state: IState): Promise<Record<ohMyCookieId, IOhMyCookie>> {
+    const missing = (state.cookies ?? []).filter(id => !this.cookies[id]);
+
+    if (missing.length) {
+      this.cookies = { ...this.cookies, ...await this.storageService.getMany<IOhMyCookie>(missing) };
+      this.cookiesSubject.next(this.cookies);
+    }
+
+    return this.cookies;
+  }
+
   public getResponse$(responseId: ohMyMockId): Observable<IMock> {
     return this.response$.pipe(filter(r => r?.id === responseId));
   }
@@ -128,7 +156,7 @@ export class OhMyStateService {
 
   private bindStreams(): void {
     // this.ngZone.runOutsideAngular(() => {
-      StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
+      StorageUtils.updates$.subscribe(({ update }: IOhMyStorageUpdate) => {
         if (!this.context) {
           return;
         }
@@ -147,8 +175,9 @@ export class OhMyStateService {
               this.state = StateUtils.init({ domain: (update.oldValue as IState).domain });
             }
 
-            // The state may name requests this popup has not loaded yet
+            // The state may name requests or cookies this popup has not loaded yet
             this.loadRequests(this.state);
+            this.loadCookies(this.state);
 
             this.stateSubject.next(this.state);
             break;
@@ -166,6 +195,23 @@ export class OhMyStateService {
             }
 
             this.requestsSubject.next(this.requests);
+            break;
+          }
+          case objectTypes.COOKIE: {
+            // Cookie mocks are their own records as well, so a change to one
+            // arrives here and not as part of a state update. The background
+            // handler is what adds or drops the id on the state.
+            const cookie = (update.newValue ?? update.oldValue) as IOhMyCookie;
+
+            this.cookies = { ...this.cookies };
+
+            if (update.newValue) {
+              this.cookies[cookie.id] = update.newValue as IOhMyCookie;
+            } else {
+              delete this.cookies[cookie.id];
+            }
+
+            this.cookiesSubject.next(this.cookies);
             break;
           }
           case objectTypes.MOCK:

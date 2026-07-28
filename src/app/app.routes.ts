@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { ConfigComponent } from './components/config/config.component';
 
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
@@ -24,8 +23,10 @@ const appRoutes: Routes = [
         ]
       },
       {
-        path: 'configure',
-        component: ConfigComponent
+        // The second tab next to the request list. A route rather than a local
+        // switch, so the tab survives a reload of the popup.
+        path: 'cookies',
+        loadChildren: () => import('./pages/cookies/cookies.module').then(m => m.CookiesModule)
       },
       {
         path: 'state-explore',

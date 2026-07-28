@@ -1,0 +1,183 @@
+@use 'mixins' as *;
+@use 'tokens' as t;
+
+// ---------------------------------------------------------------------------
+// The cookie list of `design/Mock Manager v2.dc.html`.
+//
+// The grid is declared once and shared by the header and the rows so the two
+// cannot drift. Every BEM child below is nested under a *class*: nesting
+// `&__key` inside `li.oh-cookie-row` would compile to `li.oh-cookie-row__key`,
+// which matches nothing and fails silently.
+// ---------------------------------------------------------------------------
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+%oh-cookie-grid {
+  display: grid;
+  grid-template-columns: t.$oh-cookie-columns;
+  align-items: center;
+  gap: t.$oh-row-gap;
+  padding: 0 t.$oh-row-padding-x;
+}
+
+.oh-cookies {
+  @include oh-list-unstyled;
+
+  margin: 0;
+
+  &__header {
+    @extend %oh-cookie-grid;
+
+    height: t.$oh-table-header-height;
+    background: t.$oh-bg-subtle;
+    border-bottom: 1px solid t.$oh-border-soft;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: t.$oh-space-4 t.$oh-row-padding-x;
+    max-width: 60ch;
+    font-size: t.$oh-size-base;
+    line-height: 1.6;
+    color: t.$oh-text-faint;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: t.$oh-space-3;
+    padding: t.$oh-space-4 t.$oh-row-padding-x;
+  }
+
+  &__add {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: t.$oh-radius-md;
+    padding: 8px 13px;
+    background: t.$oh-surface-inverse;
+    color: t.$oh-bg-surface;
+    font-size: t.$oh-size-md;
+    font-weight: t.$oh-weight-medium;
+    cursor: pointer;
+
+    &:hover {
+      background: t.$oh-surface-inverse-hover;
+    }
+  }
+
+  &__add-sign {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  &__idle {
+    font-size: t.$oh-size-base;
+    color: t.$oh-text-faint;
+  }
+}
+
+.oh-col {
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$oh-text-faint;
+
+  &--end {
+    text-align: right;
+  }
+}
+
+.oh-cookie-row {
+  @extend %oh-cookie-grid;
+
+  height: t.$oh-row-height;
+  border-bottom: 1px solid t.$oh-row-border;
+  background: t.$oh-bg-surface;
+  cursor: pointer;
+  // Inset rather than a border, so a row does not shift by a pixel when it
+  // becomes the selected one.
+  box-shadow: inset 2px 0 0 0 transparent;
+  transition: background 120ms ease, box-shadow 120ms ease;
+
+  &:hover {
+    background: t.$oh-row-hover;
+  }
+
+  // Inset, because a row is the full width of the list and an offset outline
+  // would be clipped by it.
+  &:focus-visible {
+    outline: 2px solid t.$oh-brand;
+    outline-offset: -2px;
+  }
+
+  &.is-selected {
+    background: t.$oh-bg-selected;
+    box-shadow: inset 2px 0 0 0 t.$oh-brand;
+  }
+
+  &__name {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__key {
+    @include oh-ellipsis;
+
+    font-family: t.$oh-font-mono;
+    font-size: t.$oh-size-base;
+    color: t.$oh-text;
+  }
+
+  &__tags {
+    display: flex;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  &__value {
+    @include oh-ellipsis;
+
+    font-family: t.$oh-font-mono;
+    font-size: t.$oh-size-code;
+    color: t.$oh-text-subtle;
+  }
+
+  &__path,
+  &__expires {
+    @include oh-ellipsis;
+
+    font-size: t.$oh-size-base;
+    color: t.$oh-text-subtle;
+  }
+
+  &__switch {
+    justify-self: end;
+  }
+}
+
+.oh-tag {
+  flex: 0 0 auto;
+  font-size: t.$oh-size-2xs;
+  font-weight: t.$oh-weight-semibold;
+  border-radius: t.$oh-radius-pill;
+  padding: 1px 6px;
+  white-space: nowrap;
+  color: t.$oh-text-subtle;
+  background: t.$oh-bg-sunken;
+
+  // The one chip that is a state rather than a property: a mock that is off in
+  // every preset does nothing at all, which is how recorded cookies arrive.
+  &[data-tone='idle'] {
+    color: t.$oh-warning;
+    background: t.$oh-warning-tint;
+  }
+}

@@ -66,12 +66,21 @@ $oh-surface-inverse-hover: #2b2e36;
 // The status dot in front of a domain, when that domain has nothing mocked.
 $oh-dot-idle: #cdd2da;
 
+// The track of a switch in its off position. Lighter than $oh-dot-idle, which
+// is ink on a surface rather than a surface of its own.
+$oh-switch-off: #d7dae0;
+
+// The hairline between the rows of a settings list inside a pane — one step
+// softer than $oh-row-border, which separates rows of the main table.
+$oh-border-faint: #f4f5f8;
+
 // ---- typography -------------------------------------------------------
 // Instrument Sans for UI, IBM Plex Mono for anything that is data: URLs,
 // methods, status codes, JSON bodies.
 $oh-font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 $oh-font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
+$oh-size-2xs: 10.5px; // the flag tags under a cookie's name
 $oh-size-xs: 11px; // table headers, chip captions
 $oh-size-sm: 11.5px; // secondary metadata
 $oh-size-base: 12.5px; // body text in dense areas
@@ -109,8 +118,25 @@ $oh-row-height: 56px;
 $oh-table-header-height: 34px;
 // METHOD | ENDPOINT | RESPONSE | STATUS | ON
 $oh-row-columns: 62px 1fr 96px 88px 44px;
+// The pin column in front of them. Narrow on purpose: it is an affordance that
+// only shows up on hover or when the row is pinned, not a column of content.
+$oh-row-pin-width: 18px;
+// NAME | VALUE | PATH | EXPIRES | ON — the cookie list. It shares the row
+// height, the outer inset and the trailing 44px ON column with the request
+// list, so the two tabs agree at both edges and on the switch column.
+//
+// It deliberately does *not* copy the leading $oh-row-pin-width cell, so the
+// first content column starts 30px further left than METHOD does. Pinning is an
+// affordance of the request list; an empty cell here would be a column of
+// nothing, which is worse than the two headers not lining up.
+$oh-cookie-columns: 1.1fr 1.4fr 80px 96px 44px;
 $oh-row-gap: 12px;
 $oh-row-padding-x: 22px;
+
+// The pill switch in the "ON" column and next to a cookie's flags.
+$oh-switch-width: 32px;
+$oh-switch-height: 19px;
+$oh-switch-knob: 15px;
 
 // The request detail pane. It is a stack of blocks separated by hairlines, all
 // sharing one horizontal inset; only the editor in the middle scrolls.

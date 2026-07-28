@@ -1,16 +1,16 @@
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import {
   REQUIRED_MSG,
   STATUS_CODE_EXISTS_MSG,
   STATUS_CODE_INVALID_MSG,
 } from '@shared/constants';
-import { IMock, IState } from '@shared/type';
+import { IMock } from '@shared/type';
 
 @Component({
   standalone: false,
-  selector: 'app-create-status-code',
+  selector: 'oh-my-create-status-code',
   templateUrl: './create-status-code.component.html',
   styleUrls: ['./create-status-code.component.scss']
 })

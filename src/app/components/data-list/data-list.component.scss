@@ -126,15 +126,9 @@
 // Highlight
 
 
-oh-my-request-filter {
-  @include oh-position(absolute, 0 0 0 50%);
-  transform: translateX(-50%);
-  height: 50px;
-
-  &.hidden {
-    display: none;
-  }
-}
+// The filter used to be centred over the header row with `position: absolute`.
+// It now sits in `.oh-toolbar`'s flex row, and taking it out of flow left it
+// lying across the preset selector and the toggles next to it.
 
 @keyframes highlight-a {
   0% {
@@ -199,7 +193,9 @@ oh-my-request-filter {
 
 %oh-grid-row {
   display: grid;
-  grid-template-columns: t.$oh-row-columns;
+  // The pin column leads; the five content columns are the shared token, so
+  // the header and the rows still cannot drift apart.
+  grid-template-columns: t.$oh-row-pin-width t.$oh-row-columns;
   align-items: center;
   gap: t.$oh-row-gap;
   padding: 0 t.$oh-row-padding-x;
@@ -248,6 +244,78 @@ li.oh-row {
     background: t.$oh-bg-selected;
     box-shadow: inset 2px 0 0 0 t.$oh-brand;
   }
+
+  // Inset, because a row is the full width of the list and an offset outline
+  // would be clipped by it.
+  &:focus-visible {
+    outline: 2px solid t.$oh-brand;
+    outline-offset: -2px;
+  }
+}
+
+// The pinned rows form a block at the top of the list. The first row that is
+// not pinned closes it off, so the group reads as one and nothing has to know
+// how many pins there are.
+li.oh-row.is-sticky + li.oh-row:not(.is-sticky) {
+  border-top: 2px solid t.$oh-border;
+}
+
+// ---- the pin ---------------------------------------------------------------
+// Not nested under `li.oh-row`: `&__pin` there would compile to
+// `li.oh-row__pin` and match nothing.
+
+.oh-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.oh-row__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: t.$oh-text-fainter;
+  // Hidden until the row is hovered or the pin is set, so an unpinned list
+  // looks exactly as it did before.
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 1px solid t.$oh-brand;
+    outline-offset: 2px;
+    border-radius: t.$oh-radius-sm;
+  }
+
+  &:hover {
+    color: t.$oh-text-subtle;
+  }
+}
+
+.oh-row__pin-icon {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+li.oh-row:hover .oh-row__pin {
+  opacity: 1;
+}
+
+li.oh-row.is-sticky .oh-row__pin {
+  opacity: 1;
+  color: t.$oh-brand;
 }
 
 .oh-row__method {
@@ -340,13 +408,17 @@ li.oh-row {
   }
 
   &__toggle {
-    display: flex;
-    align-items: center;
-    gap: t.$oh-space-2;
     flex: 0 0 auto;
-    font-size: t.$oh-size-base;
-    color: t.$oh-text-muted;
     white-space: nowrap;
+
+    // The caption is projected into the toggle's own label, which lives in
+    // Material's view — hence `::ng-deep` to reach it. Same size and colour
+    // the toolbar's own <label> used to give it.
+    ::ng-deep .mdc-label {
+      font-size: t.$oh-size-base;
+      color: t.$oh-text-muted;
+      padding-left: t.$oh-space-2;
+    }
   }
   padding: t.$oh-space-3 t.$oh-row-padding-x;
   border-bottom: 1px solid t.$oh-border-soft;
@@ -358,5 +430,9 @@ li.oh-row {
   oh-my-request-filter {
     flex: 1;
     min-width: 0;
+
+    &.hidden {
+      display: none;
+    }
   }
 }

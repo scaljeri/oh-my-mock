@@ -29,7 +29,15 @@ export const STATUS_CODE_EXISTS_MSG = 'The StatusCode already exists';
 export const STATUS_CODE_INVALID_MSG = 'Invalid status code';
 export const REQUIRED_MSG = 'This is a required field';
 export const DEMO_TEST_DOMAIN = 'scaljeri.github.io';
-export const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'] as const;
+/**
+ * The HTTP methods the popup offers, and — through `requestMethod`, which is
+ * derived from this — the only ones a mock can be keyed by.
+ *
+ * `OPTIONS` used to appear twice, so the method dropdown listed it twice.
+ */
+export const METHODS = [
+  'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'CONNECT', 'TRACE'
+] as const;
 export const REQUEST_TYPES = ['FETCH', 'XHR'] as const;
 export const IS_BASE64_RE = /data:.*base64,/;
 export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new?assignees=&labels=&template=feature-or-bug.md&title=';
@@ -38,8 +46,12 @@ export const githubIssueUrl = 'https://github.com/scaljeri/oh-my-mock/issues/new
 export enum objectTypes {
   REQUEST = 'request',
   COOKIE = 'cookie',
-  MOCK = 'response', // Deprecated
-  RESPONSE = 'response',
+  // A stored mock's `type`, and the value on the wire. `RESPONSE = 'response'`
+  // used to sit alongside it as a second name for the same value; nothing ever
+  // referred to it, while `IMock.type` and every guard use this one. Two enum
+  // members with one value is also what made `OhMyQueue` key its handlers by
+  // string — see the note there.
+  MOCK = 'response',
   STATE = 'state',
   STORE = 'store'
 }

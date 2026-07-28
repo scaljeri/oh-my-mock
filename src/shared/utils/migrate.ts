@@ -4,6 +4,7 @@ import { mockSteps } from './migrations/mock';
 import { stateSteps } from './migrations/state';
 import { storeSteps } from './migrations/store';
 import { requestSteps } from './migrations/request';
+import { IOhMyMigrationStep, IOhMyStoredRecord } from './migrations/types';
 import { objectTypes } from '../constants';
 
 const IS_BETA_RE = /beta/;
@@ -21,7 +22,7 @@ export class MigrateUtils {
     return obj && obj.version !== MigrateUtils.version; // && MigrateUtils.version !== '__OH' + '_MY_VERSION__';
   }
 
-  static migrate<T extends { version: string }>(data: T): T | null {
+  static migrate<T extends IOhMyStoredRecord>(data: T): T | null {
     const version = data.version || '0.0.0';
 
     if (MigrateUtils.version === DEV_VERSION || version === DEV_VERSION) {
@@ -43,8 +44,10 @@ export class MigrateUtils {
 
     // The step arrays are declared over heterogeneous shapes (store, state,
     // mock, request), so the element type stays loose here on purpose rather
-    // than claiming a precision the steps do not have.
-    let migrateSteps: ((data: any) => any)[] = [(): undefined => undefined];
+    // than claiming a precision the steps do not have — see
+    // `IOhMyStoredRecord`. The default drops the record: a `type` none of the
+    // guards below recognises is not something any of these steps can migrate.
+    let migrateSteps: IOhMyMigrationStep[] = [() => null];
 
     if (MigrateUtils.isStore(data)) {
       migrateSteps = MigrateUtils.storeSteps;
@@ -56,7 +59,18 @@ export class MigrateUtils {
       migrateSteps = MigrateUtils.requestSteps;
     }
 
-    return migrateSteps.reduce((acc, step) => step(acc), data);
+    // `acc &&` is what stops a step that gave up from being handed to the next
+    // one. The steps used to guard against a `null` predecessor individually,
+    // which every one of them had to remember to do.
+    //
+    // The assertion is the one place this class asks to be believed: a step
+    // returns the object it was handed (see `IOhMyMigrationStep`), so what
+    // comes out of the chain is the record that went in, migrated in place.
+    // The step signature cannot say so — it is written over the loose
+    // pre-migration shape, which is all a step may assume about a record it
+    // did not write.
+    return migrateSteps.reduce<IOhMyStoredRecord | null>(
+      (acc, step) => acc && step(acc), data) as T | null;
   }
 
   // Type guards

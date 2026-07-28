@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
-import { ConfigComponent } from './config/config.component';
 import { DataListComponent } from './data-list/data-list.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -37,7 +36,6 @@ import { NavListComponent } from './nav-list/nav-list.component';
 import { DomainSidebarComponent } from './domain-sidebar/domain-sidebar.component';
 import { ResetStateComponent } from './reset-state/reset-state.component';
 import { DisabledEnabledComponent } from './disabled-enabled/disabled-enabled.component';
-import { HeaderButtonComponent } from './header-button/header-button.component';
 import { RequestComponent } from './request/request.component';
 import { RequestHeaderComponent } from './request/request-header/request-header.component';
 import { JsonImportComponent } from './json-import/json-import.component';
@@ -56,8 +54,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { AutocompleteDropdownComponent } from './form/autocomplete-dropdown/autocomplete-dropdown.component';
 
-import { OhMyDirectivesModule } from '../directives/directives.module';
-import { LinkComponent } from './link/link.component';
 import { DialogCodeEditorComponent } from './dialog/code-editor/code-editor.component';
 import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
@@ -67,10 +63,13 @@ import { StatusCodeComponent } from './form/status-code/status-code.component';
 import { RequestFilterComponent } from './request-filter/request-filter.component';
 import { ConnectionFailureComponent } from './connection-failure/connection-failure.component';
 import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
+import { ToggleComponent } from './toggle/toggle.component';
+import { TabNavComponent } from './tab-nav/tab-nav.component';
+import { CookieListComponent } from './cookie-list/cookie-list.component';
+import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
 
 @NgModule({
   declarations: [
-    ConfigComponent,
     DataListComponent,
     CodeEditComponent,
     CreateStatusCodeComponent,
@@ -79,7 +78,6 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     DomainSidebarComponent,
     ResetStateComponent,
     DisabledEnabledComponent,
-    HeaderButtonComponent,
     RequestComponent,
     RequestHeaderComponent,
     JsonImportComponent,
@@ -95,7 +93,6 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     UpdateInputDirective,
     SpinnerComponent,
     AutocompleteDropdownComponent,
-    LinkComponent,
     DialogCodeEditorComponent,
     PresetComponent,
     FeedbackComponent,
@@ -104,7 +101,11 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     StatusCodeComponent,
     RequestFilterComponent,
     ConnectionFailureComponent,
-    OnOffSwitchComponent
+    OnOffSwitchComponent,
+    ToggleComponent,
+    TabNavComponent,
+    CookieListComponent,
+    CookieDetailComponent
   ],
   imports: [
     CommonModule,
@@ -113,7 +114,6 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     MatIconModule,
     PipesModule,
     RouterModule,
-    OhMyDirectivesModule,
     MatFormFieldModule,
     MatCardModule,
     MatInputModule,
@@ -137,12 +137,10 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
   ],
   exports: [
     DataListComponent,
-    ConfigComponent,
     CodeEditComponent,
     NavListComponent,
     DomainSidebarComponent,
     DisabledEnabledComponent,
-    HeaderButtonComponent,
     RequestComponent,
     RequestHeaderComponent,
     FileUploaderComponent,
@@ -153,13 +151,19 @@ import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
     UpdateInputDirective,
     SpinnerComponent,
     AutocompleteDropdownComponent,
-    LinkComponent,
     DialogCodeEditorComponent,
     FeedbackComponent,
     MockImageComponent,
     StatusCodeComponent,
     ConnectionFailureComponent,
     OnOffSwitchComponent,
+    ToggleComponent,
+    TabNavComponent,
+    // Exported because the Cookies tab is a lazy module of its own: its
+    // toolbar shows the same preset selector as the request list's.
+    PresetComponent,
+    CookieListComponent,
+    CookieDetailComponent,
   ],
   providers: [
     Location,

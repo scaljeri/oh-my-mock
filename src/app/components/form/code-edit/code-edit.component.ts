@@ -1,11 +1,20 @@
-import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, forwardRef, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { PrettyPrintPipe } from '../../../pipes/pretty-print.pipe';
 import { themes, IMarker } from './code-edit';
 import { filter } from 'rxjs/operators';
+import type * as Monaco from 'monaco-editor';
 
-declare let window: any;
-declare let monaco: any;
+declare global {
+  interface Window {
+    /**
+     * Monaco's own namespace. Published on `window` by its loader once
+     * `editor.main.js` has evaluated, which is what `checkMonacoLoaded` below
+     * waits for — see `monaco-environment.ts`.
+     */
+    monaco?: typeof Monaco;
+  }
+}
 
 @Component({
   standalone: false,
@@ -26,7 +35,7 @@ declare let monaco: any;
     }
   ]
 })
-export class CodeEditComponent implements OnInit, ControlValueAccessor {
+export class CodeEditComponent implements OnInit, OnChanges, ControlValueAccessor {
   @Input() type: string | undefined;
   @Input() theme: themes = 'vs';
   @Input() base: string | undefined;
@@ -39,7 +48,7 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
   updatedCode!: string;
 
   // vs, vs-dark
-  public editorOptions = {} as any;
+  public editorOptions: Monaco.editor.IStandaloneEditorConstructionOptions = {};
 
   // ngx-monaco-editor-v2 takes `{ code, language }` models for the diff view,
   // where the previous wrapper took two plain strings.
@@ -53,8 +62,8 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
 
   value!: string;
   editorCtrl = new UntypedFormControl('', { updateOn: 'blur' });
-  onChange: any = () => { }
-  onTouch: any = () => { }
+  private onChange: (value: string) => void = () => { }
+  private onTouch: () => void = () => { }
 
   constructor(private prettyPrintPipe: PrettyPrintPipe) { }
 
@@ -72,10 +81,12 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     await this.checkMonacoLoaded();
     this.setEditorOptions();
 
-    this.editorCtrl.valueChanges.pipe(filter(v => v !== this.value)).subscribe(value => {
+    this.editorCtrl.valueChanges.pipe(filter(v => v !== this.value)).subscribe((value: string) => {
       this.value = value;
       this.onChange(value);
-      this.onTouch(value);
+      // `registerOnTouched` hands over a zero-argument callback; the value it
+      // used to be called with was thrown away.
+      this.onTouch();
     });
 
     this.updatedCode = this.editorCtrl.value;
@@ -159,23 +170,34 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     return this.prettyPrintPipe.transform(code);
   }
 
-  onInitEditor(editor: any): void {
+  onInitEditor(editor: Monaco.editor.IStandaloneCodeEditor): void {
     editor.onDidChangeModelDecorations(() => {
-      const model = editor?.getModel?.();
-      const owner = model.getModeId?.(); // TODO: THIs code doesn't seem to work anymore
+      const model = editor.getModel();
 
-      this.errors.emit(monaco?.editor.getModelMarkers({ owner }));
+      if (!model) {
+        return;
+      }
+
+      // Filtered by the model's own uri, not by `owner`. `owner` used to be
+      // read off `model.getModeId()`, a method monaco no longer has — so it
+      // was always `undefined`, which asks for the markers of *every* model on
+      // the page rather than this editor's. The uri is what identifies one
+      // editor's document.
+      this.errors.emit(window.monaco?.editor.getModelMarkers({ resource: model.uri }) ?? []);
     });
   }
 
-  onInitDiffEditor(diffEditor: any): void {
+  onInitDiffEditor(diffEditor: Monaco.editor.IStandaloneDiffEditor): void {
     if (!this.base) {
       return;
     }
 
     diffEditor.getModifiedEditor().onDidChangeModelContent(() => {
-      const content = diffEditor.getModel().modified.getValue();
-      this.editorCtrl.setValue(content);
+      const content = diffEditor.getModel()?.modified.getValue();
+
+      if (content !== undefined) {
+        this.editorCtrl.setValue(content);
+      }
     });
   }
 
@@ -185,16 +207,15 @@ export class CodeEditComponent implements OnInit, ControlValueAccessor {
     this.editorCtrl.setValue(this.value, { emitEvent: false });
   }
 
-  registerOnChange(fn: any) {
+  registerOnChange(fn: (value: string) => void) {
     this.onChange = fn
   }
 
-  registerOnTouched(fn: any) {
+  registerOnTouched(fn: () => void) {
     this.onTouch = fn
   }
 
-
-  validate(_control: UntypedFormControl): null {
+  validate(): null {
     return null;
   }
 }

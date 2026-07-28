@@ -1,11 +1,17 @@
 import { compareVersions } from 'compare-versions'
+import { IOhMyMigrationStep, recordVersion } from './types';
 
 const VERSION = '__OH_MY_VERSION__';
 
-export const storeSteps = [
-    (data: any) => {
-      data.version = '0.0.0';
-        if (compareVersions(data.version || '0.0.0', '3.3.1') === -1) { // Everything before 3.0.3 is discarded
+export const storeSteps: IOhMyMigrationStep[] = [
+    // This step used to open with `data.version = '0.0.0'`, which made the
+    // comparison below always true: every store that reached migration was
+    // discarded, and `initStorage` answered that by wiping storage. The four
+    // commits that edited the threshold (3.0.0 -> 3.0.3 -> 3.2.0 -> 3.3.1)
+    // were all editing a number that could not matter. The version the record
+    // actually carries is what decides now.
+    (data) => {
+        if (compareVersions(recordVersion(data), '3.3.1') === -1) { // Everything before 3.0.3 is discarded
             return null;
         }
 

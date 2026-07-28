@@ -16,4 +16,7 @@ export const compareUrls = (url: string, urlRe: string): boolean => {
   return !!url.match(urlRe);
 };
 
-export const stripUrl = (url: string): string => url?.match(/(?:https?:\/\/)?([^:/\?\#]+)/)?.[1] ?? '';
+// The class used to be written `[^:/\?\#]`. Inside a character class `?` and
+// `#` are already literal, so the backslashes said nothing; `urls.spec.ts`
+// pins the host this picks out either way.
+export const stripUrl = (url: string): string => url?.match(/(?:https?:\/\/)?([^:/?#]+)/)?.[1] ?? '';

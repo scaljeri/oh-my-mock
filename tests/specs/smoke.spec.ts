@@ -25,7 +25,7 @@ test.describe('harness smoke', () => {
   test('the test site serves the page harness', async ({ site }) => {
     await site.open();
     await expect(site.page.getByRole('heading', { name: 'OhMyMock test site' })).toBeVisible();
-    expect(await site.page.evaluate(() => (window as any).harness.ready)).toBe(true);
+    expect(await site.isHarnessReady()).toBe(true);
   });
 
   test('requests reach the server and are counted', async ({ site, server }) => {

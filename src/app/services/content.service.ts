@@ -135,16 +135,25 @@ export class ContentService {
     send2content(this.appStateService.tabId, packet);
   }
 
+  /**
+   * Records that the popup is open, or no longer is.
+   *
+   * The flag goes on the **store**, not on the domain's `aux`. An open popup is
+   * a property of the browser, not of a domain — and `aux.popupActive`, which
+   * both of these used to patch, is a field `MigrateUtils` deletes on sight and
+   * nothing reads. So opening the popup never actually marked it open.
+   *
+   * `OhMyContentState.isActive()` is the reader, and it matters for mocks with
+   * custom `jsCode`: those are evaluated in the sandbox that lives in the popup,
+   * so with the popup closed the request stalls on the message timeout and then
+   * goes to the server unmocked. See `docs/architecture/request-flow.md`.
+   */
   activate(): Promise<boolean> {
-    return OhMySendToBg.patch(true, '$.aux', 'popupActive', payloadType.STATE);
+    return OhMySendToBg.patch(true, '$', 'popupActive', payloadType.STORE);
   }
 
-  deactivate(isClosing = false): Promise<boolean> {
-    // if (isClosing) {
-    //   this.open(false);
-    // }
-
-    return OhMySendToBg.patch(false, '$.aux', 'popupActive', payloadType.STATE);
+  deactivate(): Promise<boolean> {
+    return OhMySendToBg.patch(false, '$', 'popupActive', payloadType.STORE);
   }
 
   reset(key: string): Promise<void> {

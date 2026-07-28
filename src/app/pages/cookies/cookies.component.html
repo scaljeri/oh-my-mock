@@ -1,0 +1,50 @@
+<!-- Two panes, like the Requests tab: the list, and whichever cookie mock is
+     open. Selection is local here — a cookie mock has no page of its own, so
+     there is no url to keep in step. -->
+<div class="oh-panes" [class.has-detail]="hasDetail">
+  <div class="oh-panes__list">
+    <div class="oh-toolbar" *ngIf="context">
+      <oh-my-preset
+        class="oh-toolbar__preset"
+        theme="light"
+        [context]="context"
+      ></oh-my-preset>
+
+      <label class="oh-toolbar__search">
+        <mat-icon class="oh-toolbar__search-icon" svgIcon="search"></mat-icon>
+        <input
+          class="oh-toolbar__search-input"
+          type="text"
+          x-test="cookie-search"
+          placeholder="Search cookies by name"
+          aria-label="Search cookies by name"
+          [ngModel]="filter"
+          (ngModelChange)="filter = $event"
+        />
+      </label>
+    </div>
+
+    <oh-my-cookie-list
+      *ngIf="context"
+      [cookies]="cookies"
+      [preset]="context.preset"
+      [filter]="filter"
+      [selectedId]="selected?.id"
+      (selectCookie)="onSelect($event)"
+      (toggleCookie)="onToggle($event)"
+      (addCookie)="onNew()"
+    ></oh-my-cookie-list>
+  </div>
+
+  <aside class="oh-panes__detail" *ngIf="hasDetail">
+    <oh-my-cookie-detail
+      [cookie]="selected"
+      [domain]="domain"
+      [presets]="presets"
+      [activePreset]="context.preset"
+      (save)="onSave($event)"
+      (remove)="onDelete($event)"
+      (cancelled)="onCancel()"
+    ></oh-my-cookie-detail>
+  </aside>
+</div>

@@ -1,10 +1,21 @@
 # Cookie mocking
 
-Design notes, and what was built from them. The background side exists:
+Design notes, and what was built from them. The background side:
 `background/cookie-jar.ts` applies and unapplies, `background/cookie-sync.ts`
 decides when, `background/handlers/cookie-handler.ts` is the CRUD, and
-`background/cookie-recorder.ts` picks up what a server sets. There is no UI yet
-— the Cookies tab in `design/Mock Manager v2` is still only a design.
+`background/cookie-recorder.ts` picks up what a server sets.
+
+The popup side is the Cookies tab of `design/Mock Manager v2`, built as
+`app/pages/cookies` with `app/components/cookie-list` and
+`app/components/cookie-detail`. It writes nothing itself: every change is an
+`OhMySendToBg.full<IOhMyCookieUpdate>({ cookie }, payloadType.COOKIE, context)`
+— an `id` patches, no `id` creates, `{ cookie: { id }, remove: true }` deletes —
+because the handler is what keeps `IState.cookies`, and the popup writing that
+list as well would race with it. Two departures from the mockup follow from the
+model rather than from taste: there is no editable `Domain` field and no
+`Host-only` switch, since a mock belongs to the domain it is listed under and
+the jar sets it host-only; and `SameSite` has a fourth option, `Unset`, because
+the absence of the attribute is not the same as `None`.
 
 ## The constraint that shapes everything
 

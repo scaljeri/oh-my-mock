@@ -2,6 +2,10 @@ import { IData, IMock } from "../type";
 import { isImage } from './image';
 import { getMimeType } from "./mime-type";
 import { FILTER_SEARCH_OPTIONS } from '../constants';
+import { errorBuilder, warnBuilder } from './logging';
+
+const warn = warnBuilder();
+const error = errorBuilder();
 
 // const QUOTE_RE = /(?<=")([^"]+)(?=")(\s|\b)/gi;
 const QUOTE_RE = /(?<=")([^"]+)(?=")/gi;
@@ -100,8 +104,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
       const mock = mocks[dataMocks[j]];
 
       if (!mock) {
-        // eslint-disable-next-line no-console
-        console.warn('WebWorker could not find mock with id ' + dataMocks[j]);
+        warn('WebWorker could not find mock with id ' + dataMocks[j]);
         continue;
       }
 
@@ -129,8 +132,7 @@ export async function deepSearch(data: Record<string, IData>, words: string[], i
           out.push(values[i]);
           continue dataLoop;
         }
-        // eslint-disable-next-line no-console
-      } catch (err) { console.error('Ooops, something went wrong while searching. Please fill in a bug report!!', err) }
+      } catch (err) { error('Ooops, something went wrong while searching. Please fill in a bug report!!', err) }
     }
   }
 

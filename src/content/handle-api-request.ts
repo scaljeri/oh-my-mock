@@ -24,15 +24,25 @@ export async function receivedApiRequest(
   messageBus: OhMyMessageBus,
   contentState: OhMyContentState) {
   if (packet.version !== VERSION && !VERSION.match('beta')) {
-    try {
-      // This content script is stale. `off` is a *list* of teardown handles —
-      // it used to be called as if it were a function, which threw straight
-      // into the empty `catch`, so nothing was ever torn down. Drain it so the
-      // handles cannot run twice.
-      ohMyWindow().off?.splice(0).forEach(h => {
-        typeof h === 'function' ? h() : h.unsubscribe?.();
-      });
-    } catch (err) { }
+    // This content script is stale. `off` is a *list* of teardown handles — it
+    // used to be called as if it were a function, which threw straight into an
+    // empty `catch`, so nothing was ever torn down. Drain it so the handles
+    // cannot run twice.
+    //
+    // The `try` sits inside the loop, not around it: a handle that throws must
+    // not take the remaining ones down with it, which is exactly what the
+    // outer `try` used to do.
+    ohMyWindow().off?.splice(0).forEach(h => {
+      try {
+        if (typeof h === 'function') {
+          h();
+        } else {
+          h.unsubscribe?.();
+        }
+      } catch (err) {
+        warn('A teardown handle threw while retiring a stale content script', err);
+      }
+    });
 
     return;
   }
@@ -178,7 +188,16 @@ async function handleResponse(
   if (state) {
     const contentType = getMimeType(retVal.headers ?? {});
     if (typeof retVal.response === 'string' && isImage(contentType) && state.aux.blurImages) {
-      retVal.response = stripB64Prefix(await blurBase64(retVal.response, contentType));
+      try {
+        retVal.response = stripB64Prefix(await blurBase64(retVal.response, contentType));
+      } catch (err) {
+        // `blurBase64` can genuinely fail (no canvas context, undecodable
+        // data). Letting that reject here left the injected script without an
+        // answer, so the page's request never finished. The body goes back
+        // empty rather than unblurred: hiding it is the point of the setting.
+        warn('Could not blur the mocked image, sending an empty body instead', err);
+        retVal.response = '';
+      }
     }
   }
 

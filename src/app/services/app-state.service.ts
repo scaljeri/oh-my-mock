@@ -6,8 +6,6 @@ import { IData, ohMyDomain } from '@shared/type';
 import { BehaviorSubject, shareReplay, Subject } from 'rxjs';
 import { APP_VERSION } from '../tokens';
 
-const VERSION = '__OH_MY_VERSION__'; // For development only
-
 export interface IPage {
   title: string;
 }
@@ -24,9 +22,6 @@ export class AppStateService {
 
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
-  // public get version(): string {
-  // return VERSION.match(/^__/) ? manifest.version : VERSION;
-  // }
   private domainChangeSubject = new BehaviorSubject<ohMyDomain | null>(null);
   public domain$ = this.domainChangeSubject.asObservable().pipe(shareReplay());
 

@@ -5,7 +5,6 @@ import { IOhMessage, IOhMyImportStatus, IOhMyReadyResponse } from '../shared/pac
 import { IOhMyInjectedState } from '../shared/type';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
-import { log } from './utils';
 
 // Undefined until the content script has sent the first STATE message.
 let state: IOhMyInjectedState | undefined;

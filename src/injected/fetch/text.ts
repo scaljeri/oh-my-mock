@@ -36,7 +36,7 @@ export function patchResponseText() {
           if (typeof output !== 'string') {
             try {
               output = JSON.stringify(output);
-            } catch (err) { /* not json */ }
+            } catch { /* not serialisable (a cycle, a BigInt); leave `output` alone */ }
           }
 
           return Promise.resolve(output);

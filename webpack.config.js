@@ -1,13 +1,13 @@
 const path = require('path');
-const TerserPlugin = require('terser-webpack-plugin');
+
+// `TerserPlugin` used to be required here for the commented-out `minimizer`
+// below. Requiring a plugin that nothing references only made the file look
+// like it minified when it does not; uncomment the block and add the require
+// back together.
 
 module.exports = {
-  mode: 'development',
   output: {
     path: path.resolve(__dirname, 'dist')
-  },
-  resolve: {
-    extensions: ['.webpack.js', '.web.js', '.ts', '.js']
   },
   module: {
     rules: [
@@ -26,6 +26,10 @@ module.exports = {
       }
     ]
   },
+  // There were two `resolve` blocks and two `mode` keys. A duplicate key is not
+  // a merge — the last one silently wins — so the first `resolve`, which also
+  // listed `.webpack.js` and `.web.js`, never applied. These are the values
+  // that were actually in force; nothing about the build changes here.
   resolve: {
     extensions: ['.js', '.ts']
   },

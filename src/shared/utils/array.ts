@@ -1,8 +1,11 @@
+import { warnBuilder } from './logging';
+
+const warn = warnBuilder();
+
 export const arrayMoveItem = <T>(list: T[], from: number, to: number): T[] => {
 
   if (from >= list.length) {
-    // eslint-disable-next-line no-console
-    console.warn(`Cannot move entry in array. 'from' >= list.length (${from} > ${list.length})`);
+    warn(`Cannot move entry in array. 'from' >= list.length (${from} > ${list.length})`);
     return list;
   }
 

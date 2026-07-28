@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { IMock, IOhMyShallowMock, IState, IStore, statusCode } from '@shared/type';
+import { IMock, IOhMyShallowMock, statusCode } from '@shared/type';
 
 @Component({
   standalone: false,

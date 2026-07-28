@@ -25,7 +25,7 @@ export interface IOhMyResponseChip {
 @UntilDestroy({ arrayName: 'subscriptions' })
 @Component({
   standalone: false,
-  selector: 'oh-request-header',
+  selector: 'oh-my-request-header',
   templateUrl: './request-header.component.html',
   styleUrls: ['./request-header.component.scss']
 })

@@ -11,8 +11,8 @@ import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from '../../constants';
 import { OhMyState } from '../../services/oh-my-store';
-import { WebWorkerService } from '../../services/web-worker.service';
 import { RequestFilterComponent } from '../request-filter/request-filter.component';
+import { IOhMyListRow, orderRequests, pruneSticky, sameSticky, toggleSticky } from './data-list.ordering';
 
 export const highlightSeq = [
   style({ backgroundColor: '*' }),
@@ -95,7 +95,13 @@ export class DataListComponent implements OnInit, OnDestroy {
 
   @ViewChild(RequestFilterComponent) filterComp!: RequestFilterComponent;
 
-  public selection = new SelectionModel<number>(true);
+  /**
+   * The ticked rows, by request id.
+   *
+   * It used to hold the row *index*, which the list re-sorts on every incoming
+   * hit — the highlight then followed the position rather than the request.
+   */
+  public selection = new SelectionModel<ohMyDataId>(true);
   public defaultList!: number[];
   public hitcount: number[] = [];
   public visibleBtns = 1;
@@ -113,6 +119,28 @@ export class DataListComponent implements OnInit, OnDestroy {
   newAutoActivate = true;
 
   public viewList!: ohMyDataId[];
+
+  /**
+   * The rows as rendered, pinned ones first. Recomputed whenever the state,
+   * the requests, the filter, the selection or the pins change — a field
+   * rather than a pipe call, so `OnPush` does not rebuild it on every check.
+   */
+  public viewRows: IOhMyListRow[] = [];
+
+  /**
+   * The pinned request ids, in the order they were pinned.
+   *
+   * Persisted in `aux.stickyRequests` — but only for the domain the popup is
+   * actually on, the same condition under which the filter is persisted. The
+   * state explorer renders another domain's state through this component, and
+   * pinning a row there must not write to that domain's aux.
+   */
+  public stickyIds: ohMyDataId[] = [];
+  /** The pin list last written, until the state carrying it comes back. */
+  private awaitingSticky: ohMyDataId[] | undefined;
+  /** Whether the list is narrowed to the pinned rows only. */
+  public stickyOnly = false;
+
   scenarioOptions: string[] = [];
   presets!: string[];
   isPresetCopy = false;
@@ -159,8 +187,6 @@ export class DataListComponent implements OnInit, OnDestroy {
             this.filteredRequests = [...state.requests];
           }
         }
-
-        this.cdr.detectChanges();
       }
 
       if (!this.context) {
@@ -172,10 +198,109 @@ export class DataListComponent implements OnInit, OnDestroy {
       this.requestCount = state.requests.length;
       this.blurImages = state.aux.blurImages ?? false;
 
+      // After the context fallback above: a write-back needs one.
+      if (this.persistFilter) {
+        this.readSticky(state);
+      }
+
+      // Ordering last: it reads the filter, the requests and the pins, all of
+      // which the lines above may just have changed.
+      this.recompute();
+      this.cdr.detectChanges();
+
       setTimeout(() => {
         this.cdr.detectChanges();
       }, 50);
     }));
+  }
+
+  /**
+   * Rebuilds the rendered rows from whatever changed.
+   *
+   * Every ordering rule lives in `orderRequests`; this only feeds it. Pins are
+   * pruned against the domain's request ids first, so a pin left over from a
+   * deleted request cannot linger in the count or in sticky-only mode.
+   */
+  private recompute(): void {
+    const state = this.stateSubject.value;
+
+    if (state) {
+      this.stickyIds = pruneSticky(this.stickyIds, state.requests);
+    }
+
+    if (!this.stickyIds.length) {
+      this.stickyOnly = false;
+    }
+
+    this.viewRows = orderRequests({
+      filtered: this.filteredRequests,
+      requests: this.data,
+      sticky: this.stickyIds,
+      selected: this.selection.selected,
+      stickyOnly: this.stickyOnly
+    });
+  }
+
+  /**
+   * Takes the pins from the state that just arrived.
+   *
+   * The stored list is pruned against the domain's requests on the way in, and
+   * written back only when that actually removed something — otherwise every
+   * state change would trigger a write, which triggers a state change. Pruning
+   * here rather than only on delete is what stops the stored list from
+   * collecting ids of requests that are long gone.
+   */
+  private readSticky(state: IState): void {
+    const stored = state.aux.stickyRequests ?? [];
+
+    if (this.awaitingSticky) {
+      if (!sameSticky(stored, this.awaitingSticky)) {
+        // A write of ours is still in flight, so this state predates it.
+        // Taking its list would undo the pin that is on its way out.
+        return;
+      }
+
+      this.awaitingSticky = undefined;
+    }
+
+    const live = pruneSticky(stored, state.requests);
+
+    this.stickyIds = live;
+
+    if (live.length !== stored.length) {
+      this.writeSticky(live);
+    }
+  }
+
+  /**
+   * Stores the pins, and remembers what was sent.
+   *
+   * A write travels to the background and comes back as a fresh state; until
+   * it does, every state still carries the previous list — see `readSticky`.
+   */
+  private writeSticky(sticky: ohMyDataId[]): void {
+    this.awaitingSticky = sticky;
+    this.storeService.updateAux({ stickyRequests: sticky }, this.context);
+  }
+
+  /** Pins a row to the top of the list, or unpins it. */
+  onToggleSticky(id: ohMyDataId, event: MouseEvent): void {
+    event.stopPropagation();
+
+    this.stickyIds = toggleSticky(this.stickyIds, id);
+
+    if (this.persistFilter) {
+      this.writeSticky(this.stickyIds);
+    }
+
+    this.recompute();
+    this.cdr.detectChanges();
+  }
+
+  onToggleStickyOnly(stickyOnly: boolean): void {
+    this.stickyOnly = stickyOnly;
+    this.recompute();
+    this.cdr.detectChanges();
   }
 
   onToggleActivateNew(toggle: boolean): void {
@@ -223,17 +348,41 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.cloned.emit(this.data[id]);
   }
 
-  onDataClick(data: IData, index: number): void {
+  /**
+   * The keyboard equivalent of clicking a row.
+   *
+   * Enter and Space, the two keys a control that behaves like a button answers
+   * to; Space would scroll the list otherwise. Keys pressed on the pin button
+   * inside the row bubble up to here as well, and that button has already
+   * handled them — hence the target check.
+   *
+   * `Event` rather than `KeyboardEvent`: that is what Angular types `$event`
+   * as for a key-modified binding such as `(keydown.enter)`.
+   */
+  onRowKey(row: IData, event: Event): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    event.preventDefault();
+    this.onDataClick(row);
+  }
+
+  onDataClick(data: IData): void {
     if (this.togglableRows) {
-      this.selection.toggle(index);
+      this.selection.toggle(data.id);
+      // A selected row is exempt from the filter, so the selection changing
+      // can change what is on screen.
+      this.recompute();
       this.selectRow.emit(data.id);
     }
   }
 
-  onExport(data: IData, rowIndex: number, event: MouseEvent): void {
+  onExport(data: IData, event: MouseEvent): void {
     event.stopPropagation()
     this.dataExport.emit(data);
-    this.selection.toggle(rowIndex);
+    this.selection.toggle(data.id);
+    this.recompute();
   }
 
   onBlurImage(): void {
@@ -241,14 +390,16 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   public selectAll(): void {
-    this.loadedState.requests.forEach((d, i) => {
-      this.selection.select(i);
+    this.loadedState.requests.forEach(id => {
+      this.selection.select(id);
     });
+    this.recompute();
     this.cdr.detectChanges();
   }
 
   public deselectAll(): void {
     this.selection.clear();
+    this.recompute();
     this.cdr.detectChanges();
   }
 
@@ -309,6 +460,7 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
 
     this.filteredRequests = data;
+    this.recompute();
   }
 
   onFilterUpdate(update: Record<string, unknown>): void {
@@ -319,5 +471,8 @@ export class DataListComponent implements OnInit, OnDestroy {
     if (this.filteredRequests) {
       this.filteredRequests = update.filteredRequests as string[];
     }
+
+    this.recompute();
+    this.cdr.detectChanges();
   }
 }

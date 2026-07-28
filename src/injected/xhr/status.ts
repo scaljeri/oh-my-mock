@@ -1,8 +1,8 @@
 import { ohMyWindow } from "../../shared/oh-my-window";
-import { IOhMyXhr, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
+import { IOhMyXhr, isXhrPatched, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
 import { findCachedResponse } from "../utils";
 
-const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__status');
+const isPatched = isXhrPatched('__status');
 const descriptor = xhrDescriptor((isPatched ? '__' : '') + 'status');
 
 export function patchStatus() {

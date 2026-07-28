@@ -1,11 +1,11 @@
 import { ohMyMockStatus } from "../../shared/constants";
 import { ohMyWindow } from "../../shared/oh-my-window";
 import { b64ToArrayBuffer, b64ToBlob } from "../../shared/utils/binary";
-import { IOhMyXhr, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
+import { IOhMyXhr, isXhrPatched, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__response');
+const isPatched = isXhrPatched('__response');
 const descriptor = xhrDescriptor((isPatched ? '__' : '') + 'response');
 
 export function patchResponse() {

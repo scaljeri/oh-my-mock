@@ -5,11 +5,11 @@
     <span>Enable</span>
     <mat-slide-toggle
       x-test="inactive-dialog-toggle"
-      (change)="onAction($event.checked)"
+      (change)="onEnable($event.checked)"
       [color]="color"
     ></mat-slide-toggle>
   </p>
 
-  <button x-test="cancel-activate-toggle" (click)="onAction()" mat-button>Continue</button>
+  <button x-test="cancel-activate-toggle" (click)="onDismiss()" mat-button>Continue</button>
   <span>(Hit 'Enter' to confirm and close)</span>
 </article>

@@ -2,6 +2,7 @@ import { appSources, payloadType } from "../shared/constants";
 import { OhMyQueue } from "../shared/utils/queue";
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 import { IPacket } from '../shared/packet-type';
+import { error } from "./utils";
 
 export function errorHandler(queue: OhMyQueue, ...errors: unknown[]): void {
   const types = queue.getActiveHandlers();
@@ -9,8 +10,7 @@ export function errorHandler(queue: OhMyQueue, ...errors: unknown[]): void {
   queue.removeFirstPacket(types?.[0]); // The first packet in this queue cannot be processed!
   queue.resetHandler(types?.[0]);
 
-  // eslint-disable-next-line no-console
-  console.log('Error in promise', types, ...errors);
+  error('Error in promise', types, ...errors);
 
   sendMsgToPopup(packet?.tabId, packet?.payload?.context?.domain, appSources.BACKGROUND, {
     type: payloadType.ERROR,

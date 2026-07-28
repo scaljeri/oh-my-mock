@@ -3,8 +3,8 @@
   <input
     [ngClass]="{ 'has-errors': ngControl.hasError('noExactOptionMatch') }"
     #input
-    (blur)="onBlur(auto)"
-    (focus)="onFocus($event, trigger)"
+    (blur)="onBlur()"
+    (focus)="onFocus()"
     type="text"
     matInput
     [formControl]="ctrl"
@@ -16,7 +16,7 @@
     #auto="matAutocomplete"
     (opened)="onAutoCompleteOpened()"
     (closed)="onAutoCompleteClose()"
-    (optionSelected)="onOptionSelected($event)"
+    (optionSelected)="onOptionSelected()"
   >
     <mat-option
       *ngFor="let option of filteredMethodOptions || []"
@@ -54,7 +54,7 @@
     matSuffix
     mat-icon-button
     aria-label="Delete"
-    (click)="onClickDelete($event)"
+    (click)="onClickDelete()"
   >
     <mat-icon [ngClass]="theme" svgIcon="delete" matTooltip="Delete"></mat-icon>
   </button>

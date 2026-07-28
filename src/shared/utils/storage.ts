@@ -3,6 +3,9 @@ import { objectTypes, STORAGE_KEY } from '../constants';
 import { IData, IMock, IOhMyCookie, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
+import { debugBuilder } from './logging';
+
+const debug = debugBuilder();
 
 export interface IOhMyStorageChange {
   newValue: unknown & { type: objectTypes }, oldValue?: unknown & { type: objectTypes };
@@ -20,12 +23,16 @@ export class StorageUtils {
   static updates$ = StorageUtils.updatesSubject.asObservable();
   static chrome = chrome;
   static MigrateUtils = MigrateUtils;
-  // The signature has to match what `chrome.storage.onChanged` actually calls
-  // it with; the app's narrower view of a change is a cast at that boundary
-  // rather than a promise made to the type checker.
+  // `chrome.storage.onChanged` also passes the area name, which this listener
+  // has no use for: it is registered on `chrome.storage` rather than on one
+  // area, and every key it forwards is namespaced already. A trailing
+  // parameter it never reads is simply left off — a listener may take fewer
+  // arguments than the event supplies.
+  //
+  // The app's narrower view of a change is a cast at that boundary rather than
+  // a promise made to the type checker.
   static callback = (
-    changes: Record<string, chrome.storage.StorageChange>,
-    _areaName: chrome.storage.AreaName
+    changes: Record<string, chrome.storage.StorageChange>
   ) => {
     Object.keys(changes).forEach(key =>
       StorageUtils.updatesSubject.next({
@@ -101,8 +108,10 @@ export class StorageUtils {
         value.version = StorageUtils.appVersion;
       }
 
-      // eslint-disable-next-line no-console
-      console.log(`Write action for ${key}`, value);
+      // `debug`, not `log`: this fires on every write, including the `lastHit`
+      // bump on each intercepted request. DevTools hides `console.debug` unless
+      // Verbose is on, which is where a per-write trace belongs.
+      debug(`Write action for ${key}`, value);
       StorageUtils.chrome.storage.local.set({ [key]: value }, resolve);
     });
   }

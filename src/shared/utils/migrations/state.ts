@@ -1,10 +1,11 @@
 import { compareVersions } from 'compare-versions'
+import { IOhMyMigrationStep, isRecord, recordVersion } from './types';
 
 const VERSION = '__OH_MY_VERSION__';
 
-export const stateSteps = [
-    (data: any) => {
-        if (compareVersions(data.version || '0.0.0', '3.3.1') === -1) { // Everything before 3.0.3 is discarded
+export const stateSteps: IOhMyMigrationStep[] = [
+    (data) => {
+        if (compareVersions(recordVersion(data), '3.3.1') === -1) { // Everything before 3.0.3 is discarded
             return null;
         }
 
@@ -15,9 +16,11 @@ export const stateSteps = [
     // belongs: an open popup is a property of the browser, not of a domain.
     // Dropping the stale copy keeps `isActive()` from reading a field nothing
     // writes any more.
-    (data: any) => {
-        if (data?.aux && 'popupActive' in data.aux) {
-            delete data.aux.popupActive;
+    (data) => {
+        const aux = 'aux' in data ? data.aux : undefined;
+
+        if (isRecord(aux) && 'popupActive' in aux) {
+            delete aux.popupActive;
         }
 
         return data;
@@ -34,9 +37,14 @@ export const stateSteps = [
     // All this does is guarantee the field exists, so a state that reached the
     // new code by some other route still reads as an empty list, never
     // `undefined`.
-    (data: any) => {
-        if (data) {
-            data.requests ??= [];
+    (data) => {
+        const requests = 'requests' in data ? data.requests : undefined;
+
+        // `requests ??= []`, spelled out: the field is not on
+        // `IOhMyStoredRecord` — a record this old is not known to have it — so
+        // it is read through `in` and written through `Object.assign`.
+        if (requests === undefined || requests === null) {
+            Object.assign(data, { requests: [] });
         }
 
         return data;

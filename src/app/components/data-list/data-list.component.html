@@ -22,14 +22,29 @@
     (updateFilterStr)="onFilterUpdateStr($event)"
   ></oh-my-request-filter>
 
-  <label class="oh-toolbar__toggle" *ngIf="showActivateToggle">
-    <mat-slide-toggle
-      (change)="onToggleActivateNew($event.checked)"
-      [checked]="$any(newAutoActivate)"
-      color="primary"
-    ></mat-slide-toggle>
-    Activate new
-  </label>
+  <!-- The text is projected into the toggle rather than wrapped around it in a
+       <label> of our own: `mat-slide-toggle` renders its content inside the
+       label it already binds to its switch, so this is what actually names the
+       control. The outer <label> named nothing — a slide toggle is a <button
+       role="switch">, which a <label> cannot be for. -->
+  <mat-slide-toggle
+    class="oh-toolbar__toggle"
+    *ngIf="showActivateToggle"
+    (change)="onToggleActivateNew($event.checked)"
+    [checked]="newAutoActivate"
+    color="primary"
+  >Activate new</mat-slide-toggle>
+
+  <!-- Only worth offering once something is pinned; before that it would empty
+       the list. -->
+  <mat-slide-toggle
+    class="oh-toolbar__toggle"
+    *ngIf="stickyIds.length"
+    x-test="sticky-only-toggle"
+    (change)="onToggleStickyOnly($event.checked)"
+    [checked]="stickyOnly"
+    color="primary"
+  >Pinned only ({{ stickyIds.length }})</mat-slide-toggle>
 
   <button
     *ngIf="showMenu"
@@ -53,6 +68,9 @@
 
 <ol data-table>
   <li class="oh-header">
+    <!-- The pin column: a header cell so the grid lines up, with a label only
+         a screen reader reads. -->
+    <span class="oh-col"><span class="oh-visually-hidden">Pinned</span></span>
     <span class="oh-col">Method</span>
     <span class="oh-col">Endpoint</span>
     <span class="oh-col">Response</span>
@@ -60,23 +78,43 @@
     <span class="oh-col oh-col--end">On</span>
   </li>
 
+  <!-- Focusable and answerable with Enter/Space: selecting a request is what
+       the row is for, and it used to be reachable with a mouse only. -->
   <li
     [title]="row.id"
     class="oh-row"
     x-test="list-request-item"
-    *ngFor="
-      let row of filteredRequests | dataToViewList: data;
-      index as index;
-      trackBy: trackBy
-    "
-    (click)="onDataClick(row, index)"
+    *ngFor="let row of viewRows; trackBy: trackBy"
+    [attr.tabindex]="togglableRows ? 0 : null"
+    (click)="onDataClick(row)"
+    (keydown.enter)="onRowKey(row, $event)"
+    (keydown.space)="onRowKey(row, $event)"
     [ngClass]="{
       'is-clickable': togglableRows,
-      'is-selected': selection.isSelected(index),
+      'is-selected': selection.isSelected(row.id),
+      'is-sticky': row.isSticky,
       'is-enabled': row.enabled[context.preset],
       'is-modified': row.mocks[row.selected[context.preset]]?.modifiedOn
     }"
   >
+    <!-- Pins the row to the top of the list and exempts it from the filter, so
+         it cannot be pushed away or hidden by arriving traffic. -->
+    <button
+      type="button"
+      class="oh-row__pin"
+      x-test="sticky-toggle"
+      [attr.aria-pressed]="row.isSticky"
+      [attr.aria-label]="row.isSticky ? 'Unpin this request' : 'Pin this request to the top'"
+      [title]="row.isSticky ? 'Unpin this request' : 'Pin this request to the top'"
+      (click)="onToggleSticky(row.id, $event)"
+    >
+      <svg class="oh-row__pin-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"
+        ></path>
+      </svg>
+    </button>
+
     <span class="oh-row__method" [attr.data-method]="row.method">{{ row.method }}</span>
 
     <span class="oh-row__endpoint">
@@ -110,13 +148,13 @@
     </span>
 
     <ng-container
-      *ngTemplateOutlet="actions; context: { row: row, index: index }"
+      *ngTemplateOutlet="actions; context: { row: row }"
     ></ng-container>
   </li>
 </ol>
 </ng-container>
 
-<ng-template #actions let-row="row" let-index="index">
+<ng-template #actions let-row="row">
   <div class="actions btns-1">
     <div class="btn-wrapper">
       <button
@@ -157,7 +195,7 @@
       </button>
       <button
         *ngIf="showExport"
-        (click)="onExport(row, index, $event)"
+        (click)="onExport(row, $event)"
         mat-icon-button
         color="primary"
         aria-label="Example icon button with a menu icon"

@@ -83,7 +83,7 @@ export function b64ToBlob(b64Data: unknown, contentType = '', sliceSize = 512) {
   }
 }
 
-export function objToBlob(json: any, contentType = 'application/json;charset=utf-8'): Blob {
+export function objToBlob(json: unknown, contentType = 'application/json;charset=utf-8'): Blob {
   const str = JSON.stringify(json);
   const bytes = new TextEncoder().encode(str);
   const blob = new Blob([bytes], {

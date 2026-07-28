@@ -87,7 +87,9 @@ export class OhMyContentState {
     if (window.name) {
       try {
         this.storage = JSON.parse(window.name) as IOhMyStorage;
-      } catch (e) {
+      } catch {
+        // `window.name` belongs to the page, not to us — anything at all can be
+        // in it. Not our JSON means there is nothing to restore.
         this.isReloaded = false;
       }
     }

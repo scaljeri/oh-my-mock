@@ -1,11 +1,11 @@
 <!-- The request detail pane, following `design/Mock Manager v2.dc.html`:
      header, saved responses, response settings, then the Body/Headers/Code
      editor. Only the editor scrolls; everything above it keeps its place. -->
-<oh-request-header
+<oh-my-request-header
   *ngIf="request"
   [request]="request"
   [context]="context"
-></oh-request-header>
+></oh-my-request-header>
 
 <ng-container *ngIf="response; else nodata">
   <oh-my-mock-details

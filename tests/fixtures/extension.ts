@@ -17,7 +17,17 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { OhMyMockDriver } from './oh-my-mock';
 
-export const EXTENSION_PATH = path.resolve(__dirname, '..', '..', 'dist');
+/**
+ * The build under test. `dist/` unless `EXTENSION_PATH` says otherwise.
+ *
+ * The override exists because `npm run build` starts by deleting `dist`: a
+ * build kicked off while the suite is running takes the extension out from
+ * under it, and every test then fails with "no extension build found". Pointing
+ * the suite at a copy makes a run immune to that.
+ */
+export const EXTENSION_PATH = process.env.EXTENSION_PATH
+  ? path.resolve(process.env.EXTENSION_PATH)
+  : path.resolve(__dirname, '..', '..', 'dist');
 
 /**
  * Fails fast when `dist/` is missing or half-built.
@@ -66,6 +76,22 @@ export const ALT_ORIGIN = process.env.ALT_ORIGIN ?? 'http://localhost:8091';
 export const SITE_DOMAIN = new URL(SITE_ORIGIN).host;
 export const ALT_DOMAIN = new URL(ALT_ORIGIN).host;
 
+/**
+ * A parsed JSON body, as the harness hands it back.
+ *
+ * Every property is another `JsonBody`. In the small that is a fiction — a leaf
+ * is a string or a number — but a deliberate one: a spec reads
+ * `result.json.users[0].name` without a cast, and the `expect()` around it does
+ * the real checking. Unlike `any` it is closed, so nothing unrelated can be
+ * assigned to it and no other type quietly becomes `any` by touching it.
+ *
+ * At runtime it is `null` when the response had no JSON body; the specs that
+ * read it are the ones that asked for `responseType: 'json'`.
+ */
+export interface JsonBody {
+  [key: string]: JsonBody;
+}
+
 export interface HarnessResult {
   id: number;
   transport: 'fetch' | 'xhr';
@@ -82,7 +108,7 @@ export interface HarnessResult {
   durationMs: number;
   error: string | null;
   body: string | null;
-  json: any;
+  json: JsonBody;
   base64: string | null;
   byteLength: number;
   bodyKind: string;
@@ -97,6 +123,22 @@ export interface RequestOptions {
   headers?: Record<string, string>;
 }
 
+/**
+ * What the page carries beyond a plain `Window`: the request driver from
+ * `test-site/public/harness.js`, and the namespace the extension injects.
+ *
+ * Declared here so the `page.evaluate` callbacks below can be typed instead of
+ * reaching through `any` — they run in the browser, where nothing knows about
+ * either of these.
+ */
+interface HarnessWindow {
+  harness?: {
+    ready: boolean;
+    request(options: RequestOptions): Promise<HarnessResult>;
+  };
+  OhMyMock?: { version?: string };
+}
+
 /** The test site page, with helpers that mirror `test-site/public/harness.js`. */
 export class SitePage {
   constructor(public readonly page: Page) {}
@@ -104,15 +146,22 @@ export class SitePage {
   /** Navigates and waits until the page harness is ready to take requests. */
   async open(pathname = '/', origin = SITE_ORIGIN): Promise<void> {
     await this.page.goto(new URL(pathname, origin).toString());
-    await this.page.waitForFunction(() => (window as any).harness?.ready === true);
+    await this.page.waitForFunction(
+      () => (window as unknown as HarnessWindow).harness?.ready === true
+    );
   }
 
   /** Issues a request through the page and returns the normalised result. */
   async request(options: RequestOptions): Promise<HarnessResult> {
-    return this.page.evaluate(
-      (opts) => (window as any).harness.request(opts),
-      options as Record<string, unknown>
-    );
+    return this.page.evaluate((opts: RequestOptions) => {
+      const harness = (window as unknown as HarnessWindow).harness;
+
+      if (!harness) {
+        throw new Error('The page harness is not loaded');
+      }
+
+      return harness.request(opts);
+    }, options);
   }
 
   /**
@@ -122,14 +171,23 @@ export class SitePage {
    */
   async waitForInjection(timeout = 10_000): Promise<void> {
     await this.page.waitForFunction(
-      () => Boolean((window as any).OhMyMock?.version),
+      () => Boolean((window as unknown as HarnessWindow).OhMyMock?.version),
       undefined,
       { timeout }
     );
   }
 
+  /** Whether `test-site/public/harness.js` has finished loading. */
+  async isHarnessReady(): Promise<boolean> {
+    return this.page.evaluate(
+      () => (window as unknown as HarnessWindow).harness?.ready === true
+    );
+  }
+
   async isInjected(): Promise<boolean> {
-    return this.page.evaluate(() => Boolean((window as any).OhMyMock?.version));
+    return this.page.evaluate(() =>
+      Boolean((window as unknown as HarnessWindow).OhMyMock?.version)
+    );
   }
 }
 
@@ -151,6 +209,51 @@ export class TestServer {
   /** Convenience for the most common assertion: did this endpoint get hit? */
   async hitCount(key: string): Promise<number> {
     return (await this.hits())[key] ?? 0;
+  }
+}
+
+/**
+ * The extension's service worker, however it happens to be running right now.
+ *
+ * An MV3 service worker is not a thing that starts once and stays up: Chrome
+ * stops it when it has been idle for about 30s and starts a fresh one when
+ * something addresses the extension again. So a handle to *the* worker is only
+ * valid for as long as that particular worker lives, and "there is no worker in
+ * the list" is a normal, temporary state rather than a failure.
+ *
+ * Waiting only on `waitForEvent('serviceworker')` cannot see either fact: the
+ * event fires once per worker, so a worker that came and went before the wait
+ * started is invisible to it, and it never fires again for one that is already
+ * listed. This polls the list as well, under a single deadline, and reports
+ * what the browser actually had when it gives up.
+ */
+async function serviceWorkerFor(
+  context: BrowserContext,
+  timeout = 30_000
+): Promise<Worker> {
+  const deadline = Date.now() + timeout;
+
+  for (;;) {
+    const worker = context.serviceWorkers()[0];
+
+    if (worker) {
+      return worker;
+    }
+
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `The extension's service worker never appeared within ${timeout}ms. ` +
+          `The browser has ${context.pages().length} page(s) open and no ` +
+          'service worker registered — usually that means Chromium refused ' +
+          `the extension at ${EXTENSION_PATH}.`
+      );
+    }
+
+    // A slice rather than the whole budget, so a worker that registers without
+    // an event this listener can see is still picked up on the next pass.
+    await context
+      .waitForEvent('serviceworker', { timeout: 500 })
+      .catch(() => undefined);
   }
 }
 
@@ -193,18 +296,19 @@ export const test = base.extend<Fixtures>({
   },
 
   serviceWorker: async ({ context }, use) => {
-    const worker =
-      context.serviceWorkers()[0] ??
-      (await context.waitForEvent('serviceworker', { timeout: 30_000 }));
-    await use(worker);
+    await use(await serviceWorkerFor(context));
   },
 
   extensionId: async ({ serviceWorker }, use) => {
     await use(new URL(serviceWorker.url()).host);
   },
 
-  ohMy: async ({ serviceWorker }, use) => {
-    const driver = new OhMyMockDriver(serviceWorker);
+  ohMy: async ({ context }, use) => {
+    // The driver is handed a *resolver*, not a worker. Everything it does is a
+    // `worker.evaluate`, and evaluating in a worker Chrome has since stopped
+    // fails with "Target closed" — a handle captured at set-up time is a slow
+    // fuse on any test that lets the extension go quiet for half a minute.
+    const driver = new OhMyMockDriver(() => serviceWorkerFor(context));
     // The background script seeds demo data for its own demo domain on install;
     // clearing keeps assertions about "what is stored" unambiguous.
     await driver.reset();

@@ -1,13 +1,12 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { filter, map, Observable, Subject, take } from 'rxjs';
-import { IData, IMock, IOhMyAPIRequest, IOhMyMockResponse } from '@shared/type';
+import { filter, Subject, take } from 'rxjs';
+import { IData, IMock, IOhMyMockResponse } from '@shared/type';
 import { OhMyStateService } from './state.service';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { StorageService } from './storage.service';
 import { IOhMyReadyResponse } from '@shared/packet-type';
-import { MOCK_JS_CODE } from '@shared/constants';
 
 interface IOhSandboxOutput {
   id: string;
@@ -46,9 +45,12 @@ export class SandboxService {
 
     return new Promise(resolve => {
       this.outputSubject.pipe(
-        take(1),
-        // filter(data => data.id === mock.id),
-        // map TODO
+        // The sandbox echoes back the id of the mock it evaluated. Without
+        // this the first output to arrive resolved *every* pending dispatch,
+        // so two requests in flight at once could be handed each other's
+        // response.
+        filter(output => output.id === mock?.id),
+        take(1)
       ).subscribe((result: IOhSandboxOutput) => {
         resolve(result.output);
       })

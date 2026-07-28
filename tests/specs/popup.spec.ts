@@ -11,11 +11,7 @@
  */
 
 import { expect, SITE_DOMAIN, test } from '../fixtures/extension';
-
-/** The popup is a web-accessible page inside the extension. */
-function popupUrl(extensionId: string): string {
-  return `chrome-extension://${extensionId}/oh-my-mock/index.html`;
-}
+import { popupUrl } from '../fixtures/popup';
 
 test.describe('popup', () => {
   test('the Angular app bootstraps and renders', async ({
@@ -28,9 +24,11 @@ test.describe('popup', () => {
 
     await page.goto(popupUrl(extensionId));
 
-    // `app-root` is in index.html from the start; content inside it only exists
-    // once Angular has bootstrapped and rendered the component tree.
-    await expect(page.locator('app-root .oh-shell')).toBeAttached({
+    // `oh-my-root` is in index.html from the start — it is the root
+    // component's selector, renamed from `app-root` to carry the project's
+    // prefix — and content inside it only exists once Angular has bootstrapped
+    // and rendered the component tree.
+    await expect(page.locator('oh-my-root .oh-shell')).toBeAttached({
       timeout: 20_000
     });
 
@@ -73,7 +71,7 @@ test.describe('popup', () => {
     const page = await context.newPage();
     await page.goto(popupUrl(extensionId));
 
-    await expect(page.locator('app-root .oh-shell')).toBeAttached({
+    await expect(page.locator('oh-my-root .oh-shell')).toBeAttached({
       timeout: 20_000
     });
 

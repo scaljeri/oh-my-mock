@@ -3,7 +3,7 @@ import { appSources, payloadType } from './constants';
 import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, ohMyStatusCode, requestType } from './type';
 import { ImportResultEnum } from './utils/import-json';
 
-export type ohMessage = <T = unknown>(message: IOhMessage) => void;
+export type ohMessage = (message: IOhMessage) => void;
 /**
  * A packet as it arrives at a subscriber.
  *

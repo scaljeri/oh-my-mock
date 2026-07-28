@@ -3,8 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   HostListener,
-  OnDestroy,
-  ViewChild
+  OnDestroy
 } from '@angular/core';
 import { IOhMyContext, IState } from '@shared/type';
 import { MatDialog } from '@angular/material/dialog';
@@ -22,11 +21,9 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { registerIcons } from './app-icons';
 
-const VERSION = '__OH_MY_VERSION__';
-
 @Component({
   standalone: false,
-  selector: 'app-root',
+  selector: 'oh-my-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
@@ -78,10 +75,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
       // Move to somewhere else
       if (state.domain !== this.domain && this.domain) { // Domain switch
-        // The popup is open — a store-level fact, not a per-domain one.
-        this.storeService.updateStore({ popupActive: true });
-        // this.storeService.updateAux({ popupActive: false }, { domain: this.domain });
-        // this.storeService.updateAux({ popupActive: true }, { domain: state.domain });
+        // `popupActive` is not set here. `ContentService` subscribes to the
+        // same domain change and calls `activate()`, which is the one writer of
+        // that flag — setting it here as well raced with it, and only ever ran
+        // on a *switch*, never when the popup was first opened.
         await this.webWorkerService.init(state.domain);
 
         this.router.navigate(['/']).then(() => {
@@ -126,15 +123,20 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
     this.mockSub?.unsubscribe();
-    this.contentService.deactivate(true);
+    this.contentService.deactivate();
+  }
+
+  /**
+   * The "OhMyMock is disabled" prompt was closed without answering it. Only
+   * the prompt goes away — the domain keeps whatever setting it had.
+   */
+  onDismissDisabled(): void {
+    this.showDisabled = 0;
+    this.cdr.detectChanges();
   }
 
   notifyDisabled(): void {
     this.showDisabled = 1;
-  }
-
-  popupActiveToggle(isActive = true) {
-    return this.storeService.updateStore({ popupActive: isActive });
   }
 
   @HostListener('window:keyup.backspace')

@@ -82,8 +82,7 @@ export class OhMyResponseHandler {
 
       return StorageUtils.set(response.id, response).then(() => response);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log('nonoo', err);
+      error('Could not update the response', err);
 
       return undefined;
     }
@@ -170,8 +169,7 @@ export class OhMyResponseHandler {
       }
       return state;
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Could not update filter results', err);
+      error('Could not update filter results', err);
 
       return undefined;
     }

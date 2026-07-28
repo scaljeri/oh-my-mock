@@ -1,7 +1,8 @@
 import { IOhMyImportStatus } from '../packet-type';
-import { IData, IMock, IOhMyBackup, IOhMyContext, IOhMyMock, IState } from '../type';
+import { IData, IMock, IOhMyContext, IOhMyCookie, IOhMyMock, IState } from '../type';
 import { DataUtils } from './data';
 import { MigrateUtils } from './migrate';
+import { IOhMyStoredRecord } from './migrations/types';
 import { StateUtils } from './state';
 import { StorageUtils } from './storage';
 import { StoreUtils } from "../../shared/utils/store";
@@ -10,7 +11,28 @@ export enum ImportResultEnum {
   SUCCESS, TOO_OLD, MIGRATED, ERROR
 }
 
-export async function importJSON(data: IOhMyBackup, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
+/**
+ * A backup on its way in: a `.json` file the user picked, the demo data bundled
+ * with the extension, or an API upsert.
+ *
+ * Its records were written by whichever release produced the backup — running
+ * them through `MigrateUtils` is the first thing this module does — so they are
+ * not `IData`/`IMock` yet and typing them as such is how the demo data ended up
+ * needing an `as any as IOhMyBackup` at three call sites. `IOhMyBackup`
+ * describes a backup *this* version writes, and every one of those is a valid
+ * input here.
+ *
+ * Cookie mocks are the exception: see the loop below for why they are not
+ * migrated, and therefore already have their current shape.
+ */
+export interface IOhMyBackupInput {
+  requests: IOhMyStoredRecord[];
+  responses: IOhMyStoredRecord[];
+  cookies?: IOhMyCookie[];
+  version: string;
+}
+
+export async function importJSON(data: IOhMyBackupInput, context: IOhMyContext, sUtils = StorageUtils): Promise<IOhMyImportStatus> {
   let state = await sUtils.get<IState>(context.domain);
 
   if (!state) {

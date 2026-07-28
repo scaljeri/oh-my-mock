@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { objectTypes, payloadType, STORAGE_KEY } from '@shared/constants';
 
-import { IOhMyMock, ohMyDomain, IState, ohMyMockId, IData, IMock, IOhMyContext, ohMyDataId, IOhMyAux, ohMyPresetId } from '@shared/type';
+import { IOhMyMock, ohMyDomain, IState, ohMyMockId, IData, IMock, IOhMyContext, ohMyDataId, IOhMyAux, ohMyPresetId, IOhMyCookie, ohMyCookieId } from '@shared/type';
+import { IOhMyCookieUpdate } from '@shared/utils/cookie';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { uniqueId } from '@shared/utils/unique-id';
@@ -201,6 +202,43 @@ export class OhMyState {
     }, payloadType.RESPONSE, context, 'popup;deleteResponse');
 
     return state;
+  }
+
+  /**
+   * Creates or patches one cookie mock.
+   *
+   * An `id` on the cookie patches the stored record, no `id` creates one. The
+   * popup deliberately does not touch `IState.cookies`: the handler keeps that
+   * list, through the state handler's queue, so a cookie write cannot overwrite
+   * a request write that is in flight. See `docs/architecture/cookie-mocking.md`.
+   */
+  async upsertCookie(cookie: Partial<IOhMyCookie>, context: IOhMyContext): Promise<IOhMyCookie | undefined> {
+    return OhMySendToBg.full<IOhMyCookieUpdate, IOhMyCookie | undefined>(
+      { cookie }, payloadType.COOKIE, { domain: context.domain }, 'popup;upsertCookie');
+  }
+
+  /** Switches one cookie mock on or off in one preset, leaving the rest alone. */
+  async toggleCookie(
+    cookie: IOhMyCookie, enabled: boolean, context: IOhMyContext
+  ): Promise<IOhMyCookie | undefined> {
+    return this.upsertCookie({
+      id: cookie.id,
+      enabled: { ...cookie.enabled, [context.preset]: enabled }
+    }, context);
+  }
+
+  /**
+   * Removes a cookie mock.
+   *
+   * The record has to go through the background rather than storage directly:
+   * the jar identifies what the mock displaced by that record, so it must
+   * unapply before the record disappears — otherwise the site's own cookie
+   * cannot be put back.
+   */
+  async deleteCookie(id: ohMyCookieId, context: IOhMyContext): Promise<void> {
+    await OhMySendToBg.full<IOhMyCookieUpdate, undefined>(
+      { cookie: { id }, remove: true }, payloadType.COOKIE, { domain: context.domain },
+      'popup;deleteCookie');
   }
 
   async reset(context?: IOhMyContext): Promise<void> {

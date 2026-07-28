@@ -1,4 +1,4 @@
-import { Component, HostBinding, Input, OnInit } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 
 export type SpinnerModes = 'light' | 'dark';
 
@@ -8,7 +8,7 @@ export type SpinnerModes = 'light' | 'dark';
   templateUrl: './spinner.component.html',
   styleUrls: ['./spinner.component.scss']
 })
-export class SpinnerComponent implements OnInit {
+export class SpinnerComponent {
   @Input() set mode(mode: SpinnerModes) {
      this._mode = mode;
   }
@@ -18,10 +18,5 @@ export class SpinnerComponent implements OnInit {
   }
 
   private _mode: SpinnerModes = 'dark'
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
 
 }

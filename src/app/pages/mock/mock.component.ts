@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IData, IOhMyAux, IOhMyContext, IOhMyRequests, IState } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
@@ -13,7 +13,7 @@ import { OhMyStateService } from '../../services/state.service';
   templateUrl: './mock.component.html',
   styleUrls: ['./mock.component.scss']
 })
-export class PageMockComponent implements OnInit {
+export class PageMockComponent implements OnInit, OnDestroy {
   static StateUtils = StateUtils;
   public data!: IData;
   private subscription!: Subscription;

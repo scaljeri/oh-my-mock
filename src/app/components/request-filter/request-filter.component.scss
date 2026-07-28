@@ -31,9 +31,13 @@ $activeModified: #ffff99;
     @include oh-list-unstyled;
   }
 
-  label {
+  // Was a <label>, which named no control. It is the heading over the list of
+  // options, and the list carries the accessible name now.
+  // No margin: the <label> this replaced was inline, so its `margin-bottom`
+  // never applied and the options started right below the line box.
+  &__title {
     font-weight: bold;
     font-size: 16px;
-    margin-bottom: $spacer-1;
+    margin: 0;
   }
 }

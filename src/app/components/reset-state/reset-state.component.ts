@@ -6,7 +6,7 @@ import { AppStateService } from '../../services/app-state.service';
 
 @Component({
   standalone: false,
-  selector: 'app-reset-state',
+  selector: 'oh-my-reset-state',
   templateUrl: './reset-state.component.html',
   styleUrls: ['./reset-state.component.scss']
 })

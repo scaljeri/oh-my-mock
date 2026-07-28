@@ -80,11 +80,19 @@ export class JsonExportComponent implements OnInit {
 
     for (const r of Object.values(this.selected)) {
       const sMocks = Object.values(r.mocks);
-      // enabled/selected are keyed by preset, which belongs to a state, not
-      // to an exported request.
-      const { enabled, selected, ...rest } = r;
-      const request = { ...rest, id: uniqueId(), mocks: {} as Record<string, IOhMyShallowMock> } as IData;
-      request.version = this.appStateService.version;
+      // `enabled` and `selected` are keyed by preset, and a preset belongs to
+      // a state rather than to an exported request. They are emptied instead
+      // of dropped: `IData` requires both, and everything that reads a request
+      // indexes into them — `DataUtils.prefillWithPresets` fills them in again
+      // against the importing state's presets.
+      const request: IData = {
+        ...r,
+        enabled: {},
+        selected: {},
+        id: uniqueId(),
+        mocks: {} as Record<string, IOhMyShallowMock>,
+        version: this.appStateService.version
+      };
 
       for (const sm of sMocks) {
         const mock = await this.storageService.get<IMock>(sm.id);

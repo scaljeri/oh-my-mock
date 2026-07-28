@@ -1,4 +1,4 @@
-import { ohMyMockStatus } from '../shared/constants';
+import { METHODS, ohMyMockStatus } from '../shared/constants';
 import { ohMyWindow } from '../shared/oh-my-window';
 import { IOhMyReadyResponse } from '../shared/packet-type';
 import { IOhMyAPIRequest, IOhMyMockResponse, requestMethod, requestType, IOhMyMockContext } from '../shared/type';
@@ -16,7 +16,9 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
   const msg = `Mocked ${requestType}(${request.method}) ${request.url} ->`;
   switch (data.status) {
     case ohMyMockStatus.ERROR:
-      data.message && error(data.message);
+      if (data.message) {
+        error(data.message);
+      }
       break;
     case ohMyMockStatus.NO_CONTENT:
       log(`${msg} New request`);
@@ -33,7 +35,8 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
       if (contentType.includes('application/json')) {
         try {
           response = data.response ? JSON.parse(data.response as string) : '';
-        } catch (e) {
+        } catch {
+          // Not JSON after all, despite the content type. Log the raw body.
           response = data.response;
         }
       } else if (isImage(contentType)) {
@@ -44,10 +47,13 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
   }
 }
 
-const REQUEST_METHODS = ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT'] as const;
-
+// `METHODS` itself, not a second list. This used to be its own array — one that
+// omitted PATCH, OPTIONS and HEAD while including `UPDATE`, which is not an
+// HTTP method — so a mock the popup happily let you create for PATCH was
+// rejected here and the request fell through unmocked, silently. `METHODS` is
+// the single source of truth; `requestMethod` is derived from it too.
 function isRequestMethod(method: string): method is requestMethod {
-  return (REQUEST_METHODS as readonly string[]).includes(method);
+  return (METHODS as readonly string[]).includes(method);
 }
 
 /**

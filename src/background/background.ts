@@ -1,7 +1,7 @@
 ///<reference types="chrome"/>
 
-import { appSources, DEMO_TEST_DOMAIN, payloadType, STORAGE_KEY } from '../shared/constants';
-import { IOhMyBackup, IOhMyPopupActive, IState } from '../shared/type';
+import { appSources, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
+import { IState } from '../shared/type';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
@@ -20,12 +20,11 @@ import './server-dispatcher';
 import { removeCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { connectWithLocalServer } from './dispatch-remote';
-import { error } from './utils';
+import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { contentScriptListeners } from './content-script-listeners';
-import { popupListeners } from './popup-listeners';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
 import { initCookieSync, primeCookieSync } from './cookie-sync';
 import { initCookieRecorder } from './cookie-recorder';
@@ -75,7 +74,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   try {
     await StorageUtils.reset();
     await initStorage(payload.context?.domain);
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
+    await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
   } catch (err) {
     error('Could not initialize the store', err);
   }
@@ -86,14 +85,12 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 contentScriptListeners(messageBus); // TODO
-popupListeners(messageBus);
 
 const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE],
   [appSources.CONTENT, appSources.POPUP])
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
-  // eslint-disable-next-line no-console
-  console.log('Received update', packet);
+  debug('Received update', packet);
 
   // Messages from an extension page (the popup) have no `sender.tab`.
   packet.tabId = sender.tab?.id;
@@ -105,7 +102,9 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
     queue.removeFirstPacket(types?.[0]); // The first packet in this queue cannot be processed!
     queue.resetHandler(types?.[0]);
 
-    error(`Could not process packet of type ${types?.[0]}`, packet);
+    // `err` is why the packet could not be processed; it used to be caught and
+    // dropped, which left the log naming the packet but never the failure.
+    error(`Could not process packet of type ${types?.[0]}`, packet, err);
   });
 });
 
@@ -127,16 +126,6 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
 // });
 connectWithLocalServer();
 
-function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
-  const data = packet.payload.data;
-
-  // if (data.active) {
-  //   chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-128.png", tabId: packet.tabId });
-  // } else {
-  //   chrome.browserAction.setIcon({ path: "oh-my-mock/assets/icons/icon-off-128.png", tabId: packet.tabId });
-  // }
-}
-
 // chrome.runtime.onInstalled.addListener(function (details) {
 //   chrome.storage.local.get([STORAGE_KEY], (state) => {
 //     if (!state[STORAGE_KEY]) {
@@ -146,8 +135,7 @@ function handleActivityChanges(packet: IPacket<IOhMyPopupActive>) {
 // });
 
 chrome.runtime.onSuspend.addListener(function () {
-  // eslint-disable-next-line no-console
-  console.log("Suspending..............................");
+  debug('Suspending');
   // chrome.browserAction.setBadgeText({ text: "" });
 });
 
@@ -157,8 +145,7 @@ chrome.runtime.onSuspend.addListener(function () {
 
 chrome.action.onClicked.addListener(async function (tab) {
   // chrome.browserAction.onClicked.addListener(async function (tab) {
-  // eslint-disable-next-line no-console
-  console.log('OhMyMock: Extension clicked', tab.id);
+  debug('Extension clicked', tab.id);
 
   openPopup(tab);
 
@@ -198,7 +185,7 @@ setTimeout(async () => {
 
   const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
   if (!state || state.requests.length === 0) {
-    await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
+    await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
   }
 
   // A restarted service worker remembers nothing; the cookies it should have

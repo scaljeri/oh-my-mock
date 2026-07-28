@@ -1,6 +1,6 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, Self, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnChanges, Output, Self, ViewChild } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, NgControl } from '@angular/forms';
-import { MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   standalone: false,
@@ -32,17 +32,24 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   @Input() copyInfo: string | undefined;
   @Input() theme: 'dark' | 'light' = 'dark'
 
-  @Output() copy = new EventEmitter<string>();
+  /**
+   * `copyValue` and `inputBlur` rather than `copy` and `blur`: both of those
+   * are native DOM events, and an output of the same name shadows the event on
+   * the host element — the host can then never be listened to for the real
+   * thing, and a parent that drops the binding silently starts receiving DOM
+   * events instead of the component's.
+   */
+  @Output() copyValue = new EventEmitter<string>();
   @Output() delete = new EventEmitter<string>();
-  @Output() blur = new EventEmitter<string>();
+  @Output() inputBlur = new EventEmitter<string>();
   @Output() clear = new EventEmitter<void>();
 
   internalValue = '';
   _ctrl!: UntypedFormControl;
   filteredMethodOptions: string[] = [];
 
-  onChange: any = () => { }
-  onTouch: any = () => { }
+  private onChange: (value: string) => void = () => { }
+  private onTouch: () => void = () => { }
 
   private autoCompleteActive = false;
 
@@ -65,12 +72,12 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   }
 
   ngAfterViewInit(): void {
-    this.ctrl.valueChanges.subscribe(value => {
-      this.filteredMethodOptions = this.filter(this.ctrl.value, this.options).sort();
+    this.ctrl.valueChanges.subscribe((value: string) => {
+      this.filteredMethodOptions = this.filter(value, this.options).sort();
     });
   }
 
-  onBlur(_el: MatAutocomplete): void {
+  onBlur(): void {
     if (!this.autoCompleteActive) {
       this.emitChange();
     }
@@ -79,14 +86,16 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
   }
 
   emitBlur(): void {
-    this.blur.emit(this.ctrl.value);
+    this.inputBlur.emit(this.ctrl.value);
   }
 
   emitChange(): void {
     if (this.ctrl.value !== this.internalValue) {
       this.internalValue = this.ctrl.value;
       this.onChange(this.ctrl.value);
-      this.onTouch(this.ctrl.value);
+      // `ControlValueAccessor.registerOnTouched` hands over a zero-argument
+      // callback; the value it used to be called with was thrown away.
+      this.onTouch();
     }
 
     this.emitBlur();
@@ -100,22 +109,24 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     this.emitChange();
   }
 
-  onOptionSelected(event: MatAutocompleteSelectedEvent): void {
+  onOptionSelected(): void {
     this.inputRef.nativeElement.blur();
   }
 
   onClickEdit(event: MouseEvent): void {
     event.stopPropagation();
-    this.copy.emit(this.ctrl.value);
+    this.copyValue.emit(this.ctrl.value);
   }
 
-  onClickDelete(event: MouseEvent): void {
+  onClickDelete(): void {
     this.delete.emit(this.ctrl.value);
   }
 
-  writeValue(value: any) {
-    this.internalValue = value;
-    this.ctrl.setValue(value, { emitEvent: false });
+  // A control can be reset to `null`, and `focus()` below reads the length of
+  // whatever is stored here.
+  writeValue(value: string | null) {
+    this.internalValue = value ?? '';
+    this.ctrl.setValue(this.internalValue, { emitEvent: false });
 
     if (this.showAllOnFocus) {
       this.filteredMethodOptions = [...this.options].sort();
@@ -128,11 +139,11 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     });
   }
 
-  registerOnChange(fn: any) {
+  registerOnChange(fn: (value: string) => void) {
     this.onChange = fn
   }
 
-  registerOnTouched(fn: any) {
+  registerOnTouched(fn: () => void) {
     this.onTouch = fn
   }
 
@@ -144,7 +155,7 @@ export class AutocompleteDropdownComponent implements AfterViewInit, OnChanges, 
     this.inputRef.nativeElement.setSelectionRange(strLength, strLength);
   }
 
-  onFocus(e: FocusEvent, t: MatAutocompleteTrigger): void {
+  onFocus(): void {
     if (this.clearOnFocus && !this.autoCompleteActive) {
       this.ctrl.setValue('');
     } else if (this.showAllOnFocus) {

@@ -2,6 +2,7 @@ import { OhMyAPIUpsert } from "../../shared/api-types";
 import { IOhMyImportStatus, IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
 import { importJSON, ImportResultEnum } from "../../shared/utils/import-json";
 import { StorageUtils } from "../../shared/utils/storage";
+import { error } from "../utils";
 
 export class OhMyImportHandler {
   static StorageUtils = StorageUtils;
@@ -31,8 +32,14 @@ export class OhMyImportHandler {
       } else if (result.status === ImportResultEnum.TOO_OLD) {
         result.status = ImportResultEnum.TOO_OLD;
       }
-    } catch {
-    } finally {
+    } catch (err) {
+      // The queue answers the caller with whatever comes back, so a failed
+      // import has to resolve as an ERROR rather than reject — but it must not
+      // do so silently, which is what the empty `catch` (and the empty
+      // `finally` behind it) amounted to.
+      // `result` still holds the ERROR it was initialised with: the only
+      // assignment to it is the `await` that just threw.
+      error('Could not import the backup', err);
     }
 
     return result;

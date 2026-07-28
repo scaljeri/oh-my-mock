@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { IOhMyMockRule } from '@shared/type';
 
 // DOC: https://github.com/Marak/Faker.js
 
@@ -8,7 +7,7 @@ export const firstName = (): string => {
 }
 
 export const lastName = (): string => {
-  return faker.person.firstName();
+  return faker.person.lastName();
 }
 
 export const middleName = (): string => {
@@ -16,7 +15,7 @@ export const middleName = (): string => {
 }
 
 export const fullName = (): string => {
-  return `${firstName()} ${faker.person.lastName()}`;
+  return `${firstName()} ${lastName()}`;
 }
 
 export const password = (): string => {

@@ -2,7 +2,7 @@
   The sidebar of `design/Mock Manager v2.dc.html`: search, the DOMAINS list
   with a count per domain, and the two actions at the bottom. The old nav links
   (reset, explore, import/export, docs) live in the overflow menu next to
-  "Import HAR file" — see `app-nav-list`.
+  "Import HAR file" — see `oh-my-nav-list`.
 -->
 <div class="oh-domain-nav">
   <div class="oh-domain-nav__search">
@@ -88,11 +88,11 @@
         Import HAR file
       </button>
 
-      <app-nav-list
+      <oh-my-nav-list
         class="oh-domain-nav__more"
         [context]="context"
         (navigate)="navigate.emit()"
-      ></app-nav-list>
+      ></oh-my-nav-list>
     </div>
   </div>
 </div>

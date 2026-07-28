@@ -1,0 +1,86 @@
+@use 'mixins' as *;
+@use 'tokens' as t;
+
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+// The same two panes as the Requests tab, so switching tabs does not move the
+// list under the pointer.
+.oh-panes {
+  display: grid;
+  grid-template-columns: 1fr;
+  height: 100%;
+  min-height: 0;
+
+  &.has-detail {
+    grid-template-columns: 1fr minmax(t.$oh-detail-min-width, t.$oh-detail-width);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  &__detail {
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    background: t.$oh-bg-surface;
+    border-left: 1px solid t.$oh-border;
+  }
+}
+
+.oh-toolbar {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-3;
+  padding: t.$oh-space-3 t.$oh-row-padding-x;
+  border-bottom: 1px solid t.$oh-border-soft;
+
+  &__preset {
+    flex: 0 0 auto;
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: t.$oh-space-2;
+    flex: 1 1 auto;
+    min-width: 0;
+    background: t.$oh-bg-surface;
+    border: 1px solid t.$oh-border;
+    border-radius: t.$oh-radius-md;
+    padding: 7px 11px;
+
+    &:focus-within {
+      border-color: t.$oh-brand;
+    }
+  }
+
+  &__search-icon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    color: t.$oh-text-fainter;
+  }
+
+  &__search-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-size: t.$oh-size-md;
+    color: t.$oh-text;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}

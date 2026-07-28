@@ -18,6 +18,7 @@
 
 import * as path from 'path';
 import { createServer } from '../../libs/nodejs-sdk';
+import { ohMyMockStatus } from '../../src/shared/constants';
 import type { IOhMyMockResponse } from '../../src/shared/type';
 
 const port = 8000;
@@ -54,3 +55,35 @@ server.local.add({
     return output;
   }
 } as never);
+
+/**
+ * The readiness probe the e2e suite polls — not part of the SDK demo.
+ *
+ * "Is this process listening?" is answerable over HTTP (`/_sdk/health` below),
+ * but that is not the question a test needs answered. What matters is whether
+ * the *extension* has finished its websocket handshake, and neither side
+ * reports it: `isConnectedWithLocalServer()` lives in a module inside the
+ * service worker, and `createServer` keeps its socket.io instance private. So a
+ * test asks the only party that can answer — it makes a request from the page
+ * and sees whether this server was the one that served it.
+ *
+ * The path sits outside `/api` on purpose, so the main test server's hit
+ * counter ignores the probes that fall through before the socket is up.
+ */
+server.local.add({
+  url: '/sdk-probe',
+  method: 'GET',
+  statusCode: 200,
+  handler: (output: IOhMyMockResponse): IOhMyMockResponse => {
+    output.status = ohMyMockStatus.OK;
+    output.response = 'sdk-ready';
+    output.headers = { 'content-type': 'text/plain' };
+    return output;
+  }
+});
+
+// "Is the process up?", for the fixture that starts it. The SDK's own express
+// app is otherwise unused here, so there is nothing to clash with.
+server.app.get('/_sdk/health', (_req, res) => {
+  res.json({ ok: true });
+});

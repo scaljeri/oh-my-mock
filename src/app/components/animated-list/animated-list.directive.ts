@@ -1,4 +1,4 @@
-import { ContentChildren, Directive, ElementRef, HostBinding, Input, QueryList } from '@angular/core';
+import { AfterViewInit, ContentChildren, Directive, ElementRef, HostBinding, Input, OnChanges, QueryList } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 
 interface IMeta {
@@ -10,7 +10,7 @@ interface IMeta {
   standalone: false,
   selector: '[ohMyAnimatedList]'
 })
-export class AnimatedListDirective {
+export class AnimatedListDirective implements OnChanges, AfterViewInit {
   @Input() @HostBinding('class.animated-list') ohMyAnimatedList!: number[];
 
   @ContentChildren('animatedRow', { read: ElementRef }) rowRefs!: QueryList<ElementRef>;

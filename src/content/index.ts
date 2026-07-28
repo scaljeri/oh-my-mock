@@ -5,7 +5,7 @@ import { IOhMyAPIRequest } from '../shared/type';
 import { IOhMessage, IOhMyPacketContext, IOhMyResponseUpdate } from '../shared/packet-type';
 import { hasOhMyWindow, ohMyWindow, setOhMyWindow } from '../shared/oh-my-window';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
-// import { debug, error } from './utils';
+// import { error } from './utils';
 import { OhMyContentState } from './content-state';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
@@ -18,7 +18,7 @@ import { receivedApiRequest } from './handle-api-request';
 import { BehaviorSubject } from 'rxjs';
 // import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
-import { debug, error } from './utils';
+import { error } from './utils';
 import { injectCode } from './inject-code';
 import { sendMsg2Popup } from './message-to-popup';
 
@@ -31,7 +31,11 @@ window.onunhandledrejection = function (event: PromiseRejectionEvent) {
 
 if (hasOhMyWindow()) {
   ohMyWindow().off?.forEach(h => {
-    typeof h === 'function' ? h() : h.unsubscribe?.();
+    if (typeof h === 'function') {
+      h();
+    } else {
+      h.unsubscribe?.();
+    }
   });
 }
 
@@ -63,7 +67,7 @@ ohMyWindow().off?.push(contentState.isActive$.subscribe(async (value?: boolean) 
 
 // window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
 // API
-handleAPI(messageBus, contentState);
+handleAPI(messageBus);
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,
@@ -107,8 +111,3 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
 
   injectCode({ active: contentState.isActive(state) }, messageBus);
 })();
-
-    // if (isInjectedInjected) {
-    // eslint-disable-next-line no-console
-    // chrome.storage.local.get(null, function (data) { debug('Data dump: ', data); })
-    // }

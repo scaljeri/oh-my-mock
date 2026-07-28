@@ -35,6 +35,7 @@
     "test": "jest",
     "lint": "tsc --project tsconfig.json --noEmit && eslint .",
     "e2e": "playwright test",
+    "e2e:types": "tsc -p tests/tsconfig.json",
     "e2e:headed": "HEADED=1 playwright test",
     "e2e:debug": "PWDEBUG=1 HEADED=1 playwright test",
     "e2e:report": "playwright show-report test-results/html",
@@ -91,6 +92,7 @@
     "@types/lodash": "^4.17.13",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^22.10.2",
+    "angular-eslint": "^22.1.0",
     "eslint": "^9.17.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
@@ -104,6 +106,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "~6.0.3",
+    "typescript-eslint": "^8.65.0",
     "uglify-js": "^3.19.3",
     "webpack": "^5.97.1",
     "webpack-cli": "^6.0.1"

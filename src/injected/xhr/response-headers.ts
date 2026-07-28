@@ -2,10 +2,10 @@ import { findCachedResponse } from "../utils";
 import * as headers from '../../shared/utils/xhr-headers';
 import { ohMyMockStatus } from "../../shared/constants";
 import { ohMyWindow } from "../../shared/oh-my-window";
-import { IOhMyXhr, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
+import { IOhMyXhr, isXhrPatched, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__getResponseHeader');
+const isPatched = isXhrPatched('__getResponseHeader');
 const descrAllHeaders = xhrDescriptor((isPatched ? '__' : '') + 'getAllResponseHeaders');
 const descrHeader = xhrDescriptor((isPatched ? '__' : '') + 'getResponseHeader');
 

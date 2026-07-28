@@ -27,7 +27,6 @@ export const evalCode = async (mock: IMock, request: IOhMyAPIRequest, response?:
     retVal = { status: ohMyMockStatus.OK, ...result };
   } catch (err) {
     // TODO: send message to popup so the error can be reviewed
-    // eslint-disable-next-line no-console
     retVal = {
       status: ohMyMockStatus.ERROR,
       message: err instanceof Error ? err.message : String(err)

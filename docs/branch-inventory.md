@@ -167,6 +167,13 @@ Take the ideas as separate, tested changes.
    gives the same guarantee for far less churn.
 4. ✅ Tagged union, applied to the *packet* context (`kind: 'patch'`), which is
    where the optional-fields-that-belong-together problem actually lives.
+6. ✅ Sticky rows, built against the redesigned list: a pin per row rather than
+   a tick plus a mode switch. A pinned row is hoisted to the top in pin order,
+   is exempt from the filter, and does not move when traffic arrives; the
+   "Pinned only" toggle is the branch's original behaviour, offered once
+   something is pinned. Ordering lives in `data-list.ordering.ts` and is
+   tested there. Persisted in `IOhMyAux.stickyRequests`, which the branch
+   never did — see the note below.
 
 **Left, with reasons:**
 
@@ -178,12 +185,23 @@ Take the ideas as separate, tested changes.
 5. **Domain rename + request normalisation — the big one.** Today every request
    is embedded in its domain record, so saving one mock rewrites the whole
    domain in `chrome.storage`. Needs a storage migration written from scratch.
-6. **Sticky rows — wait for the redesign.** The request list is being rebuilt;
-   implementing this against the current one is work that gets thrown away.
 
 The redesign itself has since landed the request list, the filter toolbar and
-the detail-beside-the-list routing, which is why 3 and 6 are still waiting —
-see `docs/architecture/README.md` for how the pieces fit together.
+the detail-beside-the-list routing, which is why 3 is still waiting — see
+`docs/architecture/README.md` for how the pieces fit together.
+
+Note on 6: the pins round-trip through `IOhMyAux.stickyRequests`, the way the
+filter already does — read in the state subscription, written from
+`onToggleSticky` through `updateAux`. Two details are load-bearing. The stored
+list is pruned against the domain's request *ids*, not against the loaded
+request records: those arrive separately and are empty for a moment when the
+popup opens, and pruning against them would throw every pin away. And a state
+that arrives while a write is still travelling is ignored, otherwise pinning
+two rows quickly would see the first write come back and undo the second.
+
+Only the domain the popup is on persists its pins. The state explorer renders
+another domain's state through the same component, and pinning a row there
+stays in memory — the same `persistFilter` condition the filter uses.
 
 Note on 5: the branch's `src/app/migrations/current-domain.ts` is only twelve
 lines and addresses an older model change, so it is not the head start it might

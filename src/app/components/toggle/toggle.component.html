@@ -1,0 +1,13 @@
+<button
+  class="oh-switch"
+  type="button"
+  role="switch"
+  x-test="toggle"
+  [attr.aria-label]="label || null"
+  [attr.aria-checked]="checked"
+  [class.is-on]="checked"
+  [disabled]="disabled"
+  (click)="onClick($event)"
+>
+  <span class="oh-switch__knob"></span>
+</button>

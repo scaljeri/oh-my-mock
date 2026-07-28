@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const fs = require("fs") //import fs from node inbuilt methods
 const strip = require("strip-comments") // import strip from strip-comments module
 

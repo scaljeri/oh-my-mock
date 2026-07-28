@@ -83,6 +83,24 @@ export function ohMyXhrPrototype(): IOhMyXhrPrototype {
 }
 
 /**
+ * Whether a patch has already stashed its backup under `name`.
+ *
+ * Deliberately `Object.prototype.hasOwnProperty.call` rather than
+ * `prototype.hasOwnProperty(name)`. This bundle runs in the **page's** JS
+ * world, where `hasOwnProperty` may have been shadowed — by another extension,
+ * a polyfill, or a page that simply defines its own. Reaching for the method
+ * through `Object.prototype` is the one form that cannot be intercepted by
+ * anything on `XMLHttpRequest.prototype` itself.
+ *
+ * Each patch calls this at module scope to decide whether it is the first to
+ * wrap a member; getting it wrong means a patch backs up an already-patched
+ * function and the original is lost for the lifetime of the page.
+ */
+export function isXhrPatched(name: string): boolean {
+  return Object.prototype.hasOwnProperty.call(window.XMLHttpRequest.prototype, name);
+}
+
+/**
  * The descriptor of a member OhMyMock patches.
  *
  * `getOwnPropertyDescriptor` is typed as possibly returning `undefined`, but

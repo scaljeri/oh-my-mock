@@ -22,7 +22,6 @@ export function handleAPISettings(messageBus: OhMyMessageBus) {
       // `popupActive` moved to the store; the external API's `active` flag is what
       // enables mocking for this domain, which is `appActive`.
       state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
-      state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
     }
 
     if (data.blurImages !== undefined) {
@@ -37,7 +36,7 @@ export function handleAPISettings(messageBus: OhMyMessageBus) {
     sendMessageToInjected({
       ...(payload.id && { id: payload.id }),
       type: payloadType.OHMYMOCK_API_OUTPUT,
-      data: !!state ? { status: 'success' } : { status: 'failure' },
+      data: state ? { status: 'success' } : { status: 'failure' },
       description: 'content:settings-api-output'
     });
   }

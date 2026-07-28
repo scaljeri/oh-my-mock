@@ -51,7 +51,7 @@
 
     <div class="oh-header__actions">
       <oh-my-on-off-switch
-        (change)="onEnableChange($event)"
+        (checkedChange)="onEnableChange($event)"
         [checked]="enabled"
         x-test="header-active-toggle"
       ></oh-my-on-off-switch>
@@ -82,6 +82,11 @@
         OhMyMock is inactive
       </div>
 
+      <!-- Requests / Cookies. Rendered only once the state has arrived: the
+           strip reads its counts from `state$`, which does not exist before
+           `initializeApp` has run. -->
+      <oh-my-tab-nav *ngIf="!isInitializing"></oh-my-tab-nav>
+
       <section class="oh-main__content" *ngIf="!isInitializing">
         <router-outlet></router-outlet>
       </section>
@@ -97,7 +102,8 @@
 
 <oh-my-disabled-enabled
   *ngIf="showDisabled === 1 && !connectionFailed"
-  (change)="onEnableChange($event)"
+  (enable)="onEnableChange($event)"
+  (dismissed)="onDismissDisabled()"
 ></oh-my-disabled-enabled>
 
 <oh-my-connection-failure *ngIf="connectionFailed"></oh-my-connection-failure>

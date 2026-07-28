@@ -30,9 +30,9 @@ interface IOhQueuePacket<T> {
  */
 export class OhMyQueue<T = IPacket> {
   // Keyed by string rather than by the enum union: `objectTypes.MOCK` and
-  // `objectTypes.RESPONSE` share the value 'response', so a Record over the
-  // union collapses keys and stops being indexable. The public methods keep the
-  // enum type, which is where it helps callers.
+  // `payloadType.RESPONSE` share the value 'response', so a Record over
+  // `ohPacketType` collapses keys and stops being indexable. The public methods
+  // keep the enum type, which is where it helps callers.
   private handlers: Record<string, IOhActivity<T>> = {};
   private queue: Record<string, IOhQueuePacket<T>[]> = {};
 

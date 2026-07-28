@@ -84,7 +84,7 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
     await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
   }
 
-  async onRequestCloned(request: IData) {
+  async onRequestCloned() {
     // The filter must be resetted otherwise the new request will not show
     await this.storeService.updateAux({ filteredRequests: undefined }, this.state.context);
   }

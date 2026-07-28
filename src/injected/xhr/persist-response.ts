@@ -5,7 +5,7 @@ import { convertToB64 } from '../../shared/utils/binary';
 import { parse } from '../../shared/utils/xhr-headers';
 import { dispatchApiResponse } from '../message/dispatch-api-response';
 import { IOhMyXhr } from '../oh-my-xhr';
-import { removeDomainFromUrl } from '../utils';
+import { error, removeDomainFromUrl } from '../utils';
 
 export async function persistResponse(xhr: IOhMyXhr, request: IOhMyAPIRequest): Promise<void> {
   if (xhr.__ohIsPerisisted || !ohMyWindow().state?.active || xhr.__ohMyHasError) {
@@ -26,16 +26,14 @@ export async function persistResponse(xhr: IOhMyXhr, request: IOhMyAPIRequest): 
     output = JSON.stringify(raw);
   } else if (rt === 'blob' || rt === 'arraybuffer') {
     if (typeof raw !== 'string' && !(raw instanceof Blob) && !(raw instanceof ArrayBuffer)) {
-      // eslint-disable-next-line no-console
-      return console.error(`XHR Error: OhMyMock expected a ${rt} response, but got`, raw);
+      return error(`XHR Error: OhMyMock expected a ${rt} response, but got`, raw);
     }
 
     output = await convertToB64(raw);
   } else if (rt === '' || rt === 'text') {
     output = xhr.__responseText;
   } else {
-    // eslint-disable-next-line no-console
-    return console.error(`XHR Error: OhMyMock does not support response type ${rt}.\nPlease file a feature request if you need this to be fixed!`);
+    return error(`XHR Error: OhMyMock does not support response type ${rt}.\nPlease file a feature request if you need this to be fixed!`);
   }
 
   const update: IOhMyResponseUpdate = {

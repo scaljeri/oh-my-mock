@@ -1,0 +1,50 @@
+@use 'tokens' as t;
+
+// The tab strip of `design/Mock Manager v2.dc.html`: the current tab is marked
+// by a 2px bar drawn as an inset shadow, so switching tabs never shifts the
+// row by a pixel.
+
+.oh-tabs {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-1;
+  padding: 0 t.$oh-row-padding-x;
+  border-bottom: 1px solid t.$oh-border-soft;
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 12px 12px;
+    font-size: t.$oh-size-url;
+    font-weight: t.$oh-weight-medium;
+    color: t.$oh-text-subtle;
+    box-shadow: inset 0 -2px 0 0 transparent;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+      color: t.$oh-text;
+    }
+
+    &.is-active {
+      font-weight: t.$oh-weight-semibold;
+      color: t.$oh-text;
+      box-shadow: inset 0 -2px 0 0 t.$oh-brand;
+    }
+  }
+
+  &__count {
+    font-size: t.$oh-size-xs;
+    font-weight: t.$oh-weight-semibold;
+    border-radius: t.$oh-radius-pill;
+    padding: 1px 6px;
+    color: t.$oh-text-faint;
+    background: t.$oh-bg-sunken;
+  }
+
+  &__tab.is-active &__count {
+    color: t.$oh-brand;
+    background: t.$oh-brand-tint;
+  }
+}

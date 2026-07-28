@@ -5,7 +5,7 @@ import { METHODS } from '@shared/constants';
 
 @Component({
   standalone: false,
-  selector: 'app-add-data',
+  selector: 'oh-my-add-data',
   templateUrl: './add-data.component.html',
   styleUrls: ['./add-data.component.scss']
 })

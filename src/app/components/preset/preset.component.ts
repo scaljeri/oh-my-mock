@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { IOhMyContext, IOhMyPresets, IState } from '@shared/type';
@@ -23,7 +23,7 @@ import { AutocompleteDropdownComponent } from '../form/autocomplete-dropdown/aut
     }
   ]
 })
-export class PresetComponent implements OnInit, OnChanges {
+export class PresetComponent implements OnInit, OnChanges, OnDestroy {
   @Input() context!: IOhMyContext;
   @Input() theme!: 'dark' | 'light';
 
@@ -111,7 +111,7 @@ export class PresetComponent implements OnInit, OnChanges {
 
   onBlur(): void {
     if (!this.context.preset) {
-      const [id, value] = Object.entries(this.presets)[0];
+      const [, value] = Object.entries(this.presets)[0];
       this.presetCtrl.setValue(value, { emitEvent: false });
       // this.updatePresets({ id, value, activate: true });
     }

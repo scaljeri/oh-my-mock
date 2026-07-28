@@ -1,4 +1,31 @@
-import { compareUrls, url2regex } from './urls';
+import { compareUrls, stripUrl, url2regex } from './urls';
+
+describe('#Utils/urls#stripUrl', () => {
+  it('should return the host without scheme, port, path, query or fragment', () => {
+    expect(stripUrl('https://a.b.c/x?y#z')).toBe('a.b.c');
+    expect(stripUrl('http://host:8080/p')).toBe('host');
+    expect(stripUrl('a.b.c')).toBe('a.b.c');
+  });
+
+  // `?` and `#` are literal inside the character class the regex uses; these
+  // pin that, because the escapes that used to be on them looked load-bearing.
+  it('should stop at a query or a fragment', () => {
+    expect(stripUrl('host?q')).toBe('host');
+    expect(stripUrl('host#frag')).toBe('host');
+    expect(stripUrl('https://a.b/#/route')).toBe('a.b');
+  });
+
+  it('should return an empty string when nothing matches', () => {
+    expect(stripUrl('')).toBe('');
+  });
+
+  // Not a recommendation, a record: the regex is unanchored, so it skips
+  // leading separators and takes the first run of host characters it finds.
+  it('should skip leading separators', () => {
+    expect(stripUrl('?q')).toBe('q');
+    expect(stripUrl('//x')).toBe('x');
+  });
+});
 
 describe('#Utils/urls#url2regex', () => {
   it('should escape ?', () => {

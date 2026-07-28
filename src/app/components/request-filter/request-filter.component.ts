@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
 import { BehaviorSubject, debounceTime, filter, map, merge, Observable, of, Subscription, switchMap } from 'rxjs';
@@ -21,7 +21,7 @@ type SearchFilterData = {
   styleUrls: ['./request-filter.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RequestFilterComponent implements OnInit, OnDestroy {
+export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
   @Input() data!: Record<ohMyDataId, IData>;
   @Input() filterOptions: Record<string, boolean> | undefined;
   @Input() filterStr: string | undefined;
@@ -47,7 +47,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     private storeService: OhMyState) { }
 
   ngOnInit(): void {
-    this.subs.add(this.filterCtrl.valueChanges.pipe(debounceTime(100)).subscribe(value => {
+    this.subs.add(this.filterCtrl.valueChanges.pipe(debounceTime(100)).subscribe(() => {
       this.cdr.detectChanges();
     }));
 
@@ -92,7 +92,7 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     this.filterCtrl.setValue(this.filterStr, { emitEvent: false });
   }
 
-  ngOnChanges({ filterOptions, filterStr, lastResult, data }: SimpleChanges): void {
+  ngOnChanges({ filterStr, lastResult, data }: SimpleChanges): void {
     try {
 
       if (filterStr?.currentValue !== undefined && (filterStr.currentValue === '' || !this.filterCtrl.value.match(filterStr?.currentValue))) {
@@ -114,11 +114,14 @@ export class RequestFilterComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFilterOption(option: { id: string; state: boolean }): void {
+  /**
+   * A checkbox in the filter menu was ticked. Which one is not passed in:
+   * `[(ngModel)]` has already written it into `filterOptions`, and the search
+   * reads the whole map.
+   */
+  onFilterOption(): void {
     this.filterMappedOpts = transformFilterOptions(this.filterOptions);
     this.filterTrigger$.next();
-
-    // this.updateFilterOptions.emit(this.filterOptions);
   }
 
   // Returns SearchFilterData with `data` holding the items that did not match

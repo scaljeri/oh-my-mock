@@ -3,7 +3,7 @@ import { ohMyWindow } from "../../shared/oh-my-window";
 import { IOhMyAPIRequest } from "../../shared/type";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
 import { asOhMyXhr, toXhrBody } from "../oh-my-xhr";
-import { findCachedResponse } from "../utils";
+import { error, findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
 // const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__send');
@@ -85,6 +85,10 @@ export function patchSend() {
           }, data.response.delay);
         }
       }).catch(err => {
+        // Nothing below this point runs, which means the page's XHR never
+        // completes and, if the rejection came early, was never even sent. That
+        // used to happen without a word in the console.
+        error(`OhMyMock could not mock ${method} ${url}; the request is stuck`, err);
       });
     }
   }

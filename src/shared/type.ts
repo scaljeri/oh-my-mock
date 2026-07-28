@@ -1,7 +1,17 @@
-import { MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, resetStateOptions, STORAGE_KEY } from './constants';
-import { ImportResultEnum } from './utils/import-json';
+import { METHODS, MOCK_RULE_TYPES, objectTypes, ohMyMockStatus, resetStateOptions, STORAGE_KEY } from './constants';
 
-export type requestMethod = 'GET' | 'POST' | 'DELETE' | 'UPDATE' | 'PUT';
+/**
+ * The HTTP methods a mock can be keyed by.
+ *
+ * Derived from `METHODS` rather than written out, because the two used to
+ * disagree: the popup's method dropdown offers everything in `METHODS`, while
+ * this listed only `GET | POST | DELETE | UPDATE | PUT`. `toRequestMethod`
+ * answers `undefined` for anything not in this union and the request then falls
+ * through unmocked — so a PATCH, OPTIONS or HEAD mock could be created in the
+ * UI and would silently never match. (`UPDATE`, meanwhile, is not an HTTP
+ * method at all.) Deriving one from the other makes that drift impossible.
+ */
+export type requestMethod = typeof METHODS[number];
 export type requestType = 'XHR' | 'FETCH';
 export type statusCode = number; // DEPRECATED
 export type ohMyStatusCode = number;
@@ -42,6 +52,12 @@ export interface IOhMyAux {
   appActive?: boolean;
   blurImages?: boolean;
   filteredRequests?: ohMyDataId[]
+  /**
+   * The requests this domain has pinned to the top of the list, in the order
+   * they were pinned — the order is the feature, so this is a list, not a set.
+   * Per domain, like everything else in `aux`.
+   */
+  stickyRequests?: ohMyDataId[];
   filterOptions?: Record<string, boolean>;
 }
 

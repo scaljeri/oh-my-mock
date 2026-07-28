@@ -1,0 +1,27 @@
+/*
+ * Type checking for the e2e suite.
+ *
+ * Playwright transpiles specs without type checking them, and neither
+ * `tsconfig.json` (the Angular app) nor `dev.tsconfig.json` (the extension
+ * bundles) includes this directory — so without this file the whole suite is
+ * unchecked, casts and all. `npm run e2e:types` runs it.
+ *
+ * It inherits full strict mode from the root config; `node` and `chrome` types
+ * are added because the fixtures spawn processes and evaluate code inside the
+ * extension's service worker.
+ */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // The fixtures import from `src/shared`, so the program spans both trees.
+    "rootDir": "..",
+    "types": ["node", "chrome"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "lib": ["es2022", "dom"]
+  },
+  "files": [],
+  "include": ["**/*.ts"]
+}

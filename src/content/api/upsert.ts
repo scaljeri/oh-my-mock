@@ -3,10 +3,9 @@ import { payloadType } from "../../shared/constants";
 import { IOhMessage, IOhMyImportStatus, IOhMyPacketContext } from "../../shared/packet-type";
 import { ImportResultEnum } from "../../shared/utils/import-json";
 import { OhMySendToBg } from "../../shared/utils/send-to-background";
-import { OhMyContentState } from "../content-state";
 import { sendMessageToInjected } from "../send-to-injected";
 
-export function handleAPIUpsert(contentState: OhMyContentState) {
+export function handleAPIUpsert() {
   return async ({ packet }: IOhMessage<OhMyAPIUpsert, IOhMyPacketContext>) => {
     const { type, context, data } = packet.payload;
     // const data = { activate: true, ...packet.payload.data } as OhMyAPIUpsert;

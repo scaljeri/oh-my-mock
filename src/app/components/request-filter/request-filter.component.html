@@ -31,14 +31,22 @@
     svgIcon="filter_list"
   ></mat-icon>
   <mat-menu #filter="matMenu">
-    <div class="filter-menu" (click)="$event.stopPropagation()">
-      <label>Include:</label>
-      <ul *ngIf="filterOptions">
+    <!-- The click guard is what keeps the menu open while options are ticked:
+         `mat-menu`'s panel closes on *any* click inside it. `role="presentation"`
+         says what this wrapper is — a propagation guard around the options, not
+         a control of its own. -->
+    <div
+      class="filter-menu"
+      role="presentation"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="filter-menu__title">Include:</p>
+      <ul *ngIf="filterOptions" aria-label="Include">
         <li *ngFor="let option of filterOptionsData">
           <mat-checkbox
             class="example-margin"
             [(ngModel)]="filterOptions[option.id]"
-            (change)="onFilterOption(option)"
+            (change)="onFilterOption()"
             >{{ option.label }}</mat-checkbox
           >
         </li>

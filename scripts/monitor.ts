@@ -1,11 +1,21 @@
 /* eslint-disable no-console */
 
-declare let require: any;
-// import * as chokidar from 'chokidar';
-const chokidar = require('chokidar');
-const { exec } = require('child_process');
+import * as chokidar from 'chokidar';
+import { exec } from 'child_process';
+import packageJson from '../package.json';
+
+/**
+ * `semver` ships no type declarations and `@types/semver` is not a dependency
+ * of this repo, so the one function this script uses is declared here rather
+ * than letting an untyped `require` spread `any` over the whole file. Declared
+ * for the literal module id only, so it cannot double as a general escape
+ * hatch.
+ */
+interface SemverModule {
+  inc(version: string, release: string, identifier: string): string;
+}
+declare function require(id: 'semver'): SemverModule;
 const semver = require('semver');
-const packageJson = require('../package.json');
 
 const PATH_TO_TASKS = {
   'src/content': 'yarn build:content',
@@ -16,16 +26,27 @@ const PATH_TO_TASKS = {
   'src/app': 'yarn build:ng && yarn build:sandbox',
 }
 
-let version = packageJson.version;
-let timeoutId;
-let promise;
-const commands = new Set<string>()
+type WatchedPath = keyof typeof PATH_TO_TASKS;
+
+const WATCHED_PATHS = Object.keys(PATH_TO_TASKS) as WatchedPath[];
+
+let version: string = packageJson.version;
+let timeoutId: NodeJS.Timeout | undefined;
+let promise: Promise<void> | undefined;
+const commands = new Set<WatchedPath>()
 // One-liner for current directory
 
 chokidar
-  .watch(Object.keys(PATH_TO_TASKS))
-  .on("all", (event, path) => {
-    commands.add(path2command(path));
+  .watch(WATCHED_PATHS)
+  .on("all", (_event, path) => {
+    const command = path2command(path);
+
+    // Nothing to schedule for a path outside `PATH_TO_TASKS`. The old code fed
+    // `path2command`'s empty-string fallback straight into the command set,
+    // which then built an `undefined` task.
+    if (command) {
+      commands.add(command);
+    }
 
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -36,7 +57,7 @@ chokidar
     }
 
     timeoutId = setTimeout(() => {
-      timeoutId = null;
+      timeoutId = undefined;
 
       scheduleBuild();
     }, 500);
@@ -50,17 +71,17 @@ function scheduleBuild(): Promise<void> {
     .catch(() => { })
     .finally(() => {
       console.log("- finished build", timeoutId, commands.size);
-      promise = null;
+      promise = undefined;
 
       if (!timeoutId && commands.size > 0) {
         scheduleBuild();
       }
     });
 
-    return promise;
+  return promise;
 }
 
-function build(cmds: string[]): Promise<void> {
+function build(cmds: WatchedPath[]): Promise<void> {
   createVersion();
 
   if (cmds.some(c => c.match(/src\/shared/))) {
@@ -93,6 +114,7 @@ function createVersion() {
   //version = semver.inc(version, 'patch');
 }
 
-function path2command(path): string {
-  return Object.keys(PATH_TO_TASKS).reduce((out, p) => new RegExp(p).test(path) ? p : out, '')
+function path2command(path: string): WatchedPath | undefined {
+  return WATCHED_PATHS.reduce<WatchedPath | undefined>(
+    (out, p) => new RegExp(p).test(path) ? p : out, undefined)
 }

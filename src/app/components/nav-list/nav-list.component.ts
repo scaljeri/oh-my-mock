@@ -17,7 +17,7 @@ import { ResetStateComponent } from '../reset-state/reset-state.component';
  */
 @Component({
   standalone: false,
-  selector: 'app-nav-list',
+  selector: 'oh-my-nav-list',
   templateUrl: './nav-list.component.html',
   styleUrls: ['./nav-list.component.scss']
 })

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CloudSyncService } from '../../services/cloud-sync.service';
 
 @Component({
@@ -7,7 +7,7 @@ import { CloudSyncService } from '../../services/cloud-sync.service';
   templateUrl: './cloud-sync-page.component.html',
   styleUrls: ['./cloud-sync-page.component.scss']
 })
-export class CloudSyncPageComponent implements OnInit {
+export class CloudSyncPageComponent implements OnInit, OnDestroy {
 
   constructor(private cloudSyncService: CloudSyncService) { }
 

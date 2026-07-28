@@ -41,28 +41,33 @@ export class StatusCodeComponent implements AfterViewInit, ControlValueAccessor 
   optionLabels = STATUS_CODE_LABELS;
 
   ngAfterViewInit(): void {
-    this.ctrl.valueChanges.pipe(
-    ).subscribe(value => {
-      value = Number(value.replace(/[^\d].*$/g, ''));
+    // The control holds what the autocomplete put there — `'404 Not Found'`,
+    // or whatever was typed — and the model is the number in front of it.
+    // `writeValue` below stores it back without re-emitting, so the string is
+    // the only thing this ever sees.
+    this.ctrl.valueChanges.subscribe((raw: string) => {
+      const value = Number(String(raw).replace(/[^\d].*$/g, ''));
 
       this.onChange(value);
-      this.onTouch(value);
+      // `registerOnTouched` hands over a zero-argument callback; the value it
+      // used to be called with was thrown away.
+      this.onTouch();
       this.writeValue(value);
     });
   }
 
-  onChange: any = () => { }
-  onTouch: any = () => { }
+  private onChange: (value: number) => void = () => { }
+  private onTouch: () => void = () => { }
 
-  writeValue(value: any) {
+  writeValue(value: number | null) {
     this.ctrl.setValue(value, { emitEvent: false });
   }
 
-  registerOnChange(fn: any) {
+  registerOnChange(fn: (value: number) => void) {
     this.onChange = fn
   }
 
-  registerOnTouched(fn: any) {
+  registerOnTouched(fn: () => void) {
     this.onTouch = fn
   }
 

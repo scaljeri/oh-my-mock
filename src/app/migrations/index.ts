@@ -1,9 +1,10 @@
-import { IOhMyMock } from '@shared/type'
 import { IOhMygration } from './types';
 
 
 export const migrations: Record<string, IOhMygration> = {
-  '2.13.0': (state: IOhMyMock) => null // RESET
+  // A reset: the stored state is discarded rather than transformed, so the
+  // migration ignores what it is handed.
+  '2.13.0': () => null
 
 }
 

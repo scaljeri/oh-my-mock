@@ -3,6 +3,7 @@ import { IOhMyDispatchServerRequest, IOhMyPacketContext, IPacketPayload } from '
 import { IOhMyMockResponse } from '../shared/type';
 import { ohMyMockStatus } from '../shared/constants';
 import { uniqueId } from '../shared/utils/unique-id';
+import { log } from './utils';
 
 /**
  * Optional link to the NodeJS SDK server (`libs/nodejs-sdk`), which serves mock
@@ -54,8 +55,7 @@ export const connectWithLocalServer = (url: string = DEFAULT_SDK_SERVER_URL): vo
 
   socket.io.on('error', () => {
     if (isConnected) { // state changed
-      // eslint-disable-next-line no-console
-      console.log('OhMyMock: lost connection with the SDK server');
+      log('lost connection with the SDK server');
       isConnected = false;
     }
   });
@@ -63,8 +63,7 @@ export const connectWithLocalServer = (url: string = DEFAULT_SDK_SERVER_URL): vo
   socket.on('connect', () => {
     if (!isConnected) {
       isConnected = true;
-      // eslint-disable-next-line no-console
-      console.log(`OhMyMock: connected to the SDK server on ${url}`);
+      log(`connected to the SDK server on ${url}`);
     }
   });
 

@@ -8,7 +8,6 @@ export async function getTabId(queryParams: Params = {}): Promise<number> {
       // chrome.tabs.getCurrent(tab => {
       chrome.tabs.query({ currentWindow: true, active: false }, tabs => {
         const index = tabs.length === 1 ? 0 : 1;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         resolve(tabs[index].id!);
       });
       // });

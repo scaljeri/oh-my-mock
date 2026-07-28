@@ -1,4 +1,4 @@
-import { Attribute, Directive, ElementRef, Input } from '@angular/core';
+import { Attribute, Directive, ElementRef, Input, OnChanges, OnInit } from '@angular/core';
 import { FormControlDirective, NgControl } from '@angular/forms';
 
 /**
@@ -12,7 +12,7 @@ import { FormControlDirective, NgControl } from '@angular/forms';
   standalone: false,
   selector: '[ohMyUpdateInput]'
 })
-export class UpdateInputDirective {
+export class UpdateInputDirective implements OnInit, OnChanges {
   @Input('ohMyUpdateInput') input!: string;
 
   private canUpdate = () => !this.isActive();

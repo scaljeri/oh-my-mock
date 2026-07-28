@@ -1,0 +1,74 @@
+<!--
+  The Cookies tab of `design/Mock Manager v2.dc.html`: the same row height and
+  inset as the request list, with the columns cookies actually have.
+-->
+<ol class="oh-cookies" data-table>
+  <li class="oh-cookies__header">
+    <span class="oh-col">Name</span>
+    <span class="oh-col">Value</span>
+    <span class="oh-col">Path</span>
+    <span class="oh-col">Expires</span>
+    <span class="oh-col oh-col--end">On</span>
+  </li>
+
+  <!-- Focusable and answerable with Enter/Space: opening a cookie mock is what
+       the row is for, and it used to be reachable with a mouse only. -->
+  <li
+    class="oh-cookie-row"
+    x-test="cookie-item"
+    *ngFor="let cookie of visible; trackBy: trackBy"
+    [title]="cookie.name + '=' + cookie.value"
+    tabindex="0"
+    [ngClass]="{
+      'is-selected': cookie.id === selectedId,
+      'is-enabled': isEnabled(cookie)
+    }"
+    (click)="selectCookie.emit(cookie.id)"
+    (keydown.enter)="onRowKey(cookie, $event)"
+    (keydown.space)="onRowKey(cookie, $event)"
+  >
+    <span class="oh-cookie-row__name">
+      <span class="oh-cookie-row__key" x-test="cookie-name">{{ cookie.name }}</span>
+      <span class="oh-cookie-row__tags">
+        <span
+          class="oh-tag"
+          *ngFor="let tag of cookie | ohCookieTags"
+          [attr.data-tone]="tag.tone"
+          >{{ tag.name }}</span
+        >
+      </span>
+    </span>
+
+    <span class="oh-cookie-row__value">{{ cookie.value }}</span>
+    <span class="oh-cookie-row__path">{{ path(cookie) }}</span>
+    <span class="oh-cookie-row__expires">{{ cookie.expirationDate | ohCookieExpiry }}</span>
+
+    <oh-my-toggle
+      class="oh-cookie-row__switch"
+      x-test="cookie-toggle"
+      [checked]="isEnabled(cookie)"
+      [label]="'Mock ' + cookie.name + ' in this preset'"
+      (toggled)="onToggle(cookie, $event)"
+    ></oh-my-toggle>
+  </li>
+</ol>
+
+<p class="oh-cookies__empty" *ngIf="!cookies.length">
+  No cookie mocks for this domain yet. While mocking is on, every cookie the
+  site sets is recorded here automatically — switched off, so recording never
+  changes what the browser does.
+</p>
+
+<p class="oh-cookies__empty" *ngIf="cookies.length && !visible.length">
+  No cookie matches “{{ filter }}”.
+</p>
+
+<div class="oh-cookies__foot">
+  <button class="oh-cookies__add" type="button" x-test="add-cookie" (click)="addCookie.emit()">
+    <span class="oh-cookies__add-sign">+</span> New cookie
+  </button>
+
+  <span class="oh-cookies__idle" *ngIf="idleCount" x-test="cookie-idle-count">
+    {{ idleCount }} of {{ cookies.length }} are off in every preset
+  </span>
+</div>

@@ -1,7 +1,13 @@
 import { STORAGE_KEY } from '../constants';
 
 export interface IOhMyLoggingConfig {
-  handler?: any,
+  /**
+   * Where the line goes. Always one of the `console` methods — the builders
+   * below pick `console.debug`/`warn`/`error`, and `logging` falls back to
+   * `console.log` — so the signature is a console method's: a format string
+   * followed by the `%c` substitutions and whatever else the caller passed.
+   */
+  handler?: (message: string, ...rest: unknown[]) => void,
   styles?: string;
   prefix?: string;
 }

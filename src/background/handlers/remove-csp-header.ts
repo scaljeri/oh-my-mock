@@ -21,26 +21,32 @@ export async function cSPRemoval(urls: string[]) {
     removeCSPRules([id]);
   }, 10000);
 
+  // The rule was written with `as any` on both halves, which is what let
+  // `resourceTypes: ['main_frame']` past the compiler: `ResourceType`,
+  // `RuleActionType` and `HeaderOperation` are enums, and a bare string is not
+  // one of their members. Named properly, the compiler now checks the rule
+  // instead of taking its word for it.
+  const { ResourceType, RuleActionType, HeaderOperation } = chrome.declarativeNetRequest;
+  const rule: chrome.declarativeNetRequest.Rule = {
+    id,
+    priority: 1,
+    condition: {
+      initiatorDomains: urls,
+      resourceTypes: [ResourceType.MAIN_FRAME]
+    },
+    action: {
+      type: RuleActionType.MODIFY_HEADERS,
+      responseHeaders: [
+        { header: 'Content-Security-Policy', operation: HeaderOperation.REMOVE },
+        { header: 'Content-Security-Policy-Report-Only', operation: HeaderOperation.REMOVE },
+        { header: "oh-my-mock", operation: HeaderOperation.SET, value: "true" },
+      ],
+    }
+  };
+
   const output = await chrome.declarativeNetRequest.updateSessionRules({
     // removeRuleIds: [44308],
-    addRules: [
-      {
-        id,
-        priority: 1,
-        condition: {
-          initiatorDomains: urls,
-          resourceTypes: ['main_frame']
-        } as any,
-        action: {
-          type: 'modifyHeaders',
-          responseHeaders: [
-            { header: 'Content-Security-Policy', operation: 'remove' },
-            { header: 'Content-Security-Policy-Report-Only', operation: 'remove' },
-            { header: "oh-my-mock", operation: "set", value: "true" },
-          ],
-        } as any
-      }
-    ]
+    addRules: [rule]
   });
   // console.log('CSP SETUP', urls, await chrome.declarativeNetRequest.getDynamicRules(), await chrome.declarativeNetRequest.getSessionRules());
   // console.log('output', output);

@@ -36,7 +36,9 @@ export class OhMyMessageBus {
     // `packet` comes straight off `window.postMessage`/`chrome.runtime`, so at
     // runtime it can be anything — the optional chaining is a real guard, not a
     // formality.
-    message?.packet?.source && this.packetSubject.next(message);
+    if (message?.packet?.source) {
+      this.packetSubject.next(message);
+    }
   }
 
   streamBySource$<T = unknown, X = IOhMyPacketContext>(source?: appSources | appSources[]): Observable<IOhMessage<T, X>> {

@@ -20,6 +20,10 @@ import { appRoutes } from './app.routes';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
 import { provideMonacoEditor } from 'ngx-monaco-editor-v2';
+import {
+  installMonacoEnvironment,
+  MONACO_BASE_URL
+} from './components/form/code-edit/monaco-environment';
 import { OH_MY_SEARCH_WORKER_FACTORY } from './services/search-worker.token';
 import { createSearchWorker } from './services/search-worker.factory';
 import { PageMockComponent } from './pages/mock/mock.component';
@@ -66,7 +70,15 @@ import { HttpClientModule } from '@angular/common/http';
     // mismatch 404s `loader.js` and every code editor in the app then renders
     // as an empty box — silently, because `CodeEditComponent` polls for
     // `window.monaco` forever rather than failing.
-    provideMonacoEditor({ baseUrl: './assets/monaco-editor/min/vs' }),
+    //
+    // `onMonacoLoad` runs the moment the AMD bundle is in: it swaps Monaco's
+    // blob-based worker factory for one Chrome will actually run inside an
+    // extension. Without it the language workers never start and the editors
+    // have no validation — see `monaco-environment.ts`.
+    provideMonacoEditor({
+      baseUrl: MONACO_BASE_URL,
+      onMonacoLoad: installMonacoEnvironment
+    }),
     { provide: Window, useValue: window },
   ],
   bootstrap: [AppComponent]

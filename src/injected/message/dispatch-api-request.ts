@@ -1,10 +1,10 @@
 import { appSources, ohMyMockStatus, payloadType } from '../../shared/constants';
 import { ohMyWindow } from '../../shared/oh-my-window';
-import { logMocked } from '../utils';
+import { error, logMocked } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
-import { IOhMyAPIRequest, IOhMyContext, requestType } from '../../shared/type';
+import { IOhMyAPIRequest, requestType } from '../../shared/type';
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
@@ -51,7 +51,11 @@ import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyReadyResponse> => {
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
-  return new Promise(async (resolve, reject) => {
+  // Not an `async` executor, and it must not become one: it contains no
+  // `await`, and an async executor that throws before `resolve` has its
+  // rejection swallowed — the promise would never settle and the page's
+  // `fetch` would hang forever. This runs for every intercepted request.
+  return new Promise<IOhMyReadyResponse>(resolve => {
     const id = uniqueId();
     const payload = {
       context: { id, requestType },
@@ -66,10 +70,7 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
         try {
           logMocked(request, requestType, resp.response);
         } catch (err) {
-          // eslint-disable-next-line no-console
-          console.log('Ooops, received something unexpected: ', resp);
-          // eslint-disable-next-line no-console
-          console.error(err);
+          error('Ooops, received something unexpected: ', resp, err);
         }
         mb.clear();
 

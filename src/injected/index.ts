@@ -5,15 +5,14 @@ import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { setupListenersMessageBus } from './state-manager';
-import { log } from './utils';
+import { error, log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
 
 let isOhMyMockActive = false;
 
 if (!hasOhMyWindow()) {
-  // eslint-disable-next-line no-console
-  console.log('Oooops. Something went wrong!!!')
+  error('Oooops. Something went wrong!!!')
 } else {
   const ohMy = ohMyWindow();
 

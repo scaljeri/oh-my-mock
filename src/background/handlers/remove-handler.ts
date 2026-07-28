@@ -1,12 +1,13 @@
 import { appSources, DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IOhMyBackup, IState, ohMyDataId } from "../../shared/type";
+import { IData, IState, ohMyDataId } from "../../shared/type";
 import { importJSON } from "../../shared/utils/import-json";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import jsonFromFile from '../../shared/dummy-data.json';
 import { error } from "../utils";
+import { warn } from "../utils";
 
 
 // Not for Response/IMock
@@ -43,7 +44,7 @@ export class OhMyRemoveHandler {
         await StorageUtils.remove(state.domain);
 
         if (state.domain === DEMO_TEST_DOMAIN) {
-          await importJSON(jsonFromFile as any as IOhMyBackup, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
+          await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
         }
       } else if (data.type === objectTypes.REQUEST) {
         if (!StateUtils.hasRequest(state, data.id)) { // Already gone
@@ -76,8 +77,7 @@ export class OhMyRemoveHandler {
         return await new Promise<IState>(r =>
           OhMyRemoveHandler.queue.addPacket(payloadType.STATE, { source: appSources.BACKGROUND, payload }, s => r(s as IState)));
       } else {
-        // eslint-disable-next-line no-console
-        console.log(`Cannot remove type ${data.type} (not implemented)`)
+        warn(`Cannot remove type ${data.type} (not implemented)`)
         return undefined;
       }
     } catch (err) {

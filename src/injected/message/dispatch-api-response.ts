@@ -1,6 +1,5 @@
 import { payloadType } from '../../shared/constants';
 import { IOhMyResponseUpdate } from '../../shared/packet-type';
-import { log } from '../utils';
 import { send } from './send';
 
 /**

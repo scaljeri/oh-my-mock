@@ -1,10 +1,10 @@
 import { ohMyMockStatus } from "../../shared/constants";
 import { ohMyWindow } from "../../shared/oh-my-window";
-import { IOhMyXhr, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
+import { IOhMyXhr, isXhrPatched, ohMyXhrPrototype, xhrDescriptor } from "../oh-my-xhr";
 import { findCachedResponse } from "../utils";
 import { persistResponse } from "./persist-response";
 
-const isPatched = !!window.XMLHttpRequest.prototype.hasOwnProperty('__responseText');
+const isPatched = isXhrPatched('__responseText');
 const descriptor = xhrDescriptor((isPatched ? '__' : '') + 'responseText');
 
 export function patchResponseText() {
@@ -35,7 +35,9 @@ export function patchResponseText() {
         } else {
           return this.ohResult?.response?.response || this.__responseText;
         }
-      } catch (err) {
+      } catch {
+        // The InvalidStateError the comment above expects. A getter must return
+        // something, and `undefined` is the closest thing to "no text here".
       }
 
       return undefined;
