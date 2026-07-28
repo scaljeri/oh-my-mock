@@ -8,7 +8,13 @@ import {
 } from '@angular/core';
 import { IOhMyContext, IState } from '@shared/type';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet
+} from '@angular/router';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
@@ -18,15 +24,38 @@ import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
 import { IPacketPayload } from '@shared/packet-type';
 import { WebWorkerService } from './services/web-worker.service';
-import { MatIconRegistry } from '@angular/material/icon';
+import { MatIconRegistry, MatIcon } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { registerIcons } from './app-icons';
+import { NgClass } from '@angular/common';
+import { CloudSyncComponent } from './components/cloud-sync/cloud-sync.component';
+import { OnOffSwitchComponent } from './components/on-off-switch/on-off-switch.component';
+import { DomainSidebarComponent } from './components/domain-sidebar/domain-sidebar.component';
+import { TabNavComponent } from './components/tab-nav/tab-nav.component';
+import { FeedbackComponent } from './components/feedback/feedback.component';
+import { SpinnerComponent } from './components/spinner/spinner.component';
+import { DisabledEnabledComponent } from './components/disabled-enabled/disabled-enabled.component';
+import { ConnectionFailureComponent } from './components/connection-failure/connection-failure.component';
 
 @Component({
-  standalone: false,
   selector: 'oh-my-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  imports: [
+    NgClass,
+    MatIcon,
+    RouterLink,
+    RouterLinkActive,
+    CloudSyncComponent,
+    OnOffSwitchComponent,
+    DomainSidebarComponent,
+    TabNavComponent,
+    RouterOutlet,
+    FeedbackComponent,
+    SpinnerComponent,
+    DisabledEnabledComponent,
+    ConnectionFailureComponent
+  ]
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   private appState = inject(AppStateService);

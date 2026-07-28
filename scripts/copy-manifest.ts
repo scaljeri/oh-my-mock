@@ -13,6 +13,5 @@ if (!fs.existsSync(OUT_DIR)){
 }
 
 fs.writeFile(`${OUT_DIR}/manifest.json`, JSON.stringify(manifestJson, null, 4), 'utf8', function (err: unknown) {
-  // eslint-disable-next-line no-console
   if (err) return console.log(err);
 });

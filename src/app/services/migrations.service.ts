@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { compareVersions } from 'compare-versions';
 
 import { IOhMyMock } from '@shared/types/store';
@@ -15,11 +15,9 @@ import { migrations, IOhMygrations } from '../migrations/'
   providedIn: 'root'
 })
 export class MigrationsService {
-  versions: string[];
+  private appState = inject(AppStateService);
 
-  constructor(private appState: AppStateService) {
-    this.versions = Object.keys(migrations).sort(compareVersions);
-  }
+  versions: string[] = Object.keys(migrations).sort(compareVersions);
 
   update(state: IOhMyMock): IOhMyMock | null {
     if (!state) {
