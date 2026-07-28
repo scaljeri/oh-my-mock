@@ -9,6 +9,7 @@ because the logic is spread across contexts that do not share memory.
 | [messaging.md](./messaging.md) | you are adding or debugging a message between contexts |
 | [interception.md](./interception.md) | you are wondering why this patches `fetch` instead of using an extension API |
 | [request-normalisation.md](./request-normalisation.md) | you are picking up the open refactor that moves requests out of the domain record |
+| [cookie-mocking.md](./cookie-mocking.md) | you are building the Cookies tab, or wondering why cookies cannot ride on the response mock |
 
 ## The shape of the thing in one paragraph
 
@@ -34,3 +35,7 @@ evaluated. Everything between them is messages.
   is why the receiver checks `event.source === window`.
 - **`IOhMyContext` and `IOhMyPacketContext` are different on purpose.** A message
   from the page does not know the domain, let alone the preset.
+- **A mocked response never reaches the cookie jar.** It is fabricated in the
+  page, so the browser never processes its `Set-Cookie`. Cookie mocking needs
+  `chrome.cookies`, from the background — see
+  [cookie-mocking.md](./cookie-mocking.md).
