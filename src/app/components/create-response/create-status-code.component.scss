@@ -1,49 +1,119 @@
-@use 'mixins' as *;
+@use 'tokens' as t;
 
-// No fixed height: the dialog is opened with a width only, so it sizes to its
-// content. `height: 100%` here resolved against a container that was itself
-// sizing to this element, which left the dialog with a scrollbar of its own.
+// The "create response" dialog, in the language of the detail pane: plain
+// inputs on a light surface, hairline borders, the brand colour only on the
+// confirming action.
+//
+// BEM children stay top-level selectors — nesting `&__input` inside
+// `label.oh-field` compiles to `label.oh-field__input`, which matches nothing
+// and fails silently.
+//
+// The dialog is opened with a width and no height, so this sizes to its
+// content. It used to be a fixed 380px with `height: 100%` here, which the
+// redesign's type scale outgrew: the dialog scrolled and the dropdown covered
+// the buttons.
 :host {
-  display: flex;
-  flex-direction: column;
+  display: block;
+  box-sizing: border-box;
+  padding: t.$oh-detail-padding-y t.$oh-detail-padding-x;
+  font-family: t.$oh-font-sans;
+  color: t.$oh-text;
 }
 
-mat-error {
-  font-size: 13px;
+.oh-dialog__title {
+  margin: 0 0 t.$oh-space-4;
+  font-size: t.$oh-size-lg;
+  font-weight: t.$oh-weight-bold;
+  letter-spacing: -0.01em;
+}
 
-  & + mat-error {
-    display: none;
+.oh-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: t.$oh-space-4;
+}
+
+.oh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.oh-field__label {
+  font-size: 11.5px;
+  font-weight: t.$oh-weight-medium;
+  color: t.$oh-text-subtle;
+}
+
+.oh-field__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  background: t.$oh-bg-subtle;
+  font-family: inherit;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text;
+
+  &:focus-visible {
+    outline: 2px solid t.$oh-brand;
+    outline-offset: -1px;
   }
 }
 
-mat-slide-toggle  {
-  margin-top: $spacer-4;
+.oh-field__input--mono {
+  font-family: t.$oh-font-mono;
 }
 
-.actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: $spacer-4;
+.oh-field__hint {
+  font-size: t.$oh-size-xs;
+  color: t.$oh-text-faint;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
+.oh-field__error {
+  font-size: t.$oh-size-xs;
+  color: t.$oh-danger;
 }
 
-
-
-.label {
+.oh-dialog__toggle {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: t.$oh-space-3;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text;
+}
 
-  oh-my-autocomplete-dropdown {
-    margin-right: $spacer-2;
+.oh-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: t.$oh-space-3;
+  margin-top: t.$oh-space-2;
+}
+
+.oh-btn {
+  padding: 7px 14px;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  background: transparent;
+  font-family: inherit;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text-subtle;
+  cursor: pointer;
+
+  &:hover {
+    background: t.$oh-bg-muted;
   }
 }
 
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.oh-btn--primary {
+  border-color: t.$oh-brand;
+  background: t.$oh-brand;
+  color: #fff;
+
+  &:hover {
+    filter: brightness(1.05);
+    background: t.$oh-brand;
+  }
 }

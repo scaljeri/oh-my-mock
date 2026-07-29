@@ -12,29 +12,14 @@ import {
   STATUS_CODE_INVALID_MSG
 } from '@shared/constants';
 import { IMock } from '@shared/types/mock';
-import { StatusCodeComponent } from '../form/status-code/status-code.component';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
-import { MatIcon } from '@angular/material/icon';
-import { MatTooltip } from '@angular/material/tooltip';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
-import { MatButton } from '@angular/material/button';
+import { ToggleComponent } from '../toggle/toggle.component';
+import { STATUS_CODE_OPTIONS } from '../request/mock-details/mock-details.component';
 
 @Component({
   selector: 'oh-my-create-status-code',
   templateUrl: './create-status-code.component.html',
   styleUrls: ['./create-status-code.component.scss'],
-  imports: [
-    ReactiveFormsModule,
-    StatusCodeComponent,
-    MatFormField,
-    MatLabel,
-    MatInput,
-    MatIcon,
-    MatTooltip,
-    MatSlideToggle,
-    MatButton
-  ]
+  imports: [ReactiveFormsModule, ToggleComponent]
 })
 export class CreateStatusCodeComponent {
   private dialogRef =
@@ -49,6 +34,10 @@ export class CreateStatusCodeComponent {
     clone: new UntypedFormControl()
   });
 
+  // The same suggestions the detail pane offers, so a code typed here and one
+  // edited there come from one list.
+  public statusCodeOptions = STATUS_CODE_OPTIONS;
+
   public requiredError = REQUIRED_MSG;
   public existsError = STATUS_CODE_EXISTS_MSG;
   public invalidError = STATUS_CODE_INVALID_MSG;
@@ -60,7 +49,9 @@ export class CreateStatusCodeComponent {
     if (this.form.valid) {
       const data = {
         mock: {
-          statusCode: this.form.value.statusCode,
+          // The field accepts "404" and "404 Not Found" alike — the datalist
+          // offers the labelled form — so only the digits are stored.
+          statusCode: Number(String(this.form.value.statusCode).match(/\d+/)?.[0]),
           ...(this.form.value.label && { label: this.form.value.label })
         },
         clone: this.form.value.clone

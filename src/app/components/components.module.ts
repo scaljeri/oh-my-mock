@@ -59,7 +59,6 @@ import { PresetComponent } from './preset/preset.component';
 import { FeedbackComponent } from './feedback/feedback.component';
 import { ShowErrorsComponent } from './show-errors/show-errors.component';
 import { MockImageComponent } from './mock-image/mock-image.component';
-import { StatusCodeComponent } from './form/status-code/status-code.component';
 import { RequestFilterComponent } from './request-filter/request-filter.component';
 import { ConnectionFailureComponent } from './connection-failure/connection-failure.component';
 import { OnOffSwitchComponent } from './on-off-switch/on-off-switch.component';
@@ -125,7 +124,6 @@ import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
     FeedbackComponent,
     ShowErrorsComponent,
     MockImageComponent,
-    StatusCodeComponent,
     RequestFilterComponent,
     ConnectionFailureComponent,
     OnOffSwitchComponent,
@@ -154,7 +152,6 @@ import { CookieDetailComponent } from './cookie-detail/cookie-detail.component';
     DialogCodeEditorComponent,
     FeedbackComponent,
     MockImageComponent,
-    StatusCodeComponent,
     ConnectionFailureComponent,
     OnOffSwitchComponent,
     ToggleComponent,

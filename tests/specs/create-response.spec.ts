@@ -32,17 +32,17 @@ test.describe('create response', () => {
     await popup.locator('[x-test="list-request-item"]').first().click();
     await popup.locator('[x-test="add-saved-response"]').click();
 
-    const input = popup.locator('mat-dialog-container input').first();
+    const input = popup.locator('[x-test="new-response-status-code"]');
     await expect(input).toBeVisible();
 
-    // The panel opens on focus. Clicking an option blurs the input first, and
-    // the blur handler used to close the panel — which removed the option
-    // before the click landed, so nothing was ever selected and Save then
-    // refused on an invalid form, silently.
-    await popup.locator('mat-option', { hasText: '404' }).click();
-    await expect(input).toHaveValue('404');
+    // A plain input with a `<datalist>`, like the detail pane. It replaced a
+    // Material autocomplete whose panel covered the dialog — and whose blur
+    // handler closed that panel before a click on an option could land, so
+    // nothing was ever selected and Save then refused on an invalid form,
+    // silently.
+    await input.fill('404');
 
-    await popup.locator('mat-dialog-container button:has-text("Save")').click();
+    await popup.locator('[x-test="new-response-save"]').click();
     await expect(popup.locator('mat-dialog-container')).toHaveCount(0);
 
     // The chip row is the proof the response reached storage.
@@ -74,24 +74,14 @@ test.describe('create response', () => {
     const dialog = popup.locator('mat-dialog-container');
     await expect(dialog).toBeVisible();
 
-    // The panel opens on focus and covers the dialog. Wait for it before
-    // dismissing it — an Escape sent too early closes the *dialog* instead,
-    // which made this test depend on the order it ran in.
-    const panel = popup.locator('.mat-mdc-autocomplete-panel');
-    await expect(panel).toBeVisible();
-    await popup.keyboard.press('Escape');
-    await expect(panel).toBeHidden();
-
     // It used to be opened at a fixed 380px, which the redesign's type scale
-    // outgrew: the dialog scrolled and the autocomplete panel covered Save.
+    // outgrew: the dialog scrolled and the dropdown panel covered Save.
     const fits = await dialog.evaluate(
       (el) => el.scrollHeight <= el.clientHeight
     );
     expect(fits).toBe(true);
 
-    await expect(
-      popup.locator('mat-dialog-container button:has-text("Save")')
-    ).toBeVisible();
+    await expect(popup.locator('[x-test="new-response-save"]')).toBeVisible();
 
     await popup.close();
   });

@@ -1,28 +1,61 @@
-<h2>Create new Response</h2>
-<form [formGroup]="form">
-  <oh-my-status-code [formControl]="codeCtrl"></oh-my-status-code>
+<!--
+  Plain inputs with a `<datalist>`, the same pattern as the response settings in
+  the detail pane (`mock-details`). This used to be `oh-my-status-code`, which
+  wraps a Material autocomplete: it looked nothing like the rest of the app, and
+  its panel covered this dialog on open.
+-->
+<h2 class="oh-dialog__title">Create new response</h2>
 
-  <div class="label">
-    <mat-form-field>
-      <mat-label>Label (optional)</mat-label>
-      <input matInput [formControl]="labelCtrl" />
-    </mat-form-field>
+<form class="oh-dialog__form" [formGroup]="form" (ngSubmit)="onSave()">
+  <label class="oh-field">
+    <span class="oh-field__label">Status code</span>
+    <input
+      class="oh-field__input oh-field__input--mono"
+      type="text"
+      inputmode="numeric"
+      list="oh-new-response-codes"
+      x-test="new-response-status-code"
+      formControlName="statusCode"
+    />
+    <datalist id="oh-new-response-codes">
+      @for (option of statusCodeOptions; track option.value) {
+        <option [value]="option.value" [label]="option.label"></option>
+      }
+    </datalist>
+    @if (codeCtrl.touched && codeCtrl.invalid) {
+      <span class="oh-field__error" x-test="new-response-error">
+        {{ requiredError }}
+      </span>
+    }
+  </label>
 
-    <mat-icon
-      color="primary"
-      matTooltip="Labels are handy when there are multiple responses with the same status code."
-      color="primary"
-      svgIcon="info"
-    >
-    </mat-icon>
+  <label class="oh-field">
+    <span class="oh-field__label">Label (optional)</span>
+    <input
+      class="oh-field__input"
+      type="text"
+      placeholder="e.g. empty list"
+      x-test="new-response-label"
+      formControlName="label"
+    />
+    <span class="oh-field__hint">
+      Handy when several responses share a status code.
+    </span>
+  </label>
+
+  <div class="oh-dialog__toggle">
+    <oh-my-toggle
+      label="Clone the current response"
+      x-test="new-response-clone"
+      [checked]="!!cloneCtrl.value"
+      (toggled)="cloneCtrl.setValue($event)"
+    ></oh-my-toggle>
+    <span>Clone the current response</span>
   </div>
-  <mat-slide-toggle [formControl]="cloneCtrl"
-    >Clone current response?</mat-slide-toggle
-  >
 
-  <div class="actions">
-    <button type="button" mat-button (click)="onClose()">Cancel</button>
-    <button type="submit" mat-raised-button color="primary" (click)="onSave()">
+  <div class="oh-dialog__actions">
+    <button class="oh-btn" type="button" (click)="onClose()">Cancel</button>
+    <button class="oh-btn oh-btn--primary" type="submit" x-test="new-response-save">
       Save
     </button>
   </div>
