@@ -160,8 +160,9 @@ events per request — call it 2 KB per API call.
 That is comfortable, and `unlimitedStorage` is already in the manifest.
 
 **Bodies are what makes it big, not events.** One 50 KB JSON response weighs as
-much as 250 events. That is a volume argument for the redaction default on top
-of the privacy one: switching bodies on takes a request from 2 KB to hundreds.
+much as 250 events, so switching them on takes a request from 2 KB to hundreds.
+That is the reason the body toggle hides by default; cookie values cost a few
+dozen bytes and hide by default for consistency rather than for size.
 
 ### Two modes
 
@@ -181,27 +182,32 @@ its own.
 
 ## What goes in the detail
 
-Two independent toggles, because cookie values and bodies are different risks
-and different sizes:
+Two independent toggles, **both hiding by default**. The log is about what
+happened, not what was in it; content is there for the case where the value is
+the question.
 
-| Toggle | Default | Why |
+| Toggle | Default | What it reveals |
 | --- | --- | --- |
-| **Hide cookie values** | **off** — values shown | For cookie mocking the value *is* the thing being debugged: is the mocked value in the jar, or still the site's own? A few dozen bytes, and the most diagnostic field there is |
-| **Hide body values** | **on** — bodies hidden | This is the volume problem: one 50 KB response weighs as much as 250 events. Usually the question is what happened, not what was in it |
+| **Hide cookie values** | on | The actual value per cookie. Turn it off when the question is "is my mocked value in the jar, or still the site's own?" |
+| **Hide body values** | on | Request and response bodies. This is the volume lever — one 50 KB response weighs as much as 250 events |
 
-Always present regardless: url, method, status, content type, body *size*.
-`authorization` and other credential headers stay out entirely — they are never
+Always present regardless: url, method, status, content type, body *size*, and
+for cookies the name, path and flags. Those answer most questions on their own —
+a cookie that is present with the right flags but the wrong value is a different
+bug from one that is not there at all, and the first is visible without showing
+anything.
+
+`authorization` and other credential headers stay out entirely. They are never
 the answer to "why did my mock not fire", so there is nothing to trade.
 
-**The copied header states what it contains**, in words:
+**The copied header records the state of both toggles:**
 
 ```
-ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: shown · bodies: hidden
+ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: hidden · bodies: hidden
 ```
 
-That is deliberate. A session cookie value is a working credential, and a paste
-cannot be taken back — so the fact is on screen at the moment of copying rather
-than buried in a settings page. It warns; it does not block.
+Not a warning — a legend. Without it, a reader cannot tell "hidden by a toggle"
+from "there was nothing there", and those lead to different conclusions.
 
 ## The Log tab
 
@@ -223,7 +229,7 @@ skim. One block per request, phases in order, elapsed ms in the left column:
 
 ```
 OhMyMock trace — localhost:8090
-ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: shown · bodies: hidden
+ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: hidden · bodies: hidden
 7 requests: 3 mocked · 3 passed through · 1 missed
 
 ▸ GET /api/users                                   MOCKED   4ms
@@ -235,7 +241,7 @@ ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: shown · bodies: hi
    1.4  content   fork.fast              jsCode untouched
    2.0  injected  response.synthetic     200 application/json 96B
    3.8  injected  body.read              json
-   4.1  background cookie.sync           set ohMySession=mocked-value (httpOnly, /)
+   4.1  background cookie.sync           set ohMySession (httpOnly, /) — value hidden
 
 ▸ GET /api/orders?page=2                      PASSED THROUGH  31ms
    0.0  injected  fetch.patched
@@ -304,6 +310,6 @@ Each step is its own commit, verifiable on its own.
 
 ## Settled
 
-**What the log carries**: cookie values shown by default, bodies hidden by
-default, each with its own toggle; credential headers never. See "What goes in
-the detail".
+**What the log carries**: names, paths, flags, sizes and status always; cookie
+values and bodies only when their toggle is turned off — both hide by default.
+Credential headers never. See "What goes in the detail".
