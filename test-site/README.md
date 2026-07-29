@@ -100,7 +100,11 @@ reference at load time would silently test the unpatched originals.
 | `/api/delay/:ms` | slow responses |
 | `/api/headers` | custom response headers |
 | `/api/redirect`, `/api/redirect-chain` | 302 handling |
-| `/api/cookie` | sets an httpOnly cookie |
+| `/api/cookie` | sets one httpOnly cookie |
+| `/api/cookies/set` | sets the whole fixture spread (see below) |
+| `/api/cookies` | the cookies the browser sent, **in order**, plus the raw header |
+| `/api/cookies/clear` | expires the fixture cookies |
+| `/api/admin/whoami` | a sub-path endpoint, for the path-scoped cookie |
 | `/api/abort` | drops the socket, no reply |
 
 ## Pages
@@ -112,3 +116,27 @@ reference at load time would silently test the unpatched originals.
 | `/csp-report-only` | CSP in report-only mode; injection must be unaffected |
 
 Port 8091 serves the same API with permissive CORS, for cross-origin cases.
+
+## Cookies
+
+`/api/cookies/set` hands out a spread rather than one of each, because cookie
+mocking has to carry `httpOnly`, `secure`, `sameSite`, `path` and an expiry all
+the way through storage, the jar and back — and the recorder has to pick each of
+them off a real `Set-Cookie`. The fixtures live in `server/fixtures.mts`:
+
+| Cookie | Path | Why it is there |
+| --- | --- | --- |
+| `ohMySession` | `/` | the common case: httpOnly session cookie, what a login sets |
+| `ohMyVisible` | `/` | readable from `document.cookie` — flags are per mock, not global |
+| `ohMyPersistent` | `/` | has an expiry, so "recorded as a session cookie" is visible |
+| `ohMySession` | `/api/admin` | **same name, deeper path** |
+
+That last one is not padding. `chrome.cookies.get` matches *parent* paths while
+`set` does not, and a mock on `/api/admin` used to record the `/` cookie as the
+one it displaced — then on unapply rewrote that untouched cookie and left itself
+in place, surviving every way of switching it off.
+
+So `/api/cookies` answers with a **list**, not a map: a map cannot hold the same
+name twice and would quietly drop one of them. RFC 6265 has the client send the
+longer path first, which is why `/api/admin/whoami` reports the sub-path value
+as `session` and still exposes the full list beside it.

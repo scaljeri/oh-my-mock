@@ -21,8 +21,60 @@ import {
   SERVER_MARKER,
   svgFixture,
   textFixture,
-  usersFixture
+  usersFixture,
+  cookieFixtures,
+  PERSISTENT_COOKIE_MAX_AGE_MS
 } from './fixtures.mts';
+
+/**
+ * The `cookie` request header, in the order the client sent it.
+ *
+ * A list, not a map: the same name may legitimately appear twice, once per
+ * path — `ohMySession` on `/` and on `/api/admin` is exactly the case the
+ * fixtures set up, and a map silently drops one of them. That is the same
+ * mistake the cookie-jar unit harness made, where it hid a real bug.
+ *
+ * Hand-rolled rather than pulling in `cookie-parser`: the test site has no
+ * build step and as few dependencies as it can get away with. Values are
+ * percent-decoded because `res.cookie` encodes them on the way out.
+ */
+function parseCookieHeader(header: string | undefined): { name: string; value: string }[] {
+  const out: { name: string; value: string }[] = [];
+
+  for (const pair of (header ?? '').split(';')) {
+    const eq = pair.indexOf('=');
+
+    if (eq < 1) {
+      continue; // no name, or no `=` at all
+    }
+
+    const raw = pair.slice(eq + 1).trim();
+    let value = raw;
+
+    try {
+      value = decodeURIComponent(raw);
+    } catch {
+      // A malformed escape must not take the whole response down.
+    }
+
+    out.push({ name: pair.slice(0, eq).trim(), value });
+  }
+
+  return out;
+}
+
+/**
+ * The first value sent for a name.
+ *
+ * RFC 6265 has a client send the longer path first, so for a name that exists
+ * on both `/` and `/api/admin` this is the sub-path one — the value that
+ * endpoint is actually scoped to. Read the list itself when both matter.
+ */
+function firstCookie(
+  cookies: { name: string; value: string }[], name: string
+): string | null {
+  return cookies.find(c => c.name === name)?.value ?? null;
+}
 
 export interface HitCounter {
   record(req: Request): void;
@@ -210,6 +262,63 @@ export function registerRoutes(app: Express, hits: HitCounter): void {
     // need script access to cookies in order to mock the response.
     res.cookie('ohMyTest', 'cookie-value', { httpOnly: true, sameSite: 'lax' });
     res.json({ source: SERVER_MARKER });
+  });
+
+  // Hands out the whole fixture spread in one response, so a single passthrough
+  // gives the recorder every flag combination to pick up.
+  app.get('/api/cookies/set', (_req, res) => {
+    markServer(res);
+
+    for (const cookie of cookieFixtures) {
+      res.cookie(cookie.name, cookie.value, {
+        httpOnly: cookie.httpOnly,
+        sameSite: cookie.sameSite,
+        path: cookie.path,
+        ...(cookie.persistent && { maxAge: PERSISTENT_COOKIE_MAX_AGE_MS })
+      });
+    }
+
+    res.json({ source: SERVER_MARKER, set: cookieFixtures.map(c => c.name) });
+  });
+
+  // What the browser actually *sent*. `/api/echo` returns the raw header; this
+  // parses it, which is what proves a mocked cookie reaches the server rather
+  // than merely sitting in the jar. httpOnly cookies are included — the server
+  // sees them even though the page cannot.
+  app.get('/api/cookies', (req, res) => {
+    markServer(res);
+    res.json({
+      source: SERVER_MARKER,
+      cookies: parseCookieHeader(req.headers.cookie),
+      raw: req.headers.cookie ?? ''
+    });
+  });
+
+  // Expires every fixture cookie, so a test can get back to a known jar.
+  app.get('/api/cookies/clear', (_req, res) => {
+    markServer(res);
+
+    for (const cookie of cookieFixtures) {
+      res.clearCookie(cookie.name, { path: cookie.path });
+    }
+
+    res.json({ source: SERVER_MARKER, cleared: cookieFixtures.map(c => c.name) });
+  });
+
+  // A sub-path endpoint, so the path-scoped fixture can be requested from a url
+  // the browser will actually send it to.
+  app.get('/api/admin/whoami', (req, res) => {
+    markServer(res);
+    const cookies = parseCookieHeader(req.headers.cookie);
+
+    res.json({
+      source: SERVER_MARKER,
+      // Both `ohMySession` cookies are sent here — `/` and `/api/admin` both
+      // match — and the sub-path one comes first.
+      session: firstCookie(cookies, 'ohMySession'),
+      cookies,
+      raw: req.headers.cookie ?? ''
+    });
   });
 
   // ---- error path -------------------------------------------------------
