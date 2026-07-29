@@ -1,7 +1,16 @@
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 
-const BASE_URL = '/oh-my-mock/assets/icons/material/';
+/**
+ * Relative to the document, not absolute.
+ *
+ * The popup lives at `<extension>/oh-my-mock/index.html`, so a relative path
+ * resolves to `/oh-my-mock/assets/…` there — the same place the hard-coded
+ * absolute path used to point at. It also resolves under `ng serve`, where the
+ * app is served from the root and every icon used to 404. `MONACO_BASE_URL`
+ * already does it this way.
+ */
+const BASE_URL = './assets/icons/material/';
 
 export function registerIcons(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer,) {
   matIconRegistry.addSvgIcon('search', domSanitizer.bypassSecurityTrustResourceUrl(url('search')));

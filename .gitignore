@@ -72,3 +72,6 @@ playwright-report/
 # Editor swap files
 *.swp
 *.swo
+
+# Vite dependency cache written by `ng serve`.
+.angular/

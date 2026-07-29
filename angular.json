@@ -110,6 +110,10 @@
                   "maximumWarning": "60kb",
                   "maximumError": "100kb"
                 }
+              ],
+              "polyfills": [
+                "zone.js",
+                "src/dev-chrome-shim.ts"
               ]
             }
           }
@@ -117,11 +121,14 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "oh-my-mock:build"
+            "buildTarget": "oh-my-mock:build:dev"
           },
           "configurations": {
             "production": {
               "buildTarget": "oh-my-mock:build:production"
+            },
+            "development": {
+              "buildTarget": "oh-my-mock:build:dev"
             }
           }
         },

@@ -32,17 +32,11 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ComponentsModule } from './app/components/components.module';
 import { AppComponent } from './app/app.component';
 
-// // For local serving only (with `ng serve`)
-// declare let chrome: any;
-// if (!chrome) {
-//   window['chrome'] = {
-//     storage: { local: { get: () => {}, set: () => {} } },
-//     runtime: {
-//       onMessage: { addListener: () => {} },
-//       sendMessage: () => {},
-//     },
-//   } as any;
-// }
+// Served from `localhost:4200` there is no extension around the popup, so
+// `chrome.*` is absent and the app used to die on the first `getManifest()`.
+// The shim is a no-op the moment a real `chrome.runtime` exists, so this is
+// safe in the shipped bundle — see `dev-chrome-shim.ts` for what it does and
+// does not give you.
 
 if (environment.production) {
   enableProdMode();

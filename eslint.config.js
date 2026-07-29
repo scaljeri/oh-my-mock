@@ -19,6 +19,9 @@ module.exports = tseslint.config(
   {
     ignores: [
       'dist/**',
+      // Vite's dependency cache, written by `ng serve`. Prebundled
+      // third-party code, not source.
+      '.angular/**',
       'e2e/**',
       'test-site/**',
       'playwright-report/**',
@@ -70,15 +73,6 @@ module.exports = tseslint.config(
       // expression rather than an oversight. Everything else about the rule
       // stays on.
       '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
-
-      // Three Angular idiom migrations, not defects: `inject()` over
-      // constructor DI, `@if`/`@for` over `*ngIf`/`*ngFor`, and standalone
-      // components. Each has an official `ng generate @angular/core:*`
-      // schematic, and each rewrites nearly every file in `src/app` — so they
-      // are warnings, to be done as their own deliberate change rather than
-      // smuggled in alongside feature work. Tracked as debt; not suppressed.
-      '@angular-eslint/prefer-inject': 'warn',
-      '@angular-eslint/prefer-standalone': 'warn',
 
       '@angular-eslint/directive-selector': [
         'error',
@@ -134,9 +128,6 @@ module.exports = tseslint.config(
       ...angular.configs.templateRecommended,
       ...angular.configs.templateAccessibility
     ],
-    rules: {
-      // See the note on the migration rules above — same reasoning.
-      '@angular-eslint/template/prefer-control-flow': 'warn'
-    }
+    rules: {}
   }
 );

@@ -84,4 +84,38 @@ test.describe('popup', () => {
 
     await page.close();
   });
+
+  // Material reports a failed icon on the *console*, not as a page error, so
+  // the assertions above would not notice a broken icon path at all.
+  //
+  // What this guards is the extension: that the registered path resolves and
+  // the SVGs are really fetched and inlined. It deliberately does not pin
+  // *which* path — both the old absolute `/oh-my-mock/assets/…` and the
+  // relative `./assets/…` that replaced it are correct here, since the popup
+  // lives at `oh-my-mock/index.html`. Only the relative one also works under
+  // `ng serve`, where the app is served from the root, and nothing in this
+  // suite serves it that way. Verified by mutation: swapping the path back
+  // leaves this test green.
+  test('the SVG icons resolve and render', async ({ context, extensionId }) => {
+    const page = await context.newPage();
+    const failures: string[] = [];
+
+    page.on('console', (message) => {
+      if (message.type() === 'error' && message.text().includes('retrieving icon')) {
+        failures.push(message.text());
+      }
+    });
+
+    await page.goto(popupUrl(extensionId));
+    await expect(page.locator('oh-my-root .oh-shell')).toBeAttached({
+      timeout: 20_000
+    });
+
+    // An `<svg>` inside the icon element only exists once the file was fetched
+    // and inlined; a failed one leaves `mat-icon` empty.
+    await expect(page.locator('mat-icon svg').first()).toBeAttached();
+    expect(failures).toEqual([]);
+
+    await page.close();
+  });
 });
