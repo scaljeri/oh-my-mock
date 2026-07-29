@@ -2,7 +2,7 @@
   <oh-my-code-edit
     [formControl]="ctrl"
     theme="vs-dark"
-    [type]="input?.type"
+    [type]="input.type"
     [base]="base"
     [showMinimap]="true"
     (errors)="onErrors($event)"
@@ -11,7 +11,7 @@
 
 <footer>
   <div class="button-actions">
-    @if (!input?.readonly) {
+    @if (!input.readonly) {
       <button mat-raised-button (click)="onReset()">Reset</button>
       <button mat-raised-button (click)="onToggle()">
         {{ base ? 'Edit' : 'Diff' }}
@@ -23,7 +23,7 @@
       <button mat-raised-button color="primary" (click)="onSave()">Save</button>
     }
 
-    @if (input?.readonly) {
+    @if (input.readonly) {
       <button mat-raised-button color="primary" (click)="onCancel()">
         Close
       </button>

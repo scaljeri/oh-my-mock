@@ -10,14 +10,13 @@ import {
 import { ThemePalette } from '@angular/material/core';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatButton } from '@angular/material/button';
-import { DataListComponent } from '../data-list/data-list.component';
 
 @Component({
   selector: 'oh-my-disabled-enabled',
   templateUrl: './disabled-enabled.component.html',
   styleUrls: ['./disabled-enabled.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatSlideToggle, MatButton, DataListComponent]
+  imports: [MatSlideToggle, MatButton]
 })
 export class DisabledEnabledComponent {
   private cdr = inject(ChangeDetectorRef);

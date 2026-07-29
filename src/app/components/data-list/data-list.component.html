@@ -191,10 +191,10 @@ preset selector and the overflow menu moved into the toolbar below. -->
           color="primary"
           aria-label="Example icon button with a menu icon"
         >
-          @if (!row.enabled[context?.preset]) {
+          @if (!row.enabled[context.preset]) {
             <mat-icon svgIcon="play_arrow" color="primary"></mat-icon>
           }
-          @if (row.enabled[context?.preset]) {
+          @if (row.enabled[context.preset]) {
             <mat-icon svgIcon="stop" color="primary"></mat-icon>
           }
         </button>

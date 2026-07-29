@@ -31,8 +31,8 @@ export class DialogCodeEditorComponent implements OnInit {
   showErrors!: boolean;
 
   ngOnInit(): void {
-    this.ctrl.setValue(this.input?.code ?? '', { emitEvent: false });
-    this.base = this.input?.base ?? '';
+    this.ctrl.setValue(this.input.code ?? '', { emitEvent: false });
+    this.base = this.input.base ?? '';
   }
 
   onErrors(errors: IMarker[]): void {

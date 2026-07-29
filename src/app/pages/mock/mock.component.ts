@@ -38,7 +38,10 @@ export class PageMockComponent implements OnInit, OnDestroy {
   private subscription!: Subscription;
   public context!: IOhMyContext;
 
-  aux!: IOhMyAux;
+  // Optional, not `!`: it is assigned from the state subscription, so the
+  // template renders once before it exists. The `?.` there was right and the
+  // definite-assignment claim was not.
+  aux?: IOhMyAux;
 
   /**
    * The active preset's name, for the footer of the detail pane. Resolved here

@@ -62,7 +62,9 @@ export class PageStateExplorerComponent implements OnInit, OnDestroy {
   private toast = inject(HotToastService);
 
   panelOpenState = true;
-  domains!: ohMyDomain[];
+  // Optional, not `!`: filled in from the store subscription, so the template
+  // asks for its length before it exists.
+  domains?: ohMyDomain[];
   selectedDomain = '-';
 
   state!: IState;

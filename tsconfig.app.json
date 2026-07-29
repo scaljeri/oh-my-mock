@@ -5,6 +5,10 @@
     "outDir": "./out-tsc/app",
     "types": []
   },
-  "files": ["src/main.ts"],
+  // `dev-chrome-shim.ts` is listed here as well as in `angular.json`'s `dev`
+  // polyfills. A polyfill entry is bundled but is not part of the TypeScript
+  // program, so without this it shipped unchecked — which is exactly the file
+  // that fakes `chrome.*` and most needs checking.
+  "files": ["src/main.ts", "src/dev-chrome-shim.ts"],
   "include": ["src/**/*.d.ts"]
 }
