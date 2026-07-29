@@ -33,40 +33,6 @@
   gap: t.$oh-space-4;
 }
 
-.oh-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.oh-field__label {
-  font-size: 11.5px;
-  font-weight: t.$oh-weight-medium;
-  color: t.$oh-text-subtle;
-}
-
-.oh-field__input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid t.$oh-border;
-  border-radius: t.$oh-radius;
-  background: t.$oh-bg-subtle;
-  font-family: inherit;
-  font-size: t.$oh-size-base;
-  color: t.$oh-text;
-
-  &:focus-visible {
-    outline: 2px solid t.$oh-brand;
-    outline-offset: -1px;
-  }
-}
-
-.oh-field__input--mono {
-  font-family: t.$oh-font-mono;
-}
-
 .oh-field__hint {
   font-size: t.$oh-size-xs;
   color: t.$oh-text-faint;

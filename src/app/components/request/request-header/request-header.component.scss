@@ -214,48 +214,7 @@
 // `mock-details.component.scss`. Both are component-scoped, so the rules are
 // spelled out twice rather than shared through a mixin.
 
-.oh-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: t.$oh-detail-field-gap;
-}
-
-.oh-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
 .oh-field--wide {
   grid-column: 1 / -1;
 }
 
-.oh-field__label {
-  font-size: t.$oh-size-sm;
-  font-weight: t.$oh-weight-medium;
-  color: t.$oh-text-subtle;
-}
-
-.oh-field__input {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  background: t.$oh-bg-subtle;
-  border: 1px solid t.$oh-border;
-  border-radius: t.$oh-radius;
-  padding: 8px 10px;
-  font-family: t.$oh-font-sans;
-  font-size: t.$oh-size-md;
-  color: t.$oh-text;
-
-  &:focus {
-    outline: none;
-    border-color: t.$oh-brand;
-    background: t.$oh-bg-surface;
-  }
-}
-
-.oh-field__input--mono {
-  font-family: t.$oh-font-mono;
-}

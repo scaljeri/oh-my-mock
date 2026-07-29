@@ -74,6 +74,81 @@ body {
   color: t.$oh-text-subtle;
 }
 
+// Column headers in the request and cookie lists: the same treatment as
+// `.oh-label`, a shade fainter, because a table header sits behind its data
+// rather than announcing a section. It was defined twice, both times with a
+// hand-written `0.05em` where the token says 0.06.
+.oh-col {
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+  letter-spacing: t.$oh-label-tracking;
+  text-transform: uppercase;
+  color: t.$oh-text-faint;
+}
+
+.oh-col--end {
+  text-align: right;
+}
+
+// The two-column grid the detail pane lays its fields out on.
+.oh-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: t.$oh-detail-field-gap;
+}
+
+// The labelled form field, as the detail pane draws it.
+//
+// This lived four times over — `mock-details`, `request-header`,
+// `cookie-detail` and the create-response dialog — and had drifted: three font
+// sizes for the input, two focus treatments, and only one copy styled the
+// invalid state. Merged here, keeping the most complete behaviour of each.
+.oh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.oh-field__label {
+  font-size: t.$oh-size-sm;
+  font-weight: t.$oh-weight-medium;
+  color: t.$oh-text-subtle;
+}
+
+.oh-field__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  background: t.$oh-bg-subtle;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text;
+
+  &::placeholder {
+    color: t.$oh-text-faint;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: t.$oh-brand;
+    background: t.$oh-bg-surface;
+  }
+
+  // From the cookie form: the only copy that showed an invalid value at all.
+  &.ng-invalid.ng-touched {
+    border-color: t.$oh-danger;
+  }
+}
+
+// After `__input`, so it wins on equal specificity.
+.oh-field__input--mono {
+  font-family: t.$oh-font-mono;
+}
+
 // The one button in the app.
 //
 // This lived three times over — in `cookie-detail`, `request` and the

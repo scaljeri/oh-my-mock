@@ -82,18 +82,6 @@
   }
 }
 
-.oh-col {
-  font-size: t.$oh-size-xs;
-  font-weight: t.$oh-weight-semibold;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: t.$oh-text-faint;
-
-  &--end {
-    text-align: right;
-  }
-}
-
 .oh-cookie-row {
   @extend %oh-cookie-grid;
 

@@ -126,44 +126,6 @@
   }
 }
 
-.oh-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-
-  &__label {
-    font-size: t.$oh-size-sm;
-    font-weight: t.$oh-weight-medium;
-    color: t.$oh-text-subtle;
-  }
-
-  &__input {
-    width: 100%;
-    min-width: 0;
-    background: t.$oh-bg-subtle;
-    border: 1px solid t.$oh-border;
-    border-radius: t.$oh-radius;
-    padding: 8px 10px;
-    font-size: t.$oh-size-base;
-    color: t.$oh-text;
-
-    &--mono {
-      font-family: t.$oh-font-mono;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: t.$oh-brand;
-      background: t.$oh-bg-surface;
-    }
-
-    &.ng-invalid.ng-touched {
-      border-color: t.$oh-danger;
-    }
-  }
-}
-
 .oh-choices {
   display: flex;
   gap: 6px;
