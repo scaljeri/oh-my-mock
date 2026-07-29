@@ -9,7 +9,7 @@ see it at all.
 The destination is a **chat message**: a Log tab with a record button and copy
 to clipboard, so a trace can be pasted straight into a conversation. That is not
 a detail of the UI — it decides the format (readable text, not JSON), the volume
-(a reproduction, not a day) and the redaction default (bodies out).
+(a reproduction, not a day) and what the detail may carry.
 
 Scope for the first version: **the API request path only**. Not popup actions,
 not storage writes. That is what the request-flow document already describes, it
@@ -179,14 +179,29 @@ megabyte.
 Both are bounded by count *and* bytes. An unbounded buffer on disk is a bug of
 its own.
 
-## Redaction
+## What goes in the detail
 
-**Decided: redacted by default.** The log is pasted into a chat window, which
-settles it — bodies, cookie values and `authorization` headers are in exactly
-the stream being traced. What goes in: url, method, status, content type, body
-*size*. A deliberate switch adds bodies for the case that cannot be found
-otherwise, and the copied header says so in as many words, because a paste
-cannot be taken back.
+Two independent toggles, because cookie values and bodies are different risks
+and different sizes:
+
+| Toggle | Default | Why |
+| --- | --- | --- |
+| **Hide cookie values** | **off** — values shown | For cookie mocking the value *is* the thing being debugged: is the mocked value in the jar, or still the site's own? A few dozen bytes, and the most diagnostic field there is |
+| **Hide body values** | **on** — bodies hidden | This is the volume problem: one 50 KB response weighs as much as 250 events. Usually the question is what happened, not what was in it |
+
+Always present regardless: url, method, status, content type, body *size*.
+`authorization` and other credential headers stay out entirely — they are never
+the answer to "why did my mock not fire", so there is nothing to trade.
+
+**The copied header states what it contains**, in words:
+
+```
+ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: shown · bodies: hidden
+```
+
+That is deliberate. A session cookie value is a working credential, and a paste
+cannot be taken back — so the fact is on screen at the moment of copying rather
+than buried in a settings page. It warns; it does not block.
 
 ## The Log tab
 
@@ -208,7 +223,7 @@ skim. One block per request, phases in order, elapsed ms in the left column:
 
 ```
 OhMyMock trace — localhost:8090
-ext 3.3.15 · Chrome 141 · recorded 12.4s · bodies: excluded
+ext 3.3.15 · Chrome 141 · recorded 12.4s · cookie values: shown · bodies: hidden
 7 requests: 3 mocked · 3 passed through · 1 missed
 
 ▸ GET /api/users                                   MOCKED   4ms
@@ -220,6 +235,7 @@ ext 3.3.15 · Chrome 141 · recorded 12.4s · bodies: excluded
    1.4  content   fork.fast              jsCode untouched
    2.0  injected  response.synthetic     200 application/json 96B
    3.8  injected  body.read              json
+   4.1  background cookie.sync           set ohMySession=mocked-value (httpOnly, /)
 
 ▸ GET /api/orders?page=2                      PASSED THROUGH  31ms
    0.0  injected  fetch.patched
@@ -288,5 +304,6 @@ Each step is its own commit, verifiable on its own.
 
 ## Settled
 
-**Redaction default**: bodies out unless deliberately switched on. The clipboard
-destination decided it — see the Redaction section.
+**What the log carries**: cookie values shown by default, bodies hidden by
+default, each with its own toggle; credential headers never. See "What goes in
+the detail".
