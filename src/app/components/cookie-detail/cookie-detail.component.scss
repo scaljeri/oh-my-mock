@@ -238,39 +238,5 @@
   }
 }
 
-.oh-btn {
-  border-radius: t.$oh-radius-md;
-  padding: 9px 15px;
-  font-size: t.$oh-size-md;
-  font-weight: t.$oh-weight-medium;
-  cursor: pointer;
-  border: 1px solid transparent;
-
-  &--primary {
-    background: t.$oh-brand;
-    color: t.$oh-bg-surface;
-    box-shadow: 0 1px 2px rgba(45, 45, 140, 0.3);
-
-    &:hover:not(:disabled) {
-      background: t.$oh-brand-hover;
-    }
-
-    &:disabled {
-      background: t.$oh-border-strong;
-      box-shadow: none;
-      cursor: default;
-    }
-  }
-
-  &--danger {
-    padding: 8px 14px;
-    border-color: t.$oh-border;
-    background: t.$oh-bg-surface;
-    color: t.$oh-danger;
-
-    &:hover {
-      background: t.$oh-danger-tint;
-      border-color: t.$oh-danger-border;
-    }
-  }
-}
+// `.oh-btn` is global — see `src/styles.scss`. It was defined here as well,
+// and the copies had drifted apart.

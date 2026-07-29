@@ -92,28 +92,5 @@
   margin-top: t.$oh-space-2;
 }
 
-.oh-btn {
-  padding: 7px 14px;
-  border: 1px solid t.$oh-border;
-  border-radius: t.$oh-radius;
-  background: transparent;
-  font-family: inherit;
-  font-size: t.$oh-size-base;
-  color: t.$oh-text-subtle;
-  cursor: pointer;
-
-  &:hover {
-    background: t.$oh-bg-muted;
-  }
-}
-
-.oh-btn--primary {
-  border-color: t.$oh-brand;
-  background: t.$oh-brand;
-  color: #fff;
-
-  &:hover {
-    filter: brightness(1.05);
-    background: t.$oh-brand;
-  }
-}
+// `.oh-btn` is global — see `src/styles.scss`. It was defined here as well,
+// and the copies had drifted apart.

@@ -128,23 +128,8 @@
   color: t.$oh-text-fainter;
 }
 
-.oh-btn {
-  appearance: none;
-  border: 1px solid t.$oh-border;
-  background: t.$oh-bg-surface;
-  border-radius: t.$oh-radius-md;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: t.$oh-size-md;
-  color: t.$oh-text-muted;
-  transition: background 120ms ease, color 120ms ease;
-
-  &:hover {
-    background: t.$oh-bg-muted;
-    color: t.$oh-text;
-  }
-}
+// `.oh-btn` is global — see `src/styles.scss`. It was defined here as well,
+// and the copies had drifted apart.
 
 // ---- nothing to show -------------------------------------------------
 
