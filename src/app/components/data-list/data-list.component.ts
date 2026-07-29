@@ -446,14 +446,32 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.onDataClick(row);
   }
 
+  /**
+   * Opens a request in the detail pane, and marks its row as the open one.
+   *
+   * The selection is replaced rather than toggled. It used to toggle, on a
+   * `SelectionModel` created with `multiple: true`, so every row ever clicked
+   * stayed highlighted and stayed exempt from the filter — you could add to
+   * the selection but never move it. There is only ever one request open in
+   * the detail pane, which is route-driven, so the highlight beside it is
+   * single by definition.
+   *
+   * The multi-select the model still supports belongs to the JSON export,
+   * which drives it through `selectAll` / `deselectAll` and the per-row export
+   * button, and which sets `togglableRows` to false so it never comes through
+   * here.
+   */
   onDataClick(data: IData): void {
-    if (this.togglableRows) {
-      this.selection.toggle(data.id);
-      // A selected row is exempt from the filter, so the selection changing
-      // can change what is on screen.
-      this.recompute();
-      this.selectRow.emit(data.id);
+    if (!this.togglableRows) {
+      return;
     }
+
+    this.selection.clear();
+    this.selection.select(data.id);
+    // The open row is exempt from the filter, so changing it changes what is
+    // on screen.
+    this.recompute();
+    this.selectRow.emit(data.id);
   }
 
   onExport(data: IData, event: MouseEvent): void {

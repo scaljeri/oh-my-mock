@@ -276,6 +276,15 @@ describe('DataListComponent', () => {
       expect(component.selection.isSelected('a')).toBe(false);
     });
 
+    // The reported bug: clicking a second row left the first one highlighted
+    // and filter-exempt, so the selection only ever grew.
+    it('moves the selection instead of adding to it', () => {
+      component.onDataClick(component.data['a']);
+      component.onDataClick(component.data['b']);
+
+      expect(component.selection.selected).toEqual(['b']);
+    });
+
     it('keeps a selected row visible when the filter would drop it', () => {
       component.onDataClick(component.data['b']);
       component.onFilterUpdate({ filteredRequests: ['a'] });
