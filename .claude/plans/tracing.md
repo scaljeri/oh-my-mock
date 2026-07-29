@@ -4,8 +4,12 @@
 across all five contexts, and — separately — every request the *browser* made.
 Crossing the two answers the three questions that actually get asked: was this
 request mocked, was it intercepted and then let through, or did OhMyMock never
-see it at all. The log must be exportable as a single file that can be handed to
-someone else for debugging.
+see it at all.
+
+The destination is a **chat message**: a Log tab with a record button and copy
+to clipboard, so a trace can be pasted straight into a conversation. That is not
+a detail of the UI — it decides the format (readable text, not JSON), the volume
+(a reproduction, not a day) and the redaction default (bodies out).
 
 Scope for the first version: **the API request path only**. Not popup actions,
 not storage writes. That is what the request-flow document already describes, it
@@ -177,34 +181,93 @@ its own.
 
 ## Redaction
 
-**This log is meant to be sent to someone else.** Request bodies, `authorization`
-headers and cookies are in the exact stream being traced.
+**Decided: redacted by default.** The log is pasted into a chat window, which
+settles it — bodies, cookie values and `authorization` headers are in exactly
+the stream being traced. What goes in: url, method, status, content type, body
+*size*. A deliberate switch adds bodies for the case that cannot be found
+otherwise, and the copied header says so in as many words, because a paste
+cannot be taken back.
 
-Recommendation: redacted by default — url, method, status, content type, body
-*size*; no body content, no cookie values, no `authorization`. A deliberate
-"include bodies" switch for the case that cannot be found otherwise, and the
-export names loudly what it contains.
+## The Log tab
 
-**This is the one decision still open** (see below).
+A third tab beside Requests and Cookies, scoped to the selected domain like the
+other two.
 
-## Export
+- A **record** button. Stopped, the flight recorder is still running underneath,
+  so there is always some history; started, it keeps everything for this domain
+  and may include bodies.
+- The traces for this domain, newest first, one block per request, each labelled
+  from the four quadrants: **mocked**, **passed through**, **missed**.
+- **Copy to clipboard.**
 
-A button in the popup writes one JSON file: the events, the webRequest shadow,
-the gap classification, and a header with the extension version, the Chrome
-version, the manifest permissions and the active domain — so the reader has the
-context without having to ask for it.
+### The copied format is text, not JSON
+
+The destination is a chat message, so it has to be read by a human and a model,
+not parsed. JSON of the same content is several times longer and far worse to
+skim. One block per request, phases in order, elapsed ms in the left column:
+
+```
+OhMyMock trace — localhost:8090
+ext 3.3.15 · Chrome 141 · recorded 12.4s · bodies: excluded
+7 requests: 3 mocked · 3 passed through · 1 missed
+
+▸ GET /api/users                                   MOCKED   4ms
+   0.0  injected  fetch.patched
+   0.2  injected  dispatch.sent          trace=k3f9d2
+   0.9  content   request.received
+   1.1  content   sdk.asked              no server connected
+   1.3  content   mock.lookup            hit  request=a1b2 mock=c3d4 preset=default
+   1.4  content   fork.fast              jsCode untouched
+   2.0  injected  response.synthetic     200 application/json 96B
+   3.8  injected  body.read              json
+
+▸ GET /api/orders?page=2                      PASSED THROUGH  31ms
+   0.0  injected  fetch.patched
+   1.2  content   mock.lookup            no match
+                                         stored: ^/api/orders$ (GET), ^/api/users$ (GET)
+  30.4  network   webrequest.seen        200 — reached the server
+
+▸ POST /api/track                                  MISSED
+        network   webrequest.seen        frameId=2 → iframe, all_frames is off
+```
+
+A missed request has no trace at all, so it is printed from the shadow alone —
+which is the point: the absence *is* the finding.
+
+### The line that earns its place
+
+`mock.lookup  no match` with the patterns it compared against. "I made a mock
+and it still hits my server" is the most common complaint there is, and the
+answer is nearly always visible in that one line: an anchored url pattern that
+does not match, a method that differs, a preset that is not the active one, or a
+request that is switched off. Printing the comparison beats printing the verdict.
+
+### Copy scoping
+
+A recording of twenty requests is about 160 lines — fine to paste. Five hundred
+requests is not. So the button offers:
+
+- **Copy problems** (default) — the header, the counts, and only the passed-through
+  and missed blocks. Mocked requests are the ones that worked.
+- **Copy all**
+- **Copy this request** — per block, for when the question is about one call.
+
+A JSON export of the raw events stays available for anything a script wants to
+read, but it is the secondary path, not the primary one.
 
 ## Build order
 
 1. `trace()` beside the existing builders in `logging.ts`, off by default, with
    the switch in the store. No call sites yet.
-2. The background collector: IndexedDB, batched writes, both modes, and the
-   export.
+2. The background collector: IndexedDB, batched writes, both modes.
 3. Phases in **injected** and **content** first — that is the path the question
-   is usually about.
-4. Background and popup/sandbox phases.
-5. `chrome.webRequest` shadow plus the gap classification. Manifest permission
-   lands here, not earlier.
+   is usually about, and it is enough to render a useful block.
+4. The Log tab: record button, the per-request blocks, and copy to clipboard.
+   The formatter is pure and unit tested — given events, produce that text —
+   so it is verifiable without a browser.
+5. Background and popup/sandbox phases.
+6. `chrome.webRequest` shadow plus the quadrant classification. The manifest
+   permission lands here, not earlier.
 
 Each step is its own commit, verifiable on its own.
 
@@ -223,8 +286,7 @@ Each step is its own commit, verifiable on its own.
 - **No `console.*` outside `logging.ts`** — `no-console` is an error, and the
   trace must go through the same funnel rather than around it.
 
-## Open decision
+## Settled
 
-**Redaction default.** Bodies out of the log unless explicitly switched on
-(recommended), or everything in and cleaned up by hand before sending? This
-changes what `detail` may carry, so it is worth settling before step 1.
+**Redaction default**: bodies out unless deliberately switched on. The clipboard
+destination decided it — see the Redaction section.
