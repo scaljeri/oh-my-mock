@@ -138,8 +138,42 @@ Storage there is **IndexedDB**, for two reasons:
    re-render the app, which would log, which would re-render. If we ever do want
    a `chrome.storage` area for this, that listener has to learn to filter first.
 
-Bounded by both count and bytes — a busy page produces thousands of events, and
-an unbounded ring buffer on disk is a bug of its own. Oldest out first.
+**Written in batches, not per event.** One IndexedDB transaction per event would
+sit on the path of every request. Buffer in memory and flush every ~100 events
+or every second, plus a flush on `runtime.onSuspend` so the tail is not lost
+when the worker is torn down.
+
+### How much is "a lot"
+
+A redacted event is about 200 bytes, and the phases above come to roughly ten
+events per request — call it 2 KB per API call.
+
+| Situation | Events | Size |
+| --- | --- | --- |
+| One heavy page load (500 calls) | 5,000 | ~1 MB |
+| An hour of use (5,000 calls) | 50,000 | ~10 MB |
+
+That is comfortable, and `unlimitedStorage` is already in the manifest.
+
+**Bodies are what makes it big, not events.** One 50 KB JSON response weighs as
+much as 250 events. That is a volume argument for the redaction default on top
+of the privacy one: switching bodies on takes a request from 2 KB to hundreds.
+
+### Two modes
+
+The real lever is duration, not storage. You do not trace all day.
+
+**Flight recorder** — always on, capped at ~5,000 events, oldest out first. Cheap,
+and it means "wait, that just went wrong" still has a history behind it.
+
+**Recording** — started deliberately: reproduce, stop, export. Bounded by the
+reproduction rather than by a ring buffer, so it is the mode that may include
+bodies. This is also the one that produces a file small enough to hand to
+someone: seconds to a minute of traffic, a few thousand events, well under a
+megabyte.
+
+Both are bounded by count *and* bytes. An unbounded buffer on disk is a bug of
+its own.
 
 ## Redaction
 
@@ -164,7 +198,8 @@ context without having to ask for it.
 
 1. `trace()` beside the existing builders in `logging.ts`, off by default, with
    the switch in the store. No call sites yet.
-2. The background collector: IndexedDB, ring buffer, and the export.
+2. The background collector: IndexedDB, batched writes, both modes, and the
+   export.
 3. Phases in **injected** and **content** first — that is the path the question
    is usually about.
 4. Background and popup/sandbox phases.
