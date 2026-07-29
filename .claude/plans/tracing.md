@@ -1,10 +1,11 @@
 # Plan: request tracing
 
 **Goal.** One log that shows every phase an intercepted request goes through,
-across all five contexts, and — separately — every request the *browser* made,
-so a call OhMyMock never saw is visible as a gap rather than as silence. The log
-must be exportable as a single file that can be handed to someone else for
-debugging.
+across all five contexts, and — separately — every request the *browser* made.
+Crossing the two answers the three questions that actually get asked: was this
+request mocked, was it intercepted and then let through, or did OhMyMock never
+see it at all. The log must be exportable as a single file that can be handed to
+someone else for debugging.
 
 Scope for the first version: **the API request path only**. Not popup actions,
 not storage writes. That is what the request-flow document already describes, it
@@ -44,14 +45,39 @@ requests, cross-origin iframes). It cannot be evidence that nothing was missed.
 `webRequest`. The extension is not published, so there is no installed base to
 push through a re-accept.
 
-### Classifying a gap
+### The four quadrants
 
-The point is not "we missed one" but *why*. `chrome.webRequest` reports
-`tabId`, `frameId`, `type` and `initiator`, which is enough to say:
+The two layers are only useful *crossed*. The load-bearing fact is that **a
+mocked request never reaches the network**: `ohMyFetch` resolves a synthetic
+`Response` without calling the original `fetch`. So absence from `webRequest` is
+not missing information — it is the evidence that mocking worked.
+
+| Trace? | webRequest? | Meaning |
+| --- | --- | --- |
+| yes | **no** | **Mocked.** Served by the extension, the network was never touched |
+| yes | yes | **Passed through.** Intercepted, then deliberately not mocked |
+| no | yes | **Missed.** The extension never saw this request |
+| no | no | Nothing happened |
+
+Row two matters as much as row three, and is easy to overlook. "I created a mock
+and the request still hits my server" is the most common complaint there is, and
+this separates its two causes at a glance: a trace beside the network call means
+the request *was* intercepted and the mock did not match — wrong url pattern,
+wrong method, wrong preset, or switched off. Without the crossing, that case
+would look identical to a miss and send the reader hunting in the wrong layer.
+
+Row one is worth logging for the same reason the e2e suite asserts on the test
+server's hit count: it is the only positive proof the request was kept off the
+network.
+
+### Why a miss was missed
+
+For row three, `chrome.webRequest` reports `tabId`, `frameId`, `type` and
+`initiator` — enough to name the cause rather than just the symptom:
 
 | Observation | Meaning |
 | --- | --- |
-| `type: xmlhttprequest`, `frameId: 0`, no trace | **A real miss** — this should have been caught |
+| `type: xmlhttprequest`, `frameId: 0` | **A real miss** — this should have been caught |
 | `frameId > 0` | An iframe; known gap, the manifest does not set `all_frames` |
 | `tabId: -1` | A worker or service worker — a different JS world |
 | Earlier than the page's first trace | Lost the race with the early-inject shim |
@@ -59,6 +85,12 @@ The point is not "we missed one" but *why*. `chrome.webRequest` reports
 
 Only the first row is a bug. The rest are the documented limits of the
 interception design, and seeing them labelled is the product.
+
+One caveat for the reader of a log: when the NodeJS SDK answers, the content
+script serves that response and the origin is never contacted — so it reads as
+"mocked" — but the SDK websocket to `localhost:8000` does appear in `webRequest`
+as a `websocket` entry. Filtering the shadow to `xmlhttprequest` keeps that out
+of the crossing.
 
 ## The event model
 
