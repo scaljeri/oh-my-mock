@@ -25,6 +25,8 @@ module.exports = tseslint.config(
       'e2e/**',
       'test-site/**',
       'playwright-report/**',
+      // Playwright's run output, including a bundled HTML report.
+      'test-results/**',
       'coverage/**',
       'jest.config.js',
       'karma.conf.js',

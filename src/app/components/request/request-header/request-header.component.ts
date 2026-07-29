@@ -242,9 +242,12 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
   }
 
   openAddResponseDialog(): void {
+    // Width only. The fixed 380px height predates the redesign's type scale:
+    // the status code field, the label field, the clone toggle and the actions
+    // no longer fit, so the dialog grew its own scrollbar and the autocomplete
+    // panel covered the buttons.
     const dialogRef = this.dialog.open(CreateStatusCodeComponent, {
-      width: '280px',
-      height: '380px'
+      width: '360px'
     });
 
     dialogRef.afterClosed().subscribe(async (update: IUpsertMock) => {

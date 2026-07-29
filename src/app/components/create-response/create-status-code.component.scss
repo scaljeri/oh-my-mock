@@ -1,9 +1,11 @@
 @use 'mixins' as *;
 
+// No fixed height: the dialog is opened with a width only, so it sizes to its
+// content. `height: 100%` here resolved against a container that was itself
+// sizing to this element, which left the dialog with a scrollbar of its own.
 :host {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 mat-error {
@@ -21,13 +23,12 @@ mat-slide-toggle  {
 .actions {
   display: flex;
   justify-content: space-between;
+  margin-top: $spacer-4;
 }
 
-// new
 form {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 

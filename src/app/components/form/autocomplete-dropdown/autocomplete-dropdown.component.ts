@@ -131,11 +131,25 @@ export class AutocompleteDropdownComponent
     });
   }
 
+  /**
+   * Blur means "left the field", not "finished choosing".
+   *
+   * Clicking an option blurs the input *first*, so closing the panel here — as
+   * this used to do unconditionally — removed the option from the DOM before
+   * the click could land on it. The selection then never happened: the panel
+   * shut, the control stayed empty, and a dialog that requires the value
+   * refused to save with no visible reason.
+   *
+   * While the panel is open, Material's own trigger closes it — on a selection
+   * and on an outside click — and `onAutoCompleteClose` picks the value up
+   * from there.
+   */
   onBlur(): void {
-    if (!this.autoCompleteActive) {
-      this.emitChange();
+    if (this.autoCompleteActive) {
+      return;
     }
 
+    this.emitChange();
     this.trigger?.closePanel?.();
   }
 
@@ -160,6 +174,9 @@ export class AutocompleteDropdownComponent
   }
 
   onAutoCompleteClose(): void {
+    // Reset before emitting: this used to stay true for the lifetime of the
+    // component after the first open, so `onBlur` never emitted again.
+    this.autoCompleteActive = false;
     this.emitChange();
   }
 
