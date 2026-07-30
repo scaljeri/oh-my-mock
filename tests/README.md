@@ -57,6 +57,28 @@ test('a mocked response replaces the real one', async ({ ohMy, site, server }) =
 Always assert the hit count as well as the body. Checking the body alone would
 pass even if the extension fetched the real response and discarded it.
 
+### …except where the popup is the thing under test
+
+Seeding skips the steps that *create* a mock, so a mock arrives already
+recorded, already selected and already enabled. Two specs therefore do it the
+long way round, by clicking:
+
+- `record-and-mock.spec.ts` — the whole journey with nothing seeded at all:
+  switch the domain on in the popup, let the site make a real call, watch it
+  appear in the request list, serve it, then edit what it serves.
+- `edit-response.spec.ts` — a seeded mock, re-edited through the detail pane.
+
+Reach for these only for behaviour that lives in the popup. Everything about
+interception itself is cheaper and steadier to seed.
+
+Two things that bite when driving the popup:
+
+- **Opening the popup on a domain that is off** puts `oh-my-disabled-enabled`
+  over the page, and it swallows clicks until its toggle is answered.
+- **The request list draws its url as CSS `content`**, split into two halves for
+  a middle ellipsis, so `hasText: '/api/json'` never matches — the rendered text
+  is `/api /json`. Match on `[x-test="row-endpoint"][title="…"]` instead.
+
 ### Fixtures
 
 | Fixture | What it gives you |

@@ -134,7 +134,11 @@ preset selector and the overflow menu moved into the toolbar below. -->
         <span class="oh-row__method" [attr.data-method]="row.method">{{
           row.method
         }}</span>
-        <span class="oh-row__endpoint">
+        <!-- The url is drawn as CSS `content` from the two halves below, so it
+          is not text any tooling can reach — no tooltip on a middle-ellipsised
+          url, and nothing for a screen reader or a test to match on. `title`
+          carries the whole thing. -->
+        <span class="oh-row__endpoint" x-test="row-endpoint" [title]="row.url">
           <span
             class="oh-row__url"
             [attr.data-content-start]="row.urlStart"
@@ -189,7 +193,13 @@ preset selector and the overflow menu moved into the toolbar below. -->
           (click)="onActivateToggle(row.id, $event)"
           mat-icon-button
           color="primary"
-          aria-label="Example icon button with a menu icon"
+          x-test="row-activate-toggle"
+          [attr.aria-pressed]="row.enabled[context.preset]"
+          [attr.aria-label]="
+            row.enabled[context.preset]
+              ? 'Stop mocking this request'
+              : 'Mock this request'
+          "
         >
           @if (!row.enabled[context.preset]) {
             <mat-icon svgIcon="play_arrow" color="primary"></mat-icon>
