@@ -65,10 +65,6 @@
   display: flex;
   position: relative;
 
-  button + button {
-    display: none;
-  }
-
   .btn-wrapper {
     flex-direction: row-reverse;
   }
@@ -85,6 +81,12 @@
     flex: 0 0 145px;
   }
 
+  // A second action sits next to the first. This used to be `display: none`,
+  // which is how the request list ended up with clone and delete buttons that
+  // were in the DOM and in the tab order while being invisible — a keyboard
+  // user could reach an unlabelled button and delete a request with nothing on
+  // screen to say so. The `.btns-2`/`.btns-3` widths above always assumed they
+  // would be laid out.
   button + button {
     margin-left: $spacer-2;
   }
