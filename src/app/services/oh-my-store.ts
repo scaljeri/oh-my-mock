@@ -18,6 +18,7 @@ import {
 import { IOhMyCookieUpdate } from '@shared/utils/cookie';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
+import { PresetUtils } from '@shared/utils/preset';
 import { uniqueId } from '@shared/utils/unique-id';
 import { url2regex } from '@shared/utils/urls';
 import { StorageService } from './storage.service';
@@ -149,6 +150,52 @@ export class OhMyState {
     );
 
     return state;
+  }
+
+  /**
+   * Removes a preset, and with it every trace of it on the requests.
+   *
+   * The mirror of `newPreset`, and it has to be: a preset exists in three
+   * places, and creating one writes all three. The popup used to delete only the
+   * first — the `presets` map on the state — so every request kept its
+   * `enabled[id]` and `selected[id]` for a preset that no longer existed, and
+   * creating a new preset that happened to reuse the id inherited them.
+   *
+   * `PresetUtils.delete` has done this correctly since it was written; nothing
+   * called it. Its own spec was the only caller.
+   */
+  async deletePreset(
+    id: ohMyPresetId,
+    context: IOhMyContext
+  ): Promise<IState> {
+    const state = await this.storageService.get<IState>(context.domain);
+    const requests = await this.storageService.getMany<IData>(state.requests);
+
+    const updated = PresetUtils.delete(state, requests, id);
+
+    // Deleting the *active* preset leaves the context without one, so the state
+    // would be written pointing at nothing. Fall back to whichever remains.
+    if (!updated.state.context.preset) {
+      updated.state.context = {
+        ...updated.state.context,
+        preset: Object.keys(updated.state.presets)[0]
+      };
+    }
+
+    // A request is its own record, so this is a write per request rather than
+    // one write of the whole domain — exactly as `newPreset` does it.
+    for (const request of Object.values(updated.requests)) {
+      await this.upsertRequestRecord(request, updated.state.context);
+    }
+
+    await OhMySendToBg.full(
+      updated.state,
+      payloadType.STATE,
+      undefined,
+      'popup;deletePreset'
+    );
+
+    return updated.state;
   }
 
   /**

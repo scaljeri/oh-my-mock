@@ -118,6 +118,14 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
     await this.storeService.newPreset(update.value, update.id, this.context);
   }
 
+  /**
+   * Deletes the preset that is on display.
+   *
+   * The work is `OhMyState.deletePreset`, not this method. It used to strip the
+   * preset from the `presets` map here and write just that, which left every
+   * request carrying an `enabled`/`selected` entry for a preset that no longer
+   * existed — and a later preset reusing the id inherited them.
+   */
   onPresetDelete(preset: string) {
     if (preset === '' || preset === undefined) {
       return this.toast.warning('Delete failed: no preset selected');
@@ -125,17 +133,17 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
       return this.toast.warning('Delete failed: cannot delete the last preset');
     }
 
-    delete this.presets[this.context.preset];
+    const removed = this.context.preset;
+
+    delete this.presets[removed];
     this.options = Object.values(this.presets);
     this.context.preset = Object.keys(this.presets)[0];
 
     this.presetCtrl.setValue(this.presets[this.context.preset], {
       emitEvent: false
     });
-    this.storeService.upsertState(
-      { context: this.context, presets: this.presets },
-      this.context
-    );
+
+    this.storeService.deletePreset(removed, this.context);
   }
 
   onBlur(): void {
