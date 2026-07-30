@@ -13,7 +13,9 @@ method + url line with its metadata, then the saved-response chips. -->
       <span class="oh-detail__method" [attr.data-method]="request.method">{{
         request.method
       }}</span>
-      <span class="oh-detail__url">{{ request.url }}</span>
+      <span class="oh-detail__url" [title]="request.url">{{
+        request.displayUrl || request.url
+      }}</span>
     </button>
 
     <div class="oh-detail__head-actions">

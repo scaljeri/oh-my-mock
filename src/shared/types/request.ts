@@ -41,7 +41,21 @@ export interface IData extends IOhMyMockContext {
   // some of them. A stored request always has all three — `DataUtils.create`
   // assigns an id and the url is what the request is keyed on.
   id: ohMyDataId;
+  /**
+   * Matched as a **regular expression** — `compareUrls` anchors it and runs it
+   * against the intercepted url. So it is not necessarily readable: a HAR import
+   * stores `(https?://api\.example\.com)?/v1/users` here.
+   */
   url: string;
+  /**
+   * What to show a human, when `url` is not fit to be shown.
+   *
+   * Only set where the two genuinely differ — a HAR import, which has to store a
+   * pattern but knows the url it came from. Absent everywhere else, so readers
+   * fall back to `url`. It is a label and nothing matches against it; clearing
+   * it is always safe, and editing the url by hand does exactly that.
+   */
+  displayUrl?: string;
   method: requestMethod;
   selected: Record<ohMyPresetId, ohMyMockId>;
   enabled: Record<ohMyPresetId, boolean>;

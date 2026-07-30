@@ -121,7 +121,11 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
           this.storeService.upsertRequest(
             {
               id: this.request.id,
-              url: url
+              url: url,
+              // A hand-edited url is the one to show. `displayUrl` only exists
+              // where an import had to store a pattern; keeping the old one
+              // would label this request with a url it no longer matches.
+              displayUrl: ''
             },
             this.context
           );

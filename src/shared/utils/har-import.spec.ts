@@ -202,6 +202,8 @@ describe('harCandidatesToBackup', () => {
       groupHarEntries([harEntry({ method: 'POST', requestType: 'XHR' })]), options).requests;
 
     expect(request.url).toBe('(https?://api\\.example\\.com)?/v1/users');
+    // The pattern is what the interception matches against; the list shows this.
+    expect(request.displayUrl).toBe('https://api.example.com/v1/users');
     expect(request.method).toBe('POST');
     expect(request.requestType).toBe('XHR');
     expect(request.type).toBe(objectTypes.REQUEST);

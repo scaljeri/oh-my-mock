@@ -270,6 +270,10 @@ function toRequest(
   return DataUtils.create({
     id,
     url: candidate.pattern,
+    // `url` is the regex the interception matches against; this is the url it
+    // was built from, so the list shows `https://api.example.com/v1/users`
+    // rather than `(https?://api\\.example\\.com)?/v1/users`.
+    displayUrl: candidate.url,
     method: candidate.method,
     requestType: candidate.requestType,
     mocks,

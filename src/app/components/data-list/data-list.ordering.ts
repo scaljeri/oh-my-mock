@@ -28,14 +28,20 @@ export interface IOhMyListOrderInput {
 }
 
 function toRow(data: IData, isSticky: boolean): IOhMyListRow {
+  // `url` is a regular expression; `displayUrl` is set where the two differ far
+  // enough to matter — a HAR import stores `(https?://host)?/path` and the list
+  // is no place for it.
+  const shown = data.displayUrl || data.url;
+
   return {
     ...data,
     isSticky,
+    shownUrl: shown,
     // Middle ellipsis: the row renders the two halves back to back and lets
     // the first one shrink, so a long shared prefix collapses and the tail
     // that tells requests apart stays readable.
-    urlStart: data.url.substring(0, data.url.length / 2),
-    urlEnd: data.url.substring(data.url.length / 2)
+    urlStart: shown.substring(0, shown.length / 2),
+    urlEnd: shown.substring(shown.length / 2)
   };
 }
 

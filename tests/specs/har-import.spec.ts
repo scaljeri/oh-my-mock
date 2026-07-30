@@ -179,6 +179,14 @@ test.describe('HAR import', () => {
     const state = await ohMy.getState(SITE_DOMAIN);
     expect((state as { requests: string[] }).requests.length).toBe(3);
 
+    // Readable in the list. `IData.url` holds the regex the interception matches
+    // against — `(https?://localhost:8090)?/api/json` — which is what the rows
+    // used to show, one character per row of noise. `displayUrl` carries the url
+    // it was built from, and that is what the endpoint cell is labelled with.
+    await expect(
+      popup.locator(`[x-test="row-endpoint"][title="${SITE_ORIGIN}/api/json"]`)
+    ).toHaveCount(1);
+
     await server.reset();
 
     await site.open();
