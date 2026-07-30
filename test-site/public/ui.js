@@ -2,9 +2,17 @@
  * Thin UI on top of `window.harness`.
  *
  * Exists for headed/manual use — running the site by hand and watching what
- * OhMyMock does. The Playwright tests call `window.harness.request()` directly
- * and never touch these controls, so nothing here is load-bearing for the
- * suite. Keep it that way: no test logic in the UI.
+ * OhMyMock does. Most of the Playwright suite calls `window.harness.request()`
+ * directly and never touches these controls.
+ *
+ * One spec does: `passthrough-to-mock.spec.ts` presses Send and asserts on what
+ * this file *renders*, because a response that is served right but reported
+ * wrong is invisible to a caller-side assertion. So the result row's cells and
+ * the fields of the "Latest response" panel are part of a contract now — adding
+ * to them is free, renaming or dropping one is not.
+ *
+ * Still no test logic in here: everything shown is a field the harness already
+ * returns.
  */
 (function () {
   'use strict';
@@ -64,9 +72,17 @@
     tbody.appendChild(tr);
     count.textContent = String(window.harness.results.length);
 
+    // `ok` and `statusText` sit next to `status` on purpose, and they are not
+    // decoration. OhMyMock serves a mocked code through a patched `status`
+    // getter, while `ok` and `statusText` are native getters reading the
+    // Response's own internal slot — so those three disagreeing is the visible
+    // signature of a mocked error that browsers, and `if (!res.ok) throw`, would
+    // still treat as a success.
     latest.textContent = JSON.stringify(
       {
         status: result.status,
+        ok: result.ok,
+        statusText: result.statusText,
         headers: result.headers,
         bodyKind: result.bodyKind,
         byteLength: result.byteLength,
