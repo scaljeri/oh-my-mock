@@ -132,6 +132,22 @@ test.describe('recording and mocking through the popup', () => {
     // ---- edit what it serves ----------------------------------------------
     await replaceEditorContent(popup, JSON.stringify(MOCKED));
 
+    // Wait for the edit to reach storage before asking the page again.
+    //
+    // Leaving this out is what made this test flake, and it flaked in the most
+    // misleading way available: the request *was* mocked, with the body the mock
+    // still held — which here is a copy of the server's own answer, because that
+    // is what was recorded. So the failure read as "went to the server" when it
+    // was really "asked one hop too early". Nothing is seeded here, so the ids
+    // come from the state the recording created.
+    const dataId = ((await ohMy.getState(SITE_DOMAIN)) as { requests: string[] })
+      .requests[0];
+    const mockId = (await ohMy.getRequest(dataId))?.selected?.default;
+
+    await expect
+      .poll(() => ohMy.getResponseBody(mockId as string))
+      .toBe(JSON.stringify(MOCKED));
+
     const mocked = await site.request({
       url: '/api/json',
       responseType: 'json'
