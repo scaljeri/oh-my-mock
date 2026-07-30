@@ -19,7 +19,7 @@ import { BehaviorSubject } from 'rxjs';
 // import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
 import { error } from './utils';
-import { injectCode } from './inject-code';
+import { injectCode, installEarlyShim, releaseEarlyShim } from './inject-code';
 import { sendMsg2Popup } from './message-to-popup';
 
 window.onunhandledrejection = function (event: PromiseRejectionEvent) {
@@ -46,6 +46,14 @@ const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)
   .setTrigger(triggerRuntime);
 ohMyWindow().off?.push(() => messageBus.clear());
+
+// Before anything else, and before the page has run a line of its own: the shim
+// holds `fetch`/`XHR` so a call made from an inline script in <head> cannot slip
+// past while `contentState.init()` is still reading `chrome.storage`. Whether
+// this domain is switched on is not known yet, and waiting to find out is
+// exactly what used to lose those requests. `releaseEarlyShim` below is what
+// makes holding safe.
+installEarlyShim(messageBus);
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
@@ -103,11 +111,33 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
 
 // Inject XHR/Fetch mocking code and more
 (async function () {
-  await contentState.init();
+  // Enough to answer "is this domain switched on", and no more. The shim is
+  // holding the page's own requests until one of the two branches below runs,
+  // so a page this extension does nothing for waits on two storage reads rather
+  // than on every request record the domain has.
+  await contentState.initContext();
 
   const state = contentState.state || StateUtils.init();
+  const active = contentState.isActive(state);
 
   sendKnockKnock();
 
-  injectCode({ active: contentState.isActive(state) }, messageBus);
+  if (!active) {
+    releaseEarlyShim();
+
+    return;
+  }
+
+  // Only now: a request arriving before the records are loaded would find no
+  // mock and go to the server — the same silent miss, one step further along.
+  await contentState.init();
+
+  const injected = await injectCode({ active }, messageBus);
+
+  // Injection failed — a CSP the removal rules could not beat. Nothing is
+  // coming, so the shim has to stop holding: a page whose requests never settle
+  // is a far worse failure than one that is not mocked.
+  if (!injected) {
+    releaseEarlyShim();
+  }
 })();

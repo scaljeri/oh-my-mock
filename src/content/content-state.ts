@@ -95,10 +95,33 @@ export class OhMyContentState {
     }
   }
 
+  /**
+   * Reads just enough to answer `isActive()`.
+   *
+   * Split out from the request records because the shim over `fetch` holds the
+   * page's own calls until this resolves — on *every* page, including the ones
+   * this extension will turn out to do nothing for. Those pay only for this
+   * much: two storage reads, issued together rather than one after the other.
+   */
+  async initContext(): Promise<void> {
+    const [state, store] = await Promise.all([
+      this.getState(),
+      this.get<IOhMyMock>(STORAGE_KEY)
+    ]);
+
+    this.state = state;
+    this.cache[OhMyContentState.host] = state;
+    this.store = store;
+  }
+
+  /**
+   * The request records themselves — needed before anything can be *matched*,
+   * and worth waiting for before injecting: a request that arrives while this
+   * map is empty finds no mock and goes to the server, which is the same silent
+   * miss the shim exists to prevent.
+   */
   async init() {
-    this.state = await this.getState();
-    this.cache[OhMyContentState.host] = this.state;
-    this.store = await this.get<IOhMyMock>(STORAGE_KEY);
+    await this.initContext();
 
     await this.loadRequests();
   }

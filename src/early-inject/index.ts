@@ -22,6 +22,25 @@ interface IEarlyInjectNamespace {
   xhr?: { send: (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null) => void };
   fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
   __fetch?: typeof fetch;
+  /**
+   * Stop holding: hand every call to the original implementation.
+   *
+   * Set by the content script (`releaseEarlyShim`) once it knows no injected
+   * bundle is coming — the domain is switched off, or injection failed. This
+   * shim is installed before any of that is known, so without a way to give up
+   * it would poll for a bundle that never arrives and the page's own requests
+   * would never settle.
+   */
+  passthrough?: boolean;
+  /**
+   * Stop holding, now.
+   *
+   * `passthrough` alone would do, but every held call is waiting on a 50ms
+   * poll, so the page would pay up to another tick for an answer that is already
+   * decided. Draining them costs nothing and this runs on every page the user
+   * visits, mocked or not.
+   */
+  release?: () => void;
 }
 
 /** Ad-hoc members the shim parks on each XMLHttpRequest instance. */
@@ -30,6 +49,7 @@ interface IEarlyInjectXhr extends XMLHttpRequest {
   ohHeaders?: Record<string, string>;
   ohMethod?: string;
   ohUrl?: string;
+  __send: XMLHttpRequest['send'];
   __open: XMLHttpRequest['open'];
   __setRequestHeader: XMLHttpRequest['setRequestHeader'];
   __addEventListener: XMLHttpRequest['addEventListener'];
@@ -58,6 +78,18 @@ const descriptorOf = (name: keyof XMLHttpRequest): PropertyDescriptor => {
 if (!ohMy()) {
   setOhMy({});
 
+  // Calls being held until the injected bundle arrives, or until word comes
+  // that none is. Each entry stops its own polling and lets its call through.
+  const waiting: (() => void)[] = [];
+
+  ohMy().release = function () {
+    ohMy().passthrough = true;
+
+    while (waiting.length) {
+      waiting.shift()!();
+    }
+  };
+
   const dsend = descriptorOf('send');
   const dopen = descriptorOf('open');
   const dseth = descriptorOf('setRequestHeader');
@@ -68,14 +100,22 @@ if (!ohMy()) {
       value: function (this: IEarlyInjectXhr, body?: Document | XMLHttpRequestBodyInit | null) {
         if (ohMy().xhr) {
           ohMy().xhr?.send.call(this, body);
+        } else if (ohMy().passthrough) {
+          this.__send(body);
         } else {
-          // Wait for the injected code
+          // Wait for the injected code, or for word that none is coming. The
+          // poll catches the bundle arriving; `release` drains this directly.
           const sid = setInterval(() => {
             if (ohMy().xhr) {
               clearInterval(sid);
               ohMy().xhr?.send.call(this, body);
             }
           }, 50);
+
+          waiting.push(() => {
+            clearInterval(sid);
+            this.__send(body);
+          });
         }
       }
     },
@@ -121,6 +161,8 @@ if (!ohMy()) {
     return new Promise(function (r) {
       if (ohMy().fetch) {
         r(ohMy().fetch!(input, init));
+      } else if (ohMy().passthrough) {
+        r(origFetch.call(window, input, init));
       } else {
         const fid = setInterval(function () {
           if (ohMy().fetch) {
@@ -128,6 +170,11 @@ if (!ohMy()) {
             r(ohMy().fetch!(input, init));
           }
         }, 50);
+
+        waiting.push(function () {
+          clearInterval(fid);
+          r(origFetch.call(window, input, init));
+        });
       }
     })
   }

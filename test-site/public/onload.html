@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OhMyMock on-load test page</title>
+  <link rel="icon" href="data:,">
+  <!--
+    A page that calls its API the way a real app does: from an inline script in
+    the <head>, before anything else has run.
+
+    This is the hardest moment for the extension to be ready in. The content
+    script runs at `document_start`, but it has to read `chrome.storage` before
+    it knows whether the domain is switched on, and that read is async — so a
+    request fired here can leave before anything is patched. `onload.spec.ts`
+    exists to make sure it cannot.
+
+    No `defer`, no listener, nothing awaited: the call is made while the parser
+    is still inside <head>.
+  -->
+  <script>
+    window.onloadResult = { pending: true };
+    var startedAt = performance.now();
+
+    window.onloadDone = fetch('/api/json')
+      .then(function (response) {
+        return response.text().then(function (body) {
+          window.onloadResult = {
+            pending: false,
+            // How long the shim held it. On a domain that is switched off this
+            // is the cost the extension adds to a page it does nothing for.
+            durationMs: Math.round(performance.now() - startedAt),
+            status: response.status,
+            // Set by the test server only, so its absence means the response
+            // did not come from the server.
+            source: response.headers.get('x-oh-my-source'),
+            body: body
+          };
+        });
+      })
+      .catch(function (err) {
+        window.onloadResult = { pending: false, error: String(err) };
+      });
+  </script>
+</head>
+
+<body>
+  <h1>On-load request</h1>
+  <pre id="result">see <code>window.onloadResult</code></pre>
+  <script>
+    window.onloadDone.then(function () {
+      document.getElementById('result').textContent =
+        JSON.stringify(window.onloadResult, null, 2);
+    });
+  </script>
+</body>
+</html>
