@@ -2,11 +2,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "types": [
-      "jest", // 1
-      "node",
-      "Chrome"
-    ],
+    // Lowercase: the package is `@types/chrome`, and TypeScript resolves this
+    // as a directory name. On a case-sensitive filesystem "Chrome" is TS2688,
+    // so this config could not be used at all — invisible only because Jest
+    // reads `tsconfig.json` instead.
+    "types": ["jest", "node", "chrome"],
     "esModuleInterop": true, // 2
     "emitDecoratorMetadata": true, // 3
     "allowSyntheticDefaultImports": true,

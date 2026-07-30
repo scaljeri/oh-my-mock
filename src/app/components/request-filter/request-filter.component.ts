@@ -155,28 +155,44 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
     this.filterCtrl.setValue(this.filterStr, { emitEvent: false });
   }
 
+  /**
+   * Keeps the input in step with the filter the list is actually applying.
+   *
+   * This used to be wrapped in a `try` that logged `'Ooops'` and carried on, and
+   * it was hiding two real faults rather than guarding against nothing:
+   *
+   * **The incoming value was used as a regular expression.**
+   * `this.filterCtrl.value.match(filterStr.currentValue)` compiles whatever is
+   * in the box, and the box is free text — so a filter of `(`, `[` or `*` threw
+   * a SyntaxError on every change. `includes` asks the same question about a
+   * literal, which is what a search box means.
+   *
+   * **`filterCtrl.value` is nullable.** A form control resets to `null`, not
+   * `''`, so `.match` on it threw a TypeError the moment the field was cleared
+   * from outside.
+   *
+   * With both gone there is nothing left worth swallowing: anything thrown below
+   * is a fault, and should reach the console as one.
+   */
   ngOnChanges({ filterStr, lastResult, data }: SimpleChanges): void {
-    try {
-      if (
-        filterStr?.currentValue !== undefined &&
-        (filterStr.currentValue === '' ||
-          !this.filterCtrl.value.match(filterStr?.currentValue))
-      ) {
-        this.filterCtrl.setValue(filterStr?.currentValue, { emitEvent: false });
-      } else if (!filterStr && !this.filterCtrl.value) {
-        return;
-      }
+    const incoming = filterStr?.currentValue as string | undefined;
+    const current = (this.filterCtrl.value ?? '') as string;
 
-      if (!this.filterOptions) {
-        this.setFilterOptions();
-      }
+    // An empty incoming value clears the box. Otherwise it is only written when
+    // the box does not already contain it, so a value arriving while the user is
+    // mid-word does not truncate what they have typed.
+    if (incoming !== undefined && (incoming === '' || !current.includes(incoming))) {
+      this.filterCtrl.setValue(incoming, { emitEvent: false });
+    } else if (!filterStr && !current) {
+      return;
+    }
 
-      if (data || (lastResult && !lastResult.currentValue)) {
-        this.filterTrigger$.next();
-      }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log('Ooops', err);
+    if (!this.filterOptions) {
+      this.setFilterOptions();
+    }
+
+    if (data || (lastResult && !lastResult.currentValue)) {
+      this.filterTrigger$.next();
     }
   }
 

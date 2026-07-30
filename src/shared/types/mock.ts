@@ -1,5 +1,4 @@
 import { MOCK_RULE_TYPES, objectTypes } from '../constants';
-import { ohMyPresetId } from './preset';
 import { IOhMyUpsertData } from './request';
 
 export type ohMyStatusCode = number;
@@ -21,13 +20,14 @@ export interface IOhMyShallowMock {
 export interface IOhMyMockSearch {
   id?: ohMyMockId;
   /**
-   * The mock's own label, not a preset id: `MockUtils.find` compares this with
-   * `IOhMyShallowMock.label`, and its two callers pass a label or `''`. The
-   * `ohMyPresetId` alias is a mislabel carried over from `type.ts` — harmless,
-   * since both are `string`. Left alone here because this split moves types
-   * rather than changes them.
+   * The mock's own label, not a preset id — `MockUtils.find` compares it with
+   * `IOhMyShallowMock.label`, and its two callers pass a label or `''`.
+   *
+   * It was declared `ohMyPresetId` for years. Both aliases are `string`, so it
+   * never misbehaved; it just told every reader the wrong thing about what this
+   * field holds.
    */
-  label?: ohMyPresetId;
+  label?: IOhMyShallowMock['label'];
   statusCode?: ohMyStatusCode;
 }
 
