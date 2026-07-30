@@ -4,16 +4,21 @@
  * This is the extension's most confusing fork, and it is one `if`:
  *
  *     if (!data || mock?.jsCode === MOCK_JS_CODE || !mockId) { serve directly }
- *     else { ask the popup }                 // src/content/handle-api-request.ts
+ *     else { ask the background to run it }   // src/content/handle-api-request.ts
  *
  * While the code is the untouched default the content script answers by itself.
- * Edit one character of it and the answer can only come from the popup, because
- * the `eval` that runs user code lives in a sandboxed iframe on the popup page
- * (`src/sandbox/index.ts`) — extension pages themselves may not `eval`.
+ * Edit one character of it and it has to be *run*, and the `eval` that runs user
+ * code may only happen in a sandboxed page (`src/sandbox/index.ts`) — an
+ * ordinary extension page may not `eval` under MV3.
  *
- * So every test here that expects a mocked answer opens the popup first, and
- * the last one proves what happens when it is not open. See
- * `docs/architecture/request-flow.md`, "The sandbox leg".
+ * That sandbox used to be an iframe on the popup page, so a mock with edited
+ * code silently stopped working whenever the popup was closed: the request paid
+ * the full 5s `sendMsg2Popup` timeout, went through unmocked, and the domain was
+ * switched off on the way out. The background hosts the sandbox in an offscreen
+ * document now, so **not one test here opens the popup** — that is the point of
+ * the change, and the reason it is worth asserting everywhere rather than once.
+ *
+ * See `docs/architecture/request-flow.md`, "The sandbox leg".
  */
 
 import {
@@ -22,7 +27,6 @@ import {
   SITE_ORIGIN,
   test
 } from '../fixtures/extension';
-import { openPopup } from '../fixtures/popup';
 
 /**
  * The code is the body of `async (mock, request, response) => { ... }`.
@@ -61,9 +65,7 @@ const AWAITS = `
 
 test.describe('custom mock code', () => {
   for (const transport of ['fetch', 'xhr'] as const) {
-    test(`${transport}: custom jsCode is evaluated and served while the popup is open`, async ({
-      context,
-      extensionId,
+    test(`${transport}: custom jsCode is evaluated and served, popup or not`, async ({
       ohMy,
       site,
       server
@@ -80,11 +82,6 @@ test.describe('custom mock code', () => {
       await site.open();
       await site.waitForInjection();
 
-      const popup = await openPopup(context, extensionId, {
-        domain: SITE_DOMAIN,
-        tabId: await ohMy.tabIdFor(SITE_ORIGIN)
-      });
-
       const result = await site.request({
         transport,
         url: '/api/json',
@@ -96,14 +93,10 @@ test.describe('custom mock code', () => {
       expect(result.status).toBe(200);
       // And it still never left the browser.
       expect(await server.hitCount('GET /api/json')).toBe(0);
-
-      await popup.close();
     });
   }
 
   test('the code receives the request it is answering', async ({
-    context,
-    extensionId,
     ohMy,
     site,
     server
@@ -120,11 +113,6 @@ test.describe('custom mock code', () => {
     await site.open();
     await site.waitForInjection();
 
-    const popup = await openPopup(context, extensionId, {
-      domain: SITE_DOMAIN,
-      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
-    });
-
     const result = await site.request({
       method: 'POST',
       url: '/api/echo',
@@ -132,7 +120,8 @@ test.describe('custom mock code', () => {
       body: { ping: 'pong' }
     });
 
-    // Everything here crossed page -> content -> popup -> sandbox and came back.
+    // Everything here crossed page -> content -> background -> offscreen ->
+    // sandbox and came back.
     expect(result.json).toEqual({
       url: '/api/echo',
       method: 'POST',
@@ -140,13 +129,9 @@ test.describe('custom mock code', () => {
       body: JSON.stringify({ ping: 'pong' })
     });
     expect(await server.hitCount('POST /api/echo')).toBe(0);
-
-    await popup.close();
   });
 
   test('the code decides the status code and the headers', async ({
-    context,
-    extensionId,
     ohMy,
     site
   }) => {
@@ -163,24 +148,15 @@ test.describe('custom mock code', () => {
     await site.open();
     await site.waitForInjection();
 
-    const popup = await openPopup(context, extensionId, {
-      domain: SITE_DOMAIN,
-      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
-    });
-
     const result = await site.request({ url: '/api/json', responseType: 'json' });
 
     // The stored mock said 200; the sandbox result is what the page sees.
     expect(result.status).toBe(418);
     expect(result.ok).toBe(false);
     expect(result.headers['x-from-jscode']).toBe('yes');
-
-    await popup.close();
   });
 
   test('the code may await — the sandbox resolves the promise', async ({
-    context,
-    extensionId,
     ohMy,
     site
   }) => {
@@ -195,32 +171,23 @@ test.describe('custom mock code', () => {
     await site.open();
     await site.waitForInjection();
 
-    const popup = await openPopup(context, extensionId, {
-      domain: SITE_DOMAIN,
-      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
-    });
-
     const result = await site.request({ url: '/api/json', responseType: 'json' });
 
     expect(result.json).toEqual({ source: 'awaited' });
-
-    await popup.close();
   });
 
   /**
-   * The other half of the fork, asserted rather than assumed.
+   * The regression this whole change exists to prevent, stated on its own.
    *
-   * With no popup to evaluate the code, `sendMsg2Popup` waits its full 5s
-   * timeout (`src/content/message-to-popup.ts`) and then rejects. The content
-   * script answers `ERROR`, which the injected script treats as "not mocked",
-   * so the request finally goes to the real server — and the content script
-   * switches the domain off on the way out.
-   *
-   * The request is *not* lost, then; it is served late and unmocked. Note that
-   * this only bites a mock with custom code: everything with the default code
-   * keeps being served by the content script alone.
+   * Every test above already runs without a popup, so this one adds the two
+   * things their assertions cannot see. It is written against the *old*
+   * behaviour deliberately: with the sandbox on the popup page this request paid
+   * the full 5s `sendMsg2Popup` timeout, came back carrying the server's own
+   * body, and left the domain switched off behind it. All three are asserted
+   * against, so putting the sandbox back in the popup fails here loudly rather
+   * than by a timeout somewhere else.
    */
-  test('with the popup closed, the request stalls and then goes to the server', async ({
+  test('no popup is involved: served promptly, and the domain stays on', async ({
     ohMy,
     site,
     server
@@ -238,16 +205,17 @@ test.describe('custom mock code', () => {
 
     const result = await site.request({ url: '/api/json', responseType: 'json' });
 
-    // The 5s popup timeout is paid in full before the request is let through.
-    expect(result.durationMs).toBeGreaterThanOrEqual(4_500);
-    // Unmocked: the real body, carrying the header only a real response has.
-    expect(result.json.source).toBe('server');
-    expect(result.headers['x-oh-my-source']).toBe('server');
-    expect(await server.hitCount('GET /api/json')).toBe(1);
+    expect(result.json).toEqual({ source: 'jscode', wrapped: 'stored' });
+    // Nowhere near the 5s the popup timeout used to cost. Generous on purpose:
+    // this is here to catch a stall, not to police the sandbox's latency.
+    expect(result.durationMs).toBeLessThan(2_000);
+    // Never reached the server, and carries none of its markers.
+    expect(result.headers['x-oh-my-source']).toBeUndefined();
+    expect(await server.hitCount('GET /api/json')).toBe(0);
 
-    // Failing to reach the popup also switches the domain off, so the *next*
-    // request is not stalled as well.
-    await expect.poll(() => ohMy.isAppActive(SITE_DOMAIN)).toBe(false);
+    // The content script used to switch the domain off when it could not reach
+    // the popup, so that the next request would not stall as well.
+    expect(await ohMy.isAppActive(SITE_DOMAIN)).toBe(true);
   });
 
   test('a default-jsCode mock needs no popup at all', async ({
@@ -272,5 +240,47 @@ test.describe('custom mock code', () => {
     expect(result.durationMs).toBeLessThan(4_000);
     expect(await server.hitCount('GET /api/json')).toBe(0);
     expect(await ohMy.isAppActive(SITE_DOMAIN)).toBe(true);
+  });
+
+  /**
+   * The other half of "the popup must be open", and the bigger half.
+   *
+   * `OhMyContentState.isActive` used to require `store.popupActive` as well as
+   * the domain's own flag, so closing the popup stopped **all** mocking, not
+   * just the mocks with custom code. That gate existed because of the sandbox;
+   * with the sandbox in an offscreen document it protects against nothing.
+   *
+   * `popupActive: false` is exactly the state a closed popup leaves behind.
+   */
+  test('mocking survives a closed popup, custom code and all', async ({
+    ohMy,
+    site,
+    server
+  }) => {
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { source: 'stored' },
+      jsCode: REWRITE_BODY
+    });
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/users',
+      response: { source: 'plain-mock' }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+    // Everything `setActive` set, minus the trace of an open popup.
+    await ohMy.setPopupActive(false);
+
+    await site.open();
+    await site.waitForInjection();
+
+    const custom = await site.request({ url: '/api/json', responseType: 'json' });
+    const plain = await site.request({ url: '/api/users', responseType: 'json' });
+
+    expect(custom.json).toEqual({ source: 'jscode', wrapped: 'stored' });
+    expect(plain.json).toEqual({ source: 'plain-mock' });
+    expect(await server.hitCount('GET /api/json')).toBe(0);
+    expect(await server.hitCount('GET /api/users')).toBe(0);
   });
 });

@@ -17,16 +17,19 @@ Five contexts. The **injected** script lives in the page's own JS world and is
 the only one that can patch `fetch`; it has no `chrome.*` APIs at all. The
 **content** script sits in the same tab in an isolated world, owns the state in
 `chrome.storage`, and is the bridge. The **background** service worker holds the
-optional websocket to the NodeJS SDK. The **popup** is an Angular app that also
-hosts a sandboxed iframe, which is the only place user-written mock code may be
-evaluated. Everything between them is messages.
+optional websocket to the NodeJS SDK. The **popup** is an Angular app — an
+editor for the mocks, and nothing the mocking path depends on. User-written mock
+code is evaluated in a sandboxed iframe, held by an **offscreen document** the
+background owns. Everything between them is messages.
 
 ## Things that surprise people
 
-- **The popup must be open** for mocks with custom code — the sandbox that
-  evaluates them lives there. Mocks with untouched code are served by the
-  content script alone. See the fork in
-  [request-flow.md](./request-flow.md#5-the-fork-fast-path-or-sandbox).
+- **Mocks with custom code take a longer route** — they have to be *run*, and
+  only a sandboxed page may `eval`, so the content script asks the background,
+  which owns the offscreen document that holds the sandbox. Mocks with untouched
+  code are served by the content script alone. See the fork in
+  [request-flow.md](./request-flow.md#5-the-fork-fast-path-or-sandbox). This is
+  no longer a reason to keep the popup open; it used to be.
 - **A mocked `fetch` resolves with an empty `Response`.** The body is handed over
   later, when the page reads it, out of a cache keyed by url + method.
 - **`chrome.runtime.sendMessage` is a broadcast**, not a relay: the background

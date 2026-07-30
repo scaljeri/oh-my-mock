@@ -16,6 +16,10 @@ import jsonFromFile from '../shared/dummy-data.json';
 import { openPopup } from './open-popup';
 
 import './server-dispatcher';
+// Answers `payloadType.EVAL`: runs a mock's custom code in the sandboxed page,
+// which the background hosts in an offscreen document. Used to be the popup's
+// job, and was why such a mock needed the popup open.
+import './eval-dispatcher';
 // import { injectContent } from './inject-content';
 import { removeCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';

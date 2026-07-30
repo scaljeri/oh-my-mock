@@ -272,6 +272,25 @@ export class OhMyMockDriver {
   }
 
   /**
+   * Sets the browser-global `popupActive` flag on the store.
+   *
+   * `setActive` turns it on along with everything else, because that is the
+   * state a popup leaves behind. This exists to turn it *off* — the state after
+   * the popup is closed, which used to stop all mocking and no longer does.
+   */
+  async setPopupActive(active: boolean): Promise<void> {
+    await (await this.worker()).evaluate(async (active) => {
+      const stored = await chrome.storage.local.get('OhMyMock');
+      const store = stored.OhMyMock as StoredStore | undefined;
+
+      if (store) {
+        store.popupActive = active;
+        await chrome.storage.local.set({ OhMyMock: store });
+      }
+    }, active);
+  }
+
+  /**
    * Whether the extension still considers the domain switched on.
    *
    * Read separately from `getState` because the content script *writes* this

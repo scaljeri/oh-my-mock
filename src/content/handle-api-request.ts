@@ -2,7 +2,7 @@
 import { MOCK_JS_CODE, ohMyMockStatus, payloadType } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { IMock, IOhMyAPIRequest, IOhMyMockResponse, IState, ohMyMockId } from "../shared/type";
+import { IMock, IOhMyAPIRequest, IOhMyEvalRequest, IOhMyMockResponse, IState, ohMyMockId } from "../shared/type";
 import { DataUtils } from "../shared/utils/data";
 import { blurBase64, isImage, stripB64Prefix } from "../shared/utils/image";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
@@ -11,9 +11,8 @@ import { MockUtils } from "../shared/utils/mock";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
 import { StateUtils } from "../shared/utils/state";
 import { OhMyContentState } from "./content-state";
-import { IOhMyPopupError, sendMsg2Popup } from "./message-to-popup";
 import { sendMessageToInjected } from "./send-to-injected";
-import { debug, error, warn } from "./utils";
+import { warn } from "./utils";
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -113,32 +112,27 @@ export async function receivedApiRequest(
     //   context: payload.context, description: 'content;response'
     // });
   } else {
-    try {
-      const output = await sendMsg2Popup<IOhMyMockResponse>(messageBus, {
-        context: payload.context,
-        type: payloadType.API_REQUEST,
-        data: {
-          request: inputRequest,
-          ...(response.status === ohMyMockStatus.OK && { response }),
-        },
-        description: 'content:dispatch-eval'
-      });
+    // This mock's code has been edited, so it has to be run before there is a
+    // response to serve. That goes to the *background*, which hosts the
+    // sandboxed page in an offscreen document.
+    //
+    // It used to go to the popup, which held the sandbox in an iframe — so a
+    // mock with edited code silently stopped working the moment the popup was
+    // closed: the request stalled the full 5s `sendMsg2Popup` timeout, went
+    // through unmocked, and the content script cleared `aux.appActive` on its
+    // way out so the next one would not stall too. None of that is needed now;
+    // the background is always there to answer.
+    const output = await OhMySendToBg.full<IOhMyEvalRequest, IOhMyMockResponse>(
+      {
+        request: inputRequest,
+        ...(response.status === ohMyMockStatus.OK && { response })
+      },
+      payloadType.EVAL,
+      context,
+      'content;dispatch-eval'
+    );
 
-      handleResponse(request, context, response, output.payload.data, state);
-    } catch (err) {
-      // `sendMsg2Popup` is the only thing that can reject in this `try`, and it
-      // rejects with an `IOhMyPopupError`.
-      const failure = err as IOhMyPopupError;
-
-      error(failure.message);
-      await OhMySendToBg.patch(false, '$.aux', 'appActive', payloadType.STATE);
-
-      debug('Popup cannot be reached -> OhMyMock deactivated');
-      warn(failure.fix);
-      handleResponse(request, context, response, {
-        status: ohMyMockStatus.ERROR
-      });
-    }
+    handleResponse(request, context, response, output, state);
     // messageBus.streamById$<IOhMyMockResponse>(context.id, appSources.POPUP).pipe(take(1)).subscribe(({ packet }: IOhMessage<IOhMyMockResponse>) => {
     //   handleResponse(request, context, response, packet.payload.data);
 

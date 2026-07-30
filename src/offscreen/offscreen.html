@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script src="offscreen.js"></script>
+  </head>
+
+  <body>
+    <!-- The sandboxed page, iframed.
+    
+    This document is an ordinary extension page: it may use `chrome.runtime`,
+    and it may not `eval`. The frame below is the mirror image — it evaluates a
+    mock's custom code because `sandbox.pages` in the manifest gives it an opaque
+    origin and a CSP of its own, and it can reach no extension API at all. That
+    split is the point, and it is why this document exists: something has to be
+    able to hold the frame *and* talk to the service worker, and a service worker
+    cannot host a DOM. -->
+    <iframe src="sandbox.html" id="sandbox" style="display: none"></iframe>
+  </body>
+</html>

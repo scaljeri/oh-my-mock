@@ -15,7 +15,9 @@ Read [messaging.md](./messaging.md) first if the message bus is new to you.
 | **Injected** (`src/injected`) | same JS world as the page | `window`, `postMessage` — **no `chrome.*` at all** |
 | **Content** (`src/content`) | isolated world, same tab | `chrome.storage`, `chrome.runtime`, and `window.postMessage` |
 | **Background** (`src/background`) | MV3 service worker, one per browser | all `chrome.*`, the SDK websocket |
-| **Popup** (`src/app`) | its own extension window | `chrome.*`, and the sandboxed iframe that evaluates mock code |
+| **Popup** (`src/app`) | its own extension window | `chrome.*` — and nothing the mocking path depends on |
+| **Offscreen** (`src/offscreen`) | a hidden page owned by the background | `chrome.runtime`, and it holds the sandboxed iframe |
+| **Sandbox** (`src/sandbox`) | iframe with an opaque origin | may `eval`; reaches **no** `chrome.*` |
 
 The injected script is the only one that can patch `fetch`, because patching has
 to happen in the page's own world. It is also the only one with no extension
@@ -29,7 +31,7 @@ sequenceDiagram
     participant I as Injected
     participant C as Content
     participant B as Background
-    participant U as Popup + sandbox
+    participant O as Offscreen + sandbox
 
     P->>I: fetch('/api/users')
     I->>C: postMessage API_REQUEST {id}
@@ -40,9 +42,11 @@ sequenceDiagram
     alt jsCode untouched (fast path)
         C-->>I: postMessage RESPONSE {id}
     else mock has custom jsCode
-        C->>U: API_REQUEST {id}
-        U->>U: evaluate jsCode in sandbox iframe
-        U-->>C: API_RESPONSE_MOCKED {id}
+        C->>B: EVAL {request}
+        B->>O: runtime message, mock resolved
+        O->>O: evaluate jsCode in sandbox iframe
+        O-->>B: output
+        B-->>C: IOhMyMockResponse
         C-->>I: postMessage RESPONSE {id}
     end
 
@@ -130,14 +134,20 @@ domain.
 if (!data || mock?.jsCode === MOCK_JS_CODE || !mockId) {
   // serve directly
 } else {
-  // send to the popup for evaluation
+  // ask the background to run it
 }
 ```
 
-**This single condition explains the extension's most confusing behaviour.**
 While a mock's code is the untouched default, the content script answers by
-itself and the popup does not need to be open. Edit that code and the mock can
-only be served while the popup *is* open, because the sandbox lives there.
+itself. Edit that code and it has to be *run*, which only a sandboxed page may
+do — so the request takes the longer leg below.
+
+**This used to be the extension's most confusing behaviour.** The sandbox was an
+iframe on the popup page, so editing one character of a mock's code made it work
+only while the popup happened to be open; with it closed the request paid the
+full 5s `sendMsg2Popup` timeout, went through unmocked, and the content script
+switched the domain off on its way out. The background owns the sandbox now and
+is always there, so the fork is a detour rather than a trap.
 
 `MockUtils.mockToResponse` builds the answer — and note it reads `responseMock`
 and `headersMock`, not `response`/`headers`:
@@ -149,10 +159,22 @@ and `headersMock`, not `response`/`headers`:
 
 ### 6. The sandbox leg (custom code only)
 
-The popup receives `API_REQUEST` in `src/app/services/content.service.ts` and
-hands it to `SandboxService.dispatch`, which posts into a **sandboxed iframe**
-(`sandbox.html`, declared under `"sandbox"` in the manifest). That frame runs
-`eval()` on the user's mock code — see `src/shared/utils/eval-jscode.ts`.
+Three hops, because each end can do exactly one thing the others cannot:
+
+| | can it hold a DOM? | can it `eval`? | can it reach `chrome.*`? |
+| --- | --- | --- | --- |
+| Background (service worker) | no | no | yes |
+| Offscreen document | yes | no | yes |
+| Sandboxed iframe | yes | **yes** | no |
+
+`src/background/eval-dispatcher.ts` answers `payloadType.EVAL`: it resolves the
+request to a mock — the lookup lives here, so the page holding the frame needs no
+state of its own — and calls `evalInSandbox` in `src/background/sandbox-host.ts`.
+That ensures the offscreen document exists (`chrome.offscreen.hasDocument`,
+created with reason `IFRAME_SCRIPTING`) and sends the mock to it.
+`src/offscreen/index.ts` is a pure relay: it posts into the **sandboxed iframe**
+(`sandbox.html`, declared under `"sandbox"` in the manifest), which runs `eval()`
+on the user's code — see `src/shared/utils/eval-jscode.ts`.
 
 The sandbox exists because extension pages have a CSP that forbids `eval`. A
 sandboxed frame has no extension privileges and its own origin, so user code
@@ -166,8 +188,17 @@ cannot reach `chrome.*` or the user's data. The code receives:
 `Partial`, because user code returns whatever it likes; `evalCode` fills in the
 `status` afterwards.
 
-The result travels back as `API_RESPONSE_MOCKED`, straight to the content script
-via `chrome.tabs.sendMessage` — the popup does not route through the background.
+The result travels back the way it came: sandbox → offscreen → background →
+content script, as the resolved value of the content script's own `EVAL` call.
+
+Replies are correlated by an id the background generates, **not** by the mock's
+id. Two calls to one endpoint are in flight at once often enough, and keyed by
+mock id the second would have been handed the first's answer.
+
+The offscreen API is why `minimum_chrome_version` is 109, and why the manifest
+asks for the `"offscreen"` permission. Only one offscreen document may exist per
+profile, so `ensureDocument` funnels concurrent callers through a single
+in-flight creation promise.
 
 ### 7. Content → injected
 

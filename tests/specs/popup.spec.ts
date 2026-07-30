@@ -43,16 +43,19 @@ test.describe('popup', () => {
     await page.close();
   });
 
-  test('the sandbox iframe is present for mock code evaluation', async ({
+  test('the popup holds no sandbox — mocking does not depend on it', async ({
     context,
     extensionId
   }) => {
     const page = await context.newPage();
     await page.goto(popupUrl(extensionId));
 
-    // Custom mock `jsCode` is evaluated in this sandboxed frame rather than in
-    // the popup itself — see `src/sandbox/index.ts`.
-    await expect(page.locator('iframe#sandbox')).toBeAttached();
+    // The sandbox that evaluates custom mock `jsCode` used to be an iframe on
+    // this page, which is why closing the popup stopped mocking. It belongs to
+    // the background now, in an offscreen document. Asserting its absence is
+    // worth a line: putting it back here would quietly re-couple the two, and
+    // `jscode.spec.ts` would then be passing for the wrong reason.
+    await expect(page.locator('iframe#sandbox')).toHaveCount(0);
     await page.close();
   });
 

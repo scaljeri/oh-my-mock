@@ -70,7 +70,14 @@ export enum payloadType {
   STATE = 'state',
   KNOCKKNOCK = 'knockknock',
   HIT = 'hit',
-  // EVAL = 'execute',
+  /**
+   * "Run this mock's custom code and tell me what it returned."
+   *
+   * Content script -> background, which owns the offscreen document that hosts
+   * the sandboxed page. It used to go to the popup instead, which is why mocks
+   * with edited `jsCode` only worked while the popup happened to be open.
+   */
+  EVAL = 'eval',
   // EVAL_RESULT = 'eval-result',
   DATA = 'data',
   /** Adds, changes or removes one cookie mock. */

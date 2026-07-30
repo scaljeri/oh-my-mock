@@ -3,10 +3,9 @@
 import { Injectable, inject } from '@angular/core';
 import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './app-state.service';
-import { SandboxService } from './sandbox.service';
 import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
-import { IOhMyReadyResponse, IPacket } from '@shared/packet-type';
+import { IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
@@ -15,7 +14,6 @@ import { Observable, Subject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   private appStateService = inject(AppStateService);
-  private sandboxService = inject(SandboxService);
 
   static DataUtils = DataUtils;
   static StateUtils = StateUtils;
@@ -79,19 +77,6 @@ export class ContentService {
           // Note: First hit appStateService then dispatch change. DataList depends on this order!!
           // this.appStateService.hit(data);
           // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
-        } else if (payload.type === payloadType.API_REQUEST) {
-          const output = await this.sandboxService.dispatch(
-            payload.data as IOhMyReadyResponse
-          );
-          send2content(this.appStateService.tabId, {
-            source: appSources.POPUP,
-            domain: this.appStateService.domain,
-            payload: {
-              context: payload.context,
-              type: payloadType.API_RESPONSE_MOCKED,
-              data: output
-            }
-          } as IPacket);
         } else if (payload.type === payloadType.KNOCKKNOCK) {
           this.pingPong();
         }

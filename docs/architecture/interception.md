@@ -72,13 +72,12 @@ untouched internal slot.
 
 Worth separating, because they are fixable without changing the mechanism:
 
-1. **Mocking only works while the popup is open.** `content-state.ts` requires
-   both `aux.appActive` and `aux.popupActive`. The reason is that mock code with
-   custom JS is evaluated in a sandboxed iframe that lives in the popup. Moving
-   that evaluation to the service worker or an offscreen document would remove
-   the requirement.
+1. ~~**Mocking only works while the popup is open.**~~ **Fixed.**
+   `content-state.ts` required `store.popupActive` as well as `aux.appActive`,
+   because custom mock code was evaluated in a sandboxed iframe living on the
+   popup page. That sandbox is hosted by the background in an offscreen document
+   now (`src/background/sandbox-host.ts`), so the gate is gone: a domain that is
+   switched on mocks, popup or no popup.
 2. **Iframes are not covered.** One `all_frames: true` in the manifest.
 3. **CSP stripping is a blunt instrument.** Worth revisiting whether the
    injection can be made to work without removing the header.
-
-Of the three, the first is the one users actually run into.

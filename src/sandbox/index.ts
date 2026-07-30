@@ -1,10 +1,28 @@
-import { IMock, IOhMyAPIRequest, IOhMyMockResponse } from "../shared/type";
-import { evalCode } from "../shared/utils/eval-code";
+import { IOhMyEvalInput, IOhMySandboxOutput } from '../shared/types/eval';
+import { IOhMyMockResponse } from '../shared/type';
+import { evalCode } from '../shared/utils/eval-code';
 
-window.addEventListener('message', async function (event) {
-  const data = event.data as { mock: IMock, request: IOhMyAPIRequest, response: IOhMyMockResponse };
+/**
+ * The only place in the extension that may run a mock's custom code.
+ *
+ * `sandbox.pages` in the manifest gives this page an opaque origin and a CSP of
+ * its own, which is what makes the `eval` in `compileJsCode` legal under MV3. In
+ * exchange it reaches no extension API at all: everything it needs arrives by
+ * `postMessage`, and the answer leaves the same way.
+ *
+ * Its host used to be the popup and is now an offscreen document owned by the
+ * background — this file does not know the difference, because it only ever
+ * replies to `event.source`.
+ */
+window.addEventListener(
+  'message',
+  async function (event: MessageEvent<IOhMyEvalInput>) {
+    const data = event.data;
 
-  if (data.mock) {
+    if (!data?.mock) {
+      return;
+    }
+
     // The caller's `status` is dropped so `evalCode` decides it; the field is
     // required on IOhMyMockResponse, hence the cast rather than `delete`.
     const response = data.response
@@ -13,34 +31,11 @@ window.addEventListener('message', async function (event) {
 
     const output = await evalCode(data.mock, data.request, response);
 
-    // The sandbox is only ever addressed from the popup window, never from a
-    // MessagePort or a ServiceWorker.
-    (event.source as Window | null)?.postMessage(
-      {
-        id: event.data.mock.id,
-        output
-      },
-      event.origin
-    );
-  } else {
-    // try {
-    //   const fn = eval('(a, b) => { return a + b }');
+    // Answered against the id the caller chose, not the mock's. Two calls to one
+    // endpoint are in flight at once often enough, and keyed by mock id the
+    // second would have been handed the first's answer.
+    const reply: IOhMySandboxOutput = { id: data.id, output };
 
-    //   event.source['window'].postMessage(
-    //     {
-    //       xyz: fn(data.a, data.b)
-    //     },
-    //     event.origin
-    //   );
-    // } catch (err) {
-    //   event.source['window'].postMessage(
-    //     {
-    //       xyz: 100
-    //     },
-    //     event.origin
-    //   );
-    // }
+    (event.source as Window | null)?.postMessage(reply, event.origin);
   }
-
-  // window.top.postMessage({ zyx: eval('return 10') }, '*');
-});
+);
