@@ -89,7 +89,27 @@ interface StoredStore {
 
 interface StoredRequest {
   enabled?: Record<string, boolean>;
+  /** Which response serves this request, per preset. */
+  selected?: Record<string, string>;
+  mocks?: Record<string, { id: string; statusCode: number; label?: string }>;
   lastHit?: number;
+}
+
+/**
+ * One stored response, narrowed to the fields a spec asserts on.
+ *
+ * `responseMock` and `headersMock` rather than `response` and `headers`: the
+ * first pair is what gets served and what the popup's editors write, the second
+ * is the recorded original the Reset button puts back.
+ */
+export interface StoredMock {
+  id: string;
+  statusCode: number | null;
+  label?: string;
+  response?: string;
+  responseMock?: string;
+  headers?: Record<string, string>;
+  headersMock?: Record<string, string>;
 }
 
 /**
@@ -413,6 +433,54 @@ export class OhMyMockDriver {
         return (stored[dataId] as StoredRequest | undefined)?.lastHit ?? 0;
       },
       dataId
+    );
+  }
+
+  /**
+   * One stored response, as the extension holds it.
+   *
+   * The counterpart to `seedMock` for the specs that drive the *popup*: what a
+   * user types there arrives here, and asserting on this record separates "the
+   * popup saved it" from "the content script serves it". Without that split a
+   * broken editor and a broken interception look the same from the page.
+   */
+  async getMock(mockId: string): Promise<StoredMock | undefined> {
+    return (await this.worker()).evaluate(
+      async (mockId) => {
+        const stored = await chrome.storage.local.get(mockId);
+
+        return stored[mockId] as StoredMock | undefined;
+      },
+      mockId
+    );
+  }
+
+  /** The body a response would serve — the one field most edits change. */
+  async getResponseBody(mockId: string): Promise<string | undefined> {
+    return (await this.getMock(mockId))?.responseMock;
+  }
+
+  /**
+   * Which response a request serves in a preset, or undefined when none does.
+   *
+   * "Picked" and "served" are two questions: switching a request off leaves
+   * `selected` in place, so this reads `enabled` as well — the same pair
+   * `active-mock.ts` reads in the app.
+   */
+  async getSelectedMockId(
+    dataId: string,
+    preset = 'default'
+  ): Promise<string | undefined> {
+    return (await this.worker()).evaluate(
+      async ({ dataId, preset }) => {
+        const stored = await chrome.storage.local.get(dataId);
+        const request = stored[dataId] as StoredRequest | undefined;
+
+        return request?.enabled?.[preset]
+          ? request.selected?.[preset]
+          : undefined;
+      },
+      { dataId, preset }
     );
   }
 

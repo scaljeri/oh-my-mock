@@ -65,3 +65,91 @@ export async function openPopup(
 
   return page;
 }
+
+/**
+ * What the detail pane's editor currently holds, straight from Monaco's model.
+ *
+ * `monaco.editor.getEditors()` returns every editor on the page — the popup can
+ * have the body editor and a dialog's open at once — so the one inside
+ * `.oh-editor` is picked by its DOM node. Reading the model rather than the
+ * rendered lines matters: Monaco virtualises long content, so the DOM holds only
+ * what is on screen.
+ */
+async function editorContent(popup: Page): Promise<string | undefined> {
+  return popup.evaluate(() => {
+    const monaco = (
+      window as unknown as {
+        monaco?: {
+          editor: {
+            getEditors(): readonly {
+              getDomNode(): HTMLElement | null;
+              getValue(): string;
+            }[];
+          };
+        };
+      }
+    ).monaco;
+    const pane = document.querySelector('.oh-editor');
+
+    return monaco?.editor
+      .getEditors()
+      .find((editor) => {
+        const node = editor.getDomNode();
+
+        return node !== null && pane?.contains(node) === true;
+      })
+      ?.getValue();
+  });
+}
+
+/**
+ * Replaces what the detail pane's editor holds, the way a user would.
+ *
+ * Four things about this are load-bearing.
+ *
+ * **The editor is Monaco.** Its text lives in a canvas plus a hidden input, so
+ * there is no field to `fill()`. Focus is taken by clicking the rendered lines.
+ *
+ * **The old text is deleted before the new text is inserted, in two steps.**
+ * Inserting over a selection does not replace it: Monaco's `autoSurround` makes
+ * a leading `{` and `"` *wrap* the selection instead, and only the third
+ * character replaces it — so inserting `{"a":1}` over an existing body silently
+ * leaves `{"a":1}"}` behind. Select-all followed by `Delete` sidesteps it.
+ *
+ * **`value` must be balanced.** Monaco applies auto-closing to inserted text
+ * character by character, which round-trips only because each closing brace or
+ * quote over-types the one auto-closing already put there. Half a snippet would
+ * come out with the auto-closed remainder still attached, so this asserts on
+ * what actually landed rather than trusting the insert — reach for a paste event
+ * if a spec ever needs to type something unbalanced.
+ *
+ * **The value reaches storage on blur, not on change.** Both
+ * `CodeEditComponent.editorCtrl` and the `responseCtrl` it feeds are declared
+ * `{ updateOn: 'blur' }`, and the wrapper only fires `onTouched` from
+ * `onDidBlurEditorWidget`. Typing without leaving the editor stores nothing —
+ * hence the final click, on an inert heading rather than on a chip, which would
+ * change which response is on display.
+ *
+ * Storage is written from the *background*, an async hop later, so a caller that
+ * needs the value to be stored has to wait for it — see `ohMy.getResponseBody`.
+ */
+export async function replaceEditorContent(
+  popup: Page,
+  value: string
+): Promise<void> {
+  // Monaco is loaded from `assets/monaco-editor` on demand; on a cold profile
+  // that takes a moment, and the pane renders before it arrives.
+  const editor = popup.locator('.oh-editor .monaco-editor');
+  await expect(editor).toBeVisible({ timeout: 20_000 });
+
+  await editor.locator('.view-lines').click();
+  await popup.keyboard.press('ControlOrMeta+a');
+  await popup.keyboard.press('Delete');
+  await popup.keyboard.insertText(value);
+
+  await expect
+    .poll(() => editorContent(popup))
+    .toBe(value);
+
+  await popup.locator('.oh-detail__label').first().click();
+}
