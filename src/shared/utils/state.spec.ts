@@ -85,10 +85,34 @@ describe('Utils/State', () => {
           .toEqual(expect.objectContaining({ id: 'zzxc' }));
       });
 
+      // Carries a url, as every real lookup does: the injected script always
+      // sends one. Without it the search is satisfied by `xyz`, the fixture
+      // that has no url, method or type at all — see the wildcard test below.
       it('should find a request if xhr matches', () => {
         expect(StateUtils.findRequest(state, requests, {
-          requestType: 'FETCH'
+          requestType: 'FETCH', url: 'url'
         })).toEqual(expect.objectContaining({ requestType: 'FETCH' }));
+      });
+
+      /**
+       * A stored request with no `requestType` matches either transport.
+       *
+       * The guard used to sit on the incoming side alone, and the injected
+       * script always sends a type — so a record stored without one could never
+       * match anything, silently. `DataUtils.create` does not default the field,
+       * so an imported backup lands exactly here.
+       */
+      it('should match a stored request that has no requestType', () => {
+        requests.typeless = { method: 'GET', url: 'url-typeless' } as IData;
+        state.requests = [...state.requests, 'typeless'];
+
+        expect(StateUtils.findRequest(state, requests, {
+          requestType: 'FETCH', method: 'GET', url: 'url-typeless'
+        })).toEqual(expect.objectContaining({ url: 'url-typeless' }));
+
+        expect(StateUtils.findRequest(state, requests, {
+          requestType: 'XHR', method: 'GET', url: 'url-typeless'
+        })).toEqual(expect.objectContaining({ url: 'url-typeless' }));
       });
 
       it('should find a request if xhr/method matches', () => {

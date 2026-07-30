@@ -68,6 +68,21 @@ export class StateUtils {
     return { ...state, requests: state.requests.filter(r => r !== id) };
   }
 
+  /**
+   * The stored request matching `search`, or undefined.
+   *
+   * Each field narrows only when *both* sides have it. That is deliberate for
+   * `requestType`: the guard used to be `!search.requestType ||`, on the
+   * incoming side alone — and the injected script always sends one, so the
+   * comparison always ran. A request stored *without* a `requestType` could
+   * therefore never match anything, and did so silently: no throw, no log, the
+   * call simply went to the server as though no mock existed.
+   *
+   * `DataUtils.create` does not default the field, so any record built without
+   * one lands in that state — a JSON import or a backup from an older version
+   * being the ordinary way to get there. Treating an absent stored type as
+   * "matches either" is what a wildcard should have meant all along.
+   */
   static findRequest(state: IState, requests: IOhMyRequests, search: IOhMyUpsertData): IData | undefined {
     const result = state.requests
       // A request record can be missing from the map while it is still loading.
@@ -76,8 +91,14 @@ export class StateUtils {
         return (
           (search.id && v.id === search.id) || !search.id &&
           (!search.method || search.method === v.method) &&
-          (!search.requestType || search.requestType === v.requestType) &&
-          (!search.url || search.url === v.url || compareUrls(search.url, v.url))
+          (!search.requestType || !v.requestType || search.requestType === v.requestType) &&
+          // `!!v.url` guards `compareUrls`, which indexes its second argument
+          // and throws on an absent one. `IData.url` is typed as required and is
+          // not always there — a record can be stored without one — and until
+          // the `requestType` wildcard above, such a record was always rejected
+          // before reaching this line. A throw here happens inside the content
+          // script's lookup, which would take the page's request down with it.
+          (!search.url || (!!v.url && (search.url === v.url || compareUrls(search.url, v.url))))
         )
       });
 

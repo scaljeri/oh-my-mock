@@ -243,4 +243,39 @@ test.describe('mocking', () => {
       .poll(() => ohMy.getLastHit(SITE_DOMAIN, dataId))
       .toBeGreaterThan(0);
   });
+
+  /**
+   * A request stored without a `requestType` still has to match.
+   *
+   * `StateUtils.findRequest` compared `search.requestType === v.requestType`,
+   * guarded only on the *incoming* one being present — and the injected script
+   * always sends one. So a stored request that had none could never match
+   * anything, silently: no throw, no log, the call simply went to the server as
+   * if no mock existed.
+   *
+   * `DataUtils.create` does not default the field, so every record built without
+   * it lands in this state — a JSON import or a backup from an older version
+   * being the ordinary way to get there.
+   */
+  test('a request stored without a requestType is still mocked', async ({
+    ohMy,
+    site,
+    server
+  }) => {
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      requestType: null,
+      response: { source: 'mock' }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+
+    await site.open();
+    await site.waitForInjection();
+
+    const result = await site.request({ url: '/api/json', responseType: 'json' });
+
+    expect(result.json.source).toBe('mock');
+    expect(await server.hitCount('GET /api/json')).toBe(0);
+  });
 });

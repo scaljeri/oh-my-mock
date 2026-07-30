@@ -36,7 +36,12 @@ export interface SeedMockOptions {
   /** Request path as the page requests it, e.g. `/api/json`. */
   url: string;
   method?: string;
-  requestType?: 'FETCH' | 'XHR';
+  /**
+   * `null` stores the request with *no* `requestType` at all — the shape an
+   * imported backup or a record from an older version has, and the one
+   * `StateUtils.findRequest` used to be unable to match.
+   */
+  requestType?: 'FETCH' | 'XHR' | null;
   statusCode?: number;
   /** Response body. Objects are JSON-stringified for you. */
   response?: string | object;
@@ -332,7 +337,8 @@ export class OhMyMockDriver {
       domain: options.domain,
       url: options.url,
       method: (options.method ?? 'GET').toUpperCase(),
-      requestType: options.requestType ?? 'FETCH',
+      requestType:
+        options.requestType === null ? null : (options.requestType ?? 'FETCH'),
       statusCode: options.statusCode ?? 200,
       response:
         typeof options.response === 'string'
@@ -391,7 +397,9 @@ export class OhMyMockDriver {
         id: opts.dataId,
         url: opts.url,
         method: opts.method,
-        requestType: opts.requestType,
+        // Omitted entirely rather than set to null when the caller asked for
+        // none: an absent field is what the real records look like.
+        ...(opts.requestType !== null && { requestType: opts.requestType }),
         selected: { default: opts.mockId },
         enabled: { default: opts.enabled },
         mocks: {
