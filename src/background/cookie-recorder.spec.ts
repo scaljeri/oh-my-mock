@@ -125,6 +125,15 @@ describe('OhMyCookieRecorder', () => {
 
     // Otherwise the extension keeps offering its own mocks back as cookies to
     // record, every time it applies them.
+    //
+    // This is the *only* test that isolates `consumeOwnWrite`, and it has to be
+    // a unit test. The recorder refuses a cookie three times over — the jar's
+    // own write, the synced mocks, and the `recorded` set of this worker's life
+    // — and every route an e2e can drive reaches one of the other two first:
+    // applying a mock puts it in `syncedCookies` before the change event lands,
+    // and a cookie the server set is already in `recorded`. Here neither is
+    // primed, so the guard is the only thing left to do the work. Disabling it
+    // fails this and nothing else.
     it('ignores the cookie the jar just wrote itself', async () => {
       await applyCookie('example.com', mock({ name: 'tracker' }));
 

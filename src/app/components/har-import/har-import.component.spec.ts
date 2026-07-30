@@ -8,7 +8,6 @@ import { IMock } from '@shared/types/mock';
 import { IData } from '@shared/types/request';
 import { IState } from '@shared/types/state';
 import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
-import { PipesModule } from '../../pipes/pipes.module';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { HarImportComponent } from './har-import.component';
@@ -97,7 +96,7 @@ describe('HarImportComponent', () => {
     await TestBed.configureTestingModule({
       // `ohStatusCodeTone` is a real pipe: an unknown one throws even under
       // NO_ERRORS_SCHEMA, and every row would silently fail to render.
-      imports: [FormsModule, PipesModule, HarImportComponent],
+      imports: [FormsModule, HarImportComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: AppStateService, useValue: appState },

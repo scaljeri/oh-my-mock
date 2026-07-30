@@ -49,10 +49,11 @@ declare global {
       multi: true
     },
     // `inject(PrettyPrintPipe)` below needs the pipe as a *provider*, which it
-    // used to get from `PipesModule` by way of `ComponentsModule`. Standalone
-    // components carry their own dependencies, and importing a pipe class only
-    // makes it usable in the template — not injectable. Without this the
-    // editor throws NG0201 at runtime while the build stays clean.
+    // used to get from `PipesModule` by way of `ComponentsModule`, both of
+    // which are gone. Standalone components carry their own dependencies, and
+    // importing a pipe class only makes it usable in the template — not
+    // injectable. Without this the editor throws NG0201 at runtime while the
+    // build stays perfectly clean.
     PrettyPrintPipe
   ],
   imports: [EditorComponent, ReactiveFormsModule, DiffEditorComponent]

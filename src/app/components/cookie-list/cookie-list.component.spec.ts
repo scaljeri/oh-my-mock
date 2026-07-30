@@ -2,7 +2,6 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { objectTypes } from '@shared/constants';
 import { IOhMyCookie } from '@shared/types/cookie';
-import { PipesModule } from '../../pipes/pipes.module';
 import { CookieListComponent } from './cookie-list.component';
 
 const cookie = (update: Partial<IOhMyCookie> = {}): IOhMyCookie => ({
@@ -21,7 +20,7 @@ describe('CookieListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PipesModule, CookieListComponent],
+      imports: [CookieListComponent],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

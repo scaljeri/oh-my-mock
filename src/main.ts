@@ -29,7 +29,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { ComponentsModule } from './app/components/components.module';
 import { AppComponent } from './app/app.component';
 
 // Served from `localhost:4200` there is no extension around the popup, so
@@ -58,8 +57,7 @@ bootstrapApplication(AppComponent, {
       MatFormFieldModule,
       MatInputModule,
       MatBadgeModule,
-      MatSnackBarModule,
-      ComponentsModule
+      MatSnackBarModule
     ),
     provideHotToastConfig(),
     { provide: OH_MY_SEARCH_WORKER_FACTORY, useValue: createSearchWorker },

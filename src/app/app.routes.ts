@@ -26,11 +26,11 @@ const appRoutes: Routes = [
         // The second tab next to the request list. A route rather than a local
         // switch, so the tab survives a reload of the popup.
         path: 'cookies',
-        loadChildren: () => import('./pages/cookies/cookies.module').then(m => m.CookiesModule)
+        loadChildren: () => import('./pages/cookies/cookies.routes').then(m => m.routes)
       },
       {
         path: 'state-explore',
-        loadChildren: () => import('./pages/state-explorer/state-explorer.module').then(m => m.StateExplorerModule)
+        loadChildren: () => import('./pages/state-explorer/state-explorer.routes').then(m => m.routes)
       },
       {
         path: 'json-export',
