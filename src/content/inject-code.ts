@@ -2,7 +2,6 @@ import { take } from "rxjs";
 import { appSources, payloadType, STORAGE_KEY } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
 import { IOhMyCSPResponse } from "../shared/packet-type";
-import { IOhMyInjectedState } from "../shared/types/store";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
 
@@ -77,13 +76,22 @@ export function releaseEarlyShim(): void {
   el.remove();
 }
 
-// returns TRUE if injection is successful. Due to CSP issues it can fail, and false will be returned.
-async function doInject(state: IOhMyInjectedState, messageBus: OhMyMessageBus): Promise<boolean> {
-  // If OhMyMock is not active, nothing will be injected
-  if (!state || !state?.active) {
-    return true;
-  }
-
+/**
+ * Puts the real bundle on the page, without waiting to hear whether it is
+ * needed.
+ *
+ * This used to run only once `contentState.init()` had read `chrome.storage` and
+ * said the domain was on, which put a storage round trip — and every request
+ * record the domain has — in front of the `<script>` even starting to load. The
+ * bundle patches `fetch` and `XHR` itself and now holds a call until the verdict
+ * arrives (see `src/injected/active-state.ts`), so injecting it before the answer
+ * is known is not only safe, it is the only ordering that catches the first call
+ * a page makes. Asking first and acting on the answer is what loses it.
+ *
+ * No `oh-my-state` attribute: there is nothing truthful to put in it yet. The
+ * bundle stays undecided until the STATE message, and holds until then.
+ */
+async function doInject(messageBus: OhMyMessageBus): Promise<boolean> {
   installEarlyShim(messageBus);
 
   return new Promise(r => {
@@ -95,7 +103,6 @@ async function doInject(state: IOhMyInjectedState, messageBus: OhMyMessageBus): 
     void shimReady?.then(() => {
       window.clearTimeout(tid);
 
-      // Async inject
       const script = document.createElement('script');
       script.onload = function () {
         ohMyWindow().injectionDone$?.next(true);
@@ -104,36 +111,53 @@ async function doInject(state: IOhMyInjectedState, messageBus: OhMyMessageBus): 
       };
 
       script.type = "text/javascript";
-      script.setAttribute('oh-my-state', JSON.stringify(state));
       script.setAttribute('id', `id-${STORAGE_KEY}`);
-      // script.setAttribute('async', 'false');
-      script.setAttribute('defer', ''); // TODO: try `true`
+      script.setAttribute('defer', '');
       script.src = chrome.runtime.getURL('oh-my-mock.js');
       (document.head || document.documentElement).appendChild(script);
     });
   });
 }
 
-export async function injectCode(state: IOhMyInjectedState, messageBus: OhMyMessageBus): Promise<boolean> {
-  // Only inject if OhMyMock is active and not already injeced
-  if (!isCodeInjected && state?.active) {
-    isCodeInjected = await doInject(state, messageBus);
-
-    if (!isCodeInjected) {
-      const response = await OhMySendToBg.send<void, IOhMyCSPResponse>({
-        source: appSources.CONTENT,
-        payload: {
-          context: { domain: OhMySendToBg.domain },
-          type: payloadType.ACTIVATE_CSP_REMOVAL,
-          description: 'content:csp-errors'
-        }
-      });
-
-      if (response.activated) {
-        window.location.reload();
-      }
-    }
+/**
+ * Injects the bundle, once, as early as possible.
+ *
+ * Unconditional on purpose — see `doInject`. The CSP escalation that used to sit
+ * here does *not* belong on this path: it strips a site's
+ * `Content-Security-Policy` and reloads the page, which is a heavy thing to do
+ * to a domain nobody asked to mock. `escalateIfBlocked` is called separately,
+ * once the domain is known to be active.
+ */
+export async function injectCode(messageBus: OhMyMessageBus): Promise<boolean> {
+  if (!isCodeInjected) {
+    isCodeInjected = await doInject(messageBus);
   }
 
   return isCodeInjected;
+}
+
+/**
+ * Last resort for a site whose CSP refuses the injected script: ask the
+ * background to drop the header, and reload so the page starts again without it.
+ *
+ * Only ever for a domain that is switched on. Weakening a site the user is not
+ * mocking, and reloading it under them, would be a poor trade for nothing.
+ */
+export async function escalateIfBlocked(): Promise<void> {
+  if (isCodeInjected) {
+    return;
+  }
+
+  const response = await OhMySendToBg.send<void, IOhMyCSPResponse>({
+    source: appSources.CONTENT,
+    payload: {
+      context: { domain: OhMySendToBg.domain },
+      type: payloadType.ACTIVATE_CSP_REMOVAL,
+      description: 'content:csp-errors'
+    }
+  });
+
+  if (response.activated) {
+    window.location.reload();
+  }
 }

@@ -29,8 +29,13 @@ export function handleAPISettings(messageBus: OhMyMessageBus) {
     }
 
     // A state's domain is a host (`window.location.host`), never an origin.
+    //
+    // The bundle is injected on every page now, so this is only a safety net for
+    // the case where it was refused — the page API switching mocking on is a
+    // good moment to try again. The `active` verdict itself travels through
+    // `contentState.isActive$`, which this patch has already moved.
     if (data.active && state?.domain === OhMyContentState.host) {
-      await injectCode({ active: true }, messageBus);
+      await injectCode(messageBus);
     }
 
     sendMessageToInjected({

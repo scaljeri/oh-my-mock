@@ -4,6 +4,7 @@ import { IOhMyInjectedState } from '../shared/types/store';
 import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
+import { settleActiveState } from './active-state';
 import { setupListenersMessageBus } from './state-manager';
 import { error, log } from './utils';
 
@@ -40,6 +41,9 @@ if (!hasOhMyWindow()) {
       return;
     }
     ohMy.state = state;
+    // Releases everything held while the answer was still unknown — including
+    // the very first request of the page, which is the one this exists for.
+    settleActiveState(state);
 
     if (state.active) {
       if (!isOhMyMockActive) {

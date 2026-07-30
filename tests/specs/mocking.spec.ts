@@ -214,7 +214,9 @@ test.describe('mocking', () => {
 
     await site.open('/', 'http://localhost:8091');
 
-    expect(await site.isInjected()).toBe(false);
+    // Injected here too — it is injected on every page — but switched off, and
+    // that is the distinction this test is about.
+    expect(await site.isInjected()).toBe(true);
 
     const result = await site.request({ url: '/api/json', responseType: 'json' });
     expect(result.json.source).toBe('server');

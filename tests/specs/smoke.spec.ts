@@ -42,8 +42,11 @@ test.describe('harness smoke', () => {
   test('OhMyMock stays out of the way while inactive', async ({ site, server }) => {
     await site.open();
 
-    // No state seeded for this domain, so the injected script must not load.
-    expect(await site.isInjected()).toBe(false);
+    // The bundle *is* on the page — it is injected everywhere now, because the
+    // only way to catch a request the page makes while it is still parsing is to
+    // be in place before anyone knows whether this domain is mocked. "Injected"
+    // and "doing something" stopped being the same thing; what matters is below.
+    expect(await site.isInjected()).toBe(true);
 
     const result = await site.request({ url: '/api/json', responseType: 'json' });
     expect(result.json.source).toBe('server');

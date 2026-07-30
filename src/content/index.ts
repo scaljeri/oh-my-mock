@@ -19,7 +19,7 @@ import { BehaviorSubject } from 'rxjs';
 // import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
 import { error } from './utils';
-import { injectCode, installEarlyShim, releaseEarlyShim } from './inject-code';
+import { escalateIfBlocked, injectCode, installEarlyShim, releaseEarlyShim } from './inject-code';
 import { sendMsg2Popup } from './message-to-popup';
 
 window.onunhandledrejection = function (event: PromiseRejectionEvent) {
@@ -55,6 +55,12 @@ ohMyWindow().off?.push(() => messageBus.clear());
 // makes holding safe.
 installEarlyShim(messageBus);
 
+// And the real bundle, immediately after — not once we know whether this domain
+// is switched on. It patches `fetch`/`XHR` itself and holds a call until the
+// verdict reaches it, so starting its download now takes a storage round trip
+// off the front of the very first request the page makes.
+const injection = injectCode(messageBus);
+
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
@@ -62,12 +68,19 @@ OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 // `isActive$` starts out `undefined` (nothing is known yet), which is simply
 // "not active" as far as the injected script is concerned.
 ohMyWindow().off?.push(contentState.isActive$.subscribe(async (value?: boolean) => {
-  if (await injectCode({ active: !!value }, messageBus)) {
+  // `undefined` means "not decided yet" and must not be answered: the bundle is
+  // holding the page's requests until it hears something, and telling it `false`
+  // here would release them unmocked before the state has even been read.
+  if (value === undefined) {
+    return;
+  }
+
+  if (await injection) {
     sendMessageToInjected({
       type: payloadType.STATE,
       // The injected script reads this as an `IOhMyInjectedState`; the
       // description belongs on the payload, not inside the state.
-      data: { active: !!value },
+      data: { active: value },
       description: 'content;contentState.isActive'
     });
   }
@@ -123,21 +136,53 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   sendKnockKnock();
 
   if (!active) {
+    // Let the page go now. Waiting for the bundle to finish loading would put
+    // its download in front of the first request of every site the user visits
+    // and never mocks, for an answer that is already known.
+    releaseEarlyShim();
+
+    // The bundle still has to hear it, though — it holds every call until it
+    // does, and nothing else will tell it. Not awaited: that is the whole point.
+    void injection.then((ok) => {
+      if (ok) {
+        sendMessageToInjected({
+          type: payloadType.STATE,
+          data: { active: false },
+          description: 'content;initial-verdict'
+        });
+      }
+    });
+
+    return;
+  }
+
+  // The records before the verdict: a request arriving before they are loaded
+  // finds no mock and goes to the server — the same silent miss, one step
+  // further along.
+  await contentState.init();
+
+  const injected = await injection;
+
+  if (!injected) {
+    // A CSP the injection could not get past. Escalating is only worth it for a
+    // domain that is actually switched on — it strips the site's header and
+    // reloads the page.
+    if (active) {
+      await escalateIfBlocked();
+    }
+
+    // Nothing is coming: the shim has to stop holding. A page whose requests
+    // never settle is a far worse failure than one that is not mocked.
     releaseEarlyShim();
 
     return;
   }
 
-  // Only now: a request arriving before the records are loaded would find no
-  // mock and go to the server — the same silent miss, one step further along.
-  await contentState.init();
-
-  const injected = await injectCode({ active }, messageBus);
-
-  // Injection failed — a CSP the removal rules could not beat. Nothing is
-  // coming, so the shim has to stop holding: a page whose requests never settle
-  // is a far worse failure than one that is not mocked.
-  if (!injected) {
-    releaseEarlyShim();
-  }
+  // The verdict. Until this lands the bundle holds every call the page makes,
+  // which is the point — it was in place before the answer was.
+  sendMessageToInjected({
+    type: payloadType.STATE,
+    data: { active },
+    description: 'content;initial-verdict'
+  });
 })();

@@ -1,4 +1,5 @@
 import { ohMyMockStatus } from "../../shared/constants";
+import { isMockingActive } from '../active-state';
 import { ohMyWindow } from "../../shared/oh-my-window";
 import { IOhMyAPIRequest } from "../../shared/types/api-request";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
@@ -16,14 +17,17 @@ export function patchSend() {
   // script can grab a reference to the original. It forwards to this function
   // as soon as the injected bundle has published it.
   ohMyWindow().xhr = {
-    send: function (this: XMLHttpRequest, body?: unknown) {
+    // `async` because the verdict below may not be in yet. Nothing reads the
+    // return value — `XMLHttpRequest.send` is void, and the early shim that
+    // forwards here ignores it — so handing back a promise changes nothing.
+    send: async function (this: XMLHttpRequest, body?: unknown) {
       const xhr = asOhMyXhr(this);
       const url = xhr.ohUrl;
       const method = xhr.ohMethod;
 
       // `open` records both before `send` can run; without them there is
       // nothing to match a mock against, so let the request through.
-      if (!ohMyWindow().state?.active || !url || !method) {
+      if (!(await isMockingActive()) || !url || !method) {
         return xhr.__send(toXhrBody(body));
       }
 

@@ -86,4 +86,66 @@ test.describe('a request made while the page loads', () => {
     // hanging, not to police a few milliseconds.
     expect(result.durationMs).toBeLessThan(1_000);
   });
+
+  /**
+   * The bundle is on every page now, so its pass-through has to be invisible.
+   *
+   * On a domain nobody is mocking, `fetch` is still the patched one — it just
+   * hands straight to the original. That used to be a path almost nothing took;
+   * it is now the path every site the user visits takes, which makes any
+   * difference between the two a bug on somebody's real page rather than a
+   * curiosity. So: a POST with a body, a header, and an abort.
+   */
+  test('the pass-through is invisible on a domain nobody mocks', async ({
+    site,
+    server
+  }) => {
+    await site.open();
+
+    const posted = await site.page.evaluate(async () => {
+      const res = await fetch('/api/echo', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-probe': 'yes' },
+        body: JSON.stringify({ ping: 'pong' })
+      });
+
+      return { status: res.status, body: await res.text() };
+    });
+
+    // `/api/echo` reflects what the server actually received, so this is the
+    // whole round trip: the method, the header and the body all survived the
+    // patched `fetch` handing over to the original.
+    expect(posted.status).toBe(200);
+
+    const echo = JSON.parse(posted.body) as {
+      method: string;
+      headers: Record<string, string>;
+      body: { ping?: string } | null;
+    };
+
+    expect(echo.method).toBe('POST');
+    expect(echo.headers['x-probe']).toBe('yes');
+    expect(echo.body?.ping).toBe('pong');
+
+    // An aborted request must still reject, and with the right error — the
+    // patched `fetch` returns the original's promise, so the signal has to
+    // survive the hand-off.
+    const aborted = await site.page.evaluate(async () => {
+      const controller = new AbortController();
+      const pending = fetch('/api/json', { signal: controller.signal });
+      controller.abort();
+
+      try {
+        await pending;
+
+        return 'resolved';
+      } catch (err) {
+        return (err as Error).name;
+      }
+    });
+
+    expect(aborted).toBe('AbortError');
+
+    void server;
+  });
 });

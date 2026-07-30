@@ -4,6 +4,7 @@ import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus } from '../shared/constants';
 import { ohMyWindow } from '../shared/oh-my-window';
+import { isMockingActive } from './active-state';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
@@ -43,7 +44,11 @@ function toRequestInit(init: unknown): RequestInit {
 async function ohMyFetch(request: string | Request, init?: unknown): Promise<unknown> {
   let config = toRequestInit(init);
 
-  if (!ohMyWindow().state?.active) {
+  // Waits for the verdict rather than reading an absent state as "off". This
+  // runs before the content script has finished reading `chrome.storage`, and
+  // letting the call through in the meantime is exactly how an on-load request
+  // escaped. Once decided this is a resolved promise and costs a microtask.
+  if (!(await isMockingActive())) {
     return originalFetch().call(window, request, config);
   }
 
