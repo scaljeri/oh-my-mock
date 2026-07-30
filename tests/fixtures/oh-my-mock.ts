@@ -87,7 +87,18 @@ interface StoredStore {
   popupActive?: boolean;
 }
 
-interface StoredRequest {
+/**
+ * One stored request — the endpoint — narrowed to the fields a spec asserts on.
+ *
+ * Exported because it is the counterpart of `StoredMock`: a request holds a
+ * *shallow* copy of each response in `mocks`, while the responses themselves are
+ * records of their own. Deleting a response has to remove it from both, which is
+ * the sort of thing only a test that reads the request record can catch.
+ */
+export interface StoredRequest {
+  id?: string;
+  url?: string;
+  method?: string;
   enabled?: Record<string, boolean>;
   /** Which response serves this request, per preset. */
   selected?: Record<string, string>;
@@ -458,6 +469,22 @@ export class OhMyMockDriver {
   /** The body a response would serve — the one field most edits change. */
   async getResponseBody(mockId: string): Promise<string | undefined> {
     return (await this.getMock(mockId))?.responseMock;
+  }
+
+  /**
+   * One stored request, as the extension holds it.
+   *
+   * `getMock` is for the response records; this is the endpoint that lists them.
+   * Reading `mocks` here is how a spec tells "the response record was deleted"
+   * apart from "the request still points at a response that no longer exists" —
+   * `active-mock.ts` exists because that second state is reachable.
+   */
+  async getRequest(dataId: string): Promise<StoredRequest | undefined> {
+    return (await this.worker()).evaluate(async (dataId) => {
+      const stored = await chrome.storage.local.get(dataId);
+
+      return stored[dataId] as StoredRequest | undefined;
+    }, dataId);
   }
 
   /**

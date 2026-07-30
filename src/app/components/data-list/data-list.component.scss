@@ -22,7 +22,9 @@
 }
 
 .main-menu {
-  @include oh-list-unstyled;
+  // The list reset lives in `styles.scss`: a menu overlay carries its declaring
+  // component's encapsulation attribute, so keeping it here reached this menu
+  // only. What stays is the part that is this menu's own.
 
   .is-selected {
     background-color: $primary;

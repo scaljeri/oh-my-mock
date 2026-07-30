@@ -5,13 +5,20 @@ than beside it, so the list never loses width to it. -->
 <div class="oh-panes" [class.has-detail]="hasDetail">
   <div class="oh-panes__list">
     @if (state) {
+      <!-- `showClone` and `showDelete` are off deliberately. The row's action
+      cell carries `.actions { button + button { display: none } }`, so only the
+      first of the three buttons has ever been rendered — the clone and delete
+      behind these flags were in the DOM and in the tab order while being
+      invisible, which is how a keyboard user could reach an unlabelled button
+      and delete a request with nothing on screen to say so. Both actions live in
+      the detail panel's own menu now, where there is room to name them. -->
       <oh-my-data-list
         [state]="state"
         [requests]="requests"
         [context]="state.context"
         [showActivate]="true"
-        [showClone]="true"
-        [showDelete]="true"
+        [showClone]="false"
+        [showDelete]="false"
         [showMenu]="true"
         (selectRow)="onDataSelect($event)"
       >

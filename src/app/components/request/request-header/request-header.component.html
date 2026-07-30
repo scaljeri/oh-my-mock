@@ -27,16 +27,56 @@ method + url line with its metadata, then the saved-response chips. -->
       >
         <mat-icon svgIcon="content_copy"></mat-icon>
       </button>
+      <!-- A trash can, not an `x`. This removes the saved response — the status
+        code on display — and with a close handle now on the panel's own edge an
+        `x` up here read as "close the panel", which is the one thing it does
+        not do. -->
       <button
         class="oh-icon-btn oh-icon-btn--danger"
         type="button"
+        x-test="delete-response"
         [disabled]="isPassthrough"
-        title="Delete the response on display"
-        aria-label="Delete the response on display"
+        [title]="deleteResponseLabel"
+        [attr.aria-label]="deleteResponseLabel"
         (click)="onDeleteResponse()"
       >
-        <mat-icon svgIcon="close"></mat-icon>
+        <mat-icon svgIcon="delete"></mat-icon>
       </button>
+      <!-- Request-level actions, kept apart from the two response-level buttons
+        beside them: deleting the endpoint is a different scope from deleting one
+        of its responses, and a third trash can would not have said which. -->
+      <button
+        class="oh-icon-btn"
+        type="button"
+        x-test="request-menu"
+        title="More actions for this request"
+        aria-label="More actions for this request"
+        [matMenuTriggerFor]="requestMenu"
+      >
+        <mat-icon svgIcon="more_vert"></mat-icon>
+      </button>
+      <mat-menu #requestMenu="matMenu">
+        <ul class="main-menu">
+          <li>
+            <button
+              mat-menu-item
+              x-test="clone-request"
+              (click)="onCloneRequest()"
+            >
+              Duplicate this request
+            </button>
+          </li>
+          <li>
+            <button
+              mat-menu-item
+              x-test="delete-request"
+              (click)="onDeleteRequest()"
+            >
+              Delete this request
+            </button>
+          </li>
+        </ul>
+      </mat-menu>
     </div>
   </div>
 

@@ -230,6 +230,19 @@ ol.reset ul li {
   overflow-y: scroll;
 }
 
+// The `<ul>` wrapping a `mat-menu`'s items, wherever one is declared.
+//
+// Global rather than per-component: a menu's content is rendered into an overlay
+// and carries the declaring component's encapsulation attribute, so the reset in
+// `data-list.component.scss` reached that component's menu and no other — the
+// request detail's menu came up with bullet points. `data-list` keeps its own
+// `.is-selected` rule; only the reset is shared.
+.main-menu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
 mat-icon {
   // Every asset in `src/assets/icons/material` is a `*_white_24dp.svg` and
   // carries `fill="#FFFFFF"` of its own, so an icon with no rule pointed at it

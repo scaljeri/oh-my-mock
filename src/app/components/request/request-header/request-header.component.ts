@@ -16,6 +16,9 @@ import { Subscription } from 'rxjs';
 import { OhMyState } from '../../../services/oh-my-store';
 import { activeMockId } from '../active-mock';
 import { MatIcon } from '@angular/material/icon';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { Router } from '@angular/router';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { LowerCasePipe, DatePipe } from '@angular/common';
 import { StatusCodeTonePipe } from '../../../pipes/status-code-tone.pipe';
 
@@ -39,6 +42,9 @@ export interface IOhMyResponseChip {
   styleUrls: ['./request-header.component.scss'],
   imports: [
     MatIcon,
+    MatMenu,
+    MatMenuItem,
+    MatMenuTrigger,
     ReactiveFormsModule,
     LowerCasePipe,
     DatePipe,
@@ -48,6 +54,8 @@ export interface IOhMyResponseChip {
 export class RequestHeaderComponent implements OnInit, OnChanges {
   dialog = inject(MatDialog);
   private storeService = inject(OhMyState);
+  private router = inject(Router);
+  private toast = inject(HotToastService);
 
   @Input() request!: IData;
   @Input() context!: IOhMyContext;
@@ -231,6 +239,28 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
     );
   }
 
+  /**
+   * Names the response the button removes, rather than saying "the response on
+   * display".
+   *
+   * A request can hold several responses that differ only by status code, and
+   * the button sits next to a row of chips — so which one it is about is the
+   * whole question. Falls back to the generic wording in passthrough, where the
+   * button is disabled and there is nothing to name.
+   */
+  get deleteResponseLabel(): string {
+    const id = this.activeMockId;
+    const mock = id ? this.request.mocks?.[id] : undefined;
+
+    if (!mock) {
+      return 'Delete the response on display';
+    }
+
+    return mock.label
+      ? `Delete the ${mock.statusCode} "${mock.label}" response`
+      : `Delete the ${mock.statusCode} response`;
+  }
+
   onDeleteResponse(): void {
     const id = this.activeMockId;
 
@@ -238,7 +268,45 @@ export class RequestHeaderComponent implements OnInit, OnChanges {
       return;
     }
 
+    const mock = this.request.mocks?.[id];
+
     this.storeService.deleteResponse(id, this.request.id, this.context);
+    this.toast.success(`Deleted the ${mock?.statusCode ?? ''} response`.trim(), {
+      duration: 2000
+    });
+  }
+
+  /**
+   * Deletes the whole request — the endpoint and every response under it.
+   *
+   * Then navigates back to the list, which is not optional: this pane is a
+   * routed child keyed on `:dataId`, and `PageMockComponent` resolves that id to
+   * `undefined` once the record is gone. Staying put would leave the panel
+   * overlaying the list with nothing in it.
+   *
+   * The list's own delete button would be the other home for this, but it is one
+   * of three icons crammed into a 44px cell and only the first of them is ever
+   * laid out — so in practice this is the only place the action exists.
+   */
+  /** Copies the endpoint and every response under it into a new request. */
+  onCloneRequest(): void {
+    // `cloneRequest` takes a source context for the state explorer, which clones
+    // across domains; here both sides are this domain.
+    void this.storeService.cloneRequest(
+      this.request.id,
+      this.context,
+      this.context
+    );
+    this.toast.success(`Duplicated ${this.request.url}`, { duration: 2000 });
+  }
+
+  onDeleteRequest(): void {
+    const url = this.request.url;
+
+    this.storeService.deleteRequest(this.request, this.context);
+    this.toast.success(`Deleted ${url}`, { duration: 2000 });
+
+    void this.router.navigate(['/']);
   }
 
   openAddResponseDialog(): void {
