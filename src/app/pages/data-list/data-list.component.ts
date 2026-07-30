@@ -4,6 +4,7 @@ import {
   NgZone,
   OnDestroy,
   OnInit,
+  ViewChild,
   inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -47,6 +48,9 @@ export class PageDataListComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
 
   static StateUtils = StateUtils;
+
+  /** Optional: the list renders only once the state has arrived. */
+  @ViewChild(DataListComponent) dataListRef?: DataListComponent;
 
   private subscriptions = new Subscription();
 
@@ -110,6 +114,25 @@ export class PageDataListComponent implements OnInit, OnDestroy {
         relativeTo: this.activatedRoute
       });
     });
+  }
+
+  /**
+   * Closes the detail panel and hands the full width back to the list.
+   *
+   * Needed because the panel overlays the list: the `x` in the detail header
+   * deletes the response on display, so there was no way out of a pane that now
+   * covers what is behind it.
+   *
+   * The highlight goes with it. A selected row is exempt from the filter — see
+   * `DataListComponent.onDataClick` — so leaving it behind would leave a row
+   * standing in a filtered list with nothing open to explain why.
+   */
+  onCloseDetail(): void {
+    this.ngZone.run(() => {
+      void this.router.navigate(['./'], { relativeTo: this.activatedRoute });
+    });
+
+    this.dataListRef?.deselectAll();
   }
 
   onMainAction(): void {

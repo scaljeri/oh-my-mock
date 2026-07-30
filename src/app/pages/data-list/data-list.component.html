@@ -1,6 +1,7 @@
-<!-- Two panes: the request list, and the detail of whichever request is
-selected. The detail is a routed child (`request/:dataId`), so selecting a
-row updates the url without taking the list off screen. -->
+<!-- The request list, and the detail of whichever request is selected. The
+detail is a routed child (`request/:dataId`), so selecting a row updates the url
+without taking the list off screen — and it slides in *over* the list rather
+than beside it, so the list never loses width to it. -->
 <div class="oh-panes" [class.has-detail]="hasDetail">
   <div class="oh-panes__list">
     @if (state) {
@@ -43,7 +44,21 @@ row updates the url without taking the list off screen. -->
   </div>
 
   @if (hasDetail) {
-    <aside class="oh-panes__detail">
+    <aside
+      class="oh-panes__detail"
+      x-test="request-detail"
+      aria-label="Request detail"
+    >
+      <button
+        class="oh-panes__collapse"
+        type="button"
+        x-test="close-detail"
+        title="Close this request"
+        aria-label="Close this request"
+        (click)="onCloseDetail()"
+      >
+        <mat-icon svgIcon="keyboard_arrow_left"></mat-icon>
+      </button>
       <router-outlet></router-outlet>
     </aside>
   }

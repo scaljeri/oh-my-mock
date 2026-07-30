@@ -372,12 +372,33 @@ li.oh-row.is-sticky .oh-row__pin {
 }
 
 // Filter toolbar above the table.
+//
+// It wraps. Its five controls — preset, filter, two toggles and the overflow
+// menu — need about 900px to sit on one line, and the window is resizable well
+// below that; before this they simply overflowed, and since `.oh-panes__list`
+// scrolls its own overflow that showed up as a horizontal scrollbar under the
+// whole request list rather than as anything pointing at the toolbar.
 .oh-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: t.$oh-space-3;
 
   &__preset {
+    // Bounded rather than `auto`: the autocomplete inside it is
+    // `mat-form-field { width: 100% }`, which resolves to Material's intrinsic
+    // width and made the preset the widest thing in the row. The basis is what
+    // its own three suffix buttons plus a readable preset name need — go much
+    // under it and the field has nowhere to put them.
+    flex: 0 1 280px;
+    min-width: 0;
+  }
+
+  // Deliberately *not* pushed to the right edge, which is where the design puts
+  // it: the detail panel overlays that edge, so anything parked there is
+  // unreachable exactly while a request is open. Everything in the toolbar stays
+  // in the left-hand strip that is always visible.
+  &__menu {
     flex: 0 0 auto;
   }
 
@@ -402,11 +423,35 @@ li.oh-row.is-sticky .oh-row__pin {
   }
 
   oh-my-request-filter {
-    flex: 1;
+    // Takes the slack on a wide row, and is the first thing to give it back.
+    // Capped: a search box that grows to 500px reads as an empty panel rather
+    // than as a field.
+    flex: 1 1 200px;
+    max-width: 340px;
     min-width: 0;
 
     &.hidden {
       display: none;
     }
+  }
+}
+
+// ---- narrow window --------------------------------------------------------
+//
+// The five content columns hold 412px of the row before ENDPOINT gets anything,
+// so on a window the user has dragged in, the urls are the first thing to go.
+// Trimming the fixed ones and the outer inset buys ENDPOINT about 100px back.
+// Both selectors are listed because they `@extend %oh-grid-row` — a media query
+// cannot reach into the placeholder they share.
+@media (max-width: t.$oh-bp-tight) {
+  li.oh-header,
+  li.oh-row {
+    grid-template-columns: t.$oh-row-pin-width t.$oh-row-columns-tight;
+    gap: t.$oh-space-2;
+    padding: 0 t.$oh-space-3;
+  }
+
+  .oh-toolbar {
+    padding: t.$oh-space-3 t.$oh-space-3;
   }
 }

@@ -41,35 +41,157 @@ oh-my-arrow {
 }
 
 
-// Two panes: request list on the left, the selected request's detail on the
-// right. See `design/Mock Manager v2.dc.html`.
+// The request list, with the selected request's detail sliding in over its right
+// edge. See `design/Mock Manager v2.dc.html`.
+//
+// The detail used to be a second grid column, which cost the list ~440px of the
+// ~1030px it has at the design width. The ENDPOINT cell absorbed all of that —
+// it is the only flexible column — so opening a request made every url in the
+// list unreadable, which is the one thing the list is for. As an overlay the
+// list keeps its full width and gets it back the moment the panel closes.
 .oh-panes {
-  display: grid;
-  grid-template-columns: 1fr;
+  // How much of the right-hand end the panel covers. Held as a custom property
+  // because two things need the same number: the panel's own width, and the
+  // inset that keeps the list's *controls* out from under it.
+  --oh-detail-width: #{clamp(
+      t.$oh-detail-min-width,
+      t.$oh-detail-share,
+      t.$oh-detail-max-width
+    )};
+
+  display: block;
   height: 100%;
   min-height: 0;
-
-  &.has-detail {
-    grid-template-columns: 1fr minmax(t.$oh-detail-min-width, t.$oh-detail-width);
-  }
+  // The panel is positioned against this box, and starts outside its right edge.
+  position: relative;
+  overflow: hidden;
 
   &__list {
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
     // The `+` FAB and the arrow inside this column are absolutely positioned;
-    // without a positioned ancestor they anchor to the page and float over the
-    // detail pane's footer.
+    // without a positioned ancestor they anchor to the page.
     position: relative;
   }
 
   &__detail {
-    min-width: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    // Bounded on both sides: never so narrow that the 2x2 settings grid inside
+    // it collapses, never so wide that the list behind it is pointless.
+    width: var(--oh-detail-width);
+    display: flex;
+    flex-direction: column;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden; // the routed component scrolls its own editor
     background: t.$oh-bg-surface;
     border-left: 1px solid t.$oh-border;
+    box-shadow: t.$oh-shadow-panel;
+    animation: oh-detail-in 160ms ease-out;
+  }
+
+  // A handle on the panel's own edge, half over the list. The `x` in the detail
+  // header is *delete this response*, so without this there was no way back to
+  // the full-width list at all — which an overlay cannot afford.
+  &__collapse {
+    position: absolute;
+    top: t.$oh-space-5;
+    left: -13px;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid t.$oh-border;
+    border-radius: t.$oh-radius-pill;
+    background: t.$oh-bg-surface;
+    color: t.$oh-text-subtle;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(19, 22, 29, 0.12);
+
+    &:hover {
+      color: t.$oh-text;
+      background: t.$oh-bg-muted;
+    }
+
+    ::ng-deep svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      // The only chevron in the icon set points left; this one dismisses the
+      // panel to the right.
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// The rows keep their full width while the panel is open — that is the whole
+// point, the url stays readable — but a *control* under the panel is a control
+// you cannot reach, and the toolbar's overflow menu is the far-right item. So
+// the toolbar alone is inset by the panel's width. It already wraps, so on a
+// narrower strip it simply becomes two lines.
+//
+// `::ng-deep` because the toolbar belongs to `oh-my-data-list`; this is a fact
+// about the panel that overlays it, which the list itself has no way to know.
+.oh-panes.has-detail ::ng-deep .oh-toolbar {
+  padding-right: calc(var(--oh-detail-width) + #{t.$oh-space-4});
+}
+
+// Same reasoning for the floating `+`, which sits in the bottom-right corner
+// the panel lands on.
+.oh-panes.has-detail .new-data {
+  right: calc(var(--oh-detail-width) + #{t.$oh-space-5});
+}
+
+@keyframes oh-detail-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+// Below this the strip of list beside the panel is too narrow to read a url in,
+// which is the only thing it was being kept visible for. So the panel takes the
+// whole width and the two become one view at a time — closing it is what brings
+// the list back, which is what the handle is for.
+@media (max-width: t.$oh-bp-tight) {
+  .oh-panes__detail {
+    // Not quite the full width: the handle hangs off the panel's left edge, so
+    // it needs a gutter to hang into. Flush left instead would put it straight
+    // on top of the method pill in the detail's own header.
+    //
+    // `width: auto` is load-bearing — a declared width wins over `right`, so the
+    // clamp above would otherwise keep the panel at its old size and just move
+    // it across.
+    left: 26px;
+    width: auto;
+  }
+
+  // The panel covers the list outright here, so there is nothing to keep clear
+  // of — insetting the toolbar would only squeeze controls nobody can see.
+  .oh-panes.has-detail ::ng-deep .oh-toolbar {
+    padding-right: t.$oh-space-3;
+  }
+
+  .oh-panes.has-detail .new-data {
+    right: t.$oh-space-5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oh-panes__detail {
+    animation: none;
   }
 }

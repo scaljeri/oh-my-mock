@@ -165,6 +165,20 @@
   }
 }
 
+// ---- narrow window ----------------------------------------------------
+//
+// The sidebar is the only fixed column in the shell, so it is what gives way
+// first. The header shares its grid so the brand keeps sitting over it.
+@media (max-width: t.$oh-bp-compact) {
+  .oh-header {
+    grid-template-columns: t.$oh-sidebar-width-compact 1fr auto;
+  }
+
+  .oh-body {
+    grid-template-columns: t.$oh-sidebar-width-compact 1fr;
+  }
+}
+
 // Shown when mocking is switched off for this domain.
 .oh-notice {
   padding: t.$oh-space-2 t.$oh-space-4;

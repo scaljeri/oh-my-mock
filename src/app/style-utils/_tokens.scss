@@ -106,18 +106,51 @@ $oh-radius-lg: 14px;
 $oh-radius-pill: 999px; // chips, toggles, badges
 
 // ---- layout -----------------------------------------------------------
-// The popup window is opened at 900x800 (`src/background/open-popup.ts`), so
-// the three panes have to fit that. The mockup is drawn at 1280 wide; the
-// sidebar and detail pane keep their proportions and the request list takes
-// whatever is left.
+// The popup window is opened at 1280x860 (`src/background/open-popup.ts`), the
+// width the mockup is drawn at. It is a resizable window, though, and the user
+// is free to make it smaller — so the shell holds down to about 700px wide.
+//
+// The detail pane is an *overlay*: it slides in over the request list instead of
+// taking a column of its own. As a column it stole ~440px from the list, which
+// squeezed the ENDPOINT cell until the urls — the one thing a request is
+// identified by — were ellipsised down to nothing.
 $oh-sidebar-width: 250px;
+$oh-sidebar-width-compact: 200px;
 $oh-detail-width: 436px;
 $oh-detail-min-width: 340px;
+$oh-detail-max-width: 560px;
+// How much of the window the overlay may take before it stops growing.
+$oh-detail-share: 44%;
+
+// ---- breakpoints ------------------------------------------------------
+// Not phone sizes: this is a desktop popup that people resize. Each of these is
+// the width at which something specific stops fitting, measured rather than
+// picked — see the comment at each `@media` that uses it.
+//
+// $oh-bp-compact — the sidebar gives up 50px.
+// $oh-bp-tight   — two things stop fitting side by side at the same width, so
+//                  they share one breakpoint: the toolbar can no longer hold its
+//                  controls on one line, and the strip of list left beside the
+//                  detail overlay (window - 200 sidebar - 340 min panel ≈ 300px)
+//                  stops being wide enough to read a url in. Below this the
+//                  overlay covers the list outright.
+$oh-bp-compact: 1120px;
+$oh-bp-tight: 900px;
+
+// ---- elevation --------------------------------------------------------
+// Only the detail overlay uses this: it is the one surface that floats above
+// another, and it needs an edge that reads as "in front of" rather than
+// "next to".
+$oh-shadow-panel: -8px 0 24px -8px rgba(19, 22, 29, 0.18);
 $oh-header-height: 56px;
 $oh-row-height: 56px;
 $oh-table-header-height: 34px;
 // METHOD | ENDPOINT | RESPONSE | STATUS | ON
 $oh-row-columns: 62px 1fr 96px 88px 44px;
+// The same five, trimmed for a narrow window. ENDPOINT is the only flexible
+// one, so every pixel the others hold on to comes out of the url — the one
+// column that actually distinguishes one row from another.
+$oh-row-columns-tight: 52px 1fr 74px 70px 36px;
 // The pin column in front of them. Narrow on purpose: it is an affordance that
 // only shows up on hover or when the row is pinned, not a column of content.
 $oh-row-pin-width: 18px;

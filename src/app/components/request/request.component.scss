@@ -20,9 +20,15 @@
 
 // ---- Body / Headers / Code -------------------------------------------
 
+// Body/Headers/Code on the left, Format/Anonymise/Expand on the right.
+//
+// It wraps, because the panel's width follows the window now: at the design's
+// 436px the six controls fit on one line, and below that the actions have to be
+// allowed to drop to a second one instead of being cut off at the edge.
 .oh-tabs {
   flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: t.$oh-space-1;
   padding: t.$oh-space-3 t.$oh-detail-padding-x 0;
@@ -63,6 +69,9 @@
   display: flex;
   gap: t.$oh-space-3;
   padding-bottom: 9px;
+  // Keeps them on the trailing edge of whichever line they end up on, once the
+  // row above is allowed to wrap.
+  margin-left: auto;
 }
 
 .oh-tabs__action {

@@ -51,7 +51,12 @@ preset selector and the overflow menu moved into the toolbar below. -->
       >
     }
     @if (showMenu) {
-      <button mat-icon-button aria-label="menu" [matMenuTriggerFor]="menu">
+      <button
+        class="oh-toolbar__menu"
+        mat-icon-button
+        aria-label="menu"
+        [matMenuTriggerFor]="menu"
+      >
         <mat-icon svgIcon="more_vert"></mat-icon>
       </button>
     }

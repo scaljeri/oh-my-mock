@@ -2,23 +2,47 @@
 
 $activeModified: #ffff99;
 
+// A row of its own inside the toolbar: the input, then the two icons beside it.
+//
+// The icons used to be `position: absolute` over the input, with a 30px right
+// margin on the field reserving the space they sat in. Two things followed from
+// that. The field never shrank below Material's own minimum, so in the toolbar's
+// flex row it pushed the toggles and the overflow menu off the edge — which is
+// what put a horizontal scrollbar under the request list. And the offsets were
+// fixed, so as soon as the field *was* narrower than they assumed, the info icon
+// landed on top of the text. Laying the three out as flex items removes both.
 :host {
-  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
 
-  .filter-field.active {
+.filter-field {
+  display: flex;
+  align-items: center;
+  gap: $spacer-1;
+  min-width: 0;
+  flex: 1 1 auto;
+
+  &.active {
     background-color: $activeModified;
     padding-left: $spacer-2;
     padding-right: $spacer-2;
   }
-
-  mat-form-field {
-    font-size: $oh-font-size;
-    margin-right: 30px; // Extra space for info icon
-  }
 }
 
-.search-help {
-  @include oh-position(absolute, 8px 35px 0 0);
+mat-form-field {
+  font-size: $oh-font-size;
+  // Material gives a form field an intrinsic width it will not go under unless
+  // it is told to. Both halves are needed: `min-width` beats the default,
+  // `flex` lets it give the space up.
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.search-help,
+.search-config {
+  flex: 0 0 auto;
 }
 
 .search-config {

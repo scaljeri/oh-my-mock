@@ -231,6 +231,18 @@ ol.reset ul li {
 }
 
 mat-icon {
+  // Every asset in `src/assets/icons/material` is a `*_white_24dp.svg` and
+  // carries `fill="#FFFFFF"` of its own, so an icon with no rule pointed at it
+  // is white — invisible on every surface this app has. Six components worked
+  // around that by repeating `fill: currentColor` locally; the request
+  // toolbar's overflow menu never did, and had been white on white.
+  //
+  // Inheriting the surrounding text colour is the default that makes the
+  // work-arounds unnecessary. The two below stay as deliberate opt-outs.
+  svg {
+    fill: currentColor;
+  }
+
   &[color=primary] svg {
     fill: var(--oh-primary);
   }
