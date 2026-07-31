@@ -33,21 +33,33 @@ function replaceToken(file, tokenKey, token) {
   });
 }
 
+/**
+ * Splices a built file into another, in place of a token.
+ *
+ * Throws when the token is missing. It used to substitute only when the token
+ * occurred exactly once and do nothing otherwise — no message, exit code 0 — so
+ * a second occurrence turned the whole splice off. The build stayed green, the
+ * token stayed in the output, and the shim it was meant to carry never reached a
+ * single page. A build step that cannot do its job has to say so.
+ */
 function replaceTokenWithFileContent(tokenKey, sourceFile, inputFile) {
   const token = `'__OH_MY_${tokenKey}__'`;
   const source = fs.readFileSync(sourceFile, {encoding:'utf8', flag:'r'});
   const input = fs.readFileSync(inputFile, {encoding:'utf8', flag:'r'});
   const parts = source.split(token);
 
-  if (parts.length === 2) {
-    const update = parts[0] + input + parts[1]; // source.replace(token, input);
-
-    fs.writeFileSync(sourceFile, update, {
-      encoding: "utf8",
-      flag: "w+",
-      mode: 0o666
-    });
+  if (parts.length < 2) {
+    throw new Error(
+      `token-replace: ${token} not found in ${sourceFile} — nothing to splice ${inputFile} into`);
   }
+
+  // Every occurrence, so a second one is a duplicate rather than a switch that
+  // quietly turns the substitution off.
+  fs.writeFileSync(sourceFile, parts.join(input), {
+    encoding: "utf8",
+    flag: "w+",
+    mode: 0o666
+  });
 }
 
 function determineVersion() {
