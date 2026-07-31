@@ -70,12 +70,12 @@ export class OhMyContentState {
         // A request this script has not seen before arrives as two updates -
         // the record and the id list - in no guaranteed order.
         this.loadRequests();
-        this.isActiveSubject.next(this.isActive(this.state));
+        this.publishActive();
       } else if (key === STORAGE_KEY) {
         // `popupActive` lives on the store, so a popup opening or closing
         // arrives here rather than on the domain's own record.
         this.store = update.newValue as IOhMyMock;
-        this.isActiveSubject.next(this.isActive(this.state));
+        this.publishActive();
       }
 
       this.subjects[key]?.next(update.newValue);
@@ -93,6 +93,24 @@ export class OhMyContentState {
         this.isReloaded = false;
       }
     }
+  }
+
+  /**
+   * Publishes whether this domain is mocked — or nothing at all, when that is
+   * still unknown.
+   *
+   * The distinction is the point. `isActive(undefined)` is `false`, and this used
+   * to be published straight: a write to the *store* arriving before the domain's
+   * own state had been read announced "not active" for a domain that was
+   * perfectly active. `setActive` writes both records, so the store write racing
+   * the state read is ordinary rather than exotic.
+   *
+   * Downstream, `false` is an instruction — the injected bundle stops mocking on
+   * it — so saying it out of ignorance is worse than saying nothing. `undefined`
+   * already means "nothing known yet" and every subscriber skips it.
+   */
+  private publishActive(): void {
+    this.isActiveSubject.next(this.state ? this.isActive(this.state) : undefined);
   }
 
   /**
