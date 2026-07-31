@@ -19,7 +19,25 @@
   -->
   <script>
     window.onloadResult = { pending: true };
+    window.onloadPost = { pending: true };
     var startedAt = performance.now();
+
+    // A second call from the same moment, with everything worth losing on it: a
+    // method, a header and a body. On a domain that is not mocked this one is
+    // *held* by the extension and then let go, so `/api/echo` reporting it back
+    // unchanged is what proves the hand-off is 1:1 rather than merely prompt.
+    fetch('/api/echo', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-onload': 'held' },
+      body: JSON.stringify({ ping: 'pong' })
+    })
+      .then(function (response) { return response.json(); })
+      .then(function (echo) {
+        window.onloadPost = { pending: false, echo: echo };
+      })
+      .catch(function (err) {
+        window.onloadPost = { pending: false, error: String(err) };
+      });
 
     window.onloadDone = fetch('/api/json')
       .then(function (response) {

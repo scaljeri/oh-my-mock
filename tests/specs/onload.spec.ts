@@ -79,6 +79,37 @@ test.describe('a request made while the page loads', () => {
     expect(result.source).toBe('server');
     expect(await server.hitCount('GET /api/json')).toBe(1);
 
+    // The other on-load call, the one with something to lose. It was held while
+    // the verdict was in flight and then handed over — `/api/echo` reflects what
+    // the server actually received, so this is the hand-off being 1:1 and not
+    // merely quick.
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { onloadPost: { pending: boolean } }).onloadPost
+          ?.pending === false
+    );
+
+    const posted = await site.page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            onloadPost: {
+              error?: string;
+              echo?: {
+                method: string;
+                headers: Record<string, string>;
+                body: { ping?: string } | null;
+              };
+            };
+          }
+        ).onloadPost
+    );
+
+    expect(posted.error).toBeUndefined();
+    expect(posted.echo?.method).toBe('POST');
+    expect(posted.echo?.headers['x-onload']).toBe('held');
+    expect(posted.echo?.body?.ping).toBe('pong');
+
     // And it is not held for long. The shim now goes in on every page, so this
     // is the cost the extension adds to a domain it does nothing for: it holds
     // the call only until `contentState.init()` has read storage and said "not
