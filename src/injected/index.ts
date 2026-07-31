@@ -5,12 +5,19 @@ import { initApi } from './api';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { settleActiveState } from './active-state';
+import { restoreOriginals } from './restore-originals';
 import { setupListenersMessageBus } from './state-manager';
 import { error, log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
 
 let isOhMyMockActive = false;
+/**
+ * The page's own `fetch`/`XHR` were handed back, so the entry points this bundle
+ * publishes are gone. Switching the domain on again has to re-publish them —
+ * the re-installed shim is waiting for exactly those.
+ */
+let wasRestored = false;
 
 if (!hasOhMyWindow()) {
   error('Oooops. Something went wrong!!!')
@@ -40,6 +47,8 @@ if (!hasOhMyWindow()) {
     if (!state) {
       return;
     }
+    const isFirstVerdict = !ohMy.state;
+
     ohMy.state = state;
     // Releases everything held while the answer was still unknown — including
     // the very first request of the page, which is the one this exists for.
@@ -48,6 +57,12 @@ if (!hasOhMyWindow()) {
     if (state.active) {
       if (!isOhMyMockActive) {
         isOhMyMockActive = true;
+
+        if (wasRestored) {
+          wasRestored = false;
+          patchXmlHttpRequest();
+          patchFetch();
+        }
         log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
         // patchXmlHttpRequest();
         // patchFetch();
@@ -56,8 +71,21 @@ if (!hasOhMyWindow()) {
     } else {
       ohMy.cache = [];
       isOhMyMockActive = false;
-      // unpatchXmlHttpRequest();
-      // unpatchFetch();
+
+      // Handing the page's own `fetch`/`XHR` back happens on the **first**
+      // verdict only, and that restraint is the point. It is a destructive step
+      // on a signal that can wobble: a later state write that momentarily lacks
+      // `aux.appActive` reads as "off", and tearing the patches out on one of
+      // those would stop mocking a page that is still switched on. It cost an
+      // intermittently red suite to find out. A later deactivation just stops
+      // mocking, exactly as it always did.
+      if (isFirstVerdict) {
+        unpatchXmlHttpRequest();
+        unpatchFetch();
+        restoreOriginals();
+        wasRestored = true;
+      }
+
       log('*** Deactivated ***%c Removed XHR and FETCH patches', 'background: red;padding:3px;margin-right:5px', 'background-color: transparent');
       notify(false)
     }

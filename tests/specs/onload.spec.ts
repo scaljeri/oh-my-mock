@@ -179,4 +179,88 @@ test.describe('a request made while the page loads', () => {
 
     void server;
   });
+
+  /**
+   * After the verdict "not this domain", OhMyMock is gone — not merely inert.
+   *
+   * The bundle is on every page the user visits, which is the price of being in
+   * place before the answer is known. A page nobody is mocking should not keep
+   * paying it, so the patches are removed again and the page gets back the
+   * `fetch` and `XMLHttpRequest` it started with.
+   */
+  test('puts the page own fetch and XHR back when it is not wanted', async ({
+    site
+  }) => {
+    await site.open();
+
+    // Wait for the verdict to have been acted on.
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { OhMyMock?: { restored?: boolean } }).OhMyMock
+          ?.restored === true
+    );
+
+    const traces = await site.page.evaluate(() => {
+      const proto = XMLHttpRequest.prototype as unknown as Record<string, unknown>;
+
+      return {
+        // A native function stringifies as `[native code]`; a patched one does
+        // not. This is the page asking "is this really mine again".
+        fetchIsNative: /\[native code\]/.test(String(window.fetch)),
+        sendIsNative: /\[native code\]/.test(String(proto.send)),
+        openIsNative: /\[native code\]/.test(String(proto.open)),
+        leftovers: ['__send', '__open', '__setRequestHeader', '__addEventListener']
+          .filter((name) => name in proto)
+      };
+    });
+
+    expect(traces.fetchIsNative).toBe(true);
+    expect(traces.sendIsNative).toBe(true);
+    expect(traces.openIsNative).toBe(true);
+    expect(traces.leftovers).toEqual([]);
+  });
+
+  /**
+   * ...and can be put back, without reloading the page.
+   *
+   * Switching a domain on while its page is open is a real path — the popup's
+   * toggle does exactly that, and the state change reaches the page through
+   * `chrome.storage.onChanged`. Handing the originals back on the "not this
+   * domain" verdict is what makes that path fragile: there is nothing left to
+   * turn on. So the restore has to be reversible.
+   */
+  test('and takes them back when the domain is switched on', async ({
+    ohMy,
+    site,
+    server
+  }) => {
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { source: 'mock' }
+    });
+    // Seeded but *off*: the page loads, hears "no", and hands everything back.
+    await site.open();
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { OhMyMock?: { restored?: boolean } }).OhMyMock
+          ?.restored === true
+    );
+
+    await ohMy.setActive(SITE_DOMAIN);
+
+    // Not `waitForInjection`: the bundle never left, so that returns at once.
+    // What has to arrive is the new verdict — and with it the patches going back
+    // on — which travels storage -> content script -> page.
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { OhMyMock?: { state?: { active?: boolean } } })
+          .OhMyMock?.state?.active === true
+    );
+
+    const result = await site.request({ url: '/api/json', responseType: 'json' });
+
+    expect(result.json.source).toBe('mock');
+    expect(await server.hitCount('GET /api/json')).toBe(0);
+  });
 });

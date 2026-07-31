@@ -23,6 +23,12 @@ interface IEarlyInjectNamespace {
   fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
   __fetch?: typeof fetch;
   /**
+   * The patches were removed again because this domain turned out not to be
+   * mocked. The namespace outlives them, so it cannot be the "already
+   * installed" test on its own.
+   */
+  restored?: boolean;
+  /**
    * Stop holding: hand every call to the original implementation.
    *
    * Set by the content script (`releaseEarlyShim`) once it knows no injected
@@ -75,8 +81,19 @@ const descriptorOf = (name: keyof XMLHttpRequest): PropertyDescriptor => {
   return descriptor;
 };
 
-if (!ohMy()) {
-  setOhMy({});
+// Installed when the namespace is absent, and again after a restore: an
+// inactive domain puts the page's own `fetch`/`XHR` back, and switching it on
+// while the page is open has to be able to re-install over them.
+if (!ohMy() || ohMy().restored) {
+  // Created when absent, and only then. On a re-install the namespace already
+  // exists and the injected bundle is holding a reference to that very object —
+  // replacing it would leave the bundle writing into an orphan, so its `state`
+  // would never be the one the page can see. Mutate.
+  if (!ohMy()) {
+    setOhMy({});
+  }
+
+  ohMy().restored = false;
 
   // Calls being held until the injected bundle arrives, or until word comes
   // that none is. Each entry stops its own polling and lets its call through.

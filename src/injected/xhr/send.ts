@@ -17,18 +17,38 @@ export function patchSend() {
   // script can grab a reference to the original. It forwards to this function
   // as soon as the injected bundle has published it.
   ohMyWindow().xhr = {
-    // `async` because the verdict below may not be in yet. Nothing reads the
-    // return value — `XMLHttpRequest.send` is void, and the early shim that
-    // forwards here ignores it — so handing back a promise changes nothing.
-    send: async function (this: XMLHttpRequest, body?: unknown) {
-      const xhr = asOhMyXhr(this);
+    /**
+     * Stays **synchronous** once the verdict is in, and that is not a detail.
+     *
+     * `XMLHttpRequest.send` is expected to have acted by the time it returns;
+     * making it unconditionally `async` pushed the real send a microtask out and
+     * made the plain XHR mocking test fail intermittently. So the decided path —
+     * every request after the first handful — runs exactly as it always did, and
+     * only a call that arrives before the answer waits for it.
+     */
+    send: function (this: XMLHttpRequest, body?: unknown) {
+      if (ohMyWindow().state) {
+        sendNow(this, body);
+
+        return;
+      }
+
+      void isMockingActive().then(() => sendNow(this, body));
+    }
+  };
+
+  function sendNow(self: XMLHttpRequest, body?: unknown): void {
+    {
+      const xhr = asOhMyXhr(self);
       const url = xhr.ohUrl;
       const method = xhr.ohMethod;
 
       // `open` records both before `send` can run; without them there is
       // nothing to match a mock against, so let the request through.
-      if (!(await isMockingActive()) || !url || !method) {
-        return xhr.__send(toXhrBody(body));
+      if (!ohMyWindow().state?.active || !url || !method) {
+        xhr.__send(toXhrBody(body));
+
+        return;
       }
 
       const request: IOhMyAPIRequest = {

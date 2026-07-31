@@ -56,6 +56,17 @@ export interface IOhMyWindow {
   /** Restores the original fetch/XHR implementations. */
   unpatch?: () => void;
 
+  /**
+   * The page's own `fetch`/`XHR` have been put back and OhMyMock is doing
+   * nothing here — see `src/injected/restore-originals.ts`.
+   *
+   * Read by `src/early-inject`, whose "already installed?" guard is the presence
+   * of this namespace. After a restore the namespace is still there while the
+   * patches are not, so without this flag switching the domain on with the page
+   * open would skip re-installing and silently mock nothing.
+   */
+  restored?: boolean;
+
   /** The API exposed to page scripts, see `src/injected/api.ts`. */
   api?: {
     upsert: (data: unknown, context?: IOhMyContext) => Promise<unknown>;

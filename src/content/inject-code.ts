@@ -41,6 +41,23 @@ export function installEarlyShim(messageBus: OhMyMessageBus): void {
     return;
   }
 
+  runShim(messageBus);
+}
+
+/**
+ * Puts the shim back after the page's own `fetch`/`XHR` were handed back.
+ *
+ * An inactive domain restores the originals — see
+ * `src/injected/restore-originals.ts` — so switching it on with the page open
+ * finds nothing patched and nothing to turn on. The shim's own guard checks the
+ * `restored` flag, so running it again is a no-op when it is still in place.
+ */
+export function reinstallEarlyShim(): void {
+  runShimCode();
+}
+
+function runShim(messageBus: OhMyMessageBus): void {
+
   // Subscribed *before* the click, because the shim announces itself while it
   // installs — synchronously, inside the click below.
   shimReady = new Promise<void>((resolve) => {
@@ -50,6 +67,20 @@ export function installEarlyShim(messageBus: OhMyMessageBus): void {
       .subscribe(() => resolve());
   });
 
+  runShimCode();
+}
+
+/**
+ * Runs the shim bundle in the page's own world.
+ *
+ * The **only** place the injected-code token appears, and it has to stay that
+ * way — do not repeat it, not even in a comment. `scripts/token-replace.js`
+ * splices the compiled shim in here by splitting on that token, and it used to
+ * do so only when it occurred exactly once. A second copy made the whole splice
+ * a silent no-op: the build succeeded, the token stayed in the output, and the
+ * shim never reached a single page.
+ */
+function runShimCode(): void {
   const el = document.createElement('div');
   el.setAttribute('onclick', `const KEY='${STORAGE_KEY}';` + `'__OH_MY_INJECTED_CODE__'`);
   document.documentElement.appendChild(el);

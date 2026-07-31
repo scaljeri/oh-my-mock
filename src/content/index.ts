@@ -19,7 +19,7 @@ import { BehaviorSubject } from 'rxjs';
 // import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
 import { error } from './utils';
-import { escalateIfBlocked, injectCode, installEarlyShim, releaseEarlyShim } from './inject-code';
+import { escalateIfBlocked, injectCode, installEarlyShim, reinstallEarlyShim, releaseEarlyShim } from './inject-code';
 import { sendMsg2Popup } from './message-to-popup';
 
 window.onunhandledrejection = function (event: PromiseRejectionEvent) {
@@ -61,6 +61,72 @@ installEarlyShim(messageBus);
 // off the front of the very first request the page makes.
 const injection = injectCode(messageBus);
 
+/**
+ * The page's own `fetch`/`XHR` were handed back because this domain is not
+ * mocked — see `src/injected/restore-originals.ts`. Switching it on later has to
+ * put them back, and nothing else in here should pay for that possibility.
+ */
+let wasHandedBack = false;
+
+/**
+ * Tells the injected bundle whether this domain is mocked — the **only** place
+ * that does.
+ *
+ * It has to be the only one, because saying `false` is destructive: the bundle
+ * answers it by handing the page's own `fetch`/`XHR` back, and coming back from
+ * that needs the shim re-installed. There were two senders — this and the
+ * start-up path — and only one of them remembered. A `false` from the other left
+ * the page with native entry points, and the later `true` re-published a
+ * `ohMy.fetch` that nothing forwarded to any more: mocking silently stopped for
+ * the rest of that page's life. It showed up as a mocked request being answered
+ * by the server, in a different spec every run.
+ */
+let settleFirstVerdict: (() => void) | undefined;
+
+/**
+ * Resolves once the start-up path has announced the first verdict.
+ *
+ * The subscription below fires on any storage change, including ones that land
+ * while `initContext()` is still reading — and `isActive(undefined)` is `false`.
+ * Announcing that would be the *first* verdict, and a first `false` is the one
+ * the bundle answers by handing the page's `fetch`/`XHR` back. On a domain that
+ * is switched on, that is a page which never mocks again.
+ *
+ * So start-up owns the first word. Everything else waits for it.
+ */
+const firstVerdict = new Promise<void>((resolve) => {
+  settleFirstVerdict = resolve;
+});
+
+async function announceVerdict(active: boolean): Promise<boolean> {
+  if (active && wasHandedBack) {
+    // Nothing is patched, so there is nothing to switch on. The shim goes back
+    // first, for the bundle to publish into.
+    reinstallEarlyShim();
+
+    // And the records before the verdict: a domain that was off never loaded
+    // them, and announcing "active" first would let the next request find no
+    // mock and go to the server.
+    await contentState.init();
+  }
+
+  if (!(await injection)) {
+    return false;
+  }
+
+  wasHandedBack = !active;
+
+  sendMessageToInjected({
+    type: payloadType.STATE,
+    // The injected script reads this as an `IOhMyInjectedState`; the
+    // description belongs on the payload, not inside the state.
+    data: { active },
+    description: 'content;verdict'
+  });
+
+  return true;
+}
+
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
@@ -75,15 +141,8 @@ ohMyWindow().off?.push(contentState.isActive$.subscribe(async (value?: boolean) 
     return;
   }
 
-  if (await injection) {
-    sendMessageToInjected({
-      type: payloadType.STATE,
-      // The injected script reads this as an `IOhMyInjectedState`; the
-      // description belongs on the payload, not inside the state.
-      data: { active: value },
-      description: 'content;contentState.isActive'
-    });
-  }
+  await firstVerdict;
+  await announceVerdict(value);
 }));
 
 // window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
@@ -143,15 +202,7 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
 
     // The bundle still has to hear it, though — it holds every call until it
     // does, and nothing else will tell it. Not awaited: that is the whole point.
-    void injection.then((ok) => {
-      if (ok) {
-        sendMessageToInjected({
-          type: payloadType.STATE,
-          data: { active: false },
-          description: 'content;initial-verdict'
-        });
-      }
-    });
+    void announceVerdict(false).then(() => settleFirstVerdict?.());
 
     return;
   }
@@ -161,9 +212,7 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // further along.
   await contentState.init();
 
-  const injected = await injection;
-
-  if (!injected) {
+  if (!(await injection)) {
     // A CSP the injection could not get past. Escalating is only worth it for a
     // domain that is actually switched on — it strips the site's header and
     // reloads the page.
@@ -174,15 +223,13 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
     // Nothing is coming: the shim has to stop holding. A page whose requests
     // never settle is a far worse failure than one that is not mocked.
     releaseEarlyShim();
+    settleFirstVerdict?.();
 
     return;
   }
 
   // The verdict. Until this lands the bundle holds every call the page makes,
   // which is the point — it was in place before the answer was.
-  sendMessageToInjected({
-    type: payloadType.STATE,
-    data: { active },
-    description: 'content;initial-verdict'
-  });
+  await announceVerdict(active);
+  settleFirstVerdict?.();
 })();
