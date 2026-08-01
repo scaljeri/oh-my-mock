@@ -56,8 +56,12 @@ export class RemoteMockingComponent implements OnInit {
    */
   private seeded = false;
 
+  /** Guards against two settle-watchers running after quick successive changes. */
+  private settling = false;
+
   async ngOnInit(): Promise<void> {
     await this.refresh();
+    await this.watchUntilSettled();
   }
 
   /**
@@ -82,6 +86,41 @@ export class RemoteMockingComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Re-checks until the answer stops changing, or until it is clear it will not.
+   *
+   * Connecting is not instant: the toggle writes the setting, the background
+   * picks that up from storage and opens a socket, and only then is there
+   * anything to report. Asking once — which is all this page used to do — meant
+   * a server that *was* reachable was announced as "Not reachable" and stayed
+   * that way, because nothing looked again.
+   *
+   * Bounded, and stops early. There is no push channel for this, and a page that
+   * polls a socket forever is its own kind of bug.
+   */
+  private async watchUntilSettled(): Promise<void> {
+    if (this.settling) {
+      return;
+    }
+
+    this.settling = true;
+
+    try {
+      const deadline = Date.now() + 12_000;
+
+      while (this.status?.enabled && !this.status.connected) {
+        if (Date.now() > deadline) {
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await this.refresh();
+      }
+    } finally {
+      this.settling = false;
+    }
+  }
+
   async onTarget(target: ohMyRemoteTarget): Promise<void> {
     await this.remoteService.update({ target });
     await this.refresh();
@@ -101,6 +140,7 @@ export class RemoteMockingComponent implements OnInit {
     }
 
     await this.refresh();
+    await this.watchUntilSettled();
   }
 
   async onAddressChange(): Promise<void> {
@@ -117,5 +157,6 @@ export class RemoteMockingComponent implements OnInit {
 
     await this.remoteService.update({ host: this.hostCtrl.value, port });
     await this.refresh();
+    await this.watchUntilSettled();
   }
 }
