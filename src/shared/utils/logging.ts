@@ -24,6 +24,27 @@ export const PREFIX_STYLES_APPEND = 'background: inherit; color: inherit;monospa
 
 const LOG_PREFIX = `%c(%c^%c*%c^%c) ${STORAGE_KEY}`;
 
+/**
+ * Replaced at build time by `scripts/token-replace.js`, with `'true'` only for a
+ * beta version. Anything else — including the token left as it is, which is what
+ * an unbuilt or half-built bundle carries — counts as off, so a build that never
+ * reached the replace step is quiet rather than noisy.
+ */
+// Typed as `string`, not left to be narrowed to its own literal: the value is
+// substituted at build time, so comparing it is the point rather than, as the
+// compiler would otherwise have it, provably pointless.
+const SHOW_DEBUG: string = '__OH_MY_SHOW_DEBUG__';
+
+/**
+ * Whether `debug()` writes anything.
+ *
+ * This switch existed, stopped being referenced by anything, and nobody noticed:
+ * `token-replace.js` went on substituting a token that no longer appeared in the
+ * source, so every build shipped with debug output on and no way to turn it off.
+ * `logging.spec.ts` now fails if the token loses its reader again.
+ */
+export const isDebugEnabled = (): boolean => SHOW_DEBUG === 'true';
+
 export const logging = (config: IOhMyLoggingConfig = {}) => {
   return (msg: string, ...rest: (string | unknown)[]) => {
 
@@ -37,6 +58,10 @@ export const logging = (config: IOhMyLoggingConfig = {}) => {
 }
 
 export const debugBuilder = (config: IOhMyLoggingConfig = {}) => {
+  if (!isDebugEnabled()) {
+    return () => undefined;
+  }
+
   return logging({ handler: console.debug, ...config });
 }
 

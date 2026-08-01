@@ -2,14 +2,33 @@ const fs = require('fs');
 const packageJson = require('../package.json');
 
 const version = determineVersion();
-const isBeta = !!version.match(/beta/);
 
-replaceToken('./dist/oh-my-mock.js', 'SHOW_DEBUG', String(isBeta));
-replaceToken('./dist/oh-my-mock.js', 'VERSION', version);
-replaceToken('./dist/content.js', 'SHOW_DEBUG', String(isBeta));
-replaceToken('./dist/background.js', 'VERSION', version);
-replaceToken('./dist/content.js', 'VERSION', version);
-replaceToken('./dist/oh-my-mock/main.js', 'VERSION', version);
+/**
+ * Whether `debug()` output is compiled in.
+ *
+ * A beta version turns it on, which is the original convention. `OH_MY_DEBUG=1`
+ * turns it on for any build, because the alternative — versioning your local
+ * build as a beta to see a log line — is not something anyone will do twice.
+ */
+const showDebug = /beta/.test(version) || process.env.OH_MY_DEBUG === '1';
+
+/** Every bundle that carries a build-time token. */
+const BUNDLES = [
+  './dist/oh-my-mock.js',
+  './dist/content.js',
+  './dist/background.js',
+  './dist/oh-my-mock/main.js'
+];
+
+// `shared/utils/logging.ts` is compiled into the content, injected and
+// background bundles, so the debug switch has to reach all three — it used to be
+// substituted in two. The popup does not use that logger (it has
+// `app/utils/log.ts`) and carries no such token; passing it here is harmless and
+// keeps the list of bundles one thing rather than two.
+for (const file of BUNDLES) {
+  replaceToken(file, 'SHOW_DEBUG', String(showDebug));
+  replaceToken(file, 'VERSION', version);
+}
 replaceTokenWithFileContent('INJECTED_CODE', './dist/content.js', './dist/early-inject-clean.js');
 
 function replaceToken(file, tokenKey, token) {
