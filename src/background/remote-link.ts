@@ -1,6 +1,10 @@
 import { appSources, payloadType, STORAGE_KEY } from '../shared/constants';
 import { IOhMessage } from '../shared/packet-type';
-import { IOhMyMock } from '../shared/types/store';
+import {
+  IOhMyMock,
+  OH_MY_REMOTE_DEFAULTS,
+  ohMyRemoteTarget
+} from '../shared/types/store';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { StorageUtils } from '../shared/utils/storage';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
@@ -8,12 +12,16 @@ import {
   connectIfEnabled,
   disconnectFromLocalServer,
   isConnectedWithLocalServer,
-  DEFAULT_SDK_SERVER_URL
+  remoteUrl
 } from './dispatch-remote';
 
 /** What the popup's Remote mocking page shows. */
 export interface IOhMyRemoteStatus {
   enabled: boolean;
+  target: ohMyRemoteTarget;
+  host: string;
+  port: number;
+  /** The address the two above resolve to, so the page never builds it itself. */
   url: string;
   connected: boolean;
 }
@@ -49,9 +57,14 @@ export function initRemoteLink(): void {
     async ({ callback }: IOhMessage) => {
       const store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
 
+      const remote = store?.remote;
+
       callback({
-        enabled: !!store?.remote?.enabled,
-        url: store?.remote?.url || DEFAULT_SDK_SERVER_URL,
+        enabled: !!remote?.enabled,
+        target: remote?.target || OH_MY_REMOTE_DEFAULTS.target,
+        host: remote?.host || OH_MY_REMOTE_DEFAULTS.host,
+        port: remote?.port || OH_MY_REMOTE_DEFAULTS.port,
+        url: remoteUrl(remote),
         connected: isConnectedWithLocalServer()
       } as IOhMyRemoteStatus);
     }

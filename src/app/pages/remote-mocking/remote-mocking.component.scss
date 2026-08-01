@@ -80,15 +80,33 @@
     color: t.$oh-text-subtle;
   }
 
+  &__address {
+    display: flex;
+    gap: t.$oh-space-4;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  &__resolved {
+    font-size: t.$oh-size-sm;
+
+    code {
+      font-family: t.$oh-font-mono;
+    }
+  }
+
   &__input {
-    width: 100%;
-    max-width: 340px;
+    width: 220px;
     padding: 8px 10px;
     font-family: t.$oh-font-mono;
     font-size: t.$oh-size-base;
     border: 1px solid t.$oh-border;
     border-radius: t.$oh-radius-sm;
     background: t.$oh-bg-app;
+  }
+
+  .oh-field--port .oh-remote__input {
+    width: 110px;
   }
 
   &__note {

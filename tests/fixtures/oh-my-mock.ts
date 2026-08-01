@@ -283,18 +283,21 @@ export class OhMyMockDriver {
    * wants the SDK has to say so. That is the whole point of the setting: a
    * browser that never runs the SDK should never open the socket.
    */
-  async setRemote(enabled: boolean, url?: string): Promise<void> {
+  async setRemote(
+    enabled: boolean,
+    target?: 'server' | 'cloud'
+  ): Promise<void> {
     await (await this.worker()).evaluate(
-      async ({ enabled, url }) => {
+      async ({ enabled, target }) => {
         const stored = await chrome.storage.local.get('OhMyMock');
         const store = (stored.OhMyMock ?? {}) as StoredStore & {
-          remote?: { enabled?: boolean; url?: string };
+          remote?: { enabled?: boolean; target?: string };
         };
 
-        store.remote = { ...store.remote, enabled, ...(url && { url }) };
+        store.remote = { ...store.remote, enabled, ...(target && { target }) };
         await chrome.storage.local.set({ OhMyMock: store });
       },
-      { enabled, url }
+      { enabled, target }
     );
   }
 

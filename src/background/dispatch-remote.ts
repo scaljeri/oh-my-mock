@@ -6,7 +6,7 @@ import { uniqueId } from '../shared/utils/unique-id';
 import { log } from './utils';
 import { StorageUtils } from '../shared/utils/storage';
 import { STORAGE_KEY } from '../shared/constants';
-import { IOhMyMock } from '../shared/types/store';
+import { IOhMyMock, IOhMyRemote, OH_MY_REMOTE_DEFAULTS } from '../shared/types/store';
 
 /**
  * Optional link to the NodeJS SDK server (`libs/nodejs-sdk`), which serves mock
@@ -24,8 +24,22 @@ import { IOhMyMock } from '../shared/types/store';
  * server, so a failed connection costs nothing beyond the attempts themselves.
  */
 
-/** Where the SDK server listens. Matches the port used by `createServer`. */
-export const DEFAULT_SDK_SERVER_URL = 'ws://localhost:8000';
+/**
+ * Where a mock server lives, from what the user filled in.
+ *
+ * Only `ws://` — the SDK speaks socket.io over a websocket, and the host is
+ * whatever the user typed: `localhost`, or the IP of a machine on the network
+ * running the SDK for a whole team.
+ */
+export const remoteUrl = (remote?: IOhMyRemote): string => {
+  const host = remote?.host || OH_MY_REMOTE_DEFAULTS.host;
+  const port = remote?.port || OH_MY_REMOTE_DEFAULTS.port;
+
+  return `ws://${host}:${port}`;
+};
+
+/** Where the SDK server listens unless told otherwise. */
+export const DEFAULT_SDK_SERVER_URL = remoteUrl();
 
 /**
  * Enough attempts to ride out an SDK server that is still starting up, few
@@ -107,11 +121,20 @@ export const disconnectFromLocalServer = (): void => {
 export const connectIfEnabled = async (): Promise<void> => {
   const store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
 
-  if (!store?.remote?.enabled) {
+  const remote = store?.remote;
+
+  if (!remote?.enabled) {
     return;
   }
 
-  connectWithLocalServer(store.remote.url || DEFAULT_SDK_SERVER_URL);
+  // The cloud service does not exist yet, so there is nothing to dial for it.
+  // Saying so here rather than in the page keeps the page from being the only
+  // thing standing between a half-built feature and a socket to nowhere.
+  if (remote.target === 'cloud') {
+    return;
+  }
+
+  connectWithLocalServer(remoteUrl(remote));
 };
 
 export const dispatchRemote = async (

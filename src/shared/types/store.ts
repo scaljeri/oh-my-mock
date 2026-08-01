@@ -21,9 +21,27 @@ export type origin = 'local' | 'cloud' | 'ngapimock';
 export interface IOhMyRemote {
   /** Whether to connect at all. Off until someone asks for it. */
   enabled?: boolean;
-  /** Where the local SDK server listens. */
-  url?: string;
+  /**
+   * Which kind of server: one you run yourself, or the cloud service.
+   *
+   * `cloud` does not exist yet. It is in the type because the choice is the
+   * user's and the page shows both — leaving it out would make the page lie
+   * about what it is offering.
+   */
+  target?: ohMyRemoteTarget;
+  /** `localhost`, or the IP of a machine running the SDK. */
+  host?: string;
+  port?: number;
 }
+
+export type ohMyRemoteTarget = 'server' | 'cloud';
+
+/** What a `remote` with nothing filled in yet means. */
+export const OH_MY_REMOTE_DEFAULTS = {
+  target: 'server' as ohMyRemoteTarget,
+  host: 'localhost',
+  port: 8000
+};
 
 /** The root of `chrome.storage`: one key, holding the store record. */
 export interface IStore {

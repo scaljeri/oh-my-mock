@@ -1,12 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { payloadType } from '@shared/constants';
-import { IOhMyRemote } from '@shared/types/store';
+import { IOhMyRemote, ohMyRemoteTarget } from '@shared/types/store';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
 import { OhMyState } from './oh-my-store';
 
 /** What the background reports about the link to a mock server. */
 export interface IOhMyRemoteStatus {
   enabled: boolean;
+  target: ohMyRemoteTarget;
+  host: string;
+  port: number;
+  /** `ws://host:port`, resolved by the background so the page never builds it. */
   url: string;
   connected: boolean;
 }

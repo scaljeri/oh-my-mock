@@ -14,8 +14,10 @@ import net from 'node:net';
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
 import { openPopup } from '../fixtures/popup';
 
-/** The port `DEFAULT_SDK_SERVER_URL` points at. */
-const SDK_PORT = 8000;
+/** The port the page offers by default. */
+const DEFAULT_PORT = 8000;
+/** Somewhere else entirely, to prove the address field is not decoration. */
+const OTHER_PORT = 8123;
 
 /**
  * Counts anything that knocks on the SDK port, and drops it.
@@ -24,7 +26,9 @@ const SDK_PORT = 8000;
  * question — a refused connection and an accepted-then-dropped one look the same
  * from the extension's side, and only one of them is observable from here.
  */
-async function countKnocks(): Promise<{ count: () => number; stop: () => Promise<void> }> {
+async function countKnocks(
+  port = DEFAULT_PORT
+): Promise<{ count: () => number; stop: () => Promise<void> }> {
   let knocks = 0;
   const server = net.createServer((socket) => {
     knocks += 1;
@@ -33,7 +37,7 @@ async function countKnocks(): Promise<{ count: () => number; stop: () => Promise
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(SDK_PORT, resolve);
+    server.listen(port, resolve);
   });
 
   return {
@@ -82,7 +86,11 @@ test.describe('remote mocking', () => {
 
       // Off, and saying so.
       await expect(popup.locator('[x-test="remote-state"]')).toHaveText('Off');
-      await expect(popup.locator('[x-test="remote-url"]')).toHaveValue(
+      await expect(popup.locator('[x-test="remote-host"]')).toHaveValue(
+        'localhost'
+      );
+      await expect(popup.locator('[x-test="remote-port"]')).toHaveValue('8000');
+      await expect(popup.locator('[x-test="remote-url"]')).toHaveText(
         'ws://localhost:8000'
       );
       expect(listener.count()).toBe(0);
@@ -98,6 +106,82 @@ test.describe('remote mocking', () => {
       await expect(popup.locator('[x-test="remote-state"]')).not.toHaveText(
         'Off'
       );
+
+      await popup.close();
+    } finally {
+      await listener.stop();
+    }
+  });
+
+  test('the address field decides where it dials', async ({
+    context,
+    extensionId,
+    ohMy,
+    site
+  }) => {
+    // Two listeners: one on the default port, one on the port typed in. Only the
+    // second may see anything, which is the whole claim.
+    const onDefault = await countKnocks(DEFAULT_PORT);
+    const onOther = await countKnocks(OTHER_PORT);
+
+    try {
+      await ohMy.setActive(SITE_DOMAIN);
+      await site.open();
+
+      const popup = await openPopup(context, extensionId, {
+        domain: SITE_DOMAIN,
+        tabId: await ohMy.tabIdFor(SITE_ORIGIN)
+      });
+      await popup.goto(`${popup.url().split('#')[0]}#/remote-mocking`);
+
+      await popup.locator('[x-test="remote-host"]').fill('127.0.0.1');
+      await popup.locator('[x-test="remote-port"]').fill(String(OTHER_PORT));
+      // Committed on blur, so somewhere inert has to be clicked.
+      await popup.locator('.oh-remote__title').click();
+
+      await expect(popup.locator('[x-test="remote-url"]')).toHaveText(
+        `ws://127.0.0.1:${OTHER_PORT}`
+      );
+
+      await popup.locator('[x-test="remote-toggle"]').click();
+
+      await expect.poll(() => onOther.count(), { timeout: 15_000 }).toBeGreaterThan(0);
+      expect(onDefault.count()).toBe(0);
+
+      await popup.close();
+    } finally {
+      await onDefault.stop();
+      await onOther.stop();
+    }
+  });
+
+  test('the cloud is offered but contacts nothing', async ({
+    context,
+    extensionId,
+    ohMy,
+    site
+  }) => {
+    const listener = await countKnocks();
+
+    try {
+      await ohMy.setActive(SITE_DOMAIN);
+      await site.open();
+
+      const popup = await openPopup(context, extensionId, {
+        domain: SITE_DOMAIN,
+        tabId: await ohMy.tabIdFor(SITE_ORIGIN)
+      });
+      await popup.goto(`${popup.url().split('#')[0]}#/remote-mocking`);
+
+      // Offered, and plainly not ready — so it cannot be chosen by accident.
+      await expect(popup.locator('[x-test="remote-target-cloud"]')).toBeDisabled();
+
+      // Even switched on with `cloud` stored, nothing is dialled: the background
+      // refuses it rather than trusting the page to be the only guard.
+      await ohMy.setRemote(true, 'cloud');
+      await popup.waitForTimeout(6_000);
+
+      expect(listener.count()).toBe(0);
 
       await popup.close();
     } finally {
