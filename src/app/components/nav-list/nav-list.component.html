@@ -23,6 +23,15 @@
     JSON export
   </button>
   <button mat-menu-item type="button" (click)="onJsonImport()">JSON import</button>
+  <button
+    mat-menu-item
+    type="button"
+    x-test="nav-remote-mocking"
+    routerLink="/remote-mocking"
+    (click)="navigate.emit()"
+  >
+    Remote mocking
+  </button>
   <a
     mat-menu-item
     target="_blank"

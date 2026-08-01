@@ -34,10 +34,11 @@ list, which is the whole point of the new layout.
     <div class="oh-header__context">
       <h1 class="oh-header__domain oh-mono">{{ domain }}</h1>
       <a
-        routerLink="cloud-sync"
+        routerLink="remote-mocking"
         [routerLinkActive]="'is-syncing'"
         class="oh-header__sync"
-        aria-label="Cloud sync"
+        aria-label="Remote mocking"
+        title="Remote mocking"
       >
         <oh-my-cloud-sync-svg></oh-my-cloud-sync-svg>
       </a>

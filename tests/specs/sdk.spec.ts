@@ -44,6 +44,8 @@ test.describe('with the SDK server running', () => {
       response: STORED_MOCK
     });
     await ohMy.setActive(SITE_DOMAIN);
+    // The link is opt-in now; nothing is contacted until it is switched on.
+    await ohMy.setRemote(true);
 
     await site.open();
     await site.waitForInjection();
@@ -64,6 +66,8 @@ test.describe('with the SDK server running', () => {
     // where the responses live on disk next to the server instead of in the
     // extension's storage.
     await ohMy.setActive(SITE_DOMAIN);
+    // The link is opt-in now; nothing is contacted until it is switched on.
+    await ohMy.setRemote(true);
 
     await site.open();
     await site.waitForInjection();
@@ -93,6 +97,8 @@ test.describe('with the SDK server running', () => {
       response: STORED_MOCK
     });
     await ohMy.setActive(SITE_DOMAIN);
+    // The link is opt-in now; nothing is contacted until it is switched on.
+    await ohMy.setRemote(true);
 
     await site.open();
     await site.waitForInjection();
@@ -113,6 +119,8 @@ test.describe('with the SDK server running', () => {
     server
   }) => {
     await ohMy.setActive(SITE_DOMAIN);
+    // The link is opt-in now; nothing is contacted until it is switched on.
+    await ohMy.setRemote(true);
 
     await site.open();
     await site.waitForInjection();

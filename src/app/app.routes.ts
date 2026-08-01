@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { PageMockComponent } from './pages/mock/mock.component';
 import { PageDataListComponent } from './pages/data-list/data-list.component';
 import { JsonExportComponent } from './pages/json-export/json-export.component';
-import { CloudSyncPageComponent } from './pages/cloud-sync/cloud-sync-page.component';
 
 const appRoutes: Routes = [
   {
@@ -37,8 +36,13 @@ const appRoutes: Routes = [
         component: JsonExportComponent
       },
       {
-        path: 'cloud-sync',
-        component: CloudSyncPageComponent
+        // Both remote sources — the local SDK server and, later, the cloud —
+        // under one page: they answer the same question.
+        path: 'remote-mocking',
+        loadComponent: () =>
+          import('./pages/remote-mocking/remote-mocking.component').then(
+            (m) => m.RemoteMockingComponent
+          )
       }
     ]
   }

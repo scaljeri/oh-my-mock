@@ -1,4 +1,4 @@
-import { connectWithLocalServer, dispatchRemote } from "./dispatch-remote";
+import { dispatchRemote } from "./dispatch-remote";
 import { appSources, ohMyMockStatus, payloadType } from "../shared/constants";
 import { IOhMessage, IOhMyPacketContext } from "../shared/packet-type";
 import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyUpsertData, IState, IOhMyMockResponse } from "../shared/type";
@@ -24,8 +24,6 @@ mb.streamByType$<IOhMyAPIRequest>(payloadType.DISPATCH_TO_SERVER, appSources.CON
 
     callback(result);
   });
-
-connectWithLocalServer();
 
 // -- ******************************
 

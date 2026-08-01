@@ -76,7 +76,7 @@ describe('TabNavComponent', () => {
     it('belongs to no tab on the pages that are not tabs', () => {
       expect(TabNavComponent.activeTab('/state-explore')).toBeNull();
       expect(TabNavComponent.activeTab('/json-export')).toBeNull();
-      expect(TabNavComponent.activeTab('/cloud-sync')).toBeNull();
+      expect(TabNavComponent.activeTab('/remote-mocking')).toBeNull();
     });
   });
 });

@@ -4,6 +4,9 @@ import { IOhMyMockResponse } from '../shared/types/api-response';
 import { ohMyMockStatus } from '../shared/constants';
 import { uniqueId } from '../shared/utils/unique-id';
 import { log } from './utils';
+import { StorageUtils } from '../shared/utils/storage';
+import { STORAGE_KEY } from '../shared/constants';
+import { IOhMyMock } from '../shared/types/store';
 
 /**
  * Optional link to the NodeJS SDK server (`libs/nodejs-sdk`), which serves mock
@@ -85,6 +88,31 @@ export const reconnectWithLocalServer = (url: string = DEFAULT_SDK_SERVER_URL): 
 };
 
 export const isConnectedWithLocalServer = (): boolean => isConnected;
+
+/** Stops trying, and forgets the socket. */
+export const disconnectFromLocalServer = (): void => {
+  socket?.close();
+  socket = undefined;
+  isConnected = false;
+};
+
+/**
+ * Reads the store and connects only if someone has asked for it.
+ *
+ * The service worker calls this on every start, which is why the check has to
+ * live here rather than at the call site: it is the difference between a browser
+ * that never touches the network for this and one that knocks six times, and
+ * fails six times, every time the worker wakes.
+ */
+export const connectIfEnabled = async (): Promise<void> => {
+  const store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
+
+  if (!store?.remote?.enabled) {
+    return;
+  }
+
+  connectWithLocalServer(store.remote.url || DEFAULT_SDK_SERVER_URL);
+};
 
 export const dispatchRemote = async (
   payload: IPacketPayload<IOhMyDispatchServerRequest, IOhMyPacketContext>

@@ -97,6 +97,13 @@ export enum payloadType {
   UPSERT = 'upsert',
   CRUD = 'crud',
   SETTINGS = 'settings',
+  /**
+   * "Are we linked to a mock server, and to which one?"
+   *
+   * Popup -> background. The socket lives in the service worker, so its state is
+   * not something the popup can read; it has to ask.
+   */
+  REMOTE_STATUS = 'remote-status',
   ACTIVATE_CSP_REMOVAL = 'activate-csp-removal',
   CSP_REMOVAL_ACTIVATED = 'csp-removal-started',
   READY = 'ready',

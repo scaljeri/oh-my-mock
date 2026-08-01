@@ -277,6 +277,28 @@ export class OhMyMockDriver {
   }
 
   /**
+   * Switches the link to the local mock server on or off.
+   *
+   * Off by default — the extension contacts nothing until asked, so a spec that
+   * wants the SDK has to say so. That is the whole point of the setting: a
+   * browser that never runs the SDK should never open the socket.
+   */
+  async setRemote(enabled: boolean, url?: string): Promise<void> {
+    await (await this.worker()).evaluate(
+      async ({ enabled, url }) => {
+        const stored = await chrome.storage.local.get('OhMyMock');
+        const store = (stored.OhMyMock ?? {}) as StoredStore & {
+          remote?: { enabled?: boolean; url?: string };
+        };
+
+        store.remote = { ...store.remote, enabled, ...(url && { url }) };
+        await chrome.storage.local.set({ OhMyMock: store });
+      },
+      { enabled, url }
+    );
+  }
+
+  /**
    * Sets the browser-global `popupActive` flag on the store.
    *
    * `setActive` turns it on along with everything else, because that is the

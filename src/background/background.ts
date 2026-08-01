@@ -23,7 +23,8 @@ import './eval-dispatcher';
 // import { injectContent } from './inject-content';
 import { removeCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
-import { connectWithLocalServer } from './dispatch-remote';
+import { connectIfEnabled } from './dispatch-remote';
+import { initRemoteLink } from './remote-link';
 import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
@@ -128,7 +129,12 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
 //     }
 //   } as IPacket<boolean>)
 // });
-connectWithLocalServer();
+// Only when someone asked for it. This used to run unconditionally, so every
+// browser with the extension installed knocked on `ws://localhost:8000` six
+// times per service-worker start — a socket error apiece — for a server the vast
+// majority never run. `src/app/pages/remote-mocking` is where it is switched on.
+initRemoteLink();
+void connectIfEnabled();
 
 // chrome.runtime.onInstalled.addListener(function (details) {
 //   chrome.storage.local.get([STORAGE_KEY], (state) => {

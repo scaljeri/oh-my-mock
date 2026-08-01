@@ -1,0 +1,82 @@
+<section class="oh-remote">
+  <h1 class="oh-remote__title">Remote mocking</h1>
+  <p class="oh-remote__lead">
+    Serve mocks from somewhere other than this browser.
+  </p>
+
+  <article class="oh-remote__card">
+    <header class="oh-remote__card-head">
+      <h2>Local mock server</h2>
+      @if (status) {
+        <span
+          class="oh-remote__badge"
+          x-test="remote-state"
+          [attr.data-state]="status.connected ? 'connected' : (status.enabled ? 'connecting' : 'off')"
+        >
+          {{ status.connected ? 'Connected' : (status.enabled ? 'Not reachable' : 'Off') }}
+        </span>
+      }
+    </header>
+
+    <p>
+      The NodeJS SDK (<code>libs/nodejs-sdk</code>) serves mocks straight from
+      disk, so a whole team can keep them in the repository. Its answer wins over
+      anything stored here; when it has nothing to say, the stored mock is used.
+    </p>
+
+    <!-- A plain div, not a <label>: the text is projected into the toggle's own
+      label, and `mat-slide-toggle` renders a `<button role="switch">`, which a
+      <label> cannot be for. Same reason as the request toolbar's toggles. -->
+    <div class="oh-remote__row">
+      <mat-slide-toggle
+        x-test="remote-toggle"
+        color="primary"
+        [checked]="!!status?.enabled"
+        (change)="onToggle($event.checked)"
+        >Connect to the local mock server</mat-slide-toggle
+      >
+    </div>
+
+    <label class="oh-remote__field">
+      <span class="oh-remote__label">Address</span>
+      <input
+        class="oh-remote__input"
+        type="text"
+        x-test="remote-url"
+        placeholder="ws://localhost:8000"
+        [formControl]="urlCtrl"
+        (blur)="onUrlChange()"
+      />
+    </label>
+
+    <!-- Said plainly, because it is the one thing that surprises people: the
+      extension cannot be connected *to*. A browser extension has no way to
+      accept an incoming connection, so it is always this side that dials. -->
+    <p class="oh-remote__note">
+      Switched off, nothing is contacted at all — no socket, no retries.
+    </p>
+  </article>
+
+  <article class="oh-remote__card">
+    <header class="oh-remote__card-head">
+      <h2>Cloud</h2>
+      <span class="oh-remote__badge" data-state="soon">Coming soon</span>
+    </header>
+
+    <p>
+      Store your mocks in the cloud and share them with colleagues or your CI/CD
+      tooling.
+    </p>
+
+    <p>
+      Fill in
+      <a
+        target="_blank"
+        rel="noopener"
+        href="https://docs.google.com/forms/d/e/1FAIpQLScNrjZSIxIP9I5wpWqKhTnWx1QtukhOTBqngjmAGSYosefMSg/viewform"
+        >this contact form</a
+      >
+      if you would like to hear when it is ready.
+    </p>
+  </article>
+</section>

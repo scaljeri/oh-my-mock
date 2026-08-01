@@ -6,6 +6,25 @@ import { ohMyDomain } from './state';
 
 export type origin = 'local' | 'cloud' | 'ngapimock';
 
+/**
+ * The link to a mock server that lives outside the browser.
+ *
+ * Browser-global, like `popupActive`: there is one such server, not one per
+ * domain.
+ *
+ * `enabled` defaults to **off**, and that is the point of it existing. The
+ * background used to open a socket to a hard-coded `ws://localhost:8000` the
+ * moment the service worker started, whether or not anyone was running the SDK
+ * — measured at six failed connection attempts over ~30s per worker start, each
+ * one a socket error in the console, for every user who never runs it.
+ */
+export interface IOhMyRemote {
+  /** Whether to connect at all. Off until someone asks for it. */
+  enabled?: boolean;
+  /** Where the local SDK server listens. */
+  url?: string;
+}
+
 /** The root of `chrome.storage`: one key, holding the store record. */
 export interface IStore {
   [STORAGE_KEY]: IOhMyMock;
@@ -23,6 +42,8 @@ export interface IOhMyMock {
   popupActive?: boolean;
   version: string;
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
+  /** The local mock server link — see `IOhMyRemote`. Absent means "never asked". */
+  remote?: IOhMyRemote;
   modifiedOn?: string;
   type: objectTypes.STORE;
 }
