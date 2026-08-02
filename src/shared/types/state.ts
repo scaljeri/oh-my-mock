@@ -1,6 +1,7 @@
 import { objectTypes } from '../constants';
 import { IOhMyContext } from './context';
 import { ohMyCookieId } from './cookie';
+import { ohMyGroupId } from './group';
 import { ohMyPresetId } from './preset';
 import { ohMyDataId } from './request';
 
@@ -19,6 +20,18 @@ export interface IOhMyAux {
    * Per domain, like everything else in `aux`.
    */
   stickyRequests?: ohMyDataId[];
+  /**
+   * The groups this domain has switched *off*.
+   *
+   * Opening a domain activates every group covering it, so the exception is
+   * what has to be stored — otherwise a group toggled off comes back on the
+   * next visit. Per domain, because that is what the toggle means: the group
+   * itself is untouched and stays on for the other domains it covers.
+   *
+   * The *order* is not here — it is the position in `IOhMyMock.groups`, which
+   * is browser-wide.
+   */
+  disabledGroups?: ohMyGroupId[];
   filterOptions?: Record<string, boolean>;
 }
 

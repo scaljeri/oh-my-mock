@@ -1,4 +1,5 @@
 import { METHODS, objectTypes } from '../constants';
+import { ohMyGroupId } from './group';
 import { IOhMyShallowMock, ohMyMockId } from './mock';
 import { ohMyPresetId } from './preset';
 
@@ -81,6 +82,15 @@ export interface IData extends IOhMyMockContext {
    * — see `docs/architecture/mock-groups.md`.
    */
   calledAt?: number;
+  /**
+   * The mock group this request belongs to.
+   *
+   * **Absent means this domain's own local group** — which is what every
+   * request stored before groups existed is. That default is why introducing
+   * groups rewrote no request records: see `GroupUtils.groupOf` and
+   * `src/background/ensure-groups.ts`.
+   */
+  groupId?: ohMyGroupId;
   lastModified: number;
   version: string;
   type: objectTypes.REQUEST;

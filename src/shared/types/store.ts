@@ -1,5 +1,6 @@
 import { objectTypes, resetStateOptions, STORAGE_KEY } from '../constants';
 import { IOhMyCookie } from './cookie';
+import { ohMyGroupId } from './group';
 import { IMock } from './mock';
 import { IData } from './request';
 import { ohMyDomain } from './state';
@@ -55,6 +56,19 @@ export interface IStore {
 
 export interface IOhMyMock {
   domains: ohMyDomain[];
+  /**
+   * Every mock group there is, **in the order that decides who answers**: when
+   * two active groups both know an endpoint, the one earlier in this list wins.
+   *
+   * The order is browser-wide rather than per domain. A group covers one domain
+   * in almost every case, so a per-domain order would be the same list written
+   * out once per domain — and each copy another thing to keep in step. It can
+   * become per-domain later without moving anything: this stays the default and
+   * a domain overrides it.
+   *
+   * Absent on a store that predates groups; `ensureGroups` fills it in.
+   */
+  groups?: ohMyGroupId[];
   /**
    * Whether the popup window is open.
    *

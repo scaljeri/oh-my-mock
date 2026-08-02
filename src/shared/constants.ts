@@ -53,7 +53,8 @@ export enum objectTypes {
   // string — see the note there.
   MOCK = 'response',
   STATE = 'state',
-  STORE = 'store'
+  STORE = 'store',
+  GROUP = 'group'
 }
 
 export enum packetType {

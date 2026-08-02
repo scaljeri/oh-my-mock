@@ -1,8 +1,10 @@
 # Mock groups
 
-**Status: agreed design, not built.** Nothing in `src` implements this yet. It is
-written down so the shape stops being reconstructed from scratch every time, and
-so the parts that are *decided* can be told apart from the parts that are not.
+**Status: model built, UI not.** The records, the resolution and the migration
+exist (`src/shared/types/group.ts`, `src/shared/utils/group.ts`,
+`src/background/ensure-groups.ts`); nothing reads them on the serving path and
+there is no group UI, so behaviour is unchanged so far. The rest is written down
+so the shape stops being reconstructed from scratch every time.
 
 ## The problem it solves
 
@@ -34,6 +36,14 @@ all but name — plus:
 | **source** | `local` (this browser), `server` (the SDK), `cloud` |
 | **domains** | one, usually. The list lives on the group; a request has no domain field of its own, and there is no reason to give it one |
 | **order** | groups are sortable, and the order decides who answers |
+
+**A group does not list its requests.** Membership is a tag on the request,
+`IData.groupId`, and **absent means the domain's own local group**. That keeps
+one source of truth rather than a list on the group and an id on the request
+that can drift apart — and it made the migration free: every request stored
+before groups existed is already, by that default, the local group's. Tagging
+them instead would have been a rewrite of every record in storage, which can
+half-finish.
 
 Rules:
 
@@ -101,15 +111,30 @@ stores what it is given, so importing twice leaves two requests for one url and
 `findRequest`, which answers with the first match, picks between them
 arbitrarily.
 
+## Settled since
+
+- **The sidebar becomes the group list, with the domains as a filter row above
+  it.** Not two levels: the groups are the thing being worked with, and burying
+  them one expand deep makes the common act — switching a group off — the slow
+  one. The domain row keeps the navigation that the sidebar is today.
+- **The order is global**, the position in `IOhMyMock.groups`. A group covers
+  one domain in almost every case, so a per-domain order would be the same list
+  written out once per domain, each copy another thing to keep in step. It can
+  become per-domain later without moving anything: global stays the default and
+  a domain overrides it.
+- **Switching a group off is per domain**, `IState.aux.disabledGroups`. It has
+  to be: the toggle means "not here", and the group stays on for the other
+  domains it covers. Storing the *exception* rather than the activation is what
+  makes "a group that arrives already applies" work.
+
 ## Still open
 
-- **What the sidebar becomes.** Two levels (domain, then groups), or groups for
-  the current domain with the domain coming from the tab.
-- **Is the order global or per domain?** Global is simpler. Per domain is what
-  people will expect once a group covers several.
 - **Editing a mock that came from someone else.** Detaching it on save keeps a
   later sync from silently reverting your change, but muddies where it came from.
   Making it read-only until copied is stricter and more honest.
+- **What a `server` group holds.** The SDK answers live, so such a group has no
+  stored requests — it is a source with a name. Whether it appears in the group
+  list at all, or stays on the Remote mocking page, is not decided.
 
 ## How this relates to presets
 

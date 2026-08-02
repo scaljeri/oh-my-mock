@@ -4,6 +4,7 @@ import { MigrateUtils } from "../shared/utils/migrate";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
 import { StoreUtils } from "../shared/utils/store";
+import { ensureGroups } from "./ensure-groups";
 import { liftOutRequests } from "./lift-out-requests";
 
 export async function initStorage(domain?: ohMyDomain): Promise<void> {
@@ -44,6 +45,11 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
 
     await StorageUtils.set(domain, state);
   }
+
+  // Last, so the domain just added above is included: give every domain the
+  // local group its mocks already belonged to. Shape-keyed and idempotent, so
+  // this is a no-op once each domain has one.
+  store = await ensureGroups(store);
 
   await StorageUtils.set(STORAGE_KEY, store);
 }

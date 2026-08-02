@@ -19,6 +19,7 @@ export * from './types/api-response';
 export * from './types/context';
 export * from './types/cookie';
 export * from './types/eval';
+export * from './types/group';
 export * from './types/mock';
 export * from './types/preset';
 export * from './types/request';
