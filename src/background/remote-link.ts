@@ -17,7 +17,6 @@ import {
 
 /** What the popup's Remote mocking page shows. */
 export interface IOhMyRemoteStatus {
-  enabled: boolean;
   target: ohMyRemoteTarget;
   host: string;
   port: number;
@@ -44,7 +43,7 @@ export function initRemoteLink(): void {
 
     const remote = (update.newValue as IOhMyMock | undefined)?.remote;
 
-    if (remote?.enabled) {
+    if (remote?.target === 'server') {
       void connectIfEnabled();
     } else {
       disconnectFromLocalServer();
@@ -60,7 +59,6 @@ export function initRemoteLink(): void {
       const remote = store?.remote;
 
       callback({
-        enabled: !!remote?.enabled,
         target: remote?.target || OH_MY_REMOTE_DEFAULTS.target,
         host: remote?.host || OH_MY_REMOTE_DEFAULTS.host,
         port: remote?.port || OH_MY_REMOTE_DEFAULTS.port,

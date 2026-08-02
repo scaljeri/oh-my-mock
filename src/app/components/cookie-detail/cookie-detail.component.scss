@@ -126,33 +126,8 @@
   }
 }
 
-.oh-choices {
-  display: flex;
-  gap: 6px;
-
-  &__option {
-    flex: 1;
-    text-align: center;
-    border: 1px solid t.$oh-border;
-    background: t.$oh-bg-surface;
-    color: t.$oh-text-subtle;
-    border-radius: t.$oh-radius;
-    padding: 7px 0;
-    font-size: t.$oh-size-code;
-    font-weight: t.$oh-weight-medium;
-    cursor: pointer;
-
-    &:hover {
-      border-color: t.$oh-border-strong;
-    }
-
-    &.is-selected {
-      border-color: t.$oh-brand;
-      background: t.$oh-brand-tint;
-      color: t.$oh-brand;
-    }
-  }
-}
+// The segmented control is shared — see `mixins/_choices.scss`.
+@include oh-choices;
 
 .oh-setting {
   display: flex;

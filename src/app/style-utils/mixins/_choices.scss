@@ -1,0 +1,48 @@
+@use '../tokens' as t;
+
+/**
+ * A row of mutually exclusive buttons — one selected, the rest not.
+ *
+ * Shared, because two pages now use it and the first copy was
+ * component-scoped: the Remote mocking page's source picker rendered as three
+ * bare buttons with no selected state at all, which on a control whose entire
+ * job is to show which one is chosen is worse than no styling.
+ *
+ * Expects `.oh-choices > .oh-choices__option`, with `is-selected` on the chosen
+ * one and `disabled` on any that cannot be chosen yet.
+ */
+@mixin oh-choices {
+  .oh-choices {
+    display: flex;
+    gap: 6px;
+
+    &__option {
+      flex: 1;
+      text-align: center;
+      border: 1px solid t.$oh-border;
+      background: t.$oh-bg-surface;
+      color: t.$oh-text-subtle;
+      border-radius: t.$oh-radius;
+      padding: 7px 0;
+      font-size: t.$oh-size-code;
+      font-weight: t.$oh-weight-medium;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        border-color: t.$oh-border-strong;
+      }
+
+      &.is-selected {
+        border-color: t.$oh-brand;
+        background: t.$oh-brand-tint;
+        color: t.$oh-brand;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: t.$oh-text-fainter;
+        background: t.$oh-bg-muted;
+      }
+    }
+  }
+}

@@ -1,70 +1,47 @@
 <section class="oh-remote">
   <h1 class="oh-remote__title">Remote mocking</h1>
   <p class="oh-remote__lead">
-    Serve mocks from somewhere other than this browser.
+    Which storage the mocks are read from. One of them — not one on top of
+    another.
   </p>
 
   <article class="oh-remote__card">
     <header class="oh-remote__card-head">
-      <h2>Where the mocks come from</h2>
-      @if (status) {
+      <h2>Source</h2>
+      @if (status && status.target === 'server') {
         <span
           class="oh-remote__badge"
           x-test="remote-state"
-          [attr.data-state]="
-            status.connected ? 'connected' : (status.enabled ? 'connecting' : 'off')
-          "
+          [attr.data-state]="status.connected ? 'connected' : 'connecting'"
         >
-          {{
-            status.connected
-              ? 'Connected'
-              : status.enabled
-                ? 'Not reachable'
-                : 'Off'
-          }}
+          {{ status.connected ? 'Connected' : 'Not reachable' }}
         </span>
       }
     </header>
 
-    <div class="oh-field">
-      <span class="oh-field__label">Source</span>
-      <div class="oh-choices">
-        @for (target of targets; track target.value) {
-          <button
-            class="oh-choices__option"
-            type="button"
-            [attr.x-test]="'remote-target-' + target.value"
-            [disabled]="!target.ready"
-            [title]="target.ready ? '' : 'Not available yet'"
-            [class.is-selected]="status?.target === target.value"
-            (click)="onTarget(target.value)"
-          >
-            {{ target.name }}
-          </button>
-        }
-      </div>
+    <div class="oh-choices">
+      @for (target of targets; track target.value) {
+        <button
+          class="oh-choices__option"
+          type="button"
+          [attr.x-test]="'remote-target-' + target.value"
+          [disabled]="!target.ready"
+          [title]="target.ready ? '' : 'Not available yet'"
+          [class.is-selected]="status?.target === target.value"
+          (click)="onTarget(target.value)"
+        >
+          {{ target.name }}
+        </button>
+      }
     </div>
 
-    @if (status?.target === 'cloud') {
-      <p class="oh-remote__note">
-        The cloud service is not available yet — nothing is contacted for it.
-        Fill in
-        <a
-          target="_blank"
-          rel="noopener"
-          href="https://docs.google.com/forms/d/e/1FAIpQLScNrjZSIxIP9I5wpWqKhTnWx1QtukhOTBqngjmAGSYosefMSg/viewform"
-          >this contact form</a
-        >
-        to hear when it is ready.
-      </p>
-    } @else {
-      <p>
-        A machine running the NodeJS SDK (<code>libs/nodejs-sdk</code>), which
-        serves mocks straight from disk so a whole team can keep them in the
-        repository. Its answer wins over anything stored here; when it has
-        nothing to say, the stored mock is used.
-      </p>
+    @for (target of targets; track target.value) {
+      @if (status?.target === target.value) {
+        <p class="oh-remote__note">{{ target.note }}</p>
+      }
+    }
 
+    @if (status?.target === 'server') {
       <div class="oh-remote__address">
         <label class="oh-field">
           <span class="oh-field__label">Host</span>
@@ -93,23 +70,26 @@
       <p class="oh-remote__resolved">
         Connects to <code x-test="remote-url">{{ status?.url }}</code>
       </p>
+
+      <!-- Said plainly, because it is the thing that surprises people about a
+        source being a source rather than a layer. -->
+      <p class="oh-remote__note">
+        A request this server has no answer for goes to the real server — the
+        mocks stored in this browser are not consulted while it is selected.
+      </p>
     }
 
-    <!-- A plain div, not a <label>: the text is projected into the toggle's own
-      label, and `mat-slide-toggle` renders a `<button role="switch">`, which a
-      <label> cannot be for. Same reason as the request toolbar's toggles. -->
-    <div class="oh-remote__row">
-      <mat-slide-toggle
-        x-test="remote-toggle"
-        color="primary"
-        [checked]="!!status?.enabled"
-        (change)="onToggle($event.checked)"
-        >Use this source</mat-slide-toggle
-      >
-    </div>
-
-    <p class="oh-remote__note">
-      Switched off, nothing is contacted at all — no socket, no retries.
-    </p>
+    @if (status?.target === 'cloud') {
+      <p class="oh-remote__note">
+        Not available yet — nothing is contacted for it. Fill in
+        <a
+          target="_blank"
+          rel="noopener"
+          href="https://docs.google.com/forms/d/e/1FAIpQLScNrjZSIxIP9I5wpWqKhTnWx1QtukhOTBqngjmAGSYosefMSg/viewform"
+          >this contact form</a
+        >
+        to hear when it is ready.
+      </p>
+    }
   </article>
 </section>

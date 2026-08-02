@@ -70,7 +70,29 @@ export async function receivedApiRequest(
   };
 
   const request = { method: inputRequest.method, url: inputRequest.url } as IOhMyAPIRequest;
-  const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest, payloadType.DISPATCH_TO_SERVER, context);
+
+  // Which storage the mocks come from. One of them, not one on top of another:
+  // picking a source means working from that source, so with a server selected
+  // this browser's own mocks are not consulted at all — a request the server has
+  // no answer for goes to the real server.
+  //
+  // The default is this extension's own storage, and then nothing is asked of
+  // the background at all. That also spares every request a message round trip
+  // it used to make whether or not anything was listening.
+  const servedElsewhere = contentState.store?.remote?.target === 'server';
+
+  const response = servedElsewhere
+    ? await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(inputRequest, payloadType.DISPATCH_TO_SERVER, context)
+    : { status: ohMyMockStatus.NO_CONTENT };
+
+  if (servedElsewhere) {
+    // Whatever the other storage said is the answer, including "nothing" — which
+    // the injected script reads as "not mocked" and lets through.
+    handleResponse(request, context, response, undefined, state);
+
+    return;
+  }
+
   const data = state ? StateUtils.findRequest(state, contentState.requests, inputRequest) : undefined;
 
   let mockId: ohMyMockId | undefined;

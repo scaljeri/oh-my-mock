@@ -1,33 +1,53 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { ohMyRemoteTarget } from '@shared/types/store';
 
 import { IOhMyRemoteStatus, RemoteService } from '../../services/remote.service';
 
-/** The two places mocks can come from when they do not come from this browser. */
-const TARGETS: { value: ohMyRemoteTarget; name: string; ready: boolean }[] = [
-  { value: 'server', name: 'Server', ready: true },
-  { value: 'cloud', name: 'Cloud', ready: false }
+/** The storages mocks can be read from. */
+const TARGETS: {
+  value: ohMyRemoteTarget;
+  name: string;
+  note: string;
+  ready: boolean;
+}[] = [
+  {
+    value: 'extension',
+    name: 'This browser',
+    note: 'The mocks stored in this extension — what the Requests tab edits.',
+    ready: true
+  },
+  {
+    value: 'server',
+    name: 'Server',
+    note: 'A machine running the NodeJS SDK, which serves mocks straight from disk so a whole team can keep them in the repository.',
+    ready: true
+  },
+  {
+    value: 'cloud',
+    name: 'Cloud',
+    note: 'Mocks shared through our cloud service.',
+    ready: false
+  }
 ];
 
 /**
- * Where mocks come from when they do not come from this browser.
+ * Which storage the mocks are read from.
  *
- * A server you run — `localhost` while you are working, or the IP of a machine
- * running the SDK for a whole team — or the cloud service, which does not exist
- * yet and says so.
+ * One of them, not one on top of another. Picking a source means working from
+ * that source: with a server selected this browser's own mocks are not consulted
+ * at all, and a request the server has no answer for goes to the real server.
  *
- * The link is **off until asked for**, and this page is where the asking
- * happens. The background used to open a socket to a hard-coded address on every
- * service-worker start, whether or not anyone ran a server at all.
+ * The default is this browser, and then nothing outside it is contacted — no
+ * socket, no retries. The background used to dial a hard-coded address on every
+ * service-worker start whether or not anyone ran a server.
  */
 @Component({
   selector: 'oh-my-remote-mocking',
   templateUrl: './remote-mocking.component.html',
   styleUrls: ['./remote-mocking.component.scss'],
-  imports: [ReactiveFormsModule, MatSlideToggle]
+  imports: [ReactiveFormsModule]
 })
 export class RemoteMockingComponent implements OnInit {
   private remoteService = inject(RemoteService);
@@ -108,7 +128,7 @@ export class RemoteMockingComponent implements OnInit {
     try {
       const deadline = Date.now() + 12_000;
 
-      while (this.status?.enabled && !this.status.connected) {
+      while (this.status?.target === 'server' && !this.status.connected) {
         if (Date.now() > deadline) {
           return;
         }
@@ -122,18 +142,13 @@ export class RemoteMockingComponent implements OnInit {
   }
 
   async onTarget(target: ohMyRemoteTarget): Promise<void> {
-    await this.remoteService.update({ target });
-    await this.refresh();
-  }
-
-  async onToggle(enabled: boolean): Promise<void> {
     await this.remoteService.update({
-      enabled,
+      target,
       host: this.hostCtrl.value,
       port: Number(this.portCtrl.value)
     });
 
-    if (enabled) {
+    if (target === 'server') {
       this.toast.success(`Connecting to ${this.status?.url ?? 'the server'}`, {
         duration: 2000
       });

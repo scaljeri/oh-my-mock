@@ -44,8 +44,9 @@ test.describe('with the SDK server running', () => {
       response: STORED_MOCK
     });
     await ohMy.setActive(SITE_DOMAIN);
-    // The link is opt-in now; nothing is contacted until it is switched on.
-    await ohMy.setRemote(true);
+    // The source is this browser unless said otherwise; picking the server also
+    // means this browser's own mocks are no longer consulted.
+    await ohMy.setRemote('server');
 
     await site.open();
     await site.waitForInjection();
@@ -66,8 +67,9 @@ test.describe('with the SDK server running', () => {
     // where the responses live on disk next to the server instead of in the
     // extension's storage.
     await ohMy.setActive(SITE_DOMAIN);
-    // The link is opt-in now; nothing is contacted until it is switched on.
-    await ohMy.setRemote(true);
+    // The source is this browser unless said otherwise; picking the server also
+    // means this browser's own mocks are no longer consulted.
+    await ohMy.setRemote('server');
 
     await site.open();
     await site.waitForInjection();
@@ -84,21 +86,28 @@ test.describe('with the SDK server running', () => {
     expect(await server.hitCount('GET /api/users')).toBe(0);
   });
 
-  test('a request the SDK has no answer for falls back to the stored mock', async ({
+  /**
+   * There is no falling back, and this test used to assert the opposite.
+   *
+   * A source is a source: with the server picked, this browser's own mocks are
+   * not consulted at all, so a request the server has never heard of goes to the
+   * real one. The stored mock below is seeded precisely so that "not consulted"
+   * is distinguishable from "there was nothing to consult".
+   */
+  test('a request the SDK has no answer for goes to the real server', async ({
     ohMy,
     site,
     server
   }) => {
-    // The SDK knows /api/json and /api/users; /api/headers it has never heard
-    // of, so it replies NO_CONTENT and the stored mock takes over.
     await ohMy.seedMock({
       domain: SITE_DOMAIN,
       url: '/api/headers',
       response: STORED_MOCK
     });
     await ohMy.setActive(SITE_DOMAIN);
-    // The link is opt-in now; nothing is contacted until it is switched on.
-    await ohMy.setRemote(true);
+    // The source is this browser unless said otherwise; picking the server also
+    // means this browser's own mocks are no longer consulted.
+    await ohMy.setRemote('server');
 
     await site.open();
     await site.waitForInjection();
@@ -109,8 +118,8 @@ test.describe('with the SDK server running', () => {
       responseType: 'json'
     });
 
-    expect(result.json).toEqual(STORED_MOCK);
-    expect(await server.hitCount('GET /api/headers')).toBe(0);
+    expect(result.json).not.toEqual(STORED_MOCK);
+    expect(await server.hitCount('GET /api/headers')).toBe(1);
   });
 
   test('an endpoint neither side knows still reaches the real server', async ({
@@ -119,8 +128,9 @@ test.describe('with the SDK server running', () => {
     server
   }) => {
     await ohMy.setActive(SITE_DOMAIN);
-    // The link is opt-in now; nothing is contacted until it is switched on.
-    await ohMy.setRemote(true);
+    // The source is this browser unless said otherwise; picking the server also
+    // means this browser's own mocks are no longer consulted.
+    await ohMy.setRemote('server');
 
     await site.open();
     await site.waitForInjection();

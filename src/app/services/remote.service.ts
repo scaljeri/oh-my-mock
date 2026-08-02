@@ -6,7 +6,6 @@ import { OhMyState } from './oh-my-store';
 
 /** What the background reports about the link to a mock server. */
 export interface IOhMyRemoteStatus {
-  enabled: boolean;
   target: ohMyRemoteTarget;
   host: string;
   port: number;

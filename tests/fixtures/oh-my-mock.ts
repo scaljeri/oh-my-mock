@@ -277,28 +277,22 @@ export class OhMyMockDriver {
   }
 
   /**
-   * Switches the link to the local mock server on or off.
+   * Picks which storage the mocks are read from.
    *
-   * Off by default — the extension contacts nothing until asked, so a spec that
-   * wants the SDK has to say so. That is the whole point of the setting: a
-   * browser that never runs the SDK should never open the socket.
+   * `extension` by default — this browser's own, and then nothing outside it is
+   * contacted at all. A spec that wants the SDK has to say so, and in saying so
+   * it also gives up this browser's mocks: a source is a source, not a layer.
    */
-  async setRemote(
-    enabled: boolean,
-    target?: 'server' | 'cloud'
-  ): Promise<void> {
-    await (await this.worker()).evaluate(
-      async ({ enabled, target }) => {
-        const stored = await chrome.storage.local.get('OhMyMock');
-        const store = (stored.OhMyMock ?? {}) as StoredStore & {
-          remote?: { enabled?: boolean; target?: string };
-        };
+  async setRemote(target: 'extension' | 'server' | 'cloud'): Promise<void> {
+    await (await this.worker()).evaluate(async (target) => {
+      const stored = await chrome.storage.local.get('OhMyMock');
+      const store = (stored.OhMyMock ?? {}) as StoredStore & {
+        remote?: { target?: string };
+      };
 
-        store.remote = { ...store.remote, enabled, ...(target && { target }) };
-        await chrome.storage.local.set({ OhMyMock: store });
-      },
-      { enabled, target }
-    );
+      store.remote = { ...store.remote, target };
+      await chrome.storage.local.set({ OhMyMock: store });
+    }, target);
   }
 
   /**

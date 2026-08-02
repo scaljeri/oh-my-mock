@@ -49,6 +49,8 @@ const RECONNECTION_ATTEMPTS = 5;
 
 let isConnected = false;
 let socket: Socket | undefined;
+/** Where `socket` was opened to, so a changed address can be noticed. */
+let connectedUrl: string | undefined;
 
 function createSocket(url: string): Socket {
   return io(url, {
@@ -69,6 +71,7 @@ export const connectWithLocalServer = (url: string = DEFAULT_SDK_SERVER_URL): vo
   }
 
   socket = createSocket(url);
+  connectedUrl = url;
 
   socket.io.on('error', () => {
     if (isConnected) { // state changed
@@ -107,6 +110,7 @@ export const isConnectedWithLocalServer = (): boolean => isConnected;
 export const disconnectFromLocalServer = (): void => {
   socket?.close();
   socket = undefined;
+  connectedUrl = undefined;
   isConnected = false;
 };
 
@@ -121,20 +125,24 @@ export const disconnectFromLocalServer = (): void => {
 export const connectIfEnabled = async (): Promise<void> => {
   const store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
 
-  const remote = store?.remote;
-
-  if (!remote?.enabled) {
+  // Only the local server is something to dial. `extension` needs no
+  // connection at all, and the cloud service does not exist yet — saying so
+  // here, rather than in the page, keeps the page from being the only thing
+  // standing between a half-built feature and a socket to nowhere.
+  if (store?.remote?.target !== 'server') {
     return;
   }
 
-  // The cloud service does not exist yet, so there is nothing to dial for it.
-  // Saying so here rather than in the page keeps the page from being the only
-  // thing standing between a half-built feature and a socket to nowhere.
-  if (remote.target === 'cloud') {
-    return;
+  const url = remoteUrl(store.remote);
+
+  // `connectWithLocalServer` is a no-op while a socket exists, which is right
+  // for repeated calls and wrong for a changed address: typing a new host or
+  // port would leave the old socket in place and the new address ignored.
+  if (socket && connectedUrl !== url) {
+    disconnectFromLocalServer();
   }
 
-  connectWithLocalServer(remoteUrl(remote));
+  connectWithLocalServer(url);
 };
 
 export const dispatchRemote = async (

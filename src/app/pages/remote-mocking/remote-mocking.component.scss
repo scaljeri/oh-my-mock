@@ -1,4 +1,8 @@
+@use 'mixins' as *;
 @use 'tokens' as t;
+
+// The source picker, same control as the cookie detail's SameSite row.
+@include oh-choices;
 
 .oh-remote {
   padding: t.$oh-space-6;

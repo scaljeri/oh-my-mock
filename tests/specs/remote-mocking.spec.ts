@@ -47,7 +47,7 @@ async function countKnocks(
 }
 
 test.describe('remote mocking', () => {
-  test('nothing is contacted until it is switched on', async ({
+  test('nothing is contacted while this browser is the source', async ({
     serviceWorker,
     site
   }) => {
@@ -65,7 +65,7 @@ test.describe('remote mocking', () => {
     }
   });
 
-  test('the page switches it on, and reports what happened', async ({
+  test('the page picks the source, and reports what happened', async ({
     context,
     extensionId,
     ohMy,
@@ -84,8 +84,19 @@ test.describe('remote mocking', () => {
 
       await popup.goto(`${popup.url().split('#')[0]}#/remote-mocking`);
 
-      // Off, and saying so.
-      await expect(popup.locator('[x-test="remote-state"]')).toHaveText('Off');
+      // This browser is the source, so there is nothing to be connected to and
+      // no badge — and the address fields belong to the server, so they are not
+      // on screen either.
+      await expect(popup.locator('[x-test="remote-state"]')).toHaveCount(0);
+      await expect(popup.locator('[x-test="remote-host"]')).toHaveCount(0);
+      expect(listener.count()).toBe(0);
+
+      await popup.locator('[x-test="remote-target-server"]').click();
+
+      // The address it offers, and then it dials. The listener accepts and drops
+      // rather than answering, so it never becomes a real SDK server — which is
+      // the point: the page must not claim "Connected" for something that is not
+      // answering.
       await expect(popup.locator('[x-test="remote-host"]')).toHaveValue(
         'localhost'
       );
@@ -93,18 +104,12 @@ test.describe('remote mocking', () => {
       await expect(popup.locator('[x-test="remote-url"]')).toHaveText(
         'ws://localhost:8000'
       );
-      expect(listener.count()).toBe(0);
 
-      await popup.locator('[x-test="remote-toggle"]').click();
-
-      // Now it dials. The listener accepts and drops, so it never becomes a
-      // real SDK server — which is the point: the page must not claim
-      // "Connected" for something that is not answering.
       await expect
         .poll(() => listener.count(), { timeout: 15_000 })
         .toBeGreaterThan(0);
-      await expect(popup.locator('[x-test="remote-state"]')).not.toHaveText(
-        'Off'
+      await expect(popup.locator('[x-test="remote-state"]')).toHaveText(
+        'Not reachable'
       );
 
       await popup.close();
@@ -134,6 +139,13 @@ test.describe('remote mocking', () => {
       });
       await popup.goto(`${popup.url().split('#')[0]}#/remote-mocking`);
 
+      // The address fields only exist once the server is the source, so picking
+      // it first — and dialling the default address — is unavoidable here.
+      await popup.locator('[x-test="remote-target-server"]').click();
+      await expect
+        .poll(() => onDefault.count(), { timeout: 15_000 })
+        .toBeGreaterThan(0);
+
       await popup.locator('[x-test="remote-host"]').fill('127.0.0.1');
       await popup.locator('[x-test="remote-port"]').fill(String(OTHER_PORT));
       // Committed on blur, so somewhere inert has to be clicked.
@@ -143,10 +155,14 @@ test.describe('remote mocking', () => {
         `ws://127.0.0.1:${OTHER_PORT}`
       );
 
-      await popup.locator('[x-test="remote-toggle"]').click();
+      // Whatever it had said to the old address, it stops there.
+      const oldAddressAtChange = onDefault.count();
 
       await expect.poll(() => onOther.count(), { timeout: 15_000 }).toBeGreaterThan(0);
-      expect(onDefault.count()).toBe(0);
+
+      // The address is where it dials, not a label beside where it dials: the
+      // new one is being talked to and the old one is not, any more.
+      expect(onDefault.count()).toBe(oldAddressAtChange);
 
       await popup.close();
     } finally {
@@ -178,7 +194,7 @@ test.describe('remote mocking', () => {
 
       // Even switched on with `cloud` stored, nothing is dialled: the background
       // refuses it rather than trusting the page to be the only guard.
-      await ohMy.setRemote(true, 'cloud');
+      await ohMy.setRemote('cloud');
       await popup.waitForTimeout(6_000);
 
       expect(listener.count()).toBe(0);

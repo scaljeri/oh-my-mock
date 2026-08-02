@@ -1,15 +1,18 @@
 /**
- * The local mock server, driven the way a developer drives it.
+ * The local mock server, picked the way a developer picks it.
  *
  * `sdk.spec.ts` covers the leg itself — what the background does with an answer
  * from the SDK, and what it does without one — by writing the setting straight
  * to storage. Nothing put the two halves together: a real SDK server on one
- * side, and the page you actually switch it on with on the other.
+ * side, and the page you actually choose it on the other.
  *
  * Which matters, because the page makes a claim the storage cannot: it says
  * **Connected**. That word is the only thing telling a developer whether the
  * server they just started is being talked to at all, and it is answered by the
  * service worker rather than by anything the page can see for itself.
+ *
+ * Throughout: a source is a source, not a layer. Choosing the server means this
+ * browser's own mocks are not consulted at all.
  */
 
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
@@ -36,7 +39,7 @@ async function openRemotePage(
   return popup;
 }
 
-test.describe('the local mock server, switched on from the page', () => {
+test.describe('the local mock server, picked on the page', () => {
   let sdk: SdkServer | undefined;
 
   test.afterEach(async () => {
@@ -65,12 +68,12 @@ test.describe('the local mock server, switched on from the page', () => {
     await site.open();
     await site.waitForInjection();
 
-    // Before switching on, the stored mock is what the page gets.
-    const beforeToggle = await site.request({
+    // The default source is this browser, so its own mock is what the page gets.
+    const beforePick = await site.request({
       url: '/api/json',
       responseType: 'json'
     });
-    expect(beforeToggle.json).toEqual(STORED_MOCK);
+    expect(beforePick.json).toEqual(STORED_MOCK);
 
     const popup = await openRemotePage(
       context,
@@ -78,8 +81,10 @@ test.describe('the local mock server, switched on from the page', () => {
       await ohMy.tabIdFor(SITE_ORIGIN)
     );
 
-    await expect(popup.locator('[x-test="remote-state"]')).toHaveText('Off');
-    await popup.locator('[x-test="remote-toggle"]').click();
+    // No badge at all while this browser is the source — there is nothing to be
+    // connected to.
+    await expect(popup.locator('[x-test="remote-state"]')).toHaveCount(0);
+    await popup.locator('[x-test="remote-target-server"]').click();
 
     // The word the page exists to say. It comes from the service worker's own
     // socket, so it is the one thing here that cannot be faked by the page.
@@ -88,19 +93,20 @@ test.describe('the local mock server, switched on from the page', () => {
       { timeout: 15_000 }
     );
 
-    const afterToggle = await site.request({
+    const afterPick = await site.request({
       url: '/api/json',
       responseType: 'json'
     });
 
-    // The SDK's answer wins over the stored mock — and neither left the browser.
-    expect(afterToggle.json).toEqual(FROM_SDK);
+    // The SDK answers now, in place of the stored mock — and neither request
+    // left the browser.
+    expect(afterPick.json).toEqual(FROM_SDK);
     expect(await server.hitCount('GET /api/json')).toBe(0);
 
     await popup.close();
   });
 
-  test('switching it off hands the request back to the stored mock', async ({
+  test('picking this browser again hands the request back to its own mock', async ({
     context,
     extensionId,
     ohMy,
@@ -115,7 +121,7 @@ test.describe('the local mock server, switched on from the page', () => {
       response: STORED_MOCK
     });
     await ohMy.setActive(SITE_DOMAIN);
-    await ohMy.setRemote(true);
+    await ohMy.setRemote('server');
 
     await site.open();
     await site.waitForInjection();
@@ -133,11 +139,11 @@ test.describe('the local mock server, switched on from the page', () => {
       (await site.request({ url: '/api/json', responseType: 'json' })).json
     ).toEqual(FROM_SDK);
 
-    await popup.locator('[x-test="remote-toggle"]').click();
-    await expect(popup.locator('[x-test="remote-state"]')).toHaveText('Off');
+    await popup.locator('[x-test="remote-target-extension"]').click();
+    await expect(popup.locator('[x-test="remote-state"]')).toHaveCount(0);
 
-    // The server is still running and still has an answer; it is simply not
-    // being asked any more. Mocking itself is untouched.
+    // The server is still running and still has an answer; it is simply not the
+    // source any more. Mocking itself is untouched.
     const afterOff = await site.request({
       url: '/api/json',
       responseType: 'json'
@@ -177,8 +183,8 @@ test.describe('the local mock server, switched on from the page', () => {
       await ohMy.tabIdFor(SITE_ORIGIN)
     );
 
-    // Switched on with nothing there: it says so rather than claiming success.
-    await popup.locator('[x-test="remote-toggle"]').click();
+    // Picked with nothing there: it says so rather than claiming success.
+    await popup.locator('[x-test="remote-target-server"]').click();
     await expect(popup.locator('[x-test="remote-state"]')).toHaveText(
       'Not reachable',
       { timeout: 15_000 }
@@ -186,11 +192,11 @@ test.describe('the local mock server, switched on from the page', () => {
 
     sdk = await SdkServer.start();
 
-    // Toggling off and on again is the "try now" — the page has no other button
-    // for it, and the attempts are bounded on purpose.
-    await popup.locator('[x-test="remote-toggle"]').click();
-    await expect(popup.locator('[x-test="remote-state"]')).toHaveText('Off');
-    await popup.locator('[x-test="remote-toggle"]').click();
+    // Picking away and back is the "try now" — the page has no other button for
+    // it, and the attempts are bounded on purpose.
+    await popup.locator('[x-test="remote-target-extension"]').click();
+    await expect(popup.locator('[x-test="remote-state"]')).toHaveCount(0);
+    await popup.locator('[x-test="remote-target-server"]').click();
 
     await expect(popup.locator('[x-test="remote-state"]')).toHaveText(
       'Connected',

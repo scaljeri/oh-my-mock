@@ -19,13 +19,14 @@ export type origin = 'local' | 'cloud' | 'ngapimock';
  * one a socket error in the console, for every user who never runs it.
  */
 export interface IOhMyRemote {
-  /** Whether to connect at all. Off until someone asks for it. */
-  enabled?: boolean;
   /**
-   * Which kind of server: one you run yourself, or the cloud service.
+   * Which storage the mocks are read from. One of them, not one on top of
+   * another — picking a source means working from that source, and a request it
+   * has no answer for goes to the real server rather than to whatever another
+   * source happens to hold.
    *
    * `cloud` does not exist yet. It is in the type because the choice is the
-   * user's and the page shows both — leaving it out would make the page lie
+   * user's and the page shows all three; leaving it out would make the page lie
    * about what it is offering.
    */
   target?: ohMyRemoteTarget;
@@ -34,11 +35,15 @@ export interface IOhMyRemote {
   port?: number;
 }
 
-export type ohMyRemoteTarget = 'server' | 'cloud';
+/**
+ * `extension` is this browser's own storage — the default, and what the popup
+ * edits. The other two are storages that live elsewhere.
+ */
+export type ohMyRemoteTarget = 'extension' | 'server' | 'cloud';
 
 /** What a `remote` with nothing filled in yet means. */
 export const OH_MY_REMOTE_DEFAULTS = {
-  target: 'server' as ohMyRemoteTarget,
+  target: 'extension' as ohMyRemoteTarget,
   host: 'localhost',
   port: 8000
 };
