@@ -106,7 +106,10 @@ export async function receivedApiRequest(
       // HIT. This used to be a patch of `$.data` on the domain state, which
       // rewrote every request the domain knows about for the sake of one
       // timestamp. A request is its own record now, so this writes just that.
+      // `lastHit` orders the list; `calledAt` is the claim that it happened, and
+      // this is the only place allowed to make it.
       data.lastHit = Date.now();
+      data.calledAt = data.lastHit;
       OhMySendToBg.full(data, payloadType.REQUEST, context, 'content;request-hit');
 
       if (!mock) {

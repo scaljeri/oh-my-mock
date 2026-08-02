@@ -151,8 +151,8 @@ preset selector and the overflow menu moved into the toolbar below. -->
           ></span>
           <span class="oh-row__meta">
             {{ row.requestType | lowercase }}
-            @if (row.lastHit) {
-              · last hit {{ row.lastHit | date: 'shortTime' }}
+            @if (row.calledAt) {
+              · last hit {{ row.calledAt | date: 'shortTime' }}
             }
             @if (row.mocks[row.selected[context.preset]]?.label; as label) {
               · {{ label }}

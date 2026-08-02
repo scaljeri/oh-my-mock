@@ -60,7 +60,27 @@ export interface IData extends IOhMyMockContext {
   selected: Record<ohMyPresetId, ohMyMockId>;
   enabled: Record<ohMyPresetId, boolean>;
   mocks: Record<ohMyMockId, IOhMyShallowMock>;
+  /**
+   * Where this request sits in the list — newest first.
+   *
+   * Named for what it usually is and not for what it always is: a real
+   * interception writes the moment it happened, but `importJSON` re-stamps every
+   * imported request with a clock of its own to preserve the order they had in
+   * the backup, and `DataUtils.create` fills it in for a request typed by hand.
+   * So it orders the list; it does not answer "was this ever called".
+   *
+   * `calledAt` answers that.
+   */
   lastHit: number;
+  /**
+   * When this browser last intercepted this request — absent if it never has.
+   *
+   * The interception is the only writer. A request that was imported, or added
+   * by hand, has none, and the list says nothing about a last hit for it rather
+   * than inventing one. That distinction is what lets the list mean *traffic*
+   * — see `docs/architecture/mock-groups.md`.
+   */
+  calledAt?: number;
   lastModified: number;
   version: string;
   type: objectTypes.REQUEST;

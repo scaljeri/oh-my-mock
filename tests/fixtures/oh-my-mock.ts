@@ -104,6 +104,8 @@ export interface StoredRequest {
   id?: string;
   url?: string;
   method?: string;
+  /** Set by the interception only — see `called-at.spec.ts`. */
+  calledAt?: number;
   enabled?: Record<string, boolean>;
   /** Which response serves this request, per preset. */
   selected?: Record<string, string>;

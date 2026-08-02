@@ -84,8 +84,8 @@ method + url line with its metadata, then the saved-response chips. -->
 
   <p class="oh-detail__meta">
     {{ request.requestType | lowercase }} · {{ responseCountLabel }}
-    @if (request.lastHit) {
-      · last hit {{ request.lastHit | date: 'shortTime' }}
+    @if (request.calledAt) {
+      · last hit {{ request.calledAt | date: 'shortTime' }}
     }
   </p>
 </header>
