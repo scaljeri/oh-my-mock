@@ -93,7 +93,9 @@ export async function receivedApiRequest(
     return;
   }
 
-  const data = state ? StateUtils.findRequest(state, contentState.requests, inputRequest) : undefined;
+  const data = state
+    ? StateUtils.findRequest(state, contentState.requests, inputRequest, contentState.activeGroups())
+    : undefined;
 
   let mockId: ohMyMockId | undefined;
   let mock: IMock | undefined;

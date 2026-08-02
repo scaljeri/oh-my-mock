@@ -1,7 +1,8 @@
 import { BehaviorSubject, distinctUntilChanged, filter, Observable } from "rxjs";
 import { objectTypes, STORAGE_KEY } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
-import { IData, IMock, IOhMyMock, IOhMyRequests, IState } from "../shared/type";
+import { IData, IMock, IOhMyGroup, IOhMyMock, IOhMyRequests, IState, ohMyGroupId } from "../shared/type";
+import { GroupUtils } from "../shared/utils/group";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
 /**
@@ -52,6 +53,16 @@ export class OhMyContentState {
    */
   requests: IOhMyRequests = {};
 
+  /**
+   * The mock groups, by id — which of this domain's requests answer at all.
+   *
+   * Loaded alongside the requests rather than on demand: the lookup runs on
+   * every intercepted call and cannot wait on storage. Browser-wide like the
+   * requests, so this holds groups of other domains too; `GroupUtils.activeFor`
+   * narrows.
+   */
+  groups: Record<ohMyGroupId, IOhMyGroup> = {};
+
   constructor() {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
@@ -65,16 +76,29 @@ export class OhMyContentState {
         }
       }
 
+      if (GroupUtils.isGroup(update.newValue ?? update.oldValue)) {
+        if (update.newValue) {
+          this.groups[key] = update.newValue as IOhMyGroup;
+        } else {
+          delete this.groups[key];
+        }
+      }
+
       if (key === OhMyContentState.host) {
         this.state = update.newValue as IState;
         // A request this script has not seen before arrives as two updates -
         // the record and the id list - in no guaranteed order.
         this.loadRequests();
+        // `aux.disabledGroups` lives on the state, so switching a group off
+        // arrives here — and the group records it names may not be loaded.
+        this.loadGroups();
         this.publishActive();
       } else if (key === STORAGE_KEY) {
         // `popupActive` lives on the store, so a popup opening or closing
         // arrives here rather than on the domain's own record.
         this.store = update.newValue as IOhMyMock;
+        // `store.groups` is both the list of groups and their order.
+        this.loadGroups();
         this.publishActive();
       }
 
@@ -141,7 +165,7 @@ export class OhMyContentState {
   async init() {
     await this.initContext();
 
-    await this.loadRequests();
+    await Promise.all([this.loadRequests(), this.loadGroups()]);
   }
 
   private isRequestUpdate(update: { newValue: unknown, oldValue?: unknown }): boolean {
@@ -159,6 +183,40 @@ export class OhMyContentState {
     }
 
     Object.assign(this.requests, await StorageUtils.getMany<IData>(missing));
+  }
+
+  /** Fetches the group records this script does not hold yet. */
+  private async loadGroups(): Promise<void> {
+    const missing = (this.store?.groups ?? []).filter(id => !this.groups[id]);
+
+    if (!missing.length) {
+      return;
+    }
+
+    Object.assign(this.groups, await StorageUtils.getMany<IOhMyGroup>(missing));
+  }
+
+  /**
+   * The groups answering for this domain, best first.
+   *
+   * The domain's own local group is included whether or not its record has been
+   * written — its id is derived, and `ensureGroups` does not run on every path.
+   * Waiting for the record would mean serving nothing on a domain that has
+   * mocks, which is the failure this whole model is built to avoid.
+   */
+  activeGroups(): IOhMyGroup[] {
+    if (!this.state) {
+      return [];
+    }
+
+    const known = Object.values(this.groups);
+    const local = GroupUtils.localFor(known, this.state.domain);
+
+    return GroupUtils.activeFor(
+      local ? known : [...known, GroupUtils.defaultLocalFor(this.state.domain)],
+      this.state,
+      this.store?.groups ?? []
+    );
   }
 
   async get<T = unknown>(key = STORAGE_KEY): Promise<T> {

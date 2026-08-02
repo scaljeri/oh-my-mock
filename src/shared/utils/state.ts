@@ -1,5 +1,6 @@
 import { objectTypes } from '../constants';
-import { IData, IOhMyRequests, IOhMyUpsertData, IState, ohMyCookieId, ohMyDataId, ohMyDomain } from '../type';
+import { IData, IOhMyGroup, IOhMyRequests, IOhMyUpsertData, IState, ohMyCookieId, ohMyDataId, ohMyDomain } from '../type';
+import { GroupUtils } from './group';
 import { timestamp } from './timestamp';
 import { compareUrls } from './urls';
 
@@ -83,10 +84,8 @@ export class StateUtils {
    * being the ordinary way to get there. Treating an absent stored type as
    * "matches either" is what a wildcard should have meant all along.
    */
-  static findRequest(state: IState, requests: IOhMyRequests, search: IOhMyUpsertData): IData | undefined {
-    const result = state.requests
-      // A request record can be missing from the map while it is still loading.
-      .map(id => requests[id]).filter((v): v is IData => !!v)
+  static findRequest(state: IState, requests: IOhMyRequests, search: IOhMyUpsertData, active?: IOhMyGroup[]): IData | undefined {
+    const result = this.candidates(state, requests, active)
       .find(v => {
         return (
           (search.id && v.id === search.id) || !search.id &&
@@ -103,6 +102,41 @@ export class StateUtils {
       });
 
     return result ? { ...result } : undefined;
+  }
+
+  /**
+   * This state's requests in the order they should be considered.
+   *
+   * `active` is the mock groups answering for the domain, best first. Given it,
+   * a request whose group is switched off is not a candidate at all, and when
+   * two groups both know an endpoint the one from the higher group is reached
+   * first — which is the whole of "the higher one answers".
+   *
+   * Omitted, every stored request is a candidate in stored order. That is what
+   * the callers away from the serving path want: the export dialog and the
+   * popup's own lookups are about what *exists*, not about what would answer.
+   */
+  private static candidates(state: IState, requests: IOhMyRequests, active?: IOhMyGroup[]): IData[] {
+    const found = state.requests
+      // A request record can be missing from the map while it is still loading.
+      .map(id => requests[id]).filter((v): v is IData => !!v);
+
+    if (!active) {
+      return found;
+    }
+
+    const local = GroupUtils.localFor(active, state.domain);
+    const rank = (data: IData): number => {
+      const id = GroupUtils.groupOf(data, local);
+      const index = active.findIndex(g => g.id === id);
+
+      return index;
+    };
+
+    return found
+      .filter(data => rank(data) !== -1)
+      // Stable, so requests within one group keep the order they are stored in.
+      .sort((a, b) => rank(a) - rank(b));
   }
 
   /**

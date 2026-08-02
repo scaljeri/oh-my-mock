@@ -106,4 +106,67 @@ test.describe('the sidebar group list', () => {
 
     await reopened.close();
   });
+
+  /**
+   * The toggle has to change what the page gets, or it is decoration. Until the
+   * lookup read the groups it did exactly that: the row dimmed, the exception
+   * was stored, and the mock carried on being served — no throw, no log.
+   */
+  test('switching it off stops the mock being served', async ({
+    context,
+    extensionId,
+    ohMy,
+    site,
+    server
+  }) => {
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { from: 'the group' }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+
+    await site.open();
+    await site.waitForInjection();
+
+    expect(
+      (await site.request({ url: '/api/json', responseType: 'json' })).json
+    ).toEqual({ from: 'the group' });
+
+    const popup = await openPopup(context, extensionId, {
+      domain: SITE_DOMAIN,
+      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
+    });
+
+    const group = popup.locator('[x-test="group-item"]');
+    await group.click();
+    await expect(group).toHaveAttribute('aria-checked', 'false');
+
+    // The request now reaches the real server, which is the observable half of
+    // "this group does not answer here".
+    const before = await server.hitCount('GET /api/json');
+
+    await expect
+      .poll(async () =>
+        JSON.stringify(
+          (await site.request({ url: '/api/json', responseType: 'json' })).json
+        )
+      )
+      .not.toContain('the group');
+
+    expect(await server.hitCount('GET /api/json')).toBeGreaterThan(before);
+
+    // And switching it back on serves it again — the mock was never touched.
+    await group.click();
+    await expect(group).toHaveAttribute('aria-checked', 'true');
+
+    await expect
+      .poll(
+        async () =>
+          (await site.request({ url: '/api/json', responseType: 'json' })).json
+      )
+      .toEqual({ from: 'the group' });
+
+    await popup.close();
+  });
 });
