@@ -10,6 +10,7 @@ because the logic is spread across contexts that do not share memory.
 | [interception.md](./interception.md) | you are wondering why this patches `fetch` instead of using an extension API |
 | [request-normalisation.md](./request-normalisation.md) | you are picking up the open refactor that moves requests out of the domain record |
 | [cookie-mocking.md](./cookie-mocking.md) | you are building the Cookies tab, or wondering why cookies cannot ride on the response mock |
+| [mock-groups.md](./mock-groups.md) | you are picking up sharing mocks between people — the agreed design, and why nothing merges |
 
 ## The shape of the thing in one paragraph
 
