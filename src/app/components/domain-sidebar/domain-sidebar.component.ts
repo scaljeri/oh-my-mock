@@ -11,18 +11,20 @@ import {
   inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IOhMyContext, IOhMyMock, ohMyDomain } from '@shared/type';
+import { IOhMyContext, IOhMyMock, IState, ohMyDomain } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { StorageUtils } from '@shared/utils/storage';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { AppStateService } from '../../services/app-state.service';
+import { StorageService } from '../../services/storage.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { HarImportComponent } from '../har-import/har-import.component';
 import {
   DomainSummaryService,
   IOhMyDomainSummary
 } from './domain-summary.service';
+import { GroupListService, IOhMyGroupRow } from './group-list.service';
 import { MatIcon } from '@angular/material/icon';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NavListComponent } from '../nav-list/nav-list.component';
@@ -35,15 +37,14 @@ import { NavListComponent } from '../nav-list/nav-list.component';
 const REFRESH_DEBOUNCE = 200;
 
 /**
- * The left column of the three-pane shell: search, the domains OhMyMock knows
- * about with their counts, and the actions that create new ones. See the
- * `aside` in `design/Mock Manager v2.dc.html`.
+ * The left column of the three-pane shell: the **mock groups** answering for the
+ * domain being looked at, with the domains themselves as a filter row above.
  *
- * The counts are not in the store — it only holds `domains: string[]` — so
- * they are gathered per domain by `DomainSummaryService`, and re-gathered
- * whenever anything writes to `chrome.storage`. That listener is what makes a
- * request captured by the content script show up here without the popup being
- * told about it.
+ * Neither list is in the store — it holds `domains: string[]` and `groups:
+ * id[]`, no counts — so both are gathered per domain, by `DomainSummaryService`
+ * and `GroupListService`, and re-gathered whenever anything writes to
+ * `chrome.storage`. That listener is what makes a request captured by the
+ * content script show up here without the popup being told about it.
  */
 @Component({
   selector: 'oh-my-domain-sidebar',
@@ -55,6 +56,8 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   private appState = inject(AppStateService);
   private storeService = inject(OhMyState);
   private summaryService = inject(DomainSummaryService);
+  private groupListService = inject(GroupListService);
+  private storageService = inject(StorageService);
   private cdr = inject(ChangeDetectorRef);
   private dialog = inject(MatDialog);
 
@@ -66,6 +69,8 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   domains: IOhMyDomainSummary[] = [];
   visibleDomains: IOhMyDomainSummary[] = [];
   activeDomain = '';
+  /** The groups covering `activeDomain`, in the order that decides who answers. */
+  groups: IOhMyGroupRow[] = [];
 
   /** The inline "add domain" form is only shown once the button is pressed. */
   isAdding = false;
@@ -76,11 +81,27 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
   private isDestroyed = false;
 
+  /**
+   * Which group read is the current one.
+   *
+   * `refreshGroups` is several awaits long — the store, the state, then the
+   * requests — so two of them overlap easily: toggling a group twice in quick
+   * succession, or a storage write arriving while a domain switch is still
+   * resolving. Without this, the slower read finishes last and puts its older
+   * answer on screen, and the sidebar then disagrees with what is stored until
+   * something else happens to redraw it.
+   */
+  private groupReadId = 0;
+
   ngOnInit(): void {
     this.subscriptions.add(
       this.appState.domain$.subscribe((domain) => {
         this.activeDomain = domain ?? '';
         this.detectChanges();
+        // The group list is per domain, so switching domain changes it — and
+        // nothing writes to storage on a switch, so the listener below will
+        // not fire for it.
+        void this.refreshGroups();
       })
     );
 
@@ -104,6 +125,68 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
 
     this.domains = await this.summaryService.summariseAll(store?.domains ?? []);
     this.applyFilter();
+
+    await this.refreshGroups(store);
+  }
+
+  /**
+   * Re-reads the groups covering the domain on screen.
+   *
+   * Separate from `refresh` because switching domain changes this list without
+   * writing anything, and `refresh` is driven by storage writes.
+   */
+  async refreshGroups(store?: IOhMyMock): Promise<void> {
+    const read = ++this.groupReadId;
+
+    if (!this.activeDomain) {
+      this.groups = [];
+      this.detectChanges();
+
+      return;
+    }
+
+    const resolved = store ?? (await this.storeService.getStore());
+    // Typed as always resolving a state, but `chrome.storage` resolves
+    // `undefined` for a key it does not hold.
+    const state: IState | undefined = await this.storageService.get<IState>(
+      this.activeDomain
+    );
+    const rows = await this.groupListService.rowsFor(resolved, state);
+
+    // A newer read started while this one was waiting: drop this answer rather
+    // than let it overwrite the fresher one.
+    if (read !== this.groupReadId) {
+      return;
+    }
+
+    this.groups = rows;
+    this.detectChanges();
+  }
+
+  /**
+   * Switches a group on or off **for this domain**.
+   *
+   * The group itself is untouched: what is written is the domain's list of
+   * exceptions, so the same group keeps answering on the other domains it
+   * covers.
+   */
+  async onToggleGroup(row: IOhMyGroupRow): Promise<void> {
+    const state: IState | undefined = await this.storageService.get<IState>(
+      this.activeDomain
+    );
+
+    if (!state) {
+      return;
+    }
+
+    const disabledGroups = GroupListService.toggled(
+      state,
+      row.group.id,
+      !row.enabled
+    );
+
+    await this.storeService.updateAux({ disabledGroups }, this.context);
+    await this.refreshGroups();
   }
 
   applyFilter(): void {
@@ -176,6 +259,10 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
 
   trackByDomain(_index: number, summary: IOhMyDomainSummary): string {
     return summary.domain;
+  }
+
+  trackByGroup(_index: number, row: IOhMyGroupRow): string {
+    return row.group.id;
   }
 
   private detectChanges(): void {

@@ -23,6 +23,20 @@ import { StorageUtils } from '../shared/utils/storage';
  * forever. Shape-keyed makes it idempotent and safe on every startup.
  */
 export async function ensureGroups(store: IOhMyMock): Promise<IOhMyMock> {
+  // The listed groups first, which is a bounded read. This runs on every store
+  // write — the popup opening is one — and the whole-storage scan below costs
+  // the same as reading every mock the browser holds. In the ordinary case
+  // there is nothing to do and it never happens.
+  const listed = Object.values(
+    await StorageUtils.getMany<IOhMyGroup>([...(store.groups ?? [])])
+  ).filter((v): v is IOhMyGroup => GroupUtils.isGroup(v));
+
+  if (store.domains.every(domain => GroupUtils.localFor(listed, domain))) {
+    return store;
+  }
+
+  // Something is missing a group. Read everything, so a group that exists but
+  // never reached the store list is found rather than duplicated.
   // `null` reads the whole of storage; `StorageUtils.get` only takes one key.
   const all = await StorageUtils.chrome.storage.local.get(null);
   const groups = Object.values(all).filter((v): v is IOhMyGroup =>
@@ -37,11 +51,7 @@ export async function ensureGroups(store: IOhMyMock): Promise<IOhMyMock> {
       continue;
     }
 
-    const group = GroupUtils.init({
-      name: GroupUtils.DEFAULT_LOCAL_NAME,
-      source: 'local',
-      domains: [domain]
-    });
+    const group = GroupUtils.defaultLocalFor(domain);
 
     groups.push(group);
     created.push(group);

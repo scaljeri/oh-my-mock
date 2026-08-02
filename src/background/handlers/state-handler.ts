@@ -4,6 +4,7 @@ import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
+import { ensureGroups } from "../ensure-groups";
 import { error } from "../utils";
 
 export class OhMyStateHandler {
@@ -31,6 +32,12 @@ export class OhMyStateHandler {
 
       if (!StoreUtils.hasState(store, domain)) {
         store = StoreUtils.setState(store, state);
+        // A domain that is new here needs the local group its mocks belong to.
+        // `initStorage` only runs at worker start and on reset, so a domain
+        // that comes into being afterwards — the popup's "Add domain", a site
+        // being activated — would otherwise never get one, and the sidebar
+        // would show it as having no groups for ever.
+        store = await ensureGroups(store);
 
         await OhMyStateHandler.StorageUtils.setStore(store);
       }

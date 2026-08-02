@@ -19,6 +19,35 @@ export class GroupUtils {
   /** What a domain's own group is called when nobody has renamed it. */
   static readonly DEFAULT_LOCAL_NAME = 'My mocks';
 
+  /**
+   * The id of a domain's own local group — derived, not generated.
+   *
+   * Derived so that nothing depends on *when* the record was created. The
+   * record exists so the group can be renamed and ordered, and it is written by
+   * `ensureGroups`, which only runs on some paths; a reader that needed it to
+   * have run already would show a domain as having no mocks at all until it
+   * did. With the id derivable, the local group can be spoken about — counted,
+   * switched off — before its record exists, and the record agrees with what
+   * was assumed when it arrives.
+   *
+   * A local group therefore covers exactly one domain. That is what local
+   * means: this browser's own mocks for this site. Groups that span domains
+   * come from a server or the cloud, and those carry generated ids.
+   */
+  static localIdFor(domain: ohMyDomain): ohMyGroupId {
+    return `local:${domain}`;
+  }
+
+  /** The domain's own group as it stands before anyone has edited it. */
+  static defaultLocalFor(domain: ohMyDomain): IOhMyGroup {
+    return this.init({
+      id: this.localIdFor(domain),
+      name: this.DEFAULT_LOCAL_NAME,
+      source: 'local',
+      domains: [domain]
+    });
+  }
+
   static init(base: Partial<IOhMyGroup> = {}): IOhMyGroup {
     return {
       id: uniqueId(),

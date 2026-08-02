@@ -25,8 +25,28 @@ describe('ensure-groups', () => {
     StorageUtils.chrome = {
       storage: {
         local: {
-          get: jest.fn(async (keys: unknown) =>
-            keys === null ? { ...records } : {}
+          // Two shapes on purpose: `chrome.storage.local.get` resolves a
+          // promise when given no callback — how the whole-storage read works —
+          // and calls the callback when given one, which is what
+          // `StorageUtils.getMany` uses.
+          get: jest.fn(
+            async (
+              keys: unknown,
+              callback?: (data: Record<string, unknown>) => void
+            ) => {
+              const data =
+                keys === null
+                  ? { ...records }
+                  : Object.fromEntries(
+                      (Array.isArray(keys) ? keys : [keys as string])
+                        .filter(k => k in records)
+                        .map(k => [k, records[k]])
+                    );
+
+              callback?.(data);
+
+              return data;
+            }
           )
         }
       }
@@ -79,6 +99,22 @@ describe('ensure-groups', () => {
     expect(records).toEqual(before);
     expect(second.groups).toEqual(first.groups);
     expect(groupsIn(records)).toHaveLength(1);
+  });
+
+  /**
+   * This runs on every store write — the popup opening is one — so the
+   * whole-storage read has to be the exception. It costs the same as reading
+   * every mock the browser holds.
+   */
+  it('does not read the whole of storage once every domain has a group', async () => {
+    const first = await ensureGroups(store());
+    const reads = StorageUtils.chrome.storage.local.get as jest.Mock;
+    reads.mockClear();
+
+    await ensureGroups(first);
+
+    expect(reads).toHaveBeenCalled();
+    expect(reads.mock.calls.some(([keys]) => keys === null)).toBe(false);
   });
 
   it('leaves a group somebody renamed alone', async () => {
