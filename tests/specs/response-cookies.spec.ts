@@ -15,6 +15,7 @@
  */
 
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
+import { openPopup } from '../fixtures/popup';
 
 const SESSION = { name: 'oh_my_session', value: 'mocked-token' };
 
@@ -139,5 +140,67 @@ test.describe('a request made while the page loads', () => {
     });
 
     expect(echoed).toContain(`${SESSION.name}=${SESSION.value}`);
+  });
+});
+
+test.describe('editing them', () => {
+  /**
+   * The whole way through: a cookie typed into the dialog, stored on the
+   * response, and in the page's jar once that response is served. Each half
+   * works in isolation without the other doing anything at all.
+   */
+  test('a cookie typed into the dialog is set by the response', async ({
+    context,
+    extensionId,
+    ohMy,
+    site
+  }) => {
+    const { dataId } = await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { ok: true }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+    await site.open();
+    await site.waitForInjection();
+
+    const popup = await openPopup(context, extensionId, {
+      domain: SITE_DOMAIN,
+      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
+    });
+
+    await popup.locator(`[x-test="list-request-item"]`).first().click();
+
+    // The button says what the response sets, which is nothing yet.
+    const button = popup.locator('[x-test="mock-cookies"]');
+    await expect(button).toHaveText('None');
+    await button.click();
+
+    await popup.locator('[x-test="cookie-add"]').click();
+    await popup.locator('[x-test="cookie-name"]').fill(SESSION.name);
+    await popup.locator('[x-test="cookie-value"]').fill(SESSION.value);
+    await popup.locator('[x-test="cookie-save"]').click();
+
+    await expect(button).toHaveText('1 cookie');
+
+    // Stored on the response, not somewhere of its own.
+    await expect
+      .poll(async () => {
+        const request = await ohMy.getRequest(dataId);
+        const mockId = Object.keys(request?.mocks ?? {})[0];
+        return (await ohMy.getMock(mockId))?.cookies?.[0]?.name;
+      })
+      .toBe(SESSION.name);
+
+    // And it reaches the page the moment that response is served.
+    const cookie = await site.page.evaluate(async () => {
+      await fetch('/api/json').then((r) => r.json());
+
+      return document.cookie;
+    });
+
+    expect(cookie).toContain(`${SESSION.name}=${SESSION.value}`);
+
+    await popup.close();
   });
 });

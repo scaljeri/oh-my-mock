@@ -12,7 +12,12 @@ import {
   UntypedFormGroup,
   ReactiveFormsModule
 } from '@angular/forms';
-import { IMock, IOhMyContext } from '@shared/type';
+import { MatDialog } from '@angular/material/dialog';
+import { IMock, IOhMyContext, IOhMyResponseCookie } from '@shared/type';
+import {
+  IOhMyResponseCookiesData,
+  ResponseCookiesComponent
+} from '../../response-cookies/response-cookies.component';
 import { Subscription } from 'rxjs';
 import { strip, update as updateContentType } from '@shared/utils/mime-type';
 import { OhMyState } from '../../../services/oh-my-store';
@@ -70,6 +75,7 @@ export const MIME_TYPE_OPTIONS: ReadonlyArray<string> = [
 export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
   private storeService = inject(OhMyState);
   private cdr = inject(ChangeDetectorRef);
+  private dialog = inject(MatDialog);
 
   @Input() response!: IMock;
   @Input() requestId!: string;
@@ -80,6 +86,41 @@ export class MockDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
   statusCodeOptions = STATUS_CODE_OPTIONS;
   mimeTypes = MIME_TYPE_OPTIONS;
+
+  /** How many cookies this response sets — what the button says. */
+  get cookieCount(): number {
+    return this.response.cookies?.length ?? 0;
+  }
+
+  /**
+   * Opens the cookie list.
+   *
+   * Saved as a whole rather than row by row: the dialog edits a copy, so
+   * cancelling has to leave the stored response exactly as it was. An empty
+   * list is written as `undefined` — a response that sets nothing should not
+   * carry an empty array saying so.
+   */
+  onEditCookies(): void {
+    const data: IOhMyResponseCookiesData = {
+      cookies: this.response.cookies ?? [],
+      statusCode: this.response.statusCode
+    };
+
+    this.dialog
+      .open(ResponseCookiesComponent, { width: '520px', maxWidth: '92vw', data })
+      .afterClosed()
+      .subscribe((cookies: IOhMyResponseCookie[] | undefined) => {
+        if (!cookies) {
+          return; // cancelled
+        }
+
+        this.storeService.upsertResponse(
+          { id: this.response.id, cookies: cookies.length ? cookies : undefined },
+          { id: this.requestId },
+          this.context
+        );
+      });
+  }
 
   ngOnInit(): void {
     this.form = new UntypedFormGroup({

@@ -149,6 +149,28 @@ body {
   font-family: t.$oh-font-mono;
 }
 
+/* A field whose value is a list, so it opens something instead of being typed
+   into. Shaped like an input so the grid it sits in stays a grid. */
+.oh-field__button {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  background: t.$oh-bg-subtle;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: t.$oh-border-strong;
+    background: t.$oh-bg-surface;
+  }
+}
+
 // The one button in the app.
 //
 // This lived three times over — in `cookie-detail`, `request` and the

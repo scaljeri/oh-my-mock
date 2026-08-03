@@ -1,0 +1,125 @@
+@use 'tokens' as t;
+
+.oh-cookies__title {
+  display: flex;
+  align-items: baseline;
+  gap: t.$oh-space-2;
+  font-size: t.$oh-size-lg;
+  font-weight: t.$oh-weight-semibold;
+}
+
+.oh-cookies__for {
+  font-size: t.$oh-size-sm;
+  font-weight: t.$oh-weight-normal;
+  color: t.$oh-text-faint;
+}
+
+.oh-cookies__lead {
+  margin: 0 0 t.$oh-space-4;
+  color: t.$oh-text-muted;
+  font-size: t.$oh-size-base;
+}
+
+.oh-cookies__list {
+  margin: 0 0 t.$oh-space-2;
+  padding: 0;
+  list-style: none;
+}
+
+.oh-cookies__row {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-2;
+  margin-bottom: 6px;
+}
+
+.oh-cookies__input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid t.$oh-border-strong;
+  border-radius: 7px;
+  background: t.$oh-bg-surface;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text;
+
+  &--name {
+    // The names are short and the values are not, but a name that is cut off
+    // is the one you cannot identify the row by.
+    flex: 0 0 34%;
+  }
+
+  &::placeholder {
+    color: t.$oh-text-fainter;
+  }
+}
+
+.oh-cookies__remove {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: t.$oh-text-faint;
+  font-size: t.$oh-size-lg;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: t.$oh-danger-tint;
+    color: t.$oh-danger;
+  }
+}
+
+.oh-cookies__empty {
+  margin: 0 0 t.$oh-space-2;
+  color: t.$oh-text-faint;
+}
+
+.oh-cookies__add {
+  padding: 5px 10px;
+  border: 1px dashed t.$oh-border-strong;
+  border-radius: 7px;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-secondary;
+  cursor: pointer;
+
+  &:hover {
+    border-style: solid;
+    background: t.$oh-bg-muted;
+    color: t.$oh-text;
+  }
+}
+
+.oh-cookies__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: t.$oh-space-2;
+}
+
+.oh-cookies__cancel {
+  padding: 7px 14px;
+  border: 1px solid t.$oh-border-strong;
+  border-radius: 8px;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text-secondary;
+  cursor: pointer;
+}
+
+.oh-cookies__save {
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: t.$oh-text;
+  color: t.$oh-bg-surface;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  font-weight: t.$oh-weight-semibold;
+  cursor: pointer;
+}

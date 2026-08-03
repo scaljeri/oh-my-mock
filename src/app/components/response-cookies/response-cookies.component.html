@@ -1,0 +1,79 @@
+<!--
+Name and value per row, add and remove. See the component for why it is only
+those two, and why this is a dialog rather than a fourth tab.
+-->
+<h2 mat-dialog-title class="oh-cookies__title">
+  Cookies
+  @if (statusCode) {
+    <span class="oh-cookies__for">set by the {{ statusCode }} response</span>
+  }
+</h2>
+
+<mat-dialog-content class="oh-cookies__body">
+  <p class="oh-cookies__lead">
+    Written when this response is served, the way a real
+    <code>Set-Cookie</code> would be — and removed again when mocking is
+    switched off for this domain.
+  </p>
+
+  @if (cookies.length) {
+    <ul class="oh-cookies__list">
+      @for (cookie of cookies; track trackByIndex($index); let i = $index) {
+        <li class="oh-cookies__row" x-test="cookie-row">
+          <input
+            class="oh-cookies__input oh-cookies__input--name"
+            type="text"
+            placeholder="name"
+            aria-label="Cookie name"
+            x-test="cookie-name"
+            [(ngModel)]="cookie.name"
+          />
+          <input
+            class="oh-cookies__input"
+            type="text"
+            placeholder="value"
+            aria-label="Cookie value"
+            x-test="cookie-value"
+            [(ngModel)]="cookie.value"
+          />
+          <button
+            class="oh-cookies__remove"
+            type="button"
+            x-test="cookie-remove"
+            [attr.aria-label]="'Remove ' + (cookie.name || 'this cookie')"
+            (click)="onRemove(i)"
+          >
+            ×
+          </button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="oh-cookies__empty" x-test="no-cookies">
+      This response sets no cookies.
+    </p>
+  }
+
+  <button
+    class="oh-cookies__add"
+    type="button"
+    x-test="cookie-add"
+    (click)="onAdd()"
+  >
+    + Add cookie
+  </button>
+</mat-dialog-content>
+
+<mat-dialog-actions class="oh-cookies__actions">
+  <button class="oh-cookies__cancel" type="button" (click)="onCancel()">
+    Cancel
+  </button>
+  <button
+    class="oh-cookies__save"
+    type="button"
+    x-test="cookie-save"
+    (click)="onSave()"
+  >
+    Save
+  </button>
+</mat-dialog-actions>

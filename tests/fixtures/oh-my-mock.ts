@@ -136,6 +136,8 @@ export interface StoredMock {
   responseMock?: string;
   headers?: Record<string, string>;
   headersMock?: Record<string, string>;
+  /** The cookies this response sets when it is served. */
+  cookies?: { name: string; value: string; path?: string }[];
 }
 
 /**

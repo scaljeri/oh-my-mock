@@ -75,4 +75,22 @@ describe('MockDetailsComponent', () => {
         .toBe('application/json');
     });
   });
+
+  describe('the cookies button', () => {
+    it('counts what the response sets', () => {
+      component.response = {
+        ...component.response,
+        cookies: [
+          { name: 'session', value: 'abc' },
+          { name: 'theme', value: 'dark' }
+        ]
+      };
+
+      expect(component.cookieCount).toBe(2);
+    });
+
+    it('counts nothing when the response sets none', () => {
+      expect(component.cookieCount).toBe(0);
+    });
+  });
 });

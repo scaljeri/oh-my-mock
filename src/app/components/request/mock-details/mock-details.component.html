@@ -44,6 +44,28 @@
         }
       </datalist>
     </label>
+    <!-- A button rather than a field: the cookies are a list, and a list does
+    not fit a 2x2 grid of inputs. Its own cell so it lines up with them. -->
+    <div class="oh-field">
+      <span class="oh-field__label">Cookies</span>
+      <button
+        class="oh-field__button"
+        type="button"
+        x-test="mock-cookies"
+        [title]="
+          cookieCount
+            ? cookieCount + ' cookie(s) set by this response'
+            : 'This response sets no cookies'
+        "
+        (click)="onEditCookies()"
+      >
+        @if (cookieCount) {
+          {{ cookieCount }} cookie{{ cookieCount === 1 ? '' : 's' }}
+        } @else {
+          None
+        }
+      </button>
+    </div>
     <label class="oh-field">
       <span class="oh-field__label">Label</span>
       <input
