@@ -1,6 +1,7 @@
 import { appSources, DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IState, ohMyDataId } from "../../shared/type";
+import { IData, IOhMyMock, IState, ohMyDataId } from "../../shared/type";
+import { StoreUtils } from "../../shared/utils/store";
 import { importJSON } from "../../shared/utils/import-json";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StateUtils } from "../../shared/utils/state";
@@ -10,12 +11,32 @@ import { error } from "../utils";
 import { warn } from "../utils";
 
 
+/**
+ * What a REMOVE packet carries.
+ *
+ * `id` names the record for a request; a state is named by `context.domain`
+ * instead, so it has none — which is why this is one shape with both optional
+ * rather than two.
+ */
+export interface IOhMyRemoval {
+  type: objectTypes;
+  id?: string;
+  /**
+   * Forget the domain, rather than empty it.
+   *
+   * Absent means empty: the records go, the domain stays in `store.domains`.
+   * That is what the menu's "Reset state" wants, and making removal the only
+   * behaviour would have turned that button into a delete.
+   */
+  removeDomain?: boolean;
+}
+
 // Not for Response/IMock
 export class OhMyRemoveHandler {
   static StorageUtils = StorageUtils;
   static queue: OhMyQueue;
 
-  static async update({ data, context }: IPacketPayload<{ type: objectTypes, id: string }>): Promise<IState | undefined> {
+  static async update({ data, context }: IPacketPayload<IOhMyRemoval>): Promise<IState | undefined> {
     if (!data || !context?.domain) {
       return undefined;
     }
@@ -43,10 +64,30 @@ export class OhMyRemoveHandler {
 
         await StorageUtils.remove(state.domain);
 
+        // Emptying a domain and forgetting it are different things, and the
+        // menu's "Reset state" is the first. Without the flag this branch left
+        // the domain in `store.domains` pointing at a record it had just
+        // deleted — which is right for a reset and wrong for a delete.
+        if (data.removeDomain) {
+          const store = await OhMyRemoveHandler.StorageUtils.get<IOhMyMock>();
+
+          if (store) {
+            await OhMyRemoveHandler.StorageUtils.setStore(
+              StoreUtils.removeState(store, state.domain)
+            );
+          }
+        }
+
         if (state.domain === DEMO_TEST_DOMAIN) {
           await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
         }
       } else if (data.type === objectTypes.REQUEST) {
+        if (!data.id) {
+          error('Cannot remove a request without an id', data);
+
+          return state;
+        }
+
         if (!StateUtils.hasRequest(state, data.id)) { // Already gone
           return state;
         }

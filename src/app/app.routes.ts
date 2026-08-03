@@ -36,6 +36,16 @@ const appRoutes: Routes = [
         component: JsonExportComponent
       },
       {
+        // Managing the domains OhMyMock knows about. A page rather than part of
+        // the sidebar: which domain is on screen follows the active tab, so
+        // there is nothing to pick — what is left is housekeeping.
+        path: 'domains',
+        loadComponent: () =>
+          import('./pages/domains/domains.component').then(
+            (m) => m.DomainsComponent
+          )
+      },
+      {
         // Both remote sources — the local SDK server and, later, the cloud —
         // under one page: they answer the same question.
         path: 'remote-mocking',

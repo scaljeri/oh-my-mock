@@ -1,6 +1,6 @@
 <!--
   The app-wide actions that used to be a list of buttons filling the sidebar.
-  The sidebar is the domain list now, so they moved into an overflow menu at
+  The sidebar is the mock list now, so they moved into an overflow menu at
   the bottom of it — nothing was dropped.
 -->
 <button
@@ -16,6 +16,15 @@
 
 <mat-menu #menu="matMenu">
   <button mat-menu-item type="button" (click)="onReset()">Reset state</button>
+  <button
+    mat-menu-item
+    type="button"
+    x-test="nav-domains"
+    routerLink="/domains"
+    (click)="navigate.emit()"
+  >
+    Domains
+  </button>
   <button mat-menu-item type="button" routerLink="/state-explore" (click)="navigate.emit()">
     Explore state
   </button>

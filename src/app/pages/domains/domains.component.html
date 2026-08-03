@@ -1,0 +1,90 @@
+<!--
+Housekeeping for the domains OhMyMock knows about. Which domain is *being
+looked at* is not decided here — that follows the active tab — so the row for it
+is marked rather than selectable.
+-->
+<section class="oh-domains">
+  <h1 class="oh-domains__title">Domains</h1>
+  <p class="oh-domains__intro">
+    OhMyMock works on the domain of the tab you opened it from. These are the
+    domains it has anything stored for.
+  </p>
+
+  <form class="oh-domains__add" (ngSubmit)="onAdd()">
+    <input
+      #newDomainInput
+      class="oh-domains__add-input"
+      name="newDomain"
+      placeholder="example.com"
+      aria-label="Domain to add"
+      x-test="new-domain"
+      [ngModel]="newDomain"
+      (ngModelChange)="newDomain = $event"
+    />
+    <button class="oh-domains__add-btn" type="submit" x-test="add-domain">
+      Add domain
+    </button>
+  </form>
+
+  <ul class="oh-domains__list">
+    @for (summary of domains; track trackByDomain($index, summary)) {
+      <li
+        class="oh-domains__row"
+        x-test="domain-row"
+        [class.is-active]="summary.domain === activeDomain"
+      >
+        <span class="oh-domains__host oh-mono" x-test="domain-host">{{
+          summary.domain
+        }}</span>
+
+        @if (summary.domain === activeDomain) {
+          <span class="oh-domains__badge" x-test="domain-active">This tab</span>
+        }
+
+        <span class="oh-domains__counts">
+          {{ summary.requests }} requests · {{ summary.cookies }} cookies
+        </span>
+
+        @if (confirming === summary.domain) {
+          <!-- Two clicks, because there is no undo: the mocks, the requests and
+          every saved response go with it. -->
+          <span class="oh-domains__confirm">
+            <button
+              class="oh-domains__confirm-yes"
+              type="button"
+              x-test="confirm-delete"
+              (click)="onConfirmDelete(summary.domain)"
+            >
+              Delete everything
+            </button>
+            <button
+              class="oh-domains__confirm-no"
+              type="button"
+              (click)="onCancelDelete()"
+            >
+              Cancel
+            </button>
+          </span>
+        } @else {
+          <button
+            class="oh-domains__delete"
+            type="button"
+            x-test="delete-domain"
+            [attr.aria-label]="'Forget ' + summary.domain"
+            [title]="'Forget ' + summary.domain"
+            (click)="onDelete(summary.domain)"
+          >
+            <mat-icon svgIcon="delete"></mat-icon>
+          </button>
+        }
+      </li>
+    }
+  </ul>
+
+  @if (!domains.length) {
+    <p class="oh-domains__empty" x-test="no-domains">
+      Nothing stored yet. Visit a site and mock a request, or add a domain
+      above.
+    </p>
+  }
+</section>

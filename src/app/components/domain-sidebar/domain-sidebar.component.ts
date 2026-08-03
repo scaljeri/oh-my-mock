@@ -1,18 +1,15 @@
 import {
   ChangeDetectorRef,
   Component,
-  ElementRef,
   EventEmitter,
   Input,
   OnDestroy,
   OnInit,
   Output,
-  ViewChild,
   inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IOhMyContext, IOhMyMock, IState, ohMyDomain } from '@shared/type';
-import { StateUtils } from '@shared/utils/state';
+import { IOhMyContext, IOhMyMock, IState } from '@shared/type';
 import { StorageUtils } from '@shared/utils/storage';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -20,10 +17,6 @@ import { AppStateService } from '../../services/app-state.service';
 import { StorageService } from '../../services/storage.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { HarImportComponent } from '../har-import/har-import.component';
-import {
-  DomainSummaryService,
-  IOhMyDomainSummary
-} from './domain-summary.service';
 import { GroupListService, IOhMyGroupRow } from './group-list.service';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NavListComponent } from '../nav-list/nav-list.component';
@@ -36,16 +29,16 @@ import { NavListComponent } from '../nav-list/nav-list.component';
 const REFRESH_DEBOUNCE = 200;
 
 /**
- * The left column of the three-pane shell: a domain picker, and the mocks that
- * answer for the domain picked.
+ * The left column of the three-pane shell: the mocks answering for the domain
+ * being looked at.
  *
- * Each row is a mock *group* in the code — a named set with a source — but the
- * word does not appear on screen. See the template.
+ * Which domain that is comes from the active tab, not from here — adding and
+ * forgetting domains lives on `/domains`. Each row is a mock *group* in the
+ * code, a named set with a source, but the word does not appear on screen.
  *
- * Neither list is in the store — it holds `domains: string[]` and `groups:
- * id[]`, no counts — so both are gathered per domain, by `DomainSummaryService`
- * and `GroupListService`, and re-gathered whenever anything writes to
- * `chrome.storage`. That listener is what makes a request captured by the
+ * The rows are not in the store — it holds `groups: id[]`, no counts — so they
+ * are gathered by `GroupListService` and re-gathered whenever anything writes
+ * to `chrome.storage`. That listener is what makes a request captured by the
  * content script show up here without the popup being told about it.
  */
 @Component({
@@ -57,7 +50,6 @@ const REFRESH_DEBOUNCE = 200;
 export class DomainSidebarComponent implements OnInit, OnDestroy {
   private appState = inject(AppStateService);
   private storeService = inject(OhMyState);
-  private summaryService = inject(DomainSummaryService);
   private groupListService = inject(GroupListService);
   private storageService = inject(StorageService);
   private cdr = inject(ChangeDetectorRef);
@@ -67,16 +59,9 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   @Input() context!: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
 
-  domains: IOhMyDomainSummary[] = [];
   activeDomain = '';
   /** The groups covering `activeDomain`, in the order that decides who answers. */
   groups: IOhMyGroupRow[] = [];
-
-  /** The inline "add domain" form is only shown once the button is pressed. */
-  isAdding = false;
-  newDomain = '';
-
-  @ViewChild('newDomainInput') newDomainInput?: ElementRef<HTMLInputElement>;
 
   private subscriptions = new Subscription();
   private isDestroyed = false;
@@ -119,14 +104,9 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  /** Re-reads the domain list and its counts. */
+  /** Re-reads the mocks answering for this domain. */
   async refresh(): Promise<void> {
-    const store: IOhMyMock | undefined = await this.storeService.getStore();
-
-    this.domains = await this.summaryService.summariseAll(store?.domains ?? []);
-    this.detectChanges();
-
-    await this.refreshGroups(store);
+    await this.refreshGroups(await this.storeService.getStore());
   }
 
   /**
@@ -189,50 +169,6 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     await this.refreshGroups();
   }
 
-  onSelect(domain: ohMyDomain): void {
-    if (domain !== this.activeDomain) {
-      // The shell listens on this: it re-initialises the state and the search
-      // worker for the new domain and routes back to the request list.
-      this.appState.domain = domain;
-    }
-
-    this.navigate.emit();
-  }
-
-  onStartAdd(): void {
-    this.isAdding = true;
-    this.newDomain = '';
-    this.detectChanges();
-    // After the form exists, not before.
-    setTimeout(() => this.newDomainInput?.nativeElement.focus());
-  }
-
-  onCancelAdd(): void {
-    this.isAdding = false;
-    this.newDomain = '';
-    this.detectChanges();
-  }
-
-  /**
-   * Writes an empty state for the domain, which is what puts it in the store's
-   * domain list, and switches to it.
-   */
-  async onAddDomain(): Promise<void> {
-    const domain = this.newDomain.trim();
-
-    if (!domain) {
-      return;
-    }
-
-    await this.storeService.upsertState(StateUtils.init({ domain }));
-
-    this.isAdding = false;
-    this.newDomain = '';
-
-    await this.refresh();
-    this.onSelect(domain);
-  }
-
   /**
    * Opens the HAR picker.
    *
@@ -245,10 +181,6 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
       .open(HarImportComponent, { width: '760px', maxWidth: '92vw', data: {} })
       .afterClosed()
       .subscribe(() => void this.refresh());
-  }
-
-  trackByDomain(_index: number, summary: IOhMyDomainSummary): string {
-    return summary.domain;
   }
 
   trackByGroup(_index: number, row: IOhMyGroupRow): string {

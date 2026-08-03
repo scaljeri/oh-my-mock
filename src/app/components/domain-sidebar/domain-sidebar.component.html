@@ -1,38 +1,16 @@
 <!--
-The sidebar picks a domain and lists that domain's **mocks** — each row a named
-set, on or off for this site.
+The sidebar lists the **mocks** answering for the domain being looked at — each
+row a named set, on or off for this site.
+
+There is no domain picker: the url in the active tab decides which domain this
+is. Adding and forgetting domains is housekeeping and lives on its own page,
+reached from the overflow menu below.
 
 "Group" is the word in the code, not on screen. It is a technical name for a set
 of mocks with a source, and putting it in front of someone reading the sidebar
 would ask them to learn a concept where they only wanted to see their mocks.
-
-The two actions at the bottom are unchanged; the old nav links (reset, explore,
-import/export, docs) live in the overflow menu — see `oh-my-nav-list`.
 -->
 <div class="oh-domain-nav">
-  <!-- A picker rather than a list: the sidebar is about the domain being looked
-  at, and the domain itself is already named in the header. -->
-  <label class="oh-domain-nav__picker">
-    <span class="oh-domain-nav__picker-label">Domain</span>
-    <select
-      class="oh-domain-nav__select"
-      x-test="domain-select"
-      aria-label="Domain"
-      [ngModel]="activeDomain"
-      (ngModelChange)="onSelect($event)"
-    >
-      @for (summary of domains; track trackByDomain($index, summary)) {
-        <option x-test="domain-option" [value]="summary.domain">
-          {{ summary.domain }}
-        </option>
-      }
-    </select>
-  </label>
-
-  @if (!domains.length) {
-    <p class="oh-domain-nav__empty">No domains yet</p>
-  }
-
   <h2 class="oh-domain-nav__heading">Mocks</h2>
 
   <ul class="oh-group-nav__list">
@@ -89,41 +67,6 @@ import/export, docs) live in the overflow menu — see `oh-my-nav-list`.
   }
 
   <div class="oh-domain-nav__footer">
-    @if (isAdding) {
-      <form class="oh-domain-nav__new" (ngSubmit)="onAddDomain()">
-        <input
-          #newDomainInput
-          class="oh-domain-nav__new-input"
-          name="newDomain"
-          placeholder="example.com"
-          aria-label="Domain to add"
-          x-test="new-domain"
-          [ngModel]="newDomain"
-          (ngModelChange)="newDomain = $event"
-          (keyup.escape)="onCancelAdd()"
-        />
-        <button class="oh-domain-nav__new-confirm" type="submit">Add</button>
-        <button
-          class="oh-domain-nav__new-cancel"
-          type="button"
-          (click)="onCancelAdd()"
-        >
-          Cancel
-        </button>
-      </form>
-    }
-
-    @if (!isAdding) {
-      <button
-        class="oh-domain-nav__add"
-        type="button"
-        x-test="add-domain"
-        (click)="onStartAdd()"
-      >
-        <span class="oh-domain-nav__add-sign">+</span> Add domain
-      </button>
-    }
-
     <div class="oh-domain-nav__actions">
       <button
         class="oh-domain-nav__import"

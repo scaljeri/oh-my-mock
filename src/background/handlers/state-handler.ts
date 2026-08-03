@@ -13,8 +13,20 @@ export class OhMyStateHandler {
   static async update(payload: IPacketPayload<IState | IData | unknown, IOhMyPacketContext>): Promise<IState | undefined> {
     try {
       const { data, context } = payload;
-      // A full state carries its own domain; a patch only has the packet context.
-      const domain = context?.domain ?? (data as IState)?.domain;
+      // A full state carries its own domain, and **that** is the one to write it
+      // under. The packet context names the domain the popup is looking at,
+      // which `OhMySendToBg.full` fills in whether or not the caller asked for
+      // it — so preferring it meant a state created for somewhere else was
+      // stored over the state of wherever you happened to be. "Add domain" did
+      // exactly that: the new domain was never created, and the mocks of the
+      // one on screen were replaced by an empty state.
+      //
+      // A patch is the other way round: `data` is the value being patched in,
+      // not a state, so only the context can say where it belongs.
+      const isPatch = context?.kind === 'patch';
+      const domain =
+        (!isPatch && StateUtils.isState(data) ? data.domain : undefined) ??
+        context?.domain;
 
       if (!domain) {
         error('Cannot update a state without a domain', payload);

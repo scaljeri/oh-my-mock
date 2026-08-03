@@ -1,0 +1,163 @@
+@use 'tokens' as t;
+
+// Every BEM child is a top-level selector under `.oh-domains`, never nested
+// under an element selector — `li.oh-domains { &__row { } }` would compile to
+// `li.oh-domains__row`, which matches nothing and fails silently.
+
+.oh-domains {
+  padding: t.$oh-space-6;
+  max-width: 720px;
+}
+
+.oh-domains__title {
+  margin: 0 0 t.$oh-space-2;
+  font-size: t.$oh-size-xl;
+  font-weight: t.$oh-weight-semibold;
+}
+
+.oh-domains__intro {
+  margin: 0 0 t.$oh-space-6;
+  color: t.$oh-text-muted;
+}
+
+// ---- add --------------------------------------------------------------
+
+.oh-domains__add {
+  display: flex;
+  gap: t.$oh-space-2;
+  margin-bottom: t.$oh-space-5;
+}
+
+.oh-domains__add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 11px;
+  border: 1px solid t.$oh-border-strong;
+  border-radius: 8px;
+  background: t.$oh-bg-surface;
+  font-family: t.$oh-font-mono;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text;
+
+  &::placeholder {
+    color: t.$oh-text-fainter;
+  }
+}
+
+.oh-domains__add-btn {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: t.$oh-text;
+  color: t.$oh-bg-surface;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  font-weight: t.$oh-weight-semibold;
+  cursor: pointer;
+}
+
+// ---- list -------------------------------------------------------------
+
+.oh-domains__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oh-domains__row {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-3;
+  padding: 11px t.$oh-space-3;
+  border-bottom: 1px solid t.$oh-border-soft;
+
+  &.is-active {
+    background: t.$oh-bg-muted;
+  }
+}
+
+.oh-domains__host {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text;
+}
+
+.oh-domains__badge {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: t.$oh-radius-pill;
+  background: t.$oh-info-tint;
+  color: t.$oh-info;
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-semibold;
+}
+
+.oh-domains__counts {
+  flex: 1;
+  text-align: right;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-faint;
+}
+
+.oh-domains__delete {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: t.$oh-text-faint;
+  cursor: pointer;
+
+  &:hover {
+    background: t.$oh-danger-tint;
+    color: t.$oh-danger;
+  }
+
+  // Every icon asset is `fill="#FFFFFF"`; without this the glyph is white on
+  // white and simply not there.
+  ::ng-deep svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
+  }
+}
+
+.oh-domains__confirm {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+}
+
+.oh-domains__confirm-yes {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: t.$oh-danger;
+  color: #fff;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-sm;
+  font-weight: t.$oh-weight-semibold;
+  cursor: pointer;
+}
+
+.oh-domains__confirm-no {
+  padding: 4px 10px;
+  border: 1px solid t.$oh-border-strong;
+  border-radius: 6px;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-secondary;
+  cursor: pointer;
+}
+
+.oh-domains__empty {
+  margin: t.$oh-space-4 0 0;
+  color: t.$oh-text-faint;
+}

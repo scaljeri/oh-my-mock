@@ -12,13 +12,35 @@ const version = determineVersion();
  */
 const showDebug = /beta/.test(version) || process.env.OH_MY_DEBUG === '1';
 
-/** Every bundle that carries a build-time token. */
+/**
+ * Every bundle that carries a build-time token.
+ *
+ * The Angular output is **discovered**, not named. It used to list `main.js`
+ * alone, which missed every lazy chunk: a page reached by `loadComponent` — the
+ * cookies, remote-mocking and domains pages — kept the literal
+ * `__OH_MY_VERSION__`, and `StateUtils.version` in a record written from one of
+ * them was that string rather than a version. Silent, of course: the token is a
+ * valid string, so nothing threw and the record was stored with it.
+ */
 const BUNDLES = [
   './dist/oh-my-mock.js',
   './dist/content.js',
   './dist/background.js',
-  './dist/oh-my-mock/main.js'
+  ...angularChunks()
 ];
+
+function angularChunks() {
+  const dir = './dist/oh-my-mock';
+
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(dir)
+    .filter((name) => name.endsWith('.js'))
+    .map((name) => `${dir}/${name}`);
+}
 
 // `shared/utils/logging.ts` is compiled into the content, injected and
 // background bundles, so the debug switch has to reach all three — it used to be
@@ -30,6 +52,40 @@ for (const file of BUNDLES) {
   replaceToken(file, 'VERSION', version);
 }
 replaceTokenWithFileContent('INJECTED_CODE', './dist/content.js', './dist/early-inject-clean.js');
+
+assertNoTokensLeft();
+
+/**
+ * Fails the build if any shipped script still carries a token.
+ *
+ * The check exists because the failure it catches is invisible: a token that is
+ * never replaced is still a perfectly good string, so the extension loads, the
+ * page renders, and the wrong value is simply written to storage. Naming the
+ * bundles by hand went wrong exactly once and would have gone wrong again the
+ * next time a page was made lazy.
+ */
+function assertNoTokensLeft() {
+  const offenders = [];
+
+  for (const file of ['./dist/oh-my-mock.js', './dist/content.js', './dist/background.js', ...angularChunks()]) {
+    if (!fs.existsSync(file)) {
+      continue;
+    }
+
+    const match = fs
+      .readFileSync(file, { encoding: 'utf8', flag: 'r' })
+      .match(/__OH_MY_[A-Z_]+__/);
+
+    if (match) {
+      offenders.push(`${file} (${match[0]})`);
+    }
+  }
+
+  if (offenders.length) {
+    throw new Error(
+      `token-replace: tokens left unreplaced in ${offenders.join(', ')}`);
+  }
+}
 
 function replaceToken(file, tokenKey, token) {
   // The Angular bundle is absent when only the webpack bundles were built

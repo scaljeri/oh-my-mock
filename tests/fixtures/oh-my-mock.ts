@@ -227,6 +227,22 @@ export class OhMyMockDriver {
     return (await this.worker()).evaluate(() => chrome.storage.local.get(null));
   }
 
+  /**
+   * The domains the store lists.
+   *
+   * Separate from `getState`, because the two can disagree: deleting a domain
+   * used to remove its record and leave the name here, pointing at nothing.
+   */
+  async domains(): Promise<string[]> {
+    return (await this.worker()).evaluate(() =>
+      chrome.storage.local
+        .get('OhMyMock')
+        .then(
+          (all) => ((all.OhMyMock as { domains?: string[] })?.domains ?? [])
+        )
+    );
+  }
+
   async getState(domain: string): Promise<Record<string, unknown> | undefined> {
     return (await this.worker()).evaluate(
       (key) => chrome.storage.local.get(key).then((all) => all[key]),

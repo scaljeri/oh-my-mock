@@ -101,10 +101,13 @@ export class OhMyState {
       ...state
     };
 
+    // Named explicitly. `OhMySendToBg.full` defaults the context to the domain
+    // the popup is on, and a state being created for *another* domain must not
+    // be filed under this one.
     await OhMySendToBg.full(
       retVal,
       payloadType.STATE,
-      undefined,
+      { domain: retVal.domain },
       'popup;upsertState'
     );
     // await this.storageService.set(retVal.domain, retVal);
@@ -431,6 +434,23 @@ export class OhMyState {
         'popup;reset;everything'
       );
     }
+  }
+
+  /**
+   * Forgets a domain: its mocks, its requests, its record and its place in the
+   * store's domain list.
+   *
+   * Distinct from `reset(context)`, which sends the same message without
+   * `removeDomain` and so empties the domain while keeping it. Both are wanted
+   * — the menu's "Reset state" is the second.
+   */
+  async deleteDomain(domain: ohMyDomain): Promise<void> {
+    await OhMySendToBg.full(
+      { type: objectTypes.STATE, domain, removeDomain: true },
+      payloadType.REMOVE,
+      { domain, preset: 'default' },
+      'popup;deleteDomain'
+    );
   }
 
   async updateAux(aux: IOhMyAux, context: IOhMyContext): Promise<IState> {
