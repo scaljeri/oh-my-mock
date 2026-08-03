@@ -2,7 +2,7 @@
 import { MOCK_JS_CODE, ohMyMockStatus, payloadType } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacket } from "../shared/packet-type";
-import { IMock, IOhMyAPIRequest, IOhMyEvalRequest, IOhMyMockResponse, IState, ohMyMockId } from "../shared/type";
+import { IMock, IOhMyAPIRequest, IOhMyEvalRequest, IOhMyMockResponse, IOhMyResponseCookie, IState, ohMyMockId } from "../shared/type";
 import { DataUtils } from "../shared/utils/data";
 import { blurBase64, isImage, stripB64Prefix } from "../shared/utils/image";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
@@ -127,7 +127,7 @@ export async function receivedApiRequest(
     } else { // Rule: Return `response` if mock's custom code is not touched
       mockResponse = MockUtils.mockToResponse(mock);
     }
-    handleResponse(request, context, response, mockResponse, state);
+    handleResponse(request, context, response, mockResponse, state, mock?.cookies);
     // const output = {
     //   request, response: (!!data && mock ?
     //     (response.status === ohMyMockStatus.OK ? response : MockUtils.mockToResponse(mock)) : { status: ohMyMockStatus.NO_CONTENT })
@@ -159,7 +159,7 @@ export async function receivedApiRequest(
       'content;dispatch-eval'
     );
 
-    handleResponse(request, context, response, output, state);
+    handleResponse(request, context, response, output, state, mock?.cookies);
     // messageBus.streamById$<IOhMyMockResponse>(context.id, appSources.POPUP).pipe(take(1)).subscribe(({ packet }: IOhMessage<IOhMyMockResponse>) => {
     //   handleResponse(request, context, response, packet.payload.data);
 
@@ -198,7 +198,8 @@ async function handleResponse(
   context: IOhMyPacketContext,
   response: IOhMyMockResponse,
   output?: IOhMyMockResponse,
-  state?: IState) {
+  state?: IState,
+  cookies?: IOhMyResponseCookie[]) {
   // If the server said OK, and the popup did not, the server response wins.
   // With neither there is nothing to mock with, so the injected script is told
   // to let the request through.
@@ -220,6 +221,22 @@ async function handleResponse(
         retVal.response = '';
       }
     }
+  }
+
+  // The cookies this response sets, before its body reaches the page rather
+  // than after. A call made on page load usually exists to hand the *next* call
+  // a cookie, and answering first would race it — the request is already async,
+  // so waiting costs nothing anyone can see.
+  //
+  // Only when the response is actually being mocked: a request passing through
+  // to the real server is not this response, and must not set its cookies.
+  if (cookies?.length && retVal.status === ohMyMockStatus.OK) {
+    await OhMySendToBg.full(
+      cookies,
+      payloadType.SET_COOKIES,
+      context,
+      'content;set-cookies'
+    );
   }
 
   // The mocked body is whatever the mock holds, not necessarily a string, so

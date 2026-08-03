@@ -1,6 +1,7 @@
 /// <reference types="chrome"/>
 
-import { IOhMyCookie, ohMyCookieId, ohMyDomain } from '../shared/type';
+import { objectTypes } from '../shared/constants';
+import { IOhMyCookie, IOhMyResponseCookie, ohMyCookieId, ohMyDomain } from '../shared/type';
 import { CookieUtils } from '../shared/utils/cookie';
 
 /**
@@ -166,15 +167,97 @@ export async function syncCookies(
   }
 }
 
+/**
+ * The cookies served responses have set on a domain, so they can be taken back
+ * out again.
+ *
+ * Kept here rather than derived from storage because nothing in storage records
+ * that a response was *served* — the mock holds the cookies, and whether they
+ * are currently in the jar is a fact about this browser session.
+ */
+const fromResponses = new Map<ohMyDomain, Map<ohMyCookieId, IOhMyCookie>>();
+
+/**
+ * The id a response's cookie is tracked under.
+ *
+ * Name and path, not the response it came from: two responses setting the same
+ * cookie are setting the same cookie. Keying on the response would let the
+ * second record the first as the "previous value", and unapplying would then
+ * restore a mock instead of the site's own cookie.
+ */
+export function responseCookieId(cookie: IOhMyResponseCookie): ohMyCookieId {
+  return `response:${CookieUtils.path(cookie.path)}:${cookie.name}`;
+}
+
+/** A response's cookie in the shape the jar works in. */
+function asCookieMock(cookie: IOhMyResponseCookie): IOhMyCookie {
+  return {
+    ...cookie,
+    id: responseCookieId(cookie),
+    version: '',
+    type: objectTypes.COOKIE,
+    // A response is already chosen per preset, so its cookies have no switch of
+    // their own — and nothing here reads this.
+    enabled: {}
+  };
+}
+
+/**
+ * Writes the cookies a served response sets.
+ *
+ * The caller waits for this before the body reaches the page: a call made on
+ * load usually exists to hand the *next* call a cookie, and delivering the body
+ * first would race it.
+ */
+export async function applyResponseCookies(
+  domain: ohMyDomain,
+  cookies: IOhMyResponseCookie[]
+): Promise<void> {
+  const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
+  fromResponses.set(domain, applied);
+
+  for (const cookie of cookies) {
+    const asMock = asCookieMock(cookie);
+
+    applied.set(asMock.id, asMock);
+    await applyCookie(domain, asMock);
+  }
+}
+
+/**
+ * Takes back every cookie a response set on this domain.
+ *
+ * Switching mocking off has to undo these as well as the standalone mocks, or a
+ * fabricated session outlives the mocking that fabricated it — which is the
+ * failure the whole displace-and-restore dance exists to prevent.
+ */
+export async function unapplyResponseCookies(domain: ohMyDomain): Promise<void> {
+  const applied = fromResponses.get(domain);
+
+  if (!applied) {
+    return;
+  }
+
+  fromResponses.delete(domain);
+
+  for (const cookie of applied.values()) {
+    if (isApplied(domain, cookie.id)) {
+      await unapplyCookie(domain, cookie);
+    }
+  }
+}
+
 /** Test seam: drops the remembered originals for a domain. */
 export function forgetDisplaced(domain?: ohMyDomain): void {
   ownWrites.clear();
 
   if (domain) {
     displaced.delete(domain);
+    fromResponses.delete(domain);
 
     return;
   }
 
   displaced.clear();
+  fromResponses.clear();
 }

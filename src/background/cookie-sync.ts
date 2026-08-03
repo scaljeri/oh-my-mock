@@ -3,7 +3,7 @@
 import { objectTypes } from '../shared/constants';
 import { IOhMyCookie, IOhMyMock, IState, ohMyCookieId, ohMyDomain, ohMyPresetId } from '../shared/type';
 import { IOhMyStorageChange, StorageUtils } from '../shared/utils/storage';
-import { syncCookies } from './cookie-jar';
+import { syncCookies, unapplyResponseCookies } from './cookie-jar';
 import { error } from './utils';
 
 /**
@@ -82,6 +82,13 @@ export async function syncState(state: IState, force = false): Promise<void> {
   }
 
   await syncCookies(state.domain, cookies, state.context.preset, active);
+
+  // Cookies a served response set are not on the state, so the loop above never
+  // sees them — but switching mocking off has to undo them too, or a fabricated
+  // session outlives the mocking that fabricated it.
+  if (!active) {
+    await unapplyResponseCookies(state.domain);
+  }
 }
 
 /**
@@ -97,6 +104,7 @@ export async function forgetState(domain: ohMyDomain): Promise<void> {
 
   synced.delete(domain);
   await syncCookies(domain, entry.cookies, entry.preset, false);
+  await unapplyResponseCookies(domain);
 }
 
 /** Which domain a cookie record belongs to, going by what was last synced. */

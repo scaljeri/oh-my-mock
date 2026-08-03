@@ -49,6 +49,14 @@ export interface SeedMockOptions {
   /** Artificial delay in ms that OhMyMock applies before replying. */
   delay?: number;
   /**
+   * Cookies this saved response sets, the way a real `Set-Cookie` would.
+   *
+   * Written by the background when the response is served — a `Set-Cookie`
+   * header would be inert, because a mocked response is fabricated in the page
+   * and never reaches the browser's cookie jar.
+   */
+  cookies?: { name: string; value: string; path?: string }[];
+  /**
    * Custom mock code. Leave unset to keep the default: with the default,
    * `src/content/handle-api-request.ts` serves the mock without dispatching to
    * the popup, so the popup does not need to be open.
@@ -383,6 +391,7 @@ export class OhMyMockDriver {
           : JSON.stringify(options.response ?? {}),
       headers: options.headers ?? { 'content-type': 'application/json' },
       delay: options.delay ?? 0,
+      cookies: options.cookies ?? [],
       jsCode: options.jsCode ?? MOCK_JS_CODE,
       label: options.label ?? '',
       enabled: options.enabled ?? true,
@@ -406,6 +415,7 @@ export class OhMyMockDriver {
         headers: opts.headers,
         headersMock: opts.headers,
         delay: opts.delay,
+        cookies: opts.cookies,
         jsCode: opts.jsCode,
         rules: [],
         createdOn: '2020-01-01T00:00:00.000Z',

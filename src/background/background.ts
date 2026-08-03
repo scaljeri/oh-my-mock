@@ -2,6 +2,8 @@
 
 import { appSources, DEMO_TEST_DOMAIN, payloadType } from '../shared/constants';
 import { IState } from '../shared/types/state';
+import { IOhMyResponseCookie } from '../shared/types/cookie';
+import { applyResponseCookies } from './cookie-jar';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
 import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
@@ -73,6 +75,25 @@ queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REQUEST, OhMyRequestHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
 queue.addHandler(payloadType.COOKIE, OhMyCookieHandler.update);
+queue.addHandler(payloadType.SET_COOKIES, async (payload: IPacketPayload) => {
+  const domain = payload.context?.domain;
+  const cookies = payload.data as IOhMyResponseCookie[] | undefined;
+
+  if (!domain || !cookies?.length) {
+    return undefined;
+  }
+
+  try {
+    await applyResponseCookies(domain, cookies);
+  } catch (err) {
+    // The page is waiting on this before its body arrives, so a failure has to
+    // resolve rather than hang — an unset cookie is a wrong answer, a request
+    // that never finishes is a broken page.
+    error('Could not set the cookies of a served response', err);
+  }
+
+  return true;
+});
 queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
 queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
@@ -91,7 +112,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 contentScriptListeners(messageBus); // TODO
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES],
   [appSources.CONTENT, appSources.POPUP])
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {

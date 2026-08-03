@@ -83,6 +83,15 @@ export enum payloadType {
   DATA = 'data',
   /** Adds, changes or removes one cookie mock. */
   COOKIE = 'cookie',
+  /**
+   * "Put these cookies in the jar, and tell me when they are there."
+   *
+   * Content script -> background, for the cookies a served response sets. It
+   * has to be the background: `chrome.cookies` exists nowhere else, and a
+   * `Set-Cookie` header on a mocked response is inert because the response is
+   * fabricated in the page and never reaches the jar.
+   */
+  SET_COOKIES = 'set-cookies',
   // DATA_DISPATCH = 'data-dispatch',
   API_REQUEST = 'api-request',
   API_RESPONSE_MOCKED = 'api-response-mocked',

@@ -1,4 +1,5 @@
 import { MOCK_RULE_TYPES, objectTypes } from '../constants';
+import { IOhMyResponseCookie } from './cookie';
 import { IOhMyUpsertData } from './request';
 
 export type ohMyStatusCode = number;
@@ -41,6 +42,17 @@ export interface IMock {
   responseMock?: string;
   headers?: Record<string, string>;
   headersMock?: Record<string, string>;
+  /**
+   * The cookies this response sets, the way a real `Set-Cookie` would.
+   *
+   * Written by the background with `chrome.cookies` when the response is
+   * served — a `Set-Cookie` header stored here would be inert, because a mocked
+   * response is fabricated in the page and never reaches the cookie jar.
+   *
+   * Embedded rather than records of their own: they are part of the response,
+   * always loaded with it, and nothing else refers to them.
+   */
+  cookies?: IOhMyResponseCookie[];
   delay?: number;
   jsCode?: string;
   rules?: IOhMyMockRule[];
