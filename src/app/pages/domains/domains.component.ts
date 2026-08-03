@@ -47,6 +47,10 @@ export class DomainsComponent implements OnInit, OnDestroy {
   private summaryService = inject(DomainSummaryService);
   private cdr = inject(ChangeDetectorRef);
 
+  /** The domains as the store lists them, before this tab's is lifted out. */
+  private loaded: IOhMyDomainSummary[] = [];
+
+  /** What is drawn: the tab's own domain first, then the rest in store order. */
   domains: IOhMyDomainSummary[] = [];
   /** The domain of the tab the popup was opened on — not a selection. */
   activeDomain = '';
@@ -64,7 +68,9 @@ export class DomainsComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.appState.domain$.subscribe((domain) => {
         this.activeDomain = domain ?? '';
-        this.detectChanges();
+        // Which domain is first depends on this, and it can arrive after the
+        // list has already been read.
+        this.applyOrder();
       })
     );
 
@@ -85,7 +91,24 @@ export class DomainsComponent implements OnInit, OnDestroy {
   async refresh(): Promise<void> {
     const store: IOhMyMock | undefined = await this.storeService.getStore();
 
-    this.domains = await this.summaryService.summariseAll(store?.domains ?? []);
+    this.loaded = await this.summaryService.summariseAll(store?.domains ?? []);
+    this.applyOrder();
+  }
+
+  /**
+   * Puts the tab's own domain at the top.
+   *
+   * It is the one row that is nearly always the reason for opening this page,
+   * and the store lists domains in the order they were first seen — which puts
+   * the site you are on wherever it happens to fall. Everything else keeps that
+   * order rather than being sorted: a list that reshuffles is a list you have
+   * to re-read.
+   */
+  private applyOrder(): void {
+    const mine = this.loaded.filter((d) => d.domain === this.activeDomain);
+    const rest = this.loaded.filter((d) => d.domain !== this.activeDomain);
+
+    this.domains = [...mine, ...rest];
     this.detectChanges();
   }
 

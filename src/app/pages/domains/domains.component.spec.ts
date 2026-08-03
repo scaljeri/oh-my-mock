@@ -18,6 +18,7 @@ describe('DomainsComponent', () => {
   let domains: ohMyDomain[];
   let upserted: unknown[];
   let deleted: ohMyDomain[];
+  let appState: { domain: ohMyDomain; domain$: BehaviorSubject<ohMyDomain | null> };
 
   /**
    * Drains the macrotask queue, then redraws.
@@ -47,16 +48,17 @@ describe('DomainsComponent', () => {
     ];
     upserted = [];
     deleted = [];
+    appState = {
+      domain: '',
+      domain$: new BehaviorSubject<ohMyDomain | null>('example.com')
+    };
 
     await TestBed.configureTestingModule({
       imports: [FormsModule, DomainsComponent],
       providers: [
         {
           provide: AppStateService,
-          useValue: {
-            domain: '',
-            domain$: new BehaviorSubject<ohMyDomain | null>('example.com')
-          }
+          useValue: appState
         },
         {
           provide: OhMyState,
@@ -103,6 +105,52 @@ describe('DomainsComponent', () => {
     expect(rows().map(el => el.querySelector('[x-test="domain-host"]')?.textContent?.trim()))
       .toEqual(['example.com', 'api.staging.acme.io']);
     expect(rows()[0].textContent).toContain('3 requests · 1 cookies');
+  });
+
+  /**
+   * The store lists domains in the order they were first seen, which puts the
+   * site you are on wherever it happens to fall — and it is nearly always the
+   * reason the page was opened.
+   */
+  it('puts the tab own domain first, whatever the store order', async () => {
+    domains = ['a.example', 'the-tab.example', 'z.example'];
+    summaries = domains.map(domain => ({ domain, requests: 0, cookies: 0 }));
+    appState.domain$.next('the-tab.example');
+    await component.refresh();
+    fixture.detectChanges();
+
+    expect(rows().map(el => el.querySelector('[x-test="domain-host"]')?.textContent?.trim()))
+      .toEqual(['the-tab.example', 'a.example', 'z.example']);
+    expect(rows()[0].classList).toContain('is-active');
+  });
+
+  /**
+   * The list can be read before the tab's domain is known — they arrive from
+   * different places — so the order has to be applied again when it lands.
+   */
+  it('lifts it to the top when the domain arrives after the list', async () => {
+    domains = ['a.example', 'late.example'];
+    summaries = domains.map(domain => ({ domain, requests: 0, cookies: 0 }));
+    appState.domain$.next('');
+    await component.refresh();
+    fixture.detectChanges();
+
+    expect(rows()[0].textContent).toContain('a.example');
+
+    appState.domain$.next('late.example');
+    fixture.detectChanges();
+
+    expect(rows()[0].textContent).toContain('late.example');
+  });
+
+  it('leaves the others in the order the store has them', async () => {
+    domains = ['z.example', 'a.example', 'example.com'];
+    summaries = domains.map(domain => ({ domain, requests: 0, cookies: 0 }));
+    await component.refresh();
+    fixture.detectChanges();
+
+    expect(rows().map(el => el.querySelector('[x-test="domain-host"]')?.textContent?.trim()))
+      .toEqual(['example.com', 'z.example', 'a.example']);
   });
 
   /**

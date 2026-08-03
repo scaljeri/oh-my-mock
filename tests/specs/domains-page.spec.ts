@@ -60,6 +60,14 @@ test.describe('the domains page', () => {
     // Marked because the tab is on it — not because anyone picked it here.
     await expect(row.locator('[x-test="domain-active"]')).toBeVisible();
 
+    // And first. The store lists domains in the order they were first seen, so
+    // the site you are on lands wherever it happens to fall — and it is nearly
+    // always why the page was opened. `scaljeri.github.io` is seeded by the
+    // demo import and comes before it in that order.
+    await expect(popup.locator('[x-test="domain-row"]').first()).toContainText(
+      SITE_DOMAIN
+    );
+
     await popup.close();
   });
 

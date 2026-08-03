@@ -69,10 +69,17 @@
   display: flex;
   align-items: center;
   gap: t.$oh-space-3;
-  padding: 11px t.$oh-space-3;
+  // The accent is drawn on every row and only coloured on the active one, so
+  // the text does not shift by 3px between them.
+  padding: 11px t.$oh-space-3 11px calc(#{t.$oh-space-3} - 3px);
+  border-left: 3px solid transparent;
   border-bottom: 1px solid t.$oh-border-soft;
 
+  // The row this page is nearly always opened for. It is first as well as
+  // marked — being at the top is what you notice, the accent is what confirms
+  // it once you are reading.
   &.is-active {
+    border-left-color: t.$oh-info;
     background: t.$oh-bg-muted;
   }
 }
@@ -84,6 +91,10 @@
   white-space: nowrap;
   font-size: t.$oh-size-md;
   color: t.$oh-text;
+}
+
+.oh-domains__row.is-active .oh-domains__host {
+  font-weight: t.$oh-weight-semibold;
 }
 
 .oh-domains__badge {
