@@ -131,42 +131,21 @@ describe('DomainSidebarComponent', () => {
     fixture.detectChanges();
   });
 
-  it('lists every domain in the store with its counts', () => {
-    expect(component.visibleDomains).toEqual(summaries);
+  it('offers every domain in the store to pick from', () => {
+    expect(component.domains).toEqual(summaries);
 
-    const chips = Array.from(
-      fixture.nativeElement.querySelectorAll('[x-test="domain-item"]') as NodeListOf<HTMLElement>
+    const options = Array.from(
+      fixture.nativeElement.querySelectorAll('[x-test="domain-option"]') as NodeListOf<HTMLOptionElement>
     );
 
-    expect(chips.map(el => el.querySelector('.oh-domain-nav__host')?.textContent?.trim()))
-      .toEqual(['example.com', 'api.staging.acme.io']);
-    // The counts moved off a second line and onto the badge and the tooltip —
-    // the domains are a filter row above the groups now, not the main list.
-    expect(chips.map(el => el.getAttribute('title')))
-      .toEqual(['3 calls · 1 cookies', '0 calls · 0 cookies']);
-    expect(chips.map(el => el.querySelector('.oh-domain-nav__badge')?.textContent?.trim()))
-      .toEqual(['3', undefined]);
+    expect(options.map(el => el.textContent?.trim())).toEqual([
+      'example.com',
+      'api.staging.acme.io'
+    ]);
   });
 
   it('marks the domain the app is looking at', () => {
     expect(component.activeDomain).toBe('example.com');
-  });
-
-  it('filters on a part of the host, case insensitively', () => {
-    component.filter = 'ACME';
-    component.applyFilter();
-
-    expect(component.visibleDomains.map(d => d.domain)).toEqual(['api.staging.acme.io']);
-  });
-
-  it('shows everything again once the filter is cleared', () => {
-    component.filter = 'nothing-matches-this';
-    component.applyFilter();
-    expect(component.visibleDomains).toEqual([]);
-
-    component.filter = '  ';
-    component.applyFilter();
-    expect(component.visibleDomains).toEqual(summaries);
   });
 
   it('switches the app to the domain that was clicked', () => {
@@ -192,7 +171,7 @@ describe('DomainSidebarComponent', () => {
     expect(upserted.length).toBe(1);
     expect(appState.domain).toBe('new.example.org');
     expect(component.isAdding).toBe(false);
-    expect(component.visibleDomains.map(d => d.domain)).toContain('new.example.org');
+    expect(component.domains.map(d => d.domain)).toContain('new.example.org');
   });
 
   it('opens the HAR picker, which used to be a disabled button', () => {

@@ -1,56 +1,39 @@
 <!--
-The sidebar is the **mock group** list, with the domains as a filter row above
-it. Groups are the thing being worked with, so burying them one expand deep
-under a domain tree would make the common act — switching a group off for this
-site — the slow one. The domain row keeps the navigation the sidebar used to be.
+The sidebar picks a domain and lists that domain's **mocks** — each row a named
+set, on or off for this site.
+
+"Group" is the word in the code, not on screen. It is a technical name for a set
+of mocks with a source, and putting it in front of someone reading the sidebar
+would ask them to learn a concept where they only wanted to see their mocks.
 
 The two actions at the bottom are unchanged; the old nav links (reset, explore,
 import/export, docs) live in the overflow menu — see `oh-my-nav-list`.
 -->
 <div class="oh-domain-nav">
-  <div class="oh-domain-nav__search">
-    <mat-icon class="oh-domain-nav__search-icon" svgIcon="search"></mat-icon>
-    <input
-      class="oh-domain-nav__search-input"
-      type="text"
-      placeholder="Search domains"
-      aria-label="Search domains"
-      x-test="domain-search"
-      [ngModel]="filter"
-      (ngModelChange)="filter = $event; applyFilter()"
-    />
-  </div>
+  <!-- A picker rather than a list: the sidebar is about the domain being looked
+  at, and the domain itself is already named in the header. -->
+  <label class="oh-domain-nav__picker">
+    <span class="oh-domain-nav__picker-label">Domain</span>
+    <select
+      class="oh-domain-nav__select"
+      x-test="domain-select"
+      aria-label="Domain"
+      [ngModel]="activeDomain"
+      (ngModelChange)="onSelect($event)"
+    >
+      @for (summary of domains; track trackByDomain($index, summary)) {
+        <option x-test="domain-option" [value]="summary.domain">
+          {{ summary.domain }}
+        </option>
+      }
+    </select>
+  </label>
 
-  <h2 class="oh-domain-nav__heading">Domains</h2>
-
-  <ul class="oh-domain-nav__domains">
-    @for (summary of visibleDomains; track trackByDomain($index, summary)) {
-      <li>
-        <button
-          class="oh-domain-nav__chip"
-          type="button"
-          x-test="domain-item"
-          [title]="summary.requests + ' calls · ' + summary.cookies + ' cookies'"
-          [class.is-active]="summary.domain === activeDomain"
-          [class.is-mocking]="summary.requests > 0 || summary.cookies > 0"
-          (click)="onSelect(summary.domain)"
-        >
-          <span class="oh-domain-nav__host">{{ summary.domain }}</span>
-          @if (summary.requests) {
-            <span class="oh-domain-nav__badge">{{ summary.requests }}</span>
-          }
-        </button>
-      </li>
-    }
-  </ul>
-
-  @if (!visibleDomains.length) {
-    <p class="oh-domain-nav__empty">
-      {{ filter ? 'No domain matches' : 'No domains yet' }}
-    </p>
+  @if (!domains.length) {
+    <p class="oh-domain-nav__empty">No domains yet</p>
   }
 
-  <h2 class="oh-domain-nav__heading">Mock groups</h2>
+  <h2 class="oh-domain-nav__heading">Mocks</h2>
 
   <ul class="oh-group-nav__list">
     @for (row of groups; track trackByGroup($index, row)) {
@@ -102,7 +85,7 @@ import/export, docs) live in the overflow menu — see `oh-my-nav-list`.
   </ul>
 
   @if (!groups.length) {
-    <p class="oh-domain-nav__empty" x-test="no-groups">No mock groups yet</p>
+    <p class="oh-domain-nav__empty" x-test="no-groups">No mocks yet</p>
   }
 
   <div class="oh-domain-nav__footer">

@@ -25,7 +25,6 @@ import {
   IOhMyDomainSummary
 } from './domain-summary.service';
 import { GroupListService, IOhMyGroupRow } from './group-list.service';
-import { MatIcon } from '@angular/material/icon';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NavListComponent } from '../nav-list/nav-list.component';
 
@@ -37,8 +36,11 @@ import { NavListComponent } from '../nav-list/nav-list.component';
 const REFRESH_DEBOUNCE = 200;
 
 /**
- * The left column of the three-pane shell: the **mock groups** answering for the
- * domain being looked at, with the domains themselves as a filter row above.
+ * The left column of the three-pane shell: a domain picker, and the mocks that
+ * answer for the domain picked.
+ *
+ * Each row is a mock *group* in the code — a named set with a source — but the
+ * word does not appear on screen. See the template.
  *
  * Neither list is in the store — it holds `domains: string[]` and `groups:
  * id[]`, no counts — so both are gathered per domain, by `DomainSummaryService`
@@ -50,7 +52,7 @@ const REFRESH_DEBOUNCE = 200;
   selector: 'oh-my-domain-sidebar',
   templateUrl: './domain-sidebar.component.html',
   styleUrls: ['./domain-sidebar.component.scss'],
-  imports: [MatIcon, ReactiveFormsModule, FormsModule, NavListComponent]
+  imports: [ReactiveFormsModule, FormsModule, NavListComponent]
 })
 export class DomainSidebarComponent implements OnInit, OnDestroy {
   private appState = inject(AppStateService);
@@ -65,9 +67,7 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   @Input() context!: IOhMyContext;
   @Output() navigate = new EventEmitter<void>();
 
-  filter = '';
   domains: IOhMyDomainSummary[] = [];
-  visibleDomains: IOhMyDomainSummary[] = [];
   activeDomain = '';
   /** The groups covering `activeDomain`, in the order that decides who answers. */
   groups: IOhMyGroupRow[] = [];
@@ -124,7 +124,7 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     const store: IOhMyMock | undefined = await this.storeService.getStore();
 
     this.domains = await this.summaryService.summariseAll(store?.domains ?? []);
-    this.applyFilter();
+    this.detectChanges();
 
     await this.refreshGroups(store);
   }
@@ -187,16 +187,6 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
 
     await this.storeService.updateAux({ disabledGroups }, this.context);
     await this.refreshGroups();
-  }
-
-  applyFilter(): void {
-    const needle = this.filter.trim().toLowerCase();
-
-    this.visibleDomains = needle
-      ? this.domains.filter((d) => d.domain.toLowerCase().includes(needle))
-      : this.domains;
-
-    this.detectChanges();
   }
 
   onSelect(domain: ohMyDomain): void {
