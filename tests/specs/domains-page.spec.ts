@@ -165,4 +165,62 @@ test.describe('the domains page', () => {
 
     await popup.close();
   });
+
+  /**
+   * A page of its own, not a pane of the home page.
+   *
+   * Home is the mocks on the left and the api calls beside them. The domains
+   * page has nothing to do with the mock list, and leaving it standing there
+   * said it did — while the tab strip above it had already, correctly, hidden
+   * itself.
+   */
+  test('stands on its own, without the mock list beside it', async ({
+    context,
+    extensionId,
+    ohMy,
+    site
+  }) => {
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { a: 1 }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+    await site.open();
+
+    const popup = await openPopup(context, extensionId, {
+      domain: SITE_DOMAIN,
+      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
+    });
+
+    // Home: mocks on the left, api calls beside them.
+    await expect(popup.locator('.oh-sidebar')).toBeVisible();
+    await expect(popup.locator('[x-test="group-item"]')).toHaveCount(1);
+    await expect(popup.locator('[x-test="tab-requests"]')).toBeVisible();
+
+    await popup.goto(`${popup.url().split('#')[0]}#/domains`);
+    await expect(popup.locator('[x-test="domain-row"]').first()).toBeVisible();
+
+    // The whole window, and no column reserved for a sidebar that is not there.
+    await expect(popup.locator('.oh-sidebar')).toHaveCount(0);
+    await expect(popup.locator('[x-test="tab-requests"]')).toHaveCount(0);
+
+    const body = popup.locator('.oh-body');
+    const page = popup.locator('.oh-main');
+    const bodyBox = await body.boundingBox();
+    const mainBox = await page.boundingBox();
+
+    expect(mainBox?.x).toBeCloseTo(bodyBox?.x ?? -1, 0);
+    expect(mainBox?.width).toBeCloseTo(bodyBox?.width ?? -1, 0);
+
+    // The way back. The overflow menu lives in the sidebar, so without this the
+    // page is a dead end — there is nothing else on screen that navigates.
+    await popup.locator('[x-test="back-to-mocks"]').click();
+
+    await expect(popup.locator('.oh-sidebar')).toBeVisible();
+    await expect(popup.locator('[x-test="tab-requests"]')).toBeVisible();
+    await expect(popup.locator('[x-test="group-item"]')).toHaveCount(1);
+
+    await popup.close();
+  });
 });

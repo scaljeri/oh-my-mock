@@ -10,15 +10,17 @@ import { IOhMyContext, IState } from '@shared/type';
 import { MatDialog } from '@angular/material/dialog';
 import {
   ActivatedRoute,
+  NavigationEnd,
   Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet
 } from '@angular/router';
+import { isHomePage } from './utils/home-route';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 import { initializeApp } from './app.initialize';
 import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
@@ -75,6 +77,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   // The sidebar is a permanent column in the new three-pane shell rather than
   // an overlay drawer; the header button collapses it for narrow windows.
   sidebarOpen = true;
+  /**
+   * Whether the shell is showing the home page.
+   *
+   * The mock sidebar belongs to home and to nothing else: the domains page, the
+   * state explorer, the JSON export and remote mocking are pages in their own
+   * right and get the whole window.
+   */
+  isHome = true;
 
   page = '';
   dialogDone = false;
@@ -83,6 +93,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version!: string;
   showDisabled = -1;
   stateSub!: Subscription;
+  routerSub?: Subscription;
   mockSub!: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
@@ -97,6 +108,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
+    this.isHome = isHomePage(this.router.url);
+
+    this.routerSub = this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.isHome = isHomePage(event.urlAfterRedirects);
+        this.cdr.detectChanges();
+      });
+
     await initializeApp(
       this.appState,
       this.stateService,
@@ -159,9 +179,20 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   @HostListener('window:beforeunload')
+  /**
+   * Back to home from a page that stands on its own.
+   *
+   * The overflow menu lives in the sidebar, and the sidebar is not on these
+   * pages — so this is the only way back, not a convenience.
+   */
+  onBackHome(): void {
+    void this.router.navigate(['/']);
+  }
+
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
     this.mockSub?.unsubscribe();
+    this.routerSub?.unsubscribe();
     this.contentService.deactivate();
   }
 

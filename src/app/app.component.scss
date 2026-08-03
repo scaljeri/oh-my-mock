@@ -35,6 +35,31 @@
   background: t.$oh-bg-surface;
   border-bottom: 1px solid t.$oh-border;
 
+  // Same box as the hamburger it stands in for, so the brand does not shift
+  // when a page without a sidebar is opened.
+  &__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: t.$oh-text-secondary;
+    cursor: pointer;
+
+    &:hover {
+      background: t.$oh-bg-muted;
+      color: t.$oh-text;
+    }
+
+    ::ng-deep svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+  }
+
   &__brand {
     display: flex;
     align-items: center;
@@ -134,6 +159,14 @@
   display: grid;
   grid-template-columns: t.$oh-sidebar-width 1fr;
   min-height: 0; // lets the children scroll instead of stretching the grid
+
+  // No sidebar: off home, or collapsed by the header button. The track has to
+  // go with it — `display: none` on the `aside` takes the element out of the
+  // layout but leaves the column standing, so the page kept a sidebar-wide
+  // strip of nothing down its left.
+  &.is-full {
+    grid-template-columns: 1fr;
+  }
 }
 
 // The column itself does not scroll: `oh-my-domain-sidebar` keeps its search
@@ -176,6 +209,10 @@
 
   .oh-body {
     grid-template-columns: t.$oh-sidebar-width-compact 1fr;
+
+    &.is-full {
+      grid-template-columns: 1fr;
+    }
   }
 }
 
