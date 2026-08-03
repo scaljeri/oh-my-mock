@@ -18,31 +18,18 @@ list, which is the whole point of the new layout.
 >
   <header class="oh-header">
     <div class="oh-header__brand">
-      <!-- Off home there is no sidebar to collapse — and the overflow menu
-      lives in it, so without this the page would be a dead end with no way
-      back to the mocks. -->
-      @if (isHome) {
-        <button
-          class="oh-header__menu"
-          x-test="hamburger-menu-btn"
-          type="button"
-          aria-label="Menu"
-          (click)="sidebarOpen = !sidebarOpen"
-        >
-          <mat-icon svgIcon="menu"></mat-icon>
-        </button>
-      } @else {
-        <button
-          class="oh-header__back"
-          x-test="back-to-mocks"
-          type="button"
-          aria-label="Back to the mocks"
-          title="Back to the mocks"
-          (click)="onBackHome()"
-        >
-          <mat-icon svgIcon="keyboard_arrow_left"></mat-icon>
-        </button>
-      }
+      <!-- The one way into the drawer, on every page: it holds the navigation
+      as well as the mocks, so this button is how you get anywhere. -->
+      <button
+        class="oh-header__menu"
+        x-test="hamburger-menu-btn"
+        type="button"
+        aria-label="Menu"
+        [attr.aria-expanded]="sidebarOpen"
+        (click)="sidebarOpen = !sidebarOpen"
+      >
+        <mat-icon svgIcon="menu"></mat-icon>
+      </button>
       <span class="oh-header__name">OhMyMock</span>
       <span class="oh-header__version">v{{ version }}</span>
     </div>
@@ -86,17 +73,28 @@ list, which is the whole point of the new layout.
     </div>
   </header>
 
-  <!-- The sidebar column is dropped entirely off home, rather than left empty:
-  `.oh-body` is a two-track grid, so hiding only the `aside` reserves its width
-  for nothing. That was already true of the hamburger collapse. -->
-  <div class="oh-body" [class.is-full]="!isHome || !sidebarOpen">
-    @if (isHome) {
-      <aside class="oh-sidebar" [class.is-collapsed]="!sidebarOpen">
-        <oh-my-domain-sidebar
-          [context]="context"
-          (navigate)="onNavigate()"
-        ></oh-my-domain-sidebar>
-      </aside>
+  <!-- One column. The drawer slides over it and the request detail slides over
+  it from the other side, so the api call list has the window to itself. -->
+  <div class="oh-body">
+    <!-- Rendered even while closed, so opening it animates rather than appears
+    — and so its group toggles keep their state across an open/close. -->
+    <aside class="oh-drawer" [class.is-open]="sidebarOpen">
+      <oh-my-domain-sidebar
+        [context]="context"
+        (navigate)="onNavigate()"
+      ></oh-my-domain-sidebar>
+    </aside>
+
+    @if (sidebarOpen) {
+      <!-- Clicking anywhere else closes it. Without this the only way out is
+      the hamburger, which is the one place people do not look. -->
+      <button
+        class="oh-drawer__scrim"
+        type="button"
+        x-test="drawer-scrim"
+        aria-label="Close the menu"
+        (click)="sidebarOpen = false"
+      ></button>
     }
 
     <main class="oh-main">

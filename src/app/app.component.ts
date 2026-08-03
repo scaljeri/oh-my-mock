@@ -10,17 +10,15 @@ import { IOhMyContext, IState } from '@shared/type';
 import { MatDialog } from '@angular/material/dialog';
 import {
   ActivatedRoute,
-  NavigationEnd,
   Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet
 } from '@angular/router';
-import { isHomePage } from './utils/home-route';
 import { OhMyStateService } from './services/state.service';
 import { OhMyState } from './services/oh-my-store';
 import { AppStateService } from './services/app-state.service';
-import { Subscription, filter } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { initializeApp } from './app.initialize';
 import { ContentService } from './services/content.service';
 import { ShowErrorsComponent } from './components/show-errors/show-errors.component';
@@ -74,17 +72,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   domain!: string;
 
   color = 'warn';
-  // The sidebar is a permanent column in the new three-pane shell rather than
-  // an overlay drawer; the header button collapses it for narrow windows.
-  sidebarOpen = true;
   /**
-   * Whether the shell is showing the home page.
+   * The drawer: the navigation and the mock list, over the left of the page.
    *
-   * The mock sidebar belongs to home and to nothing else: the domains page, the
-   * state explorer, the JSON export and remote mocking are pages in their own
-   * right and get the whole window.
+   * Closed to start with. It was a permanent column, which spent a fixed strip
+   * of a popup-sized window on something that is read occasionally and changed
+   * rarely — while the api call list, the thing actually being worked with, got
+   * what was left.
    */
-  isHome = true;
+  sidebarOpen = false;
 
   page = '';
   dialogDone = false;
@@ -93,7 +89,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   version!: string;
   showDisabled = -1;
   stateSub!: Subscription;
-  routerSub?: Subscription;
   mockSub!: Subscription;
   isUpAndRunning = false;
   errors: IPacketPayload[] = [];
@@ -108,15 +103,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.isHome = isHomePage(this.router.url);
-
-    this.routerSub = this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        this.isHome = isHomePage(event.urlAfterRedirects);
-        this.cdr.detectChanges();
-      });
-
     await initializeApp(
       this.appState,
       this.stateService,
@@ -179,20 +165,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   @HostListener('window:beforeunload')
-  /**
-   * Back to home from a page that stands on its own.
-   *
-   * The overflow menu lives in the sidebar, and the sidebar is not on these
-   * pages — so this is the only way back, not a convenience.
-   */
-  onBackHome(): void {
-    void this.router.navigate(['/']);
-  }
-
   ngOnDestroy() {
     this.stateSub?.unsubscribe();
     this.mockSub?.unsubscribe();
-    this.routerSub?.unsubscribe();
     this.contentService.deactivate();
   }
 
@@ -232,8 +207,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
    * Navigating from the sidebar no longer has to close an overlay. The hook is
    * kept so the nav list does not need to know about the shell's layout.
    */
+  /** Something in the drawer was picked, so the drawer has done its job. */
   onNavigate(): void {
-    // Intentionally empty: the sidebar is permanent in the three-pane shell.
+    this.sidebarOpen = false;
   }
 
   onErrors(): void {

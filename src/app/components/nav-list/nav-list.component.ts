@@ -6,22 +6,20 @@ import { IOhMyContext, ResetStateOptions } from '@shared/type';
 import { OhMyState } from '../../services/oh-my-store';
 import { JsonImportComponent } from '../json-import/json-import.component';
 import { ResetStateComponent } from '../reset-state/reset-state.component';
-import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
-import { MatIcon } from '@angular/material/icon';
-
 /**
- * The app-wide actions: reset, state explorer, JSON import/export and the
- * external links.
+ * The app-wide actions: where to go, reset, JSON import/export and the external
+ * links.
  *
- * These used to be the entire sidebar. The sidebar is the domain list now
- * (`oh-my-domain-sidebar`), so this became the overflow menu in its footer —
- * the same actions behind one button, nothing dropped.
+ * These were the entire sidebar once, then an overflow menu in its footer while
+ * the sidebar was a permanent column. It is a drawer now, opened on purpose,
+ * and a menu inside it would be a second button in front of the same list — so
+ * they are plainly listed again.
  */
 @Component({
   selector: 'oh-my-nav-list',
   templateUrl: './nav-list.component.html',
   styleUrls: ['./nav-list.component.scss'],
-  imports: [MatMenuTrigger, MatIcon, MatMenu, MatMenuItem, RouterLink]
+  imports: [RouterLink]
 })
 export class NavListComponent {
   private storeService = inject(OhMyState);

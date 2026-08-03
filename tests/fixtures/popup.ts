@@ -67,6 +67,24 @@ export async function openPopup(
 }
 
 /**
+ * Opens the drawer, where the mocks and the navigation live.
+ *
+ * It is closed until asked for, and its contents are slid out of the window
+ * rather than removed — so a locator still *finds* them, and only a click
+ * fails. Anything reaching for the mock list, the HAR import or a nav item has
+ * to come through here.
+ */
+export async function openDrawer(popup: Page): Promise<void> {
+  const drawer = popup.locator('.oh-drawer');
+
+  if (!/is-open/.test((await drawer.getAttribute('class')) ?? '')) {
+    await popup.locator('[x-test="hamburger-menu-btn"]').click();
+  }
+
+  await expect(drawer).toHaveClass(/is-open/);
+}
+
+/**
  * What the detail pane's editor currently holds, straight from Monaco's model.
  *
  * `monaco.editor.getEditors()` returns every editor on the page — the popup can

@@ -10,9 +10,8 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { IState } from '@shared/types/state';
 import { filter, Subscription } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
-import { activeTab, ohMyTab } from '../../utils/home-route';
 
-export type { ohMyTab };
+export type ohMyTab = 'requests' | 'cookies';
 
 /**
  * The tab strip under the header — Requests and Cookies, with a count each,
@@ -72,11 +71,21 @@ export class TabNavComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Which tab a url belongs to, or `null` off home — the strip hides itself
-   * there rather than showing neither tab as current.
-   *
-   * The rule itself lives in `utils/home-route`, because the sidebar hides on
-   * exactly the same pages and two copies would drift.
+   * Which tab a url belongs to, or `null` for the pages that are not tabs
+   * (domains, the state explorer, the JSON export, remote mocking) — the strip
+   * hides itself there rather than showing neither tab as current.
    */
-  static activeTab = activeTab;
+  static activeTab(url: string): ohMyTab | null {
+    const path = url.split(/[?#]/)[0];
+
+    if (path === '/' || path === '' || path.startsWith('/request')) {
+      return 'requests';
+    }
+
+    if (path.startsWith('/cookies')) {
+      return 'cookies';
+    }
+
+    return null;
+  }
 }

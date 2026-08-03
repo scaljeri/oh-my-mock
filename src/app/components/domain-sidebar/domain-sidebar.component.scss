@@ -172,6 +172,18 @@
   color: t.$oh-text-faint;
 }
 
+// ---- nav ---------------------------------------------------------------
+//
+// The app-wide actions, at the top. They were an overflow button in the footer
+// while the sidebar was a permanent column; the drawer is opened on purpose, so
+// a second button in front of the same list buys nothing.
+
+.oh-domain-nav__nav {
+  flex: 0 0 auto;
+  padding: t.$oh-space-3 t.$oh-space-2 t.$oh-space-2;
+  border-bottom: 1px solid t.$oh-border-soft;
+}
+
 // ---- footer -----------------------------------------------------------
 
 .oh-domain-nav__footer {
@@ -208,39 +220,7 @@
   line-height: 1;
 }
 
-.oh-domain-nav__actions {
-  display: flex;
-  align-items: stretch;
-  gap: t.$oh-space-2;
-}
 
-.oh-domain-nav__import {
-  flex: 1;
-  min-width: 0;
-  padding: t.$oh-space-2 t.$oh-space-3;
-  border: 1px solid t.$oh-border;
-  border-radius: t.$oh-radius-md;
-  background: transparent;
-  font-family: t.$oh-font-sans;
-  font-size: t.$oh-size-md;
-  color: t.$oh-text-muted;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: t.$oh-bg-muted;
-    color: t.$oh-text;
-  }
-
-  &:disabled {
-    color: t.$oh-text-fainter;
-    cursor: not-allowed;
-  }
-}
-
-.oh-domain-nav__more {
-  flex: 0 0 auto;
-  display: flex;
-}
 
 // ---- inline "add domain" form ----------------------------------------
 

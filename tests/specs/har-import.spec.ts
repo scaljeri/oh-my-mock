@@ -14,7 +14,7 @@
  */
 
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
-import { openPopup } from '../fixtures/popup';
+import { openDrawer, openPopup } from '../fixtures/popup';
 
 interface HarEntryOptions {
   url: string;
@@ -136,6 +136,7 @@ test.describe('HAR import', () => {
       content: 'oh-my-connection-failure { display: none !important; }'
     });
 
+    await openDrawer(popup);
     await popup.locator('[x-test="import-har"]').click();
     await popup.locator('oh-my-har-import input[type="file"]').setInputFiles({
       name: 'session.har',
@@ -246,6 +247,7 @@ test.describe('HAR import', () => {
       content: 'oh-my-connection-failure { display: none !important; }'
     });
 
+    await openDrawer(popup);
     await popup.locator('[x-test="import-har"]').click();
     await popup.locator('oh-my-har-import input[type="file"]').setInputFiles({
       name: 'notes.txt',

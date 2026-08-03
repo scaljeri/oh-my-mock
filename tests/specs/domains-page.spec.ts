@@ -167,14 +167,15 @@ test.describe('the domains page', () => {
   });
 
   /**
-   * A page of its own, not a pane of the home page.
+   * The drawer, not a column.
    *
-   * Home is the mocks on the left and the api calls beside them. The domains
-   * page has nothing to do with the mock list, and leaving it standing there
-   * said it did — while the tab strip above it had already, correctly, hidden
-   * itself.
+   * The mock list and the navigation live over the left of the page and only
+   * when asked for, so the api call list has the window to itself — and so the
+   * pages that are not home are not wearing a sidebar that has nothing to do
+   * with them. Everything in the drawer is reachable from every page, which is
+   * what lets there be no back button.
    */
-  test('stands on its own, without the mock list beside it', async ({
+  test('is reached from the drawer, which is closed until it is asked for', async ({
     context,
     extensionId,
     ohMy,
@@ -193,34 +194,64 @@ test.describe('the domains page', () => {
       tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
-    // Home: mocks on the left, api calls beside them.
-    await expect(popup.locator('.oh-sidebar')).toBeVisible();
-    await expect(popup.locator('[x-test="group-item"]')).toHaveCount(1);
-    await expect(popup.locator('[x-test="tab-requests"]')).toBeVisible();
+    const drawer = popup.locator('.oh-drawer');
+    const list = popup.locator('.oh-main');
 
-    await popup.goto(`${popup.url().split('#')[0]}#/domains`);
+    // Closed to start with: the drawer is slid out of the window, and the api
+    // call list has the whole width.
+    await expect(drawer).not.toHaveClass(/is-open/);
+    const closedBox = await list.boundingBox();
+    expect(closedBox?.x).toBeCloseTo(0, 0);
+
+    await popup.locator('[x-test="hamburger-menu-btn"]').click();
+    await expect(drawer).toHaveClass(/is-open/);
+
+    // The mocks are in it, and so is the way to every other page.
+    await expect(popup.locator('[x-test="group-item"]')).toHaveCount(1);
+    await popup.locator('[x-test="nav-domains"]').click();
+
+    // Picking something closes it — a drawer left standing over the result is
+    // something you have to click away twice.
     await expect(popup.locator('[x-test="domain-row"]').first()).toBeVisible();
+    await expect(drawer).not.toHaveClass(/is-open/);
 
-    // The whole window, and no column reserved for a sidebar that is not there.
-    await expect(popup.locator('.oh-sidebar')).toHaveCount(0);
-    await expect(popup.locator('[x-test="tab-requests"]')).toHaveCount(0);
+    // The list underneath never gave up any width for it.
+    const openedBox = await list.boundingBox();
+    expect(openedBox?.x).toBeCloseTo(closedBox?.x ?? -1, 0);
+    expect(openedBox?.width).toBeCloseTo(closedBox?.width ?? -1, 0);
 
-    const body = popup.locator('.oh-body');
-    const page = popup.locator('.oh-main');
-    const bodyBox = await body.boundingBox();
-    const mainBox = await page.boundingBox();
-
-    expect(mainBox?.x).toBeCloseTo(bodyBox?.x ?? -1, 0);
-    expect(mainBox?.width).toBeCloseTo(bodyBox?.width ?? -1, 0);
-
-    // The way back. The overflow menu lives in the sidebar, so without this the
-    // page is a dead end — there is nothing else on screen that navigates.
-    await popup.locator('[x-test="back-to-mocks"]').click();
-
-    await expect(popup.locator('.oh-sidebar')).toBeVisible();
+    // And back, from the same drawer: these pages have nothing else on screen
+    // that navigates.
+    await popup.locator('[x-test="hamburger-menu-btn"]').click();
+    await popup.locator('[x-test="nav-requests"]').click();
     await expect(popup.locator('[x-test="tab-requests"]')).toBeVisible();
-    await expect(popup.locator('[x-test="group-item"]')).toHaveCount(1);
 
     await popup.close();
   });
+
+  test('the drawer closes by clicking away from it', async ({
+    context,
+    extensionId,
+    ohMy,
+    site
+  }) => {
+    await ohMy.setActive(SITE_DOMAIN);
+    await site.open();
+
+    const popup = await openPopup(context, extensionId, {
+      domain: SITE_DOMAIN,
+      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
+    });
+
+    await popup.locator('[x-test="hamburger-menu-btn"]').click();
+    await expect(popup.locator('.oh-drawer')).toHaveClass(/is-open/);
+
+    // Without this the only way out is the hamburger, which is the one place
+    // people do not look.
+    await popup.locator('[x-test="drawer-scrim"]').click();
+    await expect(popup.locator('.oh-drawer')).not.toHaveClass(/is-open/);
+
+    await popup.close();
+  });
+
 });

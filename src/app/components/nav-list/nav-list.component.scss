@@ -1,24 +1,40 @@
 @use 'tokens' as t;
 
-// A single icon button that opens the app-wide actions; it sits in the footer
-// of the domain sidebar, next to "Import HAR file".
+// The app-wide actions at the top of the drawer. A plain list rather than an
+// overflow menu: the drawer is already something you opened on purpose, so
+// hiding its contents behind a second button buys nothing.
 
 :host {
-  display: inline-flex;
+  display: block;
 }
 
-.oh-nav-menu__trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 100%;
-  min-height: 34px;
+.oh-nav__list {
+  margin: 0;
   padding: 0;
-  border: 1px solid t.$oh-border;
-  border-radius: t.$oh-radius-md;
+  list-style: none;
+
+  // The groups are separated by a rule rather than a heading: they differ in
+  // how far-reaching they are, not in subject, and there is no honest name for
+  // "the ones that do not navigate".
+  & + & {
+    margin-top: t.$oh-space-2;
+    padding-top: t.$oh-space-2;
+    border-top: 1px solid t.$oh-border-soft;
+  }
+}
+
+.oh-nav__item {
+  display: block;
+  width: 100%;
+  padding: 7px t.$oh-space-3;
+  border: 0;
+  border-radius: 8px;
   background: transparent;
-  color: t.$oh-text-subtle;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-md;
+  color: t.$oh-text-secondary;
+  text-align: left;
+  text-decoration: none;
   cursor: pointer;
 
   &:hover {
@@ -26,9 +42,14 @@
     color: t.$oh-text;
   }
 
-  ::ng-deep svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
+  // The one action here with nothing behind it to undo.
+  &--danger:hover {
+    background: t.$oh-danger-tint;
+    color: t.$oh-danger;
   }
+}
+
+.oh-nav__list--external .oh-nav__item {
+  font-size: t.$oh-size-sm;
+  color: t.$oh-text-faint;
 }

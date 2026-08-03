@@ -1,65 +1,113 @@
 <!--
-  The app-wide actions that used to be a list of buttons filling the sidebar.
-  The sidebar is the mock list now, so they moved into an overflow menu at
-  the bottom of it — nothing was dropped.
--->
-<button
-  class="oh-nav-menu__trigger"
-  type="button"
-  aria-label="More actions"
-  title="More actions"
-  x-test="nav-menu-btn"
-  [matMenuTriggerFor]="menu"
->
-  <mat-icon svgIcon="more_vert"></mat-icon>
-</button>
+The app-wide actions, at the top of the drawer.
 
-<mat-menu #menu="matMenu">
-  <button mat-menu-item type="button" (click)="onReset()">Reset state</button>
-  <button
-    mat-menu-item
-    type="button"
-    x-test="nav-domains"
-    routerLink="/domains"
-    (click)="navigate.emit()"
-  >
-    Domains
-  </button>
-  <button mat-menu-item type="button" routerLink="/state-explore" (click)="navigate.emit()">
-    Explore state
-  </button>
-  <button mat-menu-item type="button" routerLink="/json-export" (click)="navigate.emit()">
-    JSON export
-  </button>
-  <button mat-menu-item type="button" (click)="onJsonImport()">JSON import</button>
-  <button
-    mat-menu-item
-    type="button"
-    x-test="nav-remote-mocking"
-    routerLink="/remote-mocking"
-    (click)="navigate.emit()"
-  >
-    Remote mocking
-  </button>
-  <a
-    mat-menu-item
-    target="_blank"
-    rel="noopener"
-    href="https://scaljeri.github.io/oh-my-mock/documentation/index.html"
-    >Documentation</a
-  >
-  <a
-    mat-menu-item
-    target="_blank"
-    rel="noopener"
-    href="https://github.com/scaljeri/oh-my-mock/blob/feature/cypress/CHANGELOG.md"
-    >Changelog</a
-  >
-  <a
-    mat-menu-item
-    target="_blank"
-    rel="noopener"
-    href="https://scaljeri.github.io/oh-my-mock/index.html"
-    >Demo Site</a
-  >
-</mat-menu>
+These were the whole sidebar once, then an overflow menu in its footer when the
+sidebar became a permanent column. The sidebar is a drawer now — not on screen
+unless asked for — so a menu inside a menu buys nothing, and they are plainly
+listed again.
+
+`(navigate)` closes the drawer. Every one of these either goes somewhere or
+opens a dialog, and a drawer left standing over the result is something you have
+to click away twice.
+-->
+<nav class="oh-nav">
+  <ul class="oh-nav__list">
+    <li>
+      <a
+        class="oh-nav__item"
+        x-test="nav-requests"
+        routerLink="/"
+        (click)="navigate.emit()"
+        >Requests</a
+      >
+    </li>
+    <li>
+      <a
+        class="oh-nav__item"
+        x-test="nav-cookies"
+        routerLink="/cookies"
+        (click)="navigate.emit()"
+        >Cookies</a
+      >
+    </li>
+    <li>
+      <a
+        class="oh-nav__item"
+        x-test="nav-domains"
+        routerLink="/domains"
+        (click)="navigate.emit()"
+        >Domains</a
+      >
+    </li>
+    <li>
+      <a
+        class="oh-nav__item"
+        x-test="nav-remote-mocking"
+        routerLink="/remote-mocking"
+        (click)="navigate.emit()"
+        >Remote mocking</a
+      >
+    </li>
+  </ul>
+
+  <ul class="oh-nav__list oh-nav__list--secondary">
+    <li>
+      <a
+        class="oh-nav__item"
+        routerLink="/state-explore"
+        (click)="navigate.emit()"
+        >Explore state</a
+      >
+    </li>
+    <li>
+      <a class="oh-nav__item" routerLink="/json-export" (click)="navigate.emit()"
+        >JSON export</a
+      >
+    </li>
+    <li>
+      <button class="oh-nav__item" type="button" (click)="onJsonImport()">
+        JSON import
+      </button>
+    </li>
+    <li>
+      <button
+        class="oh-nav__item oh-nav__item--danger"
+        type="button"
+        x-test="nav-reset"
+        (click)="onReset()"
+      >
+        Reset state
+      </button>
+    </li>
+  </ul>
+
+  <ul class="oh-nav__list oh-nav__list--external">
+    <li>
+      <a
+        class="oh-nav__item"
+        target="_blank"
+        rel="noopener"
+        href="https://scaljeri.github.io/oh-my-mock/documentation/index.html"
+        >Documentation</a
+      >
+    </li>
+    <li>
+      <a
+        class="oh-nav__item"
+        target="_blank"
+        rel="noopener"
+        href="https://github.com/scaljeri/oh-my-mock/blob/feature/cypress/CHANGELOG.md"
+        >Changelog</a
+      >
+    </li>
+    <li>
+      <a
+        class="oh-nav__item"
+        target="_blank"
+        rel="noopener"
+        href="https://scaljeri.github.io/oh-my-mock/index.html"
+        >Demo site</a
+      >
+    </li>
+  </ul>
+</nav>

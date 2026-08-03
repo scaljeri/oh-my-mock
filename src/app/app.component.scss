@@ -156,32 +156,52 @@
 // ---- body: sidebar + main --------------------------------------------
 
 .oh-body {
+  position: relative; // the drawer and its scrim are positioned against this
   display: grid;
-  grid-template-columns: t.$oh-sidebar-width 1fr;
+  grid-template-columns: 1fr;
   min-height: 0; // lets the children scroll instead of stretching the grid
-
-  // No sidebar: off home, or collapsed by the header button. The track has to
-  // go with it — `display: none` on the `aside` takes the element out of the
-  // layout but leaves the column standing, so the page kept a sidebar-wide
-  // strip of nothing down its left.
-  &.is-full {
-    grid-template-columns: 1fr;
-  }
 }
 
-// The column itself does not scroll: `oh-my-domain-sidebar` keeps its search
-// box and its footer buttons in place and scrolls only the domain list.
-.oh-sidebar {
+// ---- drawer -----------------------------------------------------------
+//
+// Over the page rather than beside it. As a column it spent a fixed strip of a
+// popup-sized window on something read occasionally and changed rarely, while
+// the api call list — the thing being worked with — got what was left. The
+// request detail already slides in from the other side, so both are overlays
+// and the list keeps the whole window between them.
+
+.oh-drawer {
+  position: absolute;
+  z-index: 20; // over the scrim below it
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: t.$oh-sidebar-width;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
   background: t.$oh-bg-surface;
   border-right: 1px solid t.$oh-border-soft;
+  box-shadow: 2px 0 12px rgb(15 23 42 / 8%);
+  // Slid out rather than removed, so opening animates — and so the group
+  // toggles inside keep their state across an open and close.
+  transform: translateX(-100%);
+  transition: transform 160ms ease;
 
-  &.is-collapsed {
-    display: none;
+  &.is-open {
+    transform: translateX(0);
   }
+}
+
+.oh-drawer__scrim {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgb(15 23 42 / 18%);
+  cursor: default;
 }
 
 .oh-main {
@@ -207,12 +227,8 @@
     grid-template-columns: t.$oh-sidebar-width-compact 1fr auto;
   }
 
-  .oh-body {
-    grid-template-columns: t.$oh-sidebar-width-compact 1fr;
-
-    &.is-full {
-      grid-template-columns: 1fr;
-    }
+  .oh-drawer {
+    width: t.$oh-sidebar-width-compact;
   }
 }
 

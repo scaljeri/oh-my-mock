@@ -13,7 +13,7 @@
  */
 
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
-import { openPopup } from '../fixtures/popup';
+import { openDrawer, openPopup } from '../fixtures/popup';
 
 test.describe('the sidebar group list', () => {
   test('a domain that predates groups still has one, holding its mocks', async ({
@@ -35,6 +35,7 @@ test.describe('the sidebar group list', () => {
       tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
+    await openDrawer(popup);
     const group = popup.locator('[x-test="group-item"]');
 
     await expect(group).toHaveCount(1);
@@ -70,6 +71,7 @@ test.describe('the sidebar group list', () => {
       tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
+    await openDrawer(popup);
     const group = popup.locator('[x-test="group-item"]');
     await expect(group).toHaveAttribute('aria-checked', 'true');
 
@@ -99,6 +101,7 @@ test.describe('the sidebar group list', () => {
       tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
+    await openDrawer(reopened);
     await expect(reopened.locator('[x-test="group-item"]')).toHaveAttribute(
       'aria-checked',
       'false'
@@ -138,6 +141,7 @@ test.describe('the sidebar group list', () => {
       tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
+    await openDrawer(popup);
     const group = popup.locator('[x-test="group-item"]');
     await group.click();
     await expect(group).toHaveAttribute('aria-checked', 'false');

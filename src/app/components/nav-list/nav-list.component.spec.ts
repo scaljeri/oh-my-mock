@@ -36,9 +36,31 @@ describe('NavListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('is a single menu trigger, not a list of buttons', () => {
-    const triggers = fixture.nativeElement.querySelectorAll('.oh-nav-menu__trigger');
+  /**
+   * Plainly listed, not behind a trigger. The drawer these sit in is already
+   * something you opened on purpose; a menu inside it is a second button in
+   * front of the same list.
+   */
+  it('lists the actions rather than hiding them behind a trigger', () => {
+    expect(
+      fixture.nativeElement.querySelectorAll('.oh-nav-menu__trigger')
+    ).toHaveLength(0);
+    expect(
+      fixture.nativeElement.querySelectorAll('.oh-nav__item').length
+    ).toBeGreaterThan(4);
+  });
 
-    expect(triggers.length).toBe(1);
+  /**
+   * The drawer holds the only navigation there is — the pages that stand on
+   * their own have nothing else on screen that goes anywhere — so a way back to
+   * the request list has to be one of these.
+   */
+  it('offers a way back to the request list', () => {
+    const home: HTMLAnchorElement | null = fixture.nativeElement.querySelector(
+      '[x-test="nav-requests"]'
+    );
+
+    expect(home).toBeTruthy();
+    expect(home?.getAttribute('href')).toBe('/');
   });
 });

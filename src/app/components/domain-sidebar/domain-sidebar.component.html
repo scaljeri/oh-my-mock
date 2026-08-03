@@ -1,16 +1,21 @@
 <!--
-The sidebar lists the **mocks** answering for the domain being looked at — each
-row a named set, on or off for this site.
+The drawer: where to go at the top, then the **mocks** answering for the domain
+being looked at — each row a named set, on or off for this site.
 
 There is no domain picker: the url in the active tab decides which domain this
-is. Adding and forgetting domains is housekeeping and lives on its own page,
-reached from the overflow menu below.
+is. Adding and forgetting domains is housekeeping and lives on its own page.
 
 "Group" is the word in the code, not on screen. It is a technical name for a set
-of mocks with a source, and putting it in front of someone reading the sidebar
+of mocks with a source, and putting it in front of someone reading the drawer
 would ask them to learn a concept where they only wanted to see their mocks.
 -->
 <div class="oh-domain-nav">
+  <oh-my-nav-list
+    class="oh-domain-nav__nav"
+    [context]="context"
+    (navigate)="navigate.emit()"
+  ></oh-my-nav-list>
+
   <h2 class="oh-domain-nav__heading">Mocks</h2>
 
   <ul class="oh-group-nav__list">
@@ -67,22 +72,14 @@ would ask them to learn a concept where they only wanted to see their mocks.
   }
 
   <div class="oh-domain-nav__footer">
-    <div class="oh-domain-nav__actions">
-      <button
-        class="oh-domain-nav__import"
-        type="button"
-        x-test="import-har"
-        title="Import a session exported from the DevTools Network panel"
-        (click)="onImportHar()"
-      >
-        Import HAR file
-      </button>
-
-      <oh-my-nav-list
-        class="oh-domain-nav__more"
-        [context]="context"
-        (navigate)="navigate.emit()"
-      ></oh-my-nav-list>
-    </div>
+    <button
+      class="oh-domain-nav__import"
+      type="button"
+      x-test="import-har"
+      title="Import a session exported from the DevTools Network panel"
+      (click)="onImportHar()"
+    >
+      Import HAR file
+    </button>
   </div>
 </div>
