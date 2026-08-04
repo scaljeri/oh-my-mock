@@ -21,20 +21,12 @@ export interface IOhMyCache {
   [key: string]: unknown;
 }
 
-export interface IOhMyStorage {
-  forceActive?: boolean;
-  isReloaded?: boolean;
-}
-
 export class OhMyContentState {
   static host = window.location.host;
   static href = window.location.href;
 
   private cache: IOhMyCache = {};
   private subjects: Record<string, BehaviorSubject<unknown>> = {};
-  // Absent until `window.name` holds something parsable, or until one of the
-  // setters below creates it.
-  private storage?: IOhMyStorage;
   // `undefined` until the first state is known; `distinctUntilChanged` then
   // makes sure subscribers only see real transitions.
   private isActiveSubject = new BehaviorSubject<boolean | undefined>(undefined);
@@ -106,17 +98,6 @@ export class OhMyContentState {
     });
 
     ohMyWindow().off?.push(() => StorageUtils.off())
-
-    // TODO: relplace with SessionStorage
-    if (window.name) {
-      try {
-        this.storage = JSON.parse(window.name) as IOhMyStorage;
-      } catch {
-        // `window.name` belongs to the page, not to us — anything at all can be
-        // in it. Not our JSON means there is nothing to restore.
-        this.isReloaded = false;
-      }
-    }
   }
 
   /**
@@ -275,30 +256,6 @@ export class OhMyContentState {
    * gate protects against nothing and costs the feature.
    */
   isActive(state: IState | undefined = this.state): boolean {
-    return !!state?.aux.appActive || this.forceActive;
-  }
-
-  set forceActive(isActive: boolean) {
-    this.storage ??= { forceActive: false, isReloaded: false };
-    this.storage.forceActive = isActive;
-
-    window.name = JSON.stringify(this.storage);
-
-    this.isActiveSubject.next(this.isActive(this.state));
-  }
-
-  get forceActive(): boolean {
-    return this.storage?.forceActive || false;
-  }
-
-  set isReloaded(value: boolean) {
-    this.storage ??= { forceActive: false, isReloaded: false };
-    this.storage.isReloaded = value;
-
-    window.name = JSON.stringify(this.storage);
-  }
-
-  get isReloaded(): boolean {
-    return this.storage?.isReloaded ?? false;
+    return !!state?.aux.appActive;
   }
 }
