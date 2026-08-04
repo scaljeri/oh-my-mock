@@ -1,6 +1,6 @@
 /// <reference types="chrome"/>
 
-import { appSources, payloadType } from '../shared/constants';
+import { appSources, ohMyMockStatus, payloadType } from '../shared/constants';
 import { IOhMyAPIRequest } from '../shared/types/api-request';
 import { IOhMessage, IOhMyPacketContext, IOhMyResponseUpdate } from '../shared/packet-type';
 import { hasOhMyWindow, ohMyWindow, setOhMyWindow } from '../shared/oh-my-window';
@@ -156,7 +156,24 @@ function sendKnockKnock() {
 
 messageBus.streamByType$<IOhMyAPIRequest>(payloadType.API_REQUEST, appSources.INJECTED)
   .subscribe(({ packet }: IOhMessage<IOhMyAPIRequest, IOhMyPacketContext>) => {
-    receivedApiRequest(packet, messageBus, contentState);
+    // The promise was discarded. Anything that threw inside — a stored `url`
+    // that is not a valid regex reaching `compareUrls` is the realistic one —
+    // meant no answer was ever sent, and the page's `fetch` hung. The lookup
+    // failing is a reason to let the request through, not a reason to stop the
+    // page.
+    void receivedApiRequest(packet, messageBus, contentState).catch(err => {
+      error('Failed while looking up a mock, letting the request through', err);
+
+      sendMessageToInjected({
+        type: payloadType.RESPONSE,
+        data: {
+          request: packet.payload.data,
+          response: { status: ohMyMockStatus.NO_CONTENT }
+        },
+        context: packet.payload.context,
+        description: 'content;lookup-failed'
+      });
+    });
   });
 messageBus.streamByType$<IOhMyResponseUpdate>(payloadType.RESPONSE, appSources.INJECTED).subscribe(handleInjectedApiResponse);
 

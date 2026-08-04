@@ -48,6 +48,17 @@ import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 //   });
 // }
 
+/**
+ * How long to wait for the extension before giving the request back to the page.
+ *
+ * Generous on purpose. The common case never leaves the content script, but a
+ * mock with edited code, or one that sets cookies, waits on the service worker
+ * — and an MV3 worker that has been torn down can take seconds to start on slow
+ * hardware. This is a backstop against *never*, not a latency budget: it must
+ * not fire on a round trip that was going to succeed.
+ */
+const ANSWER_TIMEOUT = 10_000;
+
 export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyReadyResponse> => {
   const mb = new OhMyMessageBus().setTrigger(triggerWindow);
 
@@ -63,6 +74,30 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
       data: request
     } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;
 
+    let settled = false;
+
+    // A holder, because `answer` is defined before the timer it cancels, and
+    // that timer's own callback calls `answer`.
+    const timeout: { id?: ReturnType<typeof setTimeout> } = {};
+
+    /**
+     * Answers once, and tidies up whichever way it happened.
+     *
+     * The listener has to go on the timeout path too, or the backstop trades a
+     * hung request for a leaked `window` listener that runs for every message
+     * the page sends for the rest of its life.
+     */
+    const answer = (resp: IOhMyReadyResponse): void => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout.id);
+      mb.clear();
+      resolve(resp);
+    };
+
     mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))
       .subscribe(({ packet }) => {
@@ -72,19 +107,32 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
         } catch (err) {
           error('Ooops, received something unexpected: ', resp, err);
         }
-        mb.clear();
 
-        if (resp.response.status === ohMyMockStatus.ERROR) {
-          // TODO: can this happen????
-          // printEvalError(resp.result as string, data);
-          // error(`Due to Content Security Policy restriction for this site, the code was executed in OhMyMock's background script`);
-          // error(`You can place 'debugger' statements in your code, but make sure you use the DevTools from the background script`);
-          resolve(resp);
-        } else {
+        if (resp.response.status !== ohMyMockStatus.ERROR) {
           ohMyWindow().cache?.unshift(resp);
-          resolve(resp);
         }
+
+        answer(resp);
       });
+
+    // The backstop. Several paths on the other side can return without
+    // answering — a content script whose extension was reloaded under it, a
+    // packet with no data, a queue lane deadlocked by a rejected handler, a
+    // socket to a mock server that accepts and never replies. Every one of them
+    // left the page's `fetch` pending for ever, which looks to a developer like
+    // their own site hanging.
+    //
+    // `NO_CONTENT` is what the content script sends when there is no mock, so
+    // this hands the request back to the network exactly as an unmocked one.
+    timeout.id = setTimeout(() => {
+      error(
+        `OhMyMock did not answer within ${ANSWER_TIMEOUT}ms, letting the request through unmocked:`,
+        request.method,
+        request.url
+      );
+
+      answer({ request, response: { status: ohMyMockStatus.NO_CONTENT } });
+    }, ANSWER_TIMEOUT);
 
     send<IOhMyAPIRequest>(payload); // Dispatch eval to background script (via content)
   });

@@ -43,6 +43,11 @@ export async function receivedApiRequest(
       }
     });
 
+    // The page is waiting on this. A bare `return` left its `fetch` pending for
+    // ever — the injected script has no other way of learning that the content
+    // script it asked has retired.
+    passThrough(packet);
+
     return;
   }
 
@@ -50,6 +55,7 @@ export async function receivedApiRequest(
 
   if (!payload.data) { // Nothing to look up or dispatch
     warn('Received an API request without a request -> ignored');
+    passThrough(packet);
 
     return;
   }
@@ -190,6 +196,33 @@ export async function receivedApiRequest(
     //     description: 'content:dispatch-eval'
     //   }
     // });
+  }
+}
+
+/**
+ * Hands a request back to the page unmocked.
+ *
+ * For the paths that cannot produce an answer at all. `NO_CONTENT` is what an
+ * unmocked request gets, so the injected script does what it would have done if
+ * this extension had never been installed — which is the only honest outcome
+ * when the extension cannot say anything about it.
+ */
+function passThrough(packet: IPacket<IOhMyAPIRequest>): void {
+  try {
+    sendMessageToInjected({
+      type: payloadType.RESPONSE,
+      data: {
+        request: packet.payload.data,
+        response: { status: ohMyMockStatus.NO_CONTENT }
+      },
+      context: packet.payload.context,
+      description: 'content;passthrough'
+    });
+  } catch (err) {
+    // The injected script has a timeout of its own for exactly this, so the
+    // page still gets its request — but say so, because reaching here means the
+    // page waited ten seconds first.
+    warn('Could not hand the request back to the page', err);
   }
 }
 

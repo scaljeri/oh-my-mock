@@ -100,4 +100,32 @@ describe('#Utils/urls#compareUrls', () => {
     expect(compareUrls('abxc', escapedRe)).toBeFalsy();
     expect(compareUrls('bbc', escapedRe)).toBeFalsy();
   })
+
+  /**
+   * `IData.url` is stored as a regex. `url2regex` escapes what the UI captures,
+   * but a hand-edited url or one out of an imported backup goes in raw. The
+   * throw used to happen inside `findRequest`'s `.find()`, which aborts the
+   * whole scan — so one malformed url stopped **every** mock on that domain
+   * from being found, and the throw then reached a promise nobody was catching
+   * and left the page's request pending for ever.
+   */
+  describe('a pattern that is not a valid regex', () => {
+    it('matches nothing instead of throwing', () => {
+      expect(() => compareUrls('/api/json', '/api/(json')).not.toThrow();
+      expect(compareUrls('/api/json', '/api/(json')).toBe(false);
+    });
+
+    it('does not stop the patterns beside it from matching', () => {
+      const stored = ['/api/(json', '/api/users'];
+
+      expect(stored.filter(pattern => compareUrls('/api/users', pattern)))
+        .toEqual(['/api/users']);
+    });
+
+    it('is still false on a second look', () => {
+      compareUrls('/api/json', '/api/[unclosed');
+
+      expect(compareUrls('/api/json', '/api/[unclosed')).toBe(false);
+    });
+  });
 });
