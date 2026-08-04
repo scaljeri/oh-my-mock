@@ -6,7 +6,7 @@ import { IOhMyResponseCookie } from '../shared/types/cookie';
 import { applyResponseCookies } from './cookie-jar';
 import { OhMyQueue } from '../shared/utils/queue';
 import { StorageUtils } from '../shared/utils/storage';
-import { IOhMessage, IPacket, IPacketPayload } from '../shared/packet-type';
+import { IOhMessage, IPacketPayload } from '../shared/packet-type';
 import { OhMyStateHandler } from './handlers/state-handler';
 import { OhMyRemoveHandler } from './handlers/remove-handler';
 import { OhMyRequestHandler } from './handlers/request-handler';
@@ -115,6 +115,23 @@ contentScriptListeners(messageBus); // TODO
 const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES],
   [appSources.CONTENT, appSources.POPUP])
 
+/**
+ * Where a failing handler is reported.
+ *
+ * The queue used to let the rejection escape, and the `catch` here then had to
+ * *guess* which lane it belonged to: it took `getActiveHandlers()[0]`, which is
+ * insertion order over every lane currently running, not the one that threw. It
+ * then dropped that lane's head packet and reset it — silently discarding an
+ * in-flight packet from an unrelated lane, while the failing one's own sender
+ * was never answered at all. `addPacket` also returns `next()`, which chains the
+ * whole queue, so packet N's failure surfaced at packet 1's call.
+ *
+ * The queue keeps its own lane in order now and tells us which one it was.
+ */
+queue.onError = (packetType, err) => {
+  error(`Could not process a packet of type ${packetType}`, err);
+};
+
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   debug('Received update', packet);
 
@@ -122,15 +139,6 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
   packet.tabId = sender.tab?.id;
   queue.addPacket(packet.payload.type, packet, (result) => {
     callback(result);
-  }).catch(err => {
-    const types = queue.getActiveHandlers();
-    const packet = queue.getQueue(types?.[0])?.[0] as IPacket;
-    queue.removeFirstPacket(types?.[0]); // The first packet in this queue cannot be processed!
-    queue.resetHandler(types?.[0]);
-
-    // `err` is why the packet could not be processed; it used to be caught and
-    // dropped, which left the log naming the packet but never the failure.
-    error(`Could not process packet of type ${types?.[0]}`, packet, err);
   });
 });
 

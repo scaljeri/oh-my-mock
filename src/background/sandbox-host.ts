@@ -54,6 +54,16 @@ async function ensureDocument(): Promise<void> {
  * worked while the popup happened to be open; with it closed the request stalled
  * the full `sendMsg2Popup` timeout and was then let through unmocked.
  */
+/**
+ * How long to wait for the sandboxed frame to run a mock's code.
+ *
+ * The code is the developer's own and can do anything, including loop — so this
+ * is not "how long may an eval take", it is "how long before we conclude the
+ * frame is not going to speak". A mock that takes longer than this is a mock
+ * that is broken.
+ */
+const SANDBOX_TIMEOUT = 5_000;
+
 export async function evalInSandbox(
   mock: IMock,
   request: IOhMyAPIRequest,
@@ -69,14 +79,21 @@ export async function evalInSandbox(
       ...(response && { response })
     };
 
-    const output = (await chrome.runtime.sendMessage({
-      type: OH_MY_EVAL_MESSAGE,
-      data: input
-    })) as IOhMyMockResponse | undefined;
+    // Raced against a timeout, not simply awaited.
+    //
+    // `sendMessage` resolves `undefined` when *nothing* answered — but the
+    // offscreen document's listener returns `true` to claim an async reply and
+    // only calls `sendResponse` once the sandboxed iframe posts back. If that
+    // frame is not there yet, or its own listener has not been installed, the
+    // reply never comes and this promise stays pending: the eval dispatcher
+    // never answers the content script, and the page's request waits on it.
+    const output = (await Promise.race([
+      chrome.runtime.sendMessage({ type: OH_MY_EVAL_MESSAGE, data: input }),
+      new Promise<undefined>(resolve => setTimeout(() => resolve(undefined), SANDBOX_TIMEOUT))
+    ])) as IOhMyMockResponse | undefined;
 
-    // `sendMessage` resolves with `undefined` when nothing answered — a closed
-    // document, or a reply that never came. Saying so beats handing the content
-    // script an "OK" with no body in it.
+    // Saying the sandbox did not answer beats handing the content script an
+    // "OK" with no body in it.
     return output ?? {
       status: ohMyMockStatus.ERROR,
       message: 'The sandbox did not answer'

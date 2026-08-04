@@ -1,6 +1,9 @@
 import { ohMyDomain } from "../types/state";
 import { appSources, payloadType } from "../constants";
 import { IOhMyPacketContextBase, IPacket } from "../packet-type";
+import { debugBuilder } from "./logging";
+
+const debug = debugBuilder();
 
 // TODO: make it a class
 export class OhMySendToBg {
@@ -14,7 +17,23 @@ export class OhMySendToBg {
 
   static send<T = unknown, U = T>(packet: IPacket<T>): Promise<U> {
     return new Promise<U>(r => {
-      chrome.runtime.sendMessage(packet, (arg) => r(arg));
+      chrome.runtime.sendMessage(packet, (arg) => {
+        // Read, not ignored. Without this Chrome prints "Unchecked
+        // runtime.lastError" for every message nobody answered — and the
+        // promise resolved `undefined` regardless, so a message that never
+        // arrived was indistinguishable from one answered with nothing.
+        //
+        // `debug`, not `error`: "the message port closed before a response was
+        // received" is the ordinary outcome for the packets this codebase sends
+        // and never reads a reply to.
+        const failure = chrome.runtime.lastError;
+
+        if (failure) {
+          debug(`Message of type ${packet.payload?.type} was not answered: ${failure.message ?? failure}`);
+        }
+
+        r(arg);
+      });
     });
   }
 

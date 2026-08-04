@@ -3,7 +3,7 @@ import { objectTypes, STORAGE_KEY } from '../constants';
 import { IData, IMock, IOhMyCookie, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
-import { debugBuilder } from './logging';
+import { debugBuilder, errorBuilder } from './logging';
 
 const debug = debugBuilder();
 
@@ -14,6 +14,35 @@ export interface IOhMyStorageChange {
 export interface IOhMyStorageUpdate {
   key: string;
   update: IOhMyStorageChange;
+}
+
+
+/**
+ * Reads `chrome.runtime.lastError`, so a failure stops being silent.
+ *
+ * Every `chrome.*` callback in this file used to pass `resolve` straight in.
+ * When the call failed — quota exceeded, the extension context invalidated
+ * under a content script — Chrome put the reason in `lastError` and the promise
+ * resolved anyway. So a write that never happened looked exactly like one that
+ * did, and the only trace was Chrome's own "Unchecked runtime.lastError" in a
+ * console nobody was reading.
+ *
+ * Reading it is also what suppresses that warning, so this both reports the
+ * failure and tidies up after it.
+ *
+ * It does not reject. A failed read or write is not something any caller here
+ * can recover from, and turning it into a rejection would send unhandled ones
+ * through paths that have never had to cope with one. Being loud is the fix for
+ * being silent.
+ */
+const error = errorBuilder();
+
+function reportFailure(what: string): void {
+  const failure = StorageUtils.chrome?.runtime?.lastError;
+
+  if (failure) {
+    error(`chrome.storage could not ${what}: ${failure.message ?? failure}`);
+  }
 }
 
 export class StorageUtils {
@@ -82,7 +111,10 @@ export class StorageUtils {
     }
 
     return new Promise<Record<string, T>>(resolve => {
-      StorageUtils.chrome.storage.local.get(keys, (data: { [key: string]: T }) => resolve(data));
+      StorageUtils.chrome.storage.local.get(keys, (data: { [key: string]: T }) => {
+        reportFailure(`read ${keys.length} keys`);
+        resolve(data);
+      });
     });
   }
 
@@ -112,7 +144,10 @@ export class StorageUtils {
       // bump on each intercepted request. DevTools hides `console.debug` unless
       // Verbose is on, which is where a per-write trace belongs.
       debug(`Write action for ${key}`, value);
-      StorageUtils.chrome.storage.local.set({ [key]: value }, resolve);
+      StorageUtils.chrome.storage.local.set({ [key]: value }, () => {
+        reportFailure(`write ${key}`);
+        resolve();
+      });
     });
   }
 
@@ -127,7 +162,10 @@ export class StorageUtils {
     // was a lie — the delete had not happened yet. `tsc` had nothing to say,
     // because `undefined[]` satisfies the declared `void[]`.
     return Promise.all(key.map(k =>
-      new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', resolve))
+      new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', () => {
+        reportFailure(`remove ${k}`);
+        resolve();
+      }))
     ));
   }
 
@@ -136,7 +174,10 @@ export class StorageUtils {
       await StorageUtils.remove(key);
     } else {
       await new Promise<void>(resolve => {
-        StorageUtils.chrome.storage.local.clear(resolve);
+        StorageUtils.chrome.storage.local.clear(() => {
+          reportFailure('clear everything');
+          resolve();
+        });
       });
     }
   }

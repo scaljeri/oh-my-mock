@@ -29,6 +29,15 @@ interface IOhQueuePacket<T> {
  * mistake impossible to write.
  */
 export class OhMyQueue<T = IPacket> {
+  /**
+   * Told about anything a handler or a callback threw.
+   *
+   * A hook rather than a `throw`, because there is nobody left to throw *to*:
+   * the failure happens inside the queue's own turn, and the packet's sender is
+   * waiting on a callback, not on this promise. Set it to whatever logs.
+   */
+  onError?: (packetType: ohPacketType, err: unknown) => void;
+
   // Keyed by string rather than by the enum union: `objectTypes.MOCK` and
   // `payloadType.RESPONSE` share the value 'response', so a Record over
   // `ohPacketType` collapses keys and stops being indexable. The public methods
@@ -84,12 +93,47 @@ export class OhMyQueue<T = IPacket> {
     handler: (payload: P) => Promise<unknown>
   ): Promise<void> {
     this.handlers[packetType] = {
+      /**
+       * Runs one packet and then, whatever happened, moves on.
+       *
+       * This used to be four statements in a row, and each ordering mistake in
+       * it cost something:
+       *
+       * - A rejecting handler never reached `isActive = false`, so the lane was
+       *   dead for the rest of the service worker's life and every sender
+       *   waiting on it hung. Two registered handlers do a storage read outside
+       *   their own `try`, so it was reachable.
+       * - The packet was shifted *after* the callback ran. A callback that
+       *   threw — `sendResponse` on a channel whose popup has just closed —
+       *   left the head packet in place with the lane already free, so the next
+       *   arrival processed the same packet again.
+       * - A rejection skipped `packet.callback` entirely, and
+       *   `chrome.runtime.sendMessage` has no timeout, so that sender waited
+       *   for ever.
+       */
       handler: async (packet: IOhQueuePacket<T>): Promise<void> => {
-        // Handlers are given the payload, not the whole packet.
-        const result = await handler((packet.data as { payload: P }).payload);
-        this.handlers[packetType].isActive = false;
-        packet.callback?.(result);
+        // Off the queue before it runs, not after: a packet that fails must not
+        // be retried for ever.
         this.queue[packetType].shift();
+
+        let result: unknown;
+
+        try {
+          // Handlers are given the payload, not the whole packet.
+          result = await handler((packet.data as { payload: P }).payload);
+        } catch (err) {
+          this.onError?.(packetType, err);
+        } finally {
+          this.handlers[packetType].isActive = false;
+        }
+
+        try {
+          // Always, even after a failure. `undefined` is what a sender gets for
+          // a message nobody handled, and that is the truth here.
+          packet.callback?.(result);
+        } catch (err) {
+          this.onError?.(packetType, err);
+        }
 
         return this.next(packetType);
       }, isActive: false

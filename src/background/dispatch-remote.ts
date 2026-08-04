@@ -3,7 +3,7 @@ import { IOhMyDispatchServerRequest, IOhMyPacketContext, IPacketPayload } from '
 import { IOhMyMockResponse } from '../shared/types/api-response';
 import { ohMyMockStatus } from '../shared/constants';
 import { uniqueId } from '../shared/utils/unique-id';
-import { log } from './utils';
+import { log, warn } from './utils';
 import { StorageUtils } from '../shared/utils/storage';
 import { STORAGE_KEY } from '../shared/constants';
 import { IOhMyMock, IOhMyRemote, OH_MY_REMOTE_DEFAULTS } from '../shared/types/store';
@@ -145,6 +145,15 @@ export const connectIfEnabled = async (): Promise<void> => {
   connectWithLocalServer(url);
 };
 
+/**
+ * How long to wait for the SDK server.
+ *
+ * Short compared to the injected script's own backstop: this is a socket to a
+ * process on the developer's own machine, so a second is already a long time,
+ * and every millisecond here is one the page's request spends waiting.
+ */
+const SERVER_TIMEOUT = 3_000;
+
 export const dispatchRemote = async (
   payload: IPacketPayload<IOhMyDispatchServerRequest, IOhMyPacketContext>
 ): Promise<IOhMyMockResponse> => {
@@ -159,12 +168,37 @@ export const dispatchRemote = async (
 
   return new Promise<IOhMyMockResponse>(resolve => {
     const id = uniqueId();
+    let settled = false;
+    // A holder, because `answer` is defined before the timer it clears and that
+    // timer's callback calls `answer`.
+    const timeout: { id?: ReturnType<typeof setTimeout> } = {};
 
-    activeSocket.on(id, (result: IOhMyMockResponse) => {
+    // Answers once, and takes the socket listener with it whichever way it
+    // happened. Without the timeout an SDK server that accepted the emit and
+    // never replied left this promise pending, the listener registered for the
+    // life of the socket, and — through `server-dispatcher` and the content
+    // script — the page's own request unanswered.
+    const answer = (result: IOhMyMockResponse): void => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeout.id);
       activeSocket.off(id);
-
       resolve(result);
-    });
+    };
+
+    timeout.id = setTimeout(() => {
+      warn(`The mock server did not answer within ${SERVER_TIMEOUT}ms`, payload);
+
+      // `NO_CONTENT` is what an absent server gives, so a server that has gone
+      // quiet behaves like one that is not there: the request goes on to the
+      // real endpoint rather than waiting on a socket that may never speak.
+      answer({ status: ohMyMockStatus.NO_CONTENT });
+    }, SERVER_TIMEOUT);
+
+    activeSocket.on(id, (result: IOhMyMockResponse) => answer(result));
 
     payload.id = id;
 
