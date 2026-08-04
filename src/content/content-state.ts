@@ -56,12 +56,25 @@ export class OhMyContentState {
    */
   groups: Record<ohMyGroupId, IOhMyGroup> = {};
 
+  /** Group ids already fetched, whether or not they turned out to be ours. */
+  private seenGroups = new Set<ohMyGroupId>();
   private index = new OhMyRequestIndex();
   private indexStale = true;
 
   constructor() {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
+      // `chrome.storage.onChanged` is browser-wide: every write anywhere in the
+      // extension arrives in every tab. Everything used to be stored
+      // unconditionally, so a tab on `a.com` accumulated the request records of
+      // `b.com` and every mock record anyone wrote — response bodies included —
+      // and nothing was ever dropped. Per tab.
+      //
+      // Update what this page holds; do not adopt what it does not.
+      if (!this.isOurs(key, update)) {
+        return;
+      }
+
       this.cache[key] = update.newValue;
       // Anything below that changes a request, a group or the state invalidates
       // the lookup index. Marked here, at the one place every change arrives,
@@ -158,6 +171,40 @@ export class OhMyContentState {
     await Promise.all([this.loadRequests(), this.loadGroups()]);
   }
 
+  /**
+   * Whether a storage change is about this page.
+   *
+   * Deliberately generous in one direction: anything already held is kept up to
+   * date, so a mock fetched on demand by `get()` keeps following its record.
+   * What it refuses is *adopting* records this page has never needed.
+   *
+   * A request record can arrive before the state lists it — they are two
+   * separate writes with no guaranteed order — so dropping an unlisted one
+   * would lose it. It does not: `loadRequests()` fetches whatever the state
+   * names and the map lacks, and runs on the state update that follows. There
+   * is a test for exactly that.
+   */
+  private isOurs(key: string, update: { newValue: unknown, oldValue?: unknown }): boolean {
+    if (key === STORAGE_KEY || key === OhMyContentState.host) {
+      return true;
+    }
+
+    // Already held: an update to something this page fetched.
+    if (Object.prototype.hasOwnProperty.call(this.cache, key)) {
+      return true;
+    }
+
+    if ((this.state?.requests ?? []).includes(key)) {
+      return true;
+    }
+
+    // A group covering this domain is wanted even before anything refers to it
+    // — it decides what answers here.
+    const value = (update.newValue ?? update.oldValue) as IOhMyGroup | undefined;
+
+    return GroupUtils.isGroup(value) && GroupUtils.coversDomain(value, OhMyContentState.host);
+  }
+
   private isRequestUpdate(update: { newValue: unknown, oldValue?: unknown }): boolean {
     const value = (update.newValue ?? update.oldValue) as { type?: objectTypes } | undefined;
 
@@ -182,13 +229,29 @@ export class OhMyContentState {
 
   /** Fetches the group records this script does not hold yet. */
   private async loadGroups(): Promise<void> {
-    const missing = (this.store?.groups ?? []).filter(id => !this.groups[id]);
+    // Against what has been *looked at*, not what is held: a group belonging to
+    // another domain is deliberately not stored, and would otherwise count as
+    // missing for ever and be fetched again on every call.
+    const missing = (this.store?.groups ?? []).filter(id => !this.seenGroups.has(id));
+
 
     if (!missing.length) {
       return;
     }
 
-    Object.assign(this.groups, await StorageUtils.getMany<IOhMyGroup>(missing));
+    missing.forEach(id => this.seenGroups.add(id));
+
+    const loaded = await StorageUtils.getMany<IOhMyGroup>(missing);
+
+    // Only the ones that answer here. The store lists every group in the
+    // browser, and a group for another domain has nothing to say about this
+    // page.
+    for (const group of Object.values(loaded)) {
+      if (GroupUtils.coversDomain(group, OhMyContentState.host)) {
+        this.groups[group.id] = group;
+      }
+    }
+
     this.indexStale = true;
   }
 

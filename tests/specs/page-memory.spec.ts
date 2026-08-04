@@ -130,4 +130,32 @@ test.describe('the injected response cache', () => {
     // thirty.
     expect(added).toBeLessThanOrEqual(1);
   });
+
+  /**
+   * The safety net that makes the filtering safe. A request record and the
+   * state's id list are two separate writes with no guaranteed order, so a
+   * record can arrive before anything refers to it — and is dropped. The state
+   * update that follows has to fetch it.
+   */
+  test('still finds a request whose record arrived before the state listed it', async ({
+    ohMy,
+    site
+  }) => {
+    await ohMy.setActive(SITE_DOMAIN);
+    await site.open();
+    await site.waitForInjection();
+
+    // `seedMock` writes the record and the state, in that order.
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/users',
+      response: { from: 'the late arrival' }
+    });
+
+    await expect
+      .poll(async () =>
+        (await site.request({ url: '/api/users', responseType: 'json' })).json
+      )
+      .toEqual({ from: 'the late arrival' });
+  });
 });

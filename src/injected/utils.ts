@@ -32,14 +32,15 @@ export const logMocked = (request: IOhMyAPIRequest, requestType: requestType, da
       const contentType = data.headers?.['content-type'] ?? '';
       let response = data.response;
 
-      if (contentType.includes('application/json')) {
-        try {
-          response = data.response ? JSON.parse(data.response as string) : '';
-        } catch {
-          // Not JSON after all, despite the content type. Log the raw body.
-          response = data.response;
-        }
-      } else if (isImage(contentType)) {
+      // The body used to be `JSON.parse`d here, so the console could show it as
+      // an expandable object. That is a full parse of every mocked JSON body on
+      // every intercepted call, on the critical path, for a line nobody sees
+      // unless the console is open — and the parsed object is then retained by
+      // the console for as long as the entry lives.
+      //
+      // Logged as the string it already is. It reads the same; anyone who wants
+      // to expand it has the debug output.
+      if (isImage(contentType)) {
         response = `Image Data (${contentType})`;
       }
       log(`${msg} ${contentType}`, response);
