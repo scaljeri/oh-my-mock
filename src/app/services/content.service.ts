@@ -3,6 +3,8 @@
 import { Injectable, inject } from '@angular/core';
 import { appSources, payloadType } from '@shared/constants';
 import { AppStateService } from './app-state.service';
+import { OhMyStateService } from './state.service';
+import { IOhMyHit } from '@shared/type';
 import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
 import { IPacket } from '@shared/packet-type';
@@ -14,6 +16,7 @@ import { Observable, Subject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   private appStateService = inject(AppStateService);
+  private stateService = inject(OhMyStateService);
 
   static DataUtils = DataUtils;
   static StateUtils = StateUtils;
@@ -72,11 +75,11 @@ export class ContentService {
           //   ...payload.context
           // });
         } else if (payload.type === payloadType.HIT) {
-          // const state = this.getActiveStateSnapshot();
-          // const data = ContentService.StateUtils.findData(state, payload.context);
-          // Note: First hit appStateService then dispatch change. DataList depends on this order!!
-          // this.appStateService.hit(data);
-          // this.store.dispatch(new ViewChangeOrderItems({ name: 'hits', id: data.id, to: 0 }));
+          // A request was just served. The storage write behind it is batched,
+          // so this is what moves the list now rather than in a quarter of a
+          // second. The branch was entirely commented out and nothing sent the
+          // packet either — dead at both ends, like the error button.
+          this.stateService.applyHit(payload.data as unknown as IOhMyHit);
         } else if (payload.type === payloadType.KNOCKKNOCK) {
           this.pingPong();
         }

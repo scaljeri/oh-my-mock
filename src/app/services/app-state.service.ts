@@ -76,10 +76,6 @@ export class AppStateService {
     return !!domain && this._domain === domain;
   }
 
-  hit(data: IData): void {
-    this.hitSubject.next(data);
-  }
-
   addError(data: IPacketPayload): void {
     this.errorSubject.next(data);
   }

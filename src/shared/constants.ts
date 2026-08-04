@@ -81,6 +81,14 @@ export enum payloadType {
   EVAL = 'eval',
   // EVAL_RESULT = 'eval-result',
   DATA = 'data',
+  /**
+   * "These requests were served, at these times."
+   *
+   * Content script -> background, batched. One message per flush interval
+   * rather than one per intercepted request — see `content/hit-batch.ts` for
+   * what the per-request version cost.
+   */
+  HITS = 'hits',
   /** Adds, changes or removes one cookie mock. */
   COOKIE = 'cookie',
   /**

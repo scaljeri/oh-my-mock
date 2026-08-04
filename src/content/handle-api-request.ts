@@ -6,6 +6,7 @@ import { IMock, IOhMyAPIRequest, IOhMyEvalRequest, IOhMyMockResponse, IOhMyRespo
 import { DataUtils } from "../shared/utils/data";
 import { blurBase64, isImage, stripB64Prefix } from "../shared/utils/image";
 import { OhMyMessageBus } from "../shared/utils/message-bus";
+import { recordHit } from "./hit-batch";
 import { getMimeType } from "../shared/utils/mime-type";
 import { MockUtils } from "../shared/utils/mock";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
@@ -111,14 +112,17 @@ export async function receivedApiRequest(
     if (mockId) {
       mock = await contentState.get<IMock>(mockId);
 
-      // HIT. This used to be a patch of `$.data` on the domain state, which
-      // rewrote every request the domain knows about for the sake of one
-      // timestamp. A request is its own record now, so this writes just that.
-      // `lastHit` orders the list; `calledAt` is the claim that it happened, and
-      // this is the only place allowed to make it.
+      // HIT. `lastHit` orders the list; `calledAt` is the claim that the call
+      // happened here, and this is the only place allowed to make it.
+      //
+      // Batched rather than written now — see `recordHit`. It used to send this
+      // whole record to the background on every intercepted call, which cost a
+      // storage write and a browser-wide `onChanged` fan-out per request. The
+      // local copy is still updated so a lookup later in this same turn sees
+      // it.
       data.lastHit = Date.now();
       data.calledAt = data.lastHit;
-      OhMySendToBg.full(data, payloadType.REQUEST, context, 'content;request-hit');
+      recordHit(data.id, data.lastHit);
 
       if (!mock) {
         // The request names a mock whose record is not there: a response

@@ -31,6 +31,7 @@ import { reportError, reportUncaughtErrors } from './report-error';
 import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
+import { OhMyHitsHandler } from './handlers/hits-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { contentScriptListeners } from './content-script-listeners';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
@@ -73,6 +74,7 @@ queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REQUEST, OhMyRequestHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
 queue.addHandler(payloadType.COOKIE, OhMyCookieHandler.update);
+queue.addHandler(payloadType.HITS, OhMyHitsHandler.update);
 queue.addHandler(payloadType.SET_COOKIES, async (payload: IPacketPayload) => {
   const domain = payload.context?.domain;
   const cookies = payload.data as IOhMyResponseCookie[] | undefined;
@@ -110,7 +112,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 contentScriptListeners(messageBus); // TODO
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
   [appSources.CONTENT, appSources.POPUP])
 
 /**

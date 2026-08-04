@@ -9,6 +9,7 @@ import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { OhMyContentState } from './content-state';
 import { StateUtils } from '../shared/utils/state';
 import { handleApiResponse } from './handle-api-response';
+import { flushHitsOnLeave } from './hit-batch';
 import { OhMySendToBg } from '../shared/utils/send-to-background';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
 import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
@@ -148,6 +149,11 @@ ohMyWindow().off?.push(contentState.isActive$.subscribe(async (value?: boolean) 
 // window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
 // API
 handleAPI(messageBus);
+
+// Hits are collected and written every quarter of a second; this makes sure the
+// last quarter is not lost when the page goes away — which is exactly when
+// somebody switches to the popup to look at them.
+flushHitsOnLeave();
 
 function sendKnockKnock() {
   sendMsgToPopup(null, OhMyContentState.host, appSources.CONTENT,

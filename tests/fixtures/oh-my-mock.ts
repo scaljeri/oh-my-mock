@@ -271,6 +271,52 @@ export class OhMyMockDriver {
     }, domain);
   }
 
+  /**
+   * How many times `key` was written to storage while `during` ran.
+   *
+   * Counted in the service worker with a `chrome.storage.onChanged` listener,
+   * because the number of *writes* is the thing under test — a spec that only
+   * checked the resulting value would pass just as happily with one write per
+   * intercepted request.
+   */
+  async countWrites(key: string, during: () => Promise<void>): Promise<number> {
+    const worker = await this.worker();
+
+    await worker.evaluate((key) => {
+      const w = globalThis as unknown as {
+        __writes: number;
+        __listener?: (changes: Record<string, unknown>) => void;
+      };
+
+      w.__writes = 0;
+      w.__listener = (changes: Record<string, unknown>) => {
+        if (key in changes) {
+          w.__writes++;
+        }
+      };
+      chrome.storage.onChanged.addListener(
+        w.__listener as Parameters<typeof chrome.storage.onChanged.addListener>[0]
+      );
+    }, key);
+
+    await during();
+
+    return worker.evaluate(() => {
+      const w = globalThis as unknown as {
+        __writes: number;
+        __listener?: (changes: Record<string, unknown>) => void;
+      };
+
+      if (w.__listener) {
+        chrome.storage.onChanged.removeListener(
+          w.__listener as Parameters<typeof chrome.storage.onChanged.removeListener>[0]
+        );
+      }
+
+      return w.__writes;
+    });
+  }
+
   async getState(domain: string): Promise<Record<string, unknown> | undefined> {
     return (await this.worker()).evaluate(
       (key) => chrome.storage.local.get(key).then((all) => all[key]),

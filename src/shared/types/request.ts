@@ -37,6 +37,18 @@ export interface IOhMyMockContext {
   mockId?: ohMyMockId;
 }
 
+/**
+ * One request having been served, and when.
+ *
+ * Two fields rather than the whole `IData` record: this travels on every
+ * intercepted call, to the background in batches and to the popup at once, and
+ * neither end needs anything else to update a timestamp.
+ */
+export interface IOhMyHit {
+  id: ohMyDataId;
+  at: number;
+}
+
 export interface IData extends IOhMyMockContext {
   // `IOhMyMockContext` marks these optional because a *search* may specify only
   // some of them. A stored request always has all three — `DataUtils.create`

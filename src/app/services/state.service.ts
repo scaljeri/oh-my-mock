@@ -13,6 +13,7 @@ import {
   ohMyCookieId
 } from '@shared/type';
 import { IOhMyPacketContext } from '@shared/packet-type';
+import { IOhMyHit } from '@shared/type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import {
@@ -149,6 +150,33 @@ export class OhMyStateService {
    * Public because the state explorer shows another domain's requests, and it
    * needs them loaded before it can render them.
    */
+  /**
+   * Applies a hit the content script has just reported.
+   *
+   * The write to `chrome.storage` is batched — see `content/hit-batch.ts` — so
+   * without this the list would sit still for up to a quarter of a second after
+   * a call. The hit carries two fields and arrives at once; the write is what
+   * makes it survive a reload.
+   *
+   * Only a request already in the map is touched. One that is not is either a
+   * different domain's or not loaded yet, and in both cases the storage change
+   * that follows is what should bring it in — inventing a record here from two
+   * numbers would put a row in the list with nothing in it.
+   */
+  public applyHit(hit: IOhMyHit): void {
+    const request = this.requests[hit.id];
+
+    if (!request) {
+      return;
+    }
+
+    this.requests = {
+      ...this.requests,
+      [hit.id]: { ...request, lastHit: hit.at, calledAt: hit.at }
+    };
+    this.requestsSubject.next(this.requests);
+  }
+
   public async loadRequests(state: IState): Promise<IOhMyRequests> {
     const missing = state.requests.filter((id) => !this.requests[id]);
 
