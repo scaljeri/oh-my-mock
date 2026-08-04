@@ -10,7 +10,6 @@ import { recordHit } from "./hit-batch";
 import { getMimeType } from "../shared/utils/mime-type";
 import { MockUtils } from "../shared/utils/mock";
 import { OhMySendToBg } from "../shared/utils/send-to-background";
-import { StateUtils } from "../shared/utils/state";
 import { OhMyContentState } from "./content-state";
 import { sendMessageToInjected } from "./send-to-injected";
 import { warn } from "./utils";
@@ -100,8 +99,11 @@ export async function receivedApiRequest(
     return;
   }
 
+  // Indexed, because this runs on every intercepted call — see
+  // `OhMyRequestIndex`. The plain scan is still what the popup and the
+  // background use; they ask occasional questions.
   const data = state
-    ? StateUtils.findRequest(state, contentState.requests, inputRequest, contentState.activeGroups())
+    ? contentState.requestIndex().find(inputRequest, contentState.activeGroups())
     : undefined;
 
   let mockId: ohMyMockId | undefined;

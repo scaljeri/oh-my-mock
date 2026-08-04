@@ -3,6 +3,7 @@ import { objectTypes, STORAGE_KEY } from "../shared/constants";
 import { ohMyWindow } from "../shared/oh-my-window";
 import { IData, IMock, IOhMyGroup, IOhMyMock, IOhMyRequests, IState, ohMyGroupId } from "../shared/type";
 import { GroupUtils } from "../shared/utils/group";
+import { OhMyRequestIndex } from "../shared/utils/request-index";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
 /**
@@ -55,10 +56,18 @@ export class OhMyContentState {
    */
   groups: Record<ohMyGroupId, IOhMyGroup> = {};
 
+  private index = new OhMyRequestIndex();
+  private indexStale = true;
+
   constructor() {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
       this.cache[key] = update.newValue;
+      // Anything below that changes a request, a group or the state invalidates
+      // the lookup index. Marked here, at the one place every change arrives,
+      // rather than at each of them — an index that misses one update answers
+      // the wrong thing, quietly, which is worse than the scan it replaced.
+      this.indexStale = true;
 
       if (this.isRequestUpdate(update)) {
         if (update.newValue) {
@@ -164,6 +173,11 @@ export class OhMyContentState {
     }
 
     Object.assign(this.requests, await StorageUtils.getMany<IData>(missing));
+    // Again, after the records have landed. The subscription marks the index
+    // stale when the *event* arrives, but this read is asynchronous — a lookup
+    // in between would rebuild from the map as it was, clear the flag, and
+    // never see the record that arrived a moment later.
+    this.indexStale = true;
   }
 
   /** Fetches the group records this script does not hold yet. */
@@ -175,6 +189,7 @@ export class OhMyContentState {
     }
 
     Object.assign(this.groups, await StorageUtils.getMany<IOhMyGroup>(missing));
+    this.indexStale = true;
   }
 
   /**
@@ -185,16 +200,55 @@ export class OhMyContentState {
    * Waiting for the record would mean serving nothing on a domain that has
    * mocks, which is the failure this whole model is built to avoid.
    */
+  /**
+   * The lookup index for the serving path.
+   *
+   * Rebuilt lazily on the first lookup after anything changed, not eagerly in
+   * the subscription: a storage change arrives in every tab in the browser, and
+   * most of them are about a domain this page has nothing to do with.
+   *
+   * For **serving only**. The request list shows everything the domain has,
+   * switched-off groups included — a mock that is not in the list is a mock
+   * whose on/off switch cannot be reached.
+   */
+  requestIndex(): OhMyRequestIndex {
+    if (this.indexStale && this.state) {
+      this.index.build(this.state, this.requests, this.localGroup());
+      this.indexStale = false;
+    }
+
+    return this.index;
+  }
+
+  /**
+   * This domain's own group, record or no record.
+   *
+   * One method because two answers is a bug: `activeGroups()` fell back to the
+   * derived group when the record had not loaded, while the index builder asked
+   * `GroupUtils.localFor` directly and got `undefined`. So every untagged
+   * request — which is all of them, on any profile — was filed under no group
+   * at all while the lookup went looking under the derived one. Nothing was
+   * served, and nothing said so.
+   */
+  localGroup(): IOhMyGroup | undefined {
+    if (!this.state) {
+      return undefined;
+    }
+
+    return GroupUtils.localFor(Object.values(this.groups), this.state.domain)
+      ?? GroupUtils.defaultLocalFor(this.state.domain);
+  }
+
   activeGroups(): IOhMyGroup[] {
     if (!this.state) {
       return [];
     }
 
     const known = Object.values(this.groups);
-    const local = GroupUtils.localFor(known, this.state.domain);
+    const local = this.localGroup();
 
     return GroupUtils.activeFor(
-      local ? known : [...known, GroupUtils.defaultLocalFor(this.state.domain)],
+      local && !GroupUtils.localFor(known, this.state.domain) ? [...known, local] : known,
       this.state,
       this.store?.groups ?? []
     );

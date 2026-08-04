@@ -1,8 +1,8 @@
 import { objectTypes } from '../constants';
 import { IData, IOhMyGroup, IOhMyRequests, IOhMyUpsertData, IState, ohMyCookieId, ohMyDataId, ohMyDomain } from '../type';
 import { GroupUtils } from './group';
+import { matches } from './request-index';
 import { timestamp } from './timestamp';
-import { compareUrls } from './urls';
 
 /**
  * Everything about a domain except its requests, which are separate records.
@@ -85,21 +85,9 @@ export class StateUtils {
    * "matches either" is what a wildcard should have meant all along.
    */
   static findRequest(state: IState, requests: IOhMyRequests, search: IOhMyUpsertData, active?: IOhMyGroup[]): IData | undefined {
-    const result = this.candidates(state, requests, active)
-      .find(v => {
-        return (
-          (search.id && v.id === search.id) || !search.id &&
-          (!search.method || search.method === v.method) &&
-          (!search.requestType || !v.requestType || search.requestType === v.requestType) &&
-          // `!!v.url` guards `compareUrls`, which indexes its second argument
-          // and throws on an absent one. `IData.url` is typed as required and is
-          // not always there — a record can be stored without one — and until
-          // the `requestType` wildcard above, such a record was always rejected
-          // before reaching this line. A throw here happens inside the content
-          // script's lookup, which would take the page's request down with it.
-          (!search.url || (!!v.url && (search.url === v.url || compareUrls(search.url, v.url))))
-        )
-      });
+    // `matches` is shared with `OhMyRequestIndex`, so the indexed lookup on the
+    // serving path and this scan cannot drift apart on what counts as a match.
+    const result = this.candidates(state, requests, active).find(v => matches(v, search));
 
     return result ? { ...result } : undefined;
   }

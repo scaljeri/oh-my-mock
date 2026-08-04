@@ -317,6 +317,31 @@ export class OhMyMockDriver {
     });
   }
 
+  /** Switches a domain's own mock group back on. */
+  async enableLocalGroup(domain: string): Promise<void> {
+    await (await this.worker()).evaluate(async (domain) => {
+      const stored = await chrome.storage.local.get(domain);
+      const state = stored[domain] as { aux?: Record<string, unknown> };
+
+      state.aux = { ...(state.aux ?? {}), disabledGroups: [] };
+
+      await chrome.storage.local.set({ [domain]: state });
+    }, domain);
+  }
+
+  /** Repoints a stored request at another url, as editing it in the popup does. */
+  async setRequestUrl(dataId: string, url: string): Promise<void> {
+    await (await this.worker()).evaluate(
+      async ({ dataId, url }) => {
+        const stored = await chrome.storage.local.get(dataId);
+        const request = stored[dataId] as Record<string, unknown>;
+
+        await chrome.storage.local.set({ [dataId]: { ...request, url } });
+      },
+      { dataId, url }
+    );
+  }
+
   async getState(domain: string): Promise<Record<string, unknown> | undefined> {
     return (await this.worker()).evaluate(
       (key) => chrome.storage.local.get(key).then((all) => all[key]),

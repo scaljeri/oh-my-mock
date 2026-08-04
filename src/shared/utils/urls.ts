@@ -47,8 +47,59 @@ const endsAnchored = (pattern: string): boolean => {
   return backslashes % 2 === 0;
 };
 
-/** Patterns already found to be invalid, so each is complained about once. */
-const broken = new Set<string>();
+/**
+ * Stored patterns, compiled once.
+ *
+ * `compareUrls` handed a **string** to `url.match()`, so the engine turned it
+ * into a `RegExp` on every call — for every candidate, on every intercepted
+ * request, and again for every unmocked response on the recording path.
+ *
+ * `null` marks a pattern that is not a valid regex, so a broken one is compiled
+ * once and rejected from a lookup thereafter rather than throwing again.
+ *
+ * Keyed on the pattern text itself, which is what makes this safe to keep
+ * forever: the key *is* the content, so an entry cannot go stale. Editing a
+ * mock's url produces a different key.
+ */
+const compiled = new Map<string, RegExp | null>();
+
+/**
+ * The anchored `RegExp` for a stored url pattern, or `null` if it is not one.
+ *
+ * A pattern that cannot be compiled matches nothing rather than throwing. The
+ * throw used to happen inside `findRequest`'s `.find()`, which aborts the whole
+ * scan — so a single malformed url stopped **every** mock on that domain from
+ * being found.
+ */
+export function patternFor(urlRe: string): RegExp | null {
+  const cached = compiled.get(urlRe);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let source = urlRe;
+
+  if (source[0] !== '^') {
+    source = '^' + source;
+  }
+
+  if (!endsAnchored(source)) {
+    source += '$';
+  }
+
+  try {
+    const pattern = new RegExp(source);
+    compiled.set(urlRe, pattern);
+
+    return pattern;
+  } catch {
+    compiled.set(urlRe, null);
+    warn(`Not a valid pattern, so it will never match anything: ${urlRe}`);
+
+    return null;
+  }
+}
 
 /**
  * Whether a stored pattern matches a url.
@@ -64,27 +115,9 @@ const broken = new Set<string>();
  * One broken mock should break one mock.
  */
 export const compareUrls = (url: string, urlRe: string): boolean => {
-  if (urlRe[0] !== '^') {
-    urlRe = '^' + urlRe;
-  }
+  const pattern = patternFor(urlRe);
 
-  if (!endsAnchored(urlRe)) {
-    urlRe += '$';
-  }
-
-  try {
-    return !!url.match(urlRe);
-  } catch {
-    // Once per pattern: this runs for every candidate of every intercepted
-    // request, and a page making a hundred calls would otherwise print a
-    // hundred identical warnings.
-    if (!broken.has(urlRe)) {
-      broken.add(urlRe);
-      warn(`Not a valid pattern, so it will never match anything: ${urlRe}`);
-    }
-
-    return false;
-  }
+  return !!pattern && pattern.test(url);
 };
 
 // The class used to be written `[^:/\?\#]`. Inside a character class `?` and
