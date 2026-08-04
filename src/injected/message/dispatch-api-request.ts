@@ -1,11 +1,12 @@
 import { appSources, ohMyMockStatus, payloadType } from '../../shared/constants';
 import { ohMyWindow } from '../../shared/oh-my-window';
-import { error, logMocked } from '../utils';
+import { error, logMocked, trimResponseCache } from '../utils';
 import { uniqueId } from '../../shared/utils/unique-id';
 import { send } from './send';
 import { take } from 'rxjs/operators';
 import { IOhMyAPIRequest, requestType } from '../../shared/type';
 import { IOhMyPacketContext, IOhMyReadyResponse, IPacketPayload } from '../../shared/packet-type';
+import { Subscription } from 'rxjs';
 import { OhMyMessageBus } from '../../shared/utils/message-bus';
 import { triggerWindow } from '../../shared/utils/trigger-msg-window';
 
@@ -59,8 +60,38 @@ import { triggerWindow } from '../../shared/utils/trigger-msg-window';
  */
 const ANSWER_TIMEOUT = 10_000;
 
+/**
+ * One bus for every intercepted request, not one per request.
+ *
+ * `new OhMyMessageBus().setTrigger(triggerWindow)` adds a
+ * `window.addEventListener('message')`. Built per request, a page with K calls
+ * in flight ran every packet posted on the window through K listeners, each
+ * with its own rxjs filter chain — quadratic in concurrency, and pages fire
+ * dozens of requests at once. A request that never got an answer kept its
+ * listener for the life of the page.
+ *
+ * Created on first use rather than at module load: the bundle is evaluated
+ * before anyone knows whether this domain is mocked at all, and a page that is
+ * never intercepted should not be given a listener.
+ */
+let bus: OhMyMessageBus | undefined;
+
+function messageBus(): OhMyMessageBus {
+  if (!bus) {
+    bus = new OhMyMessageBus().setTrigger(triggerWindow);
+    // The one listener goes with everything else when the extension is
+    // re-injected or switched off.
+    ohMyWindow().off?.push(() => {
+      bus?.clear();
+      bus = undefined;
+    });
+  }
+
+  return bus;
+}
+
 export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: requestType): Promise<IOhMyReadyResponse> => {
-  const mb = new OhMyMessageBus().setTrigger(triggerWindow);
+  const mb = messageBus();
 
   // Not an `async` executor, and it must not become one: it contains no
   // `await`, and an async executor that throws before `resolve` has its
@@ -75,6 +106,11 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
     } as IPacketPayload<IOhMyAPIRequest, IOhMyPacketContext>;
 
     let settled = false;
+    // The subscription for *this* request, in a holder for the same reason as
+    // the timer above: `answer` closes over it and is defined first. The bus is
+    // shared now, so only this goes away when the answer arrives — clearing the
+    // bus would take every other in-flight request's listener with it.
+    const listener: { sub?: Subscription } = {};
 
     // A holder, because `answer` is defined before the timer it cancels, and
     // that timer's own callback calls `answer`.
@@ -94,11 +130,11 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
 
       settled = true;
       clearTimeout(timeout.id);
-      mb.clear();
+      listener.sub?.unsubscribe();
       resolve(resp);
     };
 
-    mb.streamById$(id, appSources.CONTENT)
+    listener.sub = mb.streamById$(id, appSources.CONTENT)
       .pipe(take(1))
       .subscribe(({ packet }) => {
         const resp = packet.payload.data as IOhMyReadyResponse;
@@ -110,6 +146,9 @@ export const dispatchApiRequest = async (request: IOhMyAPIRequest, requestType: 
 
         if (resp.response.status !== ohMyMockStatus.ERROR) {
           ohMyWindow().cache?.unshift(resp);
+          // Bounded: an entry is only removed when the page reads the body, and
+          // a page is free never to read one.
+          trimResponseCache();
         }
 
         answer(resp);

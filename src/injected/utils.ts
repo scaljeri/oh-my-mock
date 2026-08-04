@@ -68,6 +68,26 @@ export function toRequestMethod(method: string): requestMethod | undefined {
   return isRequestMethod(upperCased) ? upperCased : undefined;
 }
 
+/**
+ * How many answered-but-unread responses to keep.
+ *
+ * An entry is consumed when the page reads the body — `.json()`, `.text()`,
+ * `responseText`. A page that never reads one leaves it behind, and nothing
+ * else empties the cache while the page is alive. The cap keeps that bounded;
+ * the oldest go first, and an entry old enough to be dropped belongs to a
+ * request whose body was never going to be read.
+ */
+const MAX_CACHED_RESPONSES = 200;
+
+/** Drops the oldest entries once the cache outgrows its cap. */
+export function trimResponseCache(): void {
+  const cache = ohMyWindow().cache;
+
+  if (cache && cache.length > MAX_CACHED_RESPONSES) {
+    cache.splice(0, cache.length - MAX_CACHED_RESPONSES);
+  }
+}
+
 export function findCachedResponse(search: IOhMyMockContext, remove = true): IOhMyReadyResponse | undefined {
   const cache = ohMyWindow().cache ?? [];
   const result = cache.find(c =>

@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject } from 'rxjs';
 import { appSources, payloadType } from '../shared/constants';
 import { ohMyWindow } from '../shared/oh-my-window';
-import { IOhMessage, IOhMyImportStatus, IOhMyReadyResponse } from '../shared/packet-type';
+import { IOhMessage, IOhMyImportStatus } from '../shared/packet-type';
 import { IOhMyInjectedState } from '../shared/types/store';
 import { OhMyMessageBus } from '../shared/utils/message-bus';
 import { triggerWindow } from '../shared/utils/trigger-msg-window';
@@ -26,13 +26,14 @@ export function setupListenersMessageBus() {
   //   // INJECTED SCRIPT: state-manger.ts
   // });
 
-  mb.streamByType$<IOhMyReadyResponse>(payloadType.RESPONSE, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyReadyResponse>) => {
-    const response = packet.payload.data;
-
-    if (response) {
-      ohMyWindow().cache?.push(response);
-    }
-  });
+  // There used to be a second subscription here, pushing every RESPONSE packet
+  // into `ohMy.cache`. `dispatchApiRequest` already puts the answer there — it
+  // subscribes by request id, so it caches the response belonging to the
+  // request the page is actually making — and `findCachedResponse` splices out
+  // **one** match. So every intercepted request left a duplicate behind,
+  // holding a full response body for the life of the page: megabytes on a page
+  // with base64 image mocks, and a linear `find` that grew with every call the
+  // page had ever made.
 
   mb.streamByType$<IOhMyImportStatus>(payloadType.OHMYMOCK_API_OUTPUT, appSources.CONTENT).subscribe(({ packet }: IOhMessage<IOhMyImportStatus>) => {
     const status = packet.payload.data;
