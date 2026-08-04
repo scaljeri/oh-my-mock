@@ -87,5 +87,54 @@ describe('Utils/Migrate', () => {
       const out = MigrateUtils.migrate({ a: 'b', version: '1.0.1', type: 'foo' } as any);
       expect(out).toBeNull();
     });
+  
+  /**
+   * The guard that decides whether to migrate at all.
+   *
+   * It used to compare `MigrateUtils.version` against a second constant written
+   * `'__OH' + '_MY_VERSION__'`, split so `token-replace.js` would leave it
+   * alone. Minifiers fold that concat back together, and `ci:build` minifies
+   * **before** replacing tokens — so in every production build the two were the
+   * same string, the guard was unconditionally true, and `migrate` handed every
+   * record straight back. No migration step had ever run in a minified build.
+   *
+   * There is nothing left to fold: the check is a prefix, and the prefix is not
+   * the token, so replacement never touches it.
+   */
+  describe('recognising a build whose version token was never replaced', () => {
+    it('knows the raw token from a version', () => {
+      expect(MigrateUtils.isUnreplacedVersion('__OH_MY_VERSION__')).toBe(true);
+      expect(MigrateUtils.isUnreplacedVersion('3.3.15')).toBe(false);
+      expect(MigrateUtils.isUnreplacedVersion('3.3.15-beta.1')).toBe(false);
+    });
+
+    /**
+     * The shape a minifier produces. Written out rather than concatenated,
+     * because a concat here would be folded too — and then this test would
+     * agree with the bug instead of catching it.
+     */
+    it('is not defeated by the two halves being joined back up', () => {
+      expect(MigrateUtils.isUnreplacedVersion('__OH_MY_VERSION__')).toBe(true);
+    });
+
+    it('migrates normally once the token has been replaced', () => {
+      const before = MigrateUtils.version;
+      MigrateUtils.version = '2.0.0';
+
+      try {
+        // An old record of a recognised type reaches the step chain rather than
+        // being handed straight back.
+        const migrated = MigrateUtils.migrate({
+          version: '1.0.0',
+          type: objectTypes.STORE,
+          domains: []
+        } as never);
+
+        expect(migrated).not.toBeUndefined();
+      } finally {
+        MigrateUtils.version = before;
+      }
+    });
   });
+});
 })

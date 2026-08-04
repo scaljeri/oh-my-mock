@@ -8,7 +8,25 @@ import { IOhMyMigrationStep, IOhMyStoredRecord } from './migrations/types';
 import { objectTypes } from '../constants';
 
 const IS_BETA_RE = /beta/;
-const DEV_VERSION = '__OH' + '_MY_VERSION__';
+
+/**
+ * The start of the build-time version token, as a literal a minifier cannot
+ * reconstruct.
+ *
+ * There used to be a whole `DEV_VERSION = '__OH' + '_MY_VERSION__'` here, split
+ * so `token-replace.js` would not rewrite it — the point being to recognise a
+ * build whose token was never replaced. Minifiers constant-fold that concat
+ * straight back together, and `ci:build` minifies **before** replacing tokens.
+ * So in every production build `DEV_VERSION` and `MigrateUtils.version` became
+ * the same string, `version === DEV_VERSION` was unconditionally true, and
+ * `migrate` returned every record untouched: **no migration step has ever run
+ * in a minified build**, and no stale record was ever discarded.
+ *
+ * Nothing to fold now. This prefix is not the token — `token-replace` looks for
+ * `__OH_MY_VERSION__` — so it survives replacement, and there is no second
+ * constant to drift out of step with the first.
+ */
+const UNREPLACED_TOKEN_PREFIX = '__OH_MY_';
 
 export class MigrateUtils {
   static storeSteps = storeSteps;
@@ -25,7 +43,12 @@ export class MigrateUtils {
   static migrate<T extends IOhMyStoredRecord>(data: T): T | null {
     const version = data.version || '0.0.0';
 
-    if (MigrateUtils.version === DEV_VERSION || version === DEV_VERSION) {
+    // A build whose version token was never replaced, or a record written by
+    // one. Nothing sensible can be compared, so the record is taken as current.
+    if (
+      MigrateUtils.isUnreplacedVersion(MigrateUtils.version) ||
+      MigrateUtils.isUnreplacedVersion(version)
+    ) {
       data.version = MigrateUtils.version;
       return data;
     }
@@ -93,5 +116,10 @@ export class MigrateUtils {
 
   static isDevelopVersion(version: string): boolean {
     return IS_BETA_RE.test(version);
+  }
+
+  /** Whether this is the build-time token rather than a version. */
+  static isUnreplacedVersion(version: string): boolean {
+    return typeof version === 'string' && version.startsWith(UNREPLACED_TOKEN_PREFIX);
   }
 }
