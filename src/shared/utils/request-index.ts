@@ -38,9 +38,8 @@ type GroupBucket = Map<requestMethod | '*', IData[]>;
  * The group order becomes the iteration order, so the sort — and the ranking it
  * needed — stops existing rather than getting faster.
  *
- * The index is for **serving only**. The request list shows everything the
- * domain has, switched-off groups included: a mock that has vanished from the
- * list is a mock whose on/off switch cannot be reached.
+ * The index is for **serving**. The request list narrows the same way but
+ * separately — see `visibleRequests` at the bottom of this file.
  */
 export class OhMyRequestIndex {
   private byGroup = new Map<ohMyGroupId, GroupBucket>();
@@ -151,4 +150,35 @@ export function matches(request: IData, search: IOhMyUpsertData): boolean {
   const pattern = patternFor(request.url);
 
   return !!pattern && pattern.test(search.url);
+}
+
+/**
+ * The requests belonging to the groups that are switched on.
+ *
+ * What the request list shows. A mock group is a set that goes in or out as a
+ * whole, so while a group is off its mocks are not in play and are not on
+ * screen; the way back is that group's own switch, not a per-request one.
+ *
+ * Deliberately not the same call as the serving lookup: this answers "what is
+ * in play", in stored order, and keeps the map shape the list works in.
+ *
+ * `local` is the domain's own group, taken from what is *known* rather than
+ * from `active` — asking `active` for it means that a switched-off local group
+ * cannot be found there, and `GroupUtils.isActive` then takes its "groups are
+ * not set up yet, serve it" branch and shows everything.
+ */
+export function visibleRequests(
+  requests: IOhMyRequests,
+  active: IOhMyGroup[],
+  local: IOhMyGroup | undefined
+): IOhMyRequests {
+  const visible: IOhMyRequests = {};
+
+  for (const [id, request] of Object.entries(requests)) {
+    if (GroupUtils.isActive(request, active, local)) {
+      visible[id] = request;
+    }
+  }
+
+  return visible;
 }

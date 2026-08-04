@@ -25,6 +25,7 @@ import {
   ohMyDataId
 } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
+import { visibleRequests } from '@shared/utils/request-index';
 import {
   BehaviorSubject,
   combineLatest,
@@ -36,6 +37,7 @@ import {
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { presetInfo } from '../../constants';
+import { OhMyStateService } from '../../services/state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { RequestFilterComponent } from '../request-filter/request-filter.component';
 import {
@@ -110,6 +112,7 @@ export class DataListComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private toast = inject(HotToastService);
   private storeService = inject(OhMyState);
+  private stateService = inject(OhMyStateService);
 
   stateSubject = new BehaviorSubject<IState | undefined>(undefined);
   state$ = this.stateSubject.asObservable().pipe(
@@ -242,19 +245,27 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       combineLatest([this.state$, this.requestsSubject]).subscribe(
         ([state, requests]) => {
-          this.data = StateUtils.pickRequests(state, requests);
+          // Only the mocks of the groups that are **on**. A group is a set that
+          // is switched in or out as a whole; its mocks are not in play while it
+          // is off, so they are not in the list either. The way back is the
+          // group's own switch in the drawer, not a per-request one.
+          this.data = visibleRequests(
+            StateUtils.pickRequests(state, requests),
+            this.stateService.activeGroups(state),
+            this.stateService.localGroup(state)
+          );
 
           if (this.persistFilter) {
             this.filterKeywords = state.aux.filterKeywords || '';
             if (!state.aux.filterKeywords) {
-              this.filteredRequests = [...state.requests];
+              this.filteredRequests = state.requests.filter(id => !!this.data[id]);
             } else {
               this.filteredRequests = undefined;
 
               if (state.aux.filteredRequests) {
                 this.filteredRequests = state.aux.filteredRequests;
               } else if (state.aux.filteredRequests !== null) {
-                this.filteredRequests = [...state.requests];
+                this.filteredRequests = state.requests.filter(id => !!this.data[id]);
               }
             }
           }
@@ -265,7 +276,9 @@ export class DataListComponent implements OnInit, OnDestroy {
 
           this.newAutoActivate = state.aux.newAutoActivate ?? false;
           this.filterOptions = state.aux.filterOptions;
-          this.requestCount = state.requests.length;
+          // Counted from what is on screen, not from the state's id list — a
+          // badge that disagrees with the rows below it is worse than no badge.
+          this.requestCount = Object.keys(this.data).length;
           this.blurImages = state.aux.blurImages ?? false;
 
           // After the context fallback above: a write-back needs one.

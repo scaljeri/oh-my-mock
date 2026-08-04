@@ -107,10 +107,14 @@ test.describe('the lookup index', () => {
   });
 
   /**
-   * The constraint that makes the index safe to have at all. The index is for
-   * serving; the list is for reaching the switches.
+   * A mock group is a set that goes in or out as a whole. While it is off its
+   * mocks are not in play, so they are not in the list either — and the way
+   * back is the group's own switch in the drawer, not a per-request one.
+   *
+   * Within an active group every mock is listed, which is what the per-request
+   * switches are for.
    */
-  test('does not take a switched-off group out of the request list', async ({
+  test('takes a switched-off group out of the request list, and brings it back', async ({
     context,
     extensionId,
     ohMy,
@@ -122,7 +126,6 @@ test.describe('the lookup index', () => {
       response: { from: 'the mock' }
     });
     await ohMy.setActive(SITE_DOMAIN);
-    await ohMy.disableLocalGroup(SITE_DOMAIN);
     await site.open();
 
     const popup = await openPopup(context, extensionId, {
@@ -130,15 +133,24 @@ test.describe('the lookup index', () => {
       tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
-    // The mock is not being served — and it is still on screen, with its own
-    // switch, because that is the only way to get it back.
-    await expect(popup.locator('[x-test="list-request-item"]')).toHaveCount(1);
+    const rows = popup.locator('[x-test="list-request-item"]');
+    await expect(rows).toHaveCount(1);
 
+    // Switched off from the drawer, which is where a group is switched.
     await openDrawer(popup);
+    await popup.locator('[x-test="group-item"]').click();
     await expect(popup.locator('[x-test="group-item"]')).toHaveAttribute(
       'aria-checked',
       'false'
     );
+
+    // Its mocks are out of play, so they are off the list.
+    await expect(rows).toHaveCount(0);
+    // The group itself is still there, with its count — that is the way back.
+    await expect(popup.locator('[x-test="group-count"]')).toHaveText('1');
+
+    await popup.locator('[x-test="group-item"]').click();
+    await expect(rows).toHaveCount(1);
 
     await popup.close();
   });

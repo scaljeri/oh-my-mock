@@ -13,6 +13,8 @@ import {
   ohMyCookieId
 } from '@shared/type';
 import { IOhMyPacketContext } from '@shared/packet-type';
+import { GroupUtils } from '@shared/utils/group';
+import { IOhMyGroup, ohMyGroupId } from '@shared/type';
 import { IOhMyHit } from '@shared/type';
 import { objectTypes, STORAGE_KEY } from '@shared/constants';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
@@ -73,6 +75,17 @@ export class OhMyStateService {
   >(this.cookies);
   public cookies$ = this.cookiesSubject.asObservable().pipe(shareReplay(1));
 
+  /**
+   * The mock groups, by id.
+   *
+   * Held for the same reason the content script holds them: the request list
+   * shows the mocks of the groups that are **on**, so it needs to know which
+   * those are. Fed from `chrome.storage.onChanged` like everything else here.
+   */
+  public groups: Record<ohMyGroupId, IOhMyGroup> = {};
+  private groupsSubject = new BehaviorSubject<Record<ohMyGroupId, IOhMyGroup>>(this.groups);
+  public groups$ = this.groupsSubject.asObservable().pipe(shareReplay(1));
+
   private responseSubject = new BehaviorSubject<IMock | undefined>(undefined);
   public response$ = this.responseSubject
     .asObservable()
@@ -106,6 +119,7 @@ export class OhMyStateService {
 
   async initialize(domain: ohMyDomain): Promise<void> {
     this.store = await this.initStore();
+    await this.loadGroups();
     this.state = await this.initState(domain);
     this.context = this.state.context;
     this.contextSubject.next(this.context);
@@ -163,6 +177,58 @@ export class OhMyStateService {
    * that follows is what should bring it in — inventing a record here from two
    * numbers would put a row in the list with nothing in it.
    */
+  /**
+   * The groups answering for this domain, best first.
+   *
+   * The domain's own group is included whether or not its record has been
+   * written — its id is derived, and `ensureGroups` does not run on every path.
+   * The same rule the content script uses, because a list that disagrees with
+   * what is being served is worse than no list.
+   */
+  public activeGroups(state: IState | undefined = this.state): IOhMyGroup[] {
+    if (!state) {
+      return [];
+    }
+
+    const known = Object.values(this.groups);
+    const local = GroupUtils.localFor(known, state.domain);
+
+    return GroupUtils.activeFor(
+      local ? known : [...known, GroupUtils.defaultLocalFor(state.domain)],
+      state,
+      this.store?.groups ?? []
+    );
+  }
+
+  /**
+   * This domain's own group, record or no record — the same one answer the
+   * content script keeps, for the same reason.
+   */
+  public localGroup(state: IState | undefined = this.state): IOhMyGroup | undefined {
+    if (!state) {
+      return undefined;
+    }
+
+    return GroupUtils.localFor(Object.values(this.groups), state.domain)
+      ?? GroupUtils.defaultLocalFor(state.domain);
+  }
+
+  /** Loads the group records the store lists, once. */
+  public async loadGroups(): Promise<void> {
+    const listed = this.store?.groups ?? [];
+    const missing = listed.filter((id) => !this.groups[id]);
+
+    if (!missing.length) {
+      return;
+    }
+
+    this.groups = {
+      ...this.groups,
+      ...(await this.storageService.getMany<IOhMyGroup>(missing))
+    };
+    this.groupsSubject.next(this.groups);
+  }
+
   public applyHit(hit: IOhMyHit): void {
     const request = this.requests[hit.id];
 
@@ -251,6 +317,9 @@ export class OhMyStateService {
           // The state may name requests or cookies this popup has not loaded yet
           this.loadRequests(this.state);
           this.loadCookies(this.state);
+          // `aux.disabledGroups` lives on the state, so switching a group off
+          // arrives here.
+          this.groupsSubject.next(this.groups);
 
           this.stateSubject.next(this.state);
           break;
