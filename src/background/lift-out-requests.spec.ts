@@ -32,6 +32,7 @@ function legacyState(data: Record<string, IData>): unknown {
 
 describe('lift-out-requests', () => {
   let records: Record<string, unknown>;
+  let session: Record<string, unknown>;
 
   beforeEach(() => {
     records = {};
@@ -49,6 +50,14 @@ describe('lift-out-requests', () => {
     jest.spyOn(StorageUtils, 'set').mockImplementation(async (key: string, value: unknown) => {
       records[key] = value;
     });
+
+    // The scan marks the browser session as checked, so it does not repeat on
+    // every service-worker start.
+    session = {};
+    (chrome.storage as unknown as Record<string, unknown>).session = {
+      get: async (key: string) => ({ [key]: session[key] }),
+      set: async (entries: Record<string, unknown>) => Object.assign(session, entries)
+    };
   });
 
   afterEach(() => jest.restoreAllMocks());
@@ -174,5 +183,46 @@ describe('lift-out-requests', () => {
     expect(state.aux).toEqual({ appActive: true });
     expect(state.presets).toEqual({ default: 'Default' });
     expect(state.domain).toBe('example.com');
+  });
+
+  /**
+   * The scan is `chrome.storage.local.get(null)` — every record the browser
+   * holds, base64 bodies and all. It runs from `initStorage`, and MV3 tears the
+   * worker down after about thirty seconds of idle, so on an active tab it was
+   * repeating for a migration that finishes on the first pass.
+   */
+  describe('how often it looks', () => {
+    it('does not read storage again once it has run', async () => {
+      records['example.com'] = legacyState({ r1: request() });
+
+      await liftOutRequests();
+      const reads = StorageUtils.chrome.storage.local.get as jest.Mock;
+      reads.mockClear();
+
+      expect(await liftOutRequests()).toBe(0);
+      expect(reads).not.toHaveBeenCalled();
+    });
+
+    /**
+     * A session marker, not a stored one: the check has to happen again after
+     * an extension update, and this gets that without a version gate — which is
+     * the mechanism this file exists to avoid.
+     */
+    it('looks again in a new browser session', async () => {
+      records['example.com'] = legacyState({ r1: request() });
+      await liftOutRequests();
+
+      session = {};
+      (chrome.storage as unknown as Record<string, unknown>).session = {
+        get: async (key: string) => ({ [key]: session[key] }),
+        set: async (entries: Record<string, unknown>) => Object.assign(session, entries)
+      };
+
+      const reads = StorageUtils.chrome.storage.local.get as jest.Mock;
+      reads.mockClear();
+      await liftOutRequests();
+
+      expect(reads).toHaveBeenCalled();
+    });
   });
 });

@@ -40,8 +40,39 @@ function isLegacyState(value: unknown): value is ILegacyState {
     && typeof candidate.data === 'object';
 }
 
+/**
+ * Marks that this browser session has already looked.
+ *
+ * The scan is `chrome.storage.local.get(null)` — every record the browser
+ * holds, base64 bodies and all, deserialized into the worker. It runs from
+ * `initStorage`, and MV3 tears the worker down after about thirty seconds of
+ * idle, so on an active tab it was running over and over for a migration that
+ * is finished after the first pass.
+ *
+ * `chrome.storage.session` and not `local`: the check has to happen again after
+ * an extension update, and a session marker gets that for free without a
+ * version gate — which is the mechanism this file was deliberately written to
+ * avoid, because `shouldMigrate` compares versions and a change with no version
+ * bump never opens the gate.
+ *
+ * So: once per browser start instead of once every thirty seconds, and never
+ * skipped when it could still matter.
+ */
+const SESSION_KEY = 'OhMyRequestsLifted';
+
 /** Lifts every embedded request out. Returns how many records it created. */
 export async function liftOutRequests(): Promise<number> {
+  try {
+    const seen = await chrome.storage.session.get(SESSION_KEY);
+
+    if (seen?.[SESSION_KEY]) {
+      return 0;
+    }
+  } catch (err) {
+    // Session storage being unavailable is not a reason to skip a migration.
+    error('Could not tell whether requests had already been lifted out', err);
+  }
+
   // `null` reads the whole of storage; `StorageUtils.get` only takes one key.
   const everything = await StorageUtils.chrome.storage.local.get(null);
   let lifted = 0;
@@ -87,6 +118,12 @@ export async function liftOutRequests(): Promise<number> {
     }
 
     await StorageUtils.set(key, { ...state, requests: ids });
+  }
+
+  try {
+    await chrome.storage.session.set({ [SESSION_KEY]: true });
+  } catch (err) {
+    error('Could not remember that requests were lifted out', err);
   }
 
   return lifted;

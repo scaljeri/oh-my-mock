@@ -18,10 +18,12 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
   // `StorageUtils.get` resolves with `undefined` on a fresh install, and
   // `MigrateUtils.migrate` returns `null` when it gives up.
   let store: IOhMyMock | null | undefined = await StorageUtils.get<IOhMyMock>();
+  let migrated = false;
 
   if (store) {
     if (MigrateUtils.shouldMigrate(store)) {
       store = MigrateUtils.migrate(store);
+      migrated = true;
 
       if (!store) { // If the store cannot be migrated
         await StorageUtils.reset();
@@ -34,22 +36,41 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
       }
     }
   }
+  // Tracked explicitly, not by comparing references: the domain branch below
+  // mutates `store.domains` in place, so the object is the same one while its
+  // contents are not.
+  let changed = !store || migrated;
   store ??= StoreUtils.init();
 
   if (domain) {
-    const state = await StorageUtils.get<IState>(domain) || StateUtils.init({ domain });
+    const stored = await StorageUtils.get<IState>(domain);
 
     if (!store.domains.includes(domain)) {
       store.domains = [domain, ...store.domains];
+      changed = true;
     }
 
-    await StorageUtils.set(domain, state);
+    // Only when there is nothing there. It used to write the state back on
+    // every call — so every service-worker start rewrote the domain record of
+    // whichever tab woke it, which every content script in the browser then
+    // heard about through `chrome.storage.onChanged`.
+    if (!stored) {
+      await StorageUtils.set(domain, StateUtils.init({ domain }));
+    }
   }
 
   // Last, so the domain just added above is included: give every domain the
   // local group its mocks already belonged to. Shape-keyed and idempotent, so
   // this is a no-op once each domain has one.
-  store = await ensureGroups(store);
+  const grouped = await ensureGroups(store);
+  changed = changed || grouped !== store;
+  store = grouped;
 
-  await StorageUtils.set(STORAGE_KEY, store);
+  // Only if it actually changed. This ran unconditionally, and MV3 restarts the
+  // worker after about thirty seconds of idle, so an active tab had the store
+  // rewritten — and broadcast to every content script in the browser — every
+  // time it woke one up.
+  if (changed) {
+    await StorageUtils.set(STORAGE_KEY, store);
+  }
 }
