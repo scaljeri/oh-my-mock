@@ -43,18 +43,60 @@ export class OhMyCookieRecorder {
   static CookieHandler = OhMyCookieHandler;
 
   /**
-   * What has been recorded in this worker's life, keyed by domain, name and
-   * path. The state's own list lags a storage round trip behind, so a server
-   * setting the same cookie twice would otherwise be recorded twice. A mock the
-   * user deletes stays in here until the worker restarts, which is the
-   * behaviour to want: a deleted mock should not come straight back.
+   * What has been recorded, keyed by domain, name and path.
+   *
+   * Two jobs. The state's own list lags a storage round trip behind, so a
+   * server setting the same cookie twice would otherwise be recorded twice.
+   * And a mock the user deletes stays in here, so it does not come straight
+   * back the next time the server sets it.
+   *
+   * That second job needs it to outlive the service worker, which MV3 tears
+   * down after ~30s of idle — as an in-memory set it lasted minutes, and a
+   * deleted cookie mock reappeared as soon as the worker had been away and the
+   * server set the cookie again. `chrome.storage.session` keeps it for as long
+   * as the browser is open, which is the right lifetime: "deleted" is a
+   * decision about this browsing session, not for ever.
    */
   private static recorded = new Set<string>();
+  private static readonly SESSION_KEY = 'OhMyRecordedCookies';
+  private static primed = false;
+
+  /** Reads back what earlier lives of this worker had already recorded. */
+  static async prime(): Promise<void> {
+    if (OhMyCookieRecorder.primed) {
+      return;
+    }
+
+    OhMyCookieRecorder.primed = true;
+
+    try {
+      const stored = await chrome.storage.session.get(OhMyCookieRecorder.SESSION_KEY);
+
+      for (const key of (stored?.[OhMyCookieRecorder.SESSION_KEY] ?? []) as string[]) {
+        OhMyCookieRecorder.recorded.add(key);
+      }
+    } catch (err) {
+      error('Could not read back which cookies were already recorded', err);
+    }
+  }
+
+  private static async remember(): Promise<void> {
+    try {
+      await chrome.storage.session.set({
+        [OhMyCookieRecorder.SESSION_KEY]: [...OhMyCookieRecorder.recorded]
+      });
+    } catch (err) {
+      error('Could not remember which cookies were recorded', err);
+    }
+  }
 
   static async onChanged({ cookie, removed }: chrome.cookies.CookieChangeInfo): Promise<ohMyCookieId | undefined> {
     if (removed) { // Only what a server sets is worth recording
       return undefined;
     }
+
+    // The set is per browser session, not per worker life — see `recorded`.
+    await OhMyCookieRecorder.prime();
 
     const domain = activeDomains().find(d => CookieUtils.appliesTo(d, cookie.domain));
 
@@ -74,11 +116,13 @@ export class OhMyCookieRecorder {
     }
 
     OhMyCookieRecorder.recorded.add(key);
+    await OhMyCookieRecorder.remember();
 
     try {
       return await OhMyCookieRecorder.record(domain, cookie);
     } catch (err) {
       OhMyCookieRecorder.recorded.delete(key);
+      await OhMyCookieRecorder.remember();
       error(`Could not record cookie ${cookie.name}`, err);
 
       return undefined;
@@ -114,6 +158,12 @@ export function initCookieRecorder(queue: OhMyQueue): void {
   OhMyCookieHandler.queue = queue;
 
   chrome.cookies.onChanged.addListener((changeInfo: chrome.cookies.CookieChangeInfo) => {
-    OhMyCookieRecorder.onChanged(changeInfo);
+    // The promise was dropped. `onChanged`'s own `try` wraps only the record
+    // itself, so anything thrown before it — `activeDomains()`,
+    // `CookieUtils.appliesTo` — became an unhandled rejection in the service
+    // worker rather than a line in the log.
+    void OhMyCookieRecorder.onChanged(changeInfo).catch(err => {
+      error('Failed while recording a cookie the server set', err);
+    });
   });
 }

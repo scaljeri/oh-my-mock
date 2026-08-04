@@ -3,7 +3,7 @@
 import { objectTypes } from '../shared/constants';
 import { IOhMyCookie, IOhMyMock, IState, ohMyCookieId, ohMyDomain, ohMyPresetId } from '../shared/type';
 import { IOhMyStorageChange, StorageUtils } from '../shared/utils/storage';
-import { syncCookies, unapplyResponseCookies } from './cookie-jar';
+import { primeResponseCookies, syncCookies, unapplyResponseCookies } from './cookie-jar';
 import { error } from './utils';
 
 /**
@@ -162,6 +162,11 @@ export async function handleStorageUpdate(key: string, update: IOhMyStorageChang
  * knows of nothing.
  */
 export async function primeCookieSync(): Promise<void> {
+  // What served responses had put in the jar before this worker existed. Read
+  // first, so a domain that is no longer active has its response cookies taken
+  // back out by the sync below.
+  await primeResponseCookies();
+
   const store = await StorageUtils.get<IOhMyMock>();
 
   for (const domain of store?.domains ?? []) {

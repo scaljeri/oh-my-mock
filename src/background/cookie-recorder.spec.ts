@@ -191,7 +191,12 @@ describe('OhMyCookieRecorder', () => {
       expect(OhMyCookieHandler.queue).toBe(queue);
 
       const listener = (chrome.cookies.onChanged.addListener as jest.Mock).mock.calls[0][0];
-      await listener(change());
+      listener(change());
+
+      // The listener deliberately does not return its promise — a Chrome event
+      // listener's return value is not awaited by anything — so the work has to
+      // be drained rather than awaited.
+      await new Promise(resolve => setTimeout(resolve));
 
       expect(OhMyCookieRecorder.CookieHandler.upsert).toHaveBeenCalled();
     });

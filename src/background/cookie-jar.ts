@@ -3,6 +3,7 @@
 import { objectTypes } from '../shared/constants';
 import { IOhMyCookie, IOhMyResponseCookie, ohMyCookieId, ohMyDomain } from '../shared/type';
 import { CookieUtils } from '../shared/utils/cookie';
+import { error } from './utils';
 
 /**
  * Applies and unapplies cookie mocks.
@@ -178,6 +179,65 @@ export async function syncCookies(
 const fromResponses = new Map<ohMyDomain, Map<ohMyCookieId, IOhMyCookie>>();
 
 /**
+ * Where the map above is mirrored so it survives the service worker.
+ *
+ * `chrome.storage.session`, not `local`: this is true for as long as the
+ * browser is open and meaningless after it closes, which is exactly what
+ * session storage is. Keeping it out of `local` also keeps it out of the
+ * `onChanged` traffic every content script listens to, and out of the mock
+ * store.
+ *
+ * Without this the map was the one piece of cookie state a teardown did not
+ * rebuild — `displaced` and `synced` are re-primed from storage by
+ * `primeCookieSync`, but nothing in storage records that a response was
+ * *served*. So after the worker went away, `unapplyResponseCookies` found
+ * nothing to unapply and a fabricated session outlived the mocking that made
+ * it: the exact failure the rest of this module exists to prevent.
+ */
+const SESSION_KEY = 'OhMyResponseCookies';
+
+/** Mirrors `fromResponses` into session storage. Failure is logged, not thrown. */
+async function rememberResponseCookies(): Promise<void> {
+  const plain: Record<ohMyDomain, IOhMyCookie[]> = {};
+
+  for (const [domain, applied] of fromResponses) {
+    plain[domain] = [...applied.values()];
+  }
+
+  try {
+    await chrome.storage.session.set({ [SESSION_KEY]: plain });
+  } catch (err) {
+    error('Could not remember which cookies a response set', err);
+  }
+}
+
+/**
+ * Reads back what served responses had set before the worker was torn down.
+ *
+ * Additive: anything applied since this worker started stays. Called from
+ * `primeCookieSync`, alongside the re-sync of the standalone mocks.
+ */
+export async function primeResponseCookies(): Promise<void> {
+  try {
+    const stored = await chrome.storage.session.get(SESSION_KEY);
+    const plain = (stored?.[SESSION_KEY] ?? {}) as Record<ohMyDomain, IOhMyCookie[]>;
+
+    for (const [domain, cookies] of Object.entries(plain)) {
+      const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
+      fromResponses.set(domain, applied);
+
+      for (const cookie of cookies) {
+        if (!applied.has(cookie.id)) {
+          applied.set(cookie.id, cookie);
+        }
+      }
+    }
+  } catch (err) {
+    error('Could not read back which cookies a response set', err);
+  }
+}
+
+/**
  * The id a response's cookie is tracked under.
  *
  * Name and path, not the response it came from: two responses setting the same
@@ -222,6 +282,8 @@ export async function applyResponseCookies(
     applied.set(asMock.id, asMock);
     await applyCookie(domain, asMock);
   }
+
+  await rememberResponseCookies();
 }
 
 /**
@@ -241,10 +303,16 @@ export async function unapplyResponseCookies(domain: ohMyDomain): Promise<void> 
   fromResponses.delete(domain);
 
   for (const cookie of applied.values()) {
-    if (isApplied(domain, cookie.id)) {
-      await unapplyCookie(domain, cookie);
-    }
+    // `isApplied` reads the in-memory `displaced` map, which a teardown *does*
+    // clear. After a restart the cookie is in the jar but not in that map, so
+    // asking would answer no and it would never be removed — which is the whole
+    // reason this list is remembered. Unapply unconditionally: it removes what
+    // it cannot restore, which is the right outcome for a cookie this extension
+    // wrote.
+    await unapplyCookie(domain, cookie);
   }
+
+  await rememberResponseCookies();
 }
 
 /** Test seam: drops the remembered originals for a domain. */

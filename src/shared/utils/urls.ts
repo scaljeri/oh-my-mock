@@ -23,6 +23,30 @@ const RE_METACHARACTERS = /(?<!\\)([.?*+^$()[\]{}|])/g;
 
 export const url2regex = (url: string): string => url.replace(RE_METACHARACTERS, '\\$1');
 
+/**
+ * Whether a pattern already ends in an end-of-string anchor.
+ *
+ * Looking at the last character alone was not enough: `url2regex` escapes a
+ * literal `$` in a url to `\$`, and that also ends in `$`. So a stored pattern
+ * for `/api/x$` was left unanchored, and matched `/api/x$anything`.
+ *
+ * An anchor is a `$` preceded by an even number of backslashes — zero being
+ * even. An odd number means the last one escapes the `$`, making it a literal.
+ */
+const endsAnchored = (pattern: string): boolean => {
+  if (pattern.charAt(pattern.length - 1) !== '$') {
+    return false;
+  }
+
+  let backslashes = 0;
+
+  for (let i = pattern.length - 2; i >= 0 && pattern.charAt(i) === '\\'; i--) {
+    backslashes++;
+  }
+
+  return backslashes % 2 === 0;
+};
+
 /** Patterns already found to be invalid, so each is complained about once. */
 const broken = new Set<string>();
 
@@ -44,7 +68,7 @@ export const compareUrls = (url: string, urlRe: string): boolean => {
     urlRe = '^' + urlRe;
   }
 
-  if (urlRe.charAt(urlRe.length - 1) !== '$') {
+  if (!endsAnchored(urlRe)) {
     urlRe += '$';
   }
 

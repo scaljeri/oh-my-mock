@@ -128,4 +128,29 @@ describe('#Utils/urls#compareUrls', () => {
       expect(compareUrls('/api/json', '/api/[unclosed')).toBe(false);
     });
   });
+
+  /**
+   * `url2regex` escapes a literal `$` in a url to `\$`, which also ends in
+   * `$` — so the "is it already anchored" check said yes and no end anchor was
+   * added. The pattern for `/api/x$` therefore matched `/api/x$anything`.
+   */
+  describe('a url that ends in a dollar sign', () => {
+    it('is still anchored at the end', () => {
+      const pattern = url2regex('/api/x$');
+
+      expect(compareUrls('/api/x$', pattern)).toBe(true);
+      expect(compareUrls('/api/x$and-more', pattern)).toBe(false);
+    });
+
+    it('leaves a real end anchor alone', () => {
+      expect(compareUrls('/api/x', '^/api/x$')).toBe(true);
+      expect(compareUrls('/api/xy', '^/api/x$')).toBe(false);
+    });
+
+    it('handles an escaped backslash before the anchor', () => {
+      // `\\$` is a literal backslash followed by a real anchor.
+      expect(compareUrls('/api/x\\', '/api/x\\\\$')).toBe(true);
+      expect(compareUrls('/api/x\\more', '/api/x\\\\$')).toBe(false);
+    });
+  });
 });

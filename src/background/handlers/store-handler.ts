@@ -11,7 +11,12 @@ export class OhMyStoreHandler {
   static StorageUtils = StorageUtils;
 
   static async update({ data, context }: IPacketPayload<IOhMyMock, IOhMyPacketContext>): Promise<IOhMyMock | undefined> {
-    if (!data) {
+    // `data === undefined` is nothing to write; `false`, `0` and `''` are
+    // values. This was `if (!data)`, which ate `deactivate()`'s
+    // `patch(false, '$', 'popupActive', STORE)` — harmless only because nothing
+    // in production still reads `popupActive`, and a trap for the next falsy
+    // patch anyone sends.
+    if (data === undefined || data === null) {
       return undefined;
     }
 

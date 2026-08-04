@@ -253,6 +253,24 @@ export class OhMyMockDriver {
     );
   }
 
+  /**
+   * Switches a domain's own mock group off, the way clicking it in the drawer
+   * does.
+   *
+   * The id is derived — `local:<domain>` — so this needs no lookup, which is
+   * the whole point of deriving it.
+   */
+  async disableLocalGroup(domain: string): Promise<void> {
+    await (await this.worker()).evaluate(async (domain) => {
+      const stored = await chrome.storage.local.get(domain);
+      const state = stored[domain] as { aux?: Record<string, unknown> };
+
+      state.aux = { ...(state.aux ?? {}), disabledGroups: [`local:${domain}`] };
+
+      await chrome.storage.local.set({ [domain]: state });
+    }, domain);
+  }
+
   async getState(domain: string): Promise<Record<string, unknown> | undefined> {
     return (await this.worker()).evaluate(
       (key) => chrome.storage.local.get(key).then((all) => all[key]),

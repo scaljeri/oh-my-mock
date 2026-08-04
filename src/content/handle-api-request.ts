@@ -121,18 +121,26 @@ export async function receivedApiRequest(
       OhMySendToBg.full(data, payloadType.REQUEST, context, 'content;request-hit');
 
       if (!mock) {
-        // TODO: This should never happen
+        // The request names a mock whose record is not there: a response
+        // deleted while its id stayed on the request, or a half-finished
+        // import. It was an empty block marked "should never happen", and it
+        // does happen — see the condition below, which this used to fall
+        // through into.
+        warn(`The selected response ${mockId} of ${data.url} is missing, so this request is not mocked`);
       }
     }
   }
 
-  if (!data || mock?.jsCode === MOCK_JS_CODE || !mockId) { // No need to dispatch
-    let mockResponse: IOhMyMockResponse | undefined;
-    if (response.status === ohMyMockStatus.OK) {
-      // Should we do something here?
-    } else { // Rule: Return `response` if mock's custom code is not touched
-      mockResponse = MockUtils.mockToResponse(mock);
-    }
+  // `!mock` first. Without it a *missing* mock — `undefined`, so
+  // `mock?.jsCode === MOCK_JS_CODE` is false — took the "this mock's code was
+  // edited" branch below and dispatched an EVAL round trip to the background
+  // for a mock that does not exist. There is nothing to run and nothing to
+  // serve; the request goes to the network.
+  if (!data || !mock || mock.jsCode === MOCK_JS_CODE || !mockId) { // No need to dispatch
+    // `response` here is always `{ status: NO_CONTENT }`: the only branch that
+    // could make it OK is the SDK server, and that one already returned. So
+    // this is the mock, or nothing.
+    const mockResponse = MockUtils.mockToResponse(mock);
     handleResponse(request, context, response, mockResponse, state, mock?.cookies);
     // const output = {
     //   request, response: (!!data && mock ?
