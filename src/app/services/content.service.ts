@@ -44,21 +44,21 @@ export class ContentService {
       { payload, source, domain }: IPacket,
       sender: chrome.runtime.MessageSender
     ) => {
-      // Only accept messages from the content script
-      // const domain = payload.context?.domain;
-      if (
-        (source !== appSources.CONTENT && source !== appSources.BACKGROUND) ||
-        !domain
-      ) {
+      if (source !== appSources.CONTENT && source !== appSources.BACKGROUND) {
         return;
       }
 
-      // First checl background source, because it doesn't have a sender.tab
+      // The background has no `sender.tab`, so it is checked first. It has no
+      // domain either: a service worker failure belongs to the browser, not to
+      // a site. The `!domain` guard used to sit above this branch and drop
+      // every one of these — which is the other half of why the error button
+      // has never appeared. It belongs with the content-script branch, which is
+      // where a domain identifies the tab that sent it.
       if (source === appSources.BACKGROUND) {
         if (payload.type === payloadType.ERROR) {
           this.appStateService.addError(payload);
         }
-      } else if (sender.tab?.id === this.appStateService.tabId) {
+      } else if (domain && sender.tab?.id === this.appStateService.tabId) {
         if (!this.appStateService.isSameDomain(domain)) {
           this.appStateService.domain = domain;
         }

@@ -27,6 +27,7 @@ import { removeCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { connectIfEnabled } from './dispatch-remote';
 import { initRemoteLink } from './remote-link';
+import { reportError, reportUncaughtErrors } from './report-error';
 import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
@@ -36,18 +37,10 @@ import { OhMyCookieHandler } from './handlers/cookie-handler';
 import { initCookieSync, primeCookieSync } from './cookie-sync';
 import { initCookieRecorder } from './cookie-recorder';
 
-// window.onunhandledrejection = function (event) {
-//   const { reason } = event;
-//   const errorMsg = JSON.stringify(reason, Object.getOwnPropertyNames(reason));
-
-// errorHandler(queue, errorMsg);
-// }
-
-// window.onerror = function (a, b, c, d, stacktrace) {
-//   const errorMsg = JSON.stringify(stacktrace, Object.getOwnPropertyNames(stacktrace));
-
-//   errorHandler(queue, errorMsg, stacktrace);
-// }
+// Anything that escapes every `try` in here, reported to the popup rather than
+// dropped. These were `window.onunhandledrejection` / `window.onerror`, MV2
+// code that a service worker never runs, commented out instead of ported.
+reportUncaughtErrors();
 
 
 async function test() {
@@ -129,7 +122,7 @@ const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPON
  * The queue keeps its own lane in order now and tells us which one it was.
  */
 queue.onError = (packetType, err) => {
-  error(`Could not process a packet of type ${packetType}`, err);
+  reportError(`Could not process a packet of type ${packetType}`, err);
 };
 
 stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
