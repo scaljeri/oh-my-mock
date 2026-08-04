@@ -6,7 +6,53 @@
  * the same way when they are not handled: the promise never settles, and the
  * request waiting on the blurred body waits for good.
  */
+/**
+ * Blurred images, keyed on the image that went in.
+ *
+ * The blur was redone on **every** intercepted call: decode, draw, blur,
+ * re-encode, while the page waited for its body. The result is fully determined
+ * by the base64 and the content type, neither of which changes between two
+ * calls to the same mock — so a page asking for the same image twenty times
+ * blurred the same image twenty times.
+ *
+ * Keyed on the content, like the compiled url patterns, so it cannot go stale:
+ * editing the mock's body produces a different key. Bounded because the values
+ * are whole images and the key is one too — the key at least is a string the
+ * mock record already holds.
+ */
+const blurred = new Map<string, string>();
+
+/** How many blurred images to keep. They are large; a handful is plenty. */
+const MAX_BLURRED = 16;
+
+/** Remembers a blurred image, dropping the oldest once the cache is full. */
+function remember(key: string, value: string): string {
+  blurred.set(key, value);
+
+  if (blurred.size > MAX_BLURRED) {
+    const oldest = blurred.keys().next();
+
+    if (!oldest.done) {
+      blurred.delete(oldest.value);
+    }
+  }
+
+  return value;
+}
+
+/** Test seam: forgets every blurred image. */
+export function forgetBlurred(): void {
+  blurred.clear();
+}
+
 export function blurBase64(base64: string, contentType: string): Promise<string> {
+  const key = `${contentType}|${base64}`;
+  const cached = blurred.get(key);
+
+  if (cached !== undefined) {
+    return Promise.resolve(cached);
+  }
+
   const img = new Image();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -26,7 +72,7 @@ export function blurBase64(base64: string, contentType: string): Promise<string>
       ctx.filter = 'blur(10px)';
       ctx.drawImage(img, 0, 0, img.width, img.height);
 
-      resolve(canvas.toDataURL());
+      resolve(remember(key, canvas.toDataURL()));
     }
     img.onerror = () => reject(new Error(`Cannot blur the image: the ${contentType} data did not decode`));
     img.src =  `data:${contentType};base64,${base64}`;
