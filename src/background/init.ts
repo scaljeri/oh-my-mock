@@ -4,6 +4,7 @@ import { MigrateUtils } from "../shared/utils/migrate";
 import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
 import { StoreUtils } from "../shared/utils/store";
+import { error } from "./utils";
 import { ensureGroups } from "./ensure-groups";
 import { liftOutRequests } from "./lift-out-requests";
 
@@ -30,8 +31,25 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
       } else {
         // `null` reads the complete storage; `StorageUtils.get` only takes a key.
         const allData = await StorageUtils.chrome.storage.local.get(null);
+
         for (const [k, v] of Object.entries(allData)) {
-          await StorageUtils.set(k, MigrateUtils.migrate(v));
+          const migrated = MigrateUtils.migrate(v);
+
+          // `migrate` answers `null` for a record it gives up on — too old, or
+          // written by a newer version. Writing that back stored a literal
+          // `null` under the key: the record was gone, its id still referenced,
+          // and the *next* migration then threw reading `.version` off it,
+          // aborting every remaining record for good.
+          //
+          // Given up on means removed, and said out loud.
+          if (migrated === null || migrated === undefined) {
+            error(`Discarding ${k}: it cannot be migrated to ${MigrateUtils.version}`);
+            await StorageUtils.remove(k);
+
+            continue;
+          }
+
+          await StorageUtils.set(k, migrated);
         }
       }
     }

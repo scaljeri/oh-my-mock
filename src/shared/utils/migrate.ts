@@ -68,9 +68,24 @@ export class MigrateUtils {
     // The step arrays are declared over heterogeneous shapes (store, state,
     // mock, request), so the element type stays loose here on purpose rather
     // than claiming a precision the steps do not have — see
-    // `IOhMyStoredRecord`. The default drops the record: a `type` none of the
-    // guards below recognises is not something any of these steps can migrate.
-    let migrateSteps: IOhMyMigrationStep[] = [() => null];
+    // `IOhMyStoredRecord`.
+    //
+    // The default **keeps** the record. It used to be `[() => null]`, which
+    // dropped it — and `initStorage` writes whatever this returns back over the
+    // key, so a record of a type with no steps was replaced by `null` on every
+    // version bump. `GROUP` and `COOKIE` are exactly that: neither has ever
+    // needed a migration step, so neither has a guard here, so every mock group
+    // and every cookie mock in storage would have been destroyed at the next
+    // release. Silently — the popup would simply show none.
+    //
+    // That was inert for as long as migrations never ran in a production build
+    // at all (the folded `DEV_VERSION`, fixed in `5108519`). Un-deadening the
+    // migration is what armed it.
+    //
+    // "No steps for this shape" means there is nothing to do to it, not that it
+    // is rubbish. Dropping a record is a decision, and it now takes a step that
+    // says so.
+    let migrateSteps: IOhMyMigrationStep[] = [(data) => data];
 
     if (MigrateUtils.isStore(data)) {
       migrateSteps = MigrateUtils.storeSteps;

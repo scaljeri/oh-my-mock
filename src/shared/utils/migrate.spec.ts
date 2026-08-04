@@ -80,12 +80,18 @@ describe('Utils/Migrate', () => {
       expect(out).toBe(MOCK_RESULT);
     });
 
-    it('should handle unknown type', () => {
-      // A record whose `type` none of the guards recognise is dropped. This
-      // used to resolve `undefined` while `migrate` declared `T | null`; the
-      // callers all read it as "nothing came back" either way.
+    it('keeps a record whose type none of the guards recognise', () => {
+      // This used to be dropped — `migrateSteps` defaulted to `[() => null]`.
+      // `initStorage` writes whatever `migrate` returns back over the key, so
+      // "dropped" meant a literal `null` stored in place of the record. Both
+      // `GROUP` and `COOKIE` land here (neither has ever needed a step, so
+      // neither has a guard), which would have destroyed every mock group and
+      // cookie mock at the next version bump.
+      //
+      // No steps for a shape means there is nothing to do to it, not that it is
+      // rubbish.
       const out = MigrateUtils.migrate({ a: 'b', version: '1.0.1', type: 'foo' } as any);
-      expect(out).toBeNull();
+      expect(out).toEqual(expect.objectContaining({ a: 'b' }));
     });
   
   /**
@@ -135,6 +141,44 @@ describe('Utils/Migrate', () => {
         MigrateUtils.version = before;
       }
     });
+  });
+
+  /**
+   * The record types with no migration steps.
+   *
+   * `migrate` used to default to `[() => null]`, and `initStorage` writes
+   * whatever it returns back over the key — so a `GROUP` or `COOKIE` record,
+   * neither of which has ever needed a step and so neither of which has a
+   * guard, was replaced by `null` on every version bump. Every mock group and
+   * every cookie mock in storage, destroyed silently at the next release.
+   *
+   * Inert for as long as migrations never ran in production at all; arming that
+   * was what made this reachable.
+   */
+  describe('a record of a type with no steps', () => {
+    const stamped = (type: objectTypes) => {
+      const before = MigrateUtils.version;
+      MigrateUtils.version = '2.0.0';
+
+      try {
+        return MigrateUtils.migrate({ version: '1.0.0', type, id: 'x' } as never);
+      } finally {
+        MigrateUtils.version = before;
+      }
+    };
+
+    it('keeps a cookie mock instead of dropping it', () => {
+      expect(stamped(objectTypes.COOKIE)).toEqual(
+        expect.objectContaining({ id: 'x', type: objectTypes.COOKIE })
+      );
+    });
+
+    it('keeps a mock group instead of dropping it', () => {
+      expect(stamped(objectTypes.GROUP)).toEqual(
+        expect.objectContaining({ id: 'x', type: objectTypes.GROUP })
+      );
+    });
+
   });
 });
 })
