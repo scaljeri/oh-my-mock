@@ -86,6 +86,41 @@ describe('Utils/Storage', () => {
       expect(StorageUtils.chrome.storage.local.remove).toHaveBeenCalledWith('foo', expect.anything());
     });
 
+    /**
+     * The bug this pins: the arrow had a block body with no `return`, so
+     * `Promise.all` resolved over `[undefined, …]` at once. Every `await
+     * StorageUtils.remove(...)` returned before the delete had happened —
+     * `remove-handler.ts` then re-imported the demo domain over a delete that
+     * was still in flight. `tsc` said nothing, because `undefined[]` satisfies
+     * the declared `void[]`.
+     *
+     * Asserting the call happened is not enough; it happened before too. This
+     * asserts the promise **waits** for chrome to call back.
+     */
+    it('does not resolve until chrome says the key is gone', async () => {
+      const callbacks: (() => void)[] = [];
+      StorageUtils.chrome.storage.local.remove = jest.fn(
+        (_key: string, cb: () => void) => callbacks.push(cb)
+      ) as never;
+
+      let settled = false;
+      const removing = StorageUtils.remove(['foo', 'bar']).then(() => {
+        settled = true;
+      });
+
+      await Promise.resolve();
+      expect(settled).toBe(false);
+
+      // One of the two answers is not all of them.
+      callbacks[0]();
+      await Promise.resolve();
+      expect(settled).toBe(false);
+
+      callbacks[1]();
+      await removing;
+      expect(settled).toBe(true);
+    });
+
     it('should remove the data for the keys given', async () => {
       await StorageUtils.remove(['foo', 'bar']);
 

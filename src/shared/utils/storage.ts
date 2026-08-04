@@ -121,9 +121,14 @@ export class StorageUtils {
       key = [key as string];
     }
 
-    return Promise.all(key.map(k => {
-      new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', resolve));
-    }));
+    // `return`, not a bare statement. Without it the arrow's block body
+    // evaluated to `undefined`, `Promise.all` resolved over `[undefined, …]`
+    // immediately, and every `await StorageUtils.remove(...)` in the codebase
+    // was a lie — the delete had not happened yet. `tsc` had nothing to say,
+    // because `undefined[]` satisfies the declared `void[]`.
+    return Promise.all(key.map(k =>
+      new Promise<void>(resolve => StorageUtils.chrome.storage.local.remove(k + '', resolve))
+    ));
   }
 
   static async reset(key?: ohMyDomain | ohMyMockId): Promise<void> {
