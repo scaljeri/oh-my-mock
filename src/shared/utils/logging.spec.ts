@@ -1,4 +1,4 @@
-import { debugBuilder, errorBuilder, isDebugEnabled, warnBuilder } from './logging';
+import { debugBuilder, errorBuilder, isDebugEnabled, logging, warnBuilder } from './logging';
 
 /**
  * The debug switch, and the reason it has a test at all.
@@ -51,6 +51,58 @@ describe('Utils/logging', () => {
 
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
+    });
+  });
+
+  /**
+   * One style per `%c`. The format is the prefix (five) plus one in front of the
+   * message, so six styles always go ahead of whatever the caller passed.
+   *
+   * The sixth used to be added only when the second argument was an object or
+   * absent — so a **string** lined up with that `%c` and was consumed as CSS.
+   * `logMocked` passes one for every non-JSON mock body, so the body of every
+   * text, html and image mock vanished from the extension's main log line.
+   */
+  describe('a string as the second argument', () => {
+    it('is printed, not swallowed as a style', () => {
+      const handler = jest.fn();
+
+      logging({ handler })('Mocked GET /api/x ->', 'the response body');
+
+      const [format, ...args] = handler.mock.calls[0];
+      const placeholders = (format.match(/%c/g) ?? []).length;
+
+      // Six styles for six `%c`, and the caller's string after them — where the
+      // console prints it as data.
+      expect(placeholders).toBe(6);
+      expect(args).toHaveLength(placeholders + 1);
+      expect(args[placeholders]).toBe('the response body');
+    });
+
+    it('lines a caller own %c up with the style it passed', () => {
+      const handler = jest.fn();
+
+      logging({ handler })('status: %cERROR', 'color: red');
+
+      const [format, ...args] = handler.mock.calls[0];
+      const placeholders = (format.match(/%c/g) ?? []).length;
+
+      // Seven `%c` — five prefix, one ours, one theirs — and seven styles, so
+      // theirs lands on their own span rather than a slot early.
+      expect(placeholders).toBe(7);
+      expect(args).toHaveLength(7);
+      expect(args[6]).toBe('color: red');
+    });
+
+    it('still leaves an object where it was', () => {
+      const handler = jest.fn();
+      const detail = { id: 1 };
+
+      logging({ handler })('Something happened', detail);
+
+      const [, ...args] = handler.mock.calls[0];
+
+      expect(args[args.length - 1]).toBe(detail);
     });
   });
 });

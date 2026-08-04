@@ -2,24 +2,81 @@
 
 import { uniqueNum } from "../../shared/utils/unique-id";
 
+/** How long a CSP-removal rule stays in the network stack. */
+const CSP_RULE_LIFETIME = 10_000;
+
+/**
+ * Where this extension's own CSP rules are remembered, with when they expire.
+ *
+ * Session rules outlive the service worker; the `setTimeout` that was meant to
+ * clean them up does not. So a worker torn down inside the ten seconds left its
+ * rule in the network stack for the rest of the browser session, and the only
+ * thing that ever removed it was the untargeted wipe at the next startup —
+ * which also removed the rules of pages that were still open.
+ */
+const SESSION_KEY = 'OhMyCSPRules';
+
+type CSPRuleRecord = { id: number; expiresAt: number };
+
+async function rememberedRules(): Promise<CSPRuleRecord[]> {
+  const stored = await chrome.storage.session.get(SESSION_KEY);
+
+  return (stored?.[SESSION_KEY] ?? []) as CSPRuleRecord[];
+}
+
+async function rememberRules(rules: CSPRuleRecord[]): Promise<void> {
+  await chrome.storage.session.set({ [SESSION_KEY]: rules });
+}
+
+/**
+ * Removes CSP rules by id — **this extension's own**, never everything.
+ *
+ * Called with no ids it used to fetch every session rule in the browser and
+ * remove all of them, which is what `background.ts` did on every worker start.
+ * Session rules survive the worker, so a restart in the middle of browsing tore
+ * down a rule a page still open depended on. Without ids it now removes only
+ * what this module recorded.
+ */
 export async function removeCSPRules(ids?: number[]) {
-  if (!ids) {
-    ids = await (await chrome.declarativeNetRequest.getSessionRules()).map(r => r.id);
+  const remembered = await rememberedRules();
+
+  // The stray `await` in front of `(await …).map(…)` — awaiting an array — was
+  // the tell that this line had never been looked at.
+  const removeRuleIds = ids ?? remembered.map(r => r.id);
+
+  await rememberRules(remembered.filter(r => !removeRuleIds.includes(r.id)));
+
+  return chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds });
+}
+
+/**
+ * Drops the rules whose ten seconds ran out while the worker was away, and
+ * re-arms the timer for the ones that have time left.
+ *
+ * This is what runs at startup now, in place of the wipe.
+ */
+export async function pruneExpiredCSPRules(now: number): Promise<void> {
+  const remembered = await rememberedRules();
+  const expired = remembered.filter(r => r.expiresAt <= now);
+
+  if (expired.length) {
+    await removeCSPRules(expired.map(r => r.id));
   }
 
-  return chrome.declarativeNetRequest.updateSessionRules({
-    removeRuleIds: ids
-  });
+  for (const rule of remembered.filter(r => r.expiresAt > now)) {
+    setTimeout(() => void removeCSPRules([rule.id]), rule.expiresAt - now);
+  }
 }
 
 export async function cSPRemoval(urls: string[]) {
 
   // chrome.webRequest.onHeadersReceived.addListener(csps[urls[0]].fn, { urls }, ['blocking', 'responseHeaders']);
   const id = uniqueNum();
+  const expiresAt = Date.now() + CSP_RULE_LIFETIME;
 
-  setTimeout(() => {
-    removeCSPRules([id]);
-  }, 10000);
+  await rememberRules([...(await rememberedRules()), { id, expiresAt }]);
+
+  setTimeout(() => void removeCSPRules([id]), CSP_RULE_LIFETIME);
 
   // The rule was written with `as any` on both halves, which is what let
   // `resourceTypes: ['main_frame']` past the compiler: `ResourceType`,

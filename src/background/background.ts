@@ -23,7 +23,7 @@ import './server-dispatcher';
 // job, and was why such a mock needed the popup open.
 import './eval-dispatcher';
 // import { injectContent } from './inject-content';
-import { removeCSPRules } from './handlers/remove-csp-header';
+import { pruneExpiredCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { connectIfEnabled } from './dispatch-remote';
 import { initRemoteLink } from './remote-link';
@@ -44,7 +44,12 @@ reportUncaughtErrors();
 
 
 async function test() {
-  await removeCSPRules();
+  // Only our own, and only the ones whose lifetime ran out while the worker was
+  // away. This used to call `removeCSPRules()` with no arguments, which removed
+  // **every** session rule in the browser — including one installed for a page
+  // that is still open, since session rules outlive the worker and MV3 restarts
+  // it every thirty seconds of idle.
+  await pruneExpiredCSPRules(Date.now());
   // Promise.all([chrome.declarativeNetRequest.getSessionRules(), chrome.declarativeNetRequest.getDynamicRules()]).then((v) => {
   //   console.log('CSP SETUP', v[0], v[1]);
   // });

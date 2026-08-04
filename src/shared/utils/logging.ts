@@ -47,11 +47,20 @@ export const isDebugEnabled = (): boolean => SHOW_DEBUG === 'true';
 
 export const logging = (config: IOhMyLoggingConfig = {}) => {
   return (msg: string, ...rest: (string | unknown)[]) => {
-
-    if (['undefined', 'object'].includes(typeof rest[0])) {
-      rest.unshift(PREFIX_STYLES_APPEND);
-    }
-    rest.unshift(...PREFIX_STYLES_BASE);
+    // One style per `%c`, always. The format is `LOG_PREFIX` (five `%c`) plus
+    // one more in front of the message, so six styles have to go in front of
+    // whatever the caller passed.
+    //
+    // The sixth used to be added only when `rest[0]` was an object or absent.
+    // A **string** second argument therefore lined up with that `%c` and was
+    // consumed as CSS — it never appeared at all. `logMocked` passes one for
+    // every non-JSON mock body, so the body of every text, html or image mock
+    // vanished from the extension's main diagnostic line.
+    //
+    // It was equally wrong the other way: a caller writing its own `%c` in
+    // `msg` and passing a style had that style eaten by *our* `%c`, leaving
+    // theirs to take the next argument. Everything shifted by one.
+    rest.unshift(...PREFIX_STYLES_BASE, PREFIX_STYLES_APPEND);
 
     (config?.handler || console.log)(`${LOG_PREFIX} %c${msg}`, ...rest);
   }
