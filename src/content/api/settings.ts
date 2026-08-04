@@ -15,17 +15,24 @@ export function handleAPISettings(messageBus: OhMyMessageBus) {
     // answer, otherwise the page's API call never settles.
     const data = payload.data ?? {};
 
+    // This page's domain, whatever the message says — see `handleAPIUpsert`.
+    // Without it a page could switch mocking on or off for any domain.
+    const context: IOhMyPacketContext = {
+      ...payload.context,
+      domain: OhMyContentState.host
+    };
+
     // `payloadType.STATE` is handled by `OhMyStateHandler.update`, which
     // answers with the patched state.
     let state: IState | undefined;
     if (data.active !== undefined) {
       // `popupActive` moved to the store; the external API's `active` flag is what
       // enables mocking for this domain, which is `appActive`.
-      state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'appActive', payloadType.STATE, payload.context);
+      state = await OhMySendToBg.patch<boolean, IState>(data.active, '$.aux', 'appActive', payloadType.STATE, context);
     }
 
     if (data.blurImages !== undefined) {
-      state = await OhMySendToBg.patch<boolean, IState>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE, payload.context);
+      state = await OhMySendToBg.patch<boolean, IState>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE, context);
     }
 
     // A state's domain is a host (`window.location.host`), never an origin.

@@ -68,11 +68,24 @@ export async function receivedApiRequest(
     ...(payload.context?.requestType && { requestType: payload.context.requestType })
   };
   // The injected script only knows `id` and `requestType`; the domain and the
-  // active preset come from the state.
+  // active preset come from the state — and now actually do.
+  //
+  // `...payload.context` used to be spread **last**, so a message could name
+  // its own domain and win. That message arrives over `window.postMessage`,
+  // which any script in the page can send: the source and origin checks in
+  // `triggerWindow` rule out other frames, not the page itself. So a page could
+  // claim to be any host, and this context is what `SET_COOKIES` is sent with —
+  // turning the extension's `cookies` permission into a way to write an
+  // `httpOnly` cookie for a domain the page does not control.
+  //
+  // The host is a fact only the content script has. `handle-api-response.ts`
+  // already pins it; this now does the same, and takes from the message only
+  // the two fields the injected script legitimately owns.
   const context: IOhMyPacketContext = {
-    domain: OhMyContentState.host,
     ...state?.context,
-    ...payload.context
+    domain: OhMyContentState.host,
+    ...(payload.context?.id && { id: payload.context.id }),
+    ...(payload.context?.requestType && { requestType: payload.context.requestType })
   };
 
   const request = { method: inputRequest.method, url: inputRequest.url } as IOhMyAPIRequest;
