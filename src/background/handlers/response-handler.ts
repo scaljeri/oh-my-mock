@@ -158,6 +158,12 @@ export class OhMyResponseHandler {
           type: payloadType.STATE,
           data: state.aux.filteredRequests,
           context: {
+            // The tag the other three state writers carry. Without it this was
+            // read as a full state and the array below replaced the whole
+            // domain record. The handler now goes by the shape as well, so this
+            // is belt and braces — but a patch that does not say it is one is
+            // a trap for the next reader.
+            kind: 'patch',
             path: `$.aux`,
             propertyName: 'filteredRequests',
             domain: state.domain

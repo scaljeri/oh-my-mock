@@ -150,4 +150,47 @@ describe('OhMyStateHandler', () => {
   it('says so rather than guessing when nothing names a domain', async () => {
     expect(await OhMyStateHandler.update(payload({ nothing: true }))).toBeUndefined();
   });
+
+  /**
+   * A patch that forgot to say it was one used to be destructive.
+   *
+   * `response-handler` built its `filteredRequests` packet with `path` and
+   * `propertyName` but no `kind`, so the handler took the full-state branch and
+   * wrote the id array as the entire domain record — presets, aux, context and
+   * the request list gone. TypeScript admitted it because the excess-property
+   * check against a union accepts `path`/`propertyName` from the other
+   * constituent. So the *shape* decides now, not the label.
+   */
+  it('treats a packet shaped like a patch as one, tag or no tag', async () => {
+    await OhMyStateHandler.update(
+      payload(['r1', 'r2'], {
+        domain: 'on-screen.example',
+        path: '$.aux',
+        propertyName: 'filteredRequests'
+      })
+    );
+
+    const state = records['on-screen.example'] as IState;
+
+    expect(state.aux.filteredRequests).toEqual(['r1', 'r2']);
+    // The things a full-state write would have destroyed.
+    expect(state.requests).toEqual(['r1']);
+    expect(state.presets).toEqual({ default: 'Default' });
+    expect(state.domain).toBe('on-screen.example');
+  });
+
+  /**
+   * Neither a state nor a patch. Writing it would replace everything the domain
+   * has with whatever it is; refusing costs one lost update.
+   */
+  it('refuses to store something that is neither a state nor a patch', async () => {
+    const before = records['on-screen.example'];
+
+    const result = await OhMyStateHandler.update(
+      payload(['r1', 'r2'], { domain: 'on-screen.example' })
+    );
+
+    expect(result).toBeUndefined();
+    expect(records['on-screen.example']).toBe(before);
+  });
 });
