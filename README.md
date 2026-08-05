@@ -87,31 +87,36 @@ This project consists of a couple of different part, each with a specific task. 
   * ./src/content       - the extension content script, needed to pass messages between
                           the angular app and the injected script
   * ./src/injected      - this is where mocking takes place (e.g. patching of Fetch and XmlHttpRequest)
+  * ./src/early-inject  - synchronously injected shim that holds the page's first requests
+                          until the injected bundle has loaded
   * ./src/shared        - code shared between all parts
   * ./src/background    - the extension's background script
+  * ./src/offscreen     - the hidden page the background owns; it holds the sandbox
+  * ./src/sandbox       - the sandboxed iframe that evaluates custom mock code
 
-##### OhMyMock CDK
-The cdk enables you to create a NodeJs server which connects with the chrome extension.
+##### OhMyMock SDK
+The sdk enables you to create a NodeJs server which connects with the chrome extension.
 This allows you to serve responses in an easy way using a NodeJs server. This way it is
-possible to serve file content as responses. If the server doesn't have a response for
-a specific request, OhMyMock will then look in the cache and serve that if it exists.
+possible to serve file content as responses. The SDK is a *source*, not a layer: while
+it is selected on the Remote mocking page, the extension's own cached responses are not
+consulted, and a request the server has no answer for goes to the real API.
 
 ##### background.js
 For all tabs in the chrome browser there will be just one instance running of this script. It is
-always active and when the OhMyMock icons is clicked it will open the OhMyMock popup (angular app). 
-If you are using the OhMyMock SDK, the background script will establish the websocket connection. 
+always active and when the OhMyMock icons is clicked it will open the OhMyMock popup (angular app).
+It also hosts the sandboxed page (in an offscreen document) that evaluates a mock's custom code,
+and, if you select the OhMyMock SDK as the source, it establishes the websocket connection.
 
 ##### content script
 Each tab has its own instance of the content script. It takes care of two things 
   
   1) Inject code into the context of the website
   2) It receives every request from the injected script. It is the task of the content script
-     to find a mock (the response that will be served). This is a two step process:
-
-     1) If there is a websocket connection (in case you use the SDK) the request is forwarded
-        to the NodeJs. 
-     2) If there is no websocket connection or the NodeJs doesn't serve a response, it looks
-        inside the cached responses. 
+     to find a mock (the response that will be served). It looks the request up in the
+     extension's own cached responses, kept in `chrome.storage` — synchronously, through an
+     index it keeps fresh. Only when the SDK is selected as the source is the request
+     forwarded (via the background's websocket) to the NodeJs server instead, and then the
+     cached responses are not consulted at all.
 
 ##### injected script
 The injected script remains dormant until OhMyMock is enabled.
@@ -124,8 +129,9 @@ When a request is made 3 things can happen:
    2) If there is a cached response, but it is not active, the call will pass through to the API.
    3) There is an active cache and it will be served as the response
 
-Finally, if OhMyMock is disabled or the popup is closed, the original Fetch and XmlHttpRequest objects
-are restored, as if nothing ever happend.
+Finally, if OhMyMock is disabled for the domain, every call is forwarded untouched to the
+original Fetch and XmlHttpRequest, as if nothing ever happened. Closing the popup changes
+nothing: mocking follows the domain's on/off switch alone.
 
 ##### Angular app
 The angular application is where you can interact with OhMyMock. Here you can see

@@ -2,10 +2,10 @@
  * Starting and stopping the optional NodeJS SDK server for a spec.
  *
  * It is not in `webServer` in `playwright.config.ts` on purpose. The extension
- * connects to a hard-coded `ws://localhost:8000` the moment its service worker
- * starts, so a server that ran for the whole suite would quietly join every
- * other test: "the SDK has no answer" is a case worth testing, and it can only
- * be tested when nothing is listening.
+ * dials the SDK only when a spec has opted in with `ohMy.setRemote('server')`
+ * (`connectIfEnabled` in `src/background/dispatch-remote.ts`) — but "no SDK is
+ * running" is itself a case `sdk.spec.ts` tests, and it can only be tested
+ * while nothing is listening on port 8000.
  *
  * Two rules this file exists to enforce:
  *

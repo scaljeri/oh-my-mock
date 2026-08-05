@@ -3,7 +3,6 @@ import { IData, IOhMyShallowMock } from '../type';
 import { DataUtils } from './data';
 
 describe('Utils/Data', () => {
-  const initFn = DataUtils.init;
   let data: IData;
 
   beforeEach(() => {
@@ -15,10 +14,25 @@ describe('Utils/Data', () => {
     } as unknown as IData;
   });
 
+  // Spies on `DataUtils` statics stick to the shared class object — leaving one
+  // behind poisons every suite that runs after this file.
+  afterEach(() => jest.restoreAllMocks());
+
   describe('#init', () => {
-    it('should be linked to create', () => {
-      jest.spyOn(DataUtils, 'init').mockReturnValue('a' as any);
-      expect(DataUtils.init({})).toBe('a');
+    // This used to mock `init` and assert the mock — green no matter what the
+    // real `init` did. The claim is delegation, so the spy calls through and
+    // the *real* result is asserted alongside it.
+    it('delegates to create, normalisation included', () => {
+      const create = jest.spyOn(DataUtils, 'create');
+
+      const request = DataUtils.init({ url: 'a.b/c' });
+
+      expect(create).toHaveBeenCalledWith({ url: 'a.b/c' });
+      expect(request).toEqual(expect.objectContaining({
+        id: expect.any(String),
+        type: objectTypes.REQUEST,
+        url: 'a\\.b/c'
+      }));
     })
   });
   describe('#getSelectedResponse', () => {
@@ -42,8 +56,10 @@ describe('Utils/Data', () => {
     });
   });
   describe('#activeMock', () => {
-    it('should return a response if enabled', () => {
-      expect(DataUtils.activeMock(data, { preset: 'foo' } as any)).toBeDefined();
+    // *Which* mock is the whole claim — `toBeDefined()` passed just as happily
+    // for the wrong preset's selection.
+    it('should return the selected response of the enabled preset', () => {
+      expect(DataUtils.activeMock(data, { preset: 'foo' } as any)).toBe('f');
     });
 
     it('should return nothing if disabled', () => {
@@ -100,8 +116,25 @@ describe('Utils/Data', () => {
     })
   });
   describe('#getNextActiveResponse', () => {
-    it('should select the next active response', () => {
-      expect(DataUtils.getNextActiveResponse(data)).toBeDefined();
+    // Insertion order deliberately disagrees with status order: an
+    // implementation answering "the first mock" instead of "the lowest status
+    // code" must fail here, which `toBeDefined()` on the shared fixture never
+    // could.
+    it('should select the response with the lowest status code', () => {
+      const outOfOrder = {
+        mocks: {
+          f: { id: 'f', statusCode: 500 },
+          b: { id: 'b', statusCode: 200 }
+        }
+      } as unknown as IData;
+
+      expect(DataUtils.getNextActiveResponse(outOfOrder)!.id).toBe('b');
+    });
+
+    it('should return nothing when no mocks are left', () => {
+      data.mocks = {};
+
+      expect(DataUtils.getNextActiveResponse(data)).toBeUndefined();
     });
   });
   describe('#create', () => {

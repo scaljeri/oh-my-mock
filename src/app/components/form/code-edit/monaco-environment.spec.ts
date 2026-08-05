@@ -14,11 +14,16 @@ import {
  *
  * `angular.json` copies this exact directory into the extension, so what is
  * here is what the popup can load at runtime.
+ *
+ * Located through `require.resolve` rather than a `../../..` walk to
+ * `node_modules`: the path walk assumed the spec sits inside the checkout that
+ * holds the dependencies, which a git worktree does not — its modules resolve
+ * from the main checkout, and the walk found nothing there.
  */
 function shippedWorkerFiles(): string[] {
-  const dir = path.resolve(
-    __dirname,
-    '../../../../../node_modules/monaco-editor/min/vs',
+  const dir = path.join(
+    path.dirname(require.resolve('monaco-editor/package.json')),
+    'min/vs',
     MONACO_WORKER_DIR
   );
 

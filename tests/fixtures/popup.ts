@@ -8,9 +8,9 @@
  * this reason, so a test hands them over the same way the toolbar does.
  *
  * Getting the tab id right is not cosmetic: `ContentService` ignores every
- * message whose `sender.tab.id` is not the tab it was opened for, and answers
- * the sandbox result with `chrome.tabs.sendMessage(tabId, ...)`. A popup with
- * the wrong tab id looks alive and silently mocks nothing.
+ * message whose `sender.tab.id` is not the tab it was opened for, and its
+ * answers go out with `chrome.tabs.sendMessage(tabId, ...)`. A popup with the
+ * wrong tab id looks alive while showing and updating nothing of the tab.
  */
 
 import { expect, type BrowserContext, type Page } from '@playwright/test';
@@ -43,13 +43,13 @@ export function popupUrl(
 }
 
 /**
- * Opens the popup and waits until it is genuinely ready to serve mock code.
+ * Opens the popup and waits until it has genuinely loaded the domain's state.
  *
  * The wait is on the domain in the header rather than on the shell, because the
  * header is filled from the *loaded* state: seeing it means
- * `stateService.initialize()` has resolved, which is what `SandboxService`
- * reads when a request arrives. Waiting for the shell alone would let a request
- * race the state load.
+ * `stateService.initialize()` has resolved, so the pages behind it — the
+ * request list, the drawer, the Cookies tab — have real state to render.
+ * Waiting for the shell alone would let a spec's first click race the load.
  */
 export async function openPopup(
   context: BrowserContext,

@@ -33,10 +33,19 @@ reaches **every** extension context that is listening — the background service
 worker *and* the popup, at the same time. The background is not forwarding
 anything.
 
-So when the content script sends `API_REQUEST`, the background ignores it (its
-queue only handles `STORE`, `STATE`, `RESPONSE`, `REMOVE`, `UPSERT`, `RESET`, and
-`DISPATCH_TO_SERVER` separately) while the popup picks it up. Who handles what is
-decided purely by which `payloadType` each context subscribes to.
+So when the content script sends `EVAL` — run this mock's custom code — the
+popup ignores it while the background picks it up, because only the background
+subscribes to that type (`eval-dispatcher.ts`; likewise
+`DISPATCH_TO_SERVER` in `server-dispatcher.ts`, both answered outside the
+queue). The background's queue meanwhile handles the storage writes: `STORE`,
+`STATE`, `RESPONSE`, `REQUEST`, `REMOVE`, `COOKIE`, `HITS`, `SET_COOKIES`,
+`UPSERT` and `RESET`. Who handles what is decided purely by which
+`payloadType` each context subscribes to.
+
+Note `API_REQUEST` is not in either list: an intercepted request never crosses
+`chrome.runtime` at all. It arrives from the injected script over
+`window.postMessage` and the content script resolves it in place — only the
+`EVAL` and `DISPATCH_TO_SERVER` detours above leave the tab.
 
 The way back is different again: the popup answers the content script directly
 with `chrome.tabs.sendMessage`, bypassing the background entirely.
@@ -75,9 +84,10 @@ context hop, so the codebase does it by hand:
 4. the sender's subscription fires, and it unsubscribes
 
 `sendMsg2Popup` (`content/message-to-popup.ts`) adds a 5-second timeout to that
-pattern and rejects with an `IOhMyPopupError` telling the user to reopen the
-popup — which is the message you see when a mock with custom code is used while
-the popup is closed.
+pattern and rejects with an `IOhMyPopupError`. Nothing on the serving path uses
+it any more — custom mock code goes to the background now, which is always
+there — so the timeout is no longer a stall anyone sees; the one remaining
+caller is the PING/PONG liveness check in `content/index.ts`.
 
 ## Two contexts, deliberately different types
 

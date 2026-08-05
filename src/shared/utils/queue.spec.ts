@@ -33,22 +33,29 @@ describe('QueueUtils', () => {
       expect(queue.hasHandler(objectTypes.MOCK)).toBeFalsy();
     });
 
-    it('should handle packets in the queue', () => {
-      const packets = ['foo', 'bar'];
-      const handler = (packet: any): Promise<void> => {
-        // expect(packet).toBe(packets.shift());
+    it('should handle packets in the queue', async () => {
+      // The claim: a handler arriving *after* packets have queued drains the
+      // backlog, in arrival order, and leaves the lane idle. This used to have
+      // exactly those assertions commented out, keeping only `hasHandler` —
+      // which the first test in this file already covers.
+      //
+      // A queue of its own, because handlers are given `packet.payload`: the
+      // shared string-packet queue would hand every handler `undefined` and an
+      // order assertion could never bite.
+      const backlog = new OhMyQueue<{ payload: string }>();
+      const seen: string[] = [];
 
-        // setTimeout(() => {
-        //   if (queue.getQueue(objectTypes.MOCK).length === 0) {
-        //     expect(queue.isHandlerActive(objectTypes.MOCK)).toBeFalsy();
-        //     done();
-        //   }
-        // });
+      await backlog.addPacket(objectTypes.MOCK, { payload: 'foo' });
+      await backlog.addPacket(objectTypes.MOCK, { payload: 'bar' });
 
-        return Promise.resolve();
-      };
-      queue.addHandler(objectTypes.MOCK, handler);
-      expect(queue.hasHandler(objectTypes.MOCK)).toBeTruthy();
+      await backlog.addHandler<string>(objectTypes.MOCK, async (payload) => {
+        seen.push(payload);
+      });
+      await flushPromises();
+
+      expect(seen).toEqual(['foo', 'bar']);
+      expect(backlog.isHandlerActive(objectTypes.MOCK)).toBe(false);
+      expect(backlog.getQueue(objectTypes.MOCK)).toEqual([]);
     });
 
     it('should not activate two handlers', async () => {

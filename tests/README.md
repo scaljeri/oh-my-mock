@@ -18,10 +18,13 @@ npm run e2e:types       # type-check the suite
 and neither of the two project tsconfigs covers this directory. Without it the
 suite is the one unchecked corner of a strict codebase.
 
-`npm run build:bundles` is a faster alternative that compiles only the five
-webpack bundles (content, injected, early-inject, sandbox, background) plus the
-manifest and icons — about ten seconds instead of a minute. Everything except
-`popup.spec.ts` passes against it, since those tests need the Angular build.
+`npm run build:bundles` is a faster alternative that compiles only the six
+webpack bundles (content, injected, early-inject, sandbox, offscreen,
+background) plus the manifest and icons — about ten seconds instead of a
+minute. It is enough for everything that only intercepts; the many specs that
+open the popup — `popup.spec.ts`, `cookies.spec.ts`, `sidebar-groups.spec.ts`
+and the rest of the UI-driving files, currently twenty of the thirty-two —
+need the Angular build.
 
 The test site is started for you by `webServer` in `playwright.config.ts`.
 
@@ -60,8 +63,8 @@ pass even if the extension fetched the real response and discarded it.
 ### …except where the popup is the thing under test
 
 Seeding skips the steps that *create* a mock, so a mock arrives already
-recorded, already selected and already enabled. Two specs therefore do it the
-long way round, by clicking:
+recorded, already selected and already enabled. A number of specs therefore do
+it the long way round, by clicking. The two that bracket the range:
 
 - `record-and-mock.spec.ts` — the whole journey with nothing seeded at all:
   switch the domain on in the popup, let the site make a real call, watch it
@@ -94,11 +97,12 @@ Two helpers are not fixtures because only a few specs need them:
 
 ### Opening the popup
 
-Some behaviour only exists while the popup is open — see the sandbox section
-below. Playwright cannot press the toolbar button, which is where the popup
-normally learns which tab it is inspecting, so `openPopup()` passes `domain` and
-`tabId` on the query string instead. `src/app/app.initialize.ts` reads them from
-there, exactly as the toolbar does.
+Nothing on the mocking path needs the popup any more — the sandbox that once
+lived there belongs to the background now — so it is opened only when the popup
+itself is under test. Playwright cannot press the toolbar button, which is
+where the popup normally learns which tab it is inspecting, so `openPopup()`
+passes `domain` and `tabId` on the query string instead.
+`src/app/app.initialize.ts` reads them from there, exactly as the toolbar does.
 
 The tab id is load-bearing, not cosmetic: `ContentService` drops every message
 whose `sender.tab.id` is not the one it was opened for, and answers with
@@ -141,10 +145,11 @@ applied is **left alone** — both `syncCookies` and the delete path check
 
 `SdkServer.start()` spawns `test-site/server/sdk-server.ts` and waits for its
 `/_sdk/health` route; `stop()` kills the process group and waits for it. It is
-deliberately *not* in `webServer`: the extension connects to a hard-coded
-`ws://localhost:8000` as soon as its service worker starts, so a server running
-for the whole suite would join every other test — and "no SDK is running" is
-itself a case worth testing.
+deliberately *not* in `webServer`: the background dials the SDK only when the
+store says `remote.target === 'server'` (`connectIfEnabled` in
+`src/background/dispatch-remote.ts`), which a spec opts into with
+`ohMy.setRemote('server')` — and "no SDK is running" is itself a case
+`sdk.spec.ts` tests, which it can only do while nothing is listening.
 
 Whether the *extension* has connected is a separate question from whether the
 server is up, and neither side reports it. `waitForSdkConnection()` therefore
@@ -154,11 +159,12 @@ through before the socket is up are not counted by the test server.
 
 ### Three things that bite
 
-**Activation needs two flags.** `OhMyContentState.isActive()` requires both
-the domain's `aux.appActive` and the store's `popupActive` — "enabled for this
-domain" and "popup open".
-`ohMy.setActive()` sets both, which is what lets these tests run without the
-popup.
+**Activation is one flag.** `OhMyContentState.isActive()` reads the domain's
+`aux.appActive` and nothing else. It used to require the store's `popupActive`
+as well — the popup hosted the eval sandbox then, so mocking died with the
+popup. `ohMy.setActive()` still writes both, because "a popup was open here" is
+the state it fakes; `ohMy.setPopupActive(false)` exists to take that trace away
+again, which is how `jscode.spec.ts` proves the second flag no longer matters.
 
 **Mocks serve `responseMock`, not `response`.** `MockUtils.mockToResponse()`
 reads `responseMock`/`headersMock`. Seeding only `response` yields an empty
@@ -173,7 +179,7 @@ rewrite what was just seeded. The driver reads the version from
 
 On a loaded machine this suite drops two or three tests on timeouts — different
 ones each run, which is the tell. Check `uptime` first: above roughly load 5 it
-is unreliable, at idle it is a consistent 58/58 in two to three minutes.
+is unreliable, at idle it is a consistent 131/131 in a handful of minutes.
 Stray `test-site/server` processes from earlier runs are the usual cause:
 
     pkill -f "test-site/server"
@@ -197,7 +203,7 @@ the suite. Run against a copy when something else may be building:
 
 The "server was never contacted" assertion reads a counter on the one shared
 test server. Parallel workers would reset and increment it concurrently and the
-count would stop meaning anything. The whole suite runs in about a minute, so
+count would stop meaning anything. The whole suite runs in a few minutes, so
 the parallelism is not missed.
 
 ## Regression tests
@@ -211,43 +217,44 @@ fixed; the tests stay to keep them fixed.
 
 ## The two forks worth understanding
 
-**Custom `jsCode` needs the popup** (`jscode.spec.ts`). While a mock's code is
-the untouched default, the content script answers by itself. Edit it and the
-answer can only come from the popup, because the `eval` runs in a sandboxed
-iframe that lives there — extension pages may not `eval` at all.
+**Custom `jsCode` goes to the background** (`jscode.spec.ts`). While a mock's
+code is the untouched default, the content script answers by itself. Edit one
+character of it and the code has to be *run*, which only a sandboxed page may do
+— extension pages may not `eval` at all — so the content script dispatches
+`EVAL` to the background, which holds the sandboxed iframe in an offscreen
+document and is always there to answer.
 
-With the popup closed, that request is not dropped: `sendMsg2Popup` waits its
-full 5s timeout, the content script answers `ERROR`, the injected script reads
-that as "not mocked" and sends the request to the real server. On its way out
-the content script also clears `aux.appActive`, so the *next* request is not
-stalled as well. The spec asserts all of it, including the stall.
+That sandbox used to live on the popup page, so an edited mock silently stopped
+working whenever the popup was closed: the request stalled the full 5s
+`sendMsg2Popup` timeout, went through unmocked, and `aux.appActive` was cleared
+on the way out so the next request would not stall too. `jscode.spec.ts` runs
+every test without a popup and asserts the stall and the switch-off are gone —
+putting the sandbox back would fail there loudly.
 
-**The SDK answers before storage is consulted** (`sdk.spec.ts`). Every
-intercepted request goes to the background first; an `OK` from the SDK wins, and
-anything else falls back to the stored mock. With no server, `dispatchRemote`
-returns `NO_CONTENT` without touching the network, so the common case costs
+**The SDK is a source, not a layer** (`sdk.spec.ts`). Stored mocks are the
+default; the background is only asked at all when the store says
+`remote.target === 'server'`, and then it is asked *exclusively* — this
+browser's own mocks are not consulted, and a request the SDK has no answer for
+goes to the real server rather than falling back. With the default target,
+nothing is sent to the background per request, so the common case costs
 nothing.
 
 ## Known gaps
 
-- **The popup is only smoke-tested, except for cookies.** `popup.spec.ts`
-  verifies it bootstraps, renders and reads storage; `jscode.spec.ts` drives its
-  sandbox; `cookies.spec.ts` drives the Cookies tab end to end. Interacting with
-  the request list, the response editor and the preset UI is still manual.
+- **Two popup pages are still manual.** The rest of the popup is driven for
+  real now — the request list (`request-list.spec.ts`), the response editor
+  (`create-response.spec.ts`, `edit-response.spec.ts`, `detail-panel.spec.ts`),
+  presets (`preset-delete.spec.ts`), the HAR import (`har-import.spec.ts`), the
+  Domains page (`domains-page.spec.ts`), the Cookies tab (`cookies.spec.ts`),
+  the group drawer (`sidebar-groups.spec.ts`) and the Remote mocking page
+  (`remote-mocking.spec.ts`). What nothing drives yet is the JSON export and
+  the state explorer.
 - **`consumeOwnWrite` is not isolated.** The recorder ignores the jar's own
   writes twice over — once by that set, and once by refusing to record a name it
   already has a mock for — and only the outcome is asserted, since every
   scenario an e2e test can reach hits the second guard as well. The one case
   that would separate them is a mock on a *deeper path* than a real cookie of
-  the same name, and that path is currently broken: `applyCookie` looks the
-  existing cookie up with `chrome.cookies.get`, which matches parent paths, so
-  it records a cookie at `/` as displaced by a mock at `/admin` — and
-  `unapplyCookie` then restores that instead of removing the cookie it wrote,
-  leaving the mock applied for good. Worth covering once the jar compares paths.
-- **Nothing asserts that the popup marks itself open.** Every spec sets
-  `store.popupActive` through the driver, so none of them would notice if the
-  popup stopped doing it. Worth writing once the popup does set it: at the time
-  of writing `ContentService.activate()` patches `state.aux.popupActive`, a key
-  `MigrateUtils` deletes and `isActive()` never reads, and `app.component.ts`
-  only writes the real one when the domain *changes*. A test written against
-  today's behaviour would encode that, so it is a gap on purpose.
+  the same name. That used to be unreachable because `applyCookie` recorded the
+  parent-path cookie as displaced; the jar compares paths now (see the
+  `/api/admin` fixture in the test site), so the isolating test is writable —
+  it just has not been written.

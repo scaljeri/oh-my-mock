@@ -1,20 +1,23 @@
 /**
  * The NodeJS SDK leg.
  *
- * Before the content script looks at anything it has stored, it asks the
- * background whether the optional SDK server has an answer:
+ * The SDK is a *source*, not a layer. Only when the store says
+ * `remote.target === 'server'` does the content script ask the background at
+ * all:
  *
- *     const response = await OhMySendToBg.full(inputRequest,
- *       payloadType.DISPATCH_TO_SERVER, context);   // handle-api-request.ts
+ *     const servedElsewhere = contentState.store?.remote?.target === 'server';
+ *     // handle-api-request.ts — and then the SDK's answer is final:
+ *     // this browser's own mocks are not consulted, and "nothing" means the
+ *     // request goes to the real server.
  *
- * The background forwards that over a websocket when one is connected and
- * replies `NO_CONTENT` when it is not (`src/background/server-dispatcher.ts`).
- * The precedence is decided one function later, in `handleResponse`: an `OK`
- * from the server wins, anything else falls back to the stored mock.
+ * The background forwards over a websocket when one is connected and replies
+ * `NO_CONTENT` when it is not (`src/background/server-dispatcher.ts`).
  *
- * All three states are covered here — the SDK answering, the SDK connected but
- * having nothing to say, and no SDK at all. That last one is by far the most
- * common: almost nobody runs the server, and it must cost them nothing.
+ * The states covered here: the SDK answering, the SDK having nothing to say
+ * (which must NOT fall back to a stored mock), and no SDK at all. That last
+ * one is by far the most common: almost nobody runs the server, and with the
+ * default target nothing is even sent to the background — it must cost them
+ * nothing.
  */
 
 import { expect, SITE_DOMAIN, test } from '../fixtures/extension';

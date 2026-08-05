@@ -36,7 +36,7 @@ test.describe('last hit', () => {
 
     await popup.locator('[x-test="add-response"]').click();
     await popup.locator('[x-test="custom-response-url"]').fill('/api/by-hand');
-    await popup.locator('[x-test="save-curstom-response"]').click();
+    await popup.locator('[x-test="save-custom-response"]').click();
     await expect(popup.locator('mat-dialog-container')).toHaveCount(0);
 
     const row = popup.locator('[x-test="list-request-item"]', {

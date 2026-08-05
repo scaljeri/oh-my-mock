@@ -1,10 +1,20 @@
 # Mock groups
 
-**Status: model built, UI not.** The records, the resolution and the migration
+**Status: model, serving and the drawer are built; the traffic list and the
+non-local sources are not.** The records, the resolution and the migration
 exist (`src/shared/types/group.ts`, `src/shared/utils/group.ts`,
-`src/background/ensure-groups.ts`); nothing reads them on the serving path and
-there is no group UI, so behaviour is unchanged so far. The rest is written down
-so the shape stops being reconstructed from scratch every time.
+`src/background/ensure-groups.ts`). The serving path reads them on every
+intercepted call — `OhMyContentState.activeGroups()` feeds the indexed lookup
+in `src/shared/utils/request-index.ts`, so a switched-off group genuinely stops
+answering. The drawer lists a domain's groups and toggles them per domain
+(`src/app/components/domain-sidebar`, backed by
+`IState.aux.disabledGroups`), and `tests/specs/sidebar-groups.spec.ts` covers
+all of it end to end, the served response included. What does **not** exist
+yet: the request list as *traffic* (with the who-answered badge and the Clear
+button below), and groups from anywhere but this browser — `server` and
+`cloud` are in the source type, but no group of either kind can be created or
+filled today. The rest is written down so the shape stops being reconstructed
+from scratch every time.
 
 ## The problem it solves
 
@@ -80,15 +90,20 @@ hover.
 
 ## What this changes in the code
 
-Three things are known to be in the way:
+Three things were known to be in the way; two are done:
 
-1. **The request list is not traffic today.** It shows every stored request,
-   called or not — `+ Add` creates one, and a HAR import creates forty.
-2. **`lastHit` does not mean "was called".** `DataUtils.create` sets it to
-   `Date.now()` for a request made by hand. "Actually called" needs a field the
-   interception is the only writer of.
-3. **The sidebar is the domain switcher.** If it becomes the group list, that
-   navigation has to go somewhere.
+1. **The request list is not traffic today.** Still true. It shows every stored
+   request, called or not — `+ Add` creates one, and a HAR import creates
+   forty. This is the piece of the design still to build.
+2. ~~**`lastHit` does not mean "was called".**~~ **Done.** `IData.calledAt`
+   exists and the interception is its only writer
+   (`src/content/handle-api-request.ts`); `tests/specs/called-at.spec.ts` pins
+   that a request created by hand never gets one.
+3. ~~**The sidebar is the domain switcher.**~~ **Done, differently.** The
+   drawer became the group list, and the domain navigation did not become a
+   filter row above it — it turned out not to be navigation at all: the active
+   tab decides the domain, and managing domains moved to a page of its own
+   (`src/app/pages/domains`).
 
 ## The sources
 
@@ -111,12 +126,15 @@ stores what it is given, so importing twice leaves two requests for one url and
 `findRequest`, which answers with the first match, picks between them
 arbitrarily.
 
-## Settled since
+## Settled since — and built since
 
-- **The sidebar becomes the group list, with the domains as a filter row above
-  it.** Not two levels: the groups are the thing being worked with, and burying
-  them one expand deep makes the common act — switching a group off — the slow
-  one. The domain row keeps the navigation that the sidebar is today.
+All three of these are in the code now:
+
+- **The sidebar became the group list.** Not two levels: the groups are the
+  thing being worked with, and burying them one expand deep makes the common
+  act — switching a group off — the slow one. One amendment on the way in: the
+  planned domain filter row above it was dropped, because the active tab
+  already decides the domain — see item 3 above.
 - **The order is global**, the position in `IOhMyMock.groups`. A group covers
   one domain in almost every case, so a per-domain order would be the same list
   written out once per domain, each copy another thing to keep in step. It can

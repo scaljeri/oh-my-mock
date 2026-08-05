@@ -1,13 +1,14 @@
 # How a request becomes a mocked response
 
 The journey of one `fetch()` call, from the moment the page makes it to the
-moment it gets an answer back. It crosses **five execution contexts**, and each
-boundary changes what the data is allowed to be — which is most of why this part
-of the codebase is hard to follow.
+moment it gets an answer back. A plain mock crosses **three execution
+contexts**; one with custom code crosses **six** — and each boundary changes
+what the data is allowed to be, which is most of why this part of the codebase
+is hard to follow.
 
 Read [messaging.md](./messaging.md) first if the message bus is new to you.
 
-## The five contexts
+## The contexts
 
 | Context | Runs in | Can reach |
 |---|---|---|
@@ -35,19 +36,24 @@ sequenceDiagram
 
     P->>I: fetch('/api/users')
     I->>C: postMessage API_REQUEST {id}
-    C->>B: DISPATCH_TO_SERVER
-    B-->>C: SDK response or NO_CONTENT
-    C->>C: look up request + mock in chrome.storage
 
-    alt jsCode untouched (fast path)
+    alt remote.target === 'server' (SDK picked as the source)
+        C->>B: DISPATCH_TO_SERVER
+        B-->>C: SDK response or NO_CONTENT
         C-->>I: postMessage RESPONSE {id}
-    else mock has custom jsCode
-        C->>B: EVAL {request}
-        B->>O: runtime message, mock resolved
-        O->>O: evaluate jsCode in sandbox iframe
-        O-->>B: output
-        B-->>C: IOhMyMockResponse
-        C-->>I: postMessage RESPONSE {id}
+    else the default: this browser's own storage
+        C->>C: indexed lookup in the cached request records
+
+        alt jsCode untouched (fast path)
+            C-->>I: postMessage RESPONSE {id}
+        else mock has custom jsCode
+            C->>B: EVAL {request}
+            B->>O: runtime message, mock resolved
+            O->>O: evaluate jsCode in sandbox iframe
+            O-->>B: output
+            B-->>C: IOhMyMockResponse
+            C-->>I: postMessage RESPONSE {id}
+        end
     end
 
     I->>I: push result into ohMyWindow().cache
@@ -69,13 +75,20 @@ that installs a placeholder which polls until the real patch arrives. It is
 inlined into `content.js` as a string — see the warning at the top of that file
 about template literals.
 
-If mocking is switched off, the patch forwards to the original straight away:
+If mocking is switched off, the patch forwards to the original — but it *waits
+for the verdict* rather than reading an absent state as "off":
 
 ```ts
-if (!ohMyWindow().state?.active) {
-  return originalFetch()(request, config);
+if (!(await isMockingActive())) {
+  return originalFetch().call(window, request, config);
 }
 ```
+
+The patch runs before the content script has finished reading `chrome.storage`,
+and letting calls through in the meantime is exactly how an on-load request
+used to escape unmocked. `isMockingActive` (`src/injected/active-state.ts`)
+resolves once the first verdict arrives; after that it is a resolved promise
+and costs a microtask.
 
 ### 2. Injected → content
 
@@ -94,45 +107,67 @@ The transport is `window.postMessage`, addressed to this document's own origin.
 The receiver checks `event.source === window`, so a script in an iframe cannot
 impersonate the injected script — see `src/shared/utils/trigger-msg-window.ts`.
 
-### 3. Content: ask the SDK server first
+### 3. Content: which source answers
 
-`src/content/handle-api-request.ts` is the hub. It first asks the background
-whether the optional NodeJS SDK has an answer:
+`src/content/handle-api-request.ts` is the hub. The first fork is *whose
+storage the mocks come from* — one source, not one layered on another:
 
 ```ts
-const response = await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(
-  inputRequest, payloadType.DISPATCH_TO_SERVER, context);
+const servedElsewhere = contentState.store?.remote?.target === 'server';
+
+const response = servedElsewhere
+  ? await OhMySendToBg.full<IOhMyAPIRequest, IOhMyMockResponse>(
+      inputRequest, payloadType.DISPATCH_TO_SERVER, context)
+  : { status: ohMyMockStatus.NO_CONTENT };
 ```
 
-The background (`src/background/server-dispatcher.ts`) forwards over the
-websocket if one is connected, and otherwise replies `NO_CONTENT`. The SDK wins
-when it answers; the stored mocks are the fallback.
+With the SDK picked (`remote.target === 'server'`), the background
+(`src/background/server-dispatcher.ts`) forwards over the websocket and
+whatever comes back is the answer — including "nothing", which the injected
+script reads as "not mocked" and lets through to the real server. This
+browser's own mocks are **not** consulted; a source is a source, not a
+fallback. That replaced the old always-ask-the-SDK-first behaviour, which cost
+every request a background round trip whether or not anything was listening.
+
+With the default target, nothing is sent to the background at all and the
+lookup below decides.
 
 This is also where the packet context becomes a **state** context. A message
-from the page carries only `{ id, requestType }`; `OhMySendToBg` adds the domain,
-and the content script merges in the state's `preset`. `IOhMyPacketContext` and
-`IOhMyContext` are deliberately separate types for this reason.
+from the page carries only `{ id, requestType }`; the content script pins the
+domain — a fact only it has, see the comment in `handle-api-request.ts` on why
+the message may not bring its own — and merges in the state's `preset`.
+`IOhMyPacketContext` and `IOhMyContext` are deliberately separate types for
+this reason.
 
 ### 4. Content: find the mock
 
 ```ts
-const data = StateUtils.findRequest(contentState.state, contentState.requests, inputRequest);
-const mockId = DataUtils.activeMock(data, context);   // undefined if the preset is disabled
-const mock = await contentState.get<IMock>(mockId);  // IMock | undefined
+const data = contentState.requestIndex().find(inputRequest, contentState.activeGroups());
+const mockId = DataUtils.activeMock(data, state.context); // undefined if the preset is disabled
+const mock = await contentState.get<IMock>(mockId);       // IMock | undefined
 ```
 
-`findRequest` takes the requests as an argument because they are no longer part
-of the state: each is its own `chrome.storage` record, and `OhMyContentState`
-keeps a map of them fresh from `chrome.storage.onChanged`. That keeps the
-lookup synchronous — it runs for every intercepted request — while the write
-that follows it (`lastHit`) touches one small record instead of the whole
-domain.
+The lookup is indexed and group-aware. `OhMyContentState` keeps the request
+and group records fresh from `chrome.storage.onChanged` — each is its own
+`chrome.storage` record, not part of the domain state — and
+`OhMyRequestIndex` (`src/shared/utils/request-index.ts`) is rebuilt lazily on
+the first lookup after anything changed. Passing `activeGroups()` is what makes
+a switched-off mock group stop answering; the plain `StateUtils.findRequest`
+scan still exists for the popup and the background, which ask occasional
+questions rather than one per intercepted call.
+
+A hit no longer writes storage on the spot either. `data.lastHit` /
+`data.calledAt` are updated in the local copy and handed to `recordHit`
+(`src/content/hit-batch.ts`), which tells the popup immediately but batches the
+storage write on a 250ms timer — one small record per interval instead of a
+service-worker wake, a disk write and a browser-wide `onChanged` fan-out per
+intercepted request.
 
 ### 5. The fork: fast path or sandbox
 
 ```ts
-if (!data || mock?.jsCode === MOCK_JS_CODE || !mockId) {
-  // serve directly
+if (!data || !mock || mock.jsCode === MOCK_JS_CODE || !mockId) {
+  // serve directly (or let through, when there is nothing to serve)
 } else {
   // ask the background to run it
 }

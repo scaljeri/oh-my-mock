@@ -8,7 +8,7 @@ because the logic is spread across contexts that do not share memory.
 | [request-flow.md](./request-flow.md) | you need to follow one request from `fetch()` to mocked answer |
 | [messaging.md](./messaging.md) | you are adding or debugging a message between contexts |
 | [interception.md](./interception.md) | you are wondering why this patches `fetch` instead of using an extension API |
-| [request-normalisation.md](./request-normalisation.md) | you are picking up the open refactor that moves requests out of the domain record |
+| [request-normalisation.md](./request-normalisation.md) | you are wondering why requests are records of their own rather than part of the domain record — the refactor is done; the reasoning is kept |
 | [cookie-mocking.md](./cookie-mocking.md) | you are building the Cookies tab, or wondering why cookies cannot ride on the response mock |
 | [mock-groups.md](./mock-groups.md) | you are picking up sharing mocks between people — the agreed design, and why nothing merges |
 
