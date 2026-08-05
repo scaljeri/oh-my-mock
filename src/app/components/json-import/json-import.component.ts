@@ -38,28 +38,60 @@ export class JsonImportComponent {
         this.isUploading = true;
 
         setTimeout(async () => {
+          // Parsing gets a try/catch of its own: with the import inside the
+          // same one, a storage failure — or, before `importJSON` learnt to
+          // skip unmigratable records, a throw over one such record — was
+          // reported as "does not contain (valid) JSON", sending whoever
+          // debugged it to stare at a perfectly valid file.
+          let content: IOhMyBackup;
+
           try {
-            const content = JSON.parse(
+            content = JSON.parse(
               fileLoadedEvent.target?.result as string
             ) as IOhMyBackup;
-            const { requests, responses } = content;
+          } catch {
+            this.toast.error(
+              `File ${file.name} does not contain (valid) JSON`
+            );
+            this.isUploading = false;
+            this.dialogRef?.close();
 
+            return;
+          }
+
+          try {
             const result = await importJSON(
               content,
               this.stateService.state.context
             );
 
             if (result.status === ImportResultEnum.SUCCESS) {
+              // The counts come from the import, not from the file: a partly
+              // too-old backup keeps its healthy records and drops the rest,
+              // and the toast should not claim more than what was stored.
               this.toast.success(
-                `Imported ${requests.length} requests and  ${responses.length} responses from ${file.name} into ${this.appState.domain}`
+                `Imported ${result.requests} requests and ${result.responses} responses from ${file.name} into ${this.appState.domain}`
               );
+
+              const dropped =
+                (content.requests?.length ?? 0) - result.requests +
+                (content.responses?.length ?? 0) - result.responses;
+
+              if (dropped > 0) {
+                this.toast.warning(
+                  `${dropped} record${dropped === 1 ? ' was' : 's were'} too old to migrate and skipped`
+                );
+              }
             } else if (result.status === ImportResultEnum.TOO_OLD) {
+              // The records are too old, not the extension: `MigrateUtils`
+              // keeps records from a *newer* release untouched, so age of the
+              // backup is the only way to land here.
               this.toast.error(
-                `Import failed, your version of OhMyMock is too old`
+                `Import failed, the records in ${file.name} are too old to migrate`
               );
             }
           } catch {
-            this.toast.error(`File ${file} does not contain (valid) JSON`);
+            this.toast.error(`Import of ${file.name} failed`);
           } finally {
             this.isUploading = false;
           }

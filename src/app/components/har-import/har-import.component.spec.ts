@@ -91,7 +91,7 @@ describe('HarImportComponent', () => {
     closed = [];
     toasts = { success: [], error: [] };
     importJSONMock.mockReset();
-    importJSONMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS });
+    importJSONMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS, requests: 1, responses: 1 });
 
     await TestBed.configureTestingModule({
       // `ohStatusCodeTone` is a real pipe: an unknown one throws even under
@@ -265,7 +265,7 @@ describe('HarImportComponent', () => {
     });
 
     it('reports an import the store refused', async () => {
-      importJSONMock.mockResolvedValueOnce({ status: ImportResultEnum.TOO_OLD });
+      importJSONMock.mockResolvedValueOnce({ status: ImportResultEnum.TOO_OLD, requests: 0, responses: 0 });
 
       await component.onImport();
 

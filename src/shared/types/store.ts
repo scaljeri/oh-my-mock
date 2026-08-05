@@ -2,6 +2,7 @@ import { objectTypes, resetStateOptions, STORAGE_KEY } from '../constants';
 import { IOhMyCookie } from './cookie';
 import { ohMyGroupId } from './group';
 import { IMock } from './mock';
+import { IOhMyPresets } from './preset';
 import { IData } from './request';
 import { ohMyDomain } from './state';
 
@@ -90,6 +91,20 @@ export type ResetStateOptions = resetStateOptions;
 export interface IOhMyBackup {
   requests: IData[],
   responses: IMock[],
+  /**
+   * The domain's presets, id to label.
+   *
+   * The requests above key `selected` and `enabled` by preset id, and those
+   * ids were minted by the exporting browser — without this map the importer
+   * cannot tell what any of them meant, which is how per-preset selection and
+   * on/off used to be unrecoverable from a backup. Exported whole, like
+   * cookies: presets belong to the domain, not to any one selected request.
+   *
+   * Optional because every backup written before presets were exported lacks
+   * it; the importer then falls back to prefilling against the target state's
+   * own presets, as it always did.
+   */
+  presets?: IOhMyPresets,
   /**
    * The domain's cookie mocks.
    *
