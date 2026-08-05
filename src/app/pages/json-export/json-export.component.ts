@@ -89,33 +89,69 @@ export class JsonExportComponent implements OnInit {
     const exportObj: IOhMyBackup = {
       requests: [],
       responses: [],
+      // The presets travel with the backup: `selected` and `enabled` on each
+      // request below are keyed by preset id, and without this id-to-label map
+      // the importer could not tell one preset from another — which is how a
+      // backup used to lose every per-preset choice. Exported whole, like the
+      // cookies further down: a preset belongs to the domain, not to any one
+      // selected request.
+      presets: { ...this.state.presets },
       version: this.appStateService.version
     };
 
     for (const r of Object.values(this.selected)) {
       const sMocks = Object.values(r.mocks);
-      // `enabled` and `selected` are keyed by preset, and a preset belongs to
-      // a state rather than to an exported request. They are emptied instead
-      // of dropped: `IData` requires both, and everything that reads a request
-      // indexes into them — `DataUtils.prefillWithPresets` fills them in again
-      // against the importing state's presets.
+      // Responses get fresh ids in the file, so `selected` — which points at
+      // response ids — is remapped through this before the request is written.
+      const responseIds: Record<string, string> = {};
       const request: IData = {
         ...r,
-        enabled: {},
+        enabled: { ...r.enabled },
         selected: {},
         id: uniqueId(),
         mocks: {} as Record<string, IOhMyShallowMock>,
         version: this.appStateService.version
       };
 
+      // `calledAt` means "this browser intercepted this request" and only the
+      // interception may write it (see `IData.calledAt`). Wherever this backup
+      // ends up, that browser has not called anything — exporting the field
+      // would make an imported request claim traffic that never happened there.
+      delete request.calledAt;
+
       for (const sm of sMocks) {
         const mock = await this.storageService.get<IMock>(sm.id);
+
+        // A shallow entry can outlive its record, and `get` answers
+        // `undefined` for the id it left behind. The cookie loop below already
+        // survives that; here it used to throw, killing the whole export with
+        // nothing shown. One orphaned id is no reason to hold every healthy
+        // request hostage — the entry is simply not exported.
+        if (!mock) {
+          continue;
+        }
+
         mock.id = uniqueId();
+        responseIds[sm.id] = mock.id;
         request.mocks[mock.id] = { ...sm, id: mock.id };
 
         exportObj.responses.push(mock);
-        exportObj.requests.push(request);
       }
+
+      for (const [presetId, mockId] of Object.entries(r.selected)) {
+        const remapped = responseIds[mockId];
+
+        // A selection pointing at a response that was not exported (the
+        // orphan case above) is dropped; the importer reselects a default.
+        if (remapped) {
+          request.selected[presetId] = remapped;
+        }
+      }
+
+      // Once per request, not once per response: pushing inside the loop above
+      // wrote a request with N responses N times over, and a request with no
+      // responses yet not at all — it silently vanished from the backup.
+      exportObj.requests.push(request);
     }
 
     // Cookie mocks are not attached to a request, so there is nothing in the
