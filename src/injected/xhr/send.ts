@@ -46,7 +46,12 @@ export function patchSend() {
       // `open` records both before `send` can run; without them there is
       // nothing to match a mock against, so let the request through.
       if (!ohMyWindow().state?.active || !url || !method) {
-        xhr.__send(toXhrBody(body));
+        // `__send` is taken off the prototype when the patches are handed back,
+        // which happens in the same frame that releases the calls held for the
+        // verdict. Whichever of the two this call finds, it goes out.
+        const send = xhr.__send ?? ohMyWindow().__xhrSend;
+
+        send?.call(xhr, toXhrBody(body));
 
         return;
       }

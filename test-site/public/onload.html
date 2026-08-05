@@ -39,6 +39,26 @@
         window.onloadPost = { pending: false, error: String(err) };
       });
 
+    // The same moment, over XHR. `fetch` survives a hand-back because the
+    // original is kept on the OhMyMock namespace; the XHR original was taken
+    // off the prototype in the same frame that released the held calls, so this
+    // is the one that proves the hand-off is not fetch-only.
+    window.onloadXhr = { pending: true };
+
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/text');
+      xhr.onload = function () {
+        window.onloadXhr = { pending: false, status: xhr.status, body: xhr.responseText };
+      };
+      xhr.onerror = function () {
+        window.onloadXhr = { pending: false, error: 'onerror' };
+      };
+      xhr.send();
+    } catch (err) {
+      window.onloadXhr = { pending: false, error: String(err) };
+    }
+
     window.onloadDone = fetch('/api/json')
       .then(function (response) {
         return response.text().then(function (body) {

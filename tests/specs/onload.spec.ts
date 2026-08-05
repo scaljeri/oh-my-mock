@@ -263,4 +263,85 @@ test.describe('a request made while the page loads', () => {
     expect(result.json.source).toBe('mock');
     expect(await server.hitCount('GET /api/json')).toBe(0);
   });
+
+  /**
+   * The same first-request hand-off, over XHR.
+   *
+   * `fetch` survives it because `restoreOriginals` keeps the page's own
+   * function on the OhMyMock namespace. The XHR original lived only on
+   * `XMLHttpRequest.prototype` as `__send`, and was deleted in the *same
+   * synchronous frame* that resolved the verdict — which only queues the held
+   * calls as microtasks. By the time one ran, the function it was going to call
+   * was gone: a TypeError inside a promise nobody was catching, on every domain
+   * the user is not mocking. The request was never sent and never failed.
+   */
+  test('an XHR fired on load reaches the server on a domain that is off', async ({
+    ohMy,
+    site
+  }) => {
+    await ohMy.setActive(SITE_DOMAIN, false);
+    await site.page.goto(`${SITE_ORIGIN}/onload.html`);
+
+    const result = await site.page.waitForFunction(
+      () =>
+        (window as unknown as { onloadXhr?: { pending: boolean } }).onloadXhr
+          ?.pending === false,
+      undefined,
+      { timeout: 10_000 }
+    ).then(() =>
+      site.page.evaluate(
+        () =>
+          (window as unknown as {
+            onloadXhr: { status?: number; body?: string; error?: string };
+          }).onloadXhr
+      )
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(200);
+    expect(result.body).toBeTruthy();
+  });
+
+  /**
+   * And on a domain that *is* mocked, the same XHR gets the mock.
+   *
+   * This is the half the `fetch` tests above already cover for `fetch`. The
+   * shim holds the call either way; what differs is which machinery is still
+   * there when the verdict arrives.
+   */
+  test('an XHR fired on load is mocked on a domain that is on', async ({
+    ohMy,
+    site,
+    server
+  }) => {
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/text',
+      requestType: 'XHR',
+      response: 'mocked-on-load',
+      headers: { 'content-type': 'text/plain' }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+
+    await site.page.goto(`${SITE_ORIGIN}/onload.html`);
+
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { onloadXhr?: { pending: boolean } }).onloadXhr
+          ?.pending === false,
+      undefined,
+      { timeout: 10_000 }
+    );
+
+    const result = await site.page.evaluate(
+      () =>
+        (window as unknown as {
+          onloadXhr: { status?: number; body?: string; error?: string };
+        }).onloadXhr
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.body).toBe('mocked-on-load');
+    expect(await server.hitCount('GET /api/text')).toBe(0);
+  });
 });

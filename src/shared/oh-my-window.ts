@@ -28,6 +28,14 @@ export interface IOhMyWindow {
   /** Responses waiting to be matched to a request (injected script). */
   cache?: IOhMyReadyResponse[];
 
+  /**
+   * The page's own `XMLHttpRequest.prototype.send`, kept once the patches have
+   * been handed back — see `restore-originals.ts`. The counterpart of
+   * `__fetch`, and there for the same reason: a call held for the verdict may
+   * still be looking for it after the prototype copy has gone.
+   */
+  __xhrSend?: XMLHttpRequest['send'];
+
   /** Whether mocking is switched on for this domain. */
   state?: IOhMyInjectedState;
 

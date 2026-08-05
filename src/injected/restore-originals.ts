@@ -32,6 +32,26 @@ export function restoreOriginals(): void {
 
     if (saved) {
       Object.defineProperty(proto, name, saved);
+
+      // Kept on the namespace before the prototype copy goes, the way
+      // `__fetch` already is — and for the same reason.
+      //
+      // This runs in the *same synchronous frame* as `settleActiveState`, which
+      // only queues the calls held for the verdict as microtasks. One of those
+      // reaching `xhr.__send` afterwards finds nothing there: a TypeError
+      // inside a promise with no catch, and a request that is neither sent nor
+      // failed. `fetch` never had that problem because its original survives on
+      // the namespace.
+      //
+      // Ordinarily the content script's `releaseEarlyShim()` drains those calls
+      // before the verdict gets this far, which is why it does not show up in
+      // the normal flow — I could not reproduce it through the on-load path.
+      // It needs the shim's 50ms poll to hand a call to the bundle before the
+      // verdict arrives, i.e. a slow start. Cheap to make impossible.
+      if (name === 'send') {
+        ohMy.__xhrSend = saved.value as XMLHttpRequest['send'];
+      }
+
       Reflect.deleteProperty(proto, `__${name}`);
     }
   }
