@@ -35,24 +35,46 @@ describe('Utils/Storage', () => {
   });
 
   describe('#get', () => {
-    it('should skip data migration', (done) => {
-      StorageUtils.MigrateUtils.shouldMigrate = jest.fn().mockReturnValue(true);
+    // Spies on `MigrateUtils` land on the real, shared object — assigning to
+    // its methods here without restoring used to leak the fakes into every
+    // suite that ran after this one.
+    afterEach(() => jest.restoreAllMocks());
 
-      StorageUtils.get('a').then(value => {
-        expect(value).toEqual('foo');
-        done();
-      });
+    it('returns the stored value for the key', async () => {
+      await expect(StorageUtils.get('a')).resolves.toEqual('foo');
     });
 
-    it('should return not migrated data', (done) => {
-      StorageUtils.MigrateUtils.shouldMigrate = jest.fn().mockReturnValue(false);
-      jest.spyOn(StorageUtils.MigrateUtils, 'migrate').mockReturnValue('migrated-data' as any);
-      jest.spyOn(StorageUtils, 'set').mockResolvedValue();
+    /**
+     * Read-time migration is deliberately switched off — the commented block in
+     * `storage.ts`. Records are migrated where they are written: at background
+     * start-up (`background/init.ts`) and on import. A `get` that migrated
+     * would turn every read into a potential write.
+     *
+     * So the claim to pin is a negative: `get` consults nothing and writes
+     * nothing, *even for a record the migrator would flag*. Uncommenting that
+     * block makes both of these fail.
+     */
+    it('does not consult the migrator, even for a record it would flag', async () => {
+      const shouldMigrate = jest
+        .spyOn(StorageUtils.MigrateUtils, 'shouldMigrate')
+        .mockReturnValue(true);
+      const migrate = jest
+        .spyOn(StorageUtils.MigrateUtils, 'migrate')
+        .mockReturnValue('migrated-data' as never);
 
-      StorageUtils.get('a').then(value => {
-        expect(value).toEqual('foo');
-        done();
-      });
+      await expect(StorageUtils.get('a')).resolves.toEqual('foo');
+
+      expect(shouldMigrate).not.toHaveBeenCalled();
+      expect(migrate).not.toHaveBeenCalled();
+    });
+
+    it('writes nothing back', async () => {
+      const set = jest.spyOn(StorageUtils, 'set');
+
+      await StorageUtils.get('a');
+
+      expect(set).not.toHaveBeenCalled();
+      expect(StorageUtils.chrome.storage.local.set).not.toHaveBeenCalled();
     });
   });
 

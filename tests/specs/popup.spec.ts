@@ -2,16 +2,16 @@
  * The popup — the Angular application the toolbar button opens.
  *
  * These are deliberately shallow: they check that the app bootstraps, renders,
- * and reads extension storage. Anything deeper belongs in the Jest unit tests,
- * which do not need a browser.
+ * and shows what extension storage holds. Anything deeper belongs in the Jest
+ * unit tests, which do not need a browser.
  *
  * What this does buy is a regression guard on the whole popup build chain —
  * Angular compile, bundling, the sandbox iframe, Material rendering. All of it
  * has to work for even the first assertion here to pass.
  */
 
-import { expect, SITE_DOMAIN, test } from '../fixtures/extension';
-import { popupUrl } from '../fixtures/popup';
+import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
+import { openPopup, popupUrl } from '../fixtures/popup';
 
 test.describe('popup', () => {
   test('the Angular app bootstraps and renders', async ({
@@ -59,10 +59,11 @@ test.describe('popup', () => {
     await page.close();
   });
 
-  test('a seeded domain shows up in the popup', async ({
+  test('a seeded mock shows up rendered in the popup', async ({
     context,
     extensionId,
-    ohMy
+    ohMy,
+    site
   }) => {
     await ohMy.seedMock({
       domain: SITE_DOMAIN,
@@ -70,22 +71,28 @@ test.describe('popup', () => {
       response: { source: 'mock' }
     });
     await ohMy.setActive(SITE_DOMAIN);
+    await site.open();
 
-    const page = await context.newPage();
-    await page.goto(popupUrl(extensionId));
-
-    await expect(page.locator('oh-my-root .oh-shell')).toBeAttached({
-      timeout: 20_000
+    const popup = await openPopup(context, extensionId, {
+      domain: SITE_DOMAIN,
+      tabId: await ohMy.tabIdFor(SITE_ORIGIN)
     });
 
-    // The popup reads the same storage the driver seeded, so the domain it
-    // knows about should be the one under test.
-    const store = await page.evaluate(
-      () => chrome.storage.local.get('OhMyMock').then((all) => all.OhMyMock)
-    );
-    expect((store as { domains: string[] }).domains).toContain(SITE_DOMAIN);
+    // Rendered, not merely stored. This used to read `chrome.storage` back
+    // from the popup page and assert the domain was in it — which re-verified
+    // the fixture's own write and would have stayed green with the entire UI
+    // blank. A request-list row only exists once the seeded records have
+    // travelled storage -> state service -> template, which is the seam this
+    // smoke test is for.
+    //
+    // Matched on the endpoint's `title`: the visible url is drawn as CSS
+    // `content` in two halves for the middle ellipsis, so text matching never
+    // works — see tests/README.md.
+    await expect(
+      popup.locator('[x-test="row-endpoint"][title="/api/json"]')
+    ).toBeVisible();
 
-    await page.close();
+    await popup.close();
   });
 
   // Material reports a failed icon on the *console*, not as a page error, so
