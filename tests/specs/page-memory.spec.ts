@@ -60,6 +60,15 @@ test.describe('the injected response cache', () => {
       url: '/api/json',
       response: { a: 1 }
     });
+    // A second endpoint to overflow the cache with, so the entry checked at the
+    // end is the only one for its url. Flooding with the *same* url would let a
+    // stale entry answer the final read, and the test could not tell which end
+    // had been trimmed.
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/users',
+      response: { b: 2 }
+    });
     await ohMy.setActive(SITE_DOMAIN);
 
     await site.open();
@@ -68,7 +77,7 @@ test.describe('the injected response cache', () => {
     // `fetch` without touching the response at all.
     await site.page.evaluate(async () => {
       for (let i = 0; i < 250; i++) {
-        await fetch('/api/json');
+        await fetch('/api/users');
       }
     });
 
@@ -76,6 +85,18 @@ test.describe('the injected response cache', () => {
 
     expect(size).toBeGreaterThan(0);
     expect(size).toBeLessThanOrEqual(200);
+
+    // And the *newest* survived. Entries are unshifted, so trimming the wrong
+    // end drops precisely the ones still worth having — after which every new
+    // mocked response is evicted the moment it arrives and mocking silently
+    // stops. Asserting the length alone is true whichever end goes.
+    const stillMocked = await site.page.evaluate(async () => {
+      const response = await fetch('/api/json');
+
+      return response.json();
+    });
+
+    expect(stillMocked).toEqual({ a: 1 });
   });
 
   /**

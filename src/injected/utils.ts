@@ -85,7 +85,13 @@ export function trimResponseCache(): void {
   const cache = ohMyWindow().cache;
 
   if (cache && cache.length > MAX_CACHED_RESPONSES) {
-    cache.splice(0, cache.length - MAX_CACHED_RESPONSES);
+    // From the **tail**. Entries are `unshift`ed, so index 0 is the newest and
+    // `splice(0, …)` dropped exactly the ones still worth having: once a page
+    // had accumulated 200 unread entries, every subsequent mocked response was
+    // evicted the moment it arrived and mocking silently stopped for the rest
+    // of that page's life. The cap test only asserted the length, which is true
+    // whichever end goes.
+    cache.splice(MAX_CACHED_RESPONSES);
   }
 }
 

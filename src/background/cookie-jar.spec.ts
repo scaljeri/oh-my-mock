@@ -120,13 +120,25 @@ describe('cookie-jar', () => {
     // A restarted service worker forgets what it displaced but the browser
     // still holds the mock it set. Remembering that as "the original" would
     // make unapplying restore the mock it is trying to remove.
-    it('does not mistake its own earlier write for the original', async () => {
+    /**
+     * A cookie already in the jar is the site's, and is restored — even when
+     * its value happens to equal the mock's.
+     *
+     * This used to assert the opposite, because equal values were read as "this
+     * is the mock itself, from before a teardown lost the record". That reading
+     * is unreachable now: the record survives the teardown, so a re-applied
+     * mock is recognised by its id and nothing is re-recorded (the test below
+     * covers exactly that). What is left here is a site cookie the mock
+     * coincidentally matches — and a *recorded* mock stores the site's own
+     * value, so "coincidentally" is in fact the common case.
+     */
+    it('treats a cookie already in the jar as the site own, matching value or not', async () => {
       seed({ name: 'session', value: 'mocked' });
 
       await applyCookie('example.com', mock());
       await unapplyCookie('example.com', mock());
 
-      expect(at('session')).toBeUndefined();
+      expect(at('session')?.value).toBe('mocked');
     });
 
     // `chrome.cookies.get` matches parent paths but `set` does not, so a mock
@@ -329,5 +341,40 @@ describe('cookie-jar', () => {
 
       expect(at('a')?.value).toBe('real-a');
     });
+  });
+
+  /**
+   * A recorded mock stores the site's own current value, so enabling one
+   * unchanged — freezing your session, the obvious thing to do with it — made
+   * the mock's value equal the real one. `applyCookie` compared them and
+   * recorded "nothing was displaced"; switching the mock off then deleted the
+   * site's real cookie.
+   *
+   * The comparison was there to catch "this is the mock itself, from before a
+   * teardown". That case cannot reach the recording branch any more, because
+   * the record survives the teardown.
+   */
+  it('restores a cookie whose value the mock happened to match', async () => {
+    seed({ name: 'session', value: 'the-real-one' });
+
+    await applyCookie('example.com', mock({ value: 'the-real-one' }));
+    // Something else changes it, so "restored" is distinguishable from "never
+    // touched".
+    await applyCookie('example.com', mock({ value: 'changed-by-the-mock' }));
+    await unapplyCookie('example.com', mock({ value: 'changed-by-the-mock' }));
+
+    expect(at('session')?.value).toBe('the-real-one');
+  });
+
+  it('does not restore the mock over itself after a teardown', async () => {
+    await applyCookie('example.com', mock({ value: 'mocked' }));
+    forgetDisplaced();
+
+    // The same mock re-applied by a fresh worker, with the jar already holding
+    // it: nothing new is recorded, so switching off still removes it.
+    await applyCookie('example.com', mock({ value: 'mocked' }));
+    await unapplyCookie('example.com', mock({ value: 'mocked' }));
+
+    expect(at('session')).toBeUndefined();
   });
 });

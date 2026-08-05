@@ -191,11 +191,19 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
     const displacedByThis = !!existing &&
       CookieUtils.path(existing.path) === CookieUtils.path(cookie.path);
 
-    // A cookie already holding the mock's own value is this mock, applied
-    // before the service worker was torn down and restarted. Remembering it
-    // would make unapplying restore the very mock it is removing.
-    forDomain.set(cookie.id,
-      displacedByThis && existing.value !== cookie.value ? existing : null);
+    // No value comparison. There used to be one — `existing.value !==
+    // cookie.value` — to catch "this is the mock itself, applied before the
+    // worker was torn down and restarted", because remembering it would make
+    // unapplying restore the very mock it was removing.
+    //
+    // The record survives the teardown now, so that case never reaches here:
+    // `forDomain.has(cookie.id)` is already true and nothing is re-recorded.
+    // The comparison had become pure harm. A cookie *recorded* from the site
+    // stores the site's own current value (`CookieUtils.fromBrowser`), so
+    // enabling a recorded mock unchanged — freezing your session, the obvious
+    // thing to do with one — made the values equal, recorded "nothing was
+    // displaced", and switching it off then deleted the site's real cookie.
+    forDomain.set(cookie.id, displacedByThis ? existing : null);
   }
 
   ownWrites.add(ownWriteKey(domain, cookie.name, cookie.path));
