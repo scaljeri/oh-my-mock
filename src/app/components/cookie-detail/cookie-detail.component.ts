@@ -7,8 +7,10 @@ import {
   Output
 } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
+  ValidationErrors,
   Validators,
   ReactiveFormsModule
 } from '@angular/forms';
@@ -78,10 +80,16 @@ export class CookieDetailComponent implements OnChanges {
     }),
     value: new FormControl('', { nonNullable: true }),
     path: new FormControl('/', { nonNullable: true }),
-    expires: new FormControl('', { nonNullable: true }),
+    expires: new FormControl('', {
+      nonNullable: true,
+      validators: [CookieDetailComponent.expiryStillAhead]
+    }),
     sameSite: new FormControl<sameSiteChoice>('', { nonNullable: true }),
     secure: new FormControl(false, { nonNullable: true }),
     httpOnly: new FormControl(false, { nonNullable: true })
+  }, {
+    // Cross-field: whether `SameSite=None` is storable depends on `Secure`.
+    validators: [CookieDetailComponent.storableSameSite]
   });
 
   /**
@@ -237,6 +245,28 @@ export class CookieDetailComponent implements OnChanges {
       `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
       `T${pad(date.getHours())}:${pad(date.getMinutes())}`
     );
+  }
+
+  /**
+   * Chrome refuses to store `SameSite=None` without `Secure`, so a mock saved
+   * that way would read as enabled while `chrome.cookies.set` rejected it —
+   * the jar cannot make that combination work, only this form can prevent it.
+   */
+  private static storableSameSite(group: AbstractControl): ValidationErrors | null {
+    const { sameSite, secure } = group.value as { sameSite?: sameSiteChoice, secure?: boolean };
+
+    return sameSite === 'no_restriction' && !secure ? { insecureNone: true } : null;
+  }
+
+  /**
+   * An expiry that has already passed makes `chrome.cookies.set` a *delete*:
+   * the mock would read as enabled while applying it removed the cookie — the
+   * site's real one included, if the mock had displaced it.
+   */
+  private static expiryStillAhead(control: AbstractControl): ValidationErrors | null {
+    const seconds = CookieDetailComponent.fromDateInput(control.value as string);
+
+    return seconds !== undefined && seconds * 1000 <= Date.now() ? { pastExpiry: true } : null;
   }
 
   /** The reverse; an empty input means a session cookie. */

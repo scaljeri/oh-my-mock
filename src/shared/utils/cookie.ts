@@ -1,7 +1,7 @@
 /// <reference types="chrome"/>
 
 import { objectTypes } from '../constants';
-import { IOhMyCookie, ohMyDomain } from '../type';
+import { IOhMyCookie, IState, ohMyDomain } from '../type';
 import { timestamp } from './timestamp';
 import { uniqueId } from './unique-id';
 
@@ -79,6 +79,20 @@ export class CookieUtils {
       ...(cookie.sameSite && cookie.sameSite !== 'unspecified' && { sameSite: cookie.sameSite }),
       ...(cookie.expirationDate !== undefined && { expirationDate: cookie.expirationDate })
     };
+  }
+
+  /**
+   * Whether cookies should be in the jar for this state at all.
+   *
+   * The domain's own switch, nothing else — deliberately not the popup, which
+   * response mocking additionally needs (it hosts nothing a cookie uses, and
+   * dropping a mocked session whenever the window closes would be a surprise).
+   * One rule with two readers: `cookie-sync` decides when to apply and remove,
+   * and the jar consults it again before writing a served response's cookies,
+   * because a response in flight can land after the switch went off.
+   */
+  static isMockingActive(state?: IState): boolean {
+    return state?.aux?.appActive === true;
   }
 
   /**

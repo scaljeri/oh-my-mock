@@ -2,8 +2,9 @@
 
 import { objectTypes } from '../shared/constants';
 import { IOhMyCookie, IOhMyMock, IState, ohMyCookieId, ohMyDomain, ohMyPresetId } from '../shared/type';
+import { CookieUtils } from '../shared/utils/cookie';
 import { IOhMyStorageChange, StorageUtils } from '../shared/utils/storage';
-import { primeResponseCookies, syncCookies, unapplyResponseCookies } from './cookie-jar';
+import { primeResponseCookies, serialiseCookieWork, syncCookies, unapplyResponseCookies } from './cookie-jar';
 import { error } from './utils';
 
 /**
@@ -45,7 +46,9 @@ export function syncedCookies(domain: ohMyDomain): IOhMyCookie[] {
  * session every time they close the window would be a surprise.
  */
 export function isCookieMockingActive(state: IState): boolean {
-  return state.aux?.appActive === true;
+  // The rule lives in `CookieUtils` because the jar consults it too, for a
+  // response that lands after the switch went off.
+  return CookieUtils.isMockingActive(state);
 }
 
 export function signatureOf(state: IState): string {
@@ -61,50 +64,65 @@ export async function loadCookies(ids: ohMyCookieId[]): Promise<IOhMyCookie[]> {
 }
 
 /** Brings the jar in line with a domain's state. */
-export async function syncState(state: IState, force = false): Promise<void> {
-  const signature = signatureOf(state);
+export function syncState(state: IState, force = false): Promise<void> {
+  // One sync per domain at a time. `handleStorageUpdate` fires this without
+  // awaiting it, so two quick toggles used to interleave two syncs across the
+  // awaits inside apply and unapply — the later one reading the jar's records
+  // before the earlier one had written them. The signature check sits inside
+  // the queue for the same reason: it has to see the sync before it, finished.
+  return serialiseCookieWork(state.domain, async () => {
+    const signature = signatureOf(state);
 
-  if (!force && synced.get(state.domain)?.signature === signature) {
-    return;
-  }
+    if (!force && synced.get(state.domain)?.signature === signature) {
+      return;
+    }
 
-  const active = isCookieMockingActive(state);
-  const previous = synced.get(state.domain)?.cookies ?? [];
-  const cookies = await loadCookies(state.cookies ?? []);
-  synced.set(state.domain, { signature, preset: state.context.preset, active, cookies });
+    const active = isCookieMockingActive(state);
+    const previous = synced.get(state.domain);
+    const cookies = await loadCookies(state.cookies ?? []);
+    synced.set(state.domain, { signature, preset: state.context.preset, active, cookies });
 
-  // A mock that is no longer on the state has to be taken out of the jar here;
-  // its record is gone, so the loop below will never see it again.
-  const dropped = previous.filter(p => !cookies.some(c => c.id === p.id));
+    // A mock that is no longer on the state has to be taken out of the jar here;
+    // its record is gone, so the loop below will never see it again.
+    const dropped = (previous?.cookies ?? []).filter(p => !cookies.some(c => c.id === p.id));
 
-  if (dropped.length) {
-    await syncCookies(state.domain, dropped, state.context.preset, false);
-  }
+    if (dropped.length) {
+      await syncCookies(state.domain, dropped, state.context.preset, false);
+    }
 
-  await syncCookies(state.domain, cookies, state.context.preset, active);
+    await syncCookies(state.domain, cookies, state.context.preset, active);
 
-  // Cookies a served response set are not on the state, so the loop above never
-  // sees them — but switching mocking off has to undo them too, or a fabricated
-  // session outlives the mocking that fabricated it.
-  if (!active) {
-    await unapplyResponseCookies(state.domain);
-  }
+    // Cookies a served response set are not on the state, so the loop above
+    // never sees them — but switching mocking off has to undo them too, or a
+    // fabricated session outlives the mocking that fabricated it. A *preset*
+    // switch undoes them as well: a preset is a whole scenario, the session a
+    // response fabricated under the old one does not belong to the new one, and
+    // no later sync would ever take it out — these cookies sit outside the
+    // per-preset switches the loop above follows.
+    if (!active || (previous && previous.preset !== state.context.preset)) {
+      await unapplyResponseCookies(state.domain);
+    }
+  });
 }
 
 /**
  * The domain's state record is gone (a reset). The cookie records are gone with
  * it, so what to unapply comes from what was last synced rather than storage.
  */
-export async function forgetState(domain: ohMyDomain): Promise<void> {
-  const entry = synced.get(domain);
+export function forgetState(domain: ohMyDomain): Promise<void> {
+  // Queued for the same reason `syncState` is: a reset racing a sync would
+  // read and delete the synced entry the sync is halfway through rewriting.
+  return serialiseCookieWork(domain, async () => {
+    const entry = synced.get(domain);
 
-  if (!entry) {
-    return;
-  }
+    if (!entry) {
+      return;
+    }
 
-  synced.delete(domain);
-  await syncCookies(domain, entry.cookies, entry.preset, false);
-  await unapplyResponseCookies(domain);
+    synced.delete(domain);
+    await syncCookies(domain, entry.cookies, entry.preset, false);
+    await unapplyResponseCookies(domain);
+  });
 }
 
 /** Which domain a cookie record belongs to, going by what was last synced. */

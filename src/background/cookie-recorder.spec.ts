@@ -68,6 +68,14 @@ describe('OhMyCookieRecorder', () => {
       onChanged: { addListener: jest.fn() }
     };
 
+    // Reset to the empty default: the read-back race test below replaces this
+    // with a gated one, and that must not leak into the tests after it.
+    (globalThis as unknown as { chrome: { storage: Record<string, unknown> } })
+      .chrome.storage.session = {
+      get: async () => ({}),
+      set: async () => undefined
+    };
+
     jest.spyOn(StorageUtils, 'get').mockImplementation(
       (key = 'OhMyMock') => Promise.resolve(records[key] as never));
 
@@ -180,6 +188,48 @@ describe('OhMyCookieRecorder', () => {
       delete records['example.com'];
 
       expect(await OhMyCookieRecorder.onChanged(change())).toBeUndefined();
+    });
+
+    /**
+     * Changes arrive while the read-back from session storage is still in
+     * flight — the change is often what *woke* the worker. `prime` used to
+     * flip its flag before the awaited read completed and did not share the
+     * promise, so the second change walked straight through against a
+     * still-empty set: it re-recorded a mock the user had deleted, and
+     * `remember()` then snapshotted that near-empty set over the session key,
+     * wiping the deletions the read was in the middle of fetching.
+     */
+    it('waits for the read-back, so a deleted mock is not resurrected', async () => {
+      let release!: () => void;
+      const gate = new Promise<void>(resolve => { release = resolve; });
+      const sessionSet = jest.fn(async () => undefined);
+
+      // 'tracker' was recorded — and its mock then deleted — in an earlier
+      // life of this worker; only session storage still knows.
+      (globalThis as unknown as { chrome: { storage: { session: unknown } } })
+        .chrome.storage.session = {
+        get: jest.fn(async () => {
+          await gate;
+          return { OhMyRecordedCookies: ['example.com|tracker|/'] };
+        }),
+        set: sessionSet
+      };
+
+      const first = OhMyCookieRecorder.onChanged(change({ name: 'fresh' }));
+      const second = OhMyCookieRecorder.onChanged(change()); // 'tracker'
+      release();
+      await Promise.all([first, second]);
+
+      // Only the genuinely new cookie was recorded...
+      expect(OhMyCookieRecorder.CookieHandler.upsert).toHaveBeenCalledTimes(1);
+      expect((OhMyCookieRecorder.CookieHandler.upsert as jest.Mock).mock.calls[0][1])
+        .toEqual(expect.objectContaining({ name: 'fresh' }));
+      // ...and the snapshot kept the old decision instead of overwriting it.
+      expect(sessionSet).toHaveBeenLastCalledWith({
+        OhMyRecordedCookies: expect.arrayContaining([
+          'example.com|tracker|/', 'example.com|fresh|/'
+        ])
+      });
     });
   });
 

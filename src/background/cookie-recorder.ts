@@ -59,25 +59,32 @@ export class OhMyCookieRecorder {
    */
   private static recorded = new Set<string>();
   private static readonly SESSION_KEY = 'OhMyRecordedCookies';
-  private static primed = false;
+  private static priming?: Promise<void>;
 
-  /** Reads back what earlier lives of this worker had already recorded. */
-  static async prime(): Promise<void> {
-    if (OhMyCookieRecorder.primed) {
-      return;
-    }
+  /**
+   * Reads back what earlier lives of this worker had already recorded.
+   *
+   * One shared promise, not a boolean. A flag flipped before the awaited read
+   * completed let a second `onChanged` arriving *during* the read walk straight
+   * through against a still-empty set — re-recording a mock the user had
+   * deleted, and then `remember()` snapshotted that near-empty set over the
+   * session key, wiping the very decisions the read was fetching. Every caller
+   * now waits on the same read, however many arrive while it runs.
+   */
+  static prime(): Promise<void> {
+    OhMyCookieRecorder.priming ??= (async () => {
+      try {
+        const stored = await chrome.storage.session.get(OhMyCookieRecorder.SESSION_KEY);
 
-    OhMyCookieRecorder.primed = true;
-
-    try {
-      const stored = await chrome.storage.session.get(OhMyCookieRecorder.SESSION_KEY);
-
-      for (const key of (stored?.[OhMyCookieRecorder.SESSION_KEY] ?? []) as string[]) {
-        OhMyCookieRecorder.recorded.add(key);
+        for (const key of (stored?.[OhMyCookieRecorder.SESSION_KEY] ?? []) as string[]) {
+          OhMyCookieRecorder.recorded.add(key);
+        }
+      } catch (err) {
+        error('Could not read back which cookies were already recorded', err);
       }
-    } catch (err) {
-      error('Could not read back which cookies were already recorded', err);
-    }
+    })();
+
+    return OhMyCookieRecorder.priming;
   }
 
   private static async remember(): Promise<void> {
@@ -151,6 +158,9 @@ export class OhMyCookieRecorder {
   /** Test seam. */
   static forget(): void {
     OhMyCookieRecorder.recorded.clear();
+    // A real teardown re-evaluates the module, so the read-back has not
+    // happened yet in the new worker — same reasoning as the jar's seam.
+    OhMyCookieRecorder.priming = undefined;
   }
 }
 

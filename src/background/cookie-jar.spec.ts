@@ -1,7 +1,10 @@
 import { objectTypes } from '../shared/constants';
+import { IState } from '../shared/type';
 import { IOhMyCookie } from '../shared/types/cookie';
+import { StorageUtils } from '../shared/utils/storage';
 import {
-  applyCookie, consumeOwnWrite, cookieUrl, forgetDisplaced, isApplied, syncCookies, unapplyCookie
+  applyCookie, applyResponseCookies, consumeOwnWrite, cookieUrl, forgetDisplaced, isApplied,
+  syncCookies, unapplyCookie, unapplyResponseCookies
 } from './cookie-jar';
 
 function mock(over: Partial<IOhMyCookie> = {}): IOhMyCookie {
@@ -18,32 +21,60 @@ function mock(over: Partial<IOhMyCookie> = {}): IOhMyCookie {
 
 describe('cookie-jar', () => {
   /**
-   * A stand-in for the browser's cookie jar, keyed by **name and path**.
+   * A stand-in for the browser's cookie jar, keyed by **name, domain and
+   * path** — the browser's own cookie key.
    *
    * It used to be keyed by name alone, which could not represent two cookies of
-   * the same name on different paths — so the tests could not see the case
-   * where that difference matters, and a real bug lived in `applyCookie` for as
-   * long as this harness did. The two path rules below are the ones the real
-   * API follows and the ones the jar depends on:
+   * the same name on different paths or domains — so the tests could not see
+   * the cases where that difference matters, and real bugs lived in
+   * `applyCookie` for as long as this harness did. The rules below are the ones
+   * the real API follows and the ones the jar depends on:
    *
-   *  - `get` matches a cookie on the request path **or any parent of it**,
-   *    preferring the longest match.
-   *  - `set` and `remove` are exact: they only ever touch the given path.
+   *  - `get` matches a cookie the browser would *send* for the url: the exact
+   *    host for a host-only cookie, the host or any subdomain of it for a
+   *    `Domain=.example.com` cookie (kept with its leading dot, as Chrome
+   *    reports it), and the request path or any parent of it — preferring the
+   *    longest path.
+   *  - `set` is exact: a url and no `domain` writes a host-only cookie at the
+   *    given path, touching nothing else. A past `expirationDate` is Chrome's
+   *    delete-by-overwrite: the equivalent cookie goes, nothing is stored. And
+   *    `SameSite=None` without `Secure` is refused, as Chrome refuses it.
+   *  - `remove` has the same blast radius as `get`, not as `set`: Chromium
+   *    implements it as a deletion filter matched with `IncludeForRequestURL`
+   *    (`CookiesRemoveFunction` → `CookieDeletionInfo::Matches`), so it deletes
+   *    *every* cookie of that name the browser would send for the url — parent
+   *    paths and parent domains included. The jar must never call it near a
+   *    cookie it does not own.
    */
   let jar: Map<string, chrome.cookies.Cookie>;
   /** Stands in for `chrome.storage.session`, which outlives the worker. */
   let session: Record<string, unknown>;
 
-  const key = (name: string, path: string) => `${name}|${path}`;
+  const key = (name: string, domain: string, path: string) => `${name}|${domain}|${path}`;
   const pathOf = (url: string) => new URL(url).pathname || '/';
+  const hostOf = (url: string) => new URL(url).hostname;
 
-  /** What is in the jar for a name and path, or `undefined`. */
-  const at = (name: string, path = '/') => jar.get(key(name, path));
+  /** Whether the browser would send this cookie for a request to `url`. */
+  const sentFor = (cookie: chrome.cookies.Cookie, url: string) => {
+    const host = hostOf(url);
+    const wanted = pathOf(url);
+    const domainMatch = cookie.domain.startsWith('.')
+      ? host === cookie.domain.slice(1) || host.endsWith(cookie.domain)
+      : host === cookie.domain;
 
-  /** Seeds the jar the way a server would. */
+    return domainMatch &&
+      (wanted === cookie.path || wanted.startsWith(cookie.path.replace(/\/$/, '') + '/'));
+  };
+
+  /** What is in the jar for a name, path and domain, or `undefined`. */
+  const at = (name: string, path = '/', domain = 'example.com') =>
+    jar.get(key(name, domain, path));
+
+  /** Seeds the jar the way a server would; a leading dot means a domain cookie. */
   const seed = (cookie: Partial<chrome.cookies.Cookie> & { name: string }) => {
-    const full = { path: '/', value: '', ...cookie } as chrome.cookies.Cookie;
-    jar.set(key(full.name, full.path), full);
+    const full = { path: '/', value: '', domain: 'example.com', ...cookie } as chrome.cookies.Cookie;
+    full.hostOnly = !full.domain.startsWith('.');
+    jar.set(key(full.name, full.domain, full.path), full);
   };
 
   beforeEach(() => {
@@ -67,21 +98,43 @@ describe('cookie-jar', () => {
     // test is replaced rather than the whole namespace.
     (globalThis as unknown as { chrome: Record<string, unknown> }).chrome.cookies = {
       get: jest.fn(async ({ url, name }: { url: string, name: string }) => {
-        const wanted = pathOf(url);
-        const candidates = [...jar.values()].filter(c =>
-          c.name === name &&
-          (wanted === c.path || wanted.startsWith(c.path.replace(/\/$/, '') + '/')));
+        const candidates = [...jar.values()].filter(c => c.name === name && sentFor(c, url));
 
-        // The browser hands back the most specific match.
-        return candidates.sort((a, b) => b.path.length - a.path.length)[0] ?? null;
+        // The browser hands back the most specific match; on equal paths the
+        // real tie-breaker is creation time, the host-only preference here is a
+        // deterministic stand-in.
+        return candidates.sort((a, b) =>
+          b.path.length - a.path.length || Number(b.hostOnly) - Number(a.hostOnly))[0] ?? null;
       }),
       set: jest.fn(async (details: chrome.cookies.SetDetails) => {
-        const stored = { path: '/', ...details } as unknown as chrome.cookies.Cookie;
-        jar.set(key(stored.name, stored.path), stored);
+        if (details.sameSite === 'no_restriction' && !details.secure) {
+          throw new Error('Failed to parse or set cookie named "' + details.name + '".');
+        }
+
+        const stored = {
+          path: '/',
+          ...details,
+          domain: hostOf(details.url),
+          hostOnly: true
+        } as unknown as chrome.cookies.Cookie;
+
+        // Chrome's delete-by-overwrite: an expired cookie removes its
+        // equivalent and is not stored itself.
+        if (details.expirationDate !== undefined && details.expirationDate * 1000 <= Date.now()) {
+          jar.delete(key(stored.name, stored.domain, stored.path));
+
+          return null;
+        }
+
+        jar.set(key(stored.name, stored.domain, stored.path), stored);
         return stored;
       }),
       remove: jest.fn(async ({ url, name }: { url: string, name: string }) => {
-        jar.delete(key(name, pathOf(url)));
+        for (const [k, c] of [...jar]) {
+          if (c.name === name && sentFor(c, url)) {
+            jar.delete(k);
+          }
+        }
         return null;
       })
     };
@@ -159,6 +212,30 @@ describe('cookie-jar', () => {
       // The mock is gone and the site's own cookie was never touched.
       expect(at('session', '/admin')).toBeUndefined();
       expect(at('session')?.value).toBe('real-root');
+    });
+
+    // The parent-*domain* twin of the case above. `get({url})` also answers
+    // with the site's `Domain=.example.com` cookie, while the mock's `set`
+    // writes a host-only cookie — a different cookie, sitting beside it.
+    // Recording the domain cookie as displaced made unapply write its old
+    // value back as a host-only copy: a stale twin that keeps shadowing the
+    // site's real cookie after it rotates.
+    it('does not treat a parent-domain cookie as the one it displaced', async () => {
+      seed({ name: 'session', value: 'domain-wide', domain: '.example.com' });
+
+      await applyCookie('example.com', mock());
+
+      expect(at('session')?.value).toBe('mocked');
+      expect(at('session', '/', '.example.com')?.value).toBe('domain-wide');
+
+      await unapplyCookie('example.com', mock());
+
+      // The mock is really gone — not restored-over — and the site's domain
+      // cookie survives, which also pins that unapply must not lean on
+      // `chrome.cookies.remove`: its deletion filter would take the
+      // `.example.com` twin with it.
+      expect(at('session')).toBeUndefined();
+      expect(at('session', '/', '.example.com')?.value).toBe('domain-wide');
     });
 
     // Applying twice must not record the mock's own value as "what was there
@@ -249,6 +326,104 @@ describe('cookie-jar', () => {
 
       await syncCookies('example.com', [cookie], 'logged-out', true);
       expect(at('session')).toBeUndefined();
+    });
+
+    // A past expiry turns `set` into a delete, so "applying" such a mock would
+    // remove the site's real cookie while the popup shows the mock as on.
+    it('does not apply a mock whose expiry has already passed', async () => {
+      seed({ name: 'session', value: 'real' });
+
+      await syncCookies('example.com',
+        [mock({ expirationDate: Date.now() / 1000 - 60 })], 'default', true);
+
+      expect(at('session')?.value).toBe('real');
+      expect(isApplied('example.com', 'c1')).toBe(false);
+    });
+  });
+
+  /**
+   * `chrome.cookies.set` can refuse a mock — `SameSite=None` without `Secure`
+   * is a combination Chrome will not store. Success used to be recorded before
+   * the write, so a refused mock read as applied while nothing was in the jar,
+   * and a later switch-off "unapplied" a cookie the mock never wrote.
+   */
+  describe('a write the browser refuses', () => {
+    const unstorable = () => mock({ sameSite: 'no_restriction', secure: false });
+
+    it('records nothing: not applied, and not one of the jar own writes', async () => {
+      await expect(applyCookie('example.com', unstorable())).rejects.toThrow();
+
+      expect(isApplied('example.com', 'c1')).toBe(false);
+      expect(consumeOwnWrite('example.com', 'session')).toBe(false);
+    });
+
+    it('leaves what the site sets afterwards alone when switched off', async () => {
+      await syncCookies('example.com', [unstorable()], 'default', true);
+      seed({ name: 'session', value: 'set-by-the-site-later' });
+
+      await syncCookies('example.com', [unstorable()], 'default', false);
+
+      expect(at('session')?.value).toBe('set-by-the-site-later');
+    });
+
+    it('does not keep the domain other mocks from syncing', async () => {
+      await syncCookies('example.com',
+        [unstorable(), mock({ id: 'c2', name: 'locale', value: 'nl' })], 'default', true);
+
+      expect(at('locale')?.value).toBe('nl');
+    });
+  });
+
+  describe('response cookies', () => {
+    const state = (appActive: boolean) => ({
+      version: '1.0.0',
+      type: objectTypes.STATE,
+      domain: 'example.com',
+      aux: { appActive },
+      context: { domain: 'example.com', preset: 'default' }
+    } as unknown as IState);
+
+    let records: Record<string, IState>;
+
+    beforeEach(() => {
+      records = { 'example.com': state(true) };
+      jest.spyOn(StorageUtils, 'get').mockImplementation(
+        ((key: string) => Promise.resolve(records[key])) as typeof StorageUtils.get);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('writes them while mocking is on, and takes them back out', async () => {
+      await applyResponseCookies('example.com', [{ name: 'sid', value: 'fabricated' }]);
+      expect(at('sid')?.value).toBe('fabricated');
+
+      await unapplyResponseCookies('example.com');
+      expect(at('sid')).toBeUndefined();
+    });
+
+    /**
+     * Switching mocking off runs `unapplyResponseCookies` once; a response
+     * already in flight lands *after* it. The state does not change again, so
+     * no sync ever re-runs — cookies written now would re-fabricate the
+     * session and keep it for the rest of the browser run. The jar therefore
+     * consults the switch at the moment of writing.
+     */
+    it('refuses to write once mocking is switched off', async () => {
+      records['example.com'] = state(false);
+
+      await applyResponseCookies('example.com', [{ name: 'sid', value: 'fabricated' }]);
+
+      expect(at('sid')).toBeUndefined();
+    });
+
+    it('restores the site cookie a response cookie displaced', async () => {
+      seed({ name: 'sid', value: 'the-real-session' });
+
+      await applyResponseCookies('example.com', [{ name: 'sid', value: 'fabricated' }]);
+      expect(at('sid')?.value).toBe('fabricated');
+
+      await unapplyResponseCookies('example.com');
+      expect(at('sid')?.value).toBe('the-real-session');
     });
   });
 

@@ -198,6 +198,37 @@ describe('CookieDetailComponent', () => {
     expect(saved).toEqual([]);
   });
 
+  describe('what Chrome cannot store', () => {
+    // Both cases would otherwise save fine and then fail in the jar: the mock
+    // reads as enabled while `chrome.cookies.set` refused it (SameSite=None
+    // without Secure) or deleted the cookie it claimed to set (a past expiry).
+    it('refuses SameSite=None without Secure', () => {
+      const saved: Partial<IOhMyCookie>[] = [];
+      component.save.subscribe(c => saved.push(c));
+      component.form.controls.name.setValue('session');
+
+      component.onSameSite('no_restriction');
+      component.onSubmit();
+      expect(saved).toEqual([]);
+
+      component.setFlag('secure', true);
+      component.onSubmit();
+      expect(saved.length).toBe(1);
+    });
+
+    it('refuses an expiry that has already passed', () => {
+      component.form.controls.name.setValue('session');
+
+      component.form.controls.expires.setValue('2020-01-01T00:00');
+      expect(component.form.controls.expires.hasError('pastExpiry')).toBe(true);
+      expect(component.form.invalid).toBe(true);
+
+      const future = CookieDetailComponent.toDateInput(Date.now() / 1000 + 3600);
+      component.form.controls.expires.setValue(future);
+      expect(component.form.valid).toBe(true);
+    });
+  });
+
   it('deletes an existing mock but only closes a draft', () => {
     const removed: string[] = [];
     const cancelled: string[] = [];

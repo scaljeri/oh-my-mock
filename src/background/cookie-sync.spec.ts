@@ -1,7 +1,7 @@
 import { objectTypes } from '../shared/constants';
 import { IOhMyCookie, IOhMyMock, IState } from '../shared/type';
 import { IOhMyStorageChange, StorageUtils } from '../shared/utils/storage';
-import { forgetDisplaced } from './cookie-jar';
+import { applyResponseCookies, forgetDisplaced } from './cookie-jar';
 import {
   activeDomains, domainOfCookie, forgetState, forgetSynced, handleStorageUpdate, isCookieMockingActive,
   loadCookies, primeCookieSync, signatureOf, syncCookieRecord, syncedCookies, syncState
@@ -44,9 +44,19 @@ describe('cookie-sync', () => {
 
     // `src/test.ts` defines `chrome` non-configurably, so only the slice under
     // test is replaced rather than the whole namespace.
+    // Deliberately simpler than the jar spec's harness — one cookie per name.
+    // What has to be faithful even here is Chrome's delete-by-overwrite: the
+    // jar removes its own cookies by setting them with a past expiry (the
+    // `remove` API deletes too broadly — see `unapplyCookie`), so a `set` that
+    // stored expired cookies would make every unapply look like a no-op.
     (globalThis as unknown as { chrome: Record<string, unknown> }).chrome.cookies = {
       get: jest.fn(async ({ name }: { name: string }) => jar[name] ?? null),
       set: jest.fn(async (details: chrome.cookies.SetDetails) => {
+        if (details.expirationDate !== undefined && details.expirationDate * 1000 <= Date.now()) {
+          delete jar[details.name as string];
+          return null;
+        }
+
         jar[details.name as string] = details as unknown as chrome.cookies.Cookie;
         return jar[details.name as string];
       }),
@@ -213,6 +223,67 @@ describe('cookie-sync', () => {
 
       expect(jar['session']).toBeUndefined();
       expect(domainOfCookie('c1')).toBeUndefined();
+    });
+  });
+
+  describe('one sync per domain at a time', () => {
+    /**
+     * `handleStorageUpdate` fires syncs without awaiting them, so a rapid
+     * toggle used to run two for one domain at once. The later one asked
+     * `isApplied` while the earlier was still inside `chrome.cookies.set`,
+     * heard "no", skipped the unapply — and the mock stayed in the jar with
+     * mocking switched off, nothing left that would ever take it out.
+     */
+    it('finishes the sync in flight before the next one starts', async () => {
+      // A `set` that resolves only when released — the awaits inside
+      // `applyCookie` are the window a concurrent sync used to slip into.
+      const release: Array<() => void> = [];
+      (chrome.cookies.set as jest.Mock).mockImplementation(
+        async (details: chrome.cookies.SetDetails) => {
+          await new Promise<void>(resolve => release.push(resolve));
+
+          if (details.expirationDate !== undefined && details.expirationDate * 1000 <= Date.now()) {
+            delete jar[details.name as string];
+            return null;
+          }
+
+          jar[details.name as string] = details as unknown as chrome.cookies.Cookie;
+          return jar[details.name as string];
+        });
+
+      // The rapid toggle, fired the way `handleStorageUpdate` fires it: the
+      // off arrives while the on is still applying.
+      const on = syncState(state());
+      const off = syncState(state({ aux: { appActive: false } }));
+
+      let settled = false;
+      void Promise.all([on, off]).then(() => { settled = true; });
+
+      for (let i = 0; i < 50 && !settled; i++) {
+        await new Promise(resolve => setTimeout(resolve));
+        release.splice(0).forEach(r => r());
+      }
+
+      expect(settled).toBe(true);
+      expect(jar['session']).toBeUndefined();
+    });
+  });
+
+  describe('response cookies across a preset switch', () => {
+    // A preset is a whole scenario, and the session a response fabricated
+    // under the old one does not belong to the new one. Nothing else would
+    // ever take these cookies out: they sit outside the per-preset switches,
+    // and their response may not even be selected any more.
+    it('takes the fabricated session out when the preset changes', async () => {
+      records['example.com'] = state();
+
+      await syncState(state());
+      await applyResponseCookies('example.com', [{ name: 'sid', value: 'fabricated' }]);
+      expect(jar['sid']).toBeDefined();
+
+      await syncState(state({ context: { domain: 'example.com', preset: 'other' } }));
+
+      expect(jar['sid']).toBeUndefined();
     });
   });
 

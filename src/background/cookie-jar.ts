@@ -1,8 +1,9 @@
 /// <reference types="chrome"/>
 
 import { objectTypes } from '../shared/constants';
-import { IOhMyCookie, IOhMyResponseCookie, ohMyCookieId, ohMyDomain } from '../shared/type';
+import { IOhMyCookie, IOhMyResponseCookie, IState, ohMyCookieId, ohMyDomain } from '../shared/type';
 import { CookieUtils } from '../shared/utils/cookie';
+import { StorageUtils } from '../shared/utils/storage';
 import { error } from './utils';
 
 /**
@@ -17,6 +18,31 @@ import { error } from './utils';
  * the site they were testing, which is a worse outcome than not mocking at all.
  * So whatever was there before is recorded and put back.
  */
+
+/**
+ * One piece of cookie work per domain at a time.
+ *
+ * A sync is a read-modify-write over the jar and the `displaced` map, with
+ * awaits in the middle. Nothing used to keep two of them apart:
+ * `handleStorageUpdate` fires without being awaited, so two quick toggles ran
+ * two syncs for one domain at once, interleaving across those awaits — the
+ * second sync asked `isApplied` before the first had recorded anything, decided
+ * there was nothing to undo, and the record of what was displaced was lost.
+ * Every entry point that mutates a domain's cookies goes through here; the
+ * helpers they call (`applyCookie`, `syncCookies`, `unapplyResponseCookies`…)
+ * deliberately do not, so a task never waits on itself.
+ */
+const domainQueues = new Map<ohMyDomain, Promise<unknown>>();
+
+export function serialiseCookieWork<T>(domain: ohMyDomain, task: () => Promise<T>): Promise<T> {
+  const run = (domainQueues.get(domain) ?? Promise.resolve()).then(task, task);
+
+  // The chain has to survive a failing task; the failure itself still belongs
+  // to that task's caller, which gets it through `run`.
+  domainQueues.set(domain, run.catch(() => undefined));
+
+  return run;
+}
 
 /** What was in the jar before a mock overwrote it, or `null` if nothing was. */
 type Displaced = chrome.cookies.Cookie | null;
@@ -176,6 +202,10 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
   const forDomain = displaced.get(domain) ?? new Map<ohMyCookieId, Displaced>();
   displaced.set(domain, forDomain);
 
+  // `undefined` means "already recorded, record nothing new" — distinct from
+  // `null`, which is a recorded "nothing was there".
+  let toRecord: Displaced | undefined;
+
   if (!forDomain.has(cookie.id)) {
     const existing = await chrome.cookies.get({
       url: cookieUrl(domain, cookie.path, cookie.secure),
@@ -188,8 +218,17 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
     // not be recorded as such, or unapplying takes the restore branch, rewrites
     // an untouched cookie and never removes the one the mock actually wrote.
     // The mock would then survive every way of switching it off.
+    //
+    // The same goes for **parent domains**. `get({url})` also answers with a
+    // cookie the site set with `Domain=.example.com`, while the `set` below —
+    // a url and no `domain` — writes a host-only cookie: a different cookie,
+    // sitting beside it. Chrome reports a domain cookie with the leading dot,
+    // which is what tells the two apart. Recording the domain cookie as
+    // displaced made unapplying write its old value back as a host-only copy —
+    // a stale twin that shadows the site's real cookie after it rotates.
     const displacedByThis = !!existing &&
-      CookieUtils.path(existing.path) === CookieUtils.path(cookie.path);
+      CookieUtils.path(existing.path) === CookieUtils.path(cookie.path) &&
+      !existing.domain?.startsWith('.');
 
     // No value comparison. There used to be one — `existing.value !==
     // cookie.value` — to catch "this is the mock itself, applied before the
@@ -203,11 +242,31 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
     // enabling a recorded mock unchanged — freezing your session, the obvious
     // thing to do with one — made the values equal, recorded "nothing was
     // displaced", and switching it off then deleted the site's real cookie.
-    forDomain.set(cookie.id, displacedByThis ? existing : null);
+    toRecord = displacedByThis ? existing : null;
   }
 
-  ownWrites.add(ownWriteKey(domain, cookie.name, cookie.path));
-  await chrome.cookies.set(detailsFor(domain, cookie));
+  // Before the `set`, because `chrome.cookies.onChanged` can fire before the
+  // promise resolves; taken back if the write never happened, so the recorder
+  // is not blind to the next change that really is the server's.
+  const writeKey = ownWriteKey(domain, cookie.name, cookie.path);
+  ownWrites.add(writeKey);
+
+  try {
+    await chrome.cookies.set(detailsFor(domain, cookie));
+  } catch (err) {
+    ownWrites.delete(writeKey);
+    throw err;
+  }
+
+  // Success is recorded only now. It used to be recorded first, and
+  // `chrome.cookies.set` can refuse — `SameSite=None` without `Secure`, for
+  // one. The mock then read as applied while nothing was in the jar, and a
+  // later switch-off "unapplied" a cookie the mock never wrote: with nothing
+  // displaced that is a removal, of whatever the site had put there since.
+  if (toRecord !== undefined) {
+    forDomain.set(cookie.id, toRecord);
+  }
+
   await remember();
 }
 
@@ -225,8 +284,9 @@ export async function unapplyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Pr
   const previous = forDomain?.get(cookie.id);
   const url = cookieUrl(domain, cookie.path, cookie.secure);
 
-  // Only a cookie on the *same* path is ever recorded as displaced (see
-  // `applyCookie`), so writing it back here lands on the mock and replaces it.
+  // Only a host-only cookie on the *same* path is ever recorded as displaced
+  // (see `applyCookie`), so writing it back here lands on the mock and
+  // replaces it.
   if (previous) {
     ownWrites.add(ownWriteKey(domain, previous.name, previous.path));
     await chrome.cookies.set({
@@ -251,7 +311,27 @@ export async function unapplyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Pr
     return;
   }
 
-  await chrome.cookies.remove({ url, name: cookie.name });
+  // Not `chrome.cookies.remove({url, name})`, which is *not* the inverse of the
+  // `set` in `applyCookie`: Chromium routes it through a deletion filter that
+  // matches every cookie of that name the browser would send for the url —
+  // `CookiesRemoveFunction` builds a `CookieDeletionFilter{url, name}`, and
+  // `CookieDeletionInfo::Matches` answers with `IncludeForRequestURL` under
+  // all-inclusive options. The site's `.example.com` twin and its parent-path
+  // cookies of the same name would all go with the mock — the logout this
+  // module exists to prevent, done by the cleanup itself. Overwriting the same
+  // host-only cookie with an expiry in the past is the browser's own precise
+  // delete: it touches exactly one cookie, the one the jar wrote. The change
+  // arrives at the recorder as `removed: true`, which it ignores, so no
+  // own-write entry is needed.
+  await chrome.cookies.set({
+    url,
+    name: cookie.name,
+    value: '',
+    path: CookieUtils.path(cookie.path),
+    httpOnly: cookie.httpOnly ?? false,
+    secure: cookie.secure ?? false,
+    expirationDate: 1
+  });
   forDomain?.delete(cookie.id);
   await remember();
 }
@@ -271,10 +351,31 @@ export async function syncCookies(
   domainIsActive: boolean
 ): Promise<void> {
   for (const cookie of cookies) {
-    if (domainIsActive && cookie.enabled[preset]) {
-      await applyCookie(domain, cookie);
-    } else if (isApplied(domain, cookie.id)) {
-      await unapplyCookie(domain, cookie);
+    // A mock whose expiry has already passed cannot be applied — `set` with a
+    // past `expirationDate` is a *delete*, so "applying" it would remove the
+    // site's real cookie while the mock reads as switched on. It is treated
+    // like a disabled mock instead, loudly.
+    const expired = cookie.expirationDate !== undefined &&
+      cookie.expirationDate <= Date.now() / 1000;
+
+    const wanted = domainIsActive && cookie.enabled[preset];
+
+    try {
+      if (wanted && !expired) {
+        await applyCookie(domain, cookie);
+      } else {
+        if (wanted) {
+          error(`Cookie mock ${cookie.name} for ${domain} has expired, so it is not applied`);
+        }
+
+        if (isApplied(domain, cookie.id)) {
+          await unapplyCookie(domain, cookie);
+        }
+      }
+    } catch (err) {
+      // One mock the browser refuses — an unstorable flag combination, say —
+      // must not keep the rest of the domain's cookies from syncing.
+      error(`Could not sync cookie mock ${cookie.name} for ${domain}`, err);
     }
   }
 }
@@ -335,19 +436,42 @@ export async function applyResponseCookies(
   domain: ohMyDomain,
   cookies: IOhMyResponseCookie[]
 ): Promise<void> {
-  await primed();
+  return serialiseCookieWork(domain, async () => {
+    // The switch is consulted here, at the moment of writing, because nothing
+    // upstream does: switching mocking off runs `unapplyResponseCookies` once,
+    // and a response already in flight lands *after* it. Its cookies would
+    // re-fabricate the session with mocking off — and nothing ever takes them
+    // back out, since the state does not change again and no sync re-runs.
+    // Read from storage rather than from the sync's cache: a fresh worker
+    // woken by this very message has an empty cache, and answering "inactive"
+    // from it would silently drop the cookies of every first response.
+    const state = await StorageUtils.get<IState>(domain);
 
-  const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
-  fromResponses.set(domain, applied);
+    if (!CookieUtils.isMockingActive(state)) {
+      return;
+    }
 
-  for (const cookie of cookies) {
-    const asMock = asCookieMock(cookie);
+    await primed();
 
-    applied.set(asMock.id, asMock);
-    await applyCookie(domain, asMock);
-  }
+    const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
+    fromResponses.set(domain, applied);
 
-  await remember();
+    for (const cookie of cookies) {
+      const asMock = asCookieMock(cookie);
+
+      try {
+        await applyCookie(domain, asMock);
+        // Remembered only once it is in the jar — an entry for a write the
+        // browser refused would make the eventual unapply remove a cookie this
+        // extension never wrote.
+        applied.set(asMock.id, asMock);
+      } catch (err) {
+        error(`Could not set response cookie ${cookie.name} for ${domain}`, err);
+      }
+    }
+
+    await remember();
+  });
 }
 
 /**
@@ -388,6 +512,7 @@ export function forgetDisplaced(domain?: ohMyDomain): void {
   // yet in the new worker. Clearing this is what makes this seam stand in for
   // one rather than merely emptying the maps.
   priming = undefined;
+  domainQueues.clear();
 
   if (domain) {
     displaced.delete(domain);
