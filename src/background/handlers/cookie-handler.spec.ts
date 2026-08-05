@@ -3,7 +3,9 @@ import { IOhMyPacketContext, IPacket, IPacketPayload } from '../../shared/packet
 import { IOhMyCookie, IState } from '../../shared/type';
 import { IOhMyCookieUpdate } from '../../shared/utils/cookie';
 import { OhMyQueue } from '../../shared/utils/queue';
+import { StorageUtils } from '../../shared/utils/storage';
 import { applyCookie, forgetDisplaced } from '../cookie-jar';
+import { forgetSynced, syncState } from '../cookie-sync';
 import { OhMyCookieHandler } from './cookie-handler';
 
 function cookie(over: Partial<IOhMyCookie> = {}): IOhMyCookie {
@@ -43,9 +45,17 @@ describe('OhMyCookieHandler', () => {
     records = { 'example.com': state({ cookies: ['c1'] }), c1: cookie() };
     forgetDisplaced();
 
+    // One cookie per name is enough here; what has to be faithful is Chrome's
+    // delete-by-overwrite, because the jar removes its own cookies by setting
+    // them with a past expiry — see `unapplyCookie`.
     (globalThis as unknown as { chrome: Record<string, unknown> }).chrome.cookies = {
       get: jest.fn(async ({ name }: { name: string }) => jar[name] ?? null),
       set: jest.fn(async (details: chrome.cookies.SetDetails) => {
+        if (details.expirationDate !== undefined && details.expirationDate * 1000 <= Date.now()) {
+          delete jar[details.name as string];
+          return null;
+        }
+
         jar[details.name as string] = details as unknown as chrome.cookies.Cookie;
         return jar[details.name as string];
       }),
@@ -155,6 +165,51 @@ describe('OhMyCookieHandler', () => {
       OhMyCookieHandler.StorageUtils.set = jest.fn().mockRejectedValue(new Error('nope'));
 
       expect(await OhMyCookieHandler.update(payload({ cookie: { name: 'new' } }))).toBeUndefined();
+    });
+
+    /**
+     * The delete arrives through the message queue while syncs run off storage
+     * events, so the two race. Asking `isApplied` while a sync was still
+     * inside `chrome.cookies.set` for this very mock answered "no", the
+     * unapply was skipped — and the applied cookie outlived its deleted
+     * record, with nothing left that could ever take it out of the jar.
+     */
+    it('waits for the sync in flight, so a deleted mock does not stay applied', async () => {
+      forgetSynced();
+      jest.spyOn(StorageUtils, 'get').mockImplementation(
+        ((key: string) => Promise.resolve(records[key])) as typeof StorageUtils.get);
+
+      // A `set` that resolves only when released, holding the sync open across
+      // the window the delete used to slip into.
+      const release: Array<() => void> = [];
+      (chrome.cookies.set as jest.Mock).mockImplementation(
+        async (details: chrome.cookies.SetDetails) => {
+          await new Promise<void>(resolve => release.push(resolve));
+
+          if (details.expirationDate !== undefined && details.expirationDate * 1000 <= Date.now()) {
+            delete jar[details.name as string];
+            return null;
+          }
+
+          jar[details.name as string] = details as unknown as chrome.cookies.Cookie;
+          return jar[details.name as string];
+        });
+
+      const sync = syncState(state({ aux: { appActive: true }, cookies: ['c1'] }));
+      const removal = OhMyCookieHandler.update(payload({ cookie: { id: 'c1' }, remove: true }));
+
+      let settled = false;
+      void Promise.all([sync, removal]).then(() => { settled = true; });
+
+      for (let i = 0; i < 50 && !settled; i++) {
+        await new Promise(resolve => setTimeout(resolve));
+        release.splice(0).forEach(r => r());
+      }
+
+      expect(settled).toBe(true);
+      expect(jar['session']).toBeUndefined();
+
+      jest.restoreAllMocks();
     });
   });
 });

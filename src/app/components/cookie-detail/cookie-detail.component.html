@@ -52,6 +52,17 @@ sharing one inset, of which only the preview scrolls.
           x-test="cookie-expires-input"
           formControlName="expires"
         />
+        <!--
+        Not just unhelpful but destructive: a past expiry turns the `set` into
+        a delete, so the mock would read as enabled while applying it removed
+        the cookie.
+        -->
+        @if (form.controls.expires.hasError('pastExpiry')) {
+          <span class="oh-cookie__error" x-test="cookie-expires-error">
+            Already in the past — the browser would delete the cookie instead of
+            setting it. Clear the field for a session cookie.
+          </span>
+        }
       </label>
     </div>
 
@@ -69,6 +80,16 @@ sharing one inset, of which only the preview scrolls.
           </button>
         }
       </div>
+      <!--
+      Chrome refuses to store SameSite=None without Secure. Saving it anyway
+      would show a mock that is on while nothing reached the jar.
+      -->
+      @if (form.hasError('insecureNone')) {
+        <span class="oh-cookie__error" x-test="cookie-samesite-error">
+          None only works together with Secure — the browser refuses to store
+          the cookie otherwise.
+        </span>
+      }
     </div>
   </div>
 

@@ -5,7 +5,7 @@ import { CookieUtils, IOhMyCookieUpdate } from '../../shared/utils/cookie';
 import { OhMyQueue } from '../../shared/utils/queue';
 import { StorageUtils } from '../../shared/utils/storage';
 import { timestamp } from '../../shared/utils/timestamp';
-import { isApplied, unapplyCookie } from '../cookie-jar';
+import { isApplied, serialiseCookieWork, unapplyCookie } from '../cookie-jar';
 import { error } from '../utils';
 
 /**
@@ -82,8 +82,17 @@ export class OhMyCookieHandler {
     // mock, so afterwards there would be nothing left to restore from. Only
     // what was actually applied, though — deleting a mock that was never on
     // must not take the site's real cookie of the same name with it.
-    if (stored && isApplied(state.domain, id)) {
-      await unapplyCookie(state.domain, stored);
+    //
+    // Behind the domain's queue, because this runs from the message queue while
+    // syncs run from storage events: asking `isApplied` while a sync is halfway
+    // through applying this very mock answers "no", and the applied cookie then
+    // outlives its deleted record with nothing left that can take it out.
+    if (stored) {
+      await serialiseCookieWork(state.domain, async () => {
+        if (isApplied(state.domain, id)) {
+          await unapplyCookie(state.domain, stored);
+        }
+      });
     }
 
     await OhMyCookieHandler.StorageUtils.remove(id);

@@ -124,6 +124,16 @@
     font-size: t.$oh-size-sm;
     color: t.$oh-text-fainter;
   }
+
+  // Why a field cannot be saved as it stands. Shown immediately rather than on
+  // touch: the invalid combination can arrive from a stored mock (an expiry
+  // that has since passed), not only from typing.
+  &__error {
+    margin-top: 4px;
+    font-size: t.$oh-size-sm;
+    line-height: 1.5;
+    color: t.$oh-danger;
+  }
 }
 
 // The segmented control is shared — see `mixins/_choices.scss`.
