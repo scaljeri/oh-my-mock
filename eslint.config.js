@@ -19,6 +19,13 @@ module.exports = tseslint.config(
   {
     ignores: [
       'dist/**',
+      // Git worktrees, which a parallel agent or a `git worktree add` puts
+      // here. Each is a whole second checkout, so linting them means linting
+      // the repo again — once per worktree, against whatever state it is in.
+      // `npx eslint .` is what CI runs, so without this the gate turns red for
+      // reasons that have nothing to do with the branch under test: it counted
+      // 26,742 problems, none of them in this checkout's source.
+      '.claude/**',
       // Vite's dependency cache, written by `ng serve`. Prebundled
       // third-party code, not source.
       '.angular/**',
