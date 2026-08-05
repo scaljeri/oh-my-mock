@@ -164,10 +164,11 @@ makes without a message reaching the background. `cookie-sync.ts` keeps a
 per-domain signature of `(active, preset, cookie ids)` so the many state writes
 that have nothing to do with cookies cost nothing.
 
-Cookies follow `aux.appActive` alone, not the popup. Response mocking also
-requires the popup to be open because the popup hosts the sandbox that evaluates
-mock code; a cookie needs nothing from it, and dropping a mocked session every
-time the window closes would be a surprise.
+Cookies follow `aux.appActive` alone, not the popup. Response mocking used to
+require the popup as well, back when the popup hosted the sandbox that evaluates
+mock code — that sandbox lives in the background's offscreen document now, so
+neither feature needs the popup. A cookie never did: dropping a mocked session
+every time the window closes would be a surprise.
 
 ## The permission
 

@@ -186,9 +186,13 @@ Take the ideas as separate, tested changes.
 
 **Left, with reasons:**
 
-5. **Domain rename + request normalisation — the big one.** Today every request
-   is embedded in its domain record, so saving one mock rewrites the whole
-   domain in `chrome.storage`. Needs a storage migration written from scratch.
+5. **Request normalisation ✅, domain rename not.** Requests are records of
+   their own now — see
+   [architecture/request-normalisation.md](./architecture/request-normalisation.md)
+   for how the lift-out migration was actually done (keyed on the record's
+   shape, not on a version). The rename half — `IState` → `IOhMyDomain` and the
+   `IOhMy*` prefixes — was not taken: it is churn without behaviour, and it
+   belongs with a broader naming pass if one ever happens.
 
 The redesign itself has since landed the request list, the filter toolbar and
 the detail-beside-the-list routing — see `docs/architecture/README.md` for how
@@ -208,5 +212,7 @@ another domain's state through the same component, and pinning a row there
 stays in memory — the same `persistFilter` condition the filter uses.
 
 Note on 5: the branch's `src/app/migrations/current-domain.ts` is only twelve
-lines and addresses an older model change, so it is not the head start it might
-look like. A storage migration for the normalisation still has to be written.
+lines and addresses an older model change, so it was no head start. The
+migration that was actually needed — lifting embedded requests out into records
+of their own — lives in `src/background/lift-out-requests.ts` and had to be
+written from scratch, for the reasons request-normalisation.md records.

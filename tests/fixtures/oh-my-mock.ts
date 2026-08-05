@@ -58,8 +58,9 @@ export interface SeedMockOptions {
   cookies?: { name: string; value: string; path?: string }[];
   /**
    * Custom mock code. Leave unset to keep the default: with the default,
-   * `src/content/handle-api-request.ts` serves the mock without dispatching to
-   * the popup, so the popup does not need to be open.
+   * `src/content/handle-api-request.ts` serves the mock by itself. Edited code
+   * has to be *run*, so the request detours through the background's sandbox
+   * (`payloadType.EVAL`). Neither path involves the popup.
    */
   jsCode?: string;
   label?: string;
@@ -352,9 +353,11 @@ export class OhMyMockDriver {
   /**
    * Turns mocking on or off for a domain.
    *
-   * `OhMyContentState.isActive()` requires the domain's `aux.appActive` *and*
-   * the store's `popupActive` — "enabled for this domain" and "popup open".
-   * Setting both here is what lets tests run without the popup.
+   * `OhMyContentState.isActive()` reads the domain's `aux.appActive` and
+   * nothing else. `popupActive` is still written here because this fakes the
+   * state a real popup leaves behind — and `setPopupActive(false)` exists to
+   * take exactly that trace away again, so a spec can prove the flag no longer
+   * gates anything.
    */
   async setActive(domain: string, active = true): Promise<void> {
     await (await this.worker()).evaluate(
@@ -381,7 +384,7 @@ export class OhMyMockDriver {
         };
         store.version = version;
         // `popupActive` is browser-global and lives on the store; `appActive`
-        // is per domain. `isActive()` requires both.
+        // is per domain. Only the second gates mocking — see `isActive()`.
         store.popupActive = active;
         if (!store.domains.includes(domain)) {
           store.domains = [domain, ...store.domains];
@@ -434,9 +437,10 @@ export class OhMyMockDriver {
   /**
    * Whether the extension still considers the domain switched on.
    *
-   * Read separately from `getState` because the content script *writes* this
-   * flag: it clears `aux.appActive` when the popup cannot be reached, which is
-   * the only externally visible trace of that failure.
+   * Read separately from `getState` because the interesting assertion is that
+   * it *stayed* on: the content script used to clear `aux.appActive` when the
+   * popup-hosted sandbox could not be reached, and `jscode.spec.ts` pins that
+   * no serving path switches a domain off behind the user's back any more.
    */
   async isAppActive(domain: string): Promise<boolean | undefined> {
     return (await this.worker()).evaluate(async (domain) => {

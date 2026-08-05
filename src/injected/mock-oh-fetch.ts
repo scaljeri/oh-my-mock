@@ -74,8 +74,11 @@ async function ohMyFetch(request: string | Request, init?: unknown): Promise<unk
     body = fd;
   }
 
-  // `requestMethod` does not cover PATCH/HEAD/OPTIONS, so this is a claim the
-  // shared type cannot back up yet — see the note in the report.
+  // `toUpperCase()` widens to `string`, so the cast is needed — and it trusts
+  // the page, which may pass any method it likes. That is fine: a method
+  // outside `METHODS` never matches a stored mock, and an unmatched request
+  // passes through to the real server, which is the only sensible outcome for
+  // a request no mock could have been created for.
   const method = (config.method || 'get').toUpperCase() as requestMethod;
 
   const result = await dispatchApiRequest({

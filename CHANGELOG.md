@@ -6,12 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Cookie mocking: mock, record and restore cookies through the browser's own
+  jar (`chrome.cookies`), with a Cookies tab in the popup. Adds the `cookies`
+  permission
+- Mock groups: a domain's mocks belong to named sets that can be switched on
+  and off per domain from the drawer, and the serving path resolves them on
+  every intercepted call
+- A response can set cookies when it is served — a `Set-Cookie` header on a
+  mocked response would be inert, since the browser never sees it as a network
+  response
 - End-to-end test suite (Playwright) driving the real extension in Chromium,
   with a rewritten test site and API to run it against
 - Bundled fonts and design tokens for the popup redesign
 
 ### Changed
 
+- Custom mock code is evaluated in a sandboxed iframe owned by the background
+  (an offscreen document, hence the `offscreen` permission) instead of an
+  iframe on the popup page. Mocking — custom code included — no longer requires
+  the popup to be open; closing it changes nothing
+- The SDK server is a source rather than a fallback: while `server` is the
+  selected target the extension's own mocks are not consulted, and a request
+  the SDK has no answer for goes to the real API
+- Requests are stored as records of their own instead of embedded in the
+  domain record, so serving or editing one mock no longer rewrites the whole
+  domain (existing profiles are lifted over automatically)
+- Hit timestamps are batched — one storage write per quarter second instead of
+  one per intercepted request
 - Upgraded Angular 14 to 22 and TypeScript 4.6 to 6.0. Replaced three
   unmaintained dependencies: `@ngneat/hot-toast`, `@materia-ui/ngx-monaco-editor`
   and `faker`
