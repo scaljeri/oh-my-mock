@@ -1,5 +1,5 @@
 import { compareVersions } from 'compare-versions'
-import { IOhMyMigrationStep, recordVersion } from './types';
+import { IOhMyMigrationStep, recordVersion, OLDEST_MIGRATABLE } from './types';
 
 const VERSION = '__OH_MY_VERSION__';
 
@@ -11,7 +11,7 @@ export const storeSteps: IOhMyMigrationStep[] = [
     // were all editing a number that could not matter. The version the record
     // actually carries is what decides now.
     (data) => {
-        if (compareVersions(recordVersion(data), '3.3.1') === -1) { // Everything before 3.0.3 is discarded
+        if (compareVersions(recordVersion(data), OLDEST_MIGRATABLE) === -1) {
             return null;
         }
 

@@ -47,9 +47,14 @@ describe('Utils/Migrate', () => {
       }));
     });
 
-    it('return null if input is newer', () => {
+    it('keeps input that is newer, rather than discarding it', () => {
+      // This used to answer `null`, and `initStorage` reacts to a store it
+      // cannot migrate by wiping all of storage — so a rollback or a synced
+      // profile from a machine that was ahead destroyed everything. Migrations
+      // only go forward; that is a reason to leave the record alone, not to
+      // throw it away.
       const out = MigrateUtils.migrate({ a: 'b', version: '2.0.1', type: objectTypes.REQUEST } as any);
-      expect(out).toBeNull();
+      expect(out).toEqual(expect.objectContaining({ a: 'b' }));
     });
 
     it('should migrate the store', () => {
@@ -179,6 +184,32 @@ describe('Utils/Migrate', () => {
       );
     });
 
+  });
+
+  /**
+   * Rolling the extension back one version, or a profile syncing from a machine
+   * that is ahead, used to destroy everything: `migrate` answered `null` for a
+   * record from a newer build, and `initStorage` reacts to a store it cannot
+   * migrate by wiping all of storage.
+   *
+   * Migrations only go forward, so there is nothing to *do* to such a record —
+   * but "I cannot upgrade this" is not "this is rubbish".
+   */
+  it('keeps a record written by a newer version instead of discarding it', () => {
+    const before = MigrateUtils.version;
+    MigrateUtils.version = '3.3.15';
+
+    try {
+      const out = MigrateUtils.migrate({
+        version: '3.4.0',
+        type: objectTypes.STORE,
+        domains: ['example.com']
+      } as never);
+
+      expect(out).toEqual(expect.objectContaining({ domains: ['example.com'] }));
+    } finally {
+      MigrateUtils.version = before;
+    }
   });
 });
 })

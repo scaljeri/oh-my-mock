@@ -60,9 +60,20 @@ export class MigrateUtils {
       return data;
     }
 
-    // `version` > `MigrateUtils.version`
-    if (compareVersions(version, MigrateUtils.version) === 1) { // Can only happen with JSON imports
-      return null;
+    // Written by a **newer** build than this one.
+    //
+    // This used to answer `null`, and `initStorage` reacts to a store it cannot
+    // migrate by calling `StorageUtils.reset()` — wiping every domain, request,
+    // mock and cookie the user has. So rolling the extension back one version,
+    // or a profile syncing from a machine that is ahead, destroyed everything.
+    // The comment said "can only happen with JSON imports", which was the one
+    // case it *cannot* be limited to.
+    //
+    // There is nothing to do to such a record — migrations only go forward —
+    // but "I cannot upgrade this" is not "this is rubbish". It is left exactly
+    // as it is, and the newer build that wrote it will still understand it.
+    if (compareVersions(version, MigrateUtils.version) === 1) {
+      return data;
     }
 
     // The step arrays are declared over heterogeneous shapes (store, state,

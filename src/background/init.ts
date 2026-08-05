@@ -26,8 +26,21 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
       store = MigrateUtils.migrate(store);
       migrated = true;
 
-      if (!store) { // If the store cannot be migrated
-        await StorageUtils.reset();
+      if (!store) {
+        // The store is older than anything the steps handle. It used to answer
+        // that with `StorageUtils.reset()` — every domain, request, mock and
+        // cookie the user has, deleted because one record could not be read.
+        //
+        // Only the store is rebuilt now. The domain records stay where they
+        // are: `ensureGroups` and the state handler put a domain back in the
+        // list the first time it is visited, so what is lost is the list, not
+        // the mocks. And it is said out loud, which a silent wipe never was.
+        error(
+          `The store is too old to migrate to ${MigrateUtils.version}; rebuilding it. ` +
+          'The domains it listed are still stored and will come back as they are visited.'
+        );
+        store = StoreUtils.init();
+        migrated = true;
       } else {
         // `null` reads the complete storage; `StorageUtils.get` only takes a key.
         const allData = await StorageUtils.chrome.storage.local.get(null);

@@ -39,3 +39,14 @@ export function recordVersion(data: IOhMyStoredRecord): string {
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
+
+/**
+ * Records older than this cannot be migrated and are discarded.
+ *
+ * One constant rather than the same literal in four step files, where the
+ * comment beside each of them still said `3.0.3` — the number it had been two
+ * raises earlier (3.0.0 -> 3.0.3 -> 3.2.0 -> 3.3.1). A reader checking whether
+ * their profile survives an upgrade was told the wrong answer in every one of
+ * them.
+ */
+export const OLDEST_MIGRATABLE = '3.3.1';
