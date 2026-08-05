@@ -31,6 +31,8 @@ describe('cookie-jar', () => {
    *  - `set` and `remove` are exact: they only ever touch the given path.
    */
   let jar: Map<string, chrome.cookies.Cookie>;
+  /** Stands in for `chrome.storage.session`, which outlives the worker. */
+  let session: Record<string, unknown>;
 
   const key = (name: string, path: string) => `${name}|${path}`;
   const pathOf = (url: string) => new URL(url).pathname || '/';
@@ -46,7 +48,20 @@ describe('cookie-jar', () => {
 
   beforeEach(() => {
     jar = new Map();
+    session = {};
     forgetDisplaced();
+
+    // Session storage really does survive a worker teardown, so the stub has to
+    // as well — `src/test.ts`'s global one answers `{}` and forgets, which
+    // would make every mirror test pass for the wrong reason.
+    (globalThis as unknown as { chrome: { storage: Record<string, unknown> } })
+      .chrome.storage.session = {
+      get: async (keys: string | string[]) =>
+        Object.fromEntries(
+          ([] as string[]).concat(keys).filter(k => k in session).map(k => [k, session[k]])
+        ),
+      set: async (entries: Record<string, unknown>) => Object.assign(session, entries)
+    };
 
     // `src/test.ts` defines `chrome` non-configurably, so only the slice under
     // test is replaced rather than the whole namespace.
@@ -260,6 +275,59 @@ describe('cookie-jar', () => {
       await unapplyCookie('example.com', mock());
 
       expect(consumeOwnWrite('example.com', 'session')).toBe(true);
+    });
+  });
+
+  /**
+   * Restoring only ever worked when switching a mock off fell in the same
+   * service-worker life as switching it on.
+   *
+   * `displaced` — what each mock overwrote — was memory-only, and MV3 tears the
+   * worker down after about thirty seconds of idle. Any other time
+   * `unapplyCookie` found nothing recorded and removed the cookie outright: the
+   * site's real session cookie deleted, the developer logged out of the site
+   * under test. The ordinary path, not the edge.
+   *
+   * `forgetDisplaced()` is a worker teardown here — it clears exactly the maps
+   * a teardown clears, leaving only what reached `chrome.storage.session`.
+   */
+  describe('surviving a service-worker teardown', () => {
+    it('puts back what the mock displaced, from a worker that did not apply it', async () => {
+      seed({ name: 'session', value: 'the-real-one' });
+
+      await applyCookie('example.com', mock());
+      forgetDisplaced();
+      await unapplyCookie('example.com', mock());
+
+      expect(at('session')?.value).toBe('the-real-one');
+    });
+
+    it('still removes a mock that displaced nothing', async () => {
+      await applyCookie('example.com', mock({ name: 'fresh' }));
+      forgetDisplaced();
+      await unapplyCookie('example.com', mock({ name: 'fresh' }));
+
+      expect(at('fresh')).toBeUndefined();
+    });
+
+    /**
+     * The mirror is a whole-map write, and the message that sets a cookie is
+     * usually what *wakes* the worker. Applying before reading back would put
+     * one new entry over everything the previous worker recorded — losing
+     * exactly the records that make restoring possible.
+     */
+    it('does not overwrite the mirror with the little a fresh worker knows', async () => {
+      seed({ name: 'a', value: 'real-a' });
+      seed({ name: 'b', value: 'real-b' });
+
+      await applyCookie('example.com', mock({ id: 'first', name: 'a' }));
+      forgetDisplaced();
+
+      // A fresh worker, applying a different mock before anything reads back.
+      await applyCookie('example.com', mock({ id: 'second', name: 'b' }));
+      await unapplyCookie('example.com', mock({ id: 'first', name: 'a' }));
+
+      expect(at('a')?.value).toBe('real-a');
     });
   });
 });

@@ -22,12 +22,102 @@ import { error } from './utils';
 type Displaced = chrome.cookies.Cookie | null;
 
 /**
- * Remembered per domain, then per cookie mock. Kept in memory only: the
- * service worker may be torn down, and a stale "previous value" from an earlier
- * browser session would be worse than none — `unapply` simply removes what it
- * cannot restore.
+ * What each mock overwrote, per domain and then per mock.
+ *
+ * Mirrored into `chrome.storage.session`, which is the whole reason restoring
+ * works at all. MV3 tears the service worker down after about thirty seconds of
+ * idle, so keeping this in memory meant a restore only happened when switching
+ * a mock *off* fell in the same worker life as switching it on. Any other time
+ * `unapplyCookie` found nothing recorded and removed the cookie outright —
+ * deleting the site's real session cookie and logging the developer out of the
+ * site under test. That is the exact outcome this module exists to prevent, and
+ * it was the ordinary path rather than the edge.
+ *
+ * The comment that justified memory-only reasoned that "a stale previous value
+ * from an earlier browser session would be worse than none". True, and session
+ * storage has precisely that lifetime: it is cleared when the browser closes.
+ * The worry was right; the conclusion did not follow.
  */
 const displaced = new Map<ohMyDomain, Map<ohMyCookieId, Displaced>>();
+
+/** Where `displaced` and `fromResponses` are mirrored. */
+const DISPLACED_KEY = 'OhMyDisplacedCookies';
+const RESPONSES_KEY = 'OhMyResponseCookies';
+
+/**
+ * Reads both mirrors back, once per worker life.
+ *
+ * Every mutator awaits this before touching either map, and that ordering is
+ * the point. Writing back is a whole-map serialise, so a worker that was woken
+ * *by* a cookie-setting request would otherwise apply first and write its
+ * single new entry over everything the previous worker had recorded — losing
+ * exactly the records that make restoring possible. Priming on a timer at
+ * startup does not fix that, because the message is what wakes the worker: it
+ * arrives first.
+ */
+let priming: Promise<void> | undefined;
+
+function primed(): Promise<void> {
+  priming ??= (async () => {
+    try {
+      const stored = await chrome.storage.session.get([DISPLACED_KEY, RESPONSES_KEY]);
+
+      for (const [domain, entries] of Object.entries(
+        (stored?.[DISPLACED_KEY] ?? {}) as Record<ohMyDomain, Record<ohMyCookieId, Displaced>>
+      )) {
+        const forDomain = displaced.get(domain) ?? new Map<ohMyCookieId, Displaced>();
+        displaced.set(domain, forDomain);
+
+        for (const [id, previous] of Object.entries(entries)) {
+          if (!forDomain.has(id)) {
+            forDomain.set(id, previous);
+          }
+        }
+      }
+
+      for (const [domain, cookies] of Object.entries(
+        (stored?.[RESPONSES_KEY] ?? {}) as Record<ohMyDomain, IOhMyCookie[]>
+      )) {
+        const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
+        fromResponses.set(domain, applied);
+
+        for (const cookie of cookies) {
+          if (!applied.has(cookie.id)) {
+            applied.set(cookie.id, cookie);
+          }
+        }
+      }
+    } catch (err) {
+      error('Could not read back what the cookie mocks displaced', err);
+    }
+  })();
+
+  return priming;
+}
+
+/** Mirrors both maps. Failure is logged, not thrown — the jar is still right. */
+async function remember(): Promise<void> {
+  const asPlainDisplaced: Record<ohMyDomain, Record<ohMyCookieId, Displaced>> = {};
+
+  for (const [domain, entries] of displaced) {
+    asPlainDisplaced[domain] = Object.fromEntries(entries);
+  }
+
+  const asPlainResponses: Record<ohMyDomain, IOhMyCookie[]> = {};
+
+  for (const [domain, applied] of fromResponses) {
+    asPlainResponses[domain] = [...applied.values()];
+  }
+
+  try {
+    await chrome.storage.session.set({
+      [DISPLACED_KEY]: asPlainDisplaced,
+      [RESPONSES_KEY]: asPlainResponses
+    });
+  } catch (err) {
+    error('Could not remember what the cookie mocks displaced', err);
+  }
+}
 
 /**
  * Writes the jar has made itself and that `chrome.cookies.onChanged` has not
@@ -81,6 +171,8 @@ function detailsFor(domain: ohMyDomain, cookie: IOhMyCookie): chrome.cookies.Set
  * mock's own — otherwise the original is lost and can never be restored.
  */
 export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Promise<void> {
+  await primed();
+
   const forDomain = displaced.get(domain) ?? new Map<ohMyCookieId, Displaced>();
   displaced.set(domain, forDomain);
 
@@ -108,6 +200,7 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
 
   ownWrites.add(ownWriteKey(domain, cookie.name, cookie.path));
   await chrome.cookies.set(detailsFor(domain, cookie));
+  await remember();
 }
 
 /**
@@ -118,11 +211,11 @@ export async function applyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Prom
  * why this has to run in the background.
  */
 export async function unapplyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Promise<void> {
+  await primed();
+
   const forDomain = displaced.get(domain);
   const previous = forDomain?.get(cookie.id);
   const url = cookieUrl(domain, cookie.path, cookie.secure);
-
-  forDomain?.delete(cookie.id);
 
   // Only a cookie on the *same* path is ever recorded as displaced (see
   // `applyCookie`), so writing it back here lands on the mock and replaces it.
@@ -139,10 +232,20 @@ export async function unapplyCookie(domain: ohMyDomain, cookie: IOhMyCookie): Pr
       ...(previous.expirationDate !== undefined && { expirationDate: previous.expirationDate })
     });
 
+    // Forgotten only once it is back. This used to happen before the write, so
+    // a `set` that failed left the original unrecoverable *and* the mock still
+    // in the jar — and it can fail: the url is built from the mock's `secure`
+    // flag while the details carry the original's, so restoring a `Secure`
+    // cookie over a non-secure mock is attempted on `http://`.
+    forDomain?.delete(cookie.id);
+    await remember();
+
     return;
   }
 
   await chrome.cookies.remove({ url, name: cookie.name });
+  forDomain?.delete(cookie.id);
+  await remember();
 }
 
 /**
@@ -179,62 +282,13 @@ export async function syncCookies(
 const fromResponses = new Map<ohMyDomain, Map<ohMyCookieId, IOhMyCookie>>();
 
 /**
- * Where the map above is mirrored so it survives the service worker.
+ * Reads back what earlier lives of this worker recorded — both maps.
  *
- * `chrome.storage.session`, not `local`: this is true for as long as the
- * browser is open and meaningless after it closes, which is exactly what
- * session storage is. Keeping it out of `local` also keeps it out of the
- * `onChanged` traffic every content script listens to, and out of the mock
- * store.
- *
- * Without this the map was the one piece of cookie state a teardown did not
- * rebuild — `displaced` and `synced` are re-primed from storage by
- * `primeCookieSync`, but nothing in storage records that a response was
- * *served*. So after the worker went away, `unapplyResponseCookies` found
- * nothing to unapply and a fabricated session outlived the mocking that made
- * it: the exact failure the rest of this module exists to prevent.
- */
-const SESSION_KEY = 'OhMyResponseCookies';
-
-/** Mirrors `fromResponses` into session storage. Failure is logged, not thrown. */
-async function rememberResponseCookies(): Promise<void> {
-  const plain: Record<ohMyDomain, IOhMyCookie[]> = {};
-
-  for (const [domain, applied] of fromResponses) {
-    plain[domain] = [...applied.values()];
-  }
-
-  try {
-    await chrome.storage.session.set({ [SESSION_KEY]: plain });
-  } catch (err) {
-    error('Could not remember which cookies a response set', err);
-  }
-}
-
-/**
- * Reads back what served responses had set before the worker was torn down.
- *
- * Additive: anything applied since this worker started stays. Called from
- * `primeCookieSync`, alongside the re-sync of the standalone mocks.
+ * Called from `primeCookieSync` at startup; `primed()` does the same work
+ * lazily for whichever mutator gets there first.
  */
 export async function primeResponseCookies(): Promise<void> {
-  try {
-    const stored = await chrome.storage.session.get(SESSION_KEY);
-    const plain = (stored?.[SESSION_KEY] ?? {}) as Record<ohMyDomain, IOhMyCookie[]>;
-
-    for (const [domain, cookies] of Object.entries(plain)) {
-      const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
-      fromResponses.set(domain, applied);
-
-      for (const cookie of cookies) {
-        if (!applied.has(cookie.id)) {
-          applied.set(cookie.id, cookie);
-        }
-      }
-    }
-  } catch (err) {
-    error('Could not read back which cookies a response set', err);
-  }
+  await primed();
 }
 
 /**
@@ -273,6 +327,8 @@ export async function applyResponseCookies(
   domain: ohMyDomain,
   cookies: IOhMyResponseCookie[]
 ): Promise<void> {
+  await primed();
+
   const applied = fromResponses.get(domain) ?? new Map<ohMyCookieId, IOhMyCookie>();
   fromResponses.set(domain, applied);
 
@@ -283,7 +339,7 @@ export async function applyResponseCookies(
     await applyCookie(domain, asMock);
   }
 
-  await rememberResponseCookies();
+  await remember();
 }
 
 /**
@@ -294,6 +350,8 @@ export async function applyResponseCookies(
  * failure the whole displace-and-restore dance exists to prevent.
  */
 export async function unapplyResponseCookies(domain: ohMyDomain): Promise<void> {
+  await primed();
+
   const applied = fromResponses.get(domain);
 
   if (!applied) {
@@ -312,12 +370,16 @@ export async function unapplyResponseCookies(domain: ohMyDomain): Promise<void> 
     await unapplyCookie(domain, cookie);
   }
 
-  await rememberResponseCookies();
+  await remember();
 }
 
 /** Test seam: drops the remembered originals for a domain. */
 export function forgetDisplaced(domain?: ohMyDomain): void {
   ownWrites.clear();
+  // A real teardown re-evaluates the module, so the read-back has not happened
+  // yet in the new worker. Clearing this is what makes this seam stand in for
+  // one rather than merely emptying the maps.
+  priming = undefined;
 
   if (domain) {
     displaced.delete(domain);
