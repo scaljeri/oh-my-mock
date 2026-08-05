@@ -43,7 +43,15 @@ export class StoreUtils {
 
   static removeState(store: IOhMyMock, domain: ohMyDomain): IOhMyMock {
     const domains = [...store.domains];
-    domains.splice(domains.indexOf(domain), 1);
+    const index = domains.indexOf(domain);
+
+    // `indexOf` answers -1 for a domain that is not in the list, and
+    // `splice(-1, 1)` removes the *last* entry — so removing a domain twice
+    // (a double-fired delete) used to silently drop an unrelated domain.
+    // Removing what is not there must be a no-op.
+    if (index >= 0) {
+      domains.splice(index, 1);
+    }
 
     return { ...store, domains };
   }

@@ -156,16 +156,22 @@ export class OhMyState {
   }
 
   /**
-   * Removes a preset, and with it every trace of it on the requests.
+   * Removes a preset, and with it every trace of it on the requests and the
+   * cookie mocks.
    *
-   * The mirror of `newPreset`, and it has to be: a preset exists in three
-   * places, and creating one writes all three. The popup used to delete only the
+   * The mirror of `newPreset`, and it has to be: a preset exists in several
+   * places, and creating one writes them all. The popup used to delete only the
    * first — the `presets` map on the state — so every request kept its
    * `enabled[id]` and `selected[id]` for a preset that no longer existed, and
    * creating a new preset that happened to reuse the id inherited them.
    *
-   * `PresetUtils.delete` has done this correctly since it was written; nothing
-   * called it. Its own spec was the only caller.
+   * Cookie mocks were the last stragglers: `IOhMyCookie.enabled` is keyed by
+   * preset id too, and was not scrubbed — the same bug all over again. See
+   * `PresetUtils.delete` for why the scrub writes `false` instead of dropping
+   * the key.
+   *
+   * `PresetUtils.delete` has done the request part correctly since it was
+   * written; nothing called it. Its own spec was the only caller.
    */
   async deletePreset(
     id: ohMyPresetId,
@@ -173,8 +179,9 @@ export class OhMyState {
   ): Promise<IState> {
     const state = await this.storageService.get<IState>(context.domain);
     const requests = await this.storageService.getMany<IData>(state.requests);
+    const cookies = await this.storageService.getMany<IOhMyCookie>(state.cookies ?? []);
 
-    const updated = PresetUtils.delete(state, requests, id);
+    const updated = PresetUtils.delete(state, requests, cookies, id);
 
     // Deleting the *active* preset leaves the context without one, so the state
     // would be written pointing at nothing. Fall back to whichever remains.
@@ -189,6 +196,21 @@ export class OhMyState {
     // one write of the whole domain — exactly as `newPreset` does it.
     for (const request of Object.values(updated.requests)) {
       await this.upsertRequestRecord(request, updated.state.context);
+    }
+
+    // Cookies too are their own records, but only the touched ones are written:
+    // `PresetUtils.delete` keeps the identity of a cookie the preset never
+    // knew, and rewriting it anyway would cost a storage write plus a pointless
+    // cookie-sync pass for nothing.
+    for (const [cookieId, cookie] of Object.entries(updated.cookies)) {
+      if (cookie === cookies[cookieId]) {
+        continue;
+      }
+
+      await this.upsertCookie(
+        { id: cookie.id, enabled: cookie.enabled },
+        updated.state.context
+      );
     }
 
     await OhMySendToBg.full(

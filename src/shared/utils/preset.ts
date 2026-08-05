@@ -1,5 +1,8 @@
 import { uniqueId } from './unique-id';
-import { IOhMyContext, IOhMyPresetChange, IOhMyPresets, IOhMyRequests, IState, ohMyPresetId } from '../type';
+import { IOhMyContext, IOhMyCookie, IOhMyPresetChange, IOhMyPresets, IOhMyRequests, IState, ohMyCookieId, ohMyPresetId } from '../type';
+
+/** The cookie mocks of a domain, keyed by id — the shape `StorageUtils.getMany` hands back. */
+export type IOhMyCookieRecords = Record<ohMyCookieId, IOhMyCookie>;
 
 const IS_COPY_RE = /copy(\s\d+)?/;
 
@@ -51,13 +54,16 @@ export class PresetUtils {
   }
 
   /**
-   * Drops a preset from a state and from each of its requests.
+   * Drops a preset from a state, from each of its requests and from each of its
+   * cookie mocks.
    *
-   * The requests are separate storage records now, so they come in and go out
-   * next to the state: the caller writes back both the state and every request
-   * this touched.
+   * The requests and cookies are separate storage records now, so they come in
+   * and go out next to the state: the caller writes back the state and every
+   * record this touched. A cookie it did not touch keeps its identity, so the
+   * caller can tell the two apart and skip the write.
    */
-  static delete(state: IState, requests: IOhMyRequests, id: ohMyPresetId): { state: IState, requests: IOhMyRequests } {
+  static delete(state: IState, requests: IOhMyRequests, cookies: IOhMyCookieRecords, id: ohMyPresetId):
+    { state: IState, requests: IOhMyRequests, cookies: IOhMyCookieRecords } {
     const retVal = {
       ...state,
       presets: { ...state.presets },
@@ -65,6 +71,7 @@ export class PresetUtils {
     };
 
     const retRequests: IOhMyRequests = { ...requests };
+    const retCookies: IOhMyCookieRecords = { ...cookies };
 
     state.requests.forEach(requestId => {
       const request = requests[requestId];
@@ -85,12 +92,32 @@ export class PresetUtils {
       retRequests[clone.id] = clone;
     });
 
+    // `IOhMyCookie.enabled` is keyed by preset id just like a request's, and
+    // used to be skipped here — the exact bug this method already fixed for
+    // requests. The key is set to `false` rather than removed: cookie records
+    // are written back through the cookie handler, which merges `enabled` per
+    // key (so a partial update cannot wipe the other presets), and a merge can
+    // never *drop* a key. An explicit `false` is the strongest statement that
+    // channel can carry, and it is indistinguishable from an absent key at
+    // every read site — `enabled[preset]` is only ever read for truthiness,
+    // and a new preset starts with every cookie off anyway. What matters is
+    // that a future preset reusing this id can no longer inherit `true`.
+    (state.cookies ?? []).forEach(cookieId => {
+      const cookie = cookies[cookieId];
+
+      if (!cookie || !(id in cookie.enabled)) { // not loaded, gone, or never knew the preset
+        return;
+      }
+
+      retCookies[cookieId] = { ...cookie, enabled: { ...cookie.enabled, [id]: false } };
+    });
+
     if (state.context.preset === id) {
       delete (retVal.context as Partial<IOhMyContext>).preset;
     }
 
     delete retVal.presets[id];
 
-    return { state: retVal, requests: retRequests };
+    return { state: retVal, requests: retRequests, cookies: retCookies };
   }
 }

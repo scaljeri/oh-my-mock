@@ -64,17 +64,31 @@ export class DataUtils {
       enabled: { ...data.enabled },
       mocks: { ...data.mocks }
     };
-    // TODO: The following assumes that only the active mock can be deleted
     delete data.mocks[mockId];
-    delete data.selected[context.preset];
-    delete data.enabled[context.preset];
 
     const nextActiveMock = DataUtils.getNextActiveResponse(data);
 
-    if (nextActiveMock) {
-      data.selected[context.preset] = nextActiveMock.id;
-      data.enabled[context.preset] = false;
-    }
+    // A response can be selected by any preset, not only the one that is active
+    // while it is deleted. This used to reset the active preset alone, so every
+    // other preset kept pointing at the deleted id — serving then resolved the
+    // id, failed to load the record and passed the request through unmocked,
+    // silently. So every preset that selected this response moves to the next
+    // best one, or is cleared when none is left; a preset that selected a
+    // different response is not touched, because deleting an unrelated response
+    // must not change what it serves.
+    Object.keys(data.selected).forEach(presetId => {
+      if (data.selected[presetId] !== mockId) {
+        return;
+      }
+
+      delete data.selected[presetId];
+      delete data.enabled[presetId];
+
+      if (nextActiveMock) {
+        data.selected[presetId] = nextActiveMock.id;
+        data.enabled[presetId] = false;
+      }
+    });
 
     return data;
   }

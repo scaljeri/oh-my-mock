@@ -1,12 +1,13 @@
 import { appSources, DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IOhMyMock, IState, ohMyDataId } from "../../shared/type";
+import { IData, IOhMyCookie, IOhMyMock, IState, ohMyDataId } from "../../shared/type";
 import { StoreUtils } from "../../shared/utils/store";
 import { importJSON } from "../../shared/utils/import-json";
 import { OhMyQueue } from "../../shared/utils/queue";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import jsonFromFile from '../../shared/dummy-data.json';
+import { isApplied, unapplyCookie } from "../cookie-jar";
 import { error } from "../utils";
 import { warn } from "../utils";
 
@@ -62,6 +63,22 @@ export class OhMyRemoveHandler {
           await StorageUtils.remove(id);
         }
 
+        // The cookie mocks are records of their own too, and used to be
+        // forgotten here: every cookie mock of the domain stayed in storage
+        // forever, unreferenced. And like the cookie handler's own delete, an
+        // applied mock must be unapplied *before* its record goes — the jar
+        // identifies what the mock displaced by that record, so afterwards
+        // there is nothing left to put the site's real cookie back from.
+        for (const id of state.cookies ?? []) {
+          const cookie = await StorageUtils.get<IOhMyCookie>(id);
+
+          if (cookie && isApplied(state.domain, id)) {
+            await unapplyCookie(state.domain, cookie);
+          }
+
+          await StorageUtils.remove(id);
+        }
+
         await StorageUtils.remove(state.domain);
 
         // Emptying a domain and forgetting it are different things, and the
@@ -94,8 +111,19 @@ export class OhMyRemoveHandler {
 
         const request = await StorageUtils.get<IData>(data.id);
 
-        for (const mockId of Object.keys(request?.mocks ?? {})) {
-          await StorageUtils.remove(mockId);
+        if (request) {
+          for (const mockId of Object.keys(request.mocks ?? {})) {
+            await StorageUtils.remove(mockId);
+          }
+        } else {
+          // The id is listed but the record is gone. Its mock ids lived only on
+          // that record, so any mock records it still owned are orphaned for
+          // good — nothing here can enumerate them anymore. The removal must
+          // still go on and heal the list below, but it must say what it found:
+          // this is evidence of an interrupted or out-of-band delete, and the
+          // old `request?.mocks ?? {}` swallowed it without a trace.
+          warn(`Request ${data.id} of ${state.domain} is listed but its record is gone; ` +
+            'any response records it still had are orphaned', data);
         }
 
         await StorageUtils.remove(data.id);

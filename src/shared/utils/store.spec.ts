@@ -50,6 +50,14 @@ describe('StoreUtils', () => {
       const store = StoreUtils.removeState({domains: ['a', 'b', 'c']} as any as IOhMyMock, 'b');
 
       expect(store.domains).toEqual(['a', 'c']);
-    })
+    });
+
+    // `indexOf` answers -1 here, and `splice(-1, 1)` removes the *last* entry —
+    // a double-fired delete used to silently drop an unrelated domain.
+    it('should not remove anything when the domain is absent', () => {
+      const store = StoreUtils.removeState({domains: ['a', 'b', 'c']} as any as IOhMyMock, 'x');
+
+      expect(store.domains).toEqual(['a', 'b', 'c']);
+    });
   });
 });

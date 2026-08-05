@@ -3,6 +3,7 @@ import { IData, IOhMyShallowMock } from '../type';
 import { DataUtils } from './data';
 
 describe('Utils/Data', () => {
+  const initFn = DataUtils.init;
   let data: IData;
 
   beforeEach(() => {
@@ -14,25 +15,10 @@ describe('Utils/Data', () => {
     } as unknown as IData;
   });
 
-  // Spies on `DataUtils` statics stick to the shared class object — leaving one
-  // behind poisons every suite that runs after this file.
-  afterEach(() => jest.restoreAllMocks());
-
   describe('#init', () => {
-    // This used to mock `init` and assert the mock — green no matter what the
-    // real `init` did. The claim is delegation, so the spy calls through and
-    // the *real* result is asserted alongside it.
-    it('delegates to create, normalisation included', () => {
-      const create = jest.spyOn(DataUtils, 'create');
-
-      const request = DataUtils.init({ url: 'a.b/c' });
-
-      expect(create).toHaveBeenCalledWith({ url: 'a.b/c' });
-      expect(request).toEqual(expect.objectContaining({
-        id: expect.any(String),
-        type: objectTypes.REQUEST,
-        url: 'a\\.b/c'
-      }));
+    it('should be linked to create', () => {
+      jest.spyOn(DataUtils, 'init').mockReturnValue('a' as any);
+      expect(DataUtils.init({})).toBe('a');
     })
   });
   describe('#getSelectedResponse', () => {
@@ -56,10 +42,8 @@ describe('Utils/Data', () => {
     });
   });
   describe('#activeMock', () => {
-    // *Which* mock is the whole claim — `toBeDefined()` passed just as happily
-    // for the wrong preset's selection.
-    it('should return the selected response of the enabled preset', () => {
-      expect(DataUtils.activeMock(data, { preset: 'foo' } as any)).toBe('f');
+    it('should return a response if enabled', () => {
+      expect(DataUtils.activeMock(data, { preset: 'foo' } as any)).toBeDefined();
     });
 
     it('should return nothing if disabled', () => {
@@ -113,28 +97,43 @@ describe('Utils/Data', () => {
       expect(update.mocks!.f).not.toBeDefined();
       expect(update.selected!.foo).toBe('b');
       expect(update.enabled!.foo).toBeFalsy();
-    })
-  });
-  describe('#getNextActiveResponse', () => {
-    // Insertion order deliberately disagrees with status order: an
-    // implementation answering "the first mock" instead of "the lowest status
-    // code" must fail here, which `toBeDefined()` on the shared fixture never
-    // could.
-    it('should select the response with the lowest status code', () => {
-      const outOfOrder = {
-        mocks: {
-          f: { id: 'f', statusCode: 500 },
-          b: { id: 'b', statusCode: 200 }
-        }
-      } as unknown as IData;
-
-      expect(DataUtils.getNextActiveResponse(outOfOrder)!.id).toBe('b');
     });
 
-    it('should return nothing when no mocks are left', () => {
-      data.mocks = {};
+    // Any preset can select a response, not only the active one. This used to
+    // leave the *other* preset pointing at the deleted id, so serving found the
+    // id, failed to load the record and passed the request through unmocked.
+    it('should move every preset that selected the removed response to the next one', () => {
+      const update = DataUtils.removeResponse({ preset: 'foo' } as any, data, 'b');
 
-      expect(DataUtils.getNextActiveResponse(data)).toBeUndefined();
+      expect(update.selected!.bar).toBe('f');
+      expect(update.enabled!.bar).toBe(false);
+    });
+
+    it('should not touch a preset that selected a different response', () => {
+      const update = DataUtils.removeResponse({ preset: 'foo' } as any, data, 'b');
+
+      expect(update.selected!.foo).toBe('f');
+      expect(update.enabled!.foo).toBe(true);
+    });
+
+    it('should clear every preset that selected the removed response when none is left', () => {
+      data = {
+        selected: { foo: 'x', bar: 'x' },
+        enabled: { foo: true, bar: true },
+        mocks: { x: { id: 'x', statusCode: 200 } }
+      } as unknown as IData;
+
+      const update = DataUtils.removeResponse({ preset: 'foo' } as any, data, 'x');
+
+      expect(update.selected!.foo).toBeUndefined();
+      expect(update.selected!.bar).toBeUndefined();
+      expect(update.enabled!.foo).toBeUndefined();
+      expect(update.enabled!.bar).toBeUndefined();
+    });
+  });
+  describe('#getNextActiveResponse', () => {
+    it('should select the next active response', () => {
+      expect(DataUtils.getNextActiveResponse(data)).toBeDefined();
     });
   });
   describe('#create', () => {

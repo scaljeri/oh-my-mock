@@ -1,5 +1,5 @@
-import { IData, IOhMyPresets, IOhMyRequests, IState } from '../type';
-import { PresetUtils } from './preset';
+import { IData, IOhMyCookie, IOhMyPresets, IOhMyRequests, IState } from '../type';
+import { IOhMyCookieRecords, PresetUtils } from './preset';
 
 describe('Utils/Preset', () => {
   let presets: IOhMyPresets;
@@ -84,12 +84,15 @@ describe('Utils/Preset', () => {
   describe('#delete', () => {
     let state: IState;
     let requests: IOhMyRequests;
+    let cookies: IOhMyCookieRecords;
     let input: IState;
     let inputRequests: IOhMyRequests;
+    let inputCookies: IOhMyCookieRecords;
 
     beforeEach(() => {
       input = {
         requests: ['qwerty'],
+        cookies: ['c1', 'c2'],
         context: { preset: 'b' },
         presets: { a: '1', b: '2' }
       } as unknown as IState;
@@ -100,8 +103,12 @@ describe('Utils/Preset', () => {
           selected: { a: '123', b: '456' }
         } as unknown as IData
       };
+      inputCookies = {
+        c1: { id: 'c1', name: 'session', enabled: { a: true, b: true } } as unknown as IOhMyCookie,
+        c2: { id: 'c2', name: 'other', enabled: { a: true } } as unknown as IOhMyCookie
+      };
 
-      ({ state, requests } = PresetUtils.delete(input, inputRequests, 'b'));
+      ({ state, requests, cookies } = PresetUtils.delete(input, inputRequests, inputCookies, 'b'));
     });
 
     it('should remove the preset from the preset list', () => {
@@ -119,6 +126,22 @@ describe('Utils/Preset', () => {
 
     it('should not modify the requests it was given', () => {
       expect(inputRequests.qwerty.enabled.b).toBe(true);
+    });
+
+    // Not removed: the cookie write channel merges `enabled` per key, so an
+    // absent key would be resurrected from the stored record on the way back.
+    // `false` survives the merge and reads the same as absent everywhere.
+    it('should switch the preset off on every cookie that knew it', () => {
+      expect(cookies.c1.enabled.b).toBe(false);
+      expect(cookies.c1.enabled.a).toBe(true);
+    });
+
+    it('should keep the identity of a cookie the preset never touched', () => {
+      expect(cookies.c2).toBe(inputCookies.c2);
+    });
+
+    it('should not modify the cookies it was given', () => {
+      expect(inputCookies.c1.enabled.b).toBe(true);
     });
   });
 });
