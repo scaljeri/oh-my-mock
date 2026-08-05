@@ -75,3 +75,9 @@ playwright-report/
 
 # Vite dependency cache written by `ng serve`.
 .angular/
+
+# Claude Code's session data, and the git worktrees it creates for parallel
+# agents. Each worktree is a whole second checkout of this repo — committing one
+# turns it into an embedded repository nobody can clone, which `git add -A` did
+# once before this line existed.
+.claude/
