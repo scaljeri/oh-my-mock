@@ -198,8 +198,11 @@ export class OhMyContentState {
       return true;
     }
 
-    // A group covering this domain is wanted even before anything refers to it
-    // — it decides what answers here.
+    // A group covering this domain is wanted even before the store lists it —
+    // the record and the list are two writes with no guaranteed order, the same
+    // race as a request and the state. Holding it is not serving it: only the
+    // groups `store.groups` names answer (see `activeGroups`), so a record
+    // whose listing never arrives sits here inert.
     const value = (update.newValue ?? update.oldValue) as IOhMyGroup | undefined;
 
     return GroupUtils.isGroup(value) && GroupUtils.coversDomain(value, OhMyContentState.host);
@@ -256,14 +259,6 @@ export class OhMyContentState {
   }
 
   /**
-   * The groups answering for this domain, best first.
-   *
-   * The domain's own local group is included whether or not its record has been
-   * written — its id is derived, and `ensureGroups` does not run on every path.
-   * Waiting for the record would mean serving nothing on a domain that has
-   * mocks, which is the failure this whole model is built to avoid.
-   */
-  /**
    * The lookup index for the serving path.
    *
    * Rebuilt lazily on the first lookup after anything changed, not eagerly in
@@ -284,34 +279,36 @@ export class OhMyContentState {
   }
 
   /**
-   * This domain's own group, record or no record.
-   *
-   * One method because two answers is a bug: `activeGroups()` fell back to the
-   * derived group when the record had not loaded, while the index builder asked
-   * `GroupUtils.localFor` directly and got `undefined`. So every untagged
-   * request — which is all of them, on any profile — was filed under no group
-   * at all while the lookup went looking under the derived one. Nothing was
-   * served, and nothing said so.
+   * This domain's own group, record or no record — `GroupUtils.localOrDefault`,
+   * which exists because this file once had two answers to the question: the
+   * index builder and `activeGroups()` resolved it differently, and every
+   * untagged request was filed under one group and looked for under another.
    */
   localGroup(): IOhMyGroup | undefined {
     if (!this.state) {
       return undefined;
     }
 
-    return GroupUtils.localFor(Object.values(this.groups), this.state.domain)
-      ?? GroupUtils.defaultLocalFor(this.state.domain);
+    return GroupUtils.localOrDefault(Object.values(this.groups), this.state.domain);
   }
 
+  /**
+   * The groups answering for this domain, best first.
+   *
+   * `this.groups` may hold a record `store.groups` does not list — a stray
+   * adopted from a storage event. `activeFor` refuses it: a group only the
+   * tabs that overheard its write would serve is a group that answers on some
+   * pages and not others, and a fresh load could never have fetched it at all.
+   * The derived local group is the exception, appended by `coveringFor` — its
+   * id is derivable, so it serves before `ensureGroups` has written anything.
+   */
   activeGroups(): IOhMyGroup[] {
     if (!this.state) {
       return [];
     }
 
-    const known = Object.values(this.groups);
-    const local = this.localGroup();
-
     return GroupUtils.activeFor(
-      local && !GroupUtils.localFor(known, this.state.domain) ? [...known, local] : known,
+      Object.values(this.groups),
       this.state,
       this.store?.groups ?? []
     );

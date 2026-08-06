@@ -91,6 +91,26 @@ describe('OhMyContentState and the changes it hears about', () => {
   });
 
   /**
+   * A group record overheard from a storage event is *held* — the write that
+   * lists it may be a moment behind — but not *served*. It used to be: a group
+   * `store.groups` never listed answered in every tab that overheard its
+   * write and in none that loaded afterwards, since a fresh load can only
+   * fetch the ids the store names. Whether a mock answered depended on how the
+   * tab had learned about its group.
+   */
+  it('does not serve an adopted group the store list does not carry', () => {
+    contentState.state = StateUtils.init({ domain: HOST });
+    change(STORAGE_KEY, { type: objectTypes.STORE, domains: [HOST], groups: [] });
+
+    const stray = GroupUtils.init({ id: 'stray', source: 'cloud', domains: [HOST] });
+    change('stray', stray);
+
+    expect(contentState.groups['stray']).toBeDefined();
+    expect(contentState.activeGroups().map(g => g.id))
+      .toEqual([GroupUtils.localIdFor(HOST)]);
+  });
+
+  /**
    * The safety net that makes the filtering safe. A record and the state's id
    * list are two separate writes with no guaranteed order, so a record can
    * arrive before anything refers to it — and is dropped. The state update that

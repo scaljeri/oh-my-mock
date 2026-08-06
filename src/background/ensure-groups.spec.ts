@@ -57,6 +57,16 @@ describe('ensure-groups', () => {
       .mockImplementation(async (key: string, value: unknown) => {
         records[key] = value;
       });
+
+    jest
+      .spyOn(StorageUtils, 'remove')
+      .mockImplementation(async (key: string | number | string[] | number[]) => {
+        for (const k of ([] as (string | number)[]).concat(key)) {
+          delete records[k];
+        }
+
+        return [];
+      });
   });
 
   afterEach(() => jest.restoreAllMocks());
@@ -160,5 +170,54 @@ describe('ensure-groups', () => {
     await ensureGroups(store());
 
     expect(records['r1']).toEqual({ id: 'r1', type: objectTypes.REQUEST });
+  });
+
+  describe('pruning', () => {
+    /**
+     * Deleting a domain removes its state, requests and mocks — but nothing
+     * removed its local group, so the record and the `store.groups` entry sat
+     * in storage for ever. And because the id is derived from the domain,
+     * adding the domain back silently reused the leftover, old name and all.
+     */
+    it('removes the local group of a deleted domain, record and listing both', async () => {
+      const first = await ensureGroups(store({ domains: ['example.com', 'gone.com'] }));
+      const leftover = groupsIn(records).find(g => g.domains.includes('gone.com'))!;
+
+      const after = await ensureGroups({ ...first, domains: ['example.com'] });
+
+      expect(records[leftover.id]).toBeUndefined();
+      expect(after.groups).not.toContain(leftover.id);
+      expect(groupsIn(records)).toHaveLength(1);
+    });
+
+    /** The prune is judged from the listed records; no whole-storage read. */
+    it('stays bounded while pruning', async () => {
+      const first = await ensureGroups(store({ domains: ['example.com', 'gone.com'] }));
+      const reads = StorageUtils.chrome.storage.local.get as jest.Mock;
+      reads.mockClear();
+
+      await ensureGroups({ ...first, domains: ['example.com'] });
+
+      expect(reads.mock.calls.some(([keys]) => keys === null)).toBe(false);
+    });
+
+    /**
+     * Only local groups die with their domain. A server or cloud group keeps
+     * its record while its domains come and go — its life is the subscription
+     * or the sync that brought it, not any one domain's presence in the store.
+     */
+    it('keeps a cloud group whose domains are all absent', async () => {
+      const first = await ensureGroups(store());
+      const cloud = GroupUtils.init({ source: 'cloud', domains: ['x.com'] });
+      records[cloud.id] = cloud;
+
+      const after = await ensureGroups({
+        ...first,
+        groups: [...(first.groups ?? []), cloud.id]
+      });
+
+      expect(records[cloud.id]).toBeDefined();
+      expect(after.groups).toContain(cloud.id);
+    });
   });
 });

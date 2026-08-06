@@ -1,8 +1,6 @@
 import { objectTypes } from '../constants';
 import { IData, IOhMyRequests, IState } from '../type';
 import { StateUtils } from './state';
-import { IOhMyGroup } from '../type';
-import { GroupUtils } from './group';
 
 describe('Utils/State', () => {
   let state: IState;
@@ -171,89 +169,26 @@ describe('Utils/State', () => {
 });
 
 /**
- * Which group a request comes from decides whether it answers at all, and which
- * of two answers wins. Without this, switching a group off in the sidebar
- * changed the picture on screen and nothing else — the mock kept being served,
- * silently, which is this project's signature failure.
+ * `findRequest` is group-blind on purpose: every caller left asks what
+ * *exists* — the export dialog, the background's response and server handlers,
+ * the popup's own lookups. The group-aware rules (who answers, in what order,
+ * switched off means not consulted) live in `OhMyRequestIndex` and are pinned
+ * in `request-index.spec.ts`. The optional `active` parameter this used to
+ * take went with its last caller: it derived the local group from the active
+ * list, the exact pattern that made a switched-off local group unfindable —
+ * see the note on `visibleRequests`.
  */
-describe('StateUtils.findRequest with mock groups', () => {
+describe('StateUtils.findRequest and mock groups', () => {
   const DOMAIN = 'example.com';
 
-  const group = (id: string, source: 'local' | 'cloud' = 'cloud'): IOhMyGroup =>
-    GroupUtils.init({ id, source, domains: [DOMAIN] });
-
-  const local = GroupUtils.defaultLocalFor(DOMAIN);
-
-  const request = (id: string, over: Partial<IData> = {}): IData =>
-    ({ id, url: '/api/users', method: 'GET', ...over }) as IData;
-
-  const stateWith = (ids: string[]): IState =>
-    StateUtils.init({ domain: DOMAIN, requests: ids });
-
-  it('serves a request whose group is active', () => {
-    const requests = { r1: request('r1') };
-
-    expect(
-      StateUtils.findRequest(stateWith(['r1']), requests, { url: '/api/users' }, [local])?.id
-    ).toBe('r1');
-  });
-
-  it('does not serve a request whose group is switched off', () => {
-    const requests = { r1: request('r1') };
-
-    // The local group is absent from `active` — that is what switched off means.
-    expect(
-      StateUtils.findRequest(stateWith(['r1']), requests, { url: '/api/users' }, [])
-    ).toBeUndefined();
-  });
-
-  it('serves nothing from a group that is gone, even though the request remains', () => {
-    const requests = { r1: request('r1', { groupId: 'deleted' }) };
-
-    expect(
-      StateUtils.findRequest(stateWith(['r1']), requests, { url: '/api/users' }, [local])
-    ).toBeUndefined();
-  });
-
-  /** The visible, draggable rule: the higher group answers. Not a fallback. */
-  it('lets the higher group answer when both know the endpoint', () => {
-    const theirs = group('theirs');
+  it('finds a request whatever group it belongs to', () => {
+    const state = StateUtils.init({ domain: DOMAIN, requests: ['r1'] });
     const requests = {
-      mine: request('mine'),
-      theirs: request('theirs', { groupId: 'theirs' })
-    };
-    const state = stateWith(['mine', 'theirs']);
-
-    expect(
-      StateUtils.findRequest(state, requests, { url: '/api/users' }, [local, theirs])?.id
-    ).toBe('mine');
-    // Same requests, same state — only the order of the groups differs.
-    expect(
-      StateUtils.findRequest(state, requests, { url: '/api/users' }, [theirs, local])?.id
-    ).toBe('theirs');
-  });
-
-  it('falls to the next group when the higher one is switched off', () => {
-    const theirs = group('theirs');
-    const requests = {
-      mine: request('mine'),
-      theirs: request('theirs', { groupId: 'theirs' })
+      r1: { id: 'r1', url: '/api/users', method: 'GET', groupId: 'anything' } as IData
     };
 
     expect(
-      StateUtils.findRequest(stateWith(['mine', 'theirs']), requests, { url: '/api/users' }, [theirs])?.id
-    ).toBe('theirs');
-  });
-
-  /**
-   * Everything away from the serving path — the export dialog, the popup's own
-   * lookups — asks what *exists*, not what would answer.
-   */
-  it('considers every stored request when no groups are given', () => {
-    const requests = { r1: request('r1', { groupId: 'anything' }) };
-
-    expect(
-      StateUtils.findRequest(stateWith(['r1']), requests, { url: '/api/users' })?.id
+      StateUtils.findRequest(state, requests, { url: '/api/users' })?.id
     ).toBe('r1');
   });
 });

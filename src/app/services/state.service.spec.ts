@@ -1,0 +1,101 @@
+import { TestBed } from '@angular/core/testing';
+import { BehaviorSubject } from 'rxjs';
+import { objectTypes, STORAGE_KEY } from '@shared/constants';
+import { IOhMyContext, IOhMyGroup, ohMyDomain } from '@shared/type';
+import { GroupUtils } from '@shared/utils/group';
+import { StorageUtils } from '@shared/utils/storage';
+import { AppStateService } from './app-state.service';
+import { OhMyStateService } from './state.service';
+import { StorageService } from './storage.service';
+
+const DOMAIN: ohMyDomain = 'example.com';
+
+/** One `chrome.storage.onChanged` entry, as `StorageUtils` republishes it. */
+const change = (key: string, newValue: unknown, oldValue?: unknown) =>
+  StorageUtils.updatesSubject.next({ key, update: { newValue, oldValue } } as never);
+
+/**
+ * The popup hears about storage the same way the content script does, and has
+ * to keep up the same way. Its group map used to be filled once at
+ * `initialize` and then never touched: no `GROUP` case in the stream binding,
+ * and a store update did not reload the list it names — so a group created,
+ * renamed or deleted while the popup was open simply did not exist to it,
+ * while the serving path had already moved on.
+ */
+describe('OhMyStateService and the changes it hears about', () => {
+  let service: OhMyStateService;
+  let records: Record<string, unknown>;
+
+  beforeEach(() => {
+    records = {};
+
+    jest.spyOn(StorageUtils, 'listen').mockImplementation(() => undefined);
+
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: StorageService,
+          useValue: {
+            get: (key: string) => Promise.resolve(records[key]),
+            getMany: (keys: string[]) =>
+              Promise.resolve(
+                Object.fromEntries(
+                  keys.filter((k) => k in records).map((k) => [k, records[k]])
+                )
+              )
+          }
+        },
+        {
+          provide: AppStateService,
+          useValue: { domain$: new BehaviorSubject<ohMyDomain | null>(DOMAIN) }
+        }
+      ]
+    });
+
+    service = TestBed.inject(OhMyStateService);
+    // The stream binding ignores everything until a context is known — set in
+    // `initialize`, which these tests have no business running in full.
+    service.context = { domain: DOMAIN, preset: 'default' } as IOhMyContext;
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('follows a group record written after start-up', () => {
+    const group: IOhMyGroup = GroupUtils.init({ id: 'g1', domains: [DOMAIN] });
+
+    change('g1', group);
+
+    expect(service.groups['g1']).toEqual(group);
+  });
+
+  it('forgets a group record that was deleted', () => {
+    const group: IOhMyGroup = GroupUtils.init({ id: 'g1', domains: [DOMAIN] });
+    change('g1', group);
+
+    change('g1', undefined, group);
+
+    expect(service.groups['g1']).toBeUndefined();
+  });
+
+  /**
+   * The record and the store listing are two writes with no guaranteed order.
+   * When the listing arrives first, the store update is what has to fetch the
+   * record — the content script reloads on its store update for the same
+   * reason.
+   */
+  it('loads the group records a store update lists', async () => {
+    const group: IOhMyGroup = GroupUtils.init({ id: 'g2', domains: [DOMAIN] });
+    records['g2'] = group;
+
+    change(STORAGE_KEY, {
+      type: objectTypes.STORE,
+      domains: [DOMAIN],
+      groups: ['g2']
+    });
+
+    // `loadGroups` runs off the store update.
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(service.groups['g2']).toEqual(group);
+  });
+});

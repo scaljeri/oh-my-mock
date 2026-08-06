@@ -67,17 +67,68 @@ describe('GroupUtils', () => {
     });
 
     /**
-     * A group missing from the store list used to be the kind of bug this
-     * project keeps producing: served or not served, silently. It sorts last —
-     * still answering, just after everyone who has a stated position.
+     * The old rule was "an unlisted group still serves, sorted last" — and it
+     * was a rule only one reader could follow. Every reader gets its group ids
+     * from `store.groups`, so a record the list does not name is unfetchable
+     * on a fresh load: the content script served it only in tabs that
+     * overheard its write, the drawer never drew it, and `ensureGroups` only
+     * adopted it on the path its early return skips. Three answers. The rule
+     * now is the one everybody *can* follow: unlisted means deleted, or not
+     * yet adopted — either way, not serving.
      */
-    it('still serves a group the store list has never heard of', () => {
+    it('does not serve a group the store list has never heard of', () => {
       const known = group({ id: 'known' });
-      const stray = group({ id: 'stray' });
+      const stray = group({ id: 'stray', source: 'cloud' });
 
       const active = GroupUtils.activeFor([known, stray], state(), ['known']);
 
-      expect(active.map(g => g.id)).toEqual(['known', 'stray']);
+      expect(active.map(g => g.id)).toEqual(['known']);
+    });
+
+    /**
+     * The exception to "unlisted does not serve": the domain's own local
+     * group exists by virtue of the domain — the record `ensureGroups` writes
+     * is bookkeeping — and refusing it would silence every untagged mock. It
+     * sorts last until the store list carries it.
+     */
+    it('serves the local group before it is listed, after everyone who is', () => {
+      const theirs = group({ id: 'theirs', source: 'cloud' });
+      const local = GroupUtils.defaultLocalFor(DOMAIN);
+
+      const active = GroupUtils.activeFor([theirs, local], state(), ['theirs']);
+
+      expect(active.map(g => g.id)).toEqual(['theirs', local.id]);
+    });
+
+    /**
+     * Appending the derived local group used to be every caller's own job —
+     * three copies of the same dance, which is how the popup and the content
+     * script drifted once already. It lives in `coveringFor` now.
+     */
+    it('includes the derived local group before its record exists', () => {
+      const active = GroupUtils.activeFor([], state());
+
+      expect(active.map(g => g.id)).toEqual([GroupUtils.localIdFor(DOMAIN)]);
+    });
+  });
+
+  describe('coveringFor', () => {
+    /**
+     * What the sidebar draws: `activeFor` minus nothing. A switched-off group
+     * has to keep its row — and its position — or its off-switch is
+     * unreachable and the drawer's order stops being the serving order.
+     */
+    it('keeps a switched-off group in the position it would serve from', () => {
+      const a = group({ id: 'a' });
+      const b = group({ id: 'b', source: 'cloud' });
+
+      const rows = GroupUtils.coveringFor([a, b], DOMAIN, ['b', 'a']);
+
+      expect(rows.map(g => g.id)).toEqual(['b', 'a']);
+      expect(
+        GroupUtils.activeFor([a, b], state({ aux: { disabledGroups: ['b'] } }), ['b', 'a'])
+          .map(g => g.id)
+      ).toEqual(['a']);
     });
   });
 

@@ -72,12 +72,64 @@ export class GroupUtils {
   /**
    * This domain's own group — the one an untagged request belongs to.
    *
-   * There is exactly one per domain: `ensureGroups` creates it and nothing
-   * deletes it. `undefined` while that has not run yet, which is why every
-   * caller has to cope with its absence rather than assume it.
+   * There is exactly one per domain: `ensureGroups` creates it, and it goes
+   * only when its domain does. `undefined` while the record has not loaded or
+   * been written yet, which is why every caller has to cope with its absence
+   * rather than assume it.
    */
   static localFor(groups: IOhMyGroup[], domain: ohMyDomain): IOhMyGroup | undefined {
     return groups.find(g => g.source === 'local' && this.coversDomain(g, domain));
+  }
+
+  /**
+   * This domain's own group, record or no record.
+   *
+   * The record when it is among `groups`, the derived default otherwise. One
+   * method because two answers is a bug: the content script's `activeGroups()`
+   * once fell back to the derived group while its index builder asked
+   * `localFor` directly and got `undefined` — every untagged request was filed
+   * under no group at all while the lookup went looking under the derived one.
+   */
+  static localOrDefault(groups: IOhMyGroup[], domain: ohMyDomain): IOhMyGroup {
+    return this.localFor(groups, domain) ?? this.defaultLocalFor(domain);
+  }
+
+  /**
+   * The groups that exist for `domain`, in serving order, the switched-off
+   * ones included — what the sidebar draws.
+   *
+   * `order` is `IOhMyMock.groups`, and being listed there is what makes a
+   * group exist: every reader gets its group ids from that list, so a record
+   * the list does not name cannot even be fetched on a fresh load. Serving it
+   * only in the tab that happened to hold the record in memory gave the same
+   * group three answers — served here, dark there, undrawn everywhere — so an
+   * unlisted record now counts as deleted (or not yet adopted; `ensureGroups`
+   * adopts strays into the list whenever it scans storage).
+   *
+   * The one exception is the domain's own **local** group. It exists by virtue
+   * of the domain — the id is derivable, the record is bookkeeping that
+   * `ensureGroups` writes on some paths and not others — and refusing it for
+   * being unlisted would silence every untagged mock. It sorts last until the
+   * list carries it.
+   */
+  static coveringFor(groups: IOhMyGroup[], domain: ohMyDomain, order: ohMyGroupId[] = []): IOhMyGroup[] {
+    const rank = (id: ohMyGroupId) => {
+      const index = order.indexOf(id);
+
+      return index === -1 ? order.length : index;
+    };
+    const covering = groups.filter(g => this.coversDomain(g, domain));
+
+    // The derived default, so a domain's own mocks answer before `ensureGroups`
+    // has run. Appended here rather than by each caller: three of them used to
+    // do this dance themselves, which is three chances to do it differently.
+    if (!this.localFor(covering, domain)) {
+      covering.push(this.defaultLocalFor(domain));
+    }
+
+    return covering
+      .filter(g => order.includes(g.id) || g.source === 'local')
+      .sort((a, b) => rank(a.id) - rank(b.id));
   }
 
   /**
@@ -87,21 +139,14 @@ export class GroupUtils {
    * group that arrives already applies. What is stored is the *exception*:
    * `aux.disabledGroups`, the ones switched off here.
    *
-   * `order` is `IOhMyMock.groups`; anything missing from it sorts last rather
-   * than disappearing, so a group whose id never made it into the store list is
-   * still served instead of silently going dark.
+   * `coveringFor` minus the switched-off rows, by construction: the sidebar
+   * draws that list, so the drawer and the serving order cannot disagree about
+   * who answers, or from where.
    */
   static activeFor(groups: IOhMyGroup[], state: IState, order: ohMyGroupId[] = []): IOhMyGroup[] {
     const disabled = state.aux?.disabledGroups ?? [];
-    const rank = (id: ohMyGroupId) => {
-      const index = order.indexOf(id);
 
-      return index === -1 ? order.length : index;
-    };
-
-    return groups
-      .filter(g => this.coversDomain(g, state.domain) && !disabled.includes(g.id))
-      .sort((a, b) => rank(a.id) - rank(b.id));
+    return this.coveringFor(groups, state.domain, order).filter(g => !disabled.includes(g.id));
   }
 
   /**

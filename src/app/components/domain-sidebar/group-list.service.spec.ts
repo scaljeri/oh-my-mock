@@ -1,6 +1,8 @@
-import { IData, IOhMyGroup, IState } from '@shared/type';
+import { TestBed } from '@angular/core/testing';
+import { IData, IOhMyGroup, IOhMyMock, IState } from '@shared/type';
 import { GroupUtils } from '@shared/utils/group';
 import { StateUtils } from '@shared/utils/state';
+import { StorageService } from '../../services/storage.service';
 import { GroupListService, countByGroup } from './group-list.service';
 
 const DOMAIN = 'example.com';
@@ -80,6 +82,56 @@ describe('countByGroup', () => {
     const cloud = group({ id: 'cloud', source: 'cloud' });
 
     expect(countByGroup([request()], [cloud], DOMAIN)).toEqual({ cloud: 0 });
+  });
+});
+
+describe('GroupListService.rowsFor', () => {
+  const rowsWith = async (
+    records: Record<string, unknown>,
+    storeOver: Partial<IOhMyMock>,
+    domainState: IState
+  ) => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: StorageService,
+          useValue: {
+            getMany: (keys: string[]) =>
+              Promise.resolve(
+                Object.fromEntries(
+                  keys.filter((k) => k in records).map((k) => [k, records[k]])
+                )
+              )
+          }
+        }
+      ]
+    });
+
+    return TestBed.inject(GroupListService).rowsFor(
+      storeOver as IOhMyMock,
+      domainState
+    );
+  };
+
+  /**
+   * The drawer's own contract is "the order that decides who answers". The
+   * derived local group used to be unshifted to the *front* while the serving
+   * order ranks an unlisted id *last* — so the drawer showed the local group
+   * answering first exactly when it answered after everyone else.
+   */
+  it('puts the derived local group where it serves from — last, not first', async () => {
+    const cloud = group({ id: 'cloud-1', source: 'cloud' });
+
+    const rows = await rowsWith(
+      { 'cloud-1': cloud },
+      { groups: ['cloud-1'] },
+      state()
+    );
+
+    expect(rows.map((r) => r.group.id)).toEqual([
+      'cloud-1',
+      GroupUtils.localIdFor(DOMAIN)
+    ]);
   });
 });
 

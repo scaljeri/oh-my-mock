@@ -180,21 +180,19 @@ export class OhMyStateService {
   /**
    * The groups answering for this domain, best first.
    *
-   * The domain's own group is included whether or not its record has been
-   * written — its id is derived, and `ensureGroups` does not run on every path.
-   * The same rule the content script uses, because a list that disagrees with
-   * what is being served is worse than no list.
+   * `GroupUtils.activeFor` with what this popup holds — the same call the
+   * content script serves with, because a list that disagrees with what is
+   * being served is worse than no list. The derived local group is appended
+   * inside `coveringFor`, and a record `store.groups` does not list is refused
+   * there too.
    */
   public activeGroups(state: IState | undefined = this.state): IOhMyGroup[] {
     if (!state) {
       return [];
     }
 
-    const known = Object.values(this.groups);
-    const local = GroupUtils.localFor(known, state.domain);
-
     return GroupUtils.activeFor(
-      local ? known : [...known, GroupUtils.defaultLocalFor(state.domain)],
+      Object.values(this.groups),
       state,
       this.store?.groups ?? []
     );
@@ -209,11 +207,16 @@ export class OhMyStateService {
       return undefined;
     }
 
-    return GroupUtils.localFor(Object.values(this.groups), state.domain)
-      ?? GroupUtils.defaultLocalFor(state.domain);
+    return GroupUtils.localOrDefault(Object.values(this.groups), state.domain);
   }
 
-  /** Loads the group records the store lists, once. */
+  /**
+   * Fetches the group records the store lists that are not in the map yet.
+   *
+   * Called at start-up and again on every store update — `store.groups` is the
+   * list of groups as well as their order, so a store write is how this popup
+   * learns a group came into being.
+   */
   public async loadGroups(): Promise<void> {
     const listed = this.store?.groups ?? [];
     const missing = listed.filter((id) => !this.groups[id]);
@@ -356,11 +359,33 @@ export class OhMyStateService {
           this.cookiesSubject.next(this.cookies);
           break;
         }
+        case objectTypes.GROUP: {
+          // Groups are their own records too. Without this case the map was
+          // filled once at start-up and never followed a rename, a new group
+          // or a deletion — the content script handles the same two updates
+          // (this one and the store's below), and a popup that disagrees with
+          // what is being served is exactly what groups exist to prevent.
+          const group = (update.newValue ?? update.oldValue) as IOhMyGroup;
+
+          this.groups = { ...this.groups };
+
+          if (update.newValue) {
+            this.groups[group.id] = update.newValue as IOhMyGroup;
+          } else {
+            delete this.groups[group.id];
+          }
+
+          this.groupsSubject.next(this.groups);
+          break;
+        }
         case objectTypes.MOCK:
           this.responseSubject.next(update.newValue as IMock);
           break;
         case objectTypes.STORE:
           this.store = update.newValue as IOhMyMock;
+          // `store.groups` is both the list of groups and their order, so this
+          // update can name records the popup has not read yet.
+          this.loadGroups();
           this.storeSubject.next(update.newValue as IOhMyMock);
           break;
       }

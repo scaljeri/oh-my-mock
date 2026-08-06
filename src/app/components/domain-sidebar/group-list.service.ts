@@ -86,22 +86,20 @@ export class GroupListService {
       return [];
     }
 
-    const order = store.groups ?? [];
-    const records = await this.storageService.getMany<IOhMyGroup>([...order]);
-    const groups = order
-      .map((id) => records[id])
-      .filter((g): g is IOhMyGroup => GroupUtils.isGroup(g))
-      .filter((g) => GroupUtils.coversDomain(g, state.domain));
-
-    // The domain's own group, whether or not its record has been written yet.
-    // `ensureGroups` writes it, but only runs on some paths — at worker start,
-    // and when a domain first becomes known to a handler — and a sidebar that
-    // waited for it would show a domain with mocks as having no groups at all.
-    // The id is derived, so the row here and the record that arrives later are
-    // the same group.
-    if (!GroupUtils.localFor(groups, state.domain)) {
-      groups.unshift(GroupUtils.defaultLocalFor(state.domain));
-    }
+    const order = [...(store.groups ?? [])];
+    const records = await this.storageService.getMany<IOhMyGroup>(order);
+    // `coveringFor`, so the rows are — by construction — the list the serving
+    // path consults: same membership, same order, switched-off ones included.
+    // It also appends the domain's own group when its record has not been
+    // written yet (`ensureGroups` only runs on some paths), *at the end*: the
+    // derived group used to be unshifted to the front here while the serving
+    // order ranks an unlisted id last, so the drawer showed the local group
+    // answering first exactly when it answered last.
+    const groups = GroupUtils.coveringFor(
+      Object.values(records).filter((g): g is IOhMyGroup => GroupUtils.isGroup(g)),
+      state.domain,
+      order
+    );
 
     const requests = Object.values(
       await this.storageService.getMany<IData>([...(state.requests ?? [])])

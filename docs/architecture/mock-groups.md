@@ -1,20 +1,11 @@
 # Mock groups
 
-**Status: model, serving and the drawer are built; the traffic list and the
-non-local sources are not.** The records, the resolution and the migration
-exist (`src/shared/types/group.ts`, `src/shared/utils/group.ts`,
-`src/background/ensure-groups.ts`). The serving path reads them on every
-intercepted call — `OhMyContentState.activeGroups()` feeds the indexed lookup
-in `src/shared/utils/request-index.ts`, so a switched-off group genuinely stops
-answering. The drawer lists a domain's groups and toggles them per domain
-(`src/app/components/domain-sidebar`, backed by
-`IState.aux.disabledGroups`), and `tests/specs/sidebar-groups.spec.ts` covers
-all of it end to end, the served response included. What does **not** exist
-yet: the request list as *traffic* (with the who-answered badge and the Clear
-button below), and groups from anywhere but this browser — `server` and
-`cloud` are in the source type, but no group of either kind can be created or
-filled today. The rest is written down so the shape stops being reconstructed
-from scratch every time.
+**Status: model, serving path and sidebar built.** The records, the resolution
+and the migration exist (`src/shared/types/group.ts`, `src/shared/utils/group.ts`,
+`src/background/ensure-groups.ts`); the serving path consults them through
+`OhMyRequestIndex`, and the sidebar draws them (`domain-sidebar/`). The group
+*view* — the library — is not built yet. The rest is written down so the shape
+stops being reconstructed from scratch every time.
 
 ## The problem it solves
 
@@ -90,20 +81,15 @@ hover.
 
 ## What this changes in the code
 
-Three things were known to be in the way; two are done:
+Three things are known to be in the way:
 
-1. **The request list is not traffic today.** Still true. It shows every stored
-   request, called or not — `+ Add` creates one, and a HAR import creates
-   forty. This is the piece of the design still to build.
-2. ~~**`lastHit` does not mean "was called".**~~ **Done.** `IData.calledAt`
-   exists and the interception is its only writer
-   (`src/content/handle-api-request.ts`); `tests/specs/called-at.spec.ts` pins
-   that a request created by hand never gets one.
-3. ~~**The sidebar is the domain switcher.**~~ **Done, differently.** The
-   drawer became the group list, and the domain navigation did not become a
-   filter row above it — it turned out not to be navigation at all: the active
-   tab decides the domain, and managing domains moved to a page of its own
-   (`src/app/pages/domains`).
+1. **The request list is not traffic today.** It shows every stored request,
+   called or not — `+ Add` creates one, and a HAR import creates forty.
+2. **`lastHit` does not mean "was called".** `DataUtils.create` sets it to
+   `Date.now()` for a request made by hand. "Actually called" needs a field the
+   interception is the only writer of.
+3. **The sidebar is the domain switcher.** If it becomes the group list, that
+   navigation has to go somewhere.
 
 ## The sources
 
@@ -126,15 +112,12 @@ stores what it is given, so importing twice leaves two requests for one url and
 `findRequest`, which answers with the first match, picks between them
 arbitrarily.
 
-## Settled since — and built since
+## Settled since
 
-All three of these are in the code now:
-
-- **The sidebar became the group list.** Not two levels: the groups are the
-  thing being worked with, and burying them one expand deep makes the common
-  act — switching a group off — the slow one. One amendment on the way in: the
-  planned domain filter row above it was dropped, because the active tab
-  already decides the domain — see item 3 above.
+- **The sidebar becomes the group list, with the domains as a filter row above
+  it.** Not two levels: the groups are the thing being worked with, and burying
+  them one expand deep makes the common act — switching a group off — the slow
+  one. The domain row keeps the navigation that the sidebar is today.
 - **The order is global**, the position in `IOhMyMock.groups`. A group covers
   one domain in almost every case, so a per-domain order would be the same list
   written out once per domain, each copy another thing to keep in step. It can
@@ -144,6 +127,22 @@ All three of these are in the code now:
   to be: the toggle means "not here", and the group stays on for the other
   domains it covers. Storing the *exception* rather than the activation is what
   makes "a group that arrives already applies" work.
+- **Being listed in `IOhMyMock.groups` is what makes a group exist.** Every
+  reader gets its group ids from that list, so a record the list does not name
+  cannot even be fetched on a fresh load — an earlier rule, "an unlisted group
+  still serves, sorted last", was one only a tab that happened to overhear the
+  record's write could follow, and gave the same group three answers. Unlisted
+  now means deleted, or not yet adopted (`ensureGroups` adopts strays into the
+  list when it scans); either way, not serving and not drawn. The one exception
+  is a domain's own **local** group: its id is derived, so it exists by virtue
+  of the domain and serves — sorted last — before its record is written or
+  listed. `GroupUtils.coveringFor` is the single implementation of this rule;
+  the sidebar draws it and `activeFor` serves it minus the switched-off rows.
+- **A local group dies with its domain.** Deleting a domain used to leave the
+  group record and its list entry behind for ever — and because the id is
+  derived, re-adding the domain silently reused the leftover. `ensureGroups`
+  prunes local groups whose domain is gone; `server` and `cloud` groups keep
+  their records while their domains come and go.
 
 ## Still open
 
