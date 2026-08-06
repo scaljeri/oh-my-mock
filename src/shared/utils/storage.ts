@@ -137,7 +137,7 @@ export class StorageUtils {
    * reaches for this is reintroducing the race.
    */
   static setStore(store: IOhMyMock): Promise<void> {
-    return StorageUtils.set(STORAGE_KEY, store)
+    return StorageUtils.write(STORAGE_KEY, store);
   }
 
   // Generic rather than `unknown & { version?: string }`, which collapses to
@@ -145,6 +145,25 @@ export class StorageUtils {
   // of its own — the excess-property check. Callers passing a variable slipped
   // through, which is why it went unnoticed.
   static set<T extends { version?: string }>(key: string, value: T): Promise<void> {
+    // The store record has one way in, and this is not it.
+    //
+    // Every writer of that record contends with every other, so they are
+    // serialised through `mutateStore` in `src/background/store-writer.ts` —
+    // which reaches storage through `setStore`. Saying so in a comment was all
+    // that held the line, and a comment does not survive the next person in a
+    // hurry. Refusing here makes the queue the only door: whole-record writes
+    // that skipped it lost every domain registered since the writer's read.
+    if (key === STORAGE_KEY) {
+      throw new Error(
+        'Write the store through `mutateStore` (src/background/store-writer.ts), not `StorageUtils.set`'
+      );
+    }
+
+    return StorageUtils.write(key, value);
+  }
+
+  /** The plain write both of the above end in. */
+  private static write<T extends { version?: string }>(key: string, value: T): Promise<void> {
     return new Promise(resolve => {
       if (value && !value.version) {
         value.version = StorageUtils.appVersion;

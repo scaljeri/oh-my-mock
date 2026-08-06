@@ -10,9 +10,16 @@
  *
  * The bundle is a `world: 'MAIN'` content script now, which Chromium does not
  * apply the page's CSP to (measured on 151), so the third test below passes
- * without any of that happening — no header rewrite, no reload. The escalation
- * is still wired up in `page-context.ts` for a page-context bundle that fails
- * to arrive for some other reason, and nothing here exercises it any more.
+ * without any of that happening — no header rewrite, no reload.
+ *
+ * The escalation has since been **removed altogether**, along with the
+ * `declarativeNetRequest` permission it needed. It answered "the bundle did not
+ * announce itself", which no longer has CSP among its causes, so it would have
+ * stripped a site's security header and reloaded the page in response to
+ * something stripping the header cannot fix — and no test could reach it,
+ * because the case it existed for cannot be produced any more. The extension
+ * does not weaken the site under test at all now, and these three specs are
+ * what says so.
  */
 
 import { expect, SITE_DOMAIN, test } from '../fixtures/extension';

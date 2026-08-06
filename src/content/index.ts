@@ -19,7 +19,6 @@ import { receivedApiRequest } from './handle-api-request';
 // import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
 import { error } from './utils';
-import { escalateIfBlocked, whenBundleArrives } from './page-context';
 import { sendMsg2Popup } from './message-to-popup';
 
 window.onunhandledrejection = function (event: PromiseRejectionEvent) {
@@ -46,17 +45,6 @@ const messageBus = new OhMyMessageBus()
   .setTrigger(triggerWindow)
   .setTrigger(triggerRuntime);
 ohMyWindow().off?.push(() => messageBus.clear());
-
-/**
- * Whether the page-context bundle turned up in this page's own world.
- *
- * Started here, before the first `await` anywhere: the bundle announces itself
- * while it patches, and `whenBundleArrives` has to be listening by then. It is
- * only ever read to decide whether a Content-Security-Policy is worth
- * escalating — nothing in the request path waits for it, because the bundle
- * being on the page is a decision the background already made.
- */
-const bundleArrived = whenBundleArrives(messageBus);
 
 /**
  * Tells the page-context bundle whether this domain is mocked.
@@ -198,13 +186,6 @@ async function startUp(): Promise<void> {
 
   announceVerdict(true);
 
-  if (!(await bundleArrived)) {
-    // A domain that is switched on, and no page-context bundle on the page. The
-    // realistic cause left is a Content-Security-Policy, so ask the background
-    // to strip the header and reload — which is only ever worth doing for a
-    // domain that is actually being mocked.
-    await escalateIfBlocked();
-  }
 }
 
 void startUp().catch(err => {

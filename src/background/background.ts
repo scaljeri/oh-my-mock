@@ -22,7 +22,6 @@ import './server-dispatcher';
 // which the background hosts in an offscreen document. Used to be the popup's
 // job, and was why such a mock needed the popup open.
 import './eval-dispatcher';
-import { pruneExpiredCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { connectIfEnabled } from './dispatch-remote';
 import { initRemoteLink } from './remote-link';
@@ -33,7 +32,6 @@ import { OhMyStoreHandler } from './handlers/store-handler';
 import { addDomain, clearStore } from './store-writer';
 import { OhMyHitsHandler } from './handlers/hits-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
-import { contentScriptListeners } from './content-script-listeners';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
 import { initCookieSync, primeCookieSync } from './cookie-sync';
 import { initCookieRecorder } from './cookie-recorder';
@@ -45,18 +43,6 @@ import { reconcileMainWorldScripts, watchActiveDomains } from './main-world';
 reportUncaughtErrors();
 
 
-async function test() {
-  // Only our own, and only the ones whose lifetime ran out while the worker was
-  // away. This used to call `removeCSPRules()` with no arguments, which removed
-  // **every** session rule in the browser — including one installed for a page
-  // that is still open, since session rules outlive the worker and MV3 restarts
-  // it every thirty seconds of idle.
-  await pruneExpiredCSPRules(Date.now());
-  // Promise.all([chrome.declarativeNetRequest.getSessionRules(), chrome.declarativeNetRequest.getDynamicRules()]).then((v) => {
-  //   console.log('CSP SETUP', v[0], v[1]);
-  // });
-}
-test();
 
 const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
@@ -138,7 +124,6 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
 // streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
-contentScriptListeners(messageBus); // TODO
 
 const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.ADD_DOMAIN, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
   [appSources.CONTENT, appSources.POPUP])

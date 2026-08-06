@@ -88,6 +88,3 @@ export interface IOhMyImportStatus {
   status: ImportResultEnum;
 }
 
-export interface IOhMyCSPResponse {
-  activated: boolean;
-}

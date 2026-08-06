@@ -79,11 +79,38 @@ describe('Utils/Storage', () => {
   });
 
   describe('#setStore', () => {
-    it('should set the storage key', () => {
-      jest.spyOn(StorageUtils, 'set').mockResolvedValue(undefined);
-      StorageUtils.setStore('store' as any);
+    // The effect, not the delegation: `setStore` used to be asserted by
+    // spying on `set`, which pinned an implementation detail and broke the
+    // moment the store stopped going through it.
+    it('writes the store record', async () => {
+      await StorageUtils.setStore({ a: 1 } as never);
 
-      expect(StorageUtils.set).toHaveBeenCalledWith(STORAGE_KEY, 'store');
+      expect(StorageUtils.chrome.storage.local.set).toHaveBeenLastCalledWith(
+        { [STORAGE_KEY]: { a: 1, version: '1.2.3' } },
+        expect.anything()
+      );
+    });
+
+    /**
+     * The store record has one way in, and `set` is not it.
+     *
+     * Every writer of that record contends with every other, so they are
+     * serialised through `mutateStore`, which reaches storage through
+     * `setStore`. A comment saying so was all that held the line — and a
+     * whole-record write that skipped the queue lost every domain registered
+     * since the writer read it, which is the bug that made the queue
+     * necessary. Refusing here makes the queue the only door.
+     */
+    it('refuses the store key through the general setter', () => {
+      // Synchronously, on purpose. This is a programming error, not a runtime
+      // condition, and a rejected promise would land in whichever `.catch`
+      // happened to be nearest — this codebase has lost enough failures that
+      // way. Thrown, it cannot be mistaken for a write that happened.
+      expect(() => StorageUtils.set(STORAGE_KEY, { a: 1 } as never)).toThrow(
+        'mutateStore'
+      );
+
+      expect(StorageUtils.chrome.storage.local.set).not.toHaveBeenCalled();
     });
   });
 

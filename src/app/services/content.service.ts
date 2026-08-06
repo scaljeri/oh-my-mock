@@ -9,7 +9,6 @@ import { DataUtils } from '@shared/utils/data';
 import { StateUtils } from '@shared/utils/state';
 import { IPacket } from '@shared/packet-type';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
-import { StorageUtils } from '@shared/utils/storage';
 import { send2content } from '../utils/send2content';
 import { Observable, Subject } from 'rxjs';
 
@@ -154,11 +153,4 @@ export class ContentService {
     return OhMySendToBg.patch(false, '$', 'popupActive', payloadType.STORE);
   }
 
-  reset(key: string): Promise<void> {
-    if (key) {
-      return OhMySendToBg.reset(key).then(() => {});
-    } else {
-      return StorageUtils.reset();
-    }
-  }
 }

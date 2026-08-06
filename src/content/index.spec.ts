@@ -24,8 +24,6 @@ const mockInit = jest.fn<Promise<void>, []>();
 const mockIsActive = jest.fn<boolean, [unknown?]>();
 const mockIsActive$ = new Subject<boolean | undefined>();
 
-const mockWhenBundleArrives = jest.fn<Promise<boolean>, []>();
-const mockEscalateIfBlocked = jest.fn<Promise<void>, []>();
 const mockSendMessageToInjected = jest.fn();
 const mockError = jest.fn();
 
@@ -42,10 +40,6 @@ jest.mock('./content-state', () => ({
   }
 }));
 
-jest.mock('./page-context', () => ({
-  whenBundleArrives: mockWhenBundleArrives,
-  escalateIfBlocked: mockEscalateIfBlocked
-}));
 
 jest.mock('./send-to-injected', () => ({ sendMessageToInjected: mockSendMessageToInjected }));
 jest.mock('./utils', () => ({ error: mockError, debug: jest.fn() }));
@@ -85,7 +79,6 @@ describe('content-script start-up', () => {
     mockInitContext.mockResolvedValue(undefined);
     mockInit.mockResolvedValue(undefined);
     mockIsActive.mockReturnValue(false);
-    mockWhenBundleArrives.mockResolvedValue(true);
   });
 
   /**
@@ -160,37 +153,4 @@ describe('content-script start-up', () => {
     expect(order).toEqual(['init', 'verdict']);
   });
 
-  /**
-   * A switched-on domain with no bundle on the page has one realistic cause
-   * left: a Content-Security-Policy strict enough to keep it out. That is worth
-   * stripping the site's header and reloading for — and only then.
-   */
-  it('escalates the CSP when the bundle never turns up on an active domain', async () => {
-    mockIsActive.mockReturnValue(true);
-    mockWhenBundleArrives.mockResolvedValue(false);
-
-    require('./index');
-    await settled();
-
-    expect(mockEscalateIfBlocked).toHaveBeenCalled();
-  });
-
-  /** Reloading a page the user is not mocking would be a poor trade for nothing. */
-  it('does not escalate the CSP on a domain that is switched off', async () => {
-    mockWhenBundleArrives.mockResolvedValue(false);
-
-    require('./index');
-    await settled();
-
-    expect(mockEscalateIfBlocked).not.toHaveBeenCalled();
-  });
-
-  it('does not escalate when the bundle is there', async () => {
-    mockIsActive.mockReturnValue(true);
-
-    require('./index');
-    await settled();
-
-    expect(mockEscalateIfBlocked).not.toHaveBeenCalled();
-  });
 });
