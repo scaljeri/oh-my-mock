@@ -4,6 +4,7 @@ import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
+import { isForgotten, rememberDomain } from "../forgotten-domains";
 import { mutateStore } from "../store-writer";
 import { error } from "../utils";
 
@@ -79,8 +80,26 @@ export class OhMyStateHandler {
       const known = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
 
       if (!StoreUtils.hasState(known, domain)) {
+        // The domain exists again, so a tombstone left by an earlier "forget
+        // this domain" has to go — otherwise a domain deleted and then visited
+        // again would be refused its record for the rest of the browser
+        // session, and mocking would silently do nothing on a site the user
+        // had just added back.
+        await rememberDomain(domain);
+
         await mutateStore(store =>
           StoreUtils.hasState(store, domain) ? undefined : StoreUtils.setState(store, state));
+      } else if (await isForgotten(domain)) {
+        // Listed a moment ago, forgotten since. This write was decided before
+        // the removal ran and would put the record back for a domain that is
+        // being unlisted — a state, and every request it names, left in
+        // storage with nothing naming it. The list and the record live under
+        // different storage keys and `chrome.storage` has no transaction
+        // across them, so this is the only place the two can be kept in step
+        // without putting every state write in the store's queue: a state is
+        // written on every aux change, every filter keystroke and every
+        // intercepted request. See `forgotten-domains.ts`.
+        return undefined;
       }
 
       // if (state.aux.appActive && state.aux.popupActive) {

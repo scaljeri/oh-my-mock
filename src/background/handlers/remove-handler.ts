@@ -8,6 +8,7 @@ import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import jsonFromFile from '../../shared/dummy-data.json';
 import { isApplied, unapplyCookie } from "../cookie-jar";
+import { forgetDomain } from "../forgotten-domains";
 import { mutateStore } from "../store-writer";
 import { error } from "../utils";
 import { warn } from "../utils";
@@ -51,6 +52,20 @@ export class OhMyRemoveHandler {
 
     try {
       if (data.type === objectTypes.STATE) { // Delete State
+        if (data.removeDomain) {
+          // The very first thing, before a single record is deleted.
+          //
+          // The state handler skips the store's write queue entirely for a
+          // domain that is already listed — deliberately, since a state is
+          // written on every aux change and every intercepted request — so a
+          // write decided before this removal started can land at any point
+          // during it. Saying so up front is what lets that write see the
+          // domain is going and hold back; said later, it only covers the part
+          // of the removal that comes after it, and everything deleted before
+          // then could still be written back. See `forgotten-domains.ts`.
+          await forgetDomain(state.domain);
+        }
+
         const requests = await StorageUtils.getMany<IData>(state.requests);
         const mockIds = Object.values(requests).flatMap(d => Object.keys(d.mocks));
 
