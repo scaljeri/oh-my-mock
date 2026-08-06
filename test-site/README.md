@@ -14,6 +14,11 @@ why the server files use the `.mts` extension.
 
 The Playwright suite starts this automatically (see `webServer` in
 `playwright.config.ts`), so you only need to run it by hand for manual testing.
+It starts one **per run, on a port of its own** rather than reusing whatever is
+already listening: the hit counter behind "the server was never contacted" is
+global to the server process, so two runs sharing one server count each other's
+requests. Pass `SITE_PORT=8090` to point a run at the site you started here
+instead — worth it while debugging one spec, never worth it for a full run.
 
 ### The SDK server (opt-in)
 

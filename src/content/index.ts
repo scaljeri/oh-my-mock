@@ -204,8 +204,13 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // TODO: send result back to injected???
 }
 
-// Inject XHR/Fetch mocking code and more
-(async function () {
+/**
+ * Everything that has to happen before the page's own requests can be let go.
+ *
+ * A function rather than the bare IIFE it used to be, so that the one caller
+ * can catch it — see below.
+ */
+async function startUp(): Promise<void> {
   // Enough to answer "is this domain switched on", and no more. The shim is
   // holding the page's own requests until one of the two branches below runs,
   // so a page this extension does nothing for waits on two storage reads rather
@@ -255,4 +260,26 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
   // which is the point — it was in place before the answer was.
   await announceVerdict(active);
   settleFirstVerdict?.();
-})();
+}
+
+// Inject XHR/Fetch mocking code and more
+void startUp().catch(err => {
+  // `initContext()` reads `chrome.storage`, and that read throws for real
+  // reasons — "Extension context invalidated" the moment the extension is
+  // reloaded under a live page is the everyday one. Every release above sits
+  // *after* that await, so a rejection meant the shim went on holding, the
+  // bundle was never told a verdict, and `settleFirstVerdict` was never called,
+  // so the storage-change path could not rescue it either. Not one request the
+  // page made — then or at any point afterwards — ever settled, and nothing
+  // anywhere said why.
+  //
+  // Not knowing whether a domain is mocked is a reason to let its page run. It
+  // is never a reason to stop it.
+  error('OhMyMock could not start up on this page, letting its requests through', err);
+
+  releaseEarlyShim();
+  // And the bundle, which holds calls of its own. `finally` rather than `then`:
+  // this is the path where things are already going wrong, and the point of it
+  // is that the first verdict gets settled whatever happens.
+  void announceVerdict(false).finally(() => settleFirstVerdict?.());
+});

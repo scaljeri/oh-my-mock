@@ -80,21 +80,48 @@ test.describe('a request made while the page loads', () => {
 
     // Counted from the page as well as from the server, because the two answer
     // different questions and this assertion has failed on the difference. The
-    // server's counter is reset per test but the server is shared and the tests
-    // are sequential, so a request from an earlier spec that lands after the
-    // reset is counted here — whereas the page's own resource timings can only
-    // contain what *this* page asked for. One page-side entry with two on the
-    // server is a straggler; two page-side entries is the extension sending the
-    // request twice, which is a real bug and the thing worth failing over.
+    // page's resource timings can only contain what *this* page asked for; the
+    // server's counter contains whatever reached the server since it was last
+    // cleared, which for a long time included another run's requests entirely —
+    // the site listened on one fixed port and a second suite reused it, until
+    // `playwright.config.ts` started giving each run a port of its own.
+    //
+    // Two page-side entries is therefore the extension having sent the request
+    // twice, and the thing worth failing over. One against two on the server is
+    // *probably* a request that was never this page's — but only probably: a
+    // duplicate whose response nobody reads has no reason to have been buffered
+    // as a resource timing yet. Read the journal below before concluding.
     const fromPage = await site.page.evaluate(
       () =>
         performance
           .getEntriesByType('resource')
-          .filter((e) => new URL(e.name).pathname === '/api/json').length
+          .filter((e) => new URL(e.name).pathname === '/api/json')
+          .map((e) => ({
+            initiatorType: (e as PerformanceResourceTiming).initiatorType,
+            startTime: Math.round(e.startTime),
+            duration: Math.round(e.duration)
+          }))
     );
 
-    expect(fromPage).toBe(1);
-    expect(await server.hitCount('GET /api/json')).toBe(1);
+    const fromServer = await server.hitCount('GET /api/json');
+
+    // When the two disagree, the journal is what tells the two apart without a
+    // second run: it says when each request landed and which test the counter
+    // was cleared for, so the failure arrives explained rather than as a number.
+    if (fromPage.length !== 1 || fromServer !== 1) {
+      // eslint-disable-next-line no-console
+      console.log(
+        'the on-load call was not counted once — page, server, journal:',
+        JSON.stringify(
+          { fromPage, fromServer, journal: await server.journal() },
+          null,
+          2
+        )
+      );
+    }
+
+    expect(fromPage.length).toBe(1);
+    expect(fromServer).toBe(1);
 
     // The other on-load call, the one with something to lose. It was held while
     // the verdict was in flight and then handed over — `/api/echo` reflects what

@@ -1,16 +1,11 @@
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
 import { update } from "../../shared/utils/partial-updater";
-import { STORAGE_KEY } from "../../shared/constants";
 import { IOhMyMock } from "../../shared/types/store";
-import { StorageUtils } from "../../shared/utils/storage";
-import { StoreUtils } from "../../shared/utils/store";
-import { ensureGroups } from "../ensure-groups";
+import { mutateStore } from "../store-writer";
 import { error } from "../utils";
 
 export class OhMyStoreHandler {
-  static StorageUtils = StorageUtils;
-
-  static async update({ data, context }: IPacketPayload<IOhMyMock, IOhMyPacketContext>): Promise<IOhMyMock | undefined> {
+  static async update({ data, context }: IPacketPayload<Partial<IOhMyMock>, IOhMyPacketContext>): Promise<IOhMyMock | undefined> {
     // `data === undefined` is nothing to write; `false`, `0` and `''` are
     // values. This was `if (!data)`, which ate `deactivate()`'s
     // `patch(false, '$', 'popupActive', STORE)` — harmless only because nothing
@@ -20,22 +15,24 @@ export class OhMyStoreHandler {
       return undefined;
     }
 
-    let store: IOhMyMock = data;
-
     try {
       if (context?.kind === 'patch') {
-        store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY) ?? StoreUtils.init();
-        store = update<IOhMyMock>(context.path, store, context.propertyName, data);
+        // The record comes from `mutateStore`, freshly read and nobody else's,
+        // so `update` may write into it.
+        return await mutateStore(store =>
+          update<IOhMyMock>(context.path, { ...store }, context.propertyName, data));
       }
 
-      // Every domain the store lists needs the local group its mocks belong to.
-      // Cheap once they all have one — see `ensureGroups`, which reads the
-      // listed groups and stops there rather than scanning storage. Here as
-      // well as in the state handler because the popup announcing itself writes
-      // the store without going near a state.
-      store = await ensureGroups(store);
-
-      return StorageUtils.setStore(store).then(() => store);
+      // Everything else is a **merge** of the fields the sender named onto the
+      // record as it stands now. It used to be the record itself: the popup
+      // read the whole store, spread its one change over it and sent the
+      // result, which was then written verbatim. So opening the popup wrote
+      // back the `domains` and `groups` of whenever the popup had last read
+      // them — undoing every domain registered and every group created since.
+      // Nothing over the wire can replace the store wholesale any more, which
+      // is the point: a sender is not in a position to say what the fields it
+      // did not touch should be.
+      return await mutateStore(store => ({ ...store, ...data }));
     } catch (err) {
       error('Could not update the store', err);
 

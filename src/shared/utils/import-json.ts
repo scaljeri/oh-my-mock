@@ -1,13 +1,13 @@
 import { objectTypes } from '../constants';
 import { IOhMyImportStatus } from '../packet-type';
-import { IData, IMock, IOhMyContext, IOhMyCookie, IOhMyMock, IOhMyPresets, IState, ohMyMockId, ohMyPresetId } from '../type';
+import { IData, IMock, IOhMyContext, IOhMyCookie, IOhMyPresets, IState, ohMyMockId, ohMyPresetId } from '../type';
 import { DataUtils } from './data';
 import { MigrateUtils } from './migrate';
 import { IOhMyStoredRecord } from './migrations/types';
 import { PresetUtils } from './preset';
 import { StateUtils } from './state';
 import { StorageUtils } from './storage';
-import { StoreUtils } from "../../shared/utils/store";
+import { StoreRegistrar } from './store-registrar';
 import { uniqueId } from './unique-id';
 
 export enum ImportResultEnum {
@@ -243,6 +243,14 @@ export async function importJSON(data: IOhMyBackupInput, context: IOhMyContext, 
 
     if (occupant && occupant.type !== objectTypes.REQUEST) {
       request.id = uniqueId();
+    } else if (occupant?.calledAt !== undefined) {
+      // Re-importing a backup overwrites the very record it was exported from,
+      // and that record may have been called here since. `calledAt` is a fact
+      // about this browser rather than about the backup, so the occupant's is
+      // carried over — dropping it with the rest of the record made a request
+      // that genuinely had been called claim it never was, which is the same
+      // lie as inventing one, told the other way round.
+      request.calledAt = occupant.calledAt;
     }
 
     // Each request is its own record; the state only lists the ids.
@@ -274,14 +282,14 @@ export async function importJSON(data: IOhMyBackupInput, context: IOhMyContext, 
   }
 
   await sUtils.set(state.domain, state);
-  // Is the state new, add it to the store
-  let store = await sUtils.get<IOhMyMock>();
-
-  if (!StoreUtils.hasState(store, state.domain)) {
-    store = StoreUtils.setState(store, state);
-
-    await sUtils.setStore(store);
-  }
+  // The domain has to be listed on the store, and that record is not this
+  // function's to write: an import runs in the popup as often as in the
+  // background, and reading the store here, adding a domain and writing it back
+  // dropped whatever the background had put there in between — the popup's own
+  // `popupActive`, another domain, a group. Unconditional rather than guarded
+  // by a read of the store: the answer is decided where the write is
+  // serialised, and a guard here could only ever be based on a stale one.
+  await StoreRegistrar.addDomain(state.domain);
 
   return { status: ImportResultEnum.SUCCESS, requests: keptRequests.length, responses: keptResponses.length };
 }

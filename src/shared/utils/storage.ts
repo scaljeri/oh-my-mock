@@ -126,6 +126,16 @@ export class StorageUtils {
   //   return data;
   // }
 
+  /**
+   * The store record, replaced wholesale.
+   *
+   * For `src/background/store-writer.ts` and nothing else. The record is the
+   * one thing several parts of the extension all change, and each of them
+   * changes a different field of it — so a caller that reads it, edits its own
+   * field and writes the whole thing back undoes whatever the others wrote in
+   * between. `mutateStore` is where that is kept in order; anything else that
+   * reaches for this is reintroducing the race.
+   */
   static setStore(store: IOhMyMock): Promise<void> {
     return StorageUtils.set(STORAGE_KEY, store)
   }

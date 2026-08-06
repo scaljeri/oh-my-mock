@@ -85,9 +85,17 @@ Three things are known to be in the way:
 
 1. **The request list is not traffic today.** It shows every stored request,
    called or not — `+ Add` creates one, and a HAR import creates forty.
-2. **`lastHit` does not mean "was called".** `DataUtils.create` sets it to
-   `Date.now()` for a request made by hand. "Actually called" needs a field the
-   interception is the only writer of.
+2. ~~**`lastHit` does not mean "was called".**~~ **Done.** `lastHit` still does
+   not — `DataUtils.create` stamps it for a request made by hand, `importJSON`
+   re-stamps every imported one, and both are right to, because it is the list
+   *order*. "Actually called" is `IData.calledAt`, absent until the interception
+   in `src/content/handle-api-request.ts` writes it, and absent on every record
+   stored before it existed. Nothing else may write it, which is why `importJSON`
+   and the export dialog strip it and `cloneRequest` drops it. No migration
+   backfilled it: an old record cannot say whether its `lastHit` came from a real
+   hit or from `DataUtils.create`, so backfilling would have re-told exactly the
+   lie the field was added to stop. So the traffic list can be built on
+   `calledAt` today; what it must not do is arrive before the group view.
 3. **The sidebar is the domain switcher.** If it becomes the group list, that
    navigation has to go somewhere.
 

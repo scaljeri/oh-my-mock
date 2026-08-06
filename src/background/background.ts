@@ -31,6 +31,7 @@ import { reportError, reportUncaughtErrors } from './report-error';
 import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
+import { addDomain, clearStore } from './store-writer';
 import { OhMyHitsHandler } from './handlers/hits-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { contentScriptListeners } from './content-script-listeners';
@@ -69,6 +70,20 @@ initCookieSync();
 initCookieRecorder(queue);
 
 queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
+// Its own lane, and a one-liner: the ordering that matters is not between
+// packets but between writers of the store record, and `mutateStore` is where
+// that is kept.
+queue.addHandler(payloadType.ADD_DOMAIN, async (payload: IPacketPayload) => {
+  const domain = payload.context?.domain;
+
+  if (!domain) {
+    error('Cannot add a domain to the store without one', payload);
+
+    return undefined;
+  }
+
+  return addDomain(domain);
+});
 queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REQUEST, OhMyRequestHandler.update);
@@ -98,7 +113,11 @@ queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
 queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
   // Currently this action only supports a full reset. For a Response/State reset use REMOVE
   try {
-    await StorageUtils.reset();
+    // The wipe joins the store's write queue rather than running beside it. A
+    // change that was already in flight would otherwise land *after* the clear
+    // and write the store back with the domains it had read before it —
+    // domains whose records, requests and mocks had just been deleted.
+    await clearStore();
     await initStorage(payload.context?.domain);
     await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
   } catch (err) {
@@ -112,7 +131,7 @@ queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 contentScriptListeners(messageBus); // TODO
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.ADD_DOMAIN, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
   [appSources.CONTENT, appSources.POPUP])
 
 /**

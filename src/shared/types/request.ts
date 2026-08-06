@@ -88,10 +88,17 @@ export interface IData extends IOhMyMockContext {
   /**
    * When this browser last intercepted this request — absent if it never has.
    *
-   * The interception is the only writer. A request that was imported, or added
-   * by hand, has none, and the list says nothing about a last hit for it rather
-   * than inventing one. That distinction is what lets the list mean *traffic*
-   * — see `docs/architecture/mock-groups.md`.
+   * The interception is the only writer. A request that was imported, added by
+   * hand or cloned has none, and the list says nothing about a last hit for it
+   * rather than inventing one. That distinction is what lets the list mean
+   * *traffic* — see `docs/architecture/mock-groups.md`.
+   *
+   * Records written before this field existed have none either, and no
+   * migration gives them one. Nothing in such a record can tell a `lastHit` a
+   * real interception wrote from one `DataUtils.create` stamped on a request
+   * typed by hand, so a backfill could only guess — and guessing would re-tell
+   * the very lie this field was added to stop. "Never called" is the honest
+   * answer for a request this build never watched being called.
    */
   calledAt?: number;
   /**

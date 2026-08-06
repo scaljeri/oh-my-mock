@@ -64,6 +64,15 @@ export enum packetType {
 
 export enum payloadType {
   STORE = 'store',
+  /**
+   * "Put this domain in the store's list of domains."
+   *
+   * Its own message rather than a `STORE` one carrying a domain list, because
+   * the list is the one field two writers both add to: a sender cannot say
+   * what the list *is* without undoing whatever was added to it since it last
+   * looked. See `src/background/store-writer.ts`.
+   */
+  ADD_DOMAIN = 'add-domain',
   ACTIVE = 'active',
   RESPONSE = 'response',
   REQUEST = 'request',

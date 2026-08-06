@@ -68,7 +68,15 @@ function assertExtensionBuilt(): void {
   }
 }
 
-/** Where the test site listens. Keep in sync with `playwright.config.ts`. */
+/**
+ * Where this run's test site listens.
+ *
+ * The environment is the authority, not the literal: `playwright.config.ts`
+ * gives every run its own port and passes it down this way, so that two runs on
+ * one machine cannot share a hit counter. The fallbacks are for using these
+ * fixtures outside a Playwright run, where the default port is what
+ * `npm run test-site` starts.
+ */
 export const SITE_ORIGIN = process.env.SITE_ORIGIN ?? 'http://localhost:8090';
 export const ALT_ORIGIN = process.env.ALT_ORIGIN ?? 'http://localhost:8091';
 
@@ -195,8 +203,25 @@ export class SitePage {
 export class TestServer {
   constructor(private readonly origin: string) {}
 
-  async reset(): Promise<void> {
-    await fetch(`${this.origin}/_harness/reset`, { method: 'POST' });
+  /**
+   * Clears the counters. The label goes no further than the server's journal,
+   * where it is what makes an unexpected hit attributable: it says which test
+   * the counter was last cleared for, and therefore whose page a request that
+   * lands afterwards should have come from.
+   */
+  async reset(label?: string): Promise<void> {
+    await fetch(`${this.origin}/_harness/reset`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ label })
+    });
+  }
+
+  /** Every hit and every reset the server has seen, in order. */
+  async journal(): Promise<unknown[]> {
+    const response = await fetch(`${this.origin}/_harness/journal`);
+    const body = (await response.json()) as { journal: unknown[] };
+    return body.journal;
   }
 
   /** Per-endpoint request counts, keyed `"GET /api/json"`. */
@@ -315,9 +340,9 @@ export const test = base.extend<Fixtures>({
     await use(driver);
   },
 
-  server: async ({}, use) => {
+  server: async ({}, use, testInfo) => {
     const server = new TestServer(SITE_ORIGIN);
-    await server.reset();
+    await server.reset(testInfo.titlePath.join(' > '));
     await use(server);
   },
 

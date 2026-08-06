@@ -7,7 +7,7 @@
  * server-side hit count is what actually proves interception.
  */
 
-import { expect, SITE_DOMAIN, test } from '../fixtures/extension';
+import { ALT_ORIGIN, expect, SITE_DOMAIN, test } from '../fixtures/extension';
 
 const MOCK_BODY = { source: 'mock', message: 'served by OhMyMock' };
 
@@ -212,7 +212,10 @@ test.describe('mocking', () => {
     });
     await ohMy.setActive(SITE_DOMAIN);
 
-    await site.open('/', 'http://localhost:8091');
+    // The alternate origin by name, not by port: a run picks its own ports (see
+    // `playwright.config.ts`), so a literal `localhost:8091` is another run's
+    // site as often as it is this one's.
+    await site.open('/', ALT_ORIGIN);
 
     // Injected here too — it is injected on every page — but switched off, and
     // that is the distinction this test is about.

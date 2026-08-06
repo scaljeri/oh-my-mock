@@ -32,12 +32,16 @@ export class StoreUtils {
     return store?.domains?.indexOf(domain) >= 0;
   }
 
+  // A new record rather than the one it was given, like `removeState` below.
+  // The only caller is a mutation handed to `mutateStore`, whose contract is to
+  // *return* the record the store should become — editing the argument in place
+  // and returning it reads as a change to a reader and as none to a writer.
   static setState(store: IOhMyMock, state: IState): IOhMyMock {
-    if (!StoreUtils.hasState(store, state.domain)) {
-      store.domains = [state.domain, ...store.domains];
+    if (StoreUtils.hasState(store, state.domain)) {
+      return store;
     }
 
-    return store;
+    return { ...store, domains: [state.domain, ...store.domains] };
   }
 
 

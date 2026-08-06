@@ -50,6 +50,23 @@ interface IEarlyInjectNamespace {
 }
 
 /**
+ * How long to hold a call before giving up on hearing anything at all.
+ *
+ * `release` is what normally ends the wait, and only the content script sends
+ * it. A content script that never gets that far — its extension reloaded under
+ * a live page, a storage read that threw — left this shim polling for a bundle
+ * that was never coming, with every request the page had made pending for ever
+ * and every later one joining them. That is the worst failure this extension
+ * has: the site looks broken and nothing anywhere says why.
+ *
+ * Deliberately long, and matched to the injected bundle's own backstop
+ * (`ANSWER_TIMEOUT` in `src/injected/message/dispatch-api-request.ts`). This
+ * guards against *never*; firing it early would send a request unmocked that
+ * was about to be mocked, which is the very bug the holding was added to fix.
+ */
+const HOLD_TIMEOUT = 10000;
+
+/**
  * Ad-hoc members the shim parks on each XMLHttpRequest instance.
  *
  * `ohResult` and the two `__oh*` flags are written by the injected bundle, not
@@ -103,6 +120,16 @@ if (!ohMy() || ohMy().restored) {
 
   ohMy().restored = false;
 
+  // One installation's worth, and it has to be cleared here. `release` sets it
+  // when the content script says no bundle is coming, and it used to survive
+  // into the *next* installation: switching a domain on with the page open puts
+  // this shim back over the page's own `fetch`/`XHR` (see `reinstallEarlyShim`),
+  // and a `passthrough` left over from the previous life made it hand every call
+  // straight to them instead of holding it for the bundle that was on its way.
+  // Everything the page fired between the switch and the bundle re-publishing
+  // its entry points went to the server unmocked, silently.
+  ohMy().passthrough = false;
+
   // Calls being held until the injected bundle arrives, or until word comes
   // that none is. Each entry stops its own polling and lets its call through.
   const waiting: (() => void)[] = [];
@@ -113,6 +140,57 @@ if (!ohMy() || ohMy().restored) {
     while (waiting.length) {
       waiting.shift()!();
     }
+  };
+
+  /**
+   * Holds one call until there is somewhere to send it, and sends it **once**.
+   *
+   * There are three ways out — the bundle arriving, `release` giving up on it,
+   * and the backstop — and they used to be independent of one another. The poll
+   * handed a call to the bundle without taking its entry out of `waiting`, so a
+   * `release` afterwards sent the very same request a second time through the
+   * original. On a domain that is switched off both of those happen as a matter
+   * of course: the bundle is injected before the verdict is known, and the
+   * verdict is then what releases the shim. One `GET` reached the server twice —
+   * intermittently, depending on which of the two won the race.
+   *
+   * @param hasBundle whether the injected bundle has published its entry point
+   * @param toBundle  hand the call to the bundle
+   * @param toNetwork hand the call to the implementation the page started with
+   */
+  const hold = function (hasBundle: () => boolean, toBundle: () => void, toNetwork: () => void): void {
+    let done = false;
+
+    // Declared before the timers it cancels, which are therefore referenced
+    // ahead of their declaration — safe, because nothing can call this until
+    // both have been started.
+    const once = function (act: () => void): void {
+      if (done) {
+        return;
+      }
+
+      done = true;
+      clearInterval(sid);
+      clearTimeout(tid);
+      act();
+    };
+
+    const sid = setInterval(function () {
+      if (hasBundle()) {
+        once(toBundle);
+      }
+    }, 50);
+
+    // Giving up is done for every held call at once, through `release` — the
+    // same door the content script uses — so `passthrough` is set with it and
+    // calls made after this one do not each wait out their own timeout.
+    const tid = setTimeout(function () {
+      ohMy().release?.();
+    }, HOLD_TIMEOUT);
+
+    waiting.push(function () {
+      once(toNetwork);
+    });
   };
 
   const dsend = descriptorOf('send');
@@ -128,19 +206,12 @@ if (!ohMy() || ohMy().restored) {
         } else if (ohMy().passthrough) {
           this.__send(body);
         } else {
-          // Wait for the injected code, or for word that none is coming. The
-          // poll catches the bundle arriving; `release` drains this directly.
-          const sid = setInterval(() => {
-            if (ohMy().xhr) {
-              clearInterval(sid);
-              ohMy().xhr?.send.call(this, body);
-            }
-          }, 50);
-
-          waiting.push(() => {
-            clearInterval(sid);
-            this.__send(body);
-          });
+          // Wait for the injected code, or for word that none is coming.
+          hold(
+            () => !!ohMy().xhr,
+            () => ohMy().xhr?.send.call(this, body),
+            () => this.__send(body)
+          );
         }
       }
     },
@@ -199,17 +270,15 @@ if (!ohMy() || ohMy().restored) {
       } else if (ohMy().passthrough) {
         r(origFetch.call(window, input, init));
       } else {
-        const fid = setInterval(function () {
-          if (ohMy().fetch) {
-            clearInterval(fid);
-            r(ohMy().fetch!(input, init));
-          }
-        }, 50);
-
-        waiting.push(function () {
-          clearInterval(fid);
-          r(origFetch.call(window, input, init));
-        });
+        hold(
+          function () { return !!ohMy().fetch; },
+          function () { r(ohMy().fetch!(input, init)); },
+          // `origFetch.call(...)` is *evaluated* here, so reaching this after
+          // the call has already gone to the bundle does not merely resolve a
+          // promise that is already settled — it puts a second request on the
+          // wire whose answer nobody reads. `hold` makes that impossible.
+          function () { r(origFetch.call(window, input, init)); }
+        );
       }
     })
   }

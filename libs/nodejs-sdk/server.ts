@@ -3,6 +3,7 @@ import express from 'express';
 import * as path from "path";
 import { createServer, IOhFileContext } from '.';
 import * as fs from 'fs';
+import { OH_MY_REMOTE_DEFAULTS } from '../../src/shared/types/store';
 
 // const filedir = path.dirname(process.argv[1]).replace(/^\./, '');
 const base = process.cwd();
@@ -11,7 +12,9 @@ const ohArgs = process.argv.slice(2);
 const fileBase = path.join(base, cliArgs(ohArgs, '--basePath', '-b') || '');
 const inputFile = cliArgs(ohArgs, '-c');
 const htmlPath = cliArgs(ohArgs, '--htmlPath', '--html');
-const port = Number(cliArgs(ohArgs, '--port', '-p') || 8000);
+// Same source as `createServer`'s own default, so the two cannot drift apart
+// again — this file said 8000 while `createServer` said 9999.
+const port = Number(cliArgs(ohArgs, '--port', '-p') || OH_MY_REMOTE_DEFAULTS.port);
 
 if (!inputFile) {
   console.log('usage: node server.js -c <input-json-file> [-b path-to-data] [--html static files]')

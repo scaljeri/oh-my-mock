@@ -106,7 +106,15 @@ export class SdkServer {
 
     while (!(await isListening())) {
       if (exited) {
-        throw new Error(`The SDK server exited during start-up:\n${output}`);
+        throw new Error(
+          `The SDK server exited during start-up:\n${output}` +
+            (output.includes('EADDRINUSE')
+              ? '\nPort 8000 is hard-coded in the extension itself ' +
+                '(`src/background/dispatch-remote.ts`), so unlike the test site ' +
+                'it cannot be given a port per run — another suite on this ' +
+                'machine is holding it. Wait for that run to finish.'
+              : '')
+        );
       }
 
       if (Date.now() > deadline) {

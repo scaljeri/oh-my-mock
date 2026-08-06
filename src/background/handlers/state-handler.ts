@@ -4,7 +4,7 @@ import { update } from "../../shared/utils/partial-updater";
 import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import { StoreUtils } from "../../shared/utils/store";
-import { ensureGroups } from "../ensure-groups";
+import { mutateStore } from "../store-writer";
 import { error } from "../utils";
 
 export class OhMyStateHandler {
@@ -63,19 +63,24 @@ export class OhMyStateHandler {
 
         return undefined;
       }
-      // Is the state new, add it to the store
-      let store = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
+      // Is the state new, add it to the store. The read here is a fast path and
+      // nothing more — a state is written on every aux change, every filter
+      // keystroke and every request the page makes, and joining the store's
+      // write queue for each of them would cost a group pass apiece. What the
+      // store *is* is decided inside `mutateStore`, which reads it again in its
+      // own turn: this read can be stale, and acting on a stale one is how a
+      // domain registered a moment earlier used to be dropped again.
+      //
+      // A domain that is new also needs the local group its mocks belong to.
+      // `initStorage` only runs at worker start and on reset, so a domain that
+      // comes into being afterwards — the popup's "Add domain", a site being
+      // activated — would otherwise never get one, and the sidebar would show
+      // it as having no groups for ever. `mutateStore` does that part.
+      const known = await OhMyStateHandler.StorageUtils.get<IOhMyMock>();
 
-      if (!StoreUtils.hasState(store, domain)) {
-        store = StoreUtils.setState(store, state);
-        // A domain that is new here needs the local group its mocks belong to.
-        // `initStorage` only runs at worker start and on reset, so a domain
-        // that comes into being afterwards — the popup's "Add domain", a site
-        // being activated — would otherwise never get one, and the sidebar
-        // would show it as having no groups for ever.
-        store = await ensureGroups(store);
-
-        await OhMyStateHandler.StorageUtils.setStore(store);
+      if (!StoreUtils.hasState(known, domain)) {
+        await mutateStore(store =>
+          StoreUtils.hasState(store, domain) ? undefined : StoreUtils.setState(store, state));
       }
 
       // if (state.aux.appActive && state.aux.popupActive) {

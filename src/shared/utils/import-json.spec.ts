@@ -4,6 +4,7 @@ import { importJSON, ImportResultEnum, IOhMyBackupInput } from './import-json';
 import { MigrateUtils } from './migrate';
 import { IOhMyStoredRecord } from './migrations/types';
 import { StorageUtils } from './storage';
+import { StoreRegistrar } from './store-registrar';
 
 const CONTEXT = { domain: 'test.dev', preset: 'default', active: true };
 
@@ -44,8 +45,12 @@ describe('Utils/importJSON', () => {
 
   let storage: Map<string, unknown>;
   let sUtils: typeof StorageUtils;
+  let addDomain: jest.Mock;
+  const originalAddDomain = StoreRegistrar.addDomain;
 
   beforeEach(() => {
+    addDomain = jest.fn(() => Promise.resolve());
+    StoreRegistrar.addDomain = addDomain;
     storage = new Map<string, unknown>();
     // `importJSON` registers a brand new domain on the store, so one has to
     // exist before anything can be imported into it.
@@ -65,6 +70,7 @@ describe('Utils/importJSON', () => {
   });
 
   afterEach(() => {
+    StoreRegistrar.addDomain = originalAddDomain;
     MigrateUtils.version = originalVersion;
     MigrateUtils.requestSteps = originalRequestSteps;
     MigrateUtils.mockSteps = originalMockSteps;
@@ -173,6 +179,19 @@ describe('Utils/importJSON', () => {
 
     expect(stored).toBeDefined();
     expect('calledAt' in stored).toBe(false);
+  });
+
+  it('keeps the calledAt of the record it overwrites', async () => {
+    // Importing a backup over the record it was exported from must not tell the
+    // opposite lie: this request was called in *this* browser, and the import
+    // stripping `calledAt` off the incoming copy used to take that fact with it.
+    storage.set('req1', request({ id: 'req1', url: '/api/a', calledAt: 987654 }));
+
+    await importJSON(backup({
+      requests: [request({ id: 'req1', url: '/api/a', calledAt: 123456 })]
+    }), CONTEXT, sUtils);
+
+    expect((storage.get('req1') as IData).calledAt).toBe(987654);
   });
 
   describe('id collisions with unrelated records', () => {
@@ -287,6 +306,46 @@ describe('Utils/importJSON', () => {
 
       expect(stored.enabled).toEqual({ default: true });
       expect(stored.selected).toEqual({ default: 'm1' });
+    });
+  });
+  /**
+   * An import runs in the popup as well as in the background, so it is in no
+   * position to write the store record: reading it, adding the domain and
+   * writing it back discarded whatever the background had put there in the
+   * meantime — another domain, a group `ensureGroups` had just created, the
+   * popup's own `popupActive`. It asks instead, and the background applies the
+   * change to the record as it stands.
+   */
+  describe('registering the imported domain', () => {
+    it('asks for the domain to be added rather than writing the store', async () => {
+      await importJSON(backup({
+        requests: [request({ id: 'req1' })],
+        responses: [response({ id: 'm1' })]
+      }), CONTEXT, sUtils);
+
+      expect(addDomain).toHaveBeenCalledWith(CONTEXT.domain);
+      expect(sUtils.setStore).not.toHaveBeenCalled();
+      // Not through `set` under the store's key either, which is the same write
+      // by another name.
+      expect(sUtils.set).not.toHaveBeenCalledWith(STORAGE_KEY, expect.anything());
+    });
+
+    it('asks even when the store already lists the domain', async () => {
+      // Whether it is listed is decided where the write is serialised. A guard
+      // here could only be based on a read that another writer may already have
+      // moved past.
+      storage.set(STORAGE_KEY, {
+        type: objectTypes.STORE,
+        domains: [CONTEXT.domain],
+        version: MigrateUtils.version
+      });
+
+      await importJSON(backup({
+        requests: [request({ id: 'req1' })],
+        responses: [response({ id: 'm1' })]
+      }), CONTEXT, sUtils);
+
+      expect(addDomain).toHaveBeenCalledWith(CONTEXT.domain);
     });
   });
 });

@@ -79,11 +79,55 @@ function firstCookie(
 export interface HitCounter {
   record(req: Request): void;
   snapshot(): Record<string, number>;
-  reset(): void;
+  reset(label?: string): void;
+  journal(): JournalEntry[];
 }
+
+/**
+ * One line of the hit journal: a request, or a reset.
+ *
+ * The counts alone say how many; when that number is wrong they say nothing at
+ * all about whose request it was. The journal survives the resets and records
+ * the test each one was made for, so an unexpected hit can be placed: this
+ * page, the page before it, or — while the site still listened on one fixed
+ * port and two runs shared it — somebody else's suite entirely. That last one
+ * is what it was, and how `onload.spec.ts` came to count two hits for a request
+ * its page had made once. Keep it: a wrong count is the one failure this
+ * harness cannot explain on its own.
+ */
+export interface JournalEntry {
+  kind: 'hit' | 'reset';
+  /** Milliseconds since the server started — monotonic, unlike a wall clock. */
+  atMs: number;
+  /** Which reset generation this line falls in. */
+  epoch: number;
+  key?: string;
+  referer?: string;
+  userAgent?: string;
+  /** The test the reset was made for, as the fixture reported it. */
+  label?: string;
+}
+
+/** Enough to see a whole suite run without unbounded growth. */
+const JOURNAL_LIMIT = 5_000;
 
 export function createHitCounter(): HitCounter {
   let hits: Record<string, number> = {};
+  let epoch = 0;
+  const log: JournalEntry[] = [];
+  const startedAt = performance.now();
+
+  function append(entry: Omit<JournalEntry, 'atMs' | 'epoch'>): void {
+    log.push({
+      ...entry,
+      atMs: Math.round(performance.now() - startedAt),
+      epoch
+    });
+
+    if (log.length > JOURNAL_LIMIT) {
+      log.shift();
+    }
+  }
 
   return {
     record(req) {
@@ -95,12 +139,23 @@ export function createHitCounter(): HitCounter {
       // endpoint for counting purposes, which is what assertions care about.
       const key = `${req.method} ${req.originalUrl.split('?')[0]}`;
       hits[key] = (hits[key] ?? 0) + 1;
+      append({
+        kind: 'hit',
+        key,
+        referer: req.get('referer') ?? undefined,
+        userAgent: req.get('user-agent') ?? undefined
+      });
     },
     snapshot() {
       return { ...hits };
     },
-    reset() {
+    reset(label) {
       hits = {};
+      epoch += 1;
+      append({ kind: 'reset', label });
+    },
+    journal() {
+      return [...log];
     }
   };
 }
@@ -118,9 +173,15 @@ export function registerRoutes(app: Express, hits: HitCounter): void {
     res.json({ hits: hits.snapshot() });
   });
 
-  app.post('/_harness/reset', (_req, res) => {
-    hits.reset();
+  app.post('/_harness/reset', (req, res) => {
+    const label = (req.body as { label?: string } | undefined)?.label;
+    hits.reset(typeof label === 'string' ? label : undefined);
     res.json({ ok: true });
+  });
+
+  // Who hit what, across resets — see `JournalEntry`.
+  app.get('/_harness/journal', (_req, res) => {
+    res.json({ journal: hits.journal() });
   });
 
   app.get('/_harness/health', (_req, res) => {

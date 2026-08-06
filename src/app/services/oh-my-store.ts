@@ -75,18 +75,24 @@ export class OhMyState {
   //   return state;
   // }
 
+  /**
+   * Changes the fields it is given, and only those.
+   *
+   * It used to read the whole store, spread the change over it and send the
+   * result — a read-modify-write across two processes, with the popup's read
+   * potentially minutes old. The background wrote that snapshot verbatim, so
+   * marking the popup open undid every domain registered and every group
+   * created since the popup last looked, and the domains' mocks were left in
+   * storage with nothing listing them. The background merges these fields onto
+   * the record as it stands instead, and hands back what it wrote.
+   */
   async updateStore(store: Partial<IOhMyMock>): Promise<IOhMyMock> {
-    const retVal = { ...(await this.getStore()), ...store };
-
-    await OhMySendToBg.full(
-      retVal,
+    return OhMySendToBg.full<Partial<IOhMyMock>, IOhMyMock>(
+      store,
       payloadType.STORE,
       undefined,
       'popup;updateStore'
     );
-    // await this.storageService.setStore(retVal);
-
-    return retVal;
   }
 
   async upsertState(
@@ -314,6 +320,15 @@ export class OhMyState {
     // domains), but a request record is addressed by its id alone.
     const source = await this.storageService.get<IData>(id);
     const request = { ...source, id: uniqueId() };
+
+    // The clone is a request nothing has ever called. Copying the source's
+    // `calledAt` made it arrive in the list announcing a last hit it had never
+    // had — the same lie `DataUtils.create` used to tell with `lastHit`, and
+    // the one the field exists to rule out (see `IData.calledAt`). `lastHit`
+    // *is* copied, deliberately: it is the list order, and a clone belongs
+    // beside the request it was cloned from.
+    delete request.calledAt;
+
     const responses = Object.values(request.mocks);
 
     request.mocks = {};

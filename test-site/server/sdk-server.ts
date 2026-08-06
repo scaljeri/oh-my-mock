@@ -1,11 +1,17 @@
 /**
  * Opt-in NodeJS-SDK server for the test site.
  *
- * The extension's background script connects to a hard-coded
- * `ws://localhost:8000` (see `src/background/dispatch-remote.ts`), so this
- * server must listen on 8000 to be found. It is a separate process from the
- * main test site on purpose: when it is not running, mocking tests are
- * unaffected by it.
+ * The extension's background script connects to `ws://localhost:8000` unless
+ * the user says otherwise (`OH_MY_REMOTE_DEFAULTS`), so this server must listen
+ * on 8000 to be found. It is a separate process from the main test site on
+ * purpose: when it is not running, mocking tests are unaffected by it.
+ *
+ * **No `port` is passed**, deliberately. That is the documented way to embed
+ * the SDK, and `createServer`'s own default used to be 9999 while every other
+ * mention of the port in this project said 8000 — so a server started this way
+ * listened where no extension would ever look and served nothing, silently.
+ * Leaving the port out is what makes `tests/specs/remote-mocking.spec.ts` — and
+ * the fixture that polls port 8000 for this process — notice if that comes back.
  *
  * This exercises the real SDK from `libs/nodejs-sdk`, not a stand-in, so that
  * a break in the SDK surfaces here.
@@ -21,15 +27,13 @@ import { createServer } from '../../libs/nodejs-sdk';
 import { ohMyMockStatus } from '../../src/shared/constants';
 import type { IOhMyMockResponse } from '../../src/shared/type';
 
-const port = 8000;
 const dataDir = path.join(__dirname, '..', 'sdk-fixtures');
 
 const server = createServer({
-  port,
   local: { basePath: dataDir },
   listenHandler: () => {
     // eslint-disable-next-line no-console
-    console.log(`oh-my-mock SDK server listening on ws://localhost:${port}`);
+    console.log('oh-my-mock SDK server listening on the SDK default port');
   }
 });
 

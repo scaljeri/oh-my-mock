@@ -1,9 +1,10 @@
-import { objectTypes, payloadType } from '../../shared/constants';
+import { objectTypes, payloadType, STORAGE_KEY } from '../../shared/constants';
 import { IOhMyPacketContext, IPacket, IPacketPayload } from '../../shared/packet-type';
-import { IData, IOhMyCookie, IState } from '../../shared/type';
+import { IData, IOhMyCookie, IOhMyMock, IState } from '../../shared/type';
 import { OhMyQueue } from '../../shared/utils/queue';
 import { StorageUtils } from '../../shared/utils/storage';
 import { applyCookie, forgetDisplaced } from '../cookie-jar';
+import { addDomain } from '../store-writer';
 import * as bgUtils from '../utils';
 import { IOhMyRemoval, OhMyRemoveHandler } from './remove-handler';
 
@@ -169,6 +170,80 @@ describe('OhMyRemoveHandler', () => {
       await OhMyRemoveHandler.update(payload({ type: objectTypes.REQUEST, id: 'r1' }));
 
       expect(warned).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Forgetting a domain takes it out of the store's list, and deleting the
+   * mocks, requests and cookies that come first takes a while. The list used to
+   * be read before all of that and written after, so a domain that arrived in
+   * the meantime — a site being activated in another tab, an import finishing —
+   * was written straight back out again, and with it the group `ensureGroups`
+   * had just created for it.
+   */
+  describe('forgetting the domain', () => {
+    const realChrome = StorageUtils.chrome;
+    const tick = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
+
+    beforeEach(() => {
+      records[STORAGE_KEY] = {
+        type: objectTypes.STORE,
+        version: '1.0.0',
+        domains: ['example.com', 'other.example'],
+        groups: []
+      } as IOhMyMock;
+
+      // Slower doubles than the suite's own: what is under test here happens
+      // between a read and the write that follows it.
+      jest.spyOn(StorageUtils, 'get').mockImplementation(async (key = STORAGE_KEY) => {
+        await tick();
+
+        return records[key] as never;
+      });
+      jest.spyOn(StorageUtils, 'set').mockImplementation(async (key: string, value: unknown) => {
+        await tick();
+        records[key] = value;
+      });
+      jest.spyOn(StorageUtils, 'setStore').mockImplementation(async (store: IOhMyMock) => {
+        await tick();
+        records[STORAGE_KEY] = store;
+      });
+      StorageUtils.chrome = {
+        storage: {
+          local: {
+            get: jest.fn(async (keys: unknown) => (keys === null ? { ...records } : {}))
+          }
+        }
+      } as unknown as typeof StorageUtils.chrome;
+    });
+
+    afterEach(() => {
+      StorageUtils.chrome = realChrome;
+    });
+
+    it('takes the domain out of the list', async () => {
+      await OhMyRemoveHandler.update(payload({ type: objectTypes.STATE, removeDomain: true }));
+
+      expect((records[STORAGE_KEY] as IOhMyMock).domains).toEqual(['other.example']);
+    });
+
+    it('keeps a domain that was registered while it was deleting', async () => {
+      await Promise.all([
+        OhMyRemoveHandler.update(payload({ type: objectTypes.STATE, removeDomain: true })),
+        addDomain('brand-new.example')
+      ]);
+
+      expect([...(records[STORAGE_KEY] as IOhMyMock).domains].sort())
+        .toEqual(['brand-new.example', 'other.example']);
+    });
+
+    // Emptying a domain and forgetting it are different things: the menu's
+    // "Reset state" is the first, and without the flag this branch left the
+    // domain listed while its record had just been deleted.
+    it('leaves the domain listed when it is only being emptied', async () => {
+      await OhMyRemoveHandler.update(payload({ type: objectTypes.STATE }));
+
+      expect((records[STORAGE_KEY] as IOhMyMock).domains).toContain('example.com');
     });
   });
 });

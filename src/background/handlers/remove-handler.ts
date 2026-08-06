@@ -1,6 +1,6 @@
 import { appSources, DEMO_TEST_DOMAIN, objectTypes, payloadType } from "../../shared/constants";
 import { IOhMyPacketContext, IPacketPayload } from "../../shared/packet-type";
-import { IData, IOhMyCookie, IOhMyMock, IState, ohMyDataId } from "../../shared/type";
+import { IData, IOhMyCookie, IState, ohMyDataId } from "../../shared/type";
 import { StoreUtils } from "../../shared/utils/store";
 import { importJSON } from "../../shared/utils/import-json";
 import { OhMyQueue } from "../../shared/utils/queue";
@@ -8,6 +8,7 @@ import { StateUtils } from "../../shared/utils/state";
 import { StorageUtils } from "../../shared/utils/storage";
 import jsonFromFile from '../../shared/dummy-data.json';
 import { isApplied, unapplyCookie } from "../cookie-jar";
+import { mutateStore } from "../store-writer";
 import { error } from "../utils";
 import { warn } from "../utils";
 
@@ -86,13 +87,15 @@ export class OhMyRemoveHandler {
         // the domain in `store.domains` pointing at a record it had just
         // deleted — which is right for a reset and wrong for a delete.
         if (data.removeDomain) {
-          const store = await OhMyRemoveHandler.StorageUtils.get<IOhMyMock>();
-
-          if (store) {
-            await OhMyRemoveHandler.StorageUtils.setStore(
-              StoreUtils.removeState(store, state.domain)
-            );
-          }
+          // Through `mutateStore`, so the list this drops a domain from is the
+          // list as it stands rather than one read before the mocks above were
+          // deleted. Reading it here and writing it back put every domain
+          // registered in between straight back out again — and with them the
+          // group records `ensureGroups` had just created.
+          await mutateStore(store =>
+            StoreUtils.hasState(store, state.domain)
+              ? StoreUtils.removeState(store, state.domain)
+              : undefined);
         }
 
         if (state.domain === DEMO_TEST_DOMAIN) {

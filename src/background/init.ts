@@ -5,7 +5,7 @@ import { StateUtils } from "../shared/utils/state";
 import { StorageUtils } from "../shared/utils/storage";
 import { StoreUtils } from "../shared/utils/store";
 import { error } from "./utils";
-import { ensureGroups } from "./ensure-groups";
+import { mutateStore } from "./store-writer";
 import { liftOutRequests } from "./lift-out-requests";
 
 export async function initStorage(domain?: ohMyDomain): Promise<void> {
@@ -16,17 +16,30 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
   // record has been lifted.
   await liftOutRequests();
 
-  // `StorageUtils.get` resolves with `undefined` on a fresh install, and
-  // `MigrateUtils.migrate` returns `null` when it gives up.
-  let store: IOhMyMock | null | undefined = await StorageUtils.get<IOhMyMock>();
-  let migrated = false;
+  if (domain) {
+    // Only when there is nothing there. It used to write the state back on
+    // every call — so every service-worker start rewrote the domain record of
+    // whichever tab woke it, which every content script in the browser then
+    // heard about through `chrome.storage.onChanged`.
+    if (!await StorageUtils.get<IState>(domain)) {
+      await StorageUtils.set(domain, StateUtils.init({ domain }));
+    }
+  }
 
-  if (store) {
+  // Through `mutateStore`, which reads the record in its own turn and writes it
+  // only if this changed it. It used to read at the top of this function and
+  // write at the bottom, with a whole-storage scan and a group pass in between
+  // — and MV3 restarts the worker after about thirty seconds of idle, so the
+  // message that woke it was handled *during* that gap. A domain the state
+  // handler registered there was then written straight back out again.
+  await mutateStore(async store => {
+    let next: IOhMyMock | undefined;
+
     if (MigrateUtils.shouldMigrate(store)) {
-      store = MigrateUtils.migrate(store);
-      migrated = true;
+      // `MigrateUtils.migrate` returns `null` when it gives up.
+      const migrated = MigrateUtils.migrate(store);
 
-      if (!store) {
+      if (!migrated) {
         // The store is older than anything the steps handle. It used to answer
         // that with `StorageUtils.reset()` — every domain, request, mock and
         // cookie the user has, deleted because one record could not be read.
@@ -39,14 +52,23 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
           `The store is too old to migrate to ${MigrateUtils.version}; rebuilding it. ` +
           'The domains it listed are still stored and will come back as they are visited.'
         );
-        store = StoreUtils.init();
-        migrated = true;
+        next = StoreUtils.init();
       } else {
+        next = migrated;
+
         // `null` reads the complete storage; `StorageUtils.get` only takes a key.
         const allData = await StorageUtils.chrome.storage.local.get(null);
 
         for (const [k, v] of Object.entries(allData)) {
-          const migrated = MigrateUtils.migrate(v);
+          // Not the store record: it is migrated above and written by this
+          // mutation. Writing it here as well would put it back outside the one
+          // path that keeps store writes in order — and it is the record every
+          // other writer is contending for.
+          if (k === STORAGE_KEY) {
+            continue;
+          }
+
+          const record = MigrateUtils.migrate(v);
 
           // `migrate` answers `null` for a record it gives up on — too old, or
           // written by a newer version. Writing that back stored a literal
@@ -55,53 +77,24 @@ export async function initStorage(domain?: ohMyDomain): Promise<void> {
           // aborting every remaining record for good.
           //
           // Given up on means removed, and said out loud.
-          if (migrated === null || migrated === undefined) {
+          if (record === null || record === undefined) {
             error(`Discarding ${k}: it cannot be migrated to ${MigrateUtils.version}`);
             await StorageUtils.remove(k);
 
             continue;
           }
 
-          await StorageUtils.set(k, migrated);
+          await StorageUtils.set(k, record);
         }
       }
     }
-  }
-  // Tracked explicitly, not by comparing references: the domain branch below
-  // mutates `store.domains` in place, so the object is the same one while its
-  // contents are not.
-  let changed = !store || migrated;
-  store ??= StoreUtils.init();
 
-  if (domain) {
-    const stored = await StorageUtils.get<IState>(domain);
+    const current = next ?? store;
 
-    if (!store.domains.includes(domain)) {
-      store.domains = [domain, ...store.domains];
-      changed = true;
+    if (domain && !current.domains.includes(domain)) {
+      next = { ...current, domains: [domain, ...current.domains] };
     }
 
-    // Only when there is nothing there. It used to write the state back on
-    // every call — so every service-worker start rewrote the domain record of
-    // whichever tab woke it, which every content script in the browser then
-    // heard about through `chrome.storage.onChanged`.
-    if (!stored) {
-      await StorageUtils.set(domain, StateUtils.init({ domain }));
-    }
-  }
-
-  // Last, so the domain just added above is included: give every domain the
-  // local group its mocks already belonged to. Shape-keyed and idempotent, so
-  // this is a no-op once each domain has one.
-  const grouped = await ensureGroups(store);
-  changed = changed || grouped !== store;
-  store = grouped;
-
-  // Only if it actually changed. This ran unconditionally, and MV3 restarts the
-  // worker after about thirty seconds of idle, so an active tab had the store
-  // rewritten — and broadcast to every content script in the browser — every
-  // time it woke one up.
-  if (changed) {
-    await StorageUtils.set(STORAGE_KEY, store);
-  }
+    return next;
+  });
 }
