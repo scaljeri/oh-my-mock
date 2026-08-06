@@ -2,7 +2,7 @@
  * The link to a mock server outside the browser.
  *
  * The behaviour worth pinning is the *absence* of one. The background used to
- * open a socket to a hard-coded `ws://localhost:8000` the moment the service
+ * open a socket to `ws://localhost:8000` the moment the service
  * worker started — measured at six failed attempts over ~30s, each a socket
  * error in the console, on every browser that had the extension installed and
  * never ran the SDK. It is off until someone asks for it now, and this page is
@@ -13,11 +13,20 @@ import net from 'node:net';
 
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
 import { openPopup } from '../fixtures/popup';
+import { SDK_PORT } from '../fixtures/sdk-server';
 
-/** The port the page offers by default. */
-const DEFAULT_PORT = 8000;
+/**
+ * The address this run seeded on the store — what the page offers, and what it
+ * dials until something types over it.
+ *
+ * Not 8000. That is only what `OH_MY_REMOTE_DEFAULTS` offers a user who has
+ * stored nothing, pinned in `src/shared/types/store.spec.ts`; binding it here
+ * made two runs on one machine fight over a single port for no reason, since
+ * the extension has always dialled whatever the store says.
+ */
+const DEFAULT_PORT = SDK_PORT;
 /** Somewhere else entirely, to prove the address field is not decoration. */
-const OTHER_PORT = 8123;
+const OTHER_PORT = SDK_PORT + 1;
 
 /**
  * Counts anything that knocks on the SDK port, and drops it.
@@ -100,9 +109,11 @@ test.describe('remote mocking', () => {
       await expect(popup.locator('[x-test="remote-host"]')).toHaveValue(
         'localhost'
       );
-      await expect(popup.locator('[x-test="remote-port"]')).toHaveValue('8000');
+      await expect(popup.locator('[x-test="remote-port"]')).toHaveValue(
+        String(DEFAULT_PORT)
+      );
       await expect(popup.locator('[x-test="remote-url"]')).toHaveText(
-        'ws://localhost:8000'
+        `ws://localhost:${DEFAULT_PORT}`
       );
 
       await expect

@@ -50,6 +50,32 @@ const SITE_PORT = Number(FIXED_PORT ?? 8090 + (process.pid % 400) * 2);
 process.env.SITE_ORIGIN ??= `http://localhost:${SITE_PORT}`;
 process.env.ALT_ORIGIN ??= `http://localhost:${SITE_PORT + 1}`;
 
+/**
+ * The port this run's SDK server listens on, and the one the extension is told
+ * to dial.
+ *
+ * 8000 is the *product's* default, not a constraint on the suite: the
+ * background dials `remoteUrl(store.remote)` (`src/background/dispatch-remote.ts`),
+ * which reads the host and port the Remote-mocking page writes and only falls
+ * back to `OH_MY_REMOTE_DEFAULTS` when nothing is stored. The suite used to
+ * pin 8000 anyway — the fixture even carried a comment claiming the extension
+ * hard-codes it — so two runs on one machine fought over a single port, and
+ * `sdk.spec.ts` cannot share one at all: "no SDK is running" is one of the
+ * cases it tests.
+ *
+ * `ohMy.reset()` seeds this address on the store, so every spec's idea of
+ * "where would it dial" is this run's own. `SDK_PORT` overrides it for a
+ * server started by hand.
+ *
+ * A different band from the site so the two cannot land on each other, and
+ * even offsets again — `remote-mocking.spec.ts` uses `port + 1` for the
+ * address nobody should be dialling.
+ */
+const SDK_PORT = Number(process.env.SDK_PORT ?? 9090 + (process.pid % 400) * 2);
+
+process.env.SDK_PORT = String(SDK_PORT);
+process.env.SDK_ORIGIN ??= `http://localhost:${SDK_PORT}`;
+
 export default defineConfig({
   testDir: './tests/specs',
   testMatch: '**/*.spec.ts',

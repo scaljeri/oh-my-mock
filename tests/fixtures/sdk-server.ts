@@ -5,11 +5,11 @@
  * dials the SDK only when a spec has opted in with `ohMy.setRemote('server')`
  * (`connectIfEnabled` in `src/background/dispatch-remote.ts`) — but "no SDK is
  * running" is itself a case `sdk.spec.ts` tests, and it can only be tested
- * while nothing is listening on port 8000.
+ * while nothing is listening where the extension has been told to dial.
  *
  * Two rules this file exists to enforce:
  *
- *  1. Nothing is left behind. A stray server on 8000 would make later runs mock
+ *  1. Nothing is left behind. A stray server would make later runs mock
  *     things no test asked for, which is exactly the kind of phantom failure
  *     that costs hours. `stop()` kills the process group and waits for it, and
  *     a `process.on('exit')` hook catches a Playwright run that dies outright.
@@ -24,8 +24,16 @@ import type { SitePage } from './extension';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
-/** Where the SDK server listens — hard-coded in `src/background/dispatch-remote.ts`. */
-export const SDK_ORIGIN = 'http://localhost:8000';
+/**
+ * Where this run's SDK server listens.
+ *
+ * Set by `playwright.config.ts` from the process id. Nothing about 8000 is
+ * fixed: the extension dials `remoteUrl(store.remote)`, and `ohMy.reset()`
+ * seeds this address there — 8000 is only what `OH_MY_REMOTE_DEFAULTS` offers
+ * when a user has stored nothing.
+ */
+export const SDK_PORT = Number(process.env.SDK_PORT ?? 8000);
+export const SDK_ORIGIN = process.env.SDK_ORIGIN ?? `http://localhost:${SDK_PORT}`;
 
 /** Everything still running, so a dying test run cannot orphan one. */
 const running = new Set<ChildProcess>();
@@ -85,7 +93,13 @@ export class SdkServer {
 
     const child = spawn(
       path.join(REPO_ROOT, 'node_modules', '.bin', 'ts-node'),
-      ['-P', './tsconfig-server.json', './test-site/server/sdk-server.ts'],
+      [
+        '-P',
+        './tsconfig-server.json',
+        './test-site/server/sdk-server.ts',
+        '--port',
+        String(SDK_PORT)
+      ],
       { cwd: REPO_ROOT, detached: true, stdio: ['ignore', 'pipe', 'pipe'] }
     );
 
@@ -109,10 +123,10 @@ export class SdkServer {
         throw new Error(
           `The SDK server exited during start-up:\n${output}` +
             (output.includes('EADDRINUSE')
-              ? '\nPort 8000 is hard-coded in the extension itself ' +
-                '(`src/background/dispatch-remote.ts`), so unlike the test site ' +
-                'it cannot be given a port per run — another suite on this ' +
-                'machine is holding it. Wait for that run to finish.'
+              ? `\nSomething is already on ${SDK_PORT}. This run derives that ` +
+                'port from its own process id, so a clash means either a ' +
+                'leftover server or an unrelated service — not another suite. ' +
+                'Clear it with: pkill -f "test-site/server/sdk-server"'
               : '')
         );
       }

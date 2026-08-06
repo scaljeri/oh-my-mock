@@ -29,6 +29,7 @@
 
 import type { Worker } from '@playwright/test';
 import { MOCK_JS_CODE } from '../../src/shared/constants';
+import { SDK_PORT } from './sdk-server';
 
 export interface SeedMockOptions {
   /** Host including port, e.g. `localhost:8090` — matches `window.location.host`. */
@@ -231,6 +232,68 @@ export class OhMyMockDriver {
   /** Wipes all extension storage — the clean slate most tests start from. */
   async reset(): Promise<void> {
     await (await this.worker()).evaluate(() => chrome.storage.local.clear());
+    await this.seedRemoteAddress();
+  }
+
+  /**
+   * Points the extension at this run's SDK server.
+   *
+   * The extension dials `remoteUrl(store.remote)` and falls back to port 8000
+   * only when nothing is stored, so writing the address is what frees the
+   * suite from one machine-wide port — `sdk.spec.ts` needs a port nothing else
+   * is listening on, because "no SDK is running" is one of the cases it tests.
+   * `target` is deliberately untouched: this decides *where* it would dial,
+   * not whether it dials.
+   *
+   * Written in a loop because the write races the background. `reset()` clears
+   * storage while the worker may be part-way through its own store write —
+   * `StorageUtils.reset()` clears without joining the queue that serialises
+   * those writes, which is a race `store-writer.ts` documents as still open —
+   * so a single `set()` here was silently overwritten by whatever the worker
+   * had in flight, the popup went on offering 8000, and the specs failed as
+   * "the extension never connected". Confirmed against the committed suite:
+   * without this loop 1-4 of these 13 specs fail per run, with it none do.
+   */
+  private async seedRemoteAddress(): Promise<void> {
+    const worker = await this.worker();
+    const deadline = Date.now() + 5_000;
+
+    while (Date.now() < deadline) {
+      const port = await worker.evaluate(async (port: number) => {
+        const stored = await chrome.storage.local.get('OhMyMock');
+        const store = (stored.OhMyMock ?? {}) as Record<string, unknown>;
+
+        await chrome.storage.local.set({
+          OhMyMock: {
+            // The shape the other helpers assume — `setActive` reaches
+            // straight for `store.domains` — and a `version`, without which
+            // the record reads as ancient and the next worker start migrates
+            // it away. Spread after, so a real record keeps its own.
+            type: 'store',
+            domains: [],
+            version: chrome.runtime.getManifest().version,
+            ...store,
+            remote: { host: 'localhost', port }
+          }
+        });
+
+        const after = await chrome.storage.local.get('OhMyMock');
+
+        return (
+          (after.OhMyMock as { remote?: { port?: number } } | undefined)?.remote
+            ?.port
+        );
+      }, SDK_PORT);
+
+      if (port === SDK_PORT) {
+        return;
+      }
+    }
+
+    throw new Error(
+      `The SDK address never stuck on the store: something in the background ` +
+        `keeps rewriting the record. Expected remote.port ${SDK_PORT}.`
+    );
   }
 
   /** Everything currently in extension storage; useful when a test misbehaves. */

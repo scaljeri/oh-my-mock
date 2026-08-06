@@ -1,17 +1,22 @@
 /**
  * Opt-in NodeJS-SDK server for the test site.
  *
- * The extension's background script connects to `ws://localhost:8000` unless
- * the user says otherwise (`OH_MY_REMOTE_DEFAULTS`), so this server must listen
- * on 8000 to be found. It is a separate process from the main test site on
- * purpose: when it is not running, mocking tests are unaffected by it.
+ * The extension dials whatever the Remote-mocking page stored
+ * (`remoteUrl(store.remote)`), falling back to `OH_MY_REMOTE_DEFAULTS` — port
+ * 8000 — only when nothing has been. So this server takes `--port` and the
+ * suite gives it one per run, seeding the same address on the store: two runs
+ * on one machine no longer fight over a single port, and `sdk.spec.ts` can
+ * still test the case where nothing is listening at all.
  *
- * **No `port` is passed**, deliberately. That is the documented way to embed
- * the SDK, and `createServer`'s own default used to be 9999 while every other
- * mention of the port in this project said 8000 — so a server started this way
- * listened where no extension would ever look and served nothing, silently.
- * Leaving the port out is what makes `tests/specs/remote-mocking.spec.ts` — and
- * the fixture that polls port 8000 for this process — notice if that comes back.
+ * Without `--port` it takes `createServer`'s own default, which is the
+ * documented way to embed the SDK. That default used to be 9999 while every
+ * other mention of the port in this project said 8000, so a server started
+ * that way listened where no extension would look and served nothing,
+ * silently. `libs/nodejs-sdk/index.spec.ts` pins it now — the e2e cannot, now
+ * that it names a port.
+ *
+ * It is a separate process from the main test site on purpose: when it is not
+ * running, mocking tests are unaffected by it.
  *
  * This exercises the real SDK from `libs/nodejs-sdk`, not a stand-in, so that
  * a break in the SDK surfaces here.
@@ -29,11 +34,19 @@ import type { IOhMyMockResponse } from '../../src/shared/type';
 
 const dataDir = path.join(__dirname, '..', 'sdk-fixtures');
 
+const portArg = process.argv.indexOf('--port');
+// Absent means "take the SDK's own default", which is a case worth being able
+// to start by hand; the suite always names one.
+const port = portArg === -1 ? undefined : Number(process.argv[portArg + 1]);
+
 const server = createServer({
   local: { basePath: dataDir },
+  ...(port !== undefined && { port }),
   listenHandler: () => {
     // eslint-disable-next-line no-console
-    console.log('oh-my-mock SDK server listening on the SDK default port');
+    console.log(
+      `oh-my-mock SDK server listening on ${port ?? 'the SDK default port'}`
+    );
   }
 });
 
