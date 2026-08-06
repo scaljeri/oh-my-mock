@@ -5,7 +5,6 @@
   "manifest_version": 3,
   "minimum_chrome_version": "109",
   "permissions": [
-    "background",
     "storage",
     "unlimitedStorage",
     "tabs",
@@ -38,8 +37,6 @@
     {
       "resources": [
         "oh-my-mock.js",
-        "oh-my-mock.js.map",
-        "early-inject.js",
         "sandbox.html"
       ],
       "matches": [

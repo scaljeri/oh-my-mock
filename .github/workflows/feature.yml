@@ -26,11 +26,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npx eslint .
+      # `npm run lint`, not `npx eslint .`: the script is `tsc --noEmit`
+      # followed by eslint, and the type-check half is the one that has caught
+      # real bugs. Calling eslint directly silently skipped it.
+      - name: Lint and type-check
+        run: npm run lint
 
+      - name: Unit tests
+        run: npm run test
+
+      # The e2e specs are transpiled, never type-checked, by Playwright itself —
+      # this is the only place the suite's types are verified at all.
+      - name: Type-check e2e suite
+        run: npm run e2e:types
+
+      # `ci:build` is the production build — minified, prod Angular config,
+      # exactly what `bundle:zip` packs into the shipped zip. Building `dev`
+      # here meant the variant users install was never the variant under test.
       - name: Build extension
-        run: npm run build
+        run: npm run ci:build
 
       # `--with-deps` installs the system libraries Chromium needs. Without them
       # the browser fails to launch on a bare runner, and every spec fails at

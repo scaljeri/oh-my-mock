@@ -77,6 +77,23 @@ test.describe('a request made while the page loads', () => {
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(200);
     expect(result.source).toBe('server');
+
+    // Counted from the page as well as from the server, because the two answer
+    // different questions and this assertion has failed on the difference. The
+    // server's counter is reset per test but the server is shared and the tests
+    // are sequential, so a request from an earlier spec that lands after the
+    // reset is counted here — whereas the page's own resource timings can only
+    // contain what *this* page asked for. One page-side entry with two on the
+    // server is a straggler; two page-side entries is the extension sending the
+    // request twice, which is a real bug and the thing worth failing over.
+    const fromPage = await site.page.evaluate(
+      () =>
+        performance
+          .getEntriesByType('resource')
+          .filter((e) => new URL(e.name).pathname === '/api/json').length
+    );
+
+    expect(fromPage).toBe(1);
     expect(await server.hitCount('GET /api/json')).toBe(1);
 
     // The other on-load call, the one with something to lose. It was held while

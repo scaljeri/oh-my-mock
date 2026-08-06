@@ -38,7 +38,6 @@ module.exports = tseslint.config(
       'jest.config.js',
       'karma.conf.js',
       'monitor.js',
-      'scripts/token-replace.js',
       'src/test.ts',
       // Static HTML, not Angular templates: the design mockups and the splash
       // screen. Linting them reports accessibility findings against files that
@@ -117,6 +116,31 @@ module.exports = tseslint.config(
     files: ['scripts/**', 'webpack.config.js'],
     rules: {
       'no-console': 'off'
+    }
+  },
+  {
+    // The compiled output of this file is spliced *verbatim* into a template
+    // literal in content.js (`runShimCode` in src/content/inject-code.ts, via
+    // scripts/token-replace.js). A backtick anywhere — even inside a string —
+    // terminates that literal, and `${` starts an interpolation into it, so
+    // neither may appear in this source. A comment used to be the only thing
+    // enforcing that; `node --check` on the spliced content.js is the runtime
+    // backstop, and this rule reports the mistake where it is made.
+    files: ['src/early-inject/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TemplateLiteral',
+          message:
+            'No template literals in early-inject: its compiled output is spliced into a template literal in content.js, and a backtick or ${ would break out of it.'
+        },
+        {
+          selector: 'Literal[value=/`|\\$\\{/]',
+          message:
+            'No backtick or "${" in early-inject strings: its compiled output is spliced into a template literal in content.js, and either would break out of it.'
+        }
+      ]
     }
   },
   {

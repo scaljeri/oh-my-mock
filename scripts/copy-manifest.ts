@@ -22,6 +22,21 @@ const fullVersion = process.argv[2] || packageJson.version;
  */
 const numericVersion = fullVersion.split('-')[0];
 
+// What Chromium actually accepts, checked here rather than discovered at
+// install time: 1–4 dot-separated integers, each 0–65535. Anything else —
+// `3.3` typo'd as `3..3`, a `v` prefix, a fifth segment — produces a manifest
+// Chromium rejects wholesale, and the build would otherwise report success.
+const parts = numericVersion.split('.');
+if (
+  parts.length > 4 ||
+  parts.some((p) => !/^\d+$/.test(p) || Number(p) > 65535)
+) {
+  throw new Error(
+    `copy-manifest: "${fullVersion}" does not yield a valid manifest version — ` +
+    `"${numericVersion}" must be 1-4 dot-separated integers, each 0-65535`
+  );
+}
+
 const manifest: Record<string, unknown> = {
   ...manifestJson,
   version: numericVersion,

@@ -1,7 +1,18 @@
 const fs = require('fs');
+const { execFileSync } = require('child_process');
 const packageJson = require('../package.json');
 
 const version = determineVersion();
+
+/**
+ * `--partial` is for the watcher (`scripts/monitor.ts`), which rebuilds only
+ * the bundle whose source changed and then re-runs this script over the whole
+ * of `dist`. In that run the *untouched* bundles were already replaced — their
+ * tokens are legitimately gone — so the presence assertions below would fail a
+ * build that is perfectly fine. A full build never passes this flag: there,
+ * every bundle is fresh and a missing token is a broken build.
+ */
+const isPartial = process.argv.includes('--partial');
 
 /**
  * Whether `debug()` output is compiled in.
@@ -11,6 +22,26 @@ const version = determineVersion();
  * build as a beta to see a log line — is not something anyone will do twice.
  */
 const showDebug = /beta/.test(version) || process.env.OH_MY_DEBUG === '1';
+
+/**
+ * The tokens each webpack bundle is known to carry, verified against a fresh
+ * unminified build of every bundle.
+ *
+ * This is the other half of the token guard. `assertNoTokensLeft` only sees a
+ * token that *survived*, so it cannot catch the opposite failure: a minifier
+ * running before this script inlines `const SHOW_DEBUG = '__OH_MY_SHOW_DEBUG__'`,
+ * folds the `=== 'true'` comparison to `false` and deletes every `console.debug`
+ * — no token left to complain about, and no way to ever switch debug output on.
+ * That is exactly what `ci:build` used to do (minify first, replace after), and
+ * it is the same fold that disabled every migration via `DEV_VERSION` in
+ * `migrate.ts`. A token that should be in a bundle and is not is therefore a
+ * failed build, not a quiet no-op.
+ */
+const EXPECTED_TOKENS = [
+  { file: './dist/content.js', tokens: ['SHOW_DEBUG', 'VERSION', 'INJECTED_CODE'] },
+  { file: './dist/oh-my-mock.js', tokens: ['SHOW_DEBUG', 'VERSION'] },
+  { file: './dist/background.js', tokens: ['SHOW_DEBUG', 'VERSION'] }
+];
 
 /**
  * Every bundle that carries a build-time token.
@@ -29,18 +60,7 @@ const BUNDLES = [
   ...angularChunks()
 ];
 
-function angularChunks() {
-  const dir = './dist/oh-my-mock';
-
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
-
-  return fs
-    .readdirSync(dir)
-    .filter((name) => name.endsWith('.js'))
-    .map((name) => `${dir}/${name}`);
-}
+assertExpectedTokensPresent();
 
 // `shared/utils/logging.ts` is compiled into the content, injected and
 // background bundles, so the debug switch has to reach all three — it used to be
@@ -53,7 +73,80 @@ for (const file of BUNDLES) {
 }
 replaceTokenWithFileContent('INJECTED_CODE', './dist/content.js', './dist/early-inject-clean.js');
 
+// The splice pastes one script into a template literal inside another, so the
+// one thing that proves it produced a runnable file is parsing it. A backtick
+// or an unbalanced brace in the spliced shim breaks `content.js` as a whole,
+// and Chromium's only symptom for a content script that does not parse is that
+// nothing gets mocked. `--check` parses without executing.
+execFileSync(process.execPath, ['--check', './dist/content.js'], { stdio: 'inherit' });
+
 assertNoTokensLeft();
+
+function angularChunks() {
+  const dir = './dist/oh-my-mock';
+
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+
+  // Recursive, even though today every chunk lands flat in the directory: the
+  // layout belongs to the Angular builder, and a builder update that starts
+  // emitting `chunks/` must not silently move code out of both the replacement
+  // and the assertions.
+  return fs
+    .readdirSync(dir, { recursive: true })
+    .filter((name) => name.endsWith('.js'))
+    .map((name) => `${dir}/${name}`);
+}
+
+/**
+ * Fails the build when a token that belongs in a bundle is already gone
+ * *before* replacement — see `EXPECTED_TOKENS` for the failure this catches.
+ *
+ * A bundle that is absent is skipped: `build:bundles` deliberately builds a
+ * subset. A bundle that is present must carry its tokens.
+ */
+function assertExpectedTokensPresent() {
+  if (isPartial) {
+    return;
+  }
+
+  const missing = [];
+
+  for (const { file, tokens } of EXPECTED_TOKENS) {
+    if (!fs.existsSync(file)) {
+      continue;
+    }
+
+    const data = fs.readFileSync(file, { encoding: 'utf8', flag: 'r' });
+
+    for (const token of tokens) {
+      if (!data.includes(`__OH_MY_${token}__`)) {
+        missing.push(`${file} (__OH_MY_${token}__)`);
+      }
+    }
+  }
+
+  // The version constants live in class statics spread over many modules, so
+  // per-chunk expectations would be guesses about the bundler's chunking. What
+  // must hold regardless of chunking: the popup knows its version, so the token
+  // exists *somewhere* in the Angular output.
+  const chunks = angularChunks();
+  if (
+    chunks.length > 0 &&
+    !chunks.some((file) =>
+      fs.readFileSync(file, { encoding: 'utf8', flag: 'r' }).includes('__OH_MY_VERSION__'))
+  ) {
+    missing.push('./dist/oh-my-mock/* (__OH_MY_VERSION__ in no chunk)');
+  }
+
+  if (missing.length) {
+    throw new Error(
+      'token-replace: expected tokens are missing before replacement — ' +
+      'was the bundle minified before this script ran? ' +
+      missing.join(', '));
+  }
+}
 
 /**
  * Fails the build if any shipped script still carries a token.
@@ -67,7 +160,7 @@ assertNoTokensLeft();
 function assertNoTokensLeft() {
   const offenders = [];
 
-  for (const file of ['./dist/oh-my-mock.js', './dist/content.js', './dist/background.js', ...angularChunks()]) {
+  for (const file of BUNDLES) {
     if (!fs.existsSync(file)) {
       continue;
     }
@@ -89,10 +182,9 @@ function assertNoTokensLeft() {
 
 function replaceToken(file, tokenKey, token) {
   // The Angular bundle is absent when only the webpack bundles were built
-  // (`yarn build:bundles`), which is enough to run the e2e suite. Skip rather
-  // than crash, so a partial build stays usable.
+  // (`npm run build:bundles`), which is enough to run the e2e suite. Skip
+  // rather than crash, so a partial build stays usable.
   if (!fs.existsSync(file)) {
-    // eslint-disable-next-line no-console
     console.log(`token-replace: skipping missing ${file}`);
     return;
   }
@@ -111,11 +203,13 @@ function replaceToken(file, tokenKey, token) {
 /**
  * Splices a built file into another, in place of a token.
  *
- * Throws when the token is missing. It used to substitute only when the token
- * occurred exactly once and do nothing otherwise — no message, exit code 0 — so
- * a second occurrence turned the whole splice off. The build stayed green, the
- * token stayed in the output, and the shim it was meant to carry never reached a
- * single page. A build step that cannot do its job has to say so.
+ * Throws when the token is missing — except in a `--partial` run, where the
+ * source was not rebuilt and the splice from the previous pass is still in
+ * place. It used to substitute only when the token occurred exactly once and do
+ * nothing otherwise — no message, exit code 0 — so a second occurrence turned
+ * the whole splice off. The build stayed green, the token stayed in the output,
+ * and the shim it was meant to carry never reached a single page. A build step
+ * that cannot do its job has to say so.
  */
 function replaceTokenWithFileContent(tokenKey, sourceFile, inputFile) {
   const token = `'__OH_MY_${tokenKey}__'`;
@@ -124,6 +218,11 @@ function replaceTokenWithFileContent(tokenKey, sourceFile, inputFile) {
   const parts = source.split(token);
 
   if (parts.length < 2) {
+    if (isPartial) {
+      console.log(`token-replace: ${sourceFile} already spliced, skipping`);
+      return;
+    }
+
     throw new Error(
       `token-replace: ${token} not found in ${sourceFile} — nothing to splice ${inputFile} into`);
   }
@@ -145,4 +244,3 @@ function determineVersion() {
     return v;
   },  '') || packageJson.version;
 }
-

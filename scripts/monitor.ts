@@ -16,13 +16,14 @@ interface SemverModule {
 declare function require(id: 'semver'): SemverModule;
 const semver = require('semver');
 
+// npm, not yarn: the lockfile is package-lock.json — see `make-bundle.sh`.
 const PATH_TO_TASKS = {
-  'src/content': 'yarn build:content',
-  'src/injected': 'yarn build:injected & yarn build:content',
-  'src/background': 'yarn build:background',
-  'src/shared': 'yarn run-p build:*',
-  'src/sandbox': 'yarn build:sandbox',
-  'src/app': 'yarn build:ng && yarn build:sandbox',
+  'src/content': 'npm run build:content',
+  'src/injected': 'npm run build:injected & npm run build:content',
+  'src/background': 'npm run build:background',
+  'src/shared': 'npx run-p build:*',
+  'src/sandbox': 'npm run build:sandbox',
+  'src/app': 'npm run build:ng && npm run build:sandbox',
 }
 
 type WatchedPath = keyof typeof PATH_TO_TASKS;
@@ -89,8 +90,13 @@ function build(cmds: WatchedPath[]): Promise<void> {
 
   console.log("- start build", cmds);
   return new Promise<void>((resolve, reject) => {
-    console.log(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')};wait) && yarn replace-tokens --version ${version}`);
-    exec(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' & ')}; wait) && yarn replace-tokens --version ${version}`, (error, stdout, stderr) => {
+    // `--partial`: only the changed bundles were rebuilt, so tokens in the
+    // untouched ones are legitimately already replaced — the strict presence
+    // assertions in token-replace.js are for full builds only.
+    const replace = `node ./scripts/token-replace.js --version ${version} --partial`;
+
+    console.log(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' && ')};wait) && ${replace}`);
+    exec(`(${cmds.map(k => PATH_TO_TASKS[k]).join(' & ')}; wait) && ${replace}`, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         reject();
