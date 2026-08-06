@@ -67,6 +67,79 @@ describe('data-list ordering', () => {
     });
   });
 
+  /**
+   * The toggle in the list toolbar. Off — the default — everything is one run
+   * ordered by the most recent call, so a request whose mock is switched off
+   * rises through the ones that are on as it is hit; that is most of the point
+   * of recording a hit for it at all. On, the two are grouped, each still
+   * newest first.
+   *
+   * Never a filter: the same rows come back either way.
+   */
+  describe('keeping the switched-on requests on top', () => {
+    const context = { domain: 'example.com', preset: 'default' };
+    // `a` is the newest and switched *off*; `c` is the oldest and switched on.
+    // So the two orders disagree, which is the only way to tell them apart.
+    const mixed: Record<ohMyDataId, IData> = {
+      a: { ...request('a', '/api/alpha', 300), enabled: { default: false }, selected: { default: 'm' } },
+      b: { ...request('b', '/api/bravo', 200), enabled: { default: false }, selected: { default: 'm' } },
+      c: { ...request('c', '/api/charlie', 100), enabled: { default: true }, selected: { default: 'm' } }
+    };
+    const filtered = ['a', 'b', 'c'];
+
+    it('orders purely by the most recent call while it is off', () => {
+      const rows = orderRequests({ filtered, requests: mixed, sticky: [], context });
+
+      expect(ids(rows)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('lifts the switched-on ones above the rest while it is on', () => {
+      const rows = orderRequests({
+        filtered, requests: mixed, sticky: [], context, activeFirst: true
+      });
+
+      expect(ids(rows)).toEqual(['c', 'a', 'b']);
+    });
+
+    it('keeps each group newest first', () => {
+      const rows = orderRequests({
+        filtered: ['a', 'b', 'c'],
+        requests: {
+          ...mixed,
+          b: { ...mixed.b, enabled: { default: true }, lastHit: 50 }
+        },
+        sticky: [],
+        context,
+        activeFirst: true
+      });
+
+      // Switched on: c (100) before b (50). Then the rest: a.
+      expect(ids(rows)).toEqual(['c', 'b', 'a']);
+    });
+
+    it('hides nothing either way', () => {
+      const off = orderRequests({ filtered, requests: mixed, sticky: [], context });
+      const on = orderRequests({
+        filtered, requests: mixed, sticky: [], context, activeFirst: true
+      });
+
+      expect(ids(on).sort()).toEqual(ids(off).sort());
+    });
+
+    /**
+     * The context arrives separately from the requests, so it can be absent
+     * for a moment. Grouping without one would put every row in the same half
+     * and read as a toggle that does nothing.
+     */
+    it('falls back to the plain order when no preset is known yet', () => {
+      const rows = orderRequests({
+        filtered, requests: mixed, sticky: [], activeFirst: true
+      });
+
+      expect(ids(rows)).toEqual(['a', 'b', 'c']);
+    });
+  });
+
   describe('pinned rows', () => {
     it('puts them first, ahead of a more recently hit row', () => {
       const rows = orderRequests({ filtered: ['a', 'b', 'c'], requests, sticky: ['c'] });

@@ -78,6 +78,21 @@ export interface IOhMyMock {
    * one domain and closed for another — it cannot.
    */
   popupActive?: boolean;
+
+  /**
+   * Keep the requests whose mock is switched on above the rest of the list.
+   *
+   * Browser-global, like `popupActive`: it is how the user likes to read the
+   * list, not something about one domain.
+   *
+   * Off — the default — the list is one run of rows, newest hit first, so a
+   * switched-off request rises through the ones that are on as it is called.
+   * That is deliberate: a hit is recorded whether or not a mock answers, and
+   * seeing an endpoint you have switched off still being called is most of the
+   * reason for recording it. On, the two are grouped so what is switched on
+   * stays together at the top. Nothing is hidden either way.
+   */
+  sortActiveFirst?: boolean;
   version: string;
   origin?: origin; // Represent the origin of the data. Right now only 'local' is supported
   /** The local mock server link — see `IOhMyRemote`. Absent means "never asked". */

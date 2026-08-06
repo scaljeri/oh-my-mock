@@ -149,21 +149,28 @@ export async function receivedApiRequest(
   let mock: IMock | undefined;
 
   if (data && state) {
+    // HIT, and it is recorded whether or not a mock answers.
+    //
+    // It used to sit inside the `if (mockId)` below, so a request whose mock
+    // was switched off never moved in the list and never claimed it had been
+    // called — while switching a mock off is exactly when knowing the endpoint
+    // is still being hit matters most. Being *intercepted* is what these two
+    // fields are about; what was served is a separate question.
+    //
+    // `lastHit` orders the list; `calledAt` is the claim that the call
+    // happened in this browser, and this is the only place allowed to make it.
+    //
+    // Batched rather than written now — see `recordHit`. It used to send this
+    // whole record to the background on every intercepted call, which cost a
+    // storage write and a browser-wide `onChanged` fan-out per request. The
+    // local copy is still updated so a lookup later in this same turn sees it.
+    data.lastHit = Date.now();
+    data.calledAt = data.lastHit;
+    recordHit(data.id, data.lastHit);
+
     mockId = DataUtils.activeMock(data, state.context);
     if (mockId) {
       mock = await contentState.get<IMock>(mockId);
-
-      // HIT. `lastHit` orders the list; `calledAt` is the claim that the call
-      // happened here, and this is the only place allowed to make it.
-      //
-      // Batched rather than written now — see `recordHit`. It used to send this
-      // whole record to the background on every intercepted call, which cost a
-      // storage write and a browser-wide `onChanged` fan-out per request. The
-      // local copy is still updated so a lookup later in this same turn sees
-      // it.
-      data.lastHit = Date.now();
-      data.calledAt = data.lastHit;
-      recordHit(data.id, data.lastHit);
 
       if (!mock) {
         // The request names a mock whose record is not there: a response

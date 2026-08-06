@@ -19,7 +19,11 @@ describe('DataOverviewComponent', () => {
         { provide: MatDialog, useValue: {} },
         { provide: AppStateService, useValue: {} },
         { provide: OhMyStateService, useValue: { state$: new Subject(), requests$: new Subject() } },
-        { provide: OhMyState, useValue: {} },
+        {
+          provide: OhMyState,
+          // The list reads the browser-global sort preference on init.
+          useValue: { getStore: async () => ({}), updateStore: async () => ({}) }
+        },
         { provide: Router, useValue: {} },
         { provide: ActivatedRoute, useValue: {} },
       ],

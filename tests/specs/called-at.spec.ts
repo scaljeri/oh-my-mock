@@ -83,4 +83,41 @@ test.describe('last hit', () => {
 
     await popup.close();
   });
+
+  /**
+   * A hit is about the call being *intercepted*, not about a mock answering.
+   *
+   * It used to be written inside the branch that only runs when a mock is
+   * switched on, so a request whose mock was off never moved in the list and
+   * never claimed it had been called — while switching a mock off is exactly
+   * when knowing the endpoint is still being hit matters most. That is also
+   * what makes the list's default order worth having: a switched-off request
+   * rises through the ones that are on as the page keeps calling it.
+   */
+  test('is recorded for a request whose mock is switched off', async ({
+    ohMy,
+    site,
+    server
+  }) => {
+    const { dataId } = await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { a: 1 },
+      enabled: false
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+
+    await site.open();
+    await site.waitForInjection();
+    await site.request({ url: '/api/json', responseType: 'json' });
+
+    // The mock is off, so the call really did go to the server — this is a hit
+    // recorded for a request that was *not* served from a mock, which is the
+    // whole point.
+    expect(await server.hitCount('GET /api/json')).toBe(1);
+
+    await expect
+      .poll(async () => (await ohMy.getRequest(dataId))?.calledAt)
+      .toBeGreaterThan(0);
+  });
 });

@@ -1,4 +1,6 @@
+import { IOhMyContext } from '@shared/type';
 import { IData, ohMyDataId } from '@shared/types/request';
+import { DataUtils } from '@shared/utils/data';
 import { IOhDataView } from '../../app.types';
 
 /**
@@ -21,6 +23,20 @@ export interface IOhMyListOrderInput {
   requests: Record<ohMyDataId, IData>;
   /** Pinned ids, in the order the user pinned them. */
   sticky: readonly ohMyDataId[];
+  /**
+   * Keep the rows whose mock is switched on above the rest.
+   *
+   * Off, the list is one run of rows newest hit first, so a switched-off
+   * request rises through the ones that are on as it is called — which is what
+   * makes "this endpoint is still being hit" visible at all. On, the two are
+   * grouped, each still newest first, so what is switched on stays together at
+   * the top while the rest goes on moving underneath.
+   *
+   * Not a filter either way: nothing is hidden, only ordered.
+   */
+  activeFirst?: boolean;
+  /** Which preset decides whether a row counts as switched on. */
+  context?: IOhMyContext;
   /** Rows the user has open/ticked; kept visible, never hoisted. */
   selected?: readonly ohMyDataId[];
   /** Whether to hide everything that is not pinned. */
@@ -79,7 +95,15 @@ function byLastHitDesc(a: IData, b: IData): number {
  *   6. With `stickyOnly`, only the pinned rows are returned.
  */
 export function orderRequests(input: IOhMyListOrderInput): IOhMyListRow[] {
-  const { requests, sticky, filtered, selected = [], stickyOnly = false } = input;
+  const {
+    requests,
+    sticky,
+    filtered,
+    selected = [],
+    stickyOnly = false,
+    activeFirst = false,
+    context
+  } = input;
 
   const stickySeen = new Set<ohMyDataId>();
   const stickyRows: IOhMyListRow[] = [];
@@ -102,10 +126,24 @@ export function orderRequests(input: IOhMyListOrderInput): IOhMyListRow[] {
 
   const rest = Object.values(requests)
     .filter(d => visible.has(d.id) && !stickySeen.has(d.id))
-    .sort(byLastHitDesc)
-    .map(d => toRow(d, false));
+    .sort(byLastHitDesc);
 
-  return [...stickyRows, ...rest];
+  // Partitioned *after* sorting, so each group keeps the one order the list has
+  // always had — a stable partition of a sorted list is two sorted lists, and
+  // doing it the other way round would need the comparator to know about the
+  // preset.
+  //
+  // Without a context nothing can be called switched on, so the grouping is
+  // skipped rather than guessed at: every row would land in the same half and
+  // the toggle would look broken instead of absent.
+  const ordered = activeFirst && context
+    ? [
+        ...rest.filter(d => DataUtils.activeMock(d, context)),
+        ...rest.filter(d => !DataUtils.activeMock(d, context))
+      ]
+    : rest;
+
+  return [...stickyRows, ...ordered.map(d => toRow(d, false))];
 }
 
 /**

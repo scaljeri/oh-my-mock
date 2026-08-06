@@ -216,6 +216,13 @@ export class DataListComponent implements OnInit, OnDestroy {
   /** Whether the list is narrowed to the pinned rows only. */
   public stickyOnly = false;
 
+  /**
+   * Read from the store rather than kept per domain — it is how the user likes
+   * to read the list, not something about one project. Read once here; the
+   * popup is the only writer and there is one of it.
+   */
+  public sortActiveFirst = false;
+
   scenarioOptions: string[] = [];
   presets!: string[];
   isPresetCopy = false;
@@ -297,6 +304,8 @@ export class DataListComponent implements OnInit, OnDestroy {
         }
       )
     );
+
+    this.applyStoredSort();
   }
 
   /**
@@ -322,7 +331,9 @@ export class DataListComponent implements OnInit, OnDestroy {
       requests: this.data,
       sticky: this.stickyIds,
       selected: this.selection.selected,
-      stickyOnly: this.stickyOnly
+      stickyOnly: this.stickyOnly,
+      activeFirst: this.sortActiveFirst,
+      context: this.context
     });
   }
 
@@ -388,8 +399,45 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Takes the browser-global sort preference from the store.
+   *
+   * Deliberately *not* awaited at the top of `ngOnInit`. Doing that put a
+   * storage round trip in front of the state subscription set up below, so a
+   * state announced in that window was never heard — the pins arrived while
+   * nothing was listening and the list came up empty. This reorders when the
+   * answer lands instead, which is a frame later at worst and cannot miss
+   * anything.
+   */
+  private applyStoredSort(): void {
+    void this.storeService.getStore().then(store => {
+      const activeFirst = store?.sortActiveFirst ?? false;
+
+      if (activeFirst !== this.sortActiveFirst) {
+        this.sortActiveFirst = activeFirst;
+        this.recompute();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   onToggleActivateNew(toggle: boolean): void {
     this.storeService.updateAux({ newAutoActivate: toggle }, this.context);
+  }
+
+  /**
+   * Reorders now and remembers afterwards.
+   *
+   * The list is redrawn from the local flag rather than from the round trip:
+   * `updateStore` goes to the background and comes back through storage, and
+   * a toggle that only moves once that has happened reads as a dead control.
+   */
+  onToggleSortActiveFirst(activeFirst: boolean): void {
+    this.sortActiveFirst = activeFirst;
+    this.recompute();
+    this.cdr.detectChanges();
+
+    void this.storeService.updateStore({ sortActiveFirst: activeFirst });
   }
 
   ngOnDestroy(): void {

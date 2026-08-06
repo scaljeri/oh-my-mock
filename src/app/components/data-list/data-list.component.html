@@ -50,6 +50,15 @@ preset selector and the overflow menu moved into the toolbar below. -->
         >Pinned only ({{ stickyIds.length }})</mat-slide-toggle
       >
     }
+    <mat-slide-toggle
+      class="oh-toolbar__toggle"
+      x-test="sort-active-first-toggle"
+      (change)="onToggleSortActiveFirst($event.checked)"
+      [checked]="sortActiveFirst"
+      matTooltip="Keep switched-on requests above the rest. Off, everything is ordered by the most recent call — including requests whose mock is switched off."
+      color="primary"
+      >Active first</mat-slide-toggle
+    >
     @if (showMenu) {
       <button
         class="oh-toolbar__menu"

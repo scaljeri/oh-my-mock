@@ -54,7 +54,15 @@ describe('DataListComponent', () => {
       providers: [AnimationBuilder, { provide: MatDialog, useValue: {} },
         { provide: WebWorkerService, useValue: {} },
         // The real store would go to `chrome.storage`, which is not there.
-        { provide: OhMyState, useValue: { updateAux } }],
+        {
+          provide: OhMyState,
+          useValue: {
+            updateAux,
+            // The list reads the browser-global sort preference on init.
+            getStore: async () => ({}),
+            updateStore: async () => ({})
+          }
+        }],
     }).compileComponents();
   });
 
