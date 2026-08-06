@@ -13,7 +13,7 @@ import { ohMyWindow } from '../shared/oh-my-window';
  * What is undone here was installed by two different files. `src/early-inject`
  * owns the window-level patches — it is the one that runs before any page script
  * — and saved each original next to its replacement (`__fetch`, `__send`,
- * `__open`, `__setRequestHeader`, `__addEventListener`). The bundle's own
+ * `__open`, `__setRequestHeader`). The bundle's own
  * `Response`/`XMLHttpRequest` accessor patches are undone by their own
  * `unpatch*` functions, which the caller runs alongside this.
  */
@@ -56,11 +56,10 @@ export function restoreOriginals(): void {
     }
   }
 
-  // `addEventListener` was replaced by assignment rather than by descriptor.
-  if (typeof proto.__addEventListener === 'function') {
-    proto.addEventListener = proto.__addEventListener;
-    Reflect.deleteProperty(proto, '__addEventListener');
-  }
+  // `addEventListener` needs no restoring: the shim stopped patching it when
+  // mocked requests started completing through `dispatchEvent` — the listeners
+  // are on the instance already, so there is nothing to collect and nothing to
+  // put back.
 
   // The two the bundle publishes for the shim to forward to. Left behind they
   // would make a re-installed shim think the bundle is still driving.

@@ -4,7 +4,7 @@ import { IOhMyReadyResponse } from "../../shared/packet-type";
 import { b64ToBlob } from "../../shared/utils/binary";
 import { getMimeType } from "../../shared/utils/mime-type";
 import { findCachedResponse } from "../utils";
-import { IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
+import { consumeBody, IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
 import { persistResponse } from "./persist-response";
 
 const descriptor = originalDescriptor('blob');
@@ -33,6 +33,10 @@ export function patchResponseBlob() {
         const result = this.ohResult;
 
         if (isReadyResponse(result) && result.response.status === ohMyMockStatus.OK) {
+          // Marks the body as read (and rejects a second read) before the mock
+          // is served — see `consumeBody`.
+          await consumeBody(this);
+
           const response = result.response.response;
           // A mock may carry no headers at all, in which case there is no
           // content type to give the Blob.

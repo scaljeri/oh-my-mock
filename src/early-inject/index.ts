@@ -49,16 +49,24 @@ interface IEarlyInjectNamespace {
   release?: () => void;
 }
 
-/** Ad-hoc members the shim parks on each XMLHttpRequest instance. */
+/**
+ * Ad-hoc members the shim parks on each XMLHttpRequest instance.
+ *
+ * `ohResult` and the two `__oh*` flags are written by the injected bundle, not
+ * by this shim — they are declared here because `open` marks the start of a new
+ * request on this instance and must clear the previous request's verdict, or a
+ * reused XHR answers its second request from its first request's mock.
+ */
 interface IEarlyInjectXhr extends XMLHttpRequest {
-  ohListeners?: EventListenerOrEventListenerObject[];
   ohHeaders?: Record<string, string>;
   ohMethod?: string;
   ohUrl?: string;
+  ohResult?: unknown;
+  __ohIsPerisisted?: boolean;
+  __ohMyHasError?: boolean;
   __send: XMLHttpRequest['send'];
   __open: XMLHttpRequest['open'];
   __setRequestHeader: XMLHttpRequest['setRequestHeader'];
-  __addEventListener: XMLHttpRequest['addEventListener'];
 }
 
 const ohMy = (): IEarlyInjectNamespace =>
@@ -139,10 +147,22 @@ if (!ohMy() || ohMy().restored) {
     open: {
       ...dopen,
       value: function (this: IEarlyInjectXhr, ...args: Parameters<XMLHttpRequest['open']>) {
-        this.ohListeners = [];
         this.ohHeaders = {};
         this.ohMethod = args[0].toUpperCase();
         this.ohUrl = String(args[1]);
+
+        // `open` starts a new request cycle on this instance, so everything the
+        // previous cycle left behind has to go. `ohResult` is the old verdict:
+        // kept, it answers the next request from the previous request's mock.
+        // The `readyState` shadow is the own data property a mocked completion
+        // defines over the prototype accessor; kept, the instance reports DONE
+        // forever, however far the new request has actually got. Deleting a
+        // property that was never set is a no-op, and deleting the shadow never
+        // reaches the prototype accessor behind it.
+        delete this.ohResult;
+        delete this.__ohIsPerisisted;
+        delete this.__ohMyHasError;
+        Reflect.deleteProperty(this, 'readyState');
 
         this.__open(...args);
       }
@@ -161,16 +181,14 @@ if (!ohMy() || ohMy().restored) {
     __setRequestHeader: dseth
   });
 
-  (window.XMLHttpRequest.prototype as IEarlyInjectXhr).__addEventListener =
-    window.XMLHttpRequest.prototype.addEventListener;
-  window.XMLHttpRequest.prototype.addEventListener = function (this: IEarlyInjectXhr, eventName: string, callback: EventListenerOrEventListenerObject) {
-    if (eventName === 'load') {
-      this.ohListeners ??= []; // just to be sure
-      this.ohListeners.push(callback);
-    }
-
-    return this.__addEventListener(eventName, callback);
-  }
+  // `addEventListener` is deliberately not patched. It used to be, to collect
+  // `load` listeners for the injected bundle to replay by hand — and the patch
+  // dropped the third argument, so `once`, `capture`, `passive` and `signal`
+  // silently stopped working for XHR on every page the user visits, mocked or
+  // not. The bundle now completes a mocked request with `dispatchEvent`, which
+  // runs whatever is registered on the instance with full listener semantics,
+  // so there is nothing to collect and the page's `addEventListener` stays the
+  // browser's own.
 
   const origFetch = window.fetch;
   window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {

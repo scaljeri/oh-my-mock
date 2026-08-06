@@ -90,28 +90,15 @@ export function patchSend() {
           }
           xhr.__send(toXhrBody(body));
         } else {
-          // if ((data.response as string).match(IS_BASE64_RE)) { // It is base64 => Blob
-          // data.response = await toBlob(data.response as string);
-          // }
+          // The request never leaves the page, so the events the network would
+          // have produced are synthesised here. `loadstart` goes out before the
+          // mock's delay — the request "starts" now, the response arrives later
+          // — and could not go out earlier: at `send` time nobody knows yet
+          // whether this call will be mocked or handed to the real `send`,
+          // which fires its own.
+          xhr.dispatchEvent(new ProgressEvent('loadstart'));
 
-          // injectResponse(xhr, data);
-
-          setTimeout(() => {
-            // `configurable` on every step: without it the instance is stuck
-            // at DONE and a second `open`/`send` on the same object throws.
-            Object.defineProperty(xhr, 'readyState', { value: XMLHttpRequest.HEADERS_RECEIVED, configurable: true })
-            xhr.onreadystatechange?.(new Event('readystatechange'));
-            Object.defineProperty(xhr, 'readyState', { value: XMLHttpRequest.LOADING, configurable: true })
-            xhr.onreadystatechange?.(new Event('readystatechange'));
-            Object.defineProperty(xhr, 'readyState', { value: XMLHttpRequest.DONE, configurable: true })
-            xhr.onreadystatechange?.(new Event('readystatechange'));
-
-            const progressEvent = new ProgressEvent('load', { /* ....???.... */ });
-            xhr.onload?.(progressEvent);
-
-            xhr.ohListeners?.forEach(l =>
-              typeof l === 'function' ? l(progressEvent) : l.handleEvent(progressEvent));
-          }, data.response.delay);
+          setTimeout(() => completeMockedRequest(xhr, data.response.response), data.response.delay);
         }
       }).catch(err => {
         // Nothing below this point runs, which means the page's XHR never
@@ -121,6 +108,50 @@ export function patchSend() {
       });
     }
   }
+}
+
+/**
+ * Walks the instance through the readyState/event sequence of a successful
+ * response, exactly as the network would have: readystatechange for
+ * HEADERS_RECEIVED and LOADING, a `progress` event, readystatechange for DONE,
+ * then `load` and finally `loadend`.
+ *
+ * Everything goes through `dispatchEvent` on the instance itself. The events
+ * used to be built by hand and pushed into `onreadystatechange`/`onload` plus a
+ * list of captured listeners, and that shape was wrong three ways at once:
+ * `addEventListener('readystatechange')` and every `loadend` listener were
+ * simply never called — axios ≥ 1.x settles its promise in `loadend`, so a
+ * mocked request through it never resolved — and the events had no `target`,
+ * so the extremely common `e.target.readyState` threw. An XHR is a real
+ * `EventTarget`; dispatching on it runs the handler properties *and* every
+ * registered listener, honours `once`/`capture`/`signal`, respects
+ * `removeEventListener`, and stamps `target`/`currentTarget` on the way.
+ *
+ * `error`, `timeout` and `abort` are deliberately not synthesised: a mocked
+ * request cannot fail in transit, so — like a real request that succeeds —
+ * those events never fire. (`abort()` during the mock's delay is not detected;
+ * the response is already decided and arrives regardless.)
+ */
+function completeMockedRequest(xhr: XMLHttpRequest, body: unknown): void {
+  // `configurable` on every step: the shim's `open` deletes this shadow when
+  // the instance is reused, and without it the delete would throw and the
+  // instance be stuck at DONE.
+  const setReadyState = (value: number): void => {
+    Object.defineProperty(xhr, 'readyState', { value, configurable: true });
+    xhr.dispatchEvent(new Event('readystatechange'));
+  };
+
+  // A mock's body is stored as text, so its size is knowable; anything else is
+  // reported the way the network reports an opaque length.
+  const total = typeof body === 'string' ? new Blob([body]).size : 0;
+  const sizes = { lengthComputable: typeof body === 'string', loaded: total, total };
+
+  setReadyState(XMLHttpRequest.HEADERS_RECEIVED);
+  setReadyState(XMLHttpRequest.LOADING);
+  xhr.dispatchEvent(new ProgressEvent('progress', sizes));
+  setReadyState(XMLHttpRequest.DONE);
+  xhr.dispatchEvent(new ProgressEvent('load', sizes));
+  xhr.dispatchEvent(new ProgressEvent('loadend', sizes));
 }
 
 export function unpatchSend() {

@@ -28,6 +28,18 @@ export async function persistResponse(response: IOhMyResponse, request?: IOhMyAP
     return response.ohResult;
   }
 
+  // No url, no record. A `Response` the page built itself (`new Response(...)`
+  // in application code) has an empty `url` and is not network traffic — but
+  // reading its `status` or `headers` goes through the patched accessors, which
+  // land here. Without this guard every such response was cloned, body-read and
+  // posted to the extension as a request keyed under `''`. It also matters
+  // during construction: undici's `Response` consults the public `status`
+  // getter before the constructor returns, so persisting from that read means
+  // cloning a half-initialised response.
+  if (!response.ohUrl && !response.url && !request?.url) {
+    return;
+  }
+
   // `clone()` is not async — the `await` it used to have only cost a tick.
   const clone = asOhMyResponse(response.clone());
   const headers = Object.fromEntries(clone.headers.entries());

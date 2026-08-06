@@ -7,10 +7,10 @@ import { requestMethod } from '../shared/types/request';
  *
  * Two scripts patch the prototype. `src/early-inject/index.ts` runs at
  * `document_start`, before any page code can hold a reference, and wraps
- * `open`, `send`, `setRequestHeader` and `addEventListener`. The injected
- * bundle then wraps the `status` / `response` / `responseText` / header
- * members. Both keep the untouched original under a `__`-prefixed name, and
- * both hang request bookkeeping off the instance under `oh`-prefixed names.
+ * `open`, `send` and `setRequestHeader`. The injected bundle then wraps the
+ * `status` / `response` / `responseText` / header members. Both keep the
+ * untouched original under a `__`-prefixed name, and both hang request
+ * bookkeeping off the instance under `oh`-prefixed names.
  *
  * Every patched function therefore runs with `this` set to an object of this
  * shape, which is why they declare `this: IOhMyXhr` instead of asserting on
@@ -25,14 +25,6 @@ export interface IOhMyXhr extends XMLHttpRequest {
 
   /** Request headers collected by the `setRequestHeader` patch. */
   ohHeaders?: Record<string, string>;
-
-  /**
-   * `load` listeners registered through `addEventListener`.
-   *
-   * A mocked request never reaches the network, so no real `load` event is
-   * ever dispatched; the `send` patch replays this list itself.
-   */
-  ohListeners?: EventListenerOrEventListenerObject[];
 
   /** What the extension decided to do with this request. */
   ohResult?: IOhMyReadyResponse;
@@ -49,7 +41,6 @@ export interface IOhMyXhr extends XMLHttpRequest {
   __open: XMLHttpRequest['open'];
   __send: XMLHttpRequest['send'];
   __setRequestHeader: XMLHttpRequest['setRequestHeader'];
-  __addEventListener: XMLHttpRequest['addEventListener'];
   __getAllResponseHeaders: XMLHttpRequest['getAllResponseHeaders'];
   __getResponseHeader: XMLHttpRequest['getResponseHeader'];
   __status: number;
@@ -69,7 +60,7 @@ export interface IOhMyXhr extends XMLHttpRequest {
  * deletes them again, so unlike on an instance they are all optional here.
  */
 export type IOhMyXhrPrototype = XMLHttpRequest & Partial<Pick<IOhMyXhr,
-  '__open' | '__send' | '__setRequestHeader' | '__addEventListener' |
+  '__open' | '__send' | '__setRequestHeader' |
   '__getAllResponseHeaders' | '__getResponseHeader' |
   '__status' | '__responseText' | '__response'>>;
 

@@ -32,8 +32,13 @@ export function patchResponseText() {
           // InvalidStateError. Let the original getter raise it (it is caught
           // below) rather than inventing a value for it.
           return this.__responseText;
+        } else if (this.ohResult?.response.status === ohMyMockStatus.OK) {
+          // `?? ''` rather than `||`: an empty string is a legitimate mock —
+          // with `||` it fell through to the *real* body, so the one thing an
+          // empty mock is for (blanking a response) leaked what it was hiding.
+          return this.ohResult.response.response ?? '';
         } else {
-          return this.ohResult?.response?.response || this.__responseText;
+          return this.__responseText;
         }
       } catch {
         // The InvalidStateError the comment above expects. A getter must return

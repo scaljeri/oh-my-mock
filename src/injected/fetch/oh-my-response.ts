@@ -53,6 +53,34 @@ export function isReadyResponse(result?: IOhMyResult): result is IOhMyReadyRespo
   return !!result?.response && 'status' in result.response;
 }
 
+/**
+ * Makes a mock-served read honour the native body contract.
+ *
+ * The patched readers answer from the stored mock, not from the stream, so
+ * without this a body could be "read" any number of times while `bodyUsed`
+ * stayed false — and code that checks `bodyUsed` to decide whether it must
+ * `clone()` first (interceptor libraries do exactly that) was being lied to.
+ * So: a second read rejects with a `TypeError` like the native readers, and a
+ * first read drains the real stream — a mocked `Response` is built over the
+ * mock's own text these days — which flips `bodyUsed` and makes a later
+ * `clone()` throw, both exactly as the spec says.
+ *
+ * A body-less response (a 204, or a mock with no stored body) has nothing to
+ * drain; native readers resolve on those however often they are called, so no
+ * used-check applies either.
+ */
+export async function consumeBody(response: IOhMyResponse): Promise<void> {
+  if (!response.body) {
+    return;
+  }
+
+  if (response.bodyUsed) {
+    throw new TypeError('Failed to read body: body stream already read');
+  }
+
+  await response.__arrayBuffer();
+}
+
 export type patchableResponseMember =
   'arrayBuffer' | 'blob' | 'headers' | 'json' | 'status' | 'text';
 

@@ -48,10 +48,17 @@ test.describe('the injected response cache', () => {
   });
 
   /**
-   * A page is free never to read a body. Those entries have no consumer, so the
-   * cache is capped rather than trusted to drain.
+   * A page is free never to read a body — and that used to be what filled this
+   * cache up, because the entry was consumed by the *read*. It is consumed when
+   * the mocked `Response` is built now, so an unread body leaves nothing
+   * behind: the accumulation the 200-entry cap exists for cannot happen through
+   * this path at all.
+   *
+   * The cap is still there, and is tested directly in `src/injected/utils.spec.ts`
+   * — including which end it trims, which is what the second half of this test
+   * used to be for. There is no longer a way to reach it from a page.
    */
-  test('stays bounded when the page never reads the bodies', async ({
+  test('keeps nothing even when the page never reads the bodies', async ({
     ohMy,
     site
   }) => {
@@ -81,15 +88,11 @@ test.describe('the injected response cache', () => {
       }
     });
 
-    const size = await cacheSize(site.page);
+    expect(await cacheSize(site.page)).toBe(0);
 
-    expect(size).toBeGreaterThan(0);
-    expect(size).toBeLessThanOrEqual(200);
-
-    // And the *newest* survived. Entries are unshifted, so trimming the wrong
-    // end drops precisely the ones still worth having — after which every new
-    // mocked response is evicted the moment it arrives and mocking silently
-    // stops. Asserting the length alone is true whichever end goes.
+    // And mocking still works afterwards — the assertion that catches "the
+    // cache is empty because nothing was ever put in it", which is the boring
+    // way for the line above to be true.
     const stillMocked = await site.page.evaluate(async () => {
       const response = await fetch('/api/json');
 

@@ -2,7 +2,7 @@ import { ohMyMockStatus } from "../../shared/constants";
 import { ohMyWindow } from "../../shared/oh-my-window";
 import { IOhMyReadyResponse } from "../../shared/packet-type";
 import { findCachedResponse } from "../utils";
-import { IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
+import { consumeBody, IOhMyResponse, isReadyResponse, originalDescriptor } from "./oh-my-response";
 import { persistResponse } from "./persist-response";
 
 const descriptor = originalDescriptor('text');
@@ -31,6 +31,10 @@ export function patchResponseText() {
         const result = this.ohResult;
 
         if (isReadyResponse(result) && result.response.status === ohMyMockStatus.OK) {
+          // Marks the body as read (and rejects a second read) before the mock
+          // is served — see `consumeBody`.
+          await consumeBody(this);
+
           let output: string | undefined = result.response.response;
 
           if (typeof output !== 'string') {
