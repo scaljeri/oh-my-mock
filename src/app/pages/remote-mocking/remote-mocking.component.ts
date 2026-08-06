@@ -1,4 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject
+} from '@angular/core';
 import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { ohMyRemoteTarget } from '@shared/types/store';
@@ -49,7 +55,7 @@ const TARGETS: {
   styleUrls: ['./remote-mocking.component.scss'],
   imports: [ReactiveFormsModule]
 })
-export class RemoteMockingComponent implements OnInit {
+export class RemoteMockingComponent implements OnInit, OnDestroy {
   private remoteService = inject(RemoteService);
   private toast = inject(HotToastService);
   private cdr = inject(ChangeDetectorRef);
@@ -79,9 +85,21 @@ export class RemoteMockingComponent implements OnInit {
   /** Guards against two settle-watchers running after quick successive changes. */
   private settling = false;
 
+  /**
+   * Set on destroy. The settle-watcher lives between awaits, not in a
+   * subscription, so leaving the page does not end it by itself — it kept
+   * polling the background and calling `detectChanges()` on a destroyed view
+   * for up to its full deadline.
+   */
+  private destroyed = false;
+
   async ngOnInit(): Promise<void> {
     await this.refresh();
     await this.watchUntilSettled();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
   }
 
   /**
@@ -92,7 +110,15 @@ export class RemoteMockingComponent implements OnInit {
    * this page shows the second one.
    */
   async refresh(): Promise<void> {
-    this.status = await this.remoteService.status();
+    const status = await this.remoteService.status();
+
+    // The answer can come back after the page has been left; a destroyed view
+    // must not be marked dirty.
+    if (this.destroyed) {
+      return;
+    }
+
+    this.status = status;
 
     if (!this.seeded) {
       this.seeded = true;
@@ -128,12 +154,24 @@ export class RemoteMockingComponent implements OnInit {
     try {
       const deadline = Date.now() + 12_000;
 
-      while (this.status?.target === 'server' && !this.status.connected) {
+      while (
+        !this.destroyed &&
+        this.status?.target === 'server' &&
+        !this.status.connected
+      ) {
         if (Date.now() > deadline) {
           return;
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Checked again on the far side of the sleep — leaving the page is
+        // most likely to happen during one, and the next ask should not go
+        // out at all.
+        if (this.destroyed) {
+          return;
+        }
+
         await this.refresh();
       }
     } finally {

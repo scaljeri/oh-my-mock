@@ -21,9 +21,15 @@ export async function initializeApp(
     appStateService.contentVersion = contentVersion ?? '';
   }
 
-  // This should only happen with E2E testing
+  // Reached on a reload of the popup, where the query string is gone.
   if (!appStateService.tabId) {
-    appStateService.tabId = await getTabId();
+    const tabId = await getTabId();
+
+    // No tab found is survivable — the popup can edit mocks without one — so
+    // nothing is stored rather than a value that is not a tab.
+    if (tabId !== undefined) {
+      appStateService.tabId = tabId;
+    }
   }
 
   await stateService.initialize(appStateService.domain).then(() => {

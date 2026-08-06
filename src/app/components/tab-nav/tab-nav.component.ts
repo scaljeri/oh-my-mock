@@ -7,8 +7,9 @@ import {
   inject
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { IState } from '@shared/types/state';
-import { filter, Subscription } from 'rxjs';
+import { StateUtils } from '@shared/utils/state';
+import { visibleRequests } from '@shared/utils/request-index';
+import { combineLatest, filter, Subscription } from 'rxjs';
 import { OhMyStateService } from '../../services/state.service';
 
 export type ohMyTab = 'requests' | 'cookies';
@@ -45,8 +46,22 @@ export class TabNavComponent implements OnInit, OnDestroy {
     this.active = TabNavComponent.activeTab(this.router.url);
 
     this.subscriptions.add(
-      this.stateService.state$.subscribe((state: IState) => {
-        this.requestCount = state.requests.length;
+      // The requests and the groups as well as the state: the badge counts the
+      // rows the list actually shows — the requests of the groups that are
+      // **on** — not the state's id list. Counting the ids said 12 over a list
+      // of 5 whenever a group was switched off.
+      combineLatest([
+        this.stateService.state$,
+        this.stateService.requests$,
+        this.stateService.groups$
+      ]).subscribe(([state, requests]) => {
+        this.requestCount = Object.keys(
+          visibleRequests(
+            StateUtils.pickRequests(state, requests),
+            this.stateService.activeGroups(state),
+            this.stateService.localGroup(state)
+          )
+        ).length;
         this.cookieCount = state.cookies?.length ?? 0;
         this.cdr.detectChanges();
       })

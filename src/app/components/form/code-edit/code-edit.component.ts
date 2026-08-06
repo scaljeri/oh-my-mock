@@ -4,6 +4,7 @@ import {
   forwardRef,
   Input,
   OnChanges,
+  OnDestroy,
   OnInit,
   Output,
   inject
@@ -59,7 +60,7 @@ declare global {
   imports: [EditorComponent, ReactiveFormsModule, DiffEditorComponent]
 })
 export class CodeEditComponent
-  implements OnInit, OnChanges, ControlValueAccessor
+  implements OnInit, OnChanges, OnDestroy, ControlValueAccessor
 {
   private prettyPrintPipe = inject(PrettyPrintPipe);
 
@@ -145,16 +146,37 @@ export class CodeEditComponent
     this.modifiedModel = { code: this.updatedCode ?? '', language };
   }
 
-  // Wait for monaco to load
+  /**
+   * The poll's timer, so `ngOnDestroy` can end it. Waiting is fine; a timer
+   * that outlives the component is not.
+   */
+  private monacoPollId?: number;
+
+  /**
+   * Waits for monaco to load — but not forever. If the loader has failed,
+   * monaco is not going to appear, and the poll used to keep firing every
+   * 100ms for the life of the popup, from every editor ever created. Past the
+   * deadline it gives up and resolves; the editor is broken either way, and
+   * the rest of the component (the form control, the diff models) still works.
+   */
   checkMonacoLoaded(): Promise<void> {
-    return new Promise((r) => {
-      const id = window.setInterval(() => {
-        if (window.monaco) {
-          window.clearInterval(id);
-          r();
+    return new Promise((resolve) => {
+      const deadline = Date.now() + 20_000;
+
+      this.monacoPollId = window.setInterval(() => {
+        if (window.monaco || Date.now() > deadline) {
+          window.clearInterval(this.monacoPollId);
+          resolve();
         }
       }, 100);
     });
+  }
+
+  ngOnDestroy(): void {
+    // Destroyed while still waiting: end the poll. The promise then never
+    // settles, which is the intent — nothing after the await should run for a
+    // component that is gone.
+    window.clearInterval(this.monacoPollId);
   }
 
   private setEditorOptions(): void {

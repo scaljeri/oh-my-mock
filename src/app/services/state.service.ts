@@ -310,11 +310,19 @@ export class OhMyStateService {
             if ((update.newValue as IState).domain === this.context.domain) {
               this.state = update.newValue as IState;
             }
-          } else if ((update.oldValue as IState).domain && !update.newValue) {
-            // reset
-            this.state = StateUtils.init({
-              domain: (update.oldValue as IState).domain
-            });
+          } else if (
+            (update.oldValue as IState).domain === this.context.domain
+          ) {
+            // This domain's record was deleted (a reset), so the popup starts
+            // it afresh. Only *this* domain's: any state whose record goes is
+            // announced here, and adopting a fresh state for a domain deleted
+            // on the domains page replaced `this.state` with a state the popup
+            // is not showing — everything that reads it went with it.
+            this.state = StateUtils.init({ domain: this.context.domain });
+          } else {
+            // Another domain's record went away; nothing this popup shows
+            // changed, so there is nothing to reload or re-announce.
+            break;
           }
 
           // The state may name requests or cookies this popup has not loaded yet

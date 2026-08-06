@@ -20,12 +20,17 @@ export class AppStateService {
   #contentVersion!: string;
 
   private errorSubject = new Subject<IPacketPayload>();
-  public errors$ = this.errorSubject.asObservable().pipe(shareReplay());
+  // `shareReplay(1)`, not `shareReplay()`: without a buffer size the operator
+  // replays *everything it has ever seen* to each late subscriber, and holds
+  // on to all of it for the life of the popup.
+  public errors$ = this.errorSubject.asObservable().pipe(shareReplay(1));
 
   private hitSubject = new Subject<IData>();
   public hit$ = this.hitSubject.asObservable();
   private domainChangeSubject = new BehaviorSubject<ohMyDomain | null>(null);
-  public domain$ = this.domainChangeSubject.asObservable().pipe(shareReplay());
+  public domain$ = this.domainChangeSubject
+    .asObservable()
+    .pipe(shareReplay(1));
 
   constructor() {
     this._domain = sessionStorage.getItem('domain') ?? '';

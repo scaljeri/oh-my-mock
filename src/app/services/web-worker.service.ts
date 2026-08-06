@@ -29,6 +29,12 @@ export class WebWorkerService {
   public async init(domain: string): Promise<void> {
     if (!this.worker) {
       this.worker = this.createWorker();
+
+      // Subscribed once, with the worker, not once per `init`. This runs on
+      // every domain switch, and each call used to add another subscription —
+      // after visiting N domains every response update was posted to the
+      // worker N times. The worker lives for the popup, and so does this.
+      this.stateService.response$.subscribe((mock) => this.upsertMock(mock));
     }
     this.worker.postMessage({ type: OhWWPacketTypes.INIT, body: null });
 
@@ -44,8 +50,6 @@ export class WebWorkerService {
         return data;
       })
     });
-
-    this.stateService.response$.subscribe((mock) => this.upsertMock(mock));
   }
 
   public upsertMock(mock: IMock): void {

@@ -261,6 +261,20 @@ describe('DataListComponent', () => {
     });
   });
 
+  describe('selectAll', () => {
+    // "All" is what is on screen. The state's id list also carries the
+    // requests of groups that are off; selecting those handed the JSON export
+    // mocks the list never showed.
+    it('selects only the rows the list shows', () => {
+      component.state = state(['a', 'b']);
+      component.data = { a: request('a', 300) }; // `b`'s group is off
+
+      component.selectAll();
+
+      expect(component.selection.selected).toEqual(['a']);
+    });
+  });
+
   describe('selection', () => {
     beforeEach(() => {
       component.state = state(['a', 'b']);

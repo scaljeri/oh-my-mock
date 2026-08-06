@@ -198,8 +198,26 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * Enter as a shortcut for "enable mocking" — but only when Enter is not
+   * already meaning something to the control being used. Typing in the filter
+   * box, confirming a url edit or renaming a preset must not flip mocking on
+   * for the whole domain; the same guard the backspace handler above applies.
+   */
   @HostListener('window:keydown.enter')
   onEnable(): void {
+    const el = document.activeElement;
+
+    if (
+      el &&
+      (['input', 'textarea', 'select', 'button'].includes(
+        el.tagName.toLowerCase()
+      ) ||
+        el.getAttribute('contenteditable') === 'true')
+    ) {
+      return;
+    }
+
     this.onEnableChange(true);
   }
 

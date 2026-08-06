@@ -502,7 +502,11 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   public selectAll(): void {
-    this.loadedState.requests.forEach((id) => {
+    // "All" is all the rows on screen — `data`, the group-visible requests —
+    // not the state's id list. Selecting from the id list ticked requests the
+    // list does not show, and the export then carried mocks of groups that
+    // are switched off.
+    Object.keys(this.data).forEach((id) => {
       this.selection.select(id);
     });
     this.recompute();

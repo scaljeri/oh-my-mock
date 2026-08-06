@@ -59,7 +59,9 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
   dropdown!: AutocompleteDropdownComponent;
 
   ngOnInit(): void {
-    this.presetCtrl.valueChanges.subscribe((preset) => {
+    // Into the container `ngOnDestroy` empties — bare, this outlived the
+    // component.
+    this.subscriptions.add(this.presetCtrl.valueChanges.subscribe((preset) => {
       const oldPresetValue = this.presets[this.context.preset];
 
       if (preset !== oldPresetValue) {
@@ -82,7 +84,7 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
           );
         }
       }
-    });
+    }));
   }
 
   ngOnChanges(): void {
@@ -156,5 +158,9 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    // Kept out of the container because `ngOnChanges` replaces it per context.
+    // It was unsubscribed on every change of context but never on destroy, so
+    // the last one outlived the component.
+    this.stateSub?.unsubscribe();
   }
 }

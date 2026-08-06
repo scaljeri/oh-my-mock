@@ -21,7 +21,6 @@ import { IData, IMock, ohMyDataId, ohMyMockId } from '@shared/type';
 import {
   BehaviorSubject,
   debounceTime,
-  filter,
   map,
   merge,
   Observable,
@@ -92,7 +91,10 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
   filterCtrl = new UntypedFormControl('');
   filterOptionsData = FILTER_SEARCH_OPTIONS;
   filterMappedOpts!: Record<string, boolean>;
-  // A bare trigger: subscribers react to the emission, not to its value.
+  // A bare trigger: subscribers react to the emission, not to its value — a
+  // `Subject<void>` only ever carries `undefined`. A *Behavior*Subject, so the
+  // triggers `ngOnChanges` fires before `ngOnInit` has subscribed (the first
+  // change round runs first) still start the initial search on subscribe.
   filterTrigger$ = new BehaviorSubject<void>(undefined);
 
   private subs = new Subscription();
@@ -115,7 +117,6 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
       merge(
         this.filterTrigger$.pipe(
           debounceTime(50),
-          filter((x) => x !== undefined),
           map(() => this.filterCtrl.value)
         ),
         this.filterCtrl.valueChanges.pipe(debounceTime(300))
@@ -126,7 +127,10 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
             () =>
               ({
                 words: splitIntoSearchTerms(this.filterCtrl.value),
-                data: this.data,
+                // `?? {}`: the initial trigger can fire before the parent has
+                // anything to hand over, and a throw here would kill the
+                // subscription for good — the filter would just stop.
+                data: this.data ?? {},
                 includes: this.filterMappedOpts
               }) as SearchFilterData
           ),
@@ -215,7 +219,7 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
 
     const results = shallowSearch(input.data, input.words, input.includes);
     const opposite = Object.fromEntries(
-      Object.entries(this.data).filter(([id]) => !results[id])
+      Object.entries(this.data ?? {}).filter(([id]) => !results[id])
     );
 
     return {
@@ -227,7 +231,7 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
 
   deepSearch(input: SearchFilterData): Observable<IData[]> {
     if (input.words.length === 0) {
-      return of(Object.values(this.data));
+      return of(Object.values(this.data ?? {}));
     }
 
     return this.webWorkerService
@@ -246,7 +250,9 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
   setFilterOptions() {
     this.filterOptions = FILTER_SEARCH_OPTIONS.reduce(
       (acc: Record<string, boolean>, fo) => {
-        acc[fo.id] = this.filterOptions?.[fo.id] || true;
+        // `?? true`: only an *absent* option defaults to on. `|| true` turned
+        // a stored `false` back on, so an unticked box came back ticked.
+        acc[fo.id] = this.filterOptions?.[fo.id] ?? true;
         return acc;
       },
       {}

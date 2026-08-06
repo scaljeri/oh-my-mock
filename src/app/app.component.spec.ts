@@ -1,4 +1,9 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  EnvironmentInjector,
+  NO_ERRORS_SCHEMA,
+  runInInjectionContext
+} from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -141,4 +146,104 @@ describe('AppComponent', () => {
 
     expect(deactivate).toHaveBeenCalled();
   });
+});
+/**
+ * The component is constructed directly rather than through a fixture: these
+ * specs exercise the window-level key handlers, and rendering the shell would
+ * drag in every child of the layout for no extra coverage.
+ */
+describe('AppComponent, constructed directly', () => {
+  let component: AppComponent;
+  let updateAux: jest.Mock;
+
+  beforeEach(() => {
+    updateAux = jest.fn().mockResolvedValue(undefined);
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AppStateService, useValue: {} },
+        { provide: OhMyState, useValue: { updateAux } },
+        { provide: OhMyStateService, useValue: {} },
+        { provide: ContentService, useValue: {} },
+        { provide: WebWorkerService, useValue: {} },
+        { provide: Router, useValue: {} },
+        { provide: ActivatedRoute, useValue: {} },
+        { provide: MatDialog, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: () => {} } }
+      ]
+    });
+
+    component = runInInjectionContext(
+      TestBed.inject(EnvironmentInjector),
+      () => new AppComponent()
+    );
+    component.context = { domain: 'localhost:8090', preset: 'default' };
+  });
+
+  /**
+   * Enter is a shortcut for "enable mocking" — from the page, not from a
+   * control. The handler used to fire unguarded, so pressing Enter to confirm
+   * the filter box, the url editor or a preset rename force-enabled mocking
+   * for the whole domain as a side effect.
+   */
+  describe('the Enter shortcut', () => {
+    const focus = (el: HTMLElement) => {
+      document.body.appendChild(el);
+      el.focus();
+
+      return el;
+    };
+
+    afterEach(() => {
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      document.body
+        .querySelectorAll('input, textarea, button, [contenteditable]')
+        .forEach((el) => el.remove());
+    });
+
+    it('enables mocking when nothing is being edited', () => {
+      component.onEnable();
+
+      expect(updateAux).toHaveBeenCalledWith(
+        { appActive: true },
+        component.context
+      );
+    });
+
+    it('does nothing while typing in an input', () => {
+      focus(document.createElement('input'));
+
+      component.onEnable();
+
+      expect(updateAux).not.toHaveBeenCalled();
+    });
+
+    it('does nothing while typing in a textarea', () => {
+      focus(document.createElement('textarea'));
+
+      component.onEnable();
+
+      expect(updateAux).not.toHaveBeenCalled();
+    });
+
+    it('does nothing while a button has the focus — Enter is its click', () => {
+      focus(document.createElement('button'));
+
+      component.onEnable();
+
+      expect(updateAux).not.toHaveBeenCalled();
+    });
+
+    it('does nothing while editing contenteditable content', () => {
+      const div = document.createElement('div');
+
+      div.setAttribute('contenteditable', 'true');
+      div.tabIndex = -1;
+      focus(div);
+
+      component.onEnable();
+
+      expect(updateAux).not.toHaveBeenCalled();
+    });
+});
 });

@@ -479,23 +479,22 @@ export class OhMyState {
     let state = await this.getState(context);
     state.aux = { ...state.aux, ...aux };
 
-    // for (const item of Object.entries(aux)) {
-    // state = await OhMySendToBg.patch<boolean, IState>(item[1], '$.aux', item[0], payloadType.STATE, undefined, 'popup;updateAux');
-    // }
     const keys = Object.keys(aux);
     for (let i = 0; i < keys.length; i++) {
+      // Named explicitly, like `upsertState` above: `OhMySendToBg.patch`
+      // defaults the domain to the one the popup is on, and the caller's
+      // context can point elsewhere — the state explorer toggles another
+      // domain's aux through this method. Leaving it out read one domain and
+      // wrote another.
       state = await OhMySendToBg.patch<IOhMyAux[keyof IOhMyAux], IState>(
         aux[keys[i] as keyof IOhMyAux],
         '$.aux',
         keys[i],
         payloadType.STATE,
-        undefined,
+        { domain: context.domain },
         'popup;updateAux'
       );
     }
-
-    // (state, payloadType.STATE);
-    // await this.storageService.set(state.domain, state);
 
     return state;
   }
