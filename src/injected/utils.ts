@@ -108,19 +108,6 @@ export function findCachedResponse(search: IOhMyMockContext, remove = true): IOh
   return result;
 }
 
-export function findCachedResponseAsync(search: IOhMyMockContext, remove = true): Promise<IOhMyReadyResponse | undefined> {
-  return new Promise(resolve => {
-    let count = 0;
-    const iid = window.setInterval(() => {
-      const result = findCachedResponse(search, remove);
-      if (result || ++count === 10) {
-        window.clearInterval(iid);
-        resolve(result);
-      }
-    }, 100);
-  })
-}
-
 export function removeDomainFromUrl(url: string): string {
   return url.replace(window.location.origin, '');
 }

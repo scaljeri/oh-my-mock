@@ -5,7 +5,6 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { UntypedFormControl } from '@angular/forms';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyStateService } from '../../services/state.service';
-import { StorageService } from '../../services/storage.service';
 import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
 import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
 import { NgClass } from '@angular/common';
@@ -23,7 +22,6 @@ export class JsonImportComponent {
   });
   private appState = inject(AppStateService);
   private stateService = inject(OhMyStateService);
-  private storageService = inject(StorageService);
   private toast = inject(HotToastService);
 
   isUploading = false;
