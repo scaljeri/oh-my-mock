@@ -298,6 +298,19 @@ export class DataListComponent implements OnInit, OnDestroy {
           this.recompute();
           this.cdr.detectChanges();
 
+          // A second render, 50ms later, and nobody knows what for.
+          //
+          // It arrived in `7fb09b2` "Feature/cypress (#132)" — a commit about
+          // test infrastructure, for a runner this project no longer uses — with
+          // no explanation, and a bare number like that is normally a guess at
+          // when something else lands.
+          //
+          // It is not inert, which is why it is still here: removing it makes
+          // `does not write back when the stored list is already clean` see a
+          // filter write it should not, so this pass is somehow suppressing one.
+          // That is worth understanding before it is deleted, and understanding
+          // it means working out which write and why — not shortening the
+          // number or deleting it and re-recording the test.
           setTimeout(() => {
             this.cdr.detectChanges();
           }, 50);

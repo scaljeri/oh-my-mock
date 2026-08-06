@@ -230,19 +230,36 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 
 });
 
-// timeout is needed because onInstalled need to be called first!
-setTimeout(async () => {
-  await initStorage();
+// Start-up, run directly rather than deferred.
+//
+// This was a `setTimeout` carrying the comment "timeout is needed because
+// onInstalled need to be called first!" — and there is no `onInstalled`
+// listener to be first: the only one in this file has been commented out for
+// as long as the comment has been wrong. Nothing but comments followed the
+// call either, so the deferral ordered this after nothing at all.
+//
+// It also swallowed its own failures. An `async` callback handed to
+// `setTimeout` has nowhere to reject to, so a start-up that threw — a storage
+// read failing, a half-written demo import — became an unhandled rejection
+// with no owner. Said out loud now, which is the least a failed start-up
+// deserves.
+void (async () => {
+  try {
+    await initStorage();
 
-  const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN)
-  if (!state || state.requests.length === 0) {
-    await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
+    const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN);
+
+    if (!state || state.requests.length === 0) {
+      await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
+    }
+
+    // A restarted service worker remembers nothing; the cookies it should have
+    // applied are re-applied here (never unapplied — see `primeCookieSync`).
+    await primeCookieSync();
+  } catch (err) {
+    error('Could not start up', err);
   }
-
-  // A restarted service worker remembers nothing; the cookies it should have
-  // applied are re-applied here (never unapplied — see `primeCookieSync`).
-  await primeCookieSync();
-});
+})();
 
 
 // chrome.declarativeNetRequest.updateSessionRules({
