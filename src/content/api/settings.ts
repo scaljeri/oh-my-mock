@@ -2,13 +2,11 @@ import { IOhMyMockSettings } from "../../shared/api-types";
 import { payloadType } from "../../shared/constants";
 import { IOhMessage, IOhMyPacketContext } from "../../shared/packet-type";
 import { IState } from "../../shared/types/state";
-import { OhMyMessageBus } from "../../shared/utils/message-bus";
 import { OhMySendToBg } from "../../shared/utils/send-to-background";
 import { OhMyContentState } from "../content-state";
-import { injectCode } from "../inject-code";
 import { sendMessageToInjected } from "../send-to-injected";
 
-export function handleAPISettings(messageBus: OhMyMessageBus) {
+export function handleAPISettings() {
   return async ({ packet }: IOhMessage<IOhMyMockSettings, IOhMyPacketContext>) => {
     const payload = packet.payload;
     // A settings message without settings changes nothing; it still gets an
@@ -35,15 +33,13 @@ export function handleAPISettings(messageBus: OhMyMessageBus) {
       state = await OhMySendToBg.patch<boolean, IState>(data.blurImages, '$.aux', 'blurImages', payloadType.STATE, context);
     }
 
-    // A state's domain is a host (`window.location.host`), never an origin.
-    //
-    // The bundle is injected on every page now, so this is only a safety net for
-    // the case where it was refused — the page API switching mocking on is a
-    // good moment to try again. The `active` verdict itself travels through
-    // `contentState.isActive$`, which this patch has already moved.
-    if (data.active && state?.domain === OhMyContentState.host) {
-      await injectCode(messageBus);
-    }
+    // Nothing to inject from here any more. The patch above writes
+    // `aux.appActive`, and the background is watching `chrome.storage` for
+    // exactly that: it registers the page-context bundle for the domain and
+    // puts it into the tabs already open on it (`src/background/main-world.ts`).
+    // This used to call `injectCode`, from a time when injecting was the
+    // content script's job and the page API switching mocking on was a good
+    // moment to try again.
 
     sendMessageToInjected({
       ...(payload.id && { id: payload.id }),

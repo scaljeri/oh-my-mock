@@ -66,29 +66,42 @@ sequenceDiagram
 
 ### 1. The patch — page → injected
 
-`src/injected/mock-oh-fetch.ts` replaces `window.fetch`; `src/injected/mock-oh-xhr.ts`
-does the same for `XMLHttpRequest.prototype.send`.
+`src/injected/mock-oh-fetch.ts` publishes the mocking `fetch`;
+`src/injected/mock-oh-xhr.ts` does the same for `send`. Both hang off the
+OhMyMock namespace, and it is the *entry points* that forward to them — so an
+inactive domain can take them away again without the page's `window.fetch`
+changing identity twice.
 
-There is a race here: the page can call `fetch` before the injected bundle has
-loaded. `src/early-inject/index.ts` is a tiny shim injected **synchronously**
-that installs a placeholder which polls until the real patch arrives. It is
-inlined into `content.js` as a string — see the warning at the top of that file
-about template literals.
+`window.fetch` and `XMLHttpRequest.prototype` are taken over by
+`src/injected/entry-points.ts`, the first statement the bundle runs. There is no
+race to lose: the bundle is a `world: 'MAIN'` content script registered per
+active domain, so it is evaluated at `document_start`, before any script the
+page has of its own. See
+[interception.md](./interception.md#how-the-bundle-gets-onto-the-page) — and the
+shim, the hold and the 50ms poll that used to bridge the gap between two
+scripts are gone with it.
 
-If mocking is switched off, the patch forwards to the original — but it *waits
-for the verdict* rather than reading an absent state as "off":
+If mocking is switched off the patch forwards to the original, read
+synchronously:
 
 ```ts
-if (!(await isMockingActive())) {
+if (!ohMyWindow().state?.active) {
   return originalFetch().call(window, request, config);
 }
 ```
 
-The patch runs before the content script has finished reading `chrome.storage`,
-and letting calls through in the meantime is exactly how an on-load request
-used to escape unmocked. `isMockingActive` (`src/injected/active-state.ts`)
-resolves once the first verdict arrives; after that it is a resolved promise
-and costs a microtask.
+`state` starts out `{ active: true }`, because the bundle being on the page is
+what says the host is mocked. The content script only ever corrects that
+downwards — for another port of the same host, or a domain switched off while
+the page is open. It used to be `await isMockingActive()`, a three-state wait
+that existed because the bundle went onto every page in the browser and could
+not know.
+
+The wait did not vanish, it moved: `handle-api-request.ts` awaits
+`contentState.init()` before looking anything up, so a request that arrives
+while `chrome.storage` is still being read has its *answer* held rather than
+being told "no mock". That is the same guarantee without a patched `fetch` that
+blocks.
 
 ### 2. Injected → content
 
@@ -285,7 +298,8 @@ these are invisible by construction:
 - requests from **web workers** and **service workers** (separate JS worlds)
 - requests from **iframes** — the manifest does not set `all_frames`
 - `<img>`, `<script>`, `<link>` loads, navigations, `EventSource`, `WebSocket`
-- anything issued before the early-inject shim lands
+- anything on a page the bundle was not registered for — see
+  [interception.md](./interception.md#how-the-bundle-gets-onto-the-page)
 
 See [interception.md](./interception.md) for why this approach was chosen anyway
 and what the alternatives would cost.

@@ -1,5 +1,4 @@
 import { ohMyMockStatus } from "../../shared/constants";
-import { isMockingActive } from '../active-state';
 import { ohMyWindow } from "../../shared/oh-my-window";
 import { IOhMyAPIRequest } from "../../shared/types/api-request";
 import { dispatchApiRequest } from "../message/dispatch-api-request";
@@ -13,27 +12,21 @@ import { persistResponse } from "./persist-response";
 // const send = window.XMLHttpRequest.prototype.send;
 
 export function patchSend() {
-  // `send` itself is patched in `src/early-inject`, which runs before any page
-  // script can grab a reference to the original. It forwards to this function
-  // as soon as the injected bundle has published it.
+  // `send` itself is patched by `installEntryPoints`, in the first statement
+  // this bundle runs — before any page script can grab a reference to the
+  // original. It forwards here as soon as this publishes.
   ohMyWindow().xhr = {
     /**
-     * Stays **synchronous** once the verdict is in, and that is not a detail.
+     * **Synchronous**, always, and that is not a detail.
      *
      * `XMLHttpRequest.send` is expected to have acted by the time it returns;
-     * making it unconditionally `async` pushed the real send a microtask out and
-     * made the plain XHR mocking test fail intermittently. So the decided path —
-     * every request after the first handful — runs exactly as it always did, and
-     * only a call that arrives before the answer waits for it.
+     * making it `async` pushed the real send a microtask out and made the plain
+     * XHR mocking test fail intermittently. It used to await the verdict on the
+     * first calls of a page — there is no verdict to wait for now, because this
+     * bundle is only on a page whose host is switched on.
      */
     send: function (this: XMLHttpRequest, body?: unknown) {
-      if (ohMyWindow().state) {
-        sendNow(this, body);
-
-        return;
-      }
-
-      void isMockingActive().then(() => sendNow(this, body));
+      sendNow(this, body);
     }
   };
 
@@ -46,9 +39,10 @@ export function patchSend() {
       // `open` records both before `send` can run; without them there is
       // nothing to match a mock against, so let the request through.
       if (!ohMyWindow().state?.active || !url || !method) {
-        // `__send` is taken off the prototype when the patches are handed back,
-        // which happens in the same frame that releases the calls held for the
-        // verdict. Whichever of the two this call finds, it goes out.
+        // `__send` is taken off the prototype when the patches are handed back.
+        // A request already dispatched when that happens still has to go
+        // somewhere, so the namespace keeps a copy. Whichever of the two this
+        // call finds, it goes out.
         const send = xhr.__send ?? ohMyWindow().__xhrSend;
 
         send?.call(xhr, toXhrBody(body));
@@ -88,7 +82,23 @@ export function patchSend() {
               }
             });
           }
-          xhr.__send(toXhrBody(body));
+
+          // The same fallback as on the synchronous path above, and for a
+          // reason that is now ordinary rather than exotic: this request was
+          // dispatched while the answer was still coming, and a `false` verdict
+          // arriving in the meantime takes `__send` off the prototype
+          // (`restore-originals.ts`). Reaching for it and finding nothing threw
+          // inside this promise, whose `catch` only logs — the request was
+          // never sent, never failed, and the page's XHR simply never
+          // completed.
+          //
+          // A registration cannot carry a port, so the bundle lands on every
+          // port of a mocked host and the ones that are *not* mocked take
+          // exactly this path on their first request. It used to need the
+          // shim's 50ms poll to lose a race with start-up.
+          const send = xhr.__send ?? ohMyWindow().__xhrSend;
+
+          send?.call(xhr, toXhrBody(body));
         } else {
           // The request never leaves the page, so the events the network would
           // have produced are synthesised here. `loadstart` goes out before the

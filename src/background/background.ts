@@ -22,7 +22,6 @@ import './server-dispatcher';
 // which the background hosts in an offscreen document. Used to be the popup's
 // job, and was why such a mock needed the popup open.
 import './eval-dispatcher';
-// import { injectContent } from './inject-content';
 import { pruneExpiredCSPRules } from './handlers/remove-csp-header';
 import { OhMyImportHandler } from './handlers/import';
 import { connectIfEnabled } from './dispatch-remote';
@@ -38,6 +37,7 @@ import { contentScriptListeners } from './content-script-listeners';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
 import { initCookieSync, primeCookieSync } from './cookie-sync';
 import { initCookieRecorder } from './cookie-recorder';
+import { reconcileMainWorldScripts, watchActiveDomains } from './main-world';
 
 // Anything that escapes every `try` in here, reported to the popup rather than
 // dropped. These were `window.onunhandledrejection` / `window.onerror`, MV2
@@ -68,6 +68,15 @@ OhMyCookieHandler.queue = queue;
 // the popup included — triggers it. See `docs/architecture/cookie-mocking.md`.
 initCookieSync();
 initCookieRecorder(queue);
+
+// Which domains get the page-context bundle. Registered per active domain, so
+// that its *presence* is the answer to "is this domain mocked" — see
+// `main-world.ts`. The listener goes up first and the reconciliation is started
+// straight after: a registration survives neither an extension reload nor a
+// browser restart (measured), so the store is the only authority and every
+// worker start has to rebuild from it.
+watchActiveDomains();
+void reconcileMainWorldScripts();
 
 queue.addHandler(payloadType.STORE, OhMyStoreHandler.update);
 // Its own lane, and a one-liner: the ordering that matters is not between
@@ -207,7 +216,6 @@ chrome.action.onClicked.addListener(async function (tab) {
 
   openPopup(tab);
 
-  // injectContent(tab.id);
 
 
 

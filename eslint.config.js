@@ -119,31 +119,6 @@ module.exports = tseslint.config(
     }
   },
   {
-    // The compiled output of this file is spliced *verbatim* into a template
-    // literal in content.js (`runShimCode` in src/content/inject-code.ts, via
-    // scripts/token-replace.js). A backtick anywhere — even inside a string —
-    // terminates that literal, and `${` starts an interpolation into it, so
-    // neither may appear in this source. A comment used to be the only thing
-    // enforcing that; `node --check` on the spliced content.js is the runtime
-    // backstop, and this rule reports the mistake where it is made.
-    files: ['src/early-inject/**/*.ts'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'TemplateLiteral',
-          message:
-            'No template literals in early-inject: its compiled output is spliced into a template literal in content.js, and a backtick or ${ would break out of it.'
-        },
-        {
-          selector: 'Literal[value=/`|\\$\\{/]',
-          message:
-            'No backtick or "${" in early-inject strings: its compiled output is spliced into a template literal in content.js, and either would break out of it.'
-        }
-      ]
-    }
-  },
-  {
     // Playwright *requires* an object destructuring pattern as a fixture's
     // first argument — it rejects anything else at runtime with "First argument
     // must use the object destructuring pattern". A fixture that needs none of

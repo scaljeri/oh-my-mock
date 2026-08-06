@@ -4,6 +4,7 @@ import { ohMyWindow } from "../shared/oh-my-window";
 import { IData, IMock, IOhMyGroup, IOhMyMock, IOhMyRequests, IState, ohMyGroupId } from "../shared/type";
 import { GroupUtils } from "../shared/utils/group";
 import { OhMyRequestIndex } from "../shared/utils/request-index";
+import { StateUtils } from "../shared/utils/state";
 import { IOhMyStorageUpdate, StorageUtils } from "../shared/utils/storage";
 
 /**
@@ -355,21 +356,13 @@ export class OhMyContentState {
   // }
 
   /**
-   * Mocking runs when the extension is switched on for this domain. That is all
-   * it takes.
+   * Mocking runs when the extension is switched on for this domain.
    *
-   * It used to require `store.popupActive` as well, so closing the popup stopped
-   * *all* mocking — the single most surprising thing this extension did. The
-   * reason was real at the time: the sandbox that evaluates custom mock code was
-   * an iframe on the popup page, and a request needing it with no popup open
-   * stalled a 5s timeout before going through unmocked. Refusing to mock at all
-   * was the lesser evil.
-   *
-   * The background hosts that sandbox in an offscreen document now — see
-   * `src/background/sandbox-host.ts` — and is always there to answer, so the
-   * gate protects against nothing and costs the feature.
+   * The rule itself lives in `StateUtils.isActive`, because the background asks
+   * the same question when it decides whether to put the page-context bundle on
+   * the domain at all — see the note there.
    */
   isActive(state: IState | undefined = this.state): boolean {
-    return !!state?.aux.appActive;
+    return StateUtils.isActive(state);
   }
 }

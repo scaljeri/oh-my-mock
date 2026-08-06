@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { STORAGE_KEY } from './constants';
 import { IOhMyReadyResponse } from './packet-type';
 import { IOhMyContext, IOhMyInjectedState } from './type';
@@ -13,8 +13,9 @@ import { IOhMyContext, IOhMyInjectedState } from './type';
  * The content script (isolated world) and the injected script (page context)
  * see *different* window objects and store different subsets here, so every
  * member is optional: presence depends on which side you are on and how far
- * start-up has got. `early-inject` in particular creates the namespace as `{}`
- * before anything else fills it in, so even `off` and `state` can be absent.
+ * start-up has got. `installEntryPoints` in particular creates the namespace as
+ * `{}` before anything else fills it in, so even `off` and `state` can be
+ * absent.
  */
 export interface IOhMyWindow {
   /**
@@ -31,16 +32,22 @@ export interface IOhMyWindow {
   /**
    * The page's own `XMLHttpRequest.prototype.send`, kept once the patches have
    * been handed back — see `restore-originals.ts`. The counterpart of
-   * `__fetch`, and there for the same reason: a call held for the verdict may
-   * still be looking for it after the prototype copy has gone.
+   * `__fetch`, and there for the same reason: a request already dispatched when
+   * the restore runs may still be looking for it after the prototype copy has
+   * gone.
    */
   __xhrSend?: XMLHttpRequest['send'];
 
-  /** Whether mocking is switched on for this domain. */
+  /**
+   * Whether mocking is switched on for this domain.
+   *
+   * Set to `{ active: true }` the moment the page-context bundle loads: the
+   * background only registers it for domains that are switched on, so being
+   * here is the answer. The content script corrects it for the one case that
+   * cannot express — another port of the same host — and for a domain switched
+   * off while the page is open.
+   */
   state?: IOhMyInjectedState;
-
-  /** Emits once the injected bundle has loaded (content script side). */
-  injectionDone$?: BehaviorSubject<boolean>;
 
   /** Version of the injected bundle, used to spot a stale content script. */
   version?: string;
@@ -68,8 +75,8 @@ export interface IOhMyWindow {
    * The page's own `fetch`/`XHR` have been put back and OhMyMock is doing
    * nothing here — see `src/injected/restore-originals.ts`.
    *
-   * Read by `src/early-inject`, whose "already installed?" guard is the presence
-   * of this namespace. After a restore the namespace is still there while the
+   * Read by `installEntryPoints`, whose "already installed?" guard is `__fetch`.
+   * After a restore the namespace and `__fetch` are still there while the
    * patches are not, so without this flag switching the domain on with the page
    * open would skip re-installing and silently mock nothing.
    */

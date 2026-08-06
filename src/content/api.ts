@@ -6,5 +6,5 @@ import { handleAPISettings } from "./api/settings";
 
 export function handleAPI(messageBus: OhMyMessageBus) {
   messageBus.streamByType$<OhMyAPIUpsert>(payloadType.UPSERT, [appSources.INJECTED, appSources.EXTERNAL]).subscribe(handleAPIUpsert());
-  messageBus.streamByType$<IOhMyMockSettings>(payloadType.SETTINGS, appSources.EXTERNAL).subscribe(handleAPISettings(messageBus));
+  messageBus.streamByType$<IOhMyMockSettings>(payloadType.SETTINGS, appSources.EXTERNAL).subscribe(handleAPISettings());
 }

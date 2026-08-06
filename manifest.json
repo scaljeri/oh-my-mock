@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "description": "Extension for caching and mocking API (XHR/Fetch) responses",
   "manifest_version": 3,
-  "minimum_chrome_version": "109",
+  "minimum_chrome_version": "111",
   "permissions": [
     "storage",
     "unlimitedStorage",
     "tabs",
+    "scripting",
     "declarativeNetRequest",
     "cookies",
     "offscreen"
@@ -36,7 +37,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "oh-my-mock.js",
         "sandbox.html"
       ],
       "matches": [

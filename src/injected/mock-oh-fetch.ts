@@ -4,7 +4,6 @@ import * as fetchUtils from '../shared/utils/fetch';
 import { dispatchApiRequest } from './message/dispatch-api-request';
 import { ohMyMockStatus } from '../shared/constants';
 import { ohMyWindow } from '../shared/oh-my-window';
-import { isMockingActive } from './active-state';
 import { patchResponseBlob, unpatchResponseBlob } from './fetch/blob';
 import { patchHeaders, unpatchHeaders } from './fetch/headers';
 import { patchResponseArrayBuffer, unpatchResponseArrayBuffer } from './fetch/arraybuffer';
@@ -16,12 +15,12 @@ import { persistResponse } from './fetch/persist-response';
 import { error, findCachedResponse } from './utils';
 
 /**
- * The unpatched `fetch`, saved by `src/early-inject` before any page script
+ * The unpatched `fetch`, saved by `installEntryPoints` before any page script
  * could take a reference to it.
  *
- * It is always there — the injected bundle only runs once early-inject has
- * created the namespace — but the shared type marks it optional because the
- * content script's copy of the namespace has no fetch in it.
+ * It is always there — `src/injected/index.ts` installs the entry points before
+ * this module can be reached — but the shared type marks it optional because
+ * the content script's copy of the namespace has no fetch in it.
  */
 function originalFetch(): typeof fetch {
   const fn = ohMyWindow().__fetch;
@@ -34,8 +33,8 @@ function originalFetch(): typeof fetch {
 }
 
 /**
- * `fetch`'s second argument as it arrives from the page: early-inject forwards
- * whatever the caller passed, which need not be an object at all.
+ * `fetch`'s second argument as it arrives from the page: the entry point
+ * forwards whatever the caller passed, which need not be an object at all.
  */
 function toRequestInit(init: unknown): RequestInit {
   return typeof init === 'object' && init !== null ? init as RequestInit : {};
@@ -70,11 +69,16 @@ async function ohMyFetch(request: string | Request, init?: unknown): Promise<unk
   // overrides, and dropped their `signal` outright.
   const config = toRequestInit(init);
 
-  // Waits for the verdict rather than reading an absent state as "off". This
-  // runs before the content script has finished reading `chrome.storage`, and
-  // letting the call through in the meantime is exactly how an on-load request
-  // escaped. Once decided this is a resolved promise and costs a microtask.
-  if (!(await isMockingActive())) {
+  // Read, not awaited. `state` starts out `active` — this bundle is only on
+  // the page because the host is switched on — so there is no window in which
+  // "not decided yet" has to be told apart from "no", and no reason to hold the
+  // page's very first call while the answer travels. It used to be
+  // `await isMockingActive()`, which existed because the bundle went onto every
+  // page in the browser and could not know.
+  //
+  // A `false` here is the content script having said so: the host is off, or
+  // it is another port of a host that is on.
+  if (!ohMyWindow().state?.active) {
     return originalFetch().call(window, request, config);
   }
 
@@ -240,9 +244,9 @@ function patchFetch(): void {
 
 function unpatchFetch(): void {
   // Was `XMLHttpRequest.prototype['__fetch']`, which nothing ever sets — the
-  // original fetch is saved on the OhMyMock namespace by early-inject. With the
-  // XHR prototype being asked instead, the condition was always false and
-  // `window[STORAGE_KEY].unpatch()` restored none of the Response patches.
+  // original fetch is saved on the OhMyMock namespace by `entry-points.ts`.
+  // With the XHR prototype being asked instead, the condition was always false
+  // and `window[STORAGE_KEY].unpatch()` restored none of the Response patches.
   if (ohMyWindow().__fetch) {
     unpatchResponseBlob();
     unpatchResponseArrayBuffer();

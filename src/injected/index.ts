@@ -1,36 +1,78 @@
-import { STORAGE_KEY } from '../shared/constants';
+import { appSources, payloadType } from '../shared/constants';
 import { hasOhMyWindow, ohMyWindow } from '../shared/oh-my-window';
 import { IOhMyInjectedState } from '../shared/types/store';
 import { initApi } from './api';
+import { installEntryPoints } from './entry-points';
+import { send } from './message/send';
 import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
-import { settleActiveState } from './active-state';
 import { restoreOriginals } from './restore-originals';
 import { setupListenersMessageBus } from './state-manager';
-import { error, log } from './utils';
+import { log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
 
 let isOhMyMockActive = false;
 /**
  * The page's own `fetch`/`XHR` were handed back, so the entry points this bundle
- * publishes are gone. Switching the domain on again has to re-publish them —
- * the re-installed shim is waiting for exactly those.
+ * publishes are gone. Switching the domain on again has to put both back — the
+ * window-level patches first, then the entry points they forward to.
  */
 let wasRestored = false;
+/**
+ * Whether the content script has said anything about this domain yet.
+ *
+ * Not `!ohMy.state`, which is how this used to be worked out: the state now
+ * starts out `active` rather than absent (see below), so "nothing has been
+ * heard" and "nothing has been decided" are no longer the same question.
+ */
+let heardFromContentScript = false;
 
-if (!hasOhMyWindow()) {
-  error('Oooops. Something went wrong!!!')
-} else {
+/**
+ * This bundle runs twice on one page only when the background injects it into a
+ * tab that already has it — see `injectIntoOpenTabs` in
+ * `src/background/main-world.ts`, which cannot cheaply know. Running the whole
+ * of the below a second time would tear down the message bus this page's
+ * in-flight requests are waiting on, so the second run does nothing and the
+ * content script's STATE message does the switching on.
+ */
+const alreadyInstalled = hasOhMyWindow() && ohMyWindow().version === VERSION;
+
+if (!alreadyInstalled) {
+  // Before anything else, and before the page has run a line of its own: this
+  // is a `world: 'MAIN'` content script at `document_start`, so `window.fetch`
+  // and `XMLHttpRequest` are taken over here, in the first statement that runs
+  // on the page. The shim that used to do it — injected as a string through a
+  // `<div onclick>` and holding every call until this bundle turned up — is
+  // gone, along with the gap it existed to bridge.
+  installEntryPoints();
+
   const ohMy = ohMyWindow();
 
-  // `src/early-inject` creates the namespace with nothing in it, so on the
-  // first injection there is nothing to tear down yet.
+  // A re-injection into a page that had been restored: the previous life's
+  // subscriptions are dropped before new ones go up.
   ohMy.off?.forEach(off => typeof off === 'function' ? off() : off.unsubscribe());
-  // window[STORAGE_KEY]?.unpatch?.(); // It can be injected multiple times
   ohMy.version = VERSION;
   ohMy.off = [];
   ohMy.cache = [];
+
+  /**
+   * Mocking is on until the content script says otherwise — which is what
+   * *being here at all* means now.
+   *
+   * The background registers this bundle per active domain, so a page that has
+   * it is a page whose host is switched on. There used to be a third state,
+   * "not decided yet", and every request the page made was held until it went
+   * away; the bundle was on every page in the browser and could not know. It
+   * knows by construction now.
+   *
+   * The one thing this cannot tell apart is two ports of the same host — a
+   * content-script match pattern cannot carry a port, so `localhost:4200` being
+   * mocked registers this bundle for `localhost:8080` as well. Those pages hear
+   * `active: false` from their own content script a moment later and hand the
+   * page's `fetch`/`XHR` straight back.
+   */
+  ohMy.state = { active: true };
 
   const streams = setupListenersMessageBus();
   const sub = streams.stateUpdate$.subscribe(state => {
@@ -47,12 +89,11 @@ if (!hasOhMyWindow()) {
     if (!state) {
       return;
     }
-    const isFirstVerdict = !ohMy.state;
 
+    const isFirstVerdict = !heardFromContentScript;
+
+    heardFromContentScript = true;
     ohMy.state = state;
-    // Releases everything held while the answer was still unknown — including
-    // the very first request of the page, which is the one this exists for.
-    settleActiveState(state);
 
     if (state.active) {
       if (!isOhMyMockActive) {
@@ -60,12 +101,14 @@ if (!hasOhMyWindow()) {
 
         if (wasRestored) {
           wasRestored = false;
+          // The window-level patches first: `patchFetch` publishes `ohMy.fetch`
+          // for `window.fetch` to forward to, and after a restore there is no
+          // `window.fetch` of ours left to do the forwarding.
+          installEntryPoints();
           patchXmlHttpRequest();
           patchFetch();
         }
         log('*** Activated ***%c XHR and FETCH ready for mocking', 'background: green;padding:3px;margin-right:5px', 'background-color: transparent');
-        // patchXmlHttpRequest();
-        // patchFetch();
         notify(true)
       }
     } else {
@@ -97,11 +140,17 @@ if (!hasOhMyWindow()) {
     sub.unsubscribe();
   }
 
-  // The content script hands the initial state over on the <script> tag it
-  // injects this bundle with. A missing tag means the bundle was loaded some
-  // other way; the STATE message will follow regardless.
-  const stateAttribute = document.querySelector(`#id-${STORAGE_KEY}`)?.getAttribute('oh-my-state');
-  handleStateUpdate(stateAttribute ? JSON.parse(stateAttribute) as IOhMyInjectedState : undefined);
+  // "I am here." The content script cannot see into this world, and what it
+  // does with the answer is decide whether to escalate a Content-Security-Policy
+  // that kept this bundle out — see `whenBundleArrives` in
+  // `src/content/inject-code.ts`. Sent last, so it means the page really is
+  // patched rather than merely running this file.
+  //
+  // Ordering is not a race even though this bundle and the content script are
+  // both `document_start`: `postMessage` delivers as a task, so it cannot
+  // outrun a listener that another content script installs while evaluating.
+  send({ type: payloadType.READY, data: true, description: 'injected;ready' },
+    appSources.INJECTED);
 }
 
 function notify(isActive: boolean) {

@@ -2,10 +2,11 @@
  * A request fired while the page is still parsing.
  *
  * This is the hardest moment for the extension to be ready in, and the most
- * ordinary one for an app to call its API from. The content script runs at
- * `document_start`, but it cannot know whether this domain is switched on until
- * it has read `chrome.storage`, and that read is async. Everything the page does
- * in the meantime is a race.
+ * ordinary one for an app to call its API from. The page-context bundle is in
+ * place from `document_start` — it is a registered `world: 'MAIN'` content
+ * script — but the content script that answers its lookups cannot know what
+ * this domain has until it has read `chrome.storage`, and that read is async.
+ * Everything the page does in the meantime is a race.
  *
  * `onload.html` calls `/api/json` from an inline script in `<head>` — no
  * `defer`, no listener, nothing awaited — and parks the outcome on
@@ -13,7 +14,7 @@
  * has settled, that is where it shows.
  */
 
-import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
+import { ALT_ORIGIN, expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
 
 interface OnloadResult {
   pending: boolean;
@@ -61,10 +62,12 @@ test.describe('a request made while the page loads', () => {
   });
 
   /**
-   * The other side of it, and the reason this cannot be fixed by simply holding
-   * every request until the extension is ready: with the domain switched off,
+   * The other side of it, and the reason this was never fixable by holding
+   * every request until the extension was ready: with the domain switched off,
    * an on-load request has to go through untouched and *promptly*. A shim that
-   * waits for an injection that is never coming would hang the page.
+   * waited for an injection that was never coming hung the page, and covering
+   * that needed a ten-second backstop, a release message and a poll. Nothing
+   * holds anything now — there is no shim, and on this domain no bundle either.
    */
   test('goes straight through while the domain is switched off', async ({
     site,
@@ -123,10 +126,10 @@ test.describe('a request made while the page loads', () => {
     expect(fromPage.length).toBe(1);
     expect(fromServer).toBe(1);
 
-    // The other on-load call, the one with something to lose. It was held while
-    // the verdict was in flight and then handed over — `/api/echo` reflects what
-    // the server actually received, so this is the hand-off being 1:1 and not
-    // merely quick.
+    // The other on-load call, the one with something to lose: a POST with a
+    // header and a body, fired before the page has settled. `/api/echo` reflects
+    // what the server actually received, so this is the extension keeping out
+    // of the way 1:1 rather than merely quickly.
     await site.page.waitForFunction(
       () =>
         (window as unknown as { onloadPost: { pending: boolean } }).onloadPost
@@ -154,22 +157,23 @@ test.describe('a request made while the page loads', () => {
     expect(posted.echo?.headers['x-onload']).toBe('held');
     expect(posted.echo?.body?.ping).toBe('pong');
 
-    // And it is not held for long. The shim now goes in on every page, so this
-    // is the cost the extension adds to a domain it does nothing for: it holds
-    // the call only until `contentState.init()` has read storage and said "not
-    // this one". Generous on purpose — this is here to catch a page left
-    // hanging, not to police a few milliseconds.
+    // And it is not delayed. Nothing is registered for this domain, so the
+    // extension adds nothing to it at all — this used to be the one place the
+    // hold could be measured, and it stays as the assertion that no successor
+    // to it has crept back in. Generous on purpose: this is here to catch a
+    // page left hanging, not to police a few milliseconds.
     expect(result.durationMs).toBeLessThan(1_000);
   });
 
   /**
-   * The bundle is on every page now, so its pass-through has to be invisible.
+   * A domain nobody mocks gets nothing — no bundle, no patch, no wrapper.
    *
-   * On a domain nobody is mocking, `fetch` is still the patched one — it just
-   * hands straight to the original. That used to be a path almost nothing took;
-   * it is now the path every site the user visits takes, which makes any
-   * difference between the two a bug on somebody's real page rather than a
-   * curiosity. So: a POST with a body, a header, and an abort.
+   * `fetch` here is the browser's own, so what this really pins is that the
+   * extension does not reach a page it was not asked to. The same POST and
+   * abort also ran against the *patched* `fetch` when the bundle went onto
+   * every page in the browser; keeping them means a regression that puts it
+   * back everywhere is caught by behaviour rather than only by a presence
+   * check.
    */
   test('the pass-through is invisible on a domain nobody mocks', async ({
     site,
@@ -225,31 +229,33 @@ test.describe('a request made while the page loads', () => {
   });
 
   /**
-   * After the verdict "not this domain", OhMyMock is gone — not merely inert.
+   * On a domain nobody mocks, OhMyMock never touches the page at all.
    *
-   * The bundle is on every page the user visits, which is the price of being in
-   * place before the answer is known. A page nobody is mocking should not keep
-   * paying it, so the patches are removed again and the page gets back the
-   * `fetch` and `XMLHttpRequest` it started with.
+   * The page-context bundle is a `world: 'MAIN'` content script the background
+   * registers per *active* domain, so its absence is the ordinary state of the
+   * web. It used to be injected everywhere — the price of being in place before
+   * the answer was known — patch the page and then undo the patches on hearing
+   * "not this domain". The undo still exists for the one case registration
+   * cannot express (another port of a mocked host); on a host nobody mocks
+   * there is nothing to undo.
    */
-  test('puts the page own fetch and XHR back when it is not wanted', async ({
+  test('leaves the page own fetch and XHR completely alone', async ({
     site
   }) => {
     await site.open();
 
-    // Wait for the verdict to have been acted on.
-    await site.page.waitForFunction(
-      () =>
-        (window as unknown as { OhMyMock?: { restored?: boolean } }).OhMyMock
-          ?.restored === true
-    );
+    // Give the content script the time it would have needed to read storage,
+    // decide, and act — so this is "it never touched the page" and not "the
+    // check ran too early to see it".
+    await site.request({ url: '/api/json', responseType: 'json' });
 
     const traces = await site.page.evaluate(() => {
       const proto = XMLHttpRequest.prototype as unknown as Record<string, unknown>;
 
       return {
+        namespace: 'OhMyMock' in window,
         // A native function stringifies as `[native code]`; a patched one does
-        // not. This is the page asking "is this really mine again".
+        // not. This is the page asking "is this really mine".
         fetchIsNative: /\[native code\]/.test(String(window.fetch)),
         sendIsNative: /\[native code\]/.test(String(proto.send)),
         openIsNative: /\[native code\]/.test(String(proto.open)),
@@ -258,6 +264,7 @@ test.describe('a request made while the page loads', () => {
       };
     });
 
+    expect(traces.namespace).toBe(false);
     expect(traces.fetchIsNative).toBe(true);
     expect(traces.sendIsNative).toBe(true);
     expect(traces.openIsNative).toBe(true);
@@ -265,15 +272,16 @@ test.describe('a request made while the page loads', () => {
   });
 
   /**
-   * ...and can be put back, without reloading the page.
+   * ...and takes them when the domain is switched on, without a reload.
    *
    * Switching a domain on while its page is open is a real path — the popup's
-   * toggle does exactly that, and the state change reaches the page through
-   * `chrome.storage.onChanged`. Handing the originals back on the "not this
-   * domain" verdict is what makes that path fragile: there is nothing left to
-   * turn on. So the restore has to be reversible.
+   * toggle does exactly that. It is also the one thing registering a content
+   * script cannot do on its own: a registration only affects *future*
+   * navigations, so an open page never sees it (measured on Chromium 151, and
+   * pinned in `main-world.spec.ts`). The background injects into the open tab
+   * by hand for exactly this, and nothing else in the suite covers that path.
    */
-  test('and takes them back when the domain is switched on', async ({
+  test('and takes them when the domain is switched on', async ({
     ohMy,
     site,
     server
@@ -283,19 +291,16 @@ test.describe('a request made while the page loads', () => {
       url: '/api/json',
       response: { source: 'mock' }
     });
-    // Seeded but *off*: the page loads, hears "no", and hands everything back.
+    // Seeded but *off*: nothing is registered, so the page loads untouched.
     await site.open();
-    await site.page.waitForFunction(
-      () =>
-        (window as unknown as { OhMyMock?: { restored?: boolean } }).OhMyMock
-          ?.restored === true
-    );
+    expect(await site.isInjected()).toBe(false);
 
     await ohMy.setActive(SITE_DOMAIN);
 
-    // Not `waitForInjection`: the bundle never left, so that returns at once.
-    // What has to arrive is the new verdict — and with it the patches going back
-    // on — which travels storage -> content script -> page.
+    // The bundle has to arrive in a page that has finished loading, and then
+    // hear the verdict — storage -> background -> executeScript, and storage ->
+    // content script -> page.
+    await site.waitForInjection();
     await site.page.waitForFunction(
       () =>
         (window as unknown as { OhMyMock?: { state?: { active?: boolean } } })
@@ -309,15 +314,17 @@ test.describe('a request made while the page loads', () => {
   });
 
   /**
-   * The same first-request hand-off, over XHR.
+   * The same, over XHR: an on-load XHR on a domain that is off must reach the
+   * server.
    *
-   * `fetch` survives it because `restoreOriginals` keeps the page's own
-   * function on the OhMyMock namespace. The XHR original lived only on
-   * `XMLHttpRequest.prototype` as `__send`, and was deleted in the *same
-   * synchronous frame* that resolved the verdict — which only queues the held
-   * calls as microtasks. By the time one ran, the function it was going to call
-   * was gone: a TypeError inside a promise nobody was catching, on every domain
-   * the user is not mocking. The request was never sent and never failed.
+   * It used to be the failure of a hand-back. `fetch` survived it because
+   * `restoreOriginals` keeps the page's own function on the OhMyMock namespace;
+   * the XHR original lived only on `XMLHttpRequest.prototype` as `__send` and
+   * was deleted in the *same synchronous frame* that resolved the verdict,
+   * which only queued the held calls as microtasks. By the time one ran, the
+   * function it was going to call was gone: a TypeError inside a promise nobody
+   * was catching, on every domain the user is not mocking, and the request was
+   * neither sent nor failed.
    */
   test('an XHR fired on load reaches the server on a domain that is off', async ({
     ohMy,
@@ -349,9 +356,10 @@ test.describe('a request made while the page loads', () => {
   /**
    * And on a domain that *is* mocked, the same XHR gets the mock.
    *
-   * This is the half the `fetch` tests above already cover for `fetch`. The
-   * shim holds the call either way; what differs is which machinery is still
-   * there when the verdict arrives.
+   * This is the half the tests above cover for `fetch`. The entry point is in
+   * place either way — it is the first thing that runs on the page — so what
+   * this pins is that the *answer* still arrives in time for a call made before
+   * the content script has read a single record.
    */
   test('an XHR fired on load is mocked on a domain that is on', async ({
     ohMy,
@@ -387,5 +395,70 @@ test.describe('a request made while the page loads', () => {
     expect(result.error).toBeUndefined();
     expect(result.body).toBe('mocked-on-load');
     expect(await server.hitCount('GET /api/text')).toBe(0);
+  });
+
+  /**
+   * The one thing registering per domain cannot express: a port.
+   *
+   * Chrome rejects `*://localhost:8090/*` — "Invalid port" — so mocking
+   * `localhost:8090` registers the bundle for `localhost`, and it lands on
+   * `localhost:8091` too. That page is told `active: false` by its own content
+   * script and hands its `fetch`/`XHR` straight back, which is fine *after* the
+   * page has settled and is the hardest possible moment before it has.
+   *
+   * A request fired from `<head>` on such a page is dispatched by a bundle that
+   * still believes it is wanted, and the hand-back lands while that dispatch is
+   * in flight — taking `XMLHttpRequest.prototype.__send` off the prototype with
+   * it. Reaching for it and finding nothing threw inside a promise whose
+   * `catch` only logs: the request was never sent, never failed, and the page's
+   * XHR never completed. Ten seconds of nothing, on a domain the user is not
+   * even mocking.
+   *
+   * The `fetch` half was always safe — `restoreOriginals` keeps the page's own
+   * function on the namespace — and is asserted here so a regression that
+   * breaks it is caught in the same place.
+   */
+  test('an on-load request survives another port of the host being mocked', async ({
+    ohMy,
+    site
+  }) => {
+    // The *other* port is the one being mocked. This one is not.
+    await ohMy.seedMock({
+      domain: SITE_DOMAIN,
+      url: '/api/json',
+      response: { source: 'mock' }
+    });
+    await ohMy.setActive(SITE_DOMAIN);
+
+    await site.page.goto(`${ALT_ORIGIN}/onload.html`);
+
+    // The bundle really is on this page — otherwise the race below is not the
+    // one being tested, and this spec would pass for the wrong reason.
+    expect(await site.isInjected()).toBe(true);
+
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { onloadXhr?: { pending: boolean } }).onloadXhr
+          ?.pending === false,
+      undefined,
+      { timeout: 10_000 }
+    );
+
+    const fromXhr = await site.page.evaluate(
+      () =>
+        (window as unknown as {
+          onloadXhr: { status?: number; body?: string; error?: string };
+        }).onloadXhr
+    );
+
+    expect(fromXhr.error).toBeUndefined();
+    expect(fromXhr.status).toBe(200);
+    expect(fromXhr.body).toBeTruthy();
+
+    const fromFetch = await onloadResult(site.page);
+
+    expect(fromFetch.error).toBeUndefined();
+    expect(fromFetch.status).toBe(200);
+    expect(fromFetch.source).toBe('server');
   });
 });

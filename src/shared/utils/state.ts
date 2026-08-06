@@ -41,6 +41,30 @@ export class StateUtils {
     return (input as IState).type === objectTypes.STATE;
   }
 
+  /**
+   * Whether mocking runs for this domain. That is all it takes.
+   *
+   * The one definition, because there are now two callers a long way apart:
+   * the content script decides whether to answer a lookup, and the background
+   * decides whether to register the page-context bundle for the domain at all
+   * (`src/background/main-world.ts`). Two copies of this rule would drift, and
+   * the failure that produces — the bundle on a page the content script will
+   * not answer for, or worse the other way round — is silent.
+   *
+   * It used to require `store.popupActive` as well, so closing the popup
+   * stopped *all* mocking: the sandbox that evaluates custom mock code was an
+   * iframe on the popup page. The background hosts it in an offscreen document
+   * now (`src/background/sandbox-host.ts`) and is always there to answer, so
+   * the gate protected against nothing and cost the feature.
+   *
+   * Takes `unknown` because the callers hold a value out of `chrome.storage`,
+   * which is `undefined` for a domain nobody has visited and anything at all
+   * for a key that is not a domain record.
+   */
+  static isActive(state: unknown): boolean {
+    return !!state && StateUtils.isState(state) && !!state.aux.appActive;
+  }
+
   static hasRequest(state: IState, id: ohMyDataId): boolean {
     return state.requests.includes(id);
   }

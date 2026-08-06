@@ -5,10 +5,10 @@ import { requestMethod } from '../shared/types/request';
 /**
  * An `XMLHttpRequest` as OhMyMock's patches see it.
  *
- * Two scripts patch the prototype. `src/early-inject/index.ts` runs at
- * `document_start`, before any page code can hold a reference, and wraps
- * `open`, `send` and `setRequestHeader`. The injected bundle then wraps the
- * `status` / `response` / `responseText` / header members. Both keep the
+ * Two steps patch the prototype, both in this bundle. `installEntryPoints`
+ * (`./entry-points.ts`) runs first, before any page code can hold a reference,
+ * and wraps `open`, `send` and `setRequestHeader`. The mocking patches then
+ * wrap the `status` / `response` / `responseText` / header members. Both keep the
  * untouched original under a `__`-prefixed name, and both hang request
  * bookkeeping off the instance under `oh`-prefixed names.
  *
@@ -114,8 +114,8 @@ export function xhrDescriptor(name: string): PropertyDescriptor {
  *
  * `IOhMyWindow.xhr.send` declares its `this` as a plain `XMLHttpRequest`,
  * because `src/shared` cannot depend on `src/injected`. `send` can only be
- * reached through the patch in `src/early-inject`, which runs `open` first, so
- * the instance really does carry the members below.
+ * reached through the entry-point patch, which runs `open` first, so the
+ * instance really does carry the members below.
  */
 export function asOhMyXhr(xhr: XMLHttpRequest): IOhMyXhr {
   return xhr as IOhMyXhr;

@@ -60,9 +60,35 @@ export async function receivedApiRequest(
     return;
   }
 
-  // Only known once `contentState.init()` has resolved; a request fired during
-  // start-up simply has no state to match against yet.
+  // The records this page's mocks live in, before anything is looked up in
+  // them. This is where the on-load race is closed now: the page-context bundle
+  // is in place before any page script and dispatches straight away, so the
+  // first request of the page routinely gets here while `chrome.storage` is
+  // still being read — and an empty request map matches nothing, which reads
+  // exactly like "not mocked". Waiting used to happen on the *page* side, with
+  // every call held until a verdict; holding the answer instead of the call is
+  // the same guarantee without a patched `fetch` that blocks.
+  //
+  // Cheap after the first: `OhMyContentState` caches what it has read and
+  // fetches only the records it is missing, and the storage subscription keeps
+  // both up to date.
+  await contentState.init();
+
+  // Present by now: `init()` above is what puts it there.
   const state = contentState.state;
+
+  // The content script owns the host — see the note about forged domains below
+  // — so it owns this answer too. The bundle keeps its own copy of the verdict
+  // and stops dispatching once it has heard `false`, but it starts out assuming
+  // it is wanted (being on the page is what says so), and a request made in the
+  // moment before the verdict reaches it must not be served from mocks the user
+  // switched off.
+  if (!contentState.isActive(state)) {
+    passThrough(packet);
+
+    return;
+  }
+
   const inputRequest: IOhMyAPIRequest = {
     ...payload.data,
     ...(payload.context?.requestType && { requestType: payload.context.requestType })

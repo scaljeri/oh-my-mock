@@ -18,13 +18,12 @@ npm run e2e:types       # type-check the suite
 and neither of the two project tsconfigs covers this directory. Without it the
 suite is the one unchecked corner of a strict codebase.
 
-`npm run build:bundles` is a faster alternative that compiles only the six
-webpack bundles (content, injected, early-inject, sandbox, offscreen,
-background) plus the manifest and icons — about ten seconds instead of a
-minute. It is enough for everything that only intercepts; the many specs that
-open the popup — `popup.spec.ts`, `cookies.spec.ts`, `sidebar-groups.spec.ts`
-and the rest of the UI-driving files, currently twenty of the thirty-two —
-need the Angular build.
+`npm run build:bundles` is a faster alternative that compiles only the five
+webpack bundles (content, injected, sandbox, offscreen, background) plus the
+manifest and icons — about ten seconds instead of a minute. It is enough for
+everything that only intercepts; the many specs that open the popup —
+`popup.spec.ts`, `cookies.spec.ts`, `sidebar-groups.spec.ts` and the rest of
+the UI-driving files — need the Angular build.
 
 The test site is started for you by `webServer` in `playwright.config.ts`.
 

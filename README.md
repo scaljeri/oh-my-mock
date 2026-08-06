@@ -87,8 +87,6 @@ This project consists of a couple of different part, each with a specific task. 
   * ./src/content       - the extension content script, needed to pass messages between
                           the angular app and the injected script
   * ./src/injected      - this is where mocking takes place (e.g. patching of Fetch and XmlHttpRequest)
-  * ./src/early-inject  - synchronously injected shim that holds the page's first requests
-                          until the injected bundle has loaded
   * ./src/shared        - code shared between all parts
   * ./src/background    - the extension's background script
   * ./src/offscreen     - the hidden page the background owns; it holds the sandbox

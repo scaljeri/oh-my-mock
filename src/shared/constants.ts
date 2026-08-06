@@ -144,7 +144,6 @@ export enum appSources {
   POPUP = 'popup',
   BACKGROUND = 'background',
   EXTERNAL = 'external',
-  PRE_INJECTED = 'pre-injected',
 }
 
 export enum resetStateOptions {

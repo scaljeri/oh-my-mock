@@ -42,11 +42,16 @@ test.describe('harness smoke', () => {
   test('OhMyMock stays out of the way while inactive', async ({ site, server }) => {
     await site.open();
 
-    // The bundle *is* on the page — it is injected everywhere now, because the
-    // only way to catch a request the page makes while it is still parsing is to
-    // be in place before anyone knows whether this domain is mocked. "Injected"
-    // and "doing something" stopped being the same thing; what matters is below.
-    expect(await site.isInjected()).toBe(true);
+    // Nothing at all. The page-context bundle is a content script the background
+    // registers per *active* domain, so a domain nobody mocks never gets it —
+    // no namespace on `window`, no patched `fetch`, nothing to go wrong on
+    // somebody else's site. It used to go onto every page in the browser,
+    // because that was the only way to be in place before anyone knew whether
+    // the domain was mocked.
+    expect(await site.isInjected()).toBe(false);
+    expect(
+      await site.page.evaluate(() => 'OhMyMock' in window)
+    ).toBe(false);
 
     const result = await site.request({ url: '/api/json', responseType: 'json' });
     expect(result.json.source).toBe('server');

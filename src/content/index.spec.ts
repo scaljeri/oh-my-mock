@@ -1,14 +1,18 @@
 /**
  * Content-script start-up, and what happens when it cannot finish.
  *
- * The early shim and the injected bundle both hold the page's own `fetch`/`XHR`
- * until this script says whether the domain is mocked. That hold is what stops
- * an on-load request slipping past — and it makes start-up the one place that
- * owes the page an answer no matter what. `initContext()` reads
+ * The page-context bundle is a `world: 'MAIN'` content script the background
+ * registers per active domain, so it is on the page before any script the page
+ * has of its own — and it assumes it is wanted, because being there is what
+ * says so. This script is what corrects that: it reads `chrome.storage` and
+ * says `active: false` for a host whose *port* is not the one being mocked, and
+ * for a domain switched off while the page is open.
+ *
+ * Saying nothing is therefore not a safe default any more than it was before —
+ * it is now the failure that leaves the bundle dispatching every request the
+ * page makes to a content script that cannot answer. `initContext()` reads
  * `chrome.storage`, which throws outright once the extension has been reloaded
- * under a live page, and every release used to sit *after* that await: one
- * rejection and not a single request the page made, then or afterwards, ever
- * settled.
+ * under a live page.
  *
  * The module is a script, not a library — it does its work on import — so these
  * specs drive it by requiring it with its collaborators mocked out.
@@ -20,10 +24,7 @@ const mockInit = jest.fn<Promise<void>, []>();
 const mockIsActive = jest.fn<boolean, [unknown?]>();
 const mockIsActive$ = new Subject<boolean | undefined>();
 
-const mockInstallEarlyShim = jest.fn();
-const mockReinstallEarlyShim = jest.fn();
-const mockReleaseEarlyShim = jest.fn();
-const mockInjectCode = jest.fn<Promise<boolean>, []>();
+const mockWhenBundleArrives = jest.fn<Promise<boolean>, []>();
 const mockEscalateIfBlocked = jest.fn<Promise<void>, []>();
 const mockSendMessageToInjected = jest.fn();
 const mockError = jest.fn();
@@ -41,11 +42,8 @@ jest.mock('./content-state', () => ({
   }
 }));
 
-jest.mock('./inject-code', () => ({
-  installEarlyShim: mockInstallEarlyShim,
-  reinstallEarlyShim: mockReinstallEarlyShim,
-  releaseEarlyShim: mockReleaseEarlyShim,
-  injectCode: mockInjectCode,
+jest.mock('./page-context', () => ({
+  whenBundleArrives: mockWhenBundleArrives,
   escalateIfBlocked: mockEscalateIfBlocked
 }));
 
@@ -87,25 +85,16 @@ describe('content-script start-up', () => {
     mockInitContext.mockResolvedValue(undefined);
     mockInit.mockResolvedValue(undefined);
     mockIsActive.mockReturnValue(false);
-    mockInjectCode.mockResolvedValue(true);
+    mockWhenBundleArrives.mockResolvedValue(true);
   });
 
   /**
-   * The one that used to strand the page. A rejection here skipped every
-   * release below it, so the shim went on holding, the bundle was never told a
-   * verdict, and nothing else was ever going to tell either of them.
+   * The one that used to strand the page — every release of the held calls sat
+   * after this await. Nothing holds the page now, but the bundle is still left
+   * assuming it is wanted, dispatching to a content script that cannot answer,
+   * so it still has to be told.
    */
-  it('releases the held calls when the state cannot be read', async () => {
-    mockInitContext.mockRejectedValue(new Error('Extension context invalidated'));
-
-    require('./index');
-    await settled();
-
-    expect(mockReleaseEarlyShim).toHaveBeenCalled();
-  });
-
-  /** And the bundle, which is holding calls of its own. */
-  it('tells the injected bundle to stop holding when start-up fails', async () => {
+  it('tells the bundle to stand down when the state cannot be read', async () => {
     mockInitContext.mockRejectedValue(new Error('Extension context invalidated'));
 
     require('./index');
@@ -127,28 +116,81 @@ describe('content-script start-up', () => {
   });
 
   /**
-   * The ordinary path, as a control: a domain that is simply switched off is
-   * released the same way, and the failure specs above would pass on their own
-   * if that had stopped working.
+   * A registration is per *host*, and a match pattern cannot carry a port, so
+   * the bundle lands on `localhost:8091` when it is `localhost:8090` that is
+   * mocked. This is the only thing that gets it off such a page.
    */
-  it('releases the held calls on a domain that is switched off', async () => {
+  it('tells the bundle to stand down on a domain that is switched off', async () => {
     require('./index');
     await settled();
 
     expect(mockError).not.toHaveBeenCalled();
-    expect(mockReleaseEarlyShim).toHaveBeenCalled();
+    expect(mockSendMessageToInjected).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { active: false } })
+    );
   });
 
-  /** ...and a domain that is switched on keeps holding until the verdict. */
-  it('does not release the held calls on a domain that is switched on', async () => {
+  it('confirms a domain that is switched on', async () => {
     mockIsActive.mockReturnValue(true);
 
     require('./index');
     await settled();
 
-    expect(mockReleaseEarlyShim).not.toHaveBeenCalled();
     expect(mockSendMessageToInjected).toHaveBeenCalledWith(
       expect.objectContaining({ data: { active: true } })
     );
+  });
+
+  /**
+   * The records before the verdict. `receivedApiRequest` awaits the same call,
+   * so a request that beats start-up is held rather than answered wrongly — but
+   * announcing "active" before the mocks are loaded would make the common case
+   * the racy one.
+   */
+  it('loads the domain records before it confirms', async () => {
+    mockIsActive.mockReturnValue(true);
+    const order: string[] = [];
+
+    mockInit.mockImplementation(async () => { order.push('init'); });
+    mockSendMessageToInjected.mockImplementation(() => { order.push('verdict'); });
+
+    require('./index');
+    await settled();
+
+    expect(order).toEqual(['init', 'verdict']);
+  });
+
+  /**
+   * A switched-on domain with no bundle on the page has one realistic cause
+   * left: a Content-Security-Policy strict enough to keep it out. That is worth
+   * stripping the site's header and reloading for — and only then.
+   */
+  it('escalates the CSP when the bundle never turns up on an active domain', async () => {
+    mockIsActive.mockReturnValue(true);
+    mockWhenBundleArrives.mockResolvedValue(false);
+
+    require('./index');
+    await settled();
+
+    expect(mockEscalateIfBlocked).toHaveBeenCalled();
+  });
+
+  /** Reloading a page the user is not mocking would be a poor trade for nothing. */
+  it('does not escalate the CSP on a domain that is switched off', async () => {
+    mockWhenBundleArrives.mockResolvedValue(false);
+
+    require('./index');
+    await settled();
+
+    expect(mockEscalateIfBlocked).not.toHaveBeenCalled();
+  });
+
+  it('does not escalate when the bundle is there', async () => {
+    mockIsActive.mockReturnValue(true);
+
+    require('./index');
+    await settled();
+
+    expect(mockEscalateIfBlocked).not.toHaveBeenCalled();
   });
 });

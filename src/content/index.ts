@@ -16,11 +16,10 @@ import { triggerRuntime } from '../shared/utils/trigger-msg-runtime';
 import { sendMsgToPopup } from '../shared/utils/send-to-popup';
 import { sendMessageToInjected } from './send-to-injected';
 import { receivedApiRequest } from './handle-api-request';
-import { BehaviorSubject } from 'rxjs';
 // import { handleCSP } from './csp-handler';
 import { handleAPI } from './api';
 import { error } from './utils';
-import { escalateIfBlocked, injectCode, installEarlyShim, reinstallEarlyShim, releaseEarlyShim } from './inject-code';
+import { escalateIfBlocked, whenBundleArrives } from './page-context';
 import { sendMsg2Popup } from './message-to-popup';
 
 window.onunhandledrejection = function (event: PromiseRejectionEvent) {
@@ -40,7 +39,7 @@ if (hasOhMyWindow()) {
   });
 }
 
-setOhMyWindow({ off: [], injectionDone$: new BehaviorSubject(false) });
+setOhMyWindow({ off: [] });
 
 // Setup the message bus with the a trigger
 const messageBus = new OhMyMessageBus()
@@ -48,75 +47,32 @@ const messageBus = new OhMyMessageBus()
   .setTrigger(triggerRuntime);
 ohMyWindow().off?.push(() => messageBus.clear());
 
-// Before anything else, and before the page has run a line of its own: the shim
-// holds `fetch`/`XHR` so a call made from an inline script in <head> cannot slip
-// past while `contentState.init()` is still reading `chrome.storage`. Whether
-// this domain is switched on is not known yet, and waiting to find out is
-// exactly what used to lose those requests. `releaseEarlyShim` below is what
-// makes holding safe.
-installEarlyShim(messageBus);
-
-// And the real bundle, immediately after — not once we know whether this domain
-// is switched on. It patches `fetch`/`XHR` itself and holds a call until the
-// verdict reaches it, so starting its download now takes a storage round trip
-// off the front of the very first request the page makes.
-const injection = injectCode(messageBus);
+/**
+ * Whether the page-context bundle turned up in this page's own world.
+ *
+ * Started here, before the first `await` anywhere: the bundle announces itself
+ * while it patches, and `whenBundleArrives` has to be listening by then. It is
+ * only ever read to decide whether a Content-Security-Policy is worth
+ * escalating — nothing in the request path waits for it, because the bundle
+ * being on the page is a decision the background already made.
+ */
+const bundleArrived = whenBundleArrives(messageBus);
 
 /**
- * The page's own `fetch`/`XHR` were handed back because this domain is not
- * mocked — see `src/injected/restore-originals.ts`. Switching it on later has to
- * put them back, and nothing else in here should pay for that possibility.
- */
-let wasHandedBack = false;
-
-/**
- * Tells the injected bundle whether this domain is mocked — the **only** place
- * that does.
+ * Tells the page-context bundle whether this domain is mocked.
  *
- * It has to be the only one, because saying `false` is destructive: the bundle
- * answers it by handing the page's own `fetch`/`XHR` back, and coming back from
- * that needs the shim re-installed. There were two senders — this and the
- * start-up path — and only one of them remembered. A `false` from the other left
- * the page with native entry points, and the later `true` re-published a
- * `ohMy.fetch` that nothing forwarded to any more: mocking silently stopped for
- * the rest of that page's life. It showed up as a mocked request being answered
- * by the server, in a different spec every run.
- */
-let settleFirstVerdict: (() => void) | undefined;
-
-/**
- * Resolves once the start-up path has announced the first verdict.
+ * Still needed, even though the background only puts the bundle on domains that
+ * are switched on: a content-script match pattern cannot carry a port, so
+ * mocking `localhost:4200` also puts the bundle on `localhost:8080`, and a
+ * registration can briefly outlive the domain it was made for. Those pages hear
+ * `false` here and hand the page's own `fetch`/`XHR` straight back.
  *
- * The subscription below fires on any storage change, including ones that land
- * while `initContext()` is still reading — and `isActive(undefined)` is `false`.
- * Announcing that would be the *first* verdict, and a first `false` is the one
- * the bundle answers by handing the page's `fetch`/`XHR` back. On a domain that
- * is switched on, that is a page which never mocks again.
- *
- * So start-up owns the first word. Everything else waits for it.
+ * Saying `false` is destructive — see `src/injected/restore-originals.ts` — so
+ * it is said only about a state that has actually been read. `publishActive()`
+ * in `content-state.ts` is what guarantees that: it publishes `undefined`, not
+ * `false`, while the domain's record is still unknown.
  */
-const firstVerdict = new Promise<void>((resolve) => {
-  settleFirstVerdict = resolve;
-});
-
-async function announceVerdict(active: boolean): Promise<boolean> {
-  if (active && wasHandedBack) {
-    // Nothing is patched, so there is nothing to switch on. The shim goes back
-    // first, for the bundle to publish into.
-    reinstallEarlyShim();
-
-    // And the records before the verdict: a domain that was off never loaded
-    // them, and announcing "active" first would let the next request find no
-    // mock and go to the server.
-    await contentState.init();
-  }
-
-  if (!(await injection)) {
-    return false;
-  }
-
-  wasHandedBack = !active;
-
+function announceVerdict(active: boolean): void {
   sendMessageToInjected({
     type: payloadType.STATE,
     // The injected script reads this as an `IOhMyInjectedState`; the
@@ -124,26 +80,31 @@ async function announceVerdict(active: boolean): Promise<boolean> {
     data: { active },
     description: 'content;verdict'
   });
-
-  return true;
 }
 
 // debug('Script loaded and ready....');
 const contentState = new OhMyContentState();
 OhMySendToBg.setContext(OhMyContentState.host, appSources.CONTENT);
 
-// `isActive$` starts out `undefined` (nothing is known yet), which is simply
-// "not active" as far as the injected script is concerned.
+// `isActive$` starts out `undefined` — nothing has been read yet — and only
+// emits a real answer once this domain's own record is in hand.
 ohMyWindow().off?.push(contentState.isActive$.subscribe(async (value?: boolean) => {
-  // `undefined` means "not decided yet" and must not be answered: the bundle is
-  // holding the page's requests until it hears something, and telling it `false`
-  // here would release them unmocked before the state has even been read.
+  // `undefined` means "not decided yet" and must not be answered: `false` is
+  // what makes the bundle hand the page's `fetch`/`XHR` back, and saying it out
+  // of ignorance is a page that never mocks again.
   if (value === undefined) {
     return;
   }
 
-  await firstVerdict;
-  await announceVerdict(value);
+  if (value) {
+    // The records before the verdict. A domain that was switched on while its
+    // page was open never loaded them, and a request arriving between the two
+    // would find no mock and go to the server — the silent miss, one step
+    // further along. `init()` is a no-op once they are loaded.
+    await contentState.init();
+  }
+
+  announceVerdict(value);
 }));
 
 // window[STORAGE_KEY].off.push(handleCSP(messageBus, contentState));
@@ -205,16 +166,15 @@ async function handleInjectedApiResponse({ packet }: IOhMessage<IOhMyResponseUpd
 }
 
 /**
- * Everything that has to happen before the page's own requests can be let go.
+ * Everything that has to be true before this script can answer a lookup.
  *
  * A function rather than the bare IIFE it used to be, so that the one caller
  * can catch it — see below.
  */
 async function startUp(): Promise<void> {
-  // Enough to answer "is this domain switched on", and no more. The shim is
-  // holding the page's own requests until one of the two branches below runs,
-  // so a page this extension does nothing for waits on two storage reads rather
-  // than on every request record the domain has.
+  // Enough to answer "is this domain switched on", and no more. A page this
+  // extension does nothing for pays two storage reads rather than every request
+  // record the domain has.
   await contentState.initContext();
 
   const state = contentState.state || StateUtils.init();
@@ -223,63 +183,42 @@ async function startUp(): Promise<void> {
   sendKnockKnock();
 
   if (!active) {
-    // Let the page go now. Waiting for the bundle to finish loading would put
-    // its download in front of the first request of every site the user visits
-    // and never mocks, for an answer that is already known.
-    releaseEarlyShim();
-
-    // The bundle still has to hear it, though — it holds every call until it
-    // does, and nothing else will tell it. Not awaited: that is the whole point.
-    void announceVerdict(false).then(() => settleFirstVerdict?.());
+    // Two ports of one host share a registration, so the bundle may be here on
+    // a domain that is off. Telling it so is what gets it off the page.
+    announceVerdict(false);
 
     return;
   }
 
-  // The records before the verdict: a request arriving before they are loaded
-  // finds no mock and goes to the server — the same silent miss, one step
-  // further along.
+  // The records, before the verdict. A request arriving before they are loaded
+  // finds no mock and goes to the server — a silent miss. `receivedApiRequest`
+  // awaits the same call, so a request that beats this one is held rather than
+  // answered wrongly; this is here so the common case has nothing to wait for.
   await contentState.init();
 
-  if (!(await injection)) {
-    // A CSP the injection could not get past. Escalating is only worth it for a
-    // domain that is actually switched on — it strips the site's header and
-    // reloads the page.
-    if (active) {
-      await escalateIfBlocked();
-    }
+  announceVerdict(true);
 
-    // Nothing is coming: the shim has to stop holding. A page whose requests
-    // never settle is a far worse failure than one that is not mocked.
-    releaseEarlyShim();
-    settleFirstVerdict?.();
-
-    return;
+  if (!(await bundleArrived)) {
+    // A domain that is switched on, and no page-context bundle on the page. The
+    // realistic cause left is a Content-Security-Policy, so ask the background
+    // to strip the header and reload — which is only ever worth doing for a
+    // domain that is actually being mocked.
+    await escalateIfBlocked();
   }
-
-  // The verdict. Until this lands the bundle holds every call the page makes,
-  // which is the point — it was in place before the answer was.
-  await announceVerdict(active);
-  settleFirstVerdict?.();
 }
 
-// Inject XHR/Fetch mocking code and more
 void startUp().catch(err => {
   // `initContext()` reads `chrome.storage`, and that read throws for real
   // reasons — "Extension context invalidated" the moment the extension is
-  // reloaded under a live page is the everyday one. Every release above sits
-  // *after* that await, so a rejection meant the shim went on holding, the
-  // bundle was never told a verdict, and `settleFirstVerdict` was never called,
-  // so the storage-change path could not rescue it either. Not one request the
-  // page made — then or at any point afterwards — ever settled, and nothing
-  // anywhere said why.
+  // reloaded under a live page is the everyday one.
   //
-  // Not knowing whether a domain is mocked is a reason to let its page run. It
-  // is never a reason to stop it.
+  // Nothing is holding the page's requests any more, so this is no longer the
+  // difference between a live page and a dead one. It is still the difference
+  // between a mocked request and an unmocked one, and it used to happen without
+  // a word in the console.
   error('OhMyMock could not start up on this page, letting its requests through', err);
 
-  releaseEarlyShim();
-  // And the bundle, which holds calls of its own. `finally` rather than `then`:
-  // this is the path where things are already going wrong, and the point of it
-  // is that the first verdict gets settled whatever happens.
-  void announceVerdict(false).finally(() => settleFirstVerdict?.());
+  // And the bundle, which would otherwise go on dispatching every request the
+  // page makes to a content script that cannot answer.
+  announceVerdict(false);
 });

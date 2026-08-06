@@ -2,14 +2,17 @@
  * Injection under a Content-Security-Policy.
  *
  * OhMyMock has to get code into the *page* context to patch `fetch` and
- * `XMLHttpRequest`, which a strict `script-src` forbids. `inject-code.ts`
- * handles that by waiting 500ms for the injected script to report in, and — if
- * it never does — asking the background script to strip CSP headers for the
- * domain via declarativeNetRequest, then reloading the page.
+ * `XMLHttpRequest`. That used to mean a `<div onclick>` and a `<script src>`,
+ * both of which a strict `script-src` forbids — so `inject-code.ts` waited
+ * 500ms for the injected script to report in and, failing that, asked the
+ * background to strip the site's CSP header via declarativeNetRequest and
+ * reloaded the page.
  *
- * That fallback rewrites response headers for the whole domain, so it is worth
- * a regression test in both directions: it must kick in when needed, and it
- * must stay out of the way when it is not.
+ * The bundle is a `world: 'MAIN'` content script now, which Chromium does not
+ * apply the page's CSP to (measured on 151), so the third test below passes
+ * without any of that happening — no header rewrite, no reload. The escalation
+ * is still wired up in `page-context.ts` for a page-context bundle that fails
+ * to arrive for some other reason, and nothing here exercises it any more.
  */
 
 import { expect, SITE_DOMAIN, test } from '../fixtures/extension';
@@ -45,8 +48,10 @@ test.describe('content security policy', () => {
 
     await site.open('/csp-strict');
 
-    // The fallback reloads the page once CSP removal is active, so injection
-    // legitimately takes longer here than on an unrestricted page.
+    // The budget is still generous, because the fallback — strip the header and
+    // reload — is what this used to need and would still take. A MAIN-world
+    // content script is not subject to the page's CSP, so it should now arrive
+    // as fast as on any other page.
     await site.waitForInjection(20_000);
 
     const result = await site.request({ url: '/api/json', responseType: 'json' });

@@ -28,8 +28,10 @@ describe('OhMyContentState and the changes it hears about', () => {
   let contentState: OhMyContentState;
 
   beforeEach(() => {
-    // The namespace the content script hangs its teardown handles off. Created
-    // by `early-inject` in a real page, before anything else runs.
+    // The namespace the content script hangs its teardown handles off. In a
+    // real page the content script creates it, and the page-context bundle
+    // fills in its own half — the two run in different worlds and see
+    // different `window` objects.
     setOhMyWindow({ off: [] });
 
     jest.spyOn(StorageUtils, 'listen').mockImplementation(() => undefined);

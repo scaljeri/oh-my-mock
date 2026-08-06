@@ -1,5 +1,4 @@
 const fs = require('fs');
-const { execFileSync } = require('child_process');
 const packageJson = require('../package.json');
 
 const version = determineVersion();
@@ -38,7 +37,7 @@ const showDebug = /beta/.test(version) || process.env.OH_MY_DEBUG === '1';
  * failed build, not a quiet no-op.
  */
 const EXPECTED_TOKENS = [
-  { file: './dist/content.js', tokens: ['SHOW_DEBUG', 'VERSION', 'INJECTED_CODE'] },
+  { file: './dist/content.js', tokens: ['SHOW_DEBUG', 'VERSION'] },
   { file: './dist/oh-my-mock.js', tokens: ['SHOW_DEBUG', 'VERSION'] },
   { file: './dist/background.js', tokens: ['SHOW_DEBUG', 'VERSION'] }
 ];
@@ -71,15 +70,6 @@ for (const file of BUNDLES) {
   replaceToken(file, 'SHOW_DEBUG', String(showDebug));
   replaceToken(file, 'VERSION', version);
 }
-replaceTokenWithFileContent('INJECTED_CODE', './dist/content.js', './dist/early-inject-clean.js');
-
-// The splice pastes one script into a template literal inside another, so the
-// one thing that proves it produced a runnable file is parsing it. A backtick
-// or an unbalanced brace in the spliced shim breaks `content.js` as a whole,
-// and Chromium's only symptom for a content script that does not parse is that
-// nothing gets mocked. `--check` parses without executing.
-execFileSync(process.execPath, ['--check', './dist/content.js'], { stdio: 'inherit' });
-
 assertNoTokensLeft();
 
 function angularChunks() {
@@ -194,42 +184,6 @@ function replaceToken(file, tokenKey, token) {
   const result = data.replace(new RegExp(`__OH_MY_${tokenKey}__`, 'g'), token);
 
   fs.writeFileSync(file, result, {
-    encoding: "utf8",
-    flag: "w+",
-    mode: 0o666
-  });
-}
-
-/**
- * Splices a built file into another, in place of a token.
- *
- * Throws when the token is missing — except in a `--partial` run, where the
- * source was not rebuilt and the splice from the previous pass is still in
- * place. It used to substitute only when the token occurred exactly once and do
- * nothing otherwise — no message, exit code 0 — so a second occurrence turned
- * the whole splice off. The build stayed green, the token stayed in the output,
- * and the shim it was meant to carry never reached a single page. A build step
- * that cannot do its job has to say so.
- */
-function replaceTokenWithFileContent(tokenKey, sourceFile, inputFile) {
-  const token = `'__OH_MY_${tokenKey}__'`;
-  const source = fs.readFileSync(sourceFile, {encoding:'utf8', flag:'r'});
-  const input = fs.readFileSync(inputFile, {encoding:'utf8', flag:'r'});
-  const parts = source.split(token);
-
-  if (parts.length < 2) {
-    if (isPartial) {
-      console.log(`token-replace: ${sourceFile} already spliced, skipping`);
-      return;
-    }
-
-    throw new Error(
-      `token-replace: ${token} not found in ${sourceFile} — nothing to splice ${inputFile} into`);
-  }
-
-  // Every occurrence, so a second one is a duplicate rather than a switch that
-  // quietly turns the substitution off.
-  fs.writeFileSync(sourceFile, parts.join(input), {
     encoding: "utf8",
     flag: "w+",
     mode: 0o666

@@ -8,9 +8,9 @@ import { patchResponseHeaders, unpatchResponseHeaders } from './xhr/response-hea
  * Patches the members of `XMLHttpRequest.prototype` that carry the *response*.
  *
  * `open`, `send` and `setRequestHeader` are deliberately absent: they are
- * patched by `src/early-inject/index.ts`, which runs at `document_start`,
- * before any page code can take a reference to the originals. This bundle
- * loads too late for that. `addEventListener` is patched by nobody — a mocked
+ * patched by `installEntryPoints` (`./entry-points.ts`), the first thing this
+ * bundle runs, before any page code can take a reference to the originals.
+ * `addEventListener` is patched by nobody — a mocked
  * request completes through `dispatchEvent`, so the listeners never need to be
  * collected. There used to be a second, unused copy of each of those patches
  * under `./xhr/`; they have been deleted rather than left to look like they
@@ -25,7 +25,7 @@ export function unpatchXmlHttpRequest() {
 
 export function patchXmlHttpRequest() {
   patchResponseHeaders();
-  // Publishes `xhr.send`, which `src/early-inject` is waiting for.
+  // Publishes `xhr.send`, which the entry-point patch forwards to.
   patchSend();
   patchStatus();
   patchResponseText();

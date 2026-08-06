@@ -22,7 +22,7 @@
 //     cspRemovalSubject.next(true);
 //   });
 
-//   ms.streamByType$<boolean>(payloadType.READY, appSources.PRE_INJECTED).subscribe(() => {
+//   ms.streamByType$<boolean>(payloadType.READY, appSources.INJECTED).subscribe(() => {
 //     contentState.isReloaded = false;
 //     subscription.unsubscribe();
 //   });

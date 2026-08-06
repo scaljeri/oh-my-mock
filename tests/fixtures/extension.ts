@@ -174,8 +174,9 @@ export class SitePage {
 
   /**
    * Waits until OhMyMock has patched the page. `window.OhMyMock.version` is set
-   * by the injected bundle, so its presence means injection fully completed —
-   * `window.OhMyMock` alone is set earlier by the early-inject shim.
+   * by the page-context bundle once it has installed its entry points, so its
+   * presence means the page really is patched rather than merely running the
+   * file.
    */
   async waitForInjection(timeout = 10_000): Promise<void> {
     await this.page.waitForFunction(
@@ -252,7 +253,7 @@ export class TestServer {
  * listed. This polls the list as well, under a single deadline, and reports
  * what the browser actually had when it gives up.
  */
-async function serviceWorkerFor(
+export async function serviceWorkerFor(
   context: BrowserContext,
   timeout = 30_000
 ): Promise<Worker> {
