@@ -56,9 +56,20 @@ describe('patchSend: mocked completion', () => {
     ohMyWindow().xhr?.send?.call(xhr);
   }
 
-  /** The verdict is a microtask, the completion a `setTimeout(0)`. */
-  function completed(): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, 20));
+  /**
+   * Waits for the completion itself.
+   *
+   * This used to be a flat 20ms — enough for the verdict's microtasks and the
+   * `setTimeout(0)` behind them on an idle machine, and not enough on a busy
+   * one: a full-suite run at load ~25 failed here with the `onload` property
+   * handler simply not yet called. `loadend` is the last event the completion
+   * fires, so waiting for it is the same wait with no clock in it. The
+   * listener goes on before `send`, so a completion that arrives immediately
+   * is not missed.
+   */
+  function completed(xhr: XMLHttpRequest): Promise<void> {
+    return new Promise(resolve =>
+      xhr.addEventListener('loadend', () => resolve(), { once: true }));
   }
 
   /**
@@ -75,8 +86,10 @@ describe('patchSend: mocked completion', () => {
     xhr.onloadend = viaProperty;
     xhr.addEventListener('loadend', viaListener);
 
+    const done = completed(xhr);
+
     send(xhr);
-    await completed();
+    await done;
 
     expect(viaProperty).toHaveBeenCalledTimes(1);
     expect(viaListener).toHaveBeenCalledTimes(1);
@@ -93,8 +106,10 @@ describe('patchSend: mocked completion', () => {
     xhr.addEventListener('readystatechange', (event) =>
       states.push((event.target as XMLHttpRequest).readyState));
 
+    const done = completed(xhr);
+
     send(xhr);
-    await completed();
+    await done;
 
     expect(states).toEqual([
       XMLHttpRequest.HEADERS_RECEIVED,
@@ -119,8 +134,10 @@ describe('patchSend: mocked completion', () => {
       };
     };
 
+    const done = completed(xhr);
+
     send(xhr);
-    await completed();
+    await done;
 
     expect(seen?.target).toBe(xhr);
     expect(seen?.readyState).toBe(XMLHttpRequest.DONE);
@@ -134,8 +151,10 @@ describe('patchSend: mocked completion', () => {
       xhr.addEventListener(type, () => order.push(type));
     }
 
+    const done = completed(xhr);
+
     send(xhr);
-    await completed();
+    await done;
 
     expect(order).toEqual(['loadstart', 'progress', 'load', 'loadend']);
   });
@@ -155,8 +174,10 @@ describe('patchSend: mocked completion', () => {
     (xhr as IOhMyXhr & { ohListeners?: unknown[] }).ohListeners = [removed];
     xhr.removeEventListener('load', removed);
 
+    const done = completed(xhr);
+
     send(xhr);
-    await completed();
+    await done;
 
     expect(removed).not.toHaveBeenCalled();
   });
@@ -171,11 +192,18 @@ describe('patchSend: mocked completion', () => {
     const loaded = jest.fn();
     xhr.addEventListener('load', loaded);
 
-    send(xhr);
-    await completed();
-    expect(loaded).not.toHaveBeenCalled();
+    const done = completed(xhr);
+    const started = Date.now();
 
-    await new Promise(resolve => setTimeout(resolve, 80));
+    send(xhr);
+    await done;
+
     expect(loaded).toHaveBeenCalledTimes(1);
+
+    // A lower bound, and deliberately so: the completion cannot arrive before
+    // the delay it was given, and a busy machine can only push it later. The
+    // pair this replaced — "not yet" at a fixed 20ms, "by now" at a fixed 80ms
+    // — asked the opposite question and could be wrong about it under load.
+    expect(Date.now() - started).toBeGreaterThanOrEqual(55);
   });
 });

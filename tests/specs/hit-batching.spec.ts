@@ -62,7 +62,7 @@ test.describe('hits', () => {
     ohMy,
     site
   }) => {
-    await ohMy.seedMock({
+    const { dataId } = await ohMy.seedMock({
       domain: SITE_DOMAIN,
       url: '/api/json',
       response: { a: 1 }
@@ -83,9 +83,25 @@ test.describe('hits', () => {
 
     await site.request({ url: '/api/json', responseType: 'json' });
 
-    // Well inside the flush interval: this can only have come from the hit
-    // message, not from storage.
-    await expect(row).toContainText('last hit', { timeout: 200 });
+    // The claim is "the row moved *before* the write landed", and it is made
+    // relatively rather than against the clock.
+    //
+    // It used to be `{ timeout: 200 }` against a 250ms flush interval — an
+    // upper bound, deliberately below the interval, because a row that only
+    // updates after the flush proves nothing. That reasoning is right and the
+    // measurement is not: under load the hit message is late too, so the test
+    // failed for a mechanism that was working. Both sides slow down together,
+    // so comparing them is immune to it.
+    //
+    // The wait itself is generous — it is here to catch a row that never
+    // updates, not to police milliseconds.
+    await expect(row).toContainText('last hit', { timeout: 10_000 });
+
+    // Read the instant the row admits to the hit. If this has already been
+    // written, the row could have learnt it from storage and the fast path is
+    // unproven; `calledAt` absent is what says the message beat the write.
+    expect(await ohMy.getRequest(dataId)).toBeDefined();
+    expect((await ohMy.getRequest(dataId))?.calledAt).toBeUndefined();
 
     await popup.close();
   });
