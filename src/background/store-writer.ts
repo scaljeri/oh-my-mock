@@ -123,6 +123,13 @@ export function addDomain(domain: ohMyDomain): Promise<IOhMyMock> {
  * already in flight would otherwise land after it and put the record back with
  * the domains it read beforehand — every one of them now pointing at a record
  * that has just been deleted.
+ *
+ * That covers the store record and only the store record. `chrome.storage.local
+ * .clear()` also deletes every state, request, mock and cookie mock, and those
+ * are written from the message queue's lanes — which run concurrently with each
+ * other and with this. Call this from inside `wipeExclusively`
+ * (`wipe-barrier.ts`), which is what stops a write decided before the wipe from
+ * landing after it.
  */
 export function clearStore(): Promise<IOhMyMock> {
   return mutateStore(async () => {

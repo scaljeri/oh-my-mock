@@ -29,7 +29,9 @@ import { reportError, reportUncaughtErrors } from './report-error';
 import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
-import { addDomain, clearStore } from './store-writer';
+import { addDomain } from './store-writer';
+import { resetEverything } from './reset-everything';
+import { notWhileWiping, wipesRunOn } from './wipe-barrier';
 import { OhMyHitsHandler } from './handlers/hits-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
@@ -48,6 +50,11 @@ const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
 OhMyRequestHandler.queue = queue;
 OhMyCookieHandler.queue = queue;
+
+// A full reset clears the whole of `chrome.storage.local`, and every lane below
+// writes records of its own outside the store's write queue. `wipe-barrier.ts`
+// is what keeps the two apart; this is where it is told what has to fall quiet.
+wipesRunOn(queue, payloadType.RESET);
 
 // Cookies are domain state, applied from here rather than per request. The sync
 // follows `chrome.storage`, so anything that writes a state or a cookie mock —
@@ -105,20 +112,11 @@ queue.addHandler(payloadType.SET_COOKIES, async (payload: IPacketPayload) => {
   return true;
 });
 queue.addHandler(payloadType.UPSERT, OhMyImportHandler.upsert);
-queue.addHandler(payloadType.RESET, async (payload: IPacketPayload) => {
-  // Currently this action only supports a full reset. For a Response/State reset use REMOVE
-  try {
-    // The wipe joins the store's write queue rather than running beside it. A
-    // change that was already in flight would otherwise land *after* the clear
-    // and write the store back with the domains it had read before it —
-    // domains whose records, requests and mocks had just been deleted.
-    await clearStore();
-    await initStorage(payload.context?.domain);
-    await importJSON(jsonFromFile, { domain: DEMO_TEST_DOMAIN, preset: 'default', active: true });
-  } catch (err) {
-    error('Could not initialize the store', err);
-  }
-});
+// Currently this action only supports a full reset. For a Response/State reset
+// use REMOVE. What it has to be kept apart from — every other lane below — is in
+// `reset-everything.ts`.
+queue.addHandler(payloadType.RESET, (payload: IPacketPayload) =>
+  resetEverything(payload.context?.domain));
 
 
 // streamByType$<any>(payloadType.DISPATCH_API_REQUEST, appSources.INJECTED).subscribe(receivedApiRequest);
@@ -150,9 +148,18 @@ stream$.subscribe(({ packet, sender, callback }: IOhMessage) => {
 
   // Messages from an extension page (the popup) have no `sender.tab`.
   packet.tabId = sender.tab?.id;
-  queue.addPacket(packet.payload.type, packet, (result) => {
-    callback(result);
-  });
+
+  // The unit of work is the whole packet, from queued to answered, so a wipe
+  // waiting for quiet waits for the handler and not merely for the enqueue.
+  const deliver = () => new Promise<void>(resolve =>
+    queue.addPacket(packet.payload.type, packet, (result) => {
+      callback(result);
+      resolve();
+    }));
+
+  // The lane goes with it: the barrier lets the wipe's own lane straight
+  // through, because a reset held at its door would be waiting for itself.
+  void notWhileWiping(deliver, packet.payload.type);
 });
 
 // const domainStream$ = messageBus.streamByType$([payloadType.KNOCKKNOCK],
@@ -243,7 +250,13 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 // read failing, a half-written demo import — became an unhandled rejection
 // with no owner. Said out loud now, which is the least a failed start-up
 // deserves.
-void (async () => {
+//
+// Through the wipe barrier, because it writes records: MV3 restarts the worker
+// roughly every thirty seconds of idle, and the message that woke it — a reset
+// among them — is handled *during* this. A reset that cleared storage halfway
+// through would leave the demo import's requests and mocks behind with nothing
+// listing them.
+void notWhileWiping(async () => {
   try {
     await initStorage();
 
@@ -259,7 +272,7 @@ void (async () => {
   } catch (err) {
     error('Could not start up', err);
   }
-})();
+});
 
 
 // chrome.declarativeNetRequest.updateSessionRules({

@@ -8,6 +8,7 @@ import { consumeOwnWrite } from './cookie-jar';
 import { activeDomains, syncedCookies } from './cookie-sync';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
 import { error } from './utils';
+import { notWhileWiping } from './wipe-barrier';
 
 /**
  * Records the cookies a real (passthrough) response sets, so they do not have
@@ -168,11 +169,18 @@ export function initCookieRecorder(queue: OhMyQueue): void {
   OhMyCookieHandler.queue = queue;
 
   chrome.cookies.onChanged.addListener((changeInfo: chrome.cookies.CookieChangeInfo) => {
+    // Through the wipe barrier. This is the one writer that reaches storage
+    // without a packet ever passing through the message queue — it writes a
+    // cookie record and then queues the state patch that lists it — so a full
+    // reset running beside it would clear storage between those two writes and
+    // leave a cookie mock, or a state naming one, that the rebuilt store never
+    // lists. See `wipe-barrier.ts`.
+    //
     // The promise was dropped. `onChanged`'s own `try` wraps only the record
     // itself, so anything thrown before it — `activeDomains()`,
     // `CookieUtils.appliesTo` — became an unhandled rejection in the service
     // worker rather than a line in the log.
-    void OhMyCookieRecorder.onChanged(changeInfo).catch(err => {
+    void notWhileWiping(() => OhMyCookieRecorder.onChanged(changeInfo)).catch(err => {
       error('Failed while recording a cookie the server set', err);
     });
   });

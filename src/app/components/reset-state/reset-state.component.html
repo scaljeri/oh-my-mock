@@ -2,12 +2,22 @@
 
 <div>
   <h3>{{ appStateService.domain$ | async }}</h3>
-  <button mat-raised-button color="warn" (click)="onReset(optionTypes.SELF)">Reset</button>
+  <button
+    x-test="reset-this-domain"
+    mat-raised-button
+    color="warn"
+    (click)="onReset(optionTypes.SELF)"
+  >Reset</button>
 </div>
 
 <div>
   <h3>Everything</h3>
-  <button mat-raised-button color="warn" (click)="onReset(optionTypes.ALL)">Reset</button>
+  <button
+    x-test="reset-everything"
+    mat-raised-button
+    color="warn"
+    (click)="onReset(optionTypes.ALL)"
+  >Reset</button>
 </div>
 
 <button class="cancel" mat-button (click)="onCancel()">Cancel</button>

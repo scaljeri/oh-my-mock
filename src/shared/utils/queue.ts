@@ -44,9 +44,60 @@ export class OhMyQueue<T = IPacket> {
   // keep the enum type, which is where it helps callers.
   private handlers: Record<string, IOhActivity<T>> = {};
   private queue: Record<string, IOhQueuePacket<T>[]> = {};
+  private idleWaiters: { except?: ohPacketType, resolve: () => void }[] = [];
 
   getHandlers(): Partial<Record<ohPacketType, IOhActivity<T>>> {
     return this.handlers;
+  }
+
+  /**
+   * Nothing running and nothing waiting to run.
+   *
+   * `except` leaves one lane out, for a caller that is itself running in it:
+   * the full reset is a RESET packet and asks this while its own lane is, by
+   * definition, active — asking without it would be asking to wait for itself.
+   *
+   * A lane holding packets but with no handler counts as idle. Handlers are all
+   * registered while the worker starts, so a packet nobody handles will never
+   * run and therefore cannot write anything; counting it would instead mean one
+   * stray packet type made the queue permanently busy.
+   */
+  isIdle(except?: ohPacketType): boolean {
+    return !Object.entries(this.handlers).some(([type, activity]) =>
+      type !== except && (activity.isActive || !!this.queue[type]?.length));
+  }
+
+  /**
+   * Resolves the next time `isIdle` holds — immediately if it already does.
+   *
+   * Nothing here *keeps* the queue idle: a caller that needs the quiet to last
+   * has to stop new work arriving itself. `wipe-barrier.ts` is the one that
+   * does, and why.
+   */
+  whenIdle(except?: ohPacketType): Promise<void> {
+    if (this.isIdle(except)) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>(resolve => this.idleWaiters.push({ except, resolve }));
+  }
+
+  private settleIdle(): void {
+    if (!this.idleWaiters.length) {
+      return;
+    }
+
+    // Each waiter judged against its own exclusion, so two waiters excluding
+    // different lanes cannot resolve each other's.
+    this.idleWaiters = this.idleWaiters.filter(waiter => {
+      if (!this.isIdle(waiter.except)) {
+        return true;
+      }
+
+      waiter.resolve();
+
+      return false;
+    });
   }
 
   getActiveHandlers(): ohPacketType[] {
@@ -148,6 +199,11 @@ export class OhMyQueue<T = IPacket> {
       !this.getQueue(packetType).length ||
       this.handlers[packetType].isActive
     ) {
+      // The handler wrapper calls this once a packet is done and its lane has
+      // been freed, so this branch is where a lane running dry is noticed —
+      // which is the only moment the queue can newly *become* idle.
+      this.settleIdle();
+
       return;
     }
 
