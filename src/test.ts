@@ -25,7 +25,7 @@ if (typeof window !== 'undefined') {
           addListener: () => {}
         },
         // Present in every browser this extension supports (Chrome 102+, and
-        // `minimum_chrome_version` is 109). Stubbed here because code that keeps
+        // `minimum_chrome_version` is 111). Stubbed here because code that keeps
         // state across a service-worker teardown uses it, and a stub without it
         // makes that code look broken in tests while being right in production.
         session: {
