@@ -65,16 +65,13 @@ test.describe('a domain that has stopped existing', () => {
     // content script announces `false` or stays silent. Handing the page's own
     // `fetch` and `XHR` back is driven by hearing `false`, and silence leaves
     // the patches in place on a page nobody is mocking any more.
-    // What does *not* happen, and is recorded here rather than asserted: the
-    // extension does not take itself back out of the page. `restore-originals`
-    // hands the page's own `fetch` and `XHR` back when it hears `false`, and
-    // the content script never says it — `publishActive` answers `undefined`
-    // for any missing state, which means "nothing known yet" and every
-    // subscriber skips. Making it say `false` once a state has been seen is a
-    // three-line change that did not produce the restore, so it is left out
-    // rather than committed on the strength of the argument. The patches stay
-    // on a page nobody is mocking; harmless today, because the per-request gate
-    // above refuses to serve it either way.
+    // The page keeps its `fetch`/`XHR` patches, and that is deliberate rather
+    // than a leak. `src/injected/index.ts` restores them on the *first* verdict
+    // only: a later state write that momentarily lacks `aux.appActive` reads as
+    // "off", and tearing the patches out on one of those would stop mocking a
+    // page that is still switched on — which is what an intermittently red
+    // suite once cost to find out. A later `false` stops the mocking and leaves
+    // the patches, which is what the two assertions above measure.
   });
 
   /**

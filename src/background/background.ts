@@ -30,6 +30,7 @@ import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
 import { OhMyGroupOrderHandler } from './handlers/group-order-handler';
+import { clearForgottenDomains } from './forgotten-domains';
 import { addDomain } from './store-writer';
 import { resetEverything } from './reset-everything';
 import { notWhileWiping, wipesRunOn } from './wipe-barrier';
@@ -269,6 +270,18 @@ chrome.runtime.setUninstallURL('https://docs.google.com/forms/d/e/1FAIpQLSf5sc1M
 // listing them.
 void notWhileWiping(async () => {
   try {
+    // Any tombstone still in session storage was left by a worker that is
+    // gone, and a removal cannot outlive the worker running it — so it belongs
+    // to one that never finished. Left in place it is permanent: the domain
+    // stays listed, stays active, and the state handler refuses every write to
+    // it for the rest of the browser session. Mocking records nothing, the
+    // toggle will not switch, and none of it says so.
+    //
+    // Cleared here rather than swept later, because "this worker did not write
+    // it" is the one test that cannot mistake a removal still in flight for a
+    // dead one: an in-flight removal is by definition this worker's.
+    await clearForgottenDomains();
+
     await initStorage();
 
     const state = await StorageUtils.get<IState>(DEMO_TEST_DOMAIN);
