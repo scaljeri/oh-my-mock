@@ -1,4 +1,5 @@
 import { IOhMessage, IPacket, ohMessage } from "../packet-type";
+import { ownOrigin } from "./own-origin";
 
 /**
  * Receives packets posted on `window` — the channel between the injected script
@@ -17,12 +18,19 @@ import { IOhMessage, IPacket, ohMessage } from "../packet-type";
  *
  * The source check is the stronger of the two and is what rules out other
  * frames; the origin check is a second line of defence. Documents with an
- * opaque origin (sandboxed iframes, `file://`) report `"null"`, which is
- * compared as-is rather than turned into an exemption.
+ * opaque origin (a `Content-Security-Policy: sandbox` page, a sandboxed iframe,
+ * `file://`) report `"null"`, which is compared as-is rather than turned into
+ * an exemption.
+ *
+ * The comparison is against `window.origin`, never `window.location.origin` —
+ * see `own-origin.ts`. On a sandboxed page the two disagree, and this check
+ * read the url's origin while `MessageEvent.origin` reports the document's, so
+ * every packet OhMyMock sent itself was refused here as if it had come from an
+ * attacker.
  */
 export function triggerWindow(cb: ohMessage): () => void {
   const f = (ev: MessageEvent) => {
-    if (ev.source !== window || ev.origin !== window.location.origin) {
+    if (ev.source !== window || ev.origin !== ownOrigin()) {
       return;
     }
 

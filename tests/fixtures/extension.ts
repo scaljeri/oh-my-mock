@@ -153,9 +153,88 @@ export class SitePage {
 
   /** Navigates and waits until the page harness is ready to take requests. */
   async open(pathname = '/', origin = SITE_ORIGIN): Promise<void> {
-    await this.page.goto(new URL(pathname, origin).toString());
+    await this.goto(pathname, origin);
     await this.page.waitForFunction(
       () => (window as unknown as HarnessWindow).harness?.ready === true
+    );
+  }
+
+  /**
+   * Navigates without waiting for `harness.js`.
+   *
+   * `harness.js` is a `<script src>` like any other, so a page whose CSP
+   * forbids scripts does not have it — and waiting for it there would only ever
+   * time out. Those pages drive `window.fetch` through `pageRequest()` instead.
+   */
+  async goto(pathname = '/', origin = SITE_ORIGIN): Promise<void> {
+    await this.page.goto(new URL(pathname, origin).toString());
+  }
+
+  /**
+   * A request made by the page's own `fetch`/`XMLHttpRequest`, without the
+   * harness.
+   *
+   * `page.evaluate` reaches the page's main world through the debugger
+   * protocol, which no CSP applies to, so this still works where the page may
+   * not run a script of its own — and it calls the very entry points OhMyMock
+   * patched, which is what makes it a valid probe.
+   *
+   * Never throws. A request a CSP refuses rejects with a `TypeError`, and *how*
+   * it failed is precisely what some of these specs assert on.
+   */
+  async pageRequest(
+    url: string,
+    transport: 'fetch' | 'xhr' = 'fetch'
+  ): Promise<{ ok: boolean; status: number; body: string; error: string | null }> {
+    return this.page.evaluate(
+      async ([target, kind]) => {
+        const failed = (err: unknown) => ({
+          ok: false,
+          status: 0,
+          body: '',
+          error: err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+        });
+
+        if (kind === 'xhr') {
+          return new Promise<{ ok: boolean; status: number; body: string; error: string | null }>(
+            resolve => {
+              const xhr = new XMLHttpRequest();
+
+              xhr.open('GET', target);
+              xhr.onload = () =>
+                resolve({
+                  ok: xhr.status >= 200 && xhr.status < 300,
+                  status: xhr.status,
+                  body: xhr.responseText,
+                  error: null
+                });
+              // A CSP-blocked XHR reports a plain network error, the same way a
+              // dead server does; there is no richer signal to pass on.
+              xhr.onerror = () => resolve(failed(new Error('xhr network error')));
+
+              try {
+                xhr.send();
+              } catch (err) {
+                resolve(failed(err));
+              }
+            }
+          );
+        }
+
+        try {
+          const response = await fetch(target);
+
+          return {
+            ok: response.ok,
+            status: response.status,
+            body: await response.text(),
+            error: null
+          };
+        } catch (err) {
+          return failed(err);
+        }
+      },
+      [url, transport] as const
     );
   }
 
