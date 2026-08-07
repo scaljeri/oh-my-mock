@@ -80,11 +80,87 @@
   list-style: none;
 }
 
+// One row: the grip that reorders, then the button that switches on and off.
+.oh-group-nav__row {
+  display: flex;
+  align-items: center;
+  background: t.$oh-bg-surface;
+}
+
+// The grip, drawn in CSS for the same reason the tick is: there is no drag
+// asset, and an unregistered `svgIcon` renders nothing at all without saying so.
+.oh-group-nav__grip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  opacity: 0.45;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 2px;
+    border-radius: 1px;
+    background: t.$oh-text-faint;
+    box-shadow:
+      0 -4px 0 t.$oh-text-faint,
+      0 4px 0 t.$oh-text-faint;
+  }
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid t.$oh-info;
+    outline-offset: -1px;
+    border-radius: 4px;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// The row under the cursor while it is being dragged. It is a clone attached to
+// `document.body`, so it keeps none of the list's layout — it has to carry its
+// own width, or it collapses to the width of its text.
+.cdk-drag-preview {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: t.$oh-bg-surface;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 18%);
+}
+
+// The gap it came from, kept open so the list does not jump under the cursor.
+.cdk-drag-placeholder {
+  opacity: 0.25;
+}
+
+// The rows sliding aside to make room. Suppressed while the CDK is animating a
+// dropped row home, which it does with its own transition.
+.cdk-drop-list-dragging .oh-group-nav__row:not(.cdk-drag-placeholder) {
+  transition: transform 180ms cubic-bezier(0, 0, 0.2, 1);
+}
+
 .oh-group-nav__item {
   display: flex;
   align-items: center;
   gap: t.$oh-space-2;
-  width: 100%;
+  // `flex: 1` with `min-width: 0`, not `width: 100%`: the grip sits beside it
+  // now, and a hundred-percent-wide sibling in a flex row pushes the row past
+  // the drawer rather than sharing it.
+  flex: 1;
+  min-width: 0;
   padding: 9px t.$oh-space-3;
   border: 0;
   border-radius: 10px;

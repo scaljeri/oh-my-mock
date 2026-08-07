@@ -133,6 +133,54 @@ export class GroupUtils {
   }
 
   /**
+   * `order` with `id` moved to sit directly after `after`, or first when
+   * `after` is `null`.
+   *
+   * **A move, not a new list.** The popup could send the order it drew, but
+   * that order is a snapshot: a group created or deleted between the popup's
+   * read and this write would be dropped or resurrected by it. Everything not
+   * named here keeps its place, so a concurrent change survives a reorder.
+   *
+   * `after` may be an id the list does not hold, and there is exactly one way
+   * that happens: a domain's own local group, whose id is derived and whose
+   * record `ensureGroups` writes on some paths and not others. `coveringFor`
+   * ranks such an id last, so it is drawn at the bottom — which makes it the
+   * only unlisted row anything can be dropped *after*. Adopting it here, at
+   * the end, is therefore the position it was already serving from; the
+   * alternative, ignoring it, would silently put the dragged group back above
+   * it, the one place the user just moved it out of. Whether an unlisted id
+   * may be adopted at all is the caller's to judge — see the move handler,
+   * which refuses ids that are simply gone.
+   */
+  static moved(
+    order: ohMyGroupId[],
+    id: ohMyGroupId,
+    after: ohMyGroupId | null
+  ): ohMyGroupId[] {
+    // Nothing follows itself. Left to the general case this would list the id
+    // twice — removed once, then re-inserted beside an anchor that is no longer
+    // there — and a duplicate entry is a position in the serving order that
+    // nothing can ever be moved to.
+    if (after === id) {
+      return [...order];
+    }
+
+    const without = order.filter(g => g !== id);
+
+    if (after === null) {
+      return [id, ...without];
+    }
+
+    const at = without.indexOf(after);
+
+    if (at === -1) {
+      return [...without, after, id];
+    }
+
+    return [...without.slice(0, at + 1), id, ...without.slice(at + 1)];
+  }
+
+  /**
    * The groups that answer for this domain, best first.
    *
    * Covering the domain is what activates a group — no per-domain opt-in, so a

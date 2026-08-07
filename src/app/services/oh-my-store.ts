@@ -13,7 +13,8 @@ import {
   IOhMyAux,
   ohMyPresetId,
   IOhMyCookie,
-  ohMyCookieId
+  ohMyCookieId,
+  ohMyGroupId
 } from '@shared/type';
 import { IOhMyCookieUpdate } from '@shared/utils/cookie';
 import { StateUtils } from '@shared/utils/state';
@@ -23,7 +24,7 @@ import { uniqueId } from '@shared/utils/unique-id';
 import { url2regex } from '@shared/utils/urls';
 import { StorageService } from './storage.service';
 import { OhMySendToBg } from '@shared/utils/send-to-background';
-import { IOhMyResponseUpdate } from '@shared/packet-type';
+import { IOhMyGroupMove, IOhMyResponseUpdate } from '@shared/packet-type';
 
 @Injectable({
   providedIn: 'root'
@@ -92,6 +93,32 @@ export class OhMyState {
       payloadType.STORE,
       undefined,
       'popup;updateStore'
+    );
+  }
+
+  /**
+   * Moves one group in the order that decides which of them answers.
+   *
+   * Two ids rather than the reordered list, deliberately: `IOhMyMock.groups` is
+   * both that order and the list of which groups exist, so posting the list the
+   * drawer drew would delete a group created since it was drawn and revive one
+   * deleted since. `updateStore` cannot express this — merging a `groups` field
+   * onto the record replaces it wholesale — which is why it is its own message.
+   *
+   * `after` is the group it should follow; `null` puts it first. The domain
+   * travels because the one id that may be moved while unlisted is that
+   * domain's own local group, whose id is derived from it.
+   */
+  async moveGroup(
+    id: ohMyGroupId,
+    after: ohMyGroupId | null,
+    domain: ohMyDomain
+  ): Promise<IOhMyMock> {
+    return OhMySendToBg.full<IOhMyGroupMove, IOhMyMock>(
+      { id, after },
+      payloadType.MOVE_GROUP,
+      { domain },
+      'popup;moveGroup'
     );
   }
 

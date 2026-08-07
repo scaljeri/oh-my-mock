@@ -38,9 +38,9 @@ popup ignores it while the background picks it up, because only the background
 subscribes to that type (`eval-dispatcher.ts`; likewise
 `DISPATCH_TO_SERVER` in `server-dispatcher.ts`, both answered outside the
 queue). The background's queue meanwhile handles the storage writes: `STORE`,
-`ADD_DOMAIN`, `STATE`, `RESPONSE`, `REQUEST`, `REMOVE`, `COOKIE`, `HITS`,
-`SET_COOKIES`, `UPSERT` and `RESET`. Who handles what is decided purely by
-which `payloadType` each context subscribes to.
+`ADD_DOMAIN`, `MOVE_GROUP`, `STATE`, `RESPONSE`, `REQUEST`, `REMOVE`, `COOKIE`,
+`HITS`, `SET_COOKIES`, `UPSERT` and `RESET`. Who handles what is decided purely
+by which `payloadType` each context subscribes to.
 
 The queue keeps one lane *per type*, so two of those run at the same time as a
 matter of course — and several of them change the same record. The store record
@@ -49,7 +49,10 @@ is the one they all share: it is written only through `mutateStore`
 change at a time. That is also why no message can hand the background a whole
 store: a sender is in no position to say what the fields it did not touch
 should be, and `ADD_DOMAIN` exists because "add this to the list" cannot be
-said as "the list is now this".
+said as "the list is now this". `MOVE_GROUP` is the same argument about
+`store.groups` — that list is both the serving order and what says which groups
+exist, so it travels as a move (`{ id, after }`) rather than as a list. See
+[mock-groups.md](mock-groups.md#reordering).
 
 Note `API_REQUEST` is not in either list: an intercepted request never crosses
 `chrome.runtime` at all. It arrives from the injected script over

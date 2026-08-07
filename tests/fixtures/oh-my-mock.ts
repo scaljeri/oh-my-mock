@@ -78,8 +78,13 @@ export interface SeedMockOptions {
 }
 
 export interface SeedGroupOptions {
-  /** Storage key and group id. Local groups derive theirs; others are free. */
-  id: string;
+  /**
+   * Storage key and group id. Local groups derive theirs; others are free.
+   *
+   * Optional: a spec that only needs *a* group lets one be generated and reads
+   * it back from the return value, which is what the ordering specs do.
+   */
+  id?: string;
   name: string;
   /**
    * `local` is this browser's own. Use something else for a group that came
@@ -629,6 +634,9 @@ export class OhMyMockDriver {
         id: opts.dataId,
         url: opts.url,
         method: opts.method,
+        // Absent unless asked for: an untagged request belongs to the domain's
+        // own local group, which is what every stored record looks like.
+        ...(opts.groupId && { groupId: opts.groupId }),
         // Omitted entirely rather than set to null when the caller asked for
         // none: an absent field is what the real records look like.
         ...(opts.requestType !== null && { requestType: opts.requestType }),
@@ -672,61 +680,74 @@ export class OhMyMockDriver {
   }
 
   /**
-   * Registers a mock group, the way one arriving from elsewhere would look.
+   * Adds a mock group that came from somewhere else, and lists it.
    *
-   * The record *and* the listing in `store.groups`, because being listed is
-   * what makes a group exist: `GroupUtils.coveringFor` refuses a non-local
-   * record the list does not name, so a group seeded as a record alone neither
-   * serves nor is drawn. The listing is also the order — earlier answers first.
+   * Two writes, and both matter. The record is what carries the name, the
+   * source and the domains it covers; the entry in `store.groups` is what makes
+   * it *exist* — every reader gets its group ids from that list, so a record
+   * nothing lists cannot even be fetched on a fresh load.
+   *
+   * It is listed first, ahead of whatever is already there. A domain's own
+   * local group is created and appended by `ensureGroups` when the site is
+   * opened, so a group seeded here starts *above* it — which is to say it
+   * answers first, and moving it is what these specs are about.
    */
   async seedGroup(options: SeedGroupOptions): Promise<string> {
-    const payload = {
-      id: options.id,
-      name: options.name,
-      source: options.source ?? 'cloud',
-      domains: options.domains
-    };
+    return (await this.worker()).evaluate(
+      async (opts) => {
+        const version = chrome.runtime.getManifest().version;
+        const stored = await chrome.storage.local.get('OhMyMock');
+        const store = (stored.OhMyMock as StoredStore | undefined) ?? {
+          domains: [],
+          type: 'store'
+        };
 
-    return (await this.worker()).evaluate(async (opts) => {
-      const version = chrome.runtime.getManifest().version;
-      const stored = await chrome.storage.local.get(['OhMyMock']);
-      const store = (stored.OhMyMock as StoredStore | undefined) ?? {
-        domains: [],
-        type: 'store'
-      };
-      store.version = version;
-
-      const groups = store.groups ?? [];
-
-      if (!groups.includes(opts.id)) {
-        groups.push(opts.id);
-      }
-
-      store.groups = groups;
-
-      // The domains have to be in the store too, or `ensureGroups` sees a
-      // domain with no local group and rewrites the list underneath the test.
-      for (const domain of opts.domains) {
-        if (!store.domains.includes(domain)) {
-          store.domains = [domain, ...store.domains];
+        store.version = version;
+        for (const domain of opts.domains) {
+          if (!store.domains.includes(domain)) {
+            store.domains = [domain, ...store.domains];
+          }
         }
+        store.groups = [
+          opts.id,
+          ...(store.groups ?? []).filter((id) => id !== opts.id)
+        ];
+
+        await chrome.storage.local.set({
+          [opts.id]: {
+            type: 'group',
+            id: opts.id,
+            name: opts.name,
+            source: opts.source,
+            domains: opts.domains,
+            version
+          },
+          OhMyMock: store
+        });
+
+        return opts.id;
+      },
+      {
+        domains: options.domains,
+        name: options.name,
+        source: options.source ?? 'cloud',
+        id: options.id ?? nextId('group')
       }
+    );
+  }
 
-      await chrome.storage.local.set({
-        [opts.id]: {
-          type: 'group',
-          id: opts.id,
-          name: opts.name,
-          source: opts.source,
-          domains: opts.domains,
-          version,
-          modifiedOn: '2020-01-01T00:00:00.000Z'
-        },
-        OhMyMock: store
-      });
-
-      return opts.id;
-    }, payload);
+  /**
+   * `store.groups` — the order that decides which group answers.
+   *
+   * Read rather than inferred from the drawer: the rows can only be trusted to
+   * mirror this list once something has proved the list itself changed.
+   */
+  async groupOrder(): Promise<string[]> {
+    return (await this.worker()).evaluate(() =>
+      chrome.storage.local
+        .get('OhMyMock')
+        .then((all) => ((all.OhMyMock as { groups?: string[] })?.groups ?? []))
+    );
   }
 
   /** Flips an already-seeded mock on or off without re-seeding it. */

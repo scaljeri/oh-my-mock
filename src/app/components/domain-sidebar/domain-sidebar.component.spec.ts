@@ -14,6 +14,8 @@ import { HarImportComponent } from '../har-import/har-import.component';
 import { DomainSidebarComponent } from './domain-sidebar.component';
 import { DomainSummaryService, IOhMyDomainSummary } from './domain-summary.service';
 import { StorageService } from '../../services/storage.service';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { IOhMyGroupRow } from './group-list.service';
 
 describe('DomainSidebarComponent', () => {
   let component: DomainSidebarComponent;
@@ -28,6 +30,10 @@ describe('DomainSidebarComponent', () => {
   let auxWrites: IOhMyAux[];
   let localGroup: IOhMyGroup;
   let cloudGroup: IOhMyGroup;
+  /** `IOhMyMock.groups` — the order that decides which group answers. */
+  let groupOrder: string[];
+  /** What `moveGroup` was asked to do, in order. */
+  let moves: { id: string; after: string | null; domain: string }[];
 
   beforeEach(async () => {
     domains = ['example.com', 'api.staging.acme.io'];
@@ -50,6 +56,8 @@ describe('DomainSidebarComponent', () => {
       source: 'cloud',
       domains: ['example.com']
     });
+    groupOrder = [localGroup.id, cloudGroup.id];
+    moves = [];
     records = {
       'example.com': StateUtils.init({
         domain: 'example.com',
@@ -75,10 +83,16 @@ describe('DomainSidebarComponent', () => {
           provide: OhMyState,
           useValue: {
             getStore: () =>
-              Promise.resolve({
-                domains,
-                groups: [localGroup.id, cloudGroup.id]
-              } as IOhMyMock),
+              Promise.resolve({ domains, groups: [...groupOrder] } as IOhMyMock),
+            // The background's job, done here by the same pure rule it uses —
+            // so this double cannot quietly disagree with it about what
+            // "after" means.
+            moveGroup: (id: string, after: string | null, domain: string) => {
+              moves.push({ id, after, domain });
+              groupOrder = GroupUtils.moved(groupOrder, id, after);
+
+              return Promise.resolve({ domains, groups: groupOrder } as IOhMyMock);
+            },
             updateAux: (aux: IOhMyAux) => {
               auxWrites.push(aux);
               const state = records['example.com'] as IState;
@@ -146,4 +160,84 @@ describe('DomainSidebarComponent', () => {
     expect(opened).toEqual([HarImportComponent]);
   });
 
+  /**
+   * The order the rows are drawn in is `IOhMyMock.groups`, which is the order
+   * `GroupUtils.coveringFor` ranks by and the serving path walks. So these are
+   * about which group answers, not about which row is on top.
+   */
+  describe('reordering', () => {
+    const drop = (previousIndex: number, currentIndex: number) =>
+      component.onDrop({ previousIndex, currentIndex } as CdkDragDrop<IOhMyGroupRow[]>);
+
+    it('draws the rows in the order the store lists them', () => {
+      expect(component.groups.map(r => r.group.id)).toEqual([
+        localGroup.id,
+        cloudGroup.id
+      ]);
+    });
+
+    /**
+     * The neighbour, never the index. An index is a position in the list this
+     * popup happens to hold; a group created or deleted in the background
+     * shifts every index after it, and the move would land somewhere nobody
+     * asked for.
+     */
+    it('sends the group it should now follow, and puts it there', async () => {
+      await drop(1, 0);
+
+      expect(moves).toEqual([
+        { id: cloudGroup.id, after: null, domain: 'example.com' }
+      ]);
+      expect(groupOrder).toEqual([cloudGroup.id, localGroup.id]);
+      expect(component.groups.map(r => r.group.id)).toEqual([
+        cloudGroup.id,
+        localGroup.id
+      ]);
+    });
+
+    it('names the row above it when it is dropped anywhere but the top', async () => {
+      await drop(0, 1);
+
+      expect(moves).toEqual([
+        { id: localGroup.id, after: cloudGroup.id, domain: 'example.com' }
+      ]);
+      expect(groupOrder).toEqual([cloudGroup.id, localGroup.id]);
+    });
+
+    it('writes nothing when the row is dropped where it started', async () => {
+      await drop(1, 1);
+
+      expect(moves).toEqual([]);
+    });
+
+    /**
+     * The CDK's drag is pointer-only. Without this the serving order cannot be
+     * changed without a mouse — and it goes through the same one method, so
+     * there is no second way of writing the order to keep in step.
+     */
+    it('moves the same way from the keyboard', async () => {
+      const event = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true });
+
+      await component.onReorderKey(event, 0);
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(moves).toEqual([
+        { id: localGroup.id, after: cloudGroup.id, domain: 'example.com' }
+      ]);
+    });
+
+    it('does nothing at the ends of the list, or on any other key', async () => {
+      await component.onReorderKey(
+        new KeyboardEvent('keydown', { key: 'ArrowUp' }),
+        0
+      );
+      await component.onReorderKey(
+        new KeyboardEvent('keydown', { key: 'ArrowDown' }),
+        component.groups.length - 1
+      );
+      await component.onReorderKey(new KeyboardEvent('keydown', { key: 'Enter' }), 0);
+
+      expect(moves).toEqual([]);
+    });
+  });
 });

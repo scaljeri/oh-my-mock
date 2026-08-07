@@ -73,6 +73,17 @@ export enum payloadType {
    * looked. See `src/background/store-writer.ts`.
    */
   ADD_DOMAIN = 'add-domain',
+  /**
+   * "Put this group directly after that one."
+   *
+   * Its own message for the same reason as `ADD_DOMAIN`, and a sharper one:
+   * `IOhMyMock.groups` is both the serving order and the list of what exists,
+   * so a `STORE` message carrying a whole `groups` array would delete every
+   * group created since the sender last read it. What travels is the move —
+   * two ids — and the background applies it to the list as it stands. See
+   * `src/background/handlers/group-order-handler.ts`.
+   */
+  MOVE_GROUP = 'move-group',
   ACTIVE = 'active',
   RESPONSE = 'response',
   REQUEST = 'request',

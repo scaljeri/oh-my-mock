@@ -8,6 +8,14 @@ consults them through `OhMyRequestIndex`, the sidebar draws them
 badge naming the group that answered. The rest is written down so the shape
 stops being reconstructed from scratch every time.
 
+**Status: model, serving path, sidebar and reordering built.** The records, the
+resolution and the migration exist (`src/shared/types/group.ts`,
+`src/shared/utils/group.ts`, `src/background/ensure-groups.ts`); the serving
+path consults them through `OhMyRequestIndex`, the sidebar draws them
+(`domain-sidebar/`) and lets them be dragged into order. The group *view* — the
+library — is not built yet. The rest is written down so the shape stops being
+reconstructed from scratch every time.
+
 ## The problem it solves
 
 Mocks will come from more than one place: this browser's own storage, a mock
@@ -166,7 +174,9 @@ arbitrarily.
   one domain in almost every case, so a per-domain order would be the same list
   written out once per domain, each copy another thing to keep in step. It can
   become per-domain later without moving anything: global stays the default and
-  a domain overrides it.
+  a domain overrides it. Dragging in the drawer therefore moves a group for
+  every domain it covers, while the checkbox next to it stays local — see
+  [Reordering](#reordering).
 - **Switching a group off is per domain**, `IState.aux.disabledGroups`. It has
   to be: the toggle means "not here", and the group stays on for the other
   domains it covers. Storing the *exception* rather than the activation is what
@@ -187,6 +197,61 @@ arbitrarily.
   derived, re-adding the domain silently reused the leftover. `ensureGroups`
   prunes local groups whose domain is gone; `server` and `cloud` groups keep
   their records while their domains come and go.
+
+## Reordering
+
+The drawer's rows are dragged by a grip, `@angular/cdk/drag-drop`. The CDK is
+already a dependency (`@angular/cdk` in `package.json`, and `data-list` uses its
+`SelectionModel`), so the drag costs no new one, and dragging says what the list
+*is* — a ranking — in a way a pair of arrow buttons per row does not. The
+keyboard gets the arrow buttons' behaviour anyway, below.
+
+The grip is a **handle** (`cdkDragHandle`) and a real
+`button`, for two reasons: the row itself is a checkbox that switches the group
+off, so a drag starting anywhere on it would fire that click as well; and the
+CDK's drag is pointer-only, so `ArrowUp`/`ArrowDown` on the focused grip is the
+whole of the keyboard story. Both gestures call one method, which sends one
+message — there is no second path that writes the order.
+
+**What travels is a move, not a list**: `payloadType.MOVE_GROUP` carrying
+`{ id, after }` — the group, and the group it should now follow, `null` for the
+top. `IOhMyMock.groups` has one writer (`mutateStore`, see
+[store-writer.ts](../../src/background/store-writer.ts)) and is *both* the
+serving order and the list of what exists, so a popup that posted the order it
+had drawn would delete every group created since it drew it and revive every one
+deleted since. `GroupUtils.moved` applies the move to the record as it stands;
+everything the message does not name keeps its place.
+
+The *neighbour* rather than an index, for the same reason one step down: an
+index is a position in the list this popup happens to be showing, and a group
+added or removed in the background shifts every index after it.
+
+`OhMyGroupOrderHandler` refuses a move whose group, or whose neighbour, the list
+no longer names — that is a group deleted while the drawer was open, and putting
+it back is exactly the resurrection this list is the authority against. The
+popup re-reads storage after every move, so a refusal shows up as the row
+returning to where it was.
+
+### Dragging past the domain's own group
+
+One id may be moved while unlisted: `local:<domain>`. It is derived, so
+`coveringFor` draws it — sorted last — before `ensureGroups` has written its
+record or listed it. Being drawn last makes it the only unlisted row anything
+can be dropped *after*, and `GroupUtils.moved` therefore **adopts** it: appended
+to the list at the position it was already serving from, then the dragged group
+placed after it. Ignoring it instead would silently put the dragged group back
+above it — the one place the user had just moved it out of.
+
+Adoption is bounded by the handler, not by `moved`: an unlisted id is accepted
+only when it is the local id of a domain the store still lists. `local:<x>` is
+derivable for any string, and `ensureGroups` prunes only the local groups it can
+read a record for, so a forgotten domain's group would otherwise slip back into
+the list for good.
+
+`ensureGroups` runs on the same write and creates the record for the group just
+adopted. It used to append the id unconditionally while doing so, which listed
+it twice — the second entry a position in the serving order nothing can ever be
+moved to.
 
 ## Still open
 

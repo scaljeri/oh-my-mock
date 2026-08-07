@@ -86,7 +86,16 @@ export async function ensureGroups(store: IOhMyMock): Promise<IOhMyMock> {
 
     groups.push(group);
     created.push(group);
-    order.push(group.id);
+
+    // Listed already, record or no record. A local group's id is derived, so
+    // the list can name it before anything wrote the record — the drawer does
+    // exactly that when a group is dragged past the domain's own one, which is
+    // drawn from `GroupUtils.coveringFor`'s derived default. Pushing regardless
+    // listed the same id twice, and the second entry is a position in the
+    // serving order that nothing can ever be moved to.
+    if (!order.includes(group.id)) {
+      order.push(group.id);
+    }
   }
 
   // Groups that exist but never reached the store list. Being listed is what

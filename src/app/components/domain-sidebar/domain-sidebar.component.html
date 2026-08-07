@@ -18,9 +18,37 @@ would ask them to learn a concept where they only wanted to see their mocks.
 
   <h2 class="oh-domain-nav__heading">Mocks</h2>
 
-  <ul class="oh-group-nav__list">
+  <!--
+  The list is draggable because its order is not decoration: it is
+  `IOhMyMock.groups`, and when two sets both know an endpoint the higher one
+  answers. Dragging is global — the same order on every domain — where the
+  checkbox beside it is per domain.
+  -->
+  <ul
+    class="oh-group-nav__list"
+    cdkDropList
+    (cdkDropListDropped)="onDrop($event)"
+  >
     @for (row of groups; track trackByGroup($index, row)) {
-      <li>
+      <li class="oh-group-nav__row" cdkDrag cdkDragLockAxis="y">
+        <!--
+        A handle, so the drag cannot start on the checkbox beside it. Without
+        one, every attempt to switch a group off that moved a few pixels became
+        a reorder instead — the two gestures would share one target.
+
+        A `button` rather than a decorated `span`: the CDK's drag is
+        pointer-only, so the arrow keys are the whole of the keyboard story and
+        they need something focusable to arrive at.
+        -->
+        <button
+          class="oh-group-nav__grip"
+          type="button"
+          cdkDragHandle
+          x-test="group-grip"
+          [attr.aria-label]="'Reorder ' + row.group.name"
+          title="Drag, or use the arrow keys — the higher a set is, the sooner it answers"
+          (keydown)="onReorderKey($event, $index)"
+        ></button>
         <!--
         A checkbox rather than a link: it does not navigate, it decides whether
         this group answers here. Switched off is stored per domain, so the same

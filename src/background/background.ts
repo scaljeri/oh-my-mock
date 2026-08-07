@@ -29,6 +29,7 @@ import { reportError, reportUncaughtErrors } from './report-error';
 import { debug, error } from './utils';
 import { OhMyResponseHandler } from './handlers/response-handler';
 import { OhMyStoreHandler } from './handlers/store-handler';
+import { OhMyGroupOrderHandler } from './handlers/group-order-handler';
 import { addDomain } from './store-writer';
 import { resetEverything } from './reset-everything';
 import { notWhileWiping, wipesRunOn } from './wipe-barrier';
@@ -86,6 +87,10 @@ queue.addHandler(payloadType.ADD_DOMAIN, async (payload: IPacketPayload) => {
 
   return addDomain(domain);
 });
+// Also its own lane, and for a sharper version of the same reason: the group
+// list *is* the serving order, so a message carrying the whole list would
+// delete whatever was added to it since the sender looked.
+queue.addHandler(payloadType.MOVE_GROUP, OhMyGroupOrderHandler.update);
 queue.addHandler(payloadType.STATE, OhMyStateHandler.update);
 queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REQUEST, OhMyRequestHandler.update);
@@ -123,7 +128,7 @@ queue.addHandler(payloadType.RESET, (payload: IPacketPayload) =>
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.ADD_DOMAIN, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.ADD_DOMAIN, payloadType.MOVE_GROUP, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
   [appSources.CONTENT, appSources.POPUP])
 
 /**

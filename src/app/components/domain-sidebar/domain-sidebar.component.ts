@@ -9,7 +9,14 @@ import {
   inject
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { IOhMyContext, IOhMyMock, IState } from '@shared/type';
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDragHandle,
+  CdkDropList,
+  moveItemInArray
+} from '@angular/cdk/drag-drop';
+import { IOhMyContext, IOhMyMock, IState, ohMyGroupId } from '@shared/type';
 import { StorageUtils } from '@shared/utils/storage';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -45,7 +52,14 @@ const REFRESH_DEBOUNCE = 200;
   selector: 'oh-my-domain-sidebar',
   templateUrl: './domain-sidebar.component.html',
   styleUrls: ['./domain-sidebar.component.scss'],
-  imports: [ReactiveFormsModule, FormsModule, NavListComponent]
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    NavListComponent,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle
+  ]
 })
 export class DomainSidebarComponent implements OnInit, OnDestroy {
   private appState = inject(AppStateService);
@@ -166,6 +180,78 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     );
 
     await this.storeService.updateAux({ disabledGroups }, this.context);
+    await this.refreshGroups();
+  }
+
+  /**
+   * Reorders the list by dragging.
+   *
+   * The order is **global** — a position in `IOhMyMock.groups`, not something
+   * per domain — while switching a group off next to it is per domain. The two
+   * live in one row because that is where both decisions are made, but only one
+   * of them travels to the store record.
+   */
+  async onDrop(event: CdkDragDrop<IOhMyGroupRow[]>): Promise<void> {
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+
+    await this.moveTo(event.previousIndex, event.currentIndex);
+  }
+
+  /**
+   * The same move from the keyboard.
+   *
+   * The CDK's drag is pointer-only: it listens for `mousedown`/`touchstart` and
+   * offers no keyboard equivalent, so a drawer with nothing but a grip is a
+   * drawer where the serving order cannot be changed without a mouse. The arrow
+   * keys go through the identical path — one message, one move — rather than a
+   * second way of writing the order.
+   */
+  async onReorderKey(event: KeyboardEvent, index: number): Promise<void> {
+    const step = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+    const to = index + step;
+
+    if (!step || to < 0 || to >= this.groups.length) {
+      return;
+    }
+
+    // Before the await: the arrow keys scroll the drawer otherwise, and the row
+    // being moved is dragged out from under the caret.
+    event.preventDefault();
+
+    await this.moveTo(index, to);
+  }
+
+  /**
+   * Moves the row at `from` to `to`, and tells the store which group it should
+   * now follow.
+   *
+   * The list on screen is moved first so the row stays where it was dropped
+   * while the write is in flight — the CDK returns the element to its original
+   * slot the moment the drop finishes, and a round trip through the service
+   * worker is long enough to watch it snap back.
+   *
+   * What is sent is the **neighbour**, not the index. An index is a position in
+   * the list this popup happens to be showing; a group created or deleted in
+   * the background moves every index after it, and the reorder would land
+   * somewhere nobody asked for. The group above it is the same group whatever
+   * else the list has gained or lost — and when there is none, `null` says
+   * "first" without naming a length.
+   */
+  private async moveTo(from: number, to: number): Promise<void> {
+    const moved = this.groups[from];
+
+    moveItemInArray(this.groups, from, to);
+    this.detectChanges();
+
+    const after: ohMyGroupId | null =
+      to === 0 ? null : this.groups[to - 1].group.id;
+
+    await this.storeService.moveGroup(moved.group.id, after, this.activeDomain);
+    // Re-read rather than trust the optimistic move: the background refuses a
+    // move whose neighbour has been deleted since the drawer drew it, and the
+    // list has to go back to what is stored when it does.
     await this.refreshGroups();
   }
 

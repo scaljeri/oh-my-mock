@@ -1,6 +1,6 @@
 
 import { appSources, payloadType } from './constants';
-import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, ohMyStatusCode, requestType } from './type';
+import { IData, IMock, IOhMyAPIRequest, IOhMyContext, IOhMyMockResponse, IOhMyUpsertData, ohMyDomain, ohMyGroupId, ohMyStatusCode, requestType } from './type';
 import { ImportResultEnum } from './utils/import-json';
 
 export type ohMessage = (message: IOhMessage) => void;
@@ -66,6 +66,21 @@ export interface IPacketPayload<T = unknown, U = IOhMyPacketContext> {
 export interface IOhMyResponseUpdate {
   request: Partial<IData>;
   response: Partial<IMock>;
+}
+
+/**
+ * "Put this group directly after that one."
+ *
+ * The whole message: two ids, not a list. `IOhMyMock.groups` is the order that
+ * decides which group answers, and it is also the list of which groups exist —
+ * so a sender that posted the order it had drawn would silently delete a group
+ * created since it looked, and revive one deleted since. See
+ * `GroupUtils.moved`.
+ */
+export interface IOhMyGroupMove {
+  id: ohMyGroupId;
+  /** The group it should sit directly after; `null` for the top of the list. */
+  after: ohMyGroupId | null;
 }
 
 export interface IOhMyReadyResponse<T = string> {
