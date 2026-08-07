@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   HostListener,
@@ -55,7 +56,12 @@ import { ConnectionFailureComponent } from './components/connection-failure/conn
     SpinnerComponent,
     DisabledEnabledComponent,
     ConnectionFailureComponent
-  ]
+  ],
+  // Stated rather than inherited: Angular 22 made OnPush the default for every
+  // component, so this one has been OnPush since the upgrade whether it said so
+  // or not. Writing it down is what makes the change-detection calls below read
+  // as deliberate instead of superstitious.
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   private appState = inject(AppStateService);
@@ -113,7 +119,21 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.stateSub = this.stateService.state$.subscribe(
       async (state: IState) => {
         if (!state) {
-          return (this.isInitializing = true);
+          this.isInitializing = true;
+          // The one path out of this subscriber that skips the
+          // `detectChanges()` at the end of it, and the subscription is
+          // registered after an `await`, so not even the first replayed value
+          // arrives inside a listener — nothing else would mark this view.
+          // Raising the flag without it leaves the whole page rendered over a
+          // state that has gone away, rather than the spinner that
+          // `@if (!isInitializing)` guards.
+          //
+          // Defensive rather than a fault seen in the popup: `state$` ends in
+          // `getState$`, which filters on `s?.domain`, so nothing falsy
+          // reaches here today. The branch is written, and covered, as if it
+          // could — losing that filter should not also cost a repaint.
+          this.cdr.markForCheck();
+          return;
         }
 
         // Move to somewhere else
@@ -239,6 +259,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(async () => {
       this.errors = [];
+      // `onErrors` is reached from a `(click)`, but this runs on the dialog's
+      // close, long after that listener returned and its dirty flag was
+      // consumed. Under OnPush the emptied list therefore never reaches
+      // `@if (errors.length)`, and the error button stays in the header
+      // claiming errors that have just been read and dismissed — clicking it
+      // again opens an empty dialog.
+      this.cdr.markForCheck();
     });
   }
 }

@@ -1,4 +1,6 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   forwardRef,
@@ -37,7 +39,12 @@ declare global {
   selector: 'oh-my-code-edit',
   templateUrl: './code-edit.component.html',
   styleUrls: ['./code-edit.component.scss'],
-  // changeDetection: ChangeDetectionStrategy.OnPush,
+  // Stated rather than inherited, and no longer commented out: Angular 22 made
+  // OnPush the default, so commenting this line stopped opting the component
+  // out of it — the editor has been OnPush since the upgrade regardless of what
+  // this line said. Writing it down is what makes the `markForCheck` calls
+  // below read as deliberate instead of superstitious.
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -63,6 +70,7 @@ export class CodeEditComponent
   implements OnInit, OnChanges, OnDestroy, ControlValueAccessor
 {
   private prettyPrintPipe = inject(PrettyPrintPipe);
+  private cdr = inject(ChangeDetectorRef);
 
   @Input() type: string | undefined;
   @Input() theme: themes = 'vs';
@@ -125,6 +133,16 @@ export class CodeEditComponent
 
     this.updatedCode = this.editorCtrl.value;
     this.syncDiffModels();
+    // Everything from `await this.checkMonacoLoaded()` onwards runs as a
+    // continuation of a promise resolved by the `setInterval` poll below, so
+    // this whole tail is outside any listener and marks nothing under OnPush.
+    // Three template-bound fields were rewritten since then — `editorOptions`,
+    // read by both `[options]` bindings, and the two diff models — and each was
+    // replaced with a fresh object, so the bindings had genuinely new values to
+    // pick up and no pass in which to do it. The visible result was the editor
+    // keeping Monaco's defaults, minimap and all, in a 436px pane, and the diff
+    // view rendering against empty models.
+    this.cdr.markForCheck();
   }
 
   ngOnChanges(): void {

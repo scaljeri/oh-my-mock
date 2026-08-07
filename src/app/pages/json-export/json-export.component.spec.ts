@@ -1,7 +1,13 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from "@angular/router/testing";
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  discardPeriodicTasks,
+  fakeAsync,
+  tick
+} from '@angular/core/testing';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { IData, IMock, IOhMyBackup, IState } from '@shared/type';
 import { objectTypes } from '@shared/constants';
@@ -9,8 +15,13 @@ import { StorageService } from '../../services/storage.service';
 import { OhMyStateService } from '../../services/state.service';
 
 import { JsonExportComponent } from './json-export.component';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
+import { AnimationBuilder } from '@angular/animations';
+import { MatDialog } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { AppStateService } from '../../services/app-state.service';
+import { OhMyState } from '../../services/oh-my-store';
+import { WebWorkerService } from '../../services/web-worker.service';
 
 const VERSION = '3.5.0';
 
@@ -208,4 +219,103 @@ describe('JsonExportComponent', () => {
       expect('calledAt' in backup.requests[0]).toBe(false);
     });
   });
+});
+
+/**
+ * The list the export page picks from, rendered for real.
+ *
+ * A separate suite because it drops `NO_ERRORS_SCHEMA`: `[requests]` only
+ * reaches the DOM through `oh-my-data-list`, and with the schema in place that
+ * tag is an unknown element, so counting rows inside it would count nothing and
+ * pass whatever the component did.
+ */
+describe('JsonExportComponent, rendering the request list', () => {
+  let fixture: ComponentFixture<JsonExportComponent>;
+  let requests$: Subject<Record<string, IData>>;
+  let state: IState;
+
+  const rows = (): NodeListOf<Element> =>
+    fixture.nativeElement.querySelectorAll('[x-test="list-request-item"]');
+
+  beforeEach(async () => {
+    requests$ = new Subject<Record<string, IData>>();
+    state = {
+      domain: 'test.dev',
+      requests: ['req1'],
+      presets: { p1: 'Default' },
+      context: { domain: 'test.dev', preset: 'p1' },
+      aux: {},
+      version: VERSION,
+      type: objectTypes.STATE
+    } as IState;
+
+    await TestBed.configureTestingModule({
+      imports: [
+        RouterTestingModule.withRoutes([]),
+        MatMenuModule,
+        JsonExportComponent
+      ],
+      providers: [
+        AnimationBuilder,
+        { provide: AppStateService, useValue: { version: VERSION } },
+        { provide: HotToastService, useValue: { success: jest.fn(), warning: jest.fn() } },
+        { provide: StorageService, useValue: { get: jest.fn() } },
+        { provide: MatDialog, useValue: {} },
+        { provide: WebWorkerService, useValue: {} },
+        {
+          provide: OhMyStateService,
+          useValue: {
+            state,
+            requests$,
+            groups$: of([]),
+            // The list renders the preset dropdown, which opens a state
+            // stream of its own the moment it gets a context.
+            getState$: () => of(state),
+            activeGroups: () => [],
+            localGroup: () => undefined
+          }
+        },
+        {
+          provide: OhMyState,
+          useValue: {
+            getStore: async () => ({}),
+            updateStore: async () => ({}),
+            upsertState: jest.fn().mockResolvedValue(undefined)
+          }
+        }
+      ]
+    }).compileComponents();
+
+  });
+
+  /**
+   * `fakeAsync` because `DataListComponent.state$` is `debounceTime(50)`, so
+   * the child only recomputes its rows one timer after anything arrives. The
+   * clock here is virtual and advanced by exactly that debounce — this is not a
+   * wall-clock guess at how long the work takes, and no amount of load on the
+   * machine can change what it does.
+   */
+  it('renders a request that arrives while the page is open', fakeAsync(() => {
+    fixture = TestBed.createComponent(JsonExportComponent);
+    fixture.detectChanges();
+    tick(50);
+    fixture.detectChanges();
+
+    expect(rows().length).toBe(0);
+
+    // In the popup this emission comes from the `chrome.storage.onChanged`
+    // handler in `OhMyStateService` — a browser callback with no listener
+    // anywhere near it. Asserting `component.requests` would pass without the
+    // fix, because the field was always updated; the list was not.
+    requests$.next({
+      req1: request({ id: 'req1', url: '/api/a' }) as unknown as IData
+    });
+    fixture.detectChanges();
+    tick(50);
+    fixture.detectChanges();
+
+    expect(rows().length).toBe(1);
+
+    discardPeriodicTasks();
+  }));
 });

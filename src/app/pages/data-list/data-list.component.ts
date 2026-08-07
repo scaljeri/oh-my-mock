@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   NgZone,
@@ -36,7 +37,12 @@ import { MatIcon } from '@angular/material/icon';
     MatFabButton,
     MatIcon,
     RouterOutlet
-  ]
+  ],
+  // Stated rather than inherited: Angular 22 made OnPush the default for every
+  // component, so this one has been OnPush since the upgrade whether it said so
+  // or not. Writing it down is what makes the change-detection calls below read
+  // as deliberate instead of superstitious.
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PageDataListComponent implements OnInit, OnDestroy {
   private stateService = inject(OhMyStateService);
@@ -110,9 +116,17 @@ export class PageDataListComponent implements OnInit, OnDestroy {
 
   onDataSelect(id: string): void {
     this.ngZone.run(() => {
-      this.router.navigate(['request', id], {
-        relativeTo: this.activatedRoute
-      });
+      // `hasDetail` reads the child route, and routing is asynchronous: by the
+      // time `navigate` resolves, the click that started it has long since had
+      // its change-detection pass, which ran while `firstChild` was still the
+      // old value. Under OnPush nothing checks this view again, so the detail
+      // pane does not open — the class stays off `.oh-panes` and `@if
+      // (hasDetail)` keeps the outlet unrendered. Today a `state$` emission
+      // usually arrives soon after and hides it; that is a coincidence of
+      // timing, not a mechanism.
+      void this.router
+        .navigate(['request', id], { relativeTo: this.activatedRoute })
+        .then(() => this.cdr.markForCheck());
     });
   }
 
@@ -129,7 +143,14 @@ export class PageDataListComponent implements OnInit, OnDestroy {
    */
   onCloseDetail(): void {
     this.ngZone.run(() => {
-      void this.router.navigate(['./'], { relativeTo: this.activatedRoute });
+      // Closing has the same asynchrony as opening: `hasDetail` only goes false
+      // once the navigation away from the child route has resolved, and the
+      // `(click)` that asked for it was checked before that happened. Without
+      // the mark the pane stays on screen over the list it is covering, which
+      // is the exact state this method exists to get out of.
+      void this.router
+        .navigate(['./'], { relativeTo: this.activatedRoute })
+        .then(() => this.cdr.markForCheck());
     });
 
     this.dataListRef?.deselectAll();

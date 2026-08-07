@@ -5,6 +5,7 @@ import {
   runInInjectionContext
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgClass } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -33,6 +34,8 @@ describe('AppComponent', () => {
   let connection$: Subject<boolean>;
   let updateAux: jest.Mock;
   let deactivate: jest.Mock;
+  /** Emits when the errors dialog is dismissed — see `the errors button`. */
+  let errorsDialogClosed: Subject<void>;
 
   /** A state as `state$` delivers it, narrowed to what the shell reads. */
   const aState = (appActive: boolean): IState =>
@@ -49,6 +52,7 @@ describe('AppComponent', () => {
     connection$ = new Subject<boolean>();
     updateAux = jest.fn();
     deactivate = jest.fn();
+    errorsDialogClosed = new Subject<void>();
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
@@ -63,14 +67,22 @@ describe('AppComponent', () => {
         { provide: WebWorkerService, useValue: { init: jest.fn() } },
         { provide: Router, useValue: { navigate: jest.fn().mockResolvedValue(true) } },
         { provide: ActivatedRoute, useValue: {} },
-        { provide: MatDialog, useValue: {} }
+        {
+          provide: MatDialog,
+          useValue: { open: () => ({ afterClosed: () => errorsDialogClosed }) }
+        }
       ]
     })
       // The shell's children (sidebar, tab nav, router outlet, …) each pull in
       // services of their own; they have suites of their own too. Stripping the
       // imports leaves their tags as inert unknown elements.
+      // `NgClass` is kept: it is a directive with no dependencies of its own,
+      // and without it `[ngClass]` is not a binding at all but an unknown
+      // property that `NO_ERRORS_SCHEMA` then silences — so `is-blurred` could
+      // never appear and any assertion about it would be measuring the test
+      // setup rather than the shell.
       .overrideComponent(AppComponent, {
-        set: { imports: [], schemas: [NO_ERRORS_SCHEMA] }
+        set: { imports: [NgClass], schemas: [NO_ERRORS_SCHEMA] }
       })
       .compileComponents();
 
@@ -145,6 +157,78 @@ describe('AppComponent', () => {
     fixture.destroy();
 
     expect(deactivate).toHaveBeenCalled();
+  });
+
+  /**
+   * `.oh-main__content` and `.oh-shell` are a `<section>` and a `<div>` in the
+   * shell's own template, so `NO_ERRORS_SCHEMA` has nothing to do with either —
+   * only the child components this suite strips are affected by it, and none of
+   * them is being asserted on here.
+   */
+  describe('losing the state again', () => {
+    const content = (): Element | null =>
+      fixture.nativeElement.querySelector('.oh-main__content');
+    const shellIsBlurred = (): boolean =>
+      fixture.nativeElement
+        .querySelector('.oh-shell')
+        .classList.contains('is-blurred');
+
+    it('goes back to the initializing state on screen, not just in the field', () => {
+      state$.next(aState(true));
+      expect(content()).not.toBeNull();
+      expect(shellIsBlurred()).toBe(false);
+
+      // The `if (!state)` branch is the one way out of that subscriber that
+      // never reaches its closing `detectChanges()`, and the subscription is
+      // registered after an `await` so no listener covers it either. The field
+      // flipped even before the fix — what did not was the DOM, which kept
+      // offering the whole page over a state that had gone away.
+      state$.next(null);
+      TestBed.tick();
+
+      expect(content()).toBeNull();
+      expect(shellIsBlurred()).toBe(true);
+    });
+  });
+
+  /**
+   * The button is a plain `<button>` in the shell's own template, so the
+   * `NO_ERRORS_SCHEMA` above cannot swallow it and these assertions cannot pass
+   * against nothing — the schema only silences the child *components* whose
+   * imports this suite strips, and none of them is involved here.
+   */
+  describe('the errors button', () => {
+    const errorsButton = (): Element | null =>
+      fixture.nativeElement.querySelector('[x-test="show-errors"]');
+
+    it('appears when an error arrives', () => {
+      expect(errorsButton()).toBeNull();
+
+      errors$.next({} as IPacketPayload);
+
+      expect(errorsButton()).not.toBeNull();
+    });
+
+    it('goes away once the errors dialog has been dismissed', () => {
+      errors$.next({} as IPacketPayload);
+      expect(errorsButton()).not.toBeNull();
+
+      component.onErrors();
+      // The close arrives on the dialog's own observable, which is the whole
+      // point: the `(click)` that opened it was checked long ago, so only the
+      // component's own `markForCheck` can get the emptied list on screen.
+      // Asserting `component.errors` instead would pass either way — the list
+      // is cleared regardless; it is the DOM that used to keep the button.
+      errorsDialogClosed.next();
+      // `TestBed.tick()` runs the same traversal the running app does, so an
+      // unmarked OnPush view is skipped exactly as it would be in the popup.
+      // `fixture.detectChanges()` would do here too — it refreshes the *host*
+      // view, and descending into this component still respects its dirty flag
+      // — but `tick()` says what is meant without relying on that detail.
+      TestBed.tick();
+
+      expect(errorsButton()).toBeNull();
+    });
   });
 });
 /**

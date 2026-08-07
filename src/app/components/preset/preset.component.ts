@@ -100,6 +100,17 @@ export class PresetComponent implements OnInit, OnChanges, OnDestroy {
 
         this.setSelectedValue(this.presets[this.context.preset]);
 
+        // `getState$` delivers through the store, so every emission is a
+        // storage callback rather than a listener bound in a template, and
+        // under OnPush none of the three writes above reaches the DOM on its
+        // own. `options` is the one that shows: it is an `@Input` on the
+        // equally-OnPush dropdown, so a preset added or deleted elsewhere left
+        // the list showing the previous set, and `[showCopy]="!!context.preset"`
+        // kept the copy button in whatever state the last render saw. The
+        // `ChangeDetectorRef` has been injected here since before the upgrade
+        // and simply never called.
+        this.cdr.markForCheck();
+
         if (this.isPresetCopied) {
           this.isPresetCopied = false;
           this.dropdown.focus();

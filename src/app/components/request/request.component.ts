@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   Input,
@@ -49,7 +50,12 @@ export const OH_MY_DETAIL_TABS: ReadonlyArray<OhMyDetailTab> = [
     MockImageComponent,
     NgClass,
     LowerCasePipe
-  ]
+  ],
+  // Stated rather than inherited: Angular 22 made OnPush the default for every
+  // component, so this one has been OnPush since the upgrade whether it said so
+  // or not. Writing it down is what makes the change-detection calls below read
+  // as deliberate instead of superstitious.
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RequestComponent implements OnInit, OnChanges, OnDestroy {
   private storeService = inject(OhMyState);
@@ -162,6 +168,14 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
       this.response = await this.storageService.get(mockId);
 
       if (!this.response) {
+        // The lookup missing is a render too: `response` has just gone from a
+        // mock to `undefined`, and `@if (response)` has to close over it. This
+        // path returns before the `detectChanges()` at the end of the method,
+        // so without a mark of its own the pane keeps offering an editor for a
+        // response that is no longer there — the stale-content case the
+        // `detectChanges()` below was added to prevent, reached by the one
+        // branch that skips it.
+        this.cdr.markForCheck();
         return;
       }
 
@@ -371,6 +385,13 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
       .afterClosed()
       .subscribe((update: { data: string; rules: IOhMyMockRule[] }) => {
         this.dialogIsOpen = false;
+        // `afterClosed` emits from the dialog's own teardown, not from the
+        // `(click)` that opened it — that listener returned the moment the
+        // dialog went up. Under OnPush this assignment therefore dirties
+        // nothing, and `@if (!dialogIsOpen)` in the template never re-opens:
+        // the Body/Headers/Code editor stays unmounted after the anonymize
+        // dialog is dismissed, leaving the pane blank below the header.
+        this.cdr.markForCheck();
 
         if (update) {
           this.storeService.upsertResponse(
@@ -398,6 +419,12 @@ export class RequestComponent implements OnInit, OnChanges, OnDestroy {
 
     dialogRef.afterClosed().subscribe((update) => {
       this.dialogIsOpen = false;
+      // Same shape as `onAnonymize`: the close arrives on the dialog's
+      // observable, well after the `(click)` wrapper that opened it returned,
+      // so nothing marks this view. Without it `@if (!dialogIsOpen)` keeps the
+      // inline editor unmounted once the full-screen one has been closed, and
+      // the only way back is to reselect the request.
+      this.cdr.markForCheck();
       if (update) {
         cb(update);
       }

@@ -83,25 +83,46 @@ test.describe('hits', () => {
 
     await site.request({ url: '/api/json', responseType: 'json' });
 
-    // The claim is "the row moved *before* the write landed", and it is made
-    // relatively rather than against the clock.
+    // The claim is "the row moved *before* the write landed", and proving it
+    // means catching a moment where the row knows and storage does not.
     //
-    // It used to be `{ timeout: 200 }` against a 250ms flush interval — an
-    // upper bound, deliberately below the interval, because a row that only
-    // updates after the flush proves nothing. That reasoning is right and the
-    // measurement is not: under load the hit message is late too, so the test
-    // failed for a mechanism that was working. Both sides slow down together,
-    // so comparing them is immune to it.
+    // Two earlier shapes of this were both wrong about time. `{ timeout: 200 }`
+    // against a 250ms flush was an upper bound that load could blow through for
+    // a mechanism that was working. Waiting for the row and *then* reading
+    // storage was no better, and my reasoning for it — "both sides slow down
+    // together" — is simply false: `FLUSH_INTERVAL` is a `setTimeout` and fires
+    // within a few percent of 250ms however busy the box is, while the row's
+    // path is a cross-process message plus change detection plus a DOM update,
+    // which load stretches a great deal. Only one side slows, so waiting for it
+    // and then looking hands the race to the flush.
     //
-    // The wait itself is generous — it is here to catch a row that never
-    // updates, not to police milliseconds.
-    await expect(row).toContainText('last hit', { timeout: 10_000 });
+    // Sampling both together settles it: the ordering is a property of the two
+    // paths, not of how fast either one runs, so one sample where the row leads
+    // is the whole proof. Nothing here has a deadline of its own.
+    const rowLed = await (async () => {
+      for (let i = 0; i < 500; i++) {
+        const [shown, stored] = await Promise.all([
+          row.textContent(),
+          ohMy.getRequest(dataId)
+        ]);
 
-    // Read the instant the row admits to the hit. If this has already been
-    // written, the row could have learnt it from storage and the fast path is
-    // unproven; `calledAt` absent is what says the message beat the write.
-    expect(await ohMy.getRequest(dataId)).toBeDefined();
-    expect((await ohMy.getRequest(dataId))?.calledAt).toBeUndefined();
+        if (shown?.includes('last hit')) {
+          // Read in the same breath as the row: `calledAt` still absent is what
+          // says the row learnt it from the message rather than from storage.
+          return stored?.calledAt === undefined;
+        }
+
+        if (stored?.calledAt !== undefined) {
+          // Storage got there first and the row has not moved — whatever it
+          // shows next it could have read from storage, so nothing is proven.
+          return false;
+        }
+      }
+
+      return false;
+    })();
+
+    expect(rowLed).toBe(true);
 
     await popup.close();
   });

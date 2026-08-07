@@ -1,6 +1,7 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Subject } from 'rxjs';
@@ -41,5 +42,95 @@ describe('DataOverviewComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+});
+
+/** Whatever the detail route renders; this spec only cares that it is there. */
+@Component({ selector: 'oh-my-test-detail', template: 'detail' })
+class TestDetailComponent {}
+
+/**
+ * The detail pane is driven by the child route rather than by a field, so
+ * `hasDetail` only changes once the router has finished navigating — which is
+ * after the click that asked for it has had its change-detection pass. These
+ * run a real router for that reason: a stubbed `navigate` would decide the
+ * timing this is about.
+ *
+ * No `NO_ERRORS_SCHEMA`: the pane is a real `<aside>` with a real
+ * `<router-outlet>` inside it, and the schema would let the assertions below
+ * pass against an element Angular had quietly stopped rendering.
+ */
+describe('PageDataListComponent, the routed detail pane', () => {
+  let fixture: ComponentFixture<PageDataListComponent>;
+  let component: PageDataListComponent;
+  let router: Router;
+
+  const detailPane = (): Element | null =>
+    fixture.nativeElement.querySelector('[x-test="request-detail"]');
+  const panesHaveDetail = (): boolean =>
+    fixture.nativeElement
+      .querySelector('.oh-panes')
+      .classList.contains('has-detail');
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [
+        RouterTestingModule.withRoutes([
+          { path: 'request/:dataId', component: TestDetailComponent }
+        ]),
+        MatIconModule,
+        PageDataListComponent
+      ],
+      providers: [
+        { provide: MatDialog, useValue: {} },
+        { provide: AppStateService, useValue: {} },
+        {
+          provide: OhMyStateService,
+          useValue: { state$: new Subject(), requests$: new Subject() }
+        },
+        {
+          provide: OhMyState,
+          useValue: { getStore: async () => ({}), updateStore: async () => ({}) }
+        }
+      ]
+    }).compileComponents();
+
+    router = TestBed.inject(Router);
+    fixture = TestBed.createComponent(PageDataListComponent);
+    component = fixture.componentInstance;
+    // The list itself is behind `@if (state)` and is not what these assert;
+    // leaving the state unset keeps the heavyweight child out of the fixture.
+    fixture.detectChanges();
+  });
+
+  it('opens the detail pane once the navigation has resolved', async () => {
+    expect(detailPane()).toBeNull();
+    expect(panesHaveDetail()).toBe(false);
+
+    // The real caller is the list's `(selectRow)` output. Going through it
+    // would not change what is being tested: routing resolves a task later, so
+    // whatever change detection that listener causes has already run against
+    // the old `firstChild` by the time this becomes true.
+    component.onDataSelect('abc');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe('/request/abc');
+    expect(detailPane()).not.toBeNull();
+    expect(panesHaveDetail()).toBe(true);
+  });
+
+  it('closes the detail pane once the navigation back has resolved', async () => {
+    component.onDataSelect('abc');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(detailPane()).not.toBeNull();
+
+    component.onCloseDetail();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(detailPane()).toBeNull();
+    expect(panesHaveDetail()).toBe(false);
   });
 });

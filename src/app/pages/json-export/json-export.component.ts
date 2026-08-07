@@ -1,4 +1,11 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  ViewChild,
+  inject
+} from '@angular/core';
 import {
   IData,
   IMock,
@@ -27,7 +34,12 @@ import { MatBadge } from '@angular/material/badge';
   selector: 'oh-my-json-export',
   templateUrl: './json-export.component.html',
   styleUrls: ['./json-export.component.scss'],
-  imports: [MatMiniFabButton, MatIcon, DataListComponent, MatButton, MatBadge]
+  imports: [MatMiniFabButton, MatIcon, DataListComponent, MatButton, MatBadge],
+  // Stated rather than inherited: Angular 22 made OnPush the default for every
+  // component, so this one has been OnPush since the upgrade whether it said so
+  // or not. Writing it down is what makes the `markForCheck` below read as
+  // deliberate instead of superstitious.
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JsonExportComponent implements OnInit {
   private appStateService = inject(AppStateService);
@@ -35,6 +47,7 @@ export class JsonExportComponent implements OnInit {
   private storageService = inject(StorageService);
   private toast = inject(HotToastService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   state!: IState;
   selected: Record<string, IData> = {};
@@ -52,6 +65,14 @@ export class JsonExportComponent implements OnInit {
     this.subscriptions.push(
       this.stateService.requests$.subscribe((requests) => {
         this.requests = StateUtils.pickRequests(this.state, requests);
+        // Every emission after the first replayed one comes from the
+        // `chrome.storage.onChanged` handler in `OhMyStateService`, which is a
+        // browser callback and not a listener bound in any template — so under
+        // OnPush nothing marks this view. Without it the export list is frozen
+        // at whatever was stored when the page opened: a request recorded, or
+        // deleted, while the export page is up never shows up in the list you
+        // are picking from.
+        this.cdr.markForCheck();
       })
     );
   }
