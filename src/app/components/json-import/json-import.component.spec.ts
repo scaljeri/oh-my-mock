@@ -1,21 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
+import { ImportResultEnum } from '@shared/utils/import-json';
 import { AppStateService } from '../../services/app-state.service';
+import { OhMyState } from '../../services/oh-my-store';
 import { OhMyStateService } from '../../services/state.service';
 import { StorageService } from '../../services/storage.service';
 
 import { JsonImportComponent } from './json-import.component';
 
-// The component is under test, not the import itself — that has its own spec
-// next to `import-json.ts`. Only `importJSON` is doubled; the enum stays real.
-jest.mock('@shared/utils/import-json', () => ({
-  ...jest.requireActual('@shared/utils/import-json'),
-  importJSON: jest.fn()
-}));
-
-const importJSONMock = importJSON as jest.Mock;
+/**
+ * The import itself runs in the background now, so what this component does is
+ * send one message and report the answer — and that is what is doubled here.
+ *
+ * It used to double `importJSON` with a `jest.mock` of the module, from the
+ * days when the component called it in the popup's own process. Doubling it
+ * still would prove nothing about this component: a call to it from here would
+ * no longer be a write the wipe barrier can see, which is the very thing the
+ * move was for.
+ */
+const importMock = jest.fn();
 
 describe('JsonImportComponent', () => {
   let component: JsonImportComponent;
@@ -26,7 +30,7 @@ describe('JsonImportComponent', () => {
   let closed: Promise<void>;
 
   beforeEach(async () => {
-    importJSONMock.mockReset();
+    importMock.mockReset();
     toast = { success: jest.fn(), error: jest.fn(), warning: jest.fn() };
     closed = new Promise<void>(resolve => {
       dialogClose = jest.fn(() => resolve());
@@ -42,6 +46,7 @@ describe('JsonImportComponent', () => {
       providers: [
         { provide: AppStateService, useValue: { domain: 'test.dev' } },
         { provide: OhMyStateService, useValue: { state: { context: { domain: 'test.dev' } } } },
+        { provide: OhMyState, useValue: { importBackup: importMock } },
         { provide: StorageService, useValue: {} },
         { provide: HotToastService, useValue: toast },
         { provide: MatDialogRef, useValue: { close: dialogClose } }]
@@ -87,7 +92,7 @@ describe('JsonImportComponent', () => {
   it('reports what was imported, not what the file held', async () => {
     // Two of each in the file, one of each stored: the rest was too old to
     // migrate, and the toast must not claim otherwise.
-    importJSONMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS, requests: 1, responses: 1 });
+    importMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS, requests: 1, responses: 1 });
 
     upload(JSON.stringify({ requests: [{}, {}], responses: [{}, {}], version: '1.0.0' }));
     await whenClosed();
@@ -100,8 +105,56 @@ describe('JsonImportComponent', () => {
     );
   });
 
+  /**
+   * A reset that arrives while the import is running wins: the background
+   * writes the records, the wipe deletes them, and the answer says DISCARDED.
+   * The one thing the dialog must not do then is congratulate the user on an
+   * import that no longer exists — "Imported N requests and M responses" over
+   * a domain that was emptied a moment later is a sentence with nothing behind
+   * it, and the user has no other way of finding out.
+   */
+  it('does not claim an import a reset threw away', async () => {
+    importMock.mockResolvedValue({
+      status: ImportResultEnum.DISCARDED,
+      requests: 0,
+      responses: 0
+    });
+
+    upload(JSON.stringify({ requests: [{}], responses: [{}], version: '1.0.0' }));
+    await whenClosed();
+
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.warning).toHaveBeenCalledWith(
+      'Nothing was imported from backup.json: everything was reset while the import was running. Import it again to keep it.'
+    );
+    // Not an error: nothing failed, and the header's error badge is for faults
+    // the user did not ask for.
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  /**
+   * ERROR became reachable when the import moved to the background — it is
+   * what the handler answers for a backup it could not store, and for a packet
+   * that arrived without a context. The component used to have no branch for
+   * it at all, so the dialog closed in silence over an import that had not
+   * happened.
+   */
+  it('says so when the background could not store the backup', async () => {
+    importMock.mockResolvedValue({
+      status: ImportResultEnum.ERROR,
+      requests: 0,
+      responses: 0
+    });
+
+    upload(JSON.stringify({ requests: [{}], responses: [], version: '1.0.0' }));
+    await whenClosed();
+
+    expect(toast.error).toHaveBeenCalledWith('Import of backup.json failed');
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
   it('does not blame the JSON when the import itself fails', async () => {
-    importJSONMock.mockRejectedValue(new Error('storage is gone'));
+    importMock.mockRejectedValue(new Error('storage is gone'));
 
     upload(JSON.stringify({ requests: [], responses: [], version: '1.0.0' }));
     await whenClosed();
@@ -117,7 +170,7 @@ describe('JsonImportComponent', () => {
     expect(toast.error).toHaveBeenCalledWith(
       'File backup.json does not contain (valid) JSON'
     );
-    expect(importJSONMock).not.toHaveBeenCalled();
+    expect(importMock).not.toHaveBeenCalled();
   });
 
   /**
@@ -147,7 +200,7 @@ describe('JsonImportComponent', () => {
 
     expect(toast.error).toHaveBeenCalledWith('File backup.json could not be read');
     expect(component.isUploading).toBe(false);
-    expect(importJSONMock).not.toHaveBeenCalled();
+    expect(importMock).not.toHaveBeenCalled();
 
     read.mockRestore();
   });
@@ -176,7 +229,7 @@ describe('JsonImportComponent', () => {
     let finishImport!: (result: unknown) => void;
     let importStarted!: () => void;
     /**
-     * Resolves when the component calls `importJSON`, which is the first thing
+     * Resolves when the component sends the backup off, which is the first thing
      * it does after raising the spinner — so awaiting it lands exactly on the
      * moment the spinner is supposed to be up, with the component parked on its
      * own `await`.
@@ -193,7 +246,7 @@ describe('JsonImportComponent', () => {
       importStarted = resolve;
     });
 
-    importJSONMock.mockImplementation(() => {
+    importMock.mockImplementation(() => {
       importStarted();
 
       return new Promise((resolve) => {
@@ -233,7 +286,7 @@ describe('JsonImportComponent', () => {
     //
     // The clock is frozen for this test and never advanced, so a timer of any
     // duration between reading the file and importing it can never fire:
-    // restore one and this test stops at the `importJSON` expectation. A
+    // restore one and this test stops at the `importMock` expectation. A
     // wall-clock bound would have asserted the same thing far more weakly —
     // it would only fail on a delay longer than whatever margin was chosen,
     // and would flake on a loaded machine.
@@ -254,7 +307,7 @@ describe('JsonImportComponent', () => {
       }
     }
 
-    importJSONMock.mockResolvedValue({
+    importMock.mockResolvedValue({
       status: ImportResultEnum.SUCCESS,
       requests: 1,
       responses: 0
@@ -273,7 +326,7 @@ describe('JsonImportComponent', () => {
         await Promise.resolve();
       }
 
-      expect(importJSONMock).toHaveBeenCalled();
+      expect(importMock).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalledWith(
         'Imported 1 requests and 0 responses from backup.json into test.dev'
       );

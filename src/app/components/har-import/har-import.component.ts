@@ -11,7 +11,7 @@ import {
   summariseHarSkips
 } from '@shared/utils/har-import';
 import { IOhMyHarParseSuccess, parseHar } from '@shared/utils/har-parse';
-import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
+import { ImportResultEnum } from '@shared/utils/import-json';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
@@ -37,8 +37,10 @@ export type harImportPhase = 'pick' | 'review' | 'importing';
  * and importing them silently would be useless: the user sees what survived the
  * filters, what was left out and why, and picks.
  *
- * The import itself goes through `importJSON`, the same function a `.json`
- * backup lands through, so there is one way to create requests, not two.
+ * The import itself is sent to the background's UPSERT handler, which is where
+ * a `.json` backup lands too, so there is one way to create requests, not two —
+ * and, since the wipe barrier can only hold work running in the service worker,
+ * one that a full reset can see.
  */
 @Component({
   selector: 'oh-my-har-import',
@@ -61,7 +63,11 @@ export class HarImportComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   phase: harImportPhase = 'pick';
-  /** Set when a file could not be read or is not a HAR. Shown, never swallowed. */
+  /**
+   * Why the last attempt did not end in stored requests: a file that could not
+   * be read, one that is not a HAR, an import the background refused, or one a
+   * reset threw away. Shown in the panel, never swallowed.
+   */
   error?: string;
 
   fileName = '';
@@ -200,10 +206,27 @@ export class HarImportComponent implements OnDestroy {
       });
       const preset = state.context?.preset ?? 'default';
 
-      const result = await importJSON(
+      // Through the background rather than straight into storage: an import
+      // writing records from the popup's process is invisible to the wipe
+      // barrier, so one racing a reset left mocks nothing lists. See
+      // `importBackup`.
+      const result = await this.storeService.importBackup(
         harCandidatesToBackup(picked, { preset, label: this.fileName }),
         { domain, preset, active: true }
       );
+
+      if (result.status === ImportResultEnum.DISCARDED) {
+        // A reset arrived while this was importing, and the reset wins: the
+        // records were written and then wiped with everything else. Back to
+        // the picker with the selection intact, because re-importing is the
+        // whole remedy and re-picking a few dozen rows is not part of it.
+        this.phase = 'review';
+        this.discarded(
+          `Nothing was imported from ${this.fileName}: everything was reset while the import was running. Import it again to keep it.`
+        );
+
+        return;
+      }
 
       if (result.status !== ImportResultEnum.SUCCESS) {
         this.phase = 'review';
@@ -316,6 +339,23 @@ export class HarImportComponent implements OnDestroy {
   private fail(message: string): void {
     this.error = message;
     this.toast.error(message);
+    this.detectChanges();
+  }
+
+  /**
+   * Says nothing was kept, without calling it a failure.
+   *
+   * A toast, and a `warning` one, rather than an entry on `errors$` behind the
+   * header's "Show errors" button: that channel is for faults the user did not
+   * ask for and has to go and read, and a reset doing exactly what it says is
+   * neither. It stays in the panel as well as passing as a toast, because
+   * unlike the `.json` dialog this one does not close — the message has to
+   * still be there when the user looks up from the row list they are about to
+   * import again.
+   */
+  private discarded(message: string): void {
+    this.error = message;
+    this.toast.warning(message);
     this.detectChanges();
   }
 

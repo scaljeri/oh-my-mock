@@ -19,6 +19,7 @@ import {
   ohMyGroupId
 } from '@shared/type';
 import { IOhMyCookieUpdate } from '@shared/utils/cookie';
+import { IOhMyBackupInput, IOhMyImportResult } from '@shared/utils/import-json';
 import { StateUtils } from '@shared/utils/state';
 import { DataUtils } from '@shared/utils/data';
 import { PresetUtils } from '@shared/utils/preset';
@@ -67,6 +68,45 @@ export class OhMyState {
     return Object.values(
       await this.storageService.getMany<IData>(state.requests ?? [])
     );
+  }
+
+  /**
+   * Imports a backup — in the background, not here.
+   *
+   * The `.json` and HAR dialogs used to call `importJSON` directly, writing
+   * mocks, requests and a state from the popup's own process. A full reset is
+   * kept apart from every other piece of work by `src/background/wipe-barrier
+   * .ts`, which holds the background's message queue shut and waits for it to
+   * fall quiet — and it cannot see, let alone wait for, a write happening in
+   * another process. An import racing "Reset everything" therefore landed in
+   * the middle of the wipe and left records nothing lists: mocks with no
+   * request, requests no state names. Sending the backup over puts the import
+   * behind that door with everything else.
+   *
+   * The answer carries the per-record counts as well as the status, because
+   * the dialogs report what was *stored* rather than what the file held — and
+   * `ImportResultEnum.DISCARDED`, which is the background saying a reset wiped
+   * these records before this call returned.
+   */
+  async importBackup(
+    backup: IOhMyBackupInput,
+    context: IOhMyContext
+  ): Promise<IOhMyImportResult> {
+    const result = await OhMySendToBg.full<
+      IOhMyBackupInput,
+      IOhMyImportResult | undefined
+    >(backup, payloadType.UPSERT, context, 'popup;importBackup');
+
+    // `chrome.runtime.sendMessage` resolves `undefined` for a message nobody
+    // answered, and it has no timeout — so a service worker that died mid-flight
+    // arrives here as a missing result rather than as a rejection. Said out
+    // loud: reading `.status` off it would have been a TypeError the dialogs
+    // reported as "Import failed", which is true but tells nobody why.
+    if (!result) {
+      throw new Error('the background did not answer');
+    }
+
+    return result;
   }
 
   // async initState(context: IOhMyContext): Promise<IState> {

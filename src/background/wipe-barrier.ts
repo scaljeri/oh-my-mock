@@ -42,6 +42,19 @@
  * forever. Inner packets are therefore never gated: they belong to a unit of
  * work that came through the door before it shut, and quiet is not declared
  * until they too have run.
+ *
+ * ## Why anything that writes records has to run here
+ *
+ * The door only sees this process. A write decided in the popup is not held by
+ * it, not counted by it, and not waited for — the barrier has no way to learn
+ * such a write exists, let alone that it is in flight. The `.json` and HAR
+ * import dialogs used to call `importJSON` in the popup's own process for
+ * exactly that reason: nobody had noticed the barrier could not reach them, and
+ * an import racing a reset left the very records described above. They send the
+ * backup to `OhMyImportHandler` now. Anything else that grows a reason to write
+ * a state, a request, a mock or a cookie mock has to do the same — a message to
+ * the background is what puts it behind this door, and there is no second way
+ * in.
  */
 import { ohPacketType } from '../shared/utils/queue';
 
@@ -151,6 +164,28 @@ export function notWhileWiping<T>(work: () => Promise<T>, lane?: ohPacketType): 
       settle();
     }
   })();
+}
+
+/**
+ * Whether a wipe has been asked for and is not over yet.
+ *
+ * For a unit of work that has finished writing records and now has to tell its
+ * sender what happened. A wipe requested while it ran cannot have completed —
+ * `quiet()` below is waiting for that very unit — so it is still to come, and
+ * `chrome.storage.local.clear()` will take every record the work just wrote.
+ * Reporting success for those records would be reporting something that is
+ * about to stop being true; `OhMyImportHandler.upsert` is the caller, and the
+ * toast it feeds is the reason this is exported at all.
+ *
+ * Deliberately *not* consulted inside `importJSON`. That function also runs
+ * from inside `wipeExclusively` — the demo import at the end of a reset, and
+ * the one at start-up — where a pending wipe is the ordinary state of affairs
+ * and treating it as a verdict would abandon the rebuild the wipe exists to
+ * perform. The question "were my records condemned" only makes sense for work
+ * that came in through `notWhileWiping`, so only such work asks it.
+ */
+export function wipeIsPending(): boolean {
+  return wiping !== undefined;
 }
 
 /**

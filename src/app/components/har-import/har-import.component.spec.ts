@@ -7,17 +7,22 @@ import { objectTypes } from '@shared/constants';
 import { IMock } from '@shared/types/mock';
 import { IData } from '@shared/types/request';
 import { IState } from '@shared/types/state';
-import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
+import { IOhMyBackupInput, ImportResultEnum, IOhMyImportResult } from '@shared/utils/import-json';
+import { IOhMyContext } from '@shared/types/context';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyState } from '../../services/oh-my-store';
 import { HarImportComponent } from './har-import.component';
 
-jest.mock('@shared/utils/import-json', () => ({
-  ...jest.requireActual('@shared/utils/import-json'),
-  importJSON: jest.fn()
-}));
-
-const importJSONMock = jest.mocked(importJSON);
+/**
+ * The import runs in the background now — the component sends the backup and
+ * reports the answer — so the service method that sends it is what is doubled.
+ *
+ * It used to be `importJSON` itself, doubled through the module, from when
+ * this component wrote the records in the popup's own process. That was the
+ * bug: a write from another process is invisible to the wipe barrier, so an
+ * import racing a reset left mocks nothing lists.
+ */
+const importMock = jest.fn<Promise<IOhMyImportResult>, [IOhMyBackupInput, IOhMyContext]>();
 
 interface IEntryOptions {
   url?: string;
@@ -83,15 +88,15 @@ describe('HarImportComponent', () => {
   let appState: { domain: string };
   let existing: IData[];
   let closed: unknown[];
-  let toasts: { success: string[]; error: string[] };
+  let toasts: { success: string[]; error: string[]; warning: string[] };
 
   beforeEach(async () => {
     appState = { domain: 'app.example.com' };
     existing = [];
     closed = [];
-    toasts = { success: [], error: [] };
-    importJSONMock.mockReset();
-    importJSONMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS, requests: 1, responses: 1 });
+    toasts = { success: [], error: [], warning: [] };
+    importMock.mockReset();
+    importMock.mockResolvedValue({ status: ImportResultEnum.SUCCESS, requests: 1, responses: 1 });
 
     await TestBed.configureTestingModule({
       // `ohStatusCodeTone` is a real pipe: an unknown one throws even under
@@ -107,14 +112,16 @@ describe('HarImportComponent', () => {
               domain: context.domain,
               context: { domain: context.domain, preset: 'default' }
             } as IState),
-            getRequests: () => Promise.resolve(existing)
+            getRequests: () => Promise.resolve(existing),
+            importBackup: importMock
           }
         },
         {
           provide: HotToastService,
           useValue: {
             success: (msg: string) => toasts.success.push(msg),
-            error: (msg: string) => toasts.error.push(msg)
+            error: (msg: string) => toasts.error.push(msg),
+            warning: (msg: string) => toasts.warning.push(msg)
           }
         },
         { provide: MatDialogRef, useValue: { close: (v: unknown) => closed.push(v) } }
@@ -218,8 +225,8 @@ describe('HarImportComponent', () => {
     it('imports the picked candidates into the target domain', async () => {
       await component.onImport();
 
-      expect(importJSONMock).toHaveBeenCalledTimes(1);
-      const [backup, context] = importJSONMock.mock.calls[0];
+      expect(importMock).toHaveBeenCalledTimes(1);
+      const [backup, context] = importMock.mock.calls[0];
 
       expect(backup.requests.length).toBe(2);
       expect(backup.responses.length).toBe(2);
@@ -231,7 +238,7 @@ describe('HarImportComponent', () => {
     it('labels every imported response with the file it came from', async () => {
       await component.onImport();
 
-      const [backup] = importJSONMock.mock.calls[0];
+      const [backup] = importMock.mock.calls[0];
 
       // `IOhMyBackupInput` describes records that may still need migrating, so
       // its lists are typed as "something with a version". Narrowing rather
@@ -244,18 +251,18 @@ describe('HarImportComponent', () => {
       component.onSelectAll(false);
       await component.onImport();
 
-      expect(importJSONMock).not.toHaveBeenCalled();
+      expect(importMock).not.toHaveBeenCalled();
     });
 
     it('does nothing without a target domain', async () => {
       await component.onDomainChange('   ');
       await component.onImport();
 
-      expect(importJSONMock).not.toHaveBeenCalled();
+      expect(importMock).not.toHaveBeenCalled();
     });
 
     it('reports a failed import rather than closing on it', async () => {
-      importJSONMock.mockRejectedValueOnce(new Error('storage is full'));
+      importMock.mockRejectedValueOnce(new Error('storage is full'));
 
       await component.onImport();
 
@@ -265,13 +272,40 @@ describe('HarImportComponent', () => {
     });
 
     it('reports an import the store refused', async () => {
-      importJSONMock.mockResolvedValueOnce({ status: ImportResultEnum.TOO_OLD, requests: 0, responses: 0 });
+      importMock.mockResolvedValueOnce({ status: ImportResultEnum.TOO_OLD, requests: 0, responses: 0 });
 
       await component.onImport();
 
       expect(component.phase).toBe('review');
       expect(component.error).toContain('TOO_OLD');
       expect(closed).toEqual([]);
+    });
+
+    /**
+     * A reset that arrives while the import is running wins: the background
+     * writes the records and the wipe deletes them. The dialog must not close
+     * on a success it did not get — and it must not throw the picking away
+     * either, because importing again is the entire remedy and the rows the
+     * user chose are what it needs.
+     */
+    it('keeps the picker and says so when a reset threw the import away', async () => {
+      importMock.mockResolvedValueOnce({
+        status: ImportResultEnum.DISCARDED,
+        requests: 0,
+        responses: 0
+      });
+
+      await component.onImport();
+
+      expect(component.phase).toBe('review');
+      expect(component.selectedCount).toBe(2);
+      expect(closed).toEqual([]);
+      expect(toasts.success).toEqual([]);
+      expect(toasts.error).toEqual([]);
+      expect(toasts.warning).toEqual([
+        'Nothing was imported from session.har: everything was reset while the import was running. Import it again to keep it.'
+      ]);
+      expect(component.error).toContain('everything was reset');
     });
 
     it('goes back to the picker on "another file"', () => {
@@ -336,7 +370,7 @@ describe('HarImportComponent', () => {
       component.useSuggestedDomain();
       await component.onImport();
 
-      expect(importJSONMock.mock.calls[0][1].domain).toBe('shop.example.com');
+      expect(importMock.mock.calls[0][1].domain).toBe('shop.example.com');
     });
 
     it('is used outright when the popup has no domain of its own', async () => {

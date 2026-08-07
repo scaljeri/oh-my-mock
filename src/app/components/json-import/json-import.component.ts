@@ -5,7 +5,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { UntypedFormControl } from '@angular/forms';
 import { AppStateService } from '../../services/app-state.service';
 import { OhMyStateService } from '../../services/state.service';
-import { importJSON, ImportResultEnum } from '@shared/utils/import-json';
+import { ImportResultEnum } from '@shared/utils/import-json';
+import { OhMyState } from '../../services/oh-my-store';
 import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
 import { NgClass } from '@angular/common';
 import { SpinnerComponent } from '../spinner/spinner.component';
@@ -27,6 +28,7 @@ export class JsonImportComponent {
   });
   private appState = inject(AppStateService);
   private stateService = inject(OhMyStateService);
+  private storeService = inject(OhMyState);
   private toast = inject(HotToastService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -87,35 +89,79 @@ export class JsonImportComponent {
         }
 
         try {
-          const result = await importJSON(
+          // Through the background rather than straight into storage. A full
+          // reset is held apart from every other piece of work by the wipe
+          // barrier, which can only see work running in the service worker —
+          // an import writing records from this process landed in the middle
+          // of a wipe and left mocks nothing lists. See `importBackup`.
+          const result = await this.storeService.importBackup(
             content,
             this.stateService.state.context
           );
 
-          if (result.status === ImportResultEnum.SUCCESS) {
-            // The counts come from the import, not from the file: a partly
-            // too-old backup keeps its healthy records and drops the rest,
-            // and the toast should not claim more than what was stored.
-            this.toast.success(
-              `Imported ${result.requests} requests and ${result.responses} responses from ${file.name} into ${this.appState.domain}`
-            );
-
-            const dropped =
-              (content.requests?.length ?? 0) - result.requests +
-              (content.responses?.length ?? 0) - result.responses;
-
-            if (dropped > 0) {
-              this.toast.warning(
-                `${dropped} record${dropped === 1 ? ' was' : 's were'} too old to migrate and skipped`
+          switch (result.status) {
+            case ImportResultEnum.SUCCESS: {
+              // The counts come from the import, not from the file: a partly
+              // too-old backup keeps its healthy records and drops the rest,
+              // and the toast should not claim more than what was stored.
+              this.toast.success(
+                `Imported ${result.requests} requests and ${result.responses} responses from ${file.name} into ${this.appState.domain}`
               );
+
+              const dropped =
+                (content.requests?.length ?? 0) - result.requests +
+                (content.responses?.length ?? 0) - result.responses;
+
+              if (dropped > 0) {
+                this.toast.warning(
+                  `${dropped} record${dropped === 1 ? ' was' : 's were'} too old to migrate and skipped`
+                );
+              }
+
+              break;
             }
-          } else if (result.status === ImportResultEnum.TOO_OLD) {
-            // The records are too old, not the extension: `MigrateUtils`
-            // keeps records from a *newer* release untouched, so age of the
-            // backup is the only way to land here.
-            this.toast.error(
-              `Import failed, the records in ${file.name} are too old to migrate`
-            );
+
+            case ImportResultEnum.DISCARDED:
+              // A reset arrived while this was importing, and the reset wins:
+              // the records were written and then wiped with everything else.
+              //
+              // Said here, as a toast, rather than filed on `errors$` behind
+              // the header's "Show errors" button. That channel is for faults
+              // the user did not ask for and has to go and read; this is
+              // neither. The user pressed Reset and it did exactly what it
+              // says, so an error badge left in the header over a correct
+              // outcome would be the wrong claim in the wrong place — and it
+              // would arrive after this dialog, whose success toast is the
+              // sentence actually being corrected, has closed.
+              //
+              // `warning`, not `error`: nothing failed. It is the same class
+              // of statement as "some records were too old", which is the
+              // other place this component says "you got less than you gave
+              // me" — and it ends by saying what to do about it, because
+              // importing the file again is all it takes.
+              this.toast.warning(
+                `Nothing was imported from ${file.name}: everything was reset while the import was running. Import it again to keep it.`
+              );
+
+              break;
+
+            case ImportResultEnum.TOO_OLD:
+              // The records are too old, not the extension: `MigrateUtils`
+              // keeps records from a *newer* release untouched, so age of the
+              // backup is the only way to land here.
+              this.toast.error(
+                `Import failed, the records in ${file.name} are too old to migrate`
+              );
+
+              break;
+
+            default:
+              // Reachable now that the import runs in another process: the
+              // background answers ERROR for a backup it could not store. It
+              // used to be unreachable, and the silence it got — no toast, a
+              // dialog closing as if all was well — was survivable only
+              // because of that.
+              this.toast.error(`Import of ${file.name} failed`);
           }
         } catch {
           this.toast.error(`Import of ${file.name} failed`);

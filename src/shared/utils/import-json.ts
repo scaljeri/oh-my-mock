@@ -11,7 +11,20 @@ import { StoreRegistrar } from './store-registrar';
 import { uniqueId } from './unique-id';
 
 export enum ImportResultEnum {
-  SUCCESS, TOO_OLD, MIGRATED, ERROR
+  SUCCESS, TOO_OLD, MIGRATED, ERROR,
+  /**
+   * The records were stored and then wiped by a full reset that arrived while
+   * the import was running.
+   *
+   * Never produced by `importJSON` — it stores what it was given and says so.
+   * It is `OhMyImportHandler.upsert` that turns a SUCCESS into this, because
+   * only the background knows a wipe is pending (`wipeIsPending`), and only it
+   * can answer before the sender puts the outcome on screen. Appended rather
+   * than inserted: these numbers cross a process boundary — the public API maps
+   * `status === 0` to 'success' in `src/injected/api.ts` — so renumbering the
+   * existing members would silently change what a page is told.
+   */
+  DISCARDED
 }
 
 /**
@@ -283,12 +296,17 @@ export async function importJSON(data: IOhMyBackupInput, context: IOhMyContext, 
 
   await sUtils.set(state.domain, state);
   // The domain has to be listed on the store, and that record is not this
-  // function's to write: an import runs in the popup as often as in the
-  // background, and reading the store here, adding a domain and writing it back
-  // dropped whatever the background had put there in between — the popup's own
+  // function's to write: reading the store here, adding a domain and writing it
+  // back dropped whatever else had reached it in between — the popup's own
   // `popupActive`, another domain, a group. Unconditional rather than guarded
   // by a read of the store: the answer is decided where the write is
   // serialised, and a guard here could only ever be based on a stale one.
+  //
+  // Every caller is in the background now — the API upsert, the import dialogs
+  // by way of `OhMyImportHandler`, the demo import and the one at start-up — so
+  // `StoreRegistrar` resolves to `addDomain` and this is a direct call. The
+  // seam stays because it is what makes calling this from anywhere else safe
+  // rather than silently wrong; see `store-registrar.ts`.
   await StoreRegistrar.addDomain(state.domain);
 
   return { status: ImportResultEnum.SUCCESS, requests: keptRequests.length, responses: keptResponses.length };
