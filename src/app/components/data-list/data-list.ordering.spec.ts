@@ -1,7 +1,16 @@
 import { objectTypes } from '@shared/constants';
+import { IOhMyGroup, ohMyGroupId } from '@shared/type';
 import { IData, ohMyDataId } from '@shared/types/request';
+import { GroupUtils } from '@shared/utils/group';
 
-import { orderRequests, pruneSticky, sameSticky, toggleSticky } from './data-list.ordering';
+import {
+  groupNameOf,
+  isTraffic,
+  orderRequests,
+  pruneSticky,
+  sameSticky,
+  toggleSticky
+} from './data-list.ordering';
 
 function request(id: ohMyDataId, url: string, lastHit: number): IData {
   return {
@@ -266,6 +275,179 @@ describe('data-list ordering', () => {
       pruneSticky(sticky, requestIds);
 
       expect(sticky).toEqual(['a', 'gone']);
+    });
+  });
+
+  /**
+   * The traffic view: the list narrowed to what this browser actually
+   * intercepted.
+   *
+   * The claim being pinned here is mostly about what it is *not*. It is a mode,
+   * it is off by default, and every one of these cases has an "off" half — a
+   * traffic filter that leaked into the default view is how a colleague's forty
+   * imported mocks, none of them ever called, would stop being reachable.
+   */
+  describe('the traffic view', () => {
+    const called = (id: ohMyDataId, at: number): IData => ({
+      ...request(id, `/api/${id}`, at),
+      calledAt: at
+    });
+
+    // `hit` was intercepted; `never` is a stored mock that has not been called —
+    // an import, or one typed by hand.
+    const hit = called('hit', 300);
+    const never = request('never', '/api/never', 200);
+    const mixed: Record<ohMyDataId, IData> = { hit, never };
+    const filtered = ['hit', 'never'];
+
+    it('shows the uncalled mocks while it is off, which is the default', () => {
+      const rows = orderRequests({ filtered, requests: mixed, sticky: [] });
+
+      expect(ids(rows)).toEqual(['hit', 'never']);
+    });
+
+    it('hides them while it is on', () => {
+      const rows = orderRequests({
+        filtered, requests: mixed, sticky: [], trafficOnly: true
+      });
+
+      expect(ids(rows)).toEqual(['hit']);
+    });
+
+    /**
+     * `lastHit` is not evidence of a call: `DataUtils.create` stamps it for a
+     * request typed by hand and `importJSON` re-stamps every imported one. A
+     * traffic view built on it would show the whole import.
+     */
+    it('does not take a lastHit for a call', () => {
+      const stamped = { never: { ...never, lastHit: Date.now() } };
+
+      const rows = orderRequests({
+        filtered: ['never'], requests: stamped, sticky: [], trafficOnly: true
+      });
+
+      expect(rows).toEqual([]);
+    });
+
+    /**
+     * Clearing is a marker, not a pass over the records — see
+     * `IOhMyAux.trafficClearedAt`. So "cleared" is entirely a question of which
+     * side of a timestamp the call falls on, and the record keeps its
+     * `calledAt` either way.
+     */
+    it('forgets the calls that happened before the list was cleared', () => {
+      const rows = orderRequests({
+        filtered, requests: mixed, sticky: [], trafficOnly: true, trafficClearedAt: 500
+      });
+
+      expect(rows).toEqual([]);
+      // The record is untouched, which is the whole reason Clear cannot cost
+      // anybody a mock.
+      expect(mixed.hit.calledAt).toBe(300);
+    });
+
+    it('brings a request back the moment it is called again', () => {
+      const again = { ...mixed, hit: called('hit', 900) };
+
+      const rows = orderRequests({
+        filtered, requests: again, sticky: [], trafficOnly: true, trafficClearedAt: 500
+      });
+
+      expect(ids(rows)).toEqual(['hit']);
+    });
+
+    /**
+     * The same exemption pinned rows get from the search filter, and for the
+     * same reason: a request being *prepared* for a call that has not happened
+     * yet is exactly what someone pins, and the mode must not take it away
+     * while they work on it.
+     */
+    it('keeps a pinned row that has never been called', () => {
+      const rows = orderRequests({
+        filtered, requests: mixed, sticky: ['never'], trafficOnly: true
+      });
+
+      expect(ids(rows)).toEqual(['never', 'hit']);
+      expect(rows[0].isSticky).toBe(true);
+    });
+
+    describe('isTraffic', () => {
+      it('is false for a request with no calledAt at all', () => {
+        expect(isTraffic(never)).toBe(false);
+      });
+
+      it('is true for a call after the clear', () => {
+        expect(isTraffic(hit, 200)).toBe(true);
+      });
+
+      it('is false for a call at the very moment of the clear', () => {
+        // The clear stamps `Date.now()`, and a call in the same millisecond is
+        // one the user meant to be rid of.
+        expect(isTraffic(hit, 300)).toBe(false);
+      });
+    });
+  });
+
+  /**
+   * The provenance badge: which group this row's mock came from, and therefore
+   * — for a row with traffic — which one answered.
+   */
+  describe('the provenance badge', () => {
+    const DOMAIN = 'example.com';
+    const local = GroupUtils.defaultLocalFor(DOMAIN);
+    const theirs = GroupUtils.init({
+      id: 'theirs', name: "Ada's mocks", source: 'cloud', domains: [DOMAIN]
+    });
+    const groups: Record<ohMyGroupId, IOhMyGroup> = {
+      [local.id]: local,
+      [theirs.id]: theirs
+    };
+
+    it('names the domain\'s own group for an untagged request', () => {
+      // Untagged is what every request written before groups existed looks
+      // like, so this is the ordinary row rather than an edge case.
+      expect(groupNameOf(a, groups, local)).toBe('My mocks');
+    });
+
+    it('names the group a tagged request belongs to', () => {
+      const imported = { ...a, groupId: 'theirs' };
+
+      expect(groupNameOf(imported, groups, local)).toBe("Ada's mocks");
+    });
+
+    /**
+     * The local group's id is derived, so it answers before `ensureGroups` has
+     * written its record. Reading its name only from the map would leave the
+     * badge blank on a profile that has never been through the migration.
+     */
+    it('falls back to the derived local group when no record has been stored', () => {
+      expect(groupNameOf(a, {}, local)).toBe('My mocks');
+    });
+
+    it('says nothing when the group is not known at all', () => {
+      expect(groupNameOf({ ...a, groupId: 'deleted' }, groups, local)).toBe('');
+    });
+
+    it('reaches the row', () => {
+      const tagged = { ...a, groupId: 'theirs' };
+      const rows = orderRequests({
+        filtered: ['a', 'b'],
+        requests: { a: tagged, b },
+        sticky: [],
+        groups,
+        local
+      });
+
+      expect(rows.map(r => r.groupName)).toEqual(["Ada's mocks", 'My mocks']);
+    });
+
+    it('reaches a pinned row too', () => {
+      const rows = orderRequests({
+        filtered: ['a'], requests, sticky: ['b'], groups, local
+      });
+
+      expect(rows[0].isSticky).toBe(true);
+      expect(rows[0].groupName).toBe('My mocks');
     });
   });
 

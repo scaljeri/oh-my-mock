@@ -1,10 +1,11 @@
 # Mock groups
 
-**Status: model, serving path and sidebar built.** The records, the resolution
-and the migration exist (`src/shared/types/group.ts`, `src/shared/utils/group.ts`,
-`src/background/ensure-groups.ts`); the serving path consults them through
-`OhMyRequestIndex`, and the sidebar draws them (`domain-sidebar/`). The group
-*view* — the library — is not built yet. The rest is written down so the shape
+**Status: model, serving path, sidebar and traffic view built.** The records,
+the resolution and the migration exist (`src/shared/types/group.ts`,
+`src/shared/utils/group.ts`, `src/background/ensure-groups.ts`); the serving path
+consults them through `OhMyRequestIndex`, the sidebar draws them
+(`domain-sidebar/`), and the request list can be narrowed to traffic with a
+badge naming the group that answered. The rest is written down so the shape
 stops being reconstructed from scratch every time.
 
 ## The problem it solves
@@ -62,29 +63,64 @@ Rules:
 This is the part that matters most, and the part that was wrong in the first
 sketch.
 
-**The request list is traffic.** It shows the calls the page actually made — not
-a library of what could be mocked. Each row carries a badge saying which group
-answered it, or that nothing did. A **Clear** button above it empties the list,
-the way a network panel does; the mocks are unaffected, because they live in
-groups rather than in the list.
+**The request list can be traffic — as a mode, and not the default.** The
+sketch said the list *is* traffic, and that is the sentence to strike: it would
+have made a colleague's forty imported mocks unreachable, since not one of them
+has been called. So "Traffic only" is a toggle in the toolbar beside "Pinned
+only" and "Active first", **off by default**; off it, the list is every mock the
+active groups hold. On it, only what this browser has actually intercepted —
+`IData.calledAt`, which the interception is the only writer of.
+
+The toggle is **not persisted**, and the rule that decides which of the three
+toolbar controls is worth writing down: a control that only *orders* rows is
+stored browser-wide (`IOhMyMock.sortActiveFirst`), and a control that *hides*
+rows is held in the component and forgotten when the popup closes, as
+`stickyOnly` already was. A remembered traffic mode is precisely how those forty
+mocks become mocks nobody can find. For the same reason the toggle is drawn
+unconditionally rather than, like "Pinned only", only once there is something to
+narrow to: a mode that hides rows has to keep its own way out on screen.
+
+**Clear is a marker, not a pass over the records.** It writes one number,
+`IState.aux.trafficClearedAt`, and the traffic view shows the calls after it.
+The alternative — dropping `calledAt` from each record — is a write per request
+and puts a Clear button on the same code path as the user's mocks; this one
+cannot reach a request record at all, which is the property worth having.
+`calledAt` survives, so nothing is lost, and a request called again is back in
+the list at once, the way a network panel behaves. Pinned rows are exempt from
+the mode, as they already are from the search filter: a request being prepared
+for a call that has not happened yet is exactly what somebody pins.
 
 **The group view is the library.** What a group holds, where it came from, and
-what can be edited. It has to exist: with the list showing only real traffic, a
-colleague's forty mocks are otherwise invisible until you happen to trigger all
-forty calls, and there is nowhere to prepare a mock for a call you have not made
-yet.
+what can be edited. It has to exist — and does, in the sidebar drawer — because
+that is what makes the traffic mode safe to offer at all.
 
-Shadowing becomes readable this way. One row, one badge, naming the winner — but
-it needs to hint that there *were* other candidates, or someone edits a mock that
-never answers and cannot see why. A `+1` on the badge, listing the others on
-hover.
+**The badge names the group, and is derived rather than plumbed.** This looked
+like the hard part: `OhMyRequestIndex.find` walks the active groups in order,
+knows which one it stopped at, and throws that away. It does not need to be
+carried. `build` files every request under `GroupUtils.groupOf(request, local)`,
+so the group `find` stopped at *is* the group of the record it returned; the row
+reads `IData.groupId` and gets the same answer. Recording the answering group on
+the hit instead would put a second copy of membership in storage, which is what
+this document rejects a request list on the group for — two copies drift, and
+then the badge quietly names the wrong one. `request-index.spec.ts` pins the
+invariant, so a future `build` that buckets differently fails loudly instead of
+producing a lying badge. Nothing was added to the hit path, and no write per
+request came with it.
+
+Shadowing is readable this way: two rows for the same url, each badged with
+where it came from, and only the winner carrying a hit. It still needs a hint
+that there *were* other candidates when the loser is filtered away — a `+1` on
+the badge, listing the others on hover.
 
 ## What this changes in the code
 
 Three things are known to be in the way:
 
-1. **The request list is not traffic today.** It shows every stored request,
-   called or not — `+ Add` creates one, and a HAR import creates forty.
+1. ~~**The request list is not traffic today.**~~ **Done, as a mode.** It still
+   shows every stored request by default — `+ Add` creates one and a HAR import
+   creates forty, and all of them have to stay reachable. "Traffic only" in the
+   toolbar narrows it to the rows with a `calledAt`, and "Clear" moves
+   `aux.trafficClearedAt` forward. Neither touches a request record.
 2. ~~**`lastHit` does not mean "was called".**~~ **Done.** `lastHit` still does
    not — `DataUtils.create` stamps it for a request made by hand, `importJSON`
    re-stamps every imported one, and both are right to, because it is the list

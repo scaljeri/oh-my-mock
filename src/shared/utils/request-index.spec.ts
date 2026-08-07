@@ -119,6 +119,36 @@ describe('OhMyRequestIndex', () => {
     expect(index.find({ url: '/api/users' }, [local])?.id).toBe('good');
   });
 
+  /**
+   * The invariant the request list's provenance badge is derived from.
+   *
+   * `find` knows which group answered — it is the one it stopped walking at —
+   * and drops it on the way out. That looks like something to plumb through to
+   * the popup, on the hit or in the record, and it is not: `build` files every
+   * request under `GroupUtils.groupOf(request, local)`, so the group it was
+   * found in *is* the group it belongs to. The badge reads `IData.groupId` and
+   * gets the same answer without a second copy of membership in storage — which
+   * is the arrangement `docs/architecture/mock-groups.md` argues for, on the
+   * grounds that two copies drift and the reader then names the wrong group.
+   *
+   * Pinned here rather than left implicit, because the day `build` buckets by
+   * anything else the badge starts lying and nothing else would say so.
+   */
+  it('answers from the group the request belongs to', () => {
+    const mine = request('mine');
+    const other = request('other', { groupId: 'theirs' });
+    const index = indexOf([mine, other]);
+
+    const fromLocal = index.find({ url: '/api/users' }, [local, theirs]);
+    const fromTheirs = index.find({ url: '/api/users' }, [theirs, local]);
+
+    expect(fromLocal?.id).toBe('mine');
+    expect(GroupUtils.groupOf(fromLocal as IData, local)).toBe(local.id);
+
+    expect(fromTheirs?.id).toBe('other');
+    expect(GroupUtils.groupOf(fromTheirs as IData, local)).toBe(theirs.id);
+  });
+
   it('answers with a copy, so a caller cannot edit the stored record', () => {
     const stored = request('r1');
     const index = indexOf([stored]);

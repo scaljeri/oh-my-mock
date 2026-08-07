@@ -341,6 +341,28 @@ li.oh-row.is-sticky .oh-row__pin {
   color: t.$oh-text-faint;
 }
 
+// The provenance badge: which mock group this row's request came from.
+//
+// Quiet on purpose. It is on every row of the ordinary single-group profile,
+// where it says the same thing every time, so it has to read as a caption
+// rather than compete with the url above it. It earns its keep only once a
+// second group is on and the rows stop agreeing.
+.oh-row__group {
+  display: inline-block;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: t.$oh-radius-pill;
+  background: t.$oh-bg-muted;
+  color: t.$oh-text-subtle;
+  font-size: t.$oh-size-xs;
+  font-weight: t.$oh-weight-medium;
+}
+
 .oh-row__response {
   display: flex;
   flex-direction: column;
@@ -404,6 +426,35 @@ li.oh-row.is-sticky .oh-row__pin {
   // in the left-hand strip that is always visible.
   &__menu {
     flex: 0 0 auto;
+  }
+
+  // Clear, next to the traffic toggle it belongs to.
+  //
+  // Deliberately not styled as a destructive action, because it is not one: it
+  // writes a single timestamp and cannot touch a mock. Reading as dangerous
+  // would be its own kind of lie.
+  &__clear {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 4px t.$oh-space-3;
+    border: 1px solid t.$oh-border-strong;
+    border-radius: t.$oh-radius-sm;
+    background: t.$oh-bg-surface;
+    color: t.$oh-text-muted;
+    font-size: t.$oh-size-sm;
+    font-weight: t.$oh-weight-medium;
+
+    &:hover:not(:disabled) {
+      background: t.$oh-bg-muted;
+      color: t.$oh-text;
+    }
+
+    &:disabled {
+      cursor: default;
+      color: t.$oh-text-fainter;
+      border-color: t.$oh-border-soft;
+    }
   }
 
   &__toggle {

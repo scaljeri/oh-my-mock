@@ -50,6 +50,36 @@ preset selector and the overflow menu moved into the toolbar below. -->
         >Pinned only ({{ stickyIds.length }})</mat-slide-toggle
       >
     }
+    <!-- Traffic mode, and the Clear that goes with it.
+      Always rendered — never hidden behind "there is some traffic", the way
+      "Pinned only" is behind a pin. A toggle that hides rows has to keep its own
+      way back on screen: hiding it once the traffic is gone would leave the mode
+      on with an empty list and no control to switch it off. -->
+    @if (persistFilter) {
+      <mat-slide-toggle
+        class="oh-toolbar__toggle"
+        x-test="traffic-only-toggle"
+        (change)="onToggleTrafficOnly($event.checked)"
+        [checked]="trafficOnly"
+        matTooltip="Show only the requests this browser has actually intercepted. Off — the default — the list is every mock the active groups hold, including ones that have never been called."
+        color="primary"
+        >Traffic only ({{ trafficCount }})</mat-slide-toggle
+      >
+      <!-- Only offered in traffic mode: off it, clearing changes nothing that is
+        on screen, and a button that visibly does nothing is read as broken. -->
+      @if (trafficOnly) {
+        <button
+          type="button"
+          class="oh-toolbar__clear"
+          x-test="clear-traffic"
+          [disabled]="trafficCount === 0"
+          matTooltip="Forget which requests have been called. The mocks themselves are untouched — they live in their groups, not in this list."
+          (click)="onClearTraffic()"
+        >
+          Clear
+        </button>
+      }
+    }
     <mat-slide-toggle
       class="oh-toolbar__toggle"
       x-test="sort-active-first-toggle"
@@ -159,6 +189,19 @@ preset selector and the overflow menu moved into the toolbar below. -->
             [attr.data-content-end]="row.urlEnd"
           ></span>
           <span class="oh-row__meta">
+            <!-- Which mock group this row came from, and so — for a row with a
+              hit — which one answered the call. Several groups can hold a mock
+              for the same endpoint and only the highest answers, so without
+              this a row can be edited for an hour without it ever being the one
+              being served. -->
+            @if (row.groupName) {
+              <span
+                class="oh-row__group"
+                x-test="row-group"
+                [title]="'From the ' + row.groupName + ' mock group'"
+                >{{ row.groupName }}</span
+              >
+            }
             {{ row.requestType | lowercase }}
             @if (row.calledAt) {
               · last hit {{ row.calledAt | date: 'shortTime' }}

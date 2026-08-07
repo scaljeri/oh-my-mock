@@ -32,6 +32,20 @@ export interface IOhMyAux {
    * is browser-wide.
    */
   disabledGroups?: ohMyGroupId[];
+  /**
+   * When this domain's traffic list was last cleared.
+   *
+   * The traffic view shows the requests whose `calledAt` is *after* this, so
+   * clearing is one number rather than a pass over the request records. That is
+   * the whole reason it is a marker: dropping `calledAt` from every record would
+   * be a write per request, and a Clear button that rewrites the user's mocks —
+   * even to remove one field — is a Clear button that can lose them. This one
+   * cannot reach them. A request called again afterwards comes straight back,
+   * which is what a network panel does.
+   *
+   * Per domain, like everything else in `aux`, because the traffic is.
+   */
+  trafficClearedAt?: number;
   filterOptions?: Record<string, boolean>;
 }
 

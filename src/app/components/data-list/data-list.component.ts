@@ -20,9 +20,11 @@ import {
   IData,
   IMock,
   IOhMyContext,
+  IOhMyGroup,
   IOhMyRequests,
   IState,
-  ohMyDataId
+  ohMyDataId,
+  ohMyGroupId
 } from '@shared/type';
 import { StateUtils } from '@shared/utils/state';
 import { visibleRequests } from '@shared/utils/request-index';
@@ -42,6 +44,7 @@ import { OhMyState } from '../../services/oh-my-store';
 import { RequestFilterComponent } from '../request-filter/request-filter.component';
 import {
   IOhMyListRow,
+  isTraffic,
   orderRequests,
   pruneSticky,
   sameSticky,
@@ -58,6 +61,7 @@ import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatIconButton } from '@angular/material/button';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 import { StatusCodeTonePipe } from '../../pipes/status-code-tone.pipe';
 
 export const highlightSeq = [
@@ -99,6 +103,10 @@ export const highlightSeq = [
     MatIcon,
     MatMenu,
     MatMenuItem,
+    // The "Active first" toggle has carried a `matTooltip` since the redesign
+    // with nothing here to read it: on a standalone component an unimported
+    // directive is a plain HTML attribute, so it silently did nothing.
+    MatTooltip,
     NgTemplateOutlet,
     LowerCasePipe,
     DatePipe,
@@ -201,6 +209,33 @@ export class DataListComponent implements OnInit, OnDestroy {
   public viewRows: IOhMyListRow[] = [];
 
   /**
+   * The pinned request ids, in the order they were pinned.
+   *
+   * Persisted in `aux.stickyRequests` — but only for the domain the popup is
+   * actually on, the same condition under which the filter is persisted. The
+   * state explorer renders another domain's state through this component, and
+   * pinning a row there must not write to that domain's aux.
+   */
+  public stickyIds: ohMyDataId[] = [];
+  /** The pin list last written, until the state carrying it comes back. */
+  private awaitingSticky: ohMyDataId[] | undefined;
+  /** Whether the list is narrowed to the pinned rows only. */
+  public stickyOnly = false;
+
+  /**
+   * Whether the list is narrowed to what this browser actually intercepted.
+   *
+   * **Off by default, and deliberately not persisted** — the list is the
+   * library of what can be mocked until someone asks for the traffic view, and
+   * it goes back to being the library the next time the popup opens. That is
+   * the same treatment `stickyOnly` gets and the opposite of `sortActiveFirst`,
+   * and the line between them is whether the control *hides* anything:
+   * ordering rows differently is harmless to carry over between sessions,
+   * hiding them is not. A remembered traffic mode is precisely how a
+   * colleague's forty imported mocks — none of them called, so none of them
+   * traffic — become mocks nobody can find.
+   */
+  /**
    * Whether a state has arrived. The template draws nothing before one has.
    *
    * This used to be `@if (state$ | async; as state)`, and that second
@@ -219,19 +254,31 @@ export class DataListComponent implements OnInit, OnDestroy {
    */
   public hasState = false;
 
+  public trafficOnly = false;
+
   /**
-   * The pinned request ids, in the order they were pinned.
-   *
-   * Persisted in `aux.stickyRequests` — but only for the domain the popup is
-   * actually on, the same condition under which the filter is persisted. The
-   * state explorer renders another domain's state through this component, and
-   * pinning a row there must not write to that domain's aux.
+   * When this domain's traffic list was last cleared, from
+   * `aux.trafficClearedAt`. Calls before it are not traffic any more; the
+   * request records themselves are untouched, which is why Clear cannot cost
+   * anybody a mock.
    */
-  public stickyIds: ohMyDataId[] = [];
-  /** The pin list last written, until the state carrying it comes back. */
-  private awaitingSticky: ohMyDataId[] | undefined;
-  /** Whether the list is narrowed to the pinned rows only. */
-  public stickyOnly = false;
+  public trafficClearedAt = 0;
+
+  /** How many of the rows on screen count as traffic — what Clear would empty. */
+  public trafficCount = 0;
+
+  /** Which domain `trafficClearedAt` was read for — see `readTrafficCleared`. */
+  private trafficDomain: string | undefined;
+
+  /**
+   * The known mock groups, by id — what the provenance badge is named from.
+   *
+   * Kept as a field fed by `groups$` rather than read on demand, because a
+   * group's record arrives separately from the state that mentions it: read
+   * once at render time, a row would carry a blank badge until the next
+   * unrelated state change.
+   */
+  public groups: Record<ohMyGroupId, IOhMyGroup> = {};
 
   /**
    * Read from the store rather than kept per domain — it is how the user likes
@@ -267,11 +314,13 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
 
     this.subscriptions.add(
-      combineLatest([this.state$, this.requestsSubject]).subscribe(
-        ([state, requests]) => {
-          // First, because it is what opens the template's gate: everything
-          // set below is only rendered once this is true.
-          this.hasState = true;
+      combineLatest([
+        this.state$,
+        this.requestsSubject,
+        this.stateService.groups$
+      ]).subscribe(
+        ([state, requests, groups]) => {
+          this.groups = groups;
 
           // Only the mocks of the groups that are **on**. A group is a set that
           // is switched in or out as a whole; its mocks are not in play while it
@@ -308,6 +357,7 @@ export class DataListComponent implements OnInit, OnDestroy {
           // badge that disagrees with the rows below it is worse than no badge.
           this.requestCount = Object.keys(this.data).length;
           this.blurImages = state.aux.blurImages ?? false;
+          this.readTrafficCleared(state);
 
           // After the context fallback above: a write-back needs one.
           if (this.persistFilter) {
@@ -316,8 +366,13 @@ export class DataListComponent implements OnInit, OnDestroy {
 
           // Ordering last: it reads the filter, the requests and the pins, all of
           // which the lines above may just have changed.
+          // First, because it is what opens the template's gate: everything
+          // set below is only rendered once this is true.
+          this.hasState = true;
+
           this.recompute();
           this.cdr.detectChanges();
+
         }
       )
     );
@@ -343,13 +398,24 @@ export class DataListComponent implements OnInit, OnDestroy {
       this.stickyOnly = false;
     }
 
+    // Counted over every row in play, not over `viewRows`, so the number on the
+    // toggle says how much traffic there *is* rather than how much of it the
+    // search filter is currently letting through.
+    this.trafficCount = Object.values(this.data).filter(d =>
+      isTraffic(d, this.trafficClearedAt)
+    ).length;
+
     this.viewRows = orderRequests({
       filtered: this.filteredRequests,
       requests: this.data,
       sticky: this.stickyIds,
       selected: this.selection.selected,
       stickyOnly: this.stickyOnly,
+      trafficOnly: this.trafficOnly,
+      trafficClearedAt: this.trafficClearedAt,
       activeFirst: this.sortActiveFirst,
+      groups: this.groups,
+      local: this.stateService.localGroup(this.stateSubject.value),
       context: this.context
     });
   }
@@ -386,6 +452,34 @@ export class DataListComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Takes the traffic-clear marker from the state that just arrived.
+   *
+   * Never backwards, within a domain. `updateAux` travels to the background and
+   * comes back through storage, and any state emitted in that window still
+   * carries the *old* marker — taking it would repopulate the list with the
+   * traffic that was just cleared and then empty it again a moment later.
+   * `readSticky` guards the same race with an in-flight copy of what it sent;
+   * this needs nothing so elaborate, because clearing only ever moves forward,
+   * which makes "the later of the two" right in every case.
+   *
+   * Across domains it is not monotonic — each domain has its own marker, and
+   * carrying one domain's forward would hide traffic that another domain never
+   * cleared. So a change of domain takes the new state's value as it stands.
+   */
+  private readTrafficCleared(state: IState): void {
+    const stored = state.aux.trafficClearedAt ?? 0;
+
+    if (state.domain !== this.trafficDomain) {
+      this.trafficDomain = state.domain;
+      this.trafficClearedAt = stored;
+
+      return;
+    }
+
+    this.trafficClearedAt = Math.max(this.trafficClearedAt, stored);
+  }
+
+  /**
    * Stores the pins, and remembers what was sent.
    *
    * A write travels to the background and comes back as a fresh state; until
@@ -414,6 +508,41 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.stickyOnly = stickyOnly;
     this.recompute();
     this.cdr.detectChanges();
+  }
+
+  /** Narrows the list to what the page actually called, or widens it back. */
+  onToggleTrafficOnly(trafficOnly: boolean): void {
+    this.trafficOnly = trafficOnly;
+    this.recompute();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Forgets the traffic, the way a network panel's Clear does.
+   *
+   * It writes one number — `aux.trafficClearedAt` — and touches no request
+   * record at all. That is the point: the mocks are what the user came for, and
+   * a Clear button that opened every request to strip a field from it is a
+   * Clear button that can lose them to a half-finished pass. Nothing here can
+   * reach a mock, so nothing here can delete one. What is cleared is the
+   * *view*: a request called again afterwards is back in the list at once.
+   *
+   * Applied locally before the write lands, for the same reason
+   * `onToggleSortActiveFirst` does — the round trip goes through the background
+   * and comes back via storage, and a button that only empties the list once
+   * that has happened reads as a dead control.
+   */
+  onClearTraffic(): void {
+    this.trafficClearedAt = Date.now();
+    this.recompute();
+    this.cdr.detectChanges();
+
+    if (this.persistFilter) {
+      void this.storeService.updateAux(
+        { trafficClearedAt: this.trafficClearedAt },
+        this.context
+      );
+    }
   }
 
   /**

@@ -67,6 +67,27 @@ export interface SeedMockOptions {
   label?: string;
   /** Set false to seed a mock that exists but is switched off. */
   enabled?: boolean;
+  /**
+   * The mock group this request belongs to — see `ohMy.seedGroup`.
+   *
+   * Left out, the request carries no tag at all, which is what every request
+   * written before groups existed looks like and what `GroupUtils.groupOf`
+   * reads as "this domain's own local group".
+   */
+  groupId?: string;
+}
+
+export interface SeedGroupOptions {
+  /** Storage key and group id. Local groups derive theirs; others are free. */
+  id: string;
+  name: string;
+  /**
+   * `local` is this browser's own. Use something else for a group that came
+   * from elsewhere: `ensureGroups` prunes a *local* group whose domain it does
+   * not find, and a seeded one would be swept away with it.
+   */
+  source?: 'local' | 'server' | 'cloud';
+  domains: string[];
 }
 
 export interface SeededMock {
@@ -99,6 +120,11 @@ interface StoredStore {
   type?: string;
   version?: string;
   domains: string[];
+  /**
+   * The mock groups that exist, in the order they answer. Being named here is
+   * what makes a group exist to every reader — see `GroupUtils.coveringFor`.
+   */
+  groups?: string[];
   popupActive?: boolean;
 }
 
@@ -553,6 +579,7 @@ export class OhMyMockDriver {
       jsCode: options.jsCode ?? MOCK_JS_CODE,
       label: options.label ?? '',
       enabled: options.enabled ?? true,
+      groupId: options.groupId ?? null,
       dataId: nextId('data'),
       mockId: nextId('mock')
     };
@@ -605,6 +632,10 @@ export class OhMyMockDriver {
         // Omitted entirely rather than set to null when the caller asked for
         // none: an absent field is what the real records look like.
         ...(opts.requestType !== null && { requestType: opts.requestType }),
+        // Same treatment, and for a load-bearing reason: absent `groupId` is
+        // not "no group", it is "this domain's own local group", and that
+        // default is what let groups arrive without rewriting a single record.
+        ...(opts.groupId !== null && { groupId: opts.groupId }),
         selected: { default: opts.mockId },
         enabled: { default: opts.enabled },
         mocks: {
@@ -637,6 +668,64 @@ export class OhMyMockDriver {
       });
 
       return { dataId: opts.dataId, mockId: opts.mockId };
+    }, payload);
+  }
+
+  /**
+   * Registers a mock group, the way one arriving from elsewhere would look.
+   *
+   * The record *and* the listing in `store.groups`, because being listed is
+   * what makes a group exist: `GroupUtils.coveringFor` refuses a non-local
+   * record the list does not name, so a group seeded as a record alone neither
+   * serves nor is drawn. The listing is also the order — earlier answers first.
+   */
+  async seedGroup(options: SeedGroupOptions): Promise<string> {
+    const payload = {
+      id: options.id,
+      name: options.name,
+      source: options.source ?? 'cloud',
+      domains: options.domains
+    };
+
+    return (await this.worker()).evaluate(async (opts) => {
+      const version = chrome.runtime.getManifest().version;
+      const stored = await chrome.storage.local.get(['OhMyMock']);
+      const store = (stored.OhMyMock as StoredStore | undefined) ?? {
+        domains: [],
+        type: 'store'
+      };
+      store.version = version;
+
+      const groups = store.groups ?? [];
+
+      if (!groups.includes(opts.id)) {
+        groups.push(opts.id);
+      }
+
+      store.groups = groups;
+
+      // The domains have to be in the store too, or `ensureGroups` sees a
+      // domain with no local group and rewrites the list underneath the test.
+      for (const domain of opts.domains) {
+        if (!store.domains.includes(domain)) {
+          store.domains = [domain, ...store.domains];
+        }
+      }
+
+      await chrome.storage.local.set({
+        [opts.id]: {
+          type: 'group',
+          id: opts.id,
+          name: opts.name,
+          source: opts.source,
+          domains: opts.domains,
+          version,
+          modifiedOn: '2020-01-01T00:00:00.000Z'
+        },
+        OhMyMock: store
+      });
+
+      return opts.id;
     }, payload);
   }
 

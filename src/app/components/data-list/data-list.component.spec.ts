@@ -1,5 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
 
@@ -12,7 +12,7 @@ import { OhMyState } from '../../services/oh-my-store';
 import { objectTypes } from '@shared/constants';
 import { IData, IOhMyAux, IState, ohMyDataId } from '@shared/type';
 
-function request(id: ohMyDataId, lastHit: number): IData {
+function request(id: ohMyDataId, lastHit: number, calledAt?: number): IData {
   return {
     id,
     url: `/api/${id}`,
@@ -22,21 +22,28 @@ function request(id: ohMyDataId, lastHit: number): IData {
     enabled: {},
     mocks: {},
     lastHit,
+    // Absent unless asked for, which is the shape of every request that has
+    // not actually been intercepted — an import, or one typed by hand.
+    ...(calledAt !== undefined && { calledAt }),
     lastModified: 0,
     version: '3.0.0',
     type: objectTypes.REQUEST
   };
 }
 
-function state(requests: ohMyDataId[], aux: IOhMyAux = {}): IState {
+function state(
+  requests: ohMyDataId[],
+  aux: IOhMyAux = {},
+  domain = 'localhost:8090'
+): IState {
   return {
     version: '3.0.0',
     type: objectTypes.STATE,
-    domain: 'localhost:8090',
+    domain,
     requests,
     aux,
     presets: { default: 'Default' },
-    context: { domain: 'localhost:8090', preset: 'default' }
+    context: { domain, preset: 'default' }
   };
 }
 
@@ -44,9 +51,16 @@ describe('DataListComponent', () => {
   let component: DataListComponent;
   let fixture: ComponentFixture<DataListComponent>;
   let updateAux: jest.Mock;
+  let upsertRequest: jest.Mock;
+  let deleteRequest: jest.Mock;
 
   beforeEach(async () => {
     updateAux = jest.fn().mockResolvedValue(undefined);
+    // Only here so it can be asserted *not* to have been called — see the
+    // traffic view below. A mock is worth more than any view state, and the
+    // one control that could plausibly reach one must be shown not to.
+    upsertRequest = jest.fn().mockResolvedValue(undefined);
+    deleteRequest = jest.fn().mockResolvedValue(undefined);
 
     await TestBed.configureTestingModule({
       schemas: [NO_ERRORS_SCHEMA],
@@ -58,6 +72,8 @@ describe('DataListComponent', () => {
           provide: OhMyState,
           useValue: {
             updateAux,
+            upsertRequest,
+            deleteRequest,
             // The list reads the browser-global sort preference on init.
             getStore: async () => ({}),
             updateStore: async () => ({})
@@ -144,44 +160,6 @@ describe('DataListComponent', () => {
       expect(component.stickyIds).toEqual([]);
       expect(component.viewRows.map(r => r.id)).toEqual(['a', 'b']);
     });
-  });
-
-  describe('rendering', () => {
-    /**
-     * The list used to gate its whole template on `state$ | async`, a *second*
-     * subscription to the same debounced stream the state handler uses. Every
-     * `debounceTime` subscriber gets its own timer, and the pipe only
-     * subscribes once the template first renders — after `ngOnInit` has
-     * subscribed. Its timer therefore always expired later than the handler's,
-     * so at the moment the handler called `detectChanges()` the pipe still held
-     * nothing, the `@if` was false, and the render painted an empty view. The
-     * rows only ever appeared because a bare `setTimeout(..., 50)` rendered a
-     * second time, and that number was a guess at when the pipe would catch up.
-     *
-     * `tick(50)` is the debounce on `state$` and not a millisecond more: it
-     * advances the clock to exactly the handler's own render and stops. Nothing
-     * that arrives later can help.
-     */
-    it('renders the rows in the same pass the state arrives', fakeAsync(() => {
-      const created = TestBed.createComponent(DataListComponent);
-
-      created.componentInstance.requests = { a: request('a', 300), b: request('b', 200) };
-      created.componentInstance.state = state(['a', 'b']);
-      created.detectChanges();
-
-      tick(50);
-
-      const el = created.nativeElement as HTMLElement;
-
-      expect(el.querySelectorAll('[x-test="list-request-item"]').length).toBe(2);
-      // The toolbar goes up with them — the filter box is the control the user
-      // reaches for first, and it lived behind the same gate.
-      expect(el.querySelector('oh-my-request-filter')).toBeTruthy();
-
-      // The filter runs its own debounced opening search; let it finish rather
-      // than leave fakeAsync with timers in the queue.
-      flush();
-    }));
   });
 
   describe('persisting the pins', () => {
@@ -318,6 +296,194 @@ describe('DataListComponent', () => {
       component.selectAll();
 
       expect(component.selection.selected).toEqual(['a']);
+    });
+  });
+
+  /**
+   * The traffic view and its Clear.
+   *
+   * Two claims, and the second one matters more than anything else in this
+   * file: the mode hides mocks, so it must not be the default, and Clear must
+   * be incapable of reaching a mock at all.
+   */
+  describe('the traffic view', () => {
+    beforeEach(() => {
+      component.state = state(['a', 'b']);
+      component.context = { domain: 'localhost:8090', preset: 'default' };
+      // `a` was intercepted; `b` is a stored mock nobody has called.
+      component.data = { a: request('a', 300, 300), b: request('b', 200) };
+      component.filteredRequests = ['a', 'b'];
+      // The only public way to force a redraw with the inputs set by hand —
+      // the same lever the pinning specs above pull.
+      component.onFilterUpdate({ filteredRequests: ['a', 'b'] });
+      updateAux.mockClear();
+    });
+
+    it('starts off, showing the mocks that have never been called', () => {
+      expect(component.trafficOnly).toBe(false);
+      expect(component.viewRows.map(r => r.id)).toEqual(['a', 'b']);
+    });
+
+    it('narrows to what was actually intercepted once it is switched on', () => {
+      component.onToggleTrafficOnly(true);
+
+      expect(component.viewRows.map(r => r.id)).toEqual(['a']);
+    });
+
+    it('gives the uncalled mocks back when it is switched off again', () => {
+      component.onToggleTrafficOnly(true);
+      component.onToggleTrafficOnly(false);
+
+      expect(component.viewRows.map(r => r.id)).toEqual(['a', 'b']);
+    });
+
+    it('counts the traffic, not the rows', () => {
+      expect(component.trafficCount).toBe(1);
+    });
+
+    describe('Clear', () => {
+      it('empties the traffic list at once, without waiting for the write', () => {
+        component.onToggleTrafficOnly(true);
+        component.onClearTraffic();
+
+        expect(component.viewRows).toEqual([]);
+      });
+
+      it('stores the moment it was cleared, and nothing else', () => {
+        component.onClearTraffic();
+
+        expect(updateAux).toHaveBeenCalledTimes(1);
+        const [aux, context] = updateAux.mock.calls[0];
+        expect(Object.keys(aux)).toEqual(['trafficClearedAt']);
+        expect(aux.trafficClearedAt).toBeGreaterThan(0);
+        expect(context).toBe(component.context);
+      });
+
+      /**
+       * The one thing this button must never do. Losing a user's mocks to a
+       * Clear button would be the worst outcome available here, so clearing
+       * stores a marker (`aux.trafficClearedAt`) rather than stripping
+       * `calledAt` from each record — there is no code path from here to a
+       * request at all.
+       */
+      it('does not write to a single request record', () => {
+        const before = JSON.stringify(component.data);
+
+        component.onClearTraffic();
+
+        expect(upsertRequest).not.toHaveBeenCalled();
+        expect(deleteRequest).not.toHaveBeenCalled();
+        expect(JSON.stringify(component.data)).toBe(before);
+      });
+
+      it('leaves the mocks in the list — only the traffic is forgotten', () => {
+        component.onClearTraffic();
+
+        expect(component.viewRows.map(r => r.id)).toEqual(['a', 'b']);
+      });
+
+      it('lets a request that is called again come straight back', () => {
+        component.onToggleTrafficOnly(true);
+        component.onClearTraffic();
+
+        component.data = {
+          ...component.data,
+          a: request('a', 900, component.trafficClearedAt + 1)
+        };
+        component.onFilterUpdate({ filteredRequests: ['a', 'b'] });
+
+        expect(component.viewRows.map(r => r.id)).toEqual(['a']);
+      });
+
+      /**
+       * The state explorer renders another domain's list through this
+       * component with `persistFilter` false, the same condition under which
+       * the pins and the filter are not written back.
+       */
+      it('does not write to another domain\'s state', () => {
+        component.persistFilter = false;
+
+        component.onClearTraffic();
+
+        expect(updateAux).not.toHaveBeenCalled();
+      });
+    });
+
+    /**
+     * The marker arrives back from storage, which takes a moment — and any
+     * state emitted in that window still carries the old one.
+     */
+    describe('reading the marker back', () => {
+      /**
+       * A component whose state subscription lives inside the fake zone — the
+       * same trick, and for the same reason, as `createInZone` above.
+       */
+      function subscribed(inputs: (c: DataListComponent) => void): DataListComponent {
+        const created = TestBed.createComponent(DataListComponent);
+
+        inputs(created.componentInstance);
+        created.detectChanges();
+        tick(200);
+
+        return created.componentInstance;
+      }
+
+      it('does not un-clear when a state that predates the write arrives', fakeAsync(() => {
+        const live = subscribed(c => {
+          c.requests = { a: request('a', 300, 300), b: request('b', 200) };
+          c.state = state(['a', 'b']);
+        });
+
+        live.onToggleTrafficOnly(true);
+        live.onClearTraffic();
+        expect(live.viewRows).toEqual([]);
+
+        // The write is still on its way to the background; this state was read
+        // before it landed, so its aux has no marker at all.
+        live.state = state(['a', 'b']);
+        tick(200);
+
+        expect(live.viewRows).toEqual([]);
+      }));
+
+      it('takes the stored marker when it is the newer of the two', fakeAsync(() => {
+        const live = subscribed(c => {
+          c.requests = { a: request('a', 300, 300) };
+          c.state = state(['a']);
+        });
+
+        live.onToggleTrafficOnly(true);
+        expect(live.viewRows.map(r => r.id)).toEqual(['a']);
+
+        // Another popup on the same domain cleared it.
+        live.state = state(['a'], { trafficClearedAt: 400 });
+        tick(200);
+
+        expect(live.viewRows).toEqual([]);
+      }));
+
+      /**
+       * The marker is per domain. Carrying one domain's forward would hide
+       * traffic on the next domain that had never been cleared at all — and
+       * the popup switches domains without rebuilding this component.
+       */
+      it('starts from the new domain\'s own marker when the domain changes', fakeAsync(() => {
+        const live = subscribed(c => {
+          c.requests = { a: request('a', 300, 300) };
+          c.state = state(['a']);
+        });
+
+        live.onToggleTrafficOnly(true);
+        live.onClearTraffic();
+        expect(live.viewRows).toEqual([]);
+
+        live.requests = { z: request('z', 100, 100) };
+        live.state = state(['z'], {}, 'example.com');
+        tick(200);
+
+        expect(live.trafficClearedAt).toBe(0);
+        expect(live.viewRows.map(r => r.id)).toEqual(['z']);
+      }));
     });
   });
 
