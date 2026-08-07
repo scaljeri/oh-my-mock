@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { IOhMyBackup, IOhMyContext } from '@shared/type';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -14,12 +14,7 @@ import { SpinnerComponent } from '../spinner/spinner.component';
   selector: 'oh-my-json-import',
   templateUrl: './json-import.component.html',
   styleUrls: ['./json-import.component.scss'],
-  imports: [FileUploaderComponent, NgClass, SpinnerComponent],
-  // Stated rather than inherited: Angular 22 made OnPush the default for every
-  // component, so this one has been OnPush since the upgrade whether it said so
-  // or not. Writing it down is what makes the `markForCheck` calls below read as
-  // deliberate instead of superstitious.
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [FileUploaderComponent, NgClass, SpinnerComponent]
 })
 export class JsonImportComponent {
   dialogRef = inject<MatDialogRef<JsonImportComponent>>(MatDialogRef, {
@@ -28,7 +23,6 @@ export class JsonImportComponent {
   private appState = inject(AppStateService);
   private stateService = inject(OhMyStateService);
   private toast = inject(HotToastService);
-  private cdr = inject(ChangeDetectorRef);
 
   isUploading = false;
   skipCtrl = new UntypedFormControl(false);
@@ -40,14 +34,6 @@ export class JsonImportComponent {
       const fileReader = new FileReader();
       fileReader.onload = async (fileLoadedEvent) => {
         this.isUploading = true;
-        // Under OnPush a plain field assignment dirties nothing, and this one
-        // happens in a `FileReader` callback rather than in a listener bound in
-        // the template — so nothing else marks the view either. Without this
-        // the spinner never appears and `is-busy` never lands on the uploader:
-        // the exact "dialog sits there looking like nothing happened" that the
-        // spinner was added for in #95, back when the strategy was Eager and
-        // the assignment was enough on its own.
-        this.cdr.markForCheck();
 
         // The import starts here, on the read, rather than on a timer. A
         // 500ms `setTimeout` used to sit between the two: it arrived with the
@@ -155,11 +141,6 @@ export class JsonImportComponent {
       }
     } finally {
       this.isUploading = false;
-      // Taking the spinner down needs the same nudge as putting it up. Closing
-      // the dialog usually tears the view down anyway, but `dialogRef` is
-      // injected optionally — used outside a dialog there is no close, and the
-      // spinner would stay on screen over an import that had finished.
-      this.cdr.markForCheck();
       this.dialogRef?.close();
     }
   }

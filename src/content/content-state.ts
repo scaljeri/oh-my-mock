@@ -25,7 +25,6 @@ export interface IOhMyCache {
 
 export class OhMyContentState {
   static host = window.location.host;
-  static href = window.location.href;
 
   private cache: IOhMyCache = {};
   private subjects: Record<string, BehaviorSubject<unknown>> = {};

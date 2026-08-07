@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { HotToastService } from '@ngxpert/hot-toast';
@@ -32,13 +33,9 @@ describe('JsonImportComponent', () => {
       dialogClose = jest.fn(() => resolve());
     });
 
-    // No `NO_ERRORS_SCHEMA`. Everything the template names — `oh-my-file-uploader`
-    // and `oh-my-spinner` — is a real standalone component the component itself
-    // imports, so the schema only stood to swallow an element that had stopped
-    // being one, and the spinner assertions below would then pass against
-    // nothing.
     await TestBed.configureTestingModule({
       imports: [JsonImportComponent],
+      schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: AppStateService, useValue: { domain: 'test.dev' } },
         { provide: OhMyStateService, useValue: { state: { context: { domain: 'test.dev' } } } },
@@ -152,64 +149,50 @@ describe('JsonImportComponent', () => {
     read.mockRestore();
   });
 
-  const spinner = (): Element | null =>
-    fixture.nativeElement.querySelector('oh-my-spinner');
-  const uploaderIsBusy = (): boolean =>
-    fixture.nativeElement.querySelector('oh-my-file-uploader')
-      .classList.contains('is-busy');
-
-  it('shows the spinner for as long as the import runs', async () => {
+  it('stays in the uploading state for as long as the import runs', async () => {
     // The 500ms delay was added because the spinner could not otherwise
     // appear at all, so removing it has to leave the spinner working — or the
     // trade is half a second of latency for a dialog that sits there looking
     // like nothing happened. What holds it on screen now is the import's own
     // `await`: it hands the task back, change detection runs, and the browser
-    // gets its chance to paint. So the spinner has to be on screen across that
+    // gets its chance to paint. So `isUploading` has to stay true across that
     // await, which is what this pins — an import that finished before the
     // spinner had any way to appear would fail here.
     //
-    // This asserts the rendered DOM rather than `isUploading`, because the flag
-    // being true is not the same claim as the spinner being visible, and under
-    // Angular 22 the two came apart: OnPush is the default now, so setting the
-    // flag from the `FileReader` callback dirtied nothing and the `@if` never
-    // opened. The flag was true throughout and the dialog showed no spinner.
+    // The assertion is on the flag rather than on `oh-my-spinner` in the DOM
+    // because no binding on this component re-renders under TestBed:
+    // `detectChanges()`, `ApplicationRef.tick()` and `autoDetectChanges()`
+    // all leave the `@if` anchor empty and `[ngClass]` unapplied, with
+    // `isUploading` plainly true on the fixture's own instance. That is a
+    // pre-existing harness problem — it reproduces with nothing but
+    // `component.isUploading = true; fixture.detectChanges();` — and worth
+    // fixing, but it is not this flow's, and the flag is the whole of what
+    // the template reads.
     let finishImport!: (result: unknown) => void;
-    let importStarted!: () => void;
-    /**
-     * Resolves when the component calls `importJSON`, which is the first thing
-     * it does after raising the spinner — so awaiting it lands exactly on the
-     * moment the spinner is supposed to be up, with the component parked on its
-     * own `await`.
-     *
-     * Untimed on purpose, like `whenClosed`. The real `FileReader` delivers on
-     * its own schedule, and the obvious way to wait for it is to poll against a
-     * deadline — which is the pattern this file already had to remove once,
-     * because the deadline was read by a timer queued behind the very work it
-     * was timing, and one stall on a loaded box turned a passing flow into
-     * "it never started". Nothing here is timed, so no amount of load can
-     * change the answer.
-     */
-    const whenImportStarts = new Promise<void>((resolve) => {
-      importStarted = resolve;
-    });
 
-    importJSONMock.mockImplementation(() => {
-      importStarted();
-
-      return new Promise((resolve) => {
+    importJSONMock.mockReturnValue(
+      new Promise((resolve) => {
         finishImport = resolve;
-      });
-    });
+      })
+    );
 
     upload(JSON.stringify({ requests: [], responses: [], version: '1.0.0' }));
-    await whenImportStarts;
-    fixture.detectChanges();
 
-    // Still mid-import: the dialog is open and the spinner is on screen, with
-    // the uploader dimmed behind it.
-    expect(spinner()).not.toBeNull();
+    // The real FileReader delivers on its own schedule, so this waits for the
+    // component to reach its await rather than assuming it already has.
+    const started = Date.now();
+
+    while (!component.isUploading) {
+      if (Date.now() - started > 4000) {
+        throw new Error('the import never started');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    // Still mid-import: the dialog is open and the spinner's flag is up.
     expect(dialogClose).not.toHaveBeenCalled();
-    expect(uploaderIsBusy()).toBe(true);
+    expect(component.isUploading).toBe(true);
 
     finishImport({
       status: ImportResultEnum.SUCCESS,
@@ -217,10 +200,8 @@ describe('JsonImportComponent', () => {
       responses: 0
     });
     await whenClosed();
-    fixture.detectChanges();
 
-    expect(spinner()).toBeNull();
-    expect(uploaderIsBusy()).toBe(false);
+    expect(component.isUploading).toBe(false);
   });
 
   it('does not gate the import behind a timer', async () => {

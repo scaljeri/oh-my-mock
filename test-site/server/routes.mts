@@ -10,6 +10,9 @@
  * have been reached at all.
  */
 
+import { randomBytes } from 'node:crypto';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import express, { type Express, type Request, type Response } from 'express';
 import {
   binaryFixture,
@@ -398,13 +401,61 @@ export function registerRoutes(app: Express, hits: HitCounter): void {
 }
 
 /**
+ * The harness page as text, optionally rewritten for a CSP variant.
+ *
+ * `index.html` is static and served by `sendFile` everywhere else. Two of the
+ * CSP variants cannot use it as-is: a nonce policy is only a nonce policy if
+ * the page's own `<script>` tags carry the nonce (without it the page is just
+ * "no script may run", which `/csp-script-none` already covers), and a
+ * `<meta http-equiv>` policy has to be *in* the document. Both are one-line
+ * splices, so they happen here rather than by keeping three near-copies of a
+ * 140-line page in `public/`.
+ *
+ * Read per request, not cached: the site has no build step and is edited by
+ * hand while tests run.
+ */
+function harnessHtml(
+  publicDir: string,
+  options: { nonce?: string; metaPolicy?: string } = {}
+): string {
+  let html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8');
+
+  if (options.metaPolicy) {
+    // Immediately after `<head>`, because a `<meta>` policy governs only what
+    // the parser reaches *after* it — put below the script tags it would not
+    // apply to them at all and the page would prove nothing.
+    html = html.replace(
+      '<head>',
+      `<head>\n  <meta http-equiv="Content-Security-Policy" content="${options.metaPolicy}">`
+    );
+  }
+
+  if (options.nonce) {
+    html = html.replaceAll('<script ', `<script nonce="${options.nonce}" `);
+  }
+
+  return html;
+}
+
+/** A fresh nonce per response, as a real nonce policy requires. */
+function freshNonce(): string {
+  return randomBytes(16).toString('base64');
+}
+
+/**
  * Serves the harness pages. Split from the API so that CSP variants can be
  * mounted per page without leaking into API responses.
+ *
+ * Everything under `/csp-*` exists for `tests/specs/csp.spec.ts`. OhMyMock puts
+ * its page-context bundle in with a `world: 'MAIN'` content script, and the
+ * claim these pages exist to test is that Chromium does not apply the page's
+ * CSP to one. The variants are the directives that could plausibly interfere,
+ * each isolated so a failure names the directive responsible.
  */
 export function registerPages(app: Express, publicDir: string): void {
-  // A page with a restrictive CSP. OhMyMock injects its script into the page
-  // context, so this is the regression test for the CSP-removal fallback in
-  // `src/content/inject-code.ts`.
+  // `script-src 'self'` — the ordinary strict policy, and the one that used to
+  // defeat the old `<div onclick>` + `<script src>` injection. The page's own
+  // scripts are same-origin, so the harness still loads here.
   app.get('/csp-strict', (_req, res) => {
     res.setHeader(
       'content-security-policy',
@@ -418,6 +469,90 @@ export function registerPages(app: Express, publicDir: string): void {
     res.setHeader(
       'content-security-policy-report-only',
       "default-src 'self'; script-src 'self'"
+    );
+    res.sendFile('index.html', { root: publicDir });
+  });
+
+  // `script-src 'none'` — the strongest form there is: not one script may run,
+  // not even the page's own. `harness.js` and `ui.js` are blocked, so specs
+  // using this page drive `window.fetch` through `page.evaluate` instead.
+  app.get('/csp-script-none', (_req, res) => {
+    res.setHeader('content-security-policy', "script-src 'none'");
+    res.sendFile('index.html', { root: publicDir });
+  });
+
+  // `default-src 'none'` with no `script-src` at all — scripts fall back to
+  // `default-src`. A separate case from the one above because it is a separate
+  // code path in a CSP implementation, and because a policy written this way
+  // also blocks the stylesheet, the favicon and every fetch.
+  app.get('/csp-default-none', (_req, res) => {
+    res.setHeader('content-security-policy', "default-src 'none'");
+    res.sendFile('index.html', { root: publicDir });
+  });
+
+  // A nonce policy: only scripts carrying this response's nonce may run. It is
+  // the modern replacement for `script-src 'self'` and it is stricter — a
+  // same-origin script without the nonce is refused.
+  app.get('/csp-nonce', (_req, res) => {
+    const nonce = freshNonce();
+
+    res.setHeader(
+      'content-security-policy',
+      `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'`
+    );
+    res.type('html').send(harnessHtml(publicDir, { nonce }));
+  });
+
+  // `'strict-dynamic'`: the nonce-bearing scripts may load further scripts, and
+  // every host-source and `'self'` in the policy is *discarded*. Worth its own
+  // page because it is the one policy under which "the script is same-origin"
+  // stops being an argument for letting it run.
+  app.get('/csp-strict-dynamic', (_req, res) => {
+    const nonce = freshNonce();
+
+    res.setHeader(
+      'content-security-policy',
+      `default-src 'self'; script-src 'nonce-${nonce}' 'strict-dynamic'; ` +
+        "style-src 'self' 'unsafe-inline'"
+    );
+    res.type('html').send(harnessHtml(publicDir, { nonce }));
+  });
+
+  // The same strict policy, delivered by `<meta http-equiv>` rather than a
+  // header. A different code path in Chromium — the policy only exists from the
+  // moment the parser reaches the tag — and therefore a different question.
+  app.get('/csp-meta', (_req, res) => {
+    res.type('html').send(
+      harnessHtml(publicDir, {
+        metaPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+      })
+    );
+  });
+
+  // `sandbox allow-scripts`: the document keeps its scripting but loses its
+  // origin — `window.location.origin` reads `"null"`. That is the case
+  // `targetOrigin()` in `src/injected/message/send.ts` falls back to `'*'` for,
+  // so this page is what says that fallback works.
+  app.get('/csp-sandbox', (_req, res) => {
+    res.setHeader('content-security-policy', 'sandbox allow-scripts');
+    res.sendFile('index.html', { root: publicDir });
+  });
+
+  // `sandbox` with no `allow-scripts`: scripting is off for the whole document.
+  app.get('/csp-sandbox-no-scripts', (_req, res) => {
+    res.setHeader('content-security-policy', 'sandbox');
+    res.sendFile('index.html', { root: publicDir });
+  });
+
+  // `connect-src 'none'`: scripts run, but no script may open a connection.
+  // The interesting one, because OhMyMock's passthrough calls the page's own
+  // `fetch` — so the page's `connect-src` governs it exactly as it governs the
+  // page. Scripts are left alone so the harness loads and the comparison is
+  // against a page that works in every other respect.
+  app.get('/csp-connect-none', (_req, res) => {
+    res.setHeader(
+      'content-security-policy',
+      "default-src 'self'; connect-src 'none'; style-src 'self' 'unsafe-inline'"
     );
     res.sendFile('index.html', { root: publicDir });
   });
