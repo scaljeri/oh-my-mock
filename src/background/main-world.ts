@@ -33,14 +33,18 @@ import { debug, error } from './utils';
  *  2. **A registration only affects future navigations.** A page that is
  *     already open does not get the script until it reloads, which is why
  *     switching a domain on goes through `injectIntoOpenTabs` as well.
- *  3. **A match pattern cannot carry a port** — Chrome rejects
- *     `*://localhost:8090/*` with "Invalid port". Registrations are therefore
- *     keyed by *host*, and mocking `localhost:8090` puts the bundle on
- *     `localhost:8091` too. Those pages are told `active: false` by their own
- *     content script and hand the page's `fetch`/`XHR` straight back; outside
- *     of local development two ports of one host are rare enough that the
- *     alternative — being late for the first request on every mocked page —
- *     is much the worse trade.
+ *  3. **A match pattern carries a port only under a named scheme.** Chrome
+ *     rejects `*://localhost:8090/*` with "Invalid port", which read for a long
+ *     time as "match patterns have no ports" — so registrations were keyed by
+ *     host with the port stripped, and mocking `localhost:8090` put the bundle
+ *     on `localhost:8091` as well. That is not what the rule says. Chromium
+ *     validates a port against the scheme's default (`IsValidPortForScheme` in
+ *     `extensions/common/url_pattern.cc`): a port is accepted only for a scheme
+ *     that *has* a default port, and the wildcard `*` has none, so it is the
+ *     wildcard scheme and not the port that is refused. Naming the scheme
+ *     instead — `http://localhost:8090/*` plus `https://...` — registers and
+ *     reads back with the port intact (measured on Chromium 151), and `*`
+ *     expands to exactly those two schemes anyway. See `matchPatterns` below.
  */
 
 /** The file registered in the page's world. */
@@ -56,23 +60,7 @@ const BUNDLE = 'oh-my-mock.js';
  */
 const ID_PREFIX = 'oh-my-mock:';
 
-const scriptId = (host: string): string => `${ID_PREFIX}${host}`;
-
-/**
- * The host part of a stored domain, without its port.
- *
- * Domains are stored as `window.location.host`, so a development server is
- * `localhost:4200`. Match patterns take a host and nothing else — see (3)
- * above — so this is where the port is dropped, in one place, rather than at
- * each call site where it would eventually be forgotten.
- */
-function matchHost(domain: ohMyDomain): string {
-  // `stripUrl` in `shared/utils/urls.ts` removes a scheme and a path; a stored
-  // domain has neither, and it is the port that has to go. Anchored at the end
-  // and digits only, so an IPv6 literal keeps its colons — `split(':')[0]`
-  // would cut `[::1]:8080` down to `[`.
-  return domain.replace(/:\d+$/, '');
-}
+const scriptId = (domain: ohMyDomain): string => `${ID_PREFIX}${domain}`;
 
 /**
  * The host to build a match pattern from, or `undefined` when there is none
@@ -113,13 +101,24 @@ function patternHost(host: string): string | undefined {
   }
 }
 
+/** * The match patterns a domain is registered under: both web schemes, every
+ * path, and the port when the domain names one.
+ *
+ * Naming the schemes rather than wildcarding them is what lets the port
+ * through — see (3) above. It is not a widening: the docs define `*` as
+ * matching "only `http` or `https`", so these two patterns cover exactly what
+ * `*://` did, while `localhost:8090` and `localhost:8091` finally register as
+ * the different places they are.
+ */
+const matchPatterns = (domain: ohMyDomain): string[] => [
+  `http://${domain}/*`,
+  `https://${domain}/*`
+];
+
 /** `StateUtils.isState` reads `.type` off its argument, which `undefined` has not. */
 function isStateRecord(value: unknown): value is IState {
   return !!value && StateUtils.isState(value);
 }
-
-/** The match pattern a host is registered under: every scheme, every path. */
-const matchPattern = (host: string): string => `*://${host}/*`;
 
 /**
  * One thing at a time.
@@ -141,8 +140,8 @@ function serialise<T>(job: () => Promise<T>): Promise<T> {
   return run;
 }
 
-/** The hosts that should have the bundle, read from the store. */
-async function wantedHosts(): Promise<Set<string>> {
+/** The domains that should have the bundle, read from the store. */
+async function wantedDomains(): Promise<Set<ohMyDomain>> {
   const store = await StorageUtils.get<IOhMyMock>(STORAGE_KEY);
   const domains = store?.domains ?? [];
 
@@ -153,14 +152,14 @@ async function wantedHosts(): Promise<Set<string>> {
   // One read for all of them. A browser with many domains would otherwise pay a
   // storage round trip apiece on every worker start.
   const states = await StorageUtils.getMany<IState>(domains);
-  const hosts = new Set<string>();
+  const wanted = new Set<ohMyDomain>();
 
   for (const domain of domains) {
     if (!StateUtils.isActive(states[domain])) {
       continue;
     }
 
-    const host = patternHost(matchHost(domain));
+    const host = patternHost(domain);
 
     // Left out rather than allowed to poison the batch — see `patternHost`.
     // `debug` and not `warn`: this runs on every reconcile, so a stored domain
@@ -173,14 +172,14 @@ async function wantedHosts(): Promise<Set<string>> {
       continue;
     }
 
-    hosts.add(host);
+    wanted.add(host);
   }
 
-  return hosts;
+  return wanted;
 }
 
-/** Our registrations, by host. */
-async function registeredHosts(): Promise<Set<string>> {
+/** Our registrations, by domain. */
+async function registeredDomains(): Promise<Set<ohMyDomain>> {
   const scripts = await chrome.scripting.getRegisteredContentScripts();
 
   return new Set(
@@ -196,17 +195,17 @@ async function registeredHosts(): Promise<Set<string>> {
  * Called at worker start — which is the only thing that can be relied on, see
  * (1) above — and after any storage change that could have moved a domain in or
  * out of the active set. A domain that was deleted has no state record left, so
- * it is not in `wantedHosts()` and its registration goes here; that is the only
- * thing standing between "forget this domain" and a registration that outlives
- * it for the rest of the browser session.
+ * it is not in `wantedDomains()` and its registration goes here; that is the
+ * only thing standing between "forget this domain" and a registration that
+ * outlives it for the rest of the browser session.
  */
 export function reconcileMainWorldScripts(): Promise<void> {
   return serialise(async () => {
     try {
-      const [wanted, registered] = await Promise.all([wantedHosts(), registeredHosts()]);
+      const [wanted, registered] = await Promise.all([wantedDomains(), registeredDomains()]);
 
-      const toAdd = [...wanted].filter(host => !registered.has(host));
-      const toRemove = [...registered].filter(host => !wanted.has(host));
+      const toAdd = [...wanted].filter(domain => !registered.has(domain));
+      const toRemove = [...registered].filter(domain => !wanted.has(domain));
 
       if (toRemove.length) {
         await chrome.scripting.unregisterContentScripts({
@@ -215,9 +214,9 @@ export function reconcileMainWorldScripts(): Promise<void> {
       }
 
       if (toAdd.length) {
-        await chrome.scripting.registerContentScripts(toAdd.map(host => ({
-          id: scriptId(host),
-          matches: [matchPattern(host)],
+        await chrome.scripting.registerContentScripts(toAdd.map(domain => ({
+          id: scriptId(domain),
+          matches: matchPatterns(domain),
           js: [BUNDLE],
           // Before the page's own first script, which is the whole point.
           runAt: 'document_start' as const,
@@ -251,9 +250,9 @@ export function reconcileMainWorldScripts(): Promise<void> {
  * switching a domain on with its page open would otherwise do nothing at all
  * until a reload. That is a path the popup's toggle takes every day.
  *
- * Matched on the tab's real host, port included, unlike the registration: here
- * we have the actual url and can be exact, so switching `localhost:8090` on
- * does not inject into a `localhost:8091` tab that nobody asked for.
+ * Matched on the tab's real host, port included — the same precision the
+ * registration now has, so switching `localhost:8090` on does not inject into a
+ * `localhost:8091` tab that nobody asked for by either route.
  */
 export async function injectIntoOpenTabs(domain: ohMyDomain): Promise<void> {
   let tabs: chrome.tabs.Tab[];

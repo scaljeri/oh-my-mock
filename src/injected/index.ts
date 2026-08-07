@@ -67,11 +67,13 @@ if (!alreadyInstalled) {
    * away; the bundle was on every page in the browser and could not know. It
    * knows by construction now.
    *
-   * The one thing this cannot tell apart is two ports of the same host — a
-   * content-script match pattern cannot carry a port, so `localhost:4200` being
-   * mocked registers this bundle for `localhost:8080` as well. Those pages hear
-   * `active: false` from their own content script a moment later and hand the
-   * page's `fetch`/`XHR` straight back.
+   * Two ports of one host used to be the exception: the registration was
+   * `*://localhost/*`, so `localhost:4200` being mocked put this bundle on
+   * `localhost:8080` as well. It carries the port now (see
+   * `src/background/main-world.ts`), so what still hears `active: false` from
+   * its content script a moment later — and hands the page's `fetch`/`XHR`
+   * straight back — is a domain switched off while its page is open, and a
+   * registration that outlived its domain.
    */
   ohMy.state = { active: true };
 

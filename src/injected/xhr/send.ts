@@ -92,10 +92,13 @@ export function patchSend() {
           // never sent, never failed, and the page's XHR simply never
           // completed.
           //
-          // A registration cannot carry a port, so the bundle lands on every
-          // port of a mocked host and the ones that are *not* mocked take
-          // exactly this path on their first request. It used to need the
-          // shim's 50ms poll to lose a race with start-up.
+          // The registration used to drop the port, so the bundle landed on
+          // every port of a mocked host and the ones that were *not* mocked
+          // took exactly this path on their first request — which is how the
+          // fallback came to be needed. It carries the port now, so that source
+          // is gone; a domain switched off while its page is open still gets
+          // here, and the fallback stays because losing this race costs the
+          // page a request that never completes at all.
           const send = xhr.__send ?? ohMyWindow().__xhrSend;
 
           send?.call(xhr, toXhrBody(body));

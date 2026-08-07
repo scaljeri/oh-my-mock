@@ -283,7 +283,7 @@ test.describe('forgetting a domain that is being mocked', () => {
     await ohMy.setActive(SITE_DOMAIN);
 
     // A match pattern cannot carry a port, so the registration is by host.
-    await expect.poll(registered, { timeout: 15_000 }).toContain('oh-my-mock:localhost');
+    await expect.poll(registered, { timeout: 15_000 }).toContain(`oh-my-mock:${SITE_DOMAIN}`);
 
     await site.open();
     await site.waitForInjection();
@@ -299,7 +299,7 @@ test.describe('forgetting a domain that is being mocked', () => {
 
     await expect
       .poll(registered, { timeout: 15_000 })
-      .not.toContain('oh-my-mock:localhost');
+      .not.toContain(`oh-my-mock:${SITE_DOMAIN}`);
 
     // And the page proves it: reloaded, nothing patches `fetch`, and the call
     // the mock used to answer reaches the server.

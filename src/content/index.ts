@@ -50,10 +50,11 @@ ohMyWindow().off?.push(() => messageBus.clear());
  * Tells the page-context bundle whether this domain is mocked.
  *
  * Still needed, even though the background only puts the bundle on domains that
- * are switched on: a content-script match pattern cannot carry a port, so
- * mocking `localhost:4200` also puts the bundle on `localhost:8080`, and a
- * registration can briefly outlive the domain it was made for. Those pages hear
- * `false` here and hand the page's own `fetch`/`XHR` straight back.
+ * are switched on — and now on the right *port* of them, since a registration
+ * that names its schemes can carry one. What is left is a domain switched off
+ * while its page is open, and a registration that briefly outlives the domain
+ * it was made for. Those pages hear `false` here and hand the page's own
+ * `fetch`/`XHR` straight back.
  *
  * Saying `false` is destructive — see `src/injected/restore-originals.ts` — so
  * it is said only about a state that has actually been read. `publishActive()`

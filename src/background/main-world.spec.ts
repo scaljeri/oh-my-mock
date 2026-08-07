@@ -112,7 +112,7 @@ describe('registering the page-context bundle per active domain', () => {
 
     expect(registered).toEqual([
       expect.objectContaining({
-        matches: ['*://example.com/*'],
+        matches: ['http://example.com/*', 'https://example.com/*'],
         js: ['oh-my-mock.js'],
         world: 'MAIN',
         runAt: 'document_start'
@@ -131,17 +131,87 @@ describe('registering the page-context bundle per active domain', () => {
   });
 
   /**
-   * A match pattern cannot carry a port — Chrome rejects `*://localhost:8090/*`
-   * outright — so the port is dropped here rather than at the API call, where
-   * the whole batch would fail and no domain at all would be registered.
+   * The port a domain is stored with reaches the match pattern.
+   *
+   * Chrome rejects `*://localhost:8090/*` with "Invalid port", and that was
+   * read as "patterns have no ports": the port was stripped, so mocking
+   * `localhost:8090` put the bundle on `localhost:8091` too. The rule is
+   * narrower than that. Chromium accepts a port only for a scheme that has a
+   * default one (`IsValidPortForScheme`), and the wildcard `*` has none — so
+   * naming the two schemes `*` stands for carries the port through, which
+   * `http://localhost:8090/*` registering and reading back intact confirms on
+   * Chromium 151.
    */
-  it('drops the port a domain is stored with', async () => {
+  it('keeps the port a domain is stored with, under named schemes', async () => {
     records[STORAGE_KEY] = store(['localhost:8090']);
     records['localhost:8090'] = state('localhost:8090', true);
 
     await reconcileMainWorldScripts();
 
-    expect(registered[0].matches).toEqual(['*://localhost/*']);
+    expect(registered[0].matches).toEqual([
+      'http://localhost:8090/*',
+      'https://localhost:8090/*'
+    ]);
+  });
+
+  /**
+   * The whole point of carrying the port: two ports of one host are two
+   * domains, and switching one on must leave the other untouched.
+   *
+   * Under `*://localhost/*` these shared a single registration, so `8091` got
+   * the bundle whenever `8090` was mocked and had to be talked back down by
+   * `restoreOriginals`.
+   */
+  it('tells two ports of one host apart', async () => {
+    records[STORAGE_KEY] = store(['localhost:8090', 'localhost:8091']);
+    records['localhost:8090'] = state('localhost:8090', true);
+    records['localhost:8091'] = state('localhost:8091', false);
+
+    await reconcileMainWorldScripts();
+
+    expect(ids()).toEqual(['oh-my-mock:localhost:8090']);
+    expect(registered[0].matches).not.toContain('http://localhost:8091/*');
+  });
+
+  /**
+   * An IPv6 literal keeps its colons.
+   *
+   * The domain reaches the pattern verbatim, which is what makes this work:
+   * nothing splits a host from its port when composing one. The old code did
+   * split, to strip the port, and needed an end-anchored `:\d+$` to avoid
+   * cutting `[::1]:8080` down to `[`. Chromium parses the bracketed form
+   * itself, so `http://[::1]:8080/*` registers and reads back intact
+   * (measured on Chromium 151).
+   */
+  it('registers an IPv6 host with its port intact', async () => {
+    records[STORAGE_KEY] = store(['[::1]:8080']);
+    records['[::1]:8080'] = state('[::1]:8080', true);
+
+    await reconcileMainWorldScripts();
+
+    expect(registered[0].matches).toEqual([
+      'http://[::1]:8080/*',
+      'https://[::1]:8080/*'
+    ]);
+  });
+
+  /**
+   * A domain naming an impossible port is dropped, and takes nothing with it.
+   *
+   * `registerContentScripts` is all-or-nothing, so one pattern Chrome refuses
+   * costs every *other* domain in the batch its bundle. Stored domains come
+   * from `window.location.host` and are always fine; `import-json.ts` takes one
+   * from a file the user supplies, and nothing between there and here checks
+   * it. A port above 65535 could never match a page anyway.
+   */
+  it('drops a domain with an impossible port rather than lose the batch', async () => {
+    records[STORAGE_KEY] = store(['good.example', 'localhost:65536']);
+    records['good.example'] = state('good.example', true);
+    records['localhost:65536'] = state('localhost:65536', true);
+
+    await reconcileMainWorldScripts();
+
+    expect(ids()).toEqual(['oh-my-mock:good.example']);
   });
 
   it('takes the registration away when the domain is switched off', async () => {
@@ -273,9 +343,9 @@ describe('registering the page-context bundle per active domain', () => {
     });
 
     /**
-     * Exact here, port and all — unlike the registration, which cannot express
-     * one. Switching `localhost:8090` on must not put the bundle into a
-     * `localhost:8091` tab nobody asked about.
+     * Exact here, port and all — the same precision the registration now has.
+     * Switching `localhost:8090` on must not put the bundle into a
+     * `localhost:8091` tab nobody asked about, by either route.
      */
     it('leaves another port of the same host alone', async () => {
       tabs = [

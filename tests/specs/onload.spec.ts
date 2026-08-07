@@ -235,9 +235,10 @@ test.describe('a request made while the page loads', () => {
    * registers per *active* domain, so its absence is the ordinary state of the
    * web. It used to be injected everywhere — the price of being in place before
    * the answer was known — patch the page and then undo the patches on hearing
-   * "not this domain". The undo still exists for the one case registration
-   * cannot express (another port of a mocked host); on a host nobody mocks
-   * there is nothing to undo.
+   * "not this domain". The undo still exists for the cases a registration
+   * cannot anticipate: a domain switched off while its page is open, and a
+   * registration that outlived its domain. On a host nobody mocks there is
+   * nothing to undo.
    */
   test('leaves the page own fetch and XHR completely alone', async ({
     site
@@ -398,29 +399,32 @@ test.describe('a request made while the page loads', () => {
   });
 
   /**
-   * The one thing registering per domain cannot express: a port.
+   * Two ports of one host are two domains, and the registration says so.
    *
-   * Chrome rejects `*://localhost:8090/*` — "Invalid port" — so mocking
-   * `localhost:8090` registers the bundle for `localhost`, and it lands on
-   * `localhost:8091` too. That page is told `active: false` by its own content
-   * script and hands its `fetch`/`XHR` straight back, which is fine *after* the
-   * page has settled and is the hardest possible moment before it has.
+   * It did not always. The pattern was `*://localhost/*` — Chrome rejects
+   * `*://localhost:8090/*` with "Invalid port", which was read as "match
+   * patterns have no ports" — so mocking `localhost:8090` put the bundle on
+   * `localhost:8091` as well, and that page had to be told `active: false` and
+   * hand its `fetch`/`XHR` back. Fine *after* the page had settled, and the
+   * hardest possible moment before it had: a request fired from `<head>` was
+   * dispatched by a bundle that still believed it was wanted, and the hand-back
+   * landed mid-flight, taking `XMLHttpRequest.prototype.__send` with it. The
+   * request was never sent, never failed, and the page's XHR never completed —
+   * ten seconds of nothing, on a domain nobody was mocking.
    *
-   * A request fired from `<head>` on such a page is dispatched by a bundle that
-   * still believes it is wanted, and the hand-back lands while that dispatch is
-   * in flight — taking `XMLHttpRequest.prototype.__send` off the prototype with
-   * it. Reaching for it and finding nothing threw inside a promise whose
-   * `catch` only logs: the request was never sent, never failed, and the page's
-   * XHR never completed. Ten seconds of nothing, on a domain the user is not
-   * even mocking.
+   * The rule is narrower than it was read as. Chromium accepts a port only for
+   * a scheme that has a default one, and the wildcard `*` has none; naming the
+   * two schemes `*` stands for carries the port through. So there is no bundle
+   * on this page at all now, and the race above has nothing left to race.
    *
-   * The `fetch` half was always safe — `restoreOriginals` keeps the page's own
-   * function on the namespace — and is asserted here so a regression that
-   * breaks it is caught in the same place.
+   * Asserted as *absence*, not as a survived hand-back: a regression that puts
+   * the bundle back on the wrong port has to fail here even if the hand-back
+   * still happens to work.
    */
-  test('an on-load request survives another port of the host being mocked', async ({
+  test('another port of a mocked host is left entirely alone', async ({
     ohMy,
-    site
+    site,
+    server
   }) => {
     // The *other* port is the one being mocked. This one is not.
     await ohMy.seedMock({
@@ -431,10 +435,6 @@ test.describe('a request made while the page loads', () => {
     await ohMy.setActive(SITE_DOMAIN);
 
     await site.page.goto(`${ALT_ORIGIN}/onload.html`);
-
-    // The bundle really is on this page — otherwise the race below is not the
-    // one being tested, and this spec would pass for the wrong reason.
-    expect(await site.isInjected()).toBe(true);
 
     await site.page.waitForFunction(
       () =>
@@ -460,5 +460,40 @@ test.describe('a request made while the page loads', () => {
     expect(fromFetch.error).toBeUndefined();
     expect(fromFetch.status).toBe(200);
     expect(fromFetch.source).toBe('server');
+
+    // The bundle is not here, and never was. `restoreOriginals` puts `fetch`
+    // and the XHR prototype back well enough that the checks below would pass
+    // on a page it *had* patched and released — except for the namespace, which
+    // it deliberately leaves behind (`OhMyMock.restored`), and the
+    // `[native code]` test, which no wrapper survives. Both are asserted for
+    // that reason.
+    const traces = await site.page.evaluate(() => {
+      const proto = XMLHttpRequest.prototype as unknown as Record<string, unknown>;
+
+      return {
+        namespace: 'OhMyMock' in window,
+        fetchIsNative: /\[native code\]/.test(String(window.fetch)),
+        sendIsNative: /\[native code\]/.test(String(proto.send)),
+        openIsNative: /\[native code\]/.test(String(proto.open)),
+        leftovers: ['__send', '__open', '__setRequestHeader', '__addEventListener']
+          .filter((name) => name in proto)
+      };
+    });
+
+    expect(traces.namespace).toBe(false);
+    expect(traces.fetchIsNative).toBe(true);
+    expect(traces.sendIsNative).toBe(true);
+    expect(traces.openIsNative).toBe(true);
+    expect(traces.leftovers).toEqual([]);
+    expect(await site.isInjected()).toBe(false);
+
+    // And the mocked port is still mocked — this must not have been bought by
+    // registering nothing at all.
+    await site.page.goto(`${SITE_ORIGIN}/onload.html`);
+
+    const onMockedPort = await onloadResult(site.page);
+
+    expect(onMockedPort.body).toContain('"source":"mock"');
+    expect(await server.hitCount('GET /api/json')).toBe(0);
   });
 });

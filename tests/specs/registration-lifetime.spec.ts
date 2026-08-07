@@ -86,7 +86,7 @@ test.describe('registrations across a browser restart', () => {
       // below would be asserting about something that never happened.
       await expect
         .poll(() => registeredIds(first), { timeout: 10_000 })
-        .toContain('oh-my-mock:localhost');
+        .toContain(`oh-my-mock:${SITE_DOMAIN}`);
     } finally {
       await first.close();
     }
@@ -102,7 +102,7 @@ test.describe('registrations across a browser restart', () => {
 
       await expect
         .poll(() => registeredIds(second), { timeout: 10_000 })
-        .toContain('oh-my-mock:localhost');
+        .toContain(`oh-my-mock:${SITE_DOMAIN}`);
 
       const page = await second.newPage();
 

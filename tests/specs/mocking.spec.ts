@@ -217,9 +217,12 @@ test.describe('mocking', () => {
     // site as often as it is this one's.
     await site.open('/', ALT_ORIGIN);
 
-    // Injected here too — it is injected on every page — but switched off, and
-    // that is the distinction this test is about.
-    expect(await site.isInjected()).toBe(true);
+    // Nothing of the extension is here at all. The page-context bundle is
+    // registered per active domain and a match pattern carries a port, so
+    // mocking `localhost:8090` no longer puts it on `localhost:8091`. This
+    // used to assert the opposite — "injected here too, but switched off" —
+    // which was true when one wildcard pattern covered every port of the host.
+    expect(await site.isInjected()).toBe(false);
 
     const result = await site.request({ url: '/api/json', responseType: 'json' });
     expect(result.json.source).toBe('server');

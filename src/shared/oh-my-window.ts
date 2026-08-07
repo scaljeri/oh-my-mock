@@ -42,10 +42,10 @@ export interface IOhMyWindow {
    * Whether mocking is switched on for this domain.
    *
    * Set to `{ active: true }` the moment the page-context bundle loads: the
-   * background only registers it for domains that are switched on, so being
-   * here is the answer. The content script corrects it for the one case that
-   * cannot express — another port of the same host — and for a domain switched
-   * off while the page is open.
+   * background only registers it for domains that are switched on — port and
+   * all — so being here is the answer. The content script corrects it for the
+   * cases a registration cannot anticipate: a domain switched off while the
+   * page is open, and a registration that outlived its domain.
    */
   state?: IOhMyInjectedState;
 

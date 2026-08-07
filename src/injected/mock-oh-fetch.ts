@@ -76,8 +76,9 @@ async function ohMyFetch(request: string | Request, init?: unknown): Promise<unk
   // `await isMockingActive()`, which existed because the bundle went onto every
   // page in the browser and could not know.
   //
-  // A `false` here is the content script having said so: the host is off, or
-  // it is another port of a host that is on.
+  // A `false` here is the content script having said so: the domain was
+  // switched off while this page was open, or the registration that put this
+  // bundle here outlived the domain it was made for.
   if (!ohMyWindow().state?.active) {
     return originalFetch().call(window, request, config);
   }

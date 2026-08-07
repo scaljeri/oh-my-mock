@@ -5,13 +5,14 @@ import { ohMyWindow } from '../shared/oh-my-window';
  *
  * Called once the content script says "this domain is not mocked", which is a
  * rarer thing to hear than it used to be: the bundle is registered per active
- * domain now, so being on the page normally *is* the answer. What still reaches
- * here is a host whose other port is the one being mocked — a content-script
- * match pattern cannot carry a port — and a registration that outlived the
- * domain it was made for. Neither should keep paying for a wrapper it does not
- * use. After this OhMyMock is not merely inert, it is gone: `window.fetch` is
- * the function the page started with, and `XMLHttpRequest.prototype` carries
- * none of our members.
+ * domain — port and all, since the registration names its schemes rather than
+ * wildcarding them — so being on the page normally *is* the answer. Another
+ * port of a mocked host used to reach here and no longer does. What is left is
+ * a registration that outlived the domain it was made for, and the domain being
+ * switched off while its page is open; neither should keep paying for a wrapper
+ * it does not use. After this OhMyMock is not merely inert, it is gone:
+ * `window.fetch` is the function the page started with, and
+ * `XMLHttpRequest.prototype` carries none of our members.
  *
  * What is undone here was installed in two steps, both in this bundle.
  * `installEntryPoints` (`entry-points.ts`) owns the window-level patches — it

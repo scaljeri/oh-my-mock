@@ -57,7 +57,7 @@ test.describe('registering the page-context bundle', () => {
 
     await expect
       .poll(() => registered(context), { timeout: 15_000 })
-      .toContain('oh-my-mock:localhost');
+      .toContain(`oh-my-mock:${SITE_DOMAIN}`);
 
     // The point of the registration, and the only thing that proves it.
     await site.open();

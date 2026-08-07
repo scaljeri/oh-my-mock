@@ -109,9 +109,11 @@ describe('content-script start-up', () => {
   });
 
   /**
-   * A registration is per *host*, and a match pattern cannot carry a port, so
-   * the bundle lands on `localhost:8091` when it is `localhost:8090` that is
-   * mocked. This is the only thing that gets it off such a page.
+   * The bundle assumes it is wanted, so this is the only thing that ever gets
+   * it back off a page. It used to be reached mostly by another port of a
+   * mocked host — the registration dropped the port — and now by a domain
+   * switched off while its page is open, or a registration that outlived its
+   * domain.
    */
   it('tells the bundle to stand down on a domain that is switched off', async () => {
     require('./index');

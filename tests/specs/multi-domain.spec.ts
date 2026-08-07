@@ -127,25 +127,31 @@ test.describe('several active domains', () => {
   });
 
   /**
-   * A domain that is switched off does not get mocked because another port of
-   * the same host is.
+   * A domain that is switched off stays off while a sibling port is mocked.
    *
-   * The page-context bundle is registered per *host* — Chrome rejects a port in
-   * a match pattern — so switching `localhost:8090` on puts the bundle on
-   * `localhost:8091` too, where it starts out assuming it is wanted. A request
-   * fired from `<head>` is therefore dispatched to the content script *before*
-   * the `active: false` verdict has crossed back, and the content script is the
-   * only thing that knows which port this is.
+   * This used to be a test about a *window*. The bundle was registered per host
+   * — `*://localhost/*`, because Chrome rejects a port under the wildcard
+   * scheme — so switching `localhost:8090` on put it on `localhost:8091` as
+   * well, where it started out assuming it was wanted. A request fired from
+   * `<head>` was dispatched before the `active: false` verdict crossed back,
+   * and only the content script's own check kept a switched-off domain's mocks
+   * from being served.
    *
-   * Without its own check it would happily look the request up in this domain's
-   * records and serve a mock the user had switched off — with no way to tell,
-   * because a served mock looks exactly like a working endpoint. The bundle's
-   * copy of the verdict cannot cover this: the whole point of the window is
-   * that the bundle does not have one yet.
+   * Naming the schemes carries the port through (`src/background/main-world.ts`),
+   * so there is no bundle on the off port and no window to be wrong in. The
+   * content script's check is still there and still matters — for a domain
+   * switched off while its page is open, and for a registration that outlived
+   * its domain — but neither is reachable from here, so it is pinned as a unit
+   * in `src/content/handle-api-request.spec.ts` instead.
+   *
+   * What is left to assert here is the part that is about two domains: the off
+   * one is untouched *and* the on one keeps mocking, so the isolation was not
+   * bought by registering nothing.
    */
-  test('a switched-off domain is not mocked in the window before its verdict', async ({
+  test('a switched-off domain is untouched while its sibling port is mocked', async ({
     ohMy,
-    site
+    site,
+    server
   }) => {
     const altServer = new TestServer(ALT_ORIGIN);
     await altServer.reset();
@@ -158,7 +164,7 @@ test.describe('several active domains', () => {
     });
     await ohMy.setActive(ALT_DOMAIN, false);
 
-    // The other port of the same host is on, which is what puts the bundle here.
+    // The other port of the same host is on.
     await ohMy.seedMock({
       domain: SITE_DOMAIN,
       url: '/api/json',
@@ -166,13 +172,13 @@ test.describe('several active domains', () => {
     });
     await ohMy.setActive(SITE_DOMAIN);
 
-    // `onload.html` calls `/api/json` from an inline script in `<head>`, so the
-    // request is in flight while the verdict still is.
+    // `onload.html` calls `/api/json` from an inline script in `<head>` — the
+    // earliest a page can ask for anything, and the moment the old registration
+    // was wrong at.
     await site.page.goto(`${ALT_ORIGIN}/onload.html`);
 
-    // The bundle is on this page — otherwise there is no window to be wrong in
-    // and this spec proves nothing.
-    expect(await site.isInjected()).toBe(true);
+    // Registered per domain now, so the off port gets nothing at all.
+    expect(await site.isInjected()).toBe(false);
 
     await site.page.waitForFunction(
       () =>
@@ -192,5 +198,21 @@ test.describe('several active domains', () => {
     expect(result.source).toBe('server');
     expect(result.body).not.toContain('mock-alt');
     expect(await altServer.hitCount('GET /api/json')).toBe(1);
+
+    // And the port that *is* on still mocks — the isolation is per domain, not
+    // a registration that quietly went missing for both.
+    await site.page.goto(`${SITE_ORIGIN}/onload.html`);
+    await site.page.waitForFunction(
+      () =>
+        (window as unknown as { onloadResult?: { pending: boolean } })
+          .onloadResult?.pending === false
+    );
+
+    const onMain = await site.page.evaluate(
+      () => (window as unknown as { onloadResult: { body?: string } }).onloadResult
+    );
+
+    expect(onMain.body).toContain('mock-main');
+    expect(await server.hitCount('GET /api/json')).toBe(0);
   });
 });

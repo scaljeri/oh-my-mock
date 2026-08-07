@@ -92,8 +92,10 @@ if (!ohMyWindow().state?.active) {
 
 `state` starts out `{ active: true }`, because the bundle being on the page is
 what says the host is mocked. The content script only ever corrects that
-downwards — for another port of the same host, or a domain switched off while
-the page is open. It used to be `await isMockingActive()`, a three-state wait
+downwards — for a domain switched off while the page is open, or a registration
+that outlived the domain it was made for. Another port of the same host used to
+be the common case; registrations carry the port now, so that page never gets
+the bundle at all. It used to be `await isMockingActive()`, a three-state wait
 that existed because the bundle went onto every page in the browser and could
 not know.
 

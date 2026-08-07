@@ -96,11 +96,18 @@ rather than assumed:
 |---|---|
 | Registrations do not survive | `persistAcrossSessions` reads back `true`, and a registration made in one browser session was still gone in the next — same profile, same extension id. The store is the only authority, and every service-worker start reconciles from it. |
 | Only future navigations | A page already open never sees a new registration until it reloads, so switching a domain on also `executeScript`s into the tabs open on it. |
-| No ports in match patterns | Chrome rejects `*://localhost:8090/*` with "Invalid port". Registrations are keyed by **host**, so mocking `localhost:4200` puts the bundle on `localhost:8080` too. Those pages are told `active: false` by their own content script and hand the page's `fetch`/`XHR` back (`src/injected/restore-originals.ts`). |
+| Ports need a named scheme | Chrome rejects `*://localhost:8090/*` with "Invalid port", which reads like "match patterns have no ports" and is not what the rule says. Chromium validates a port against the scheme's default (`IsValidPortForScheme`, `extensions/common/url_pattern.cc`): a port is accepted only for a scheme that *has* one, and the wildcard `*` has none. Registering `http://localhost:8090/*` and `https://localhost:8090/*` instead carries the port through — and `*` expands to exactly those two schemes, so it is not a widening. Registrations are keyed by **domain**, port and all. |
 
-The last one is the only reason a verdict still travels to the page at all. The
-bundle assumes it is wanted — being there is what says so — and the content
-script only ever corrects it downwards.
+Registrations were keyed by host until that was checked, so mocking
+`localhost:8090` put the bundle on `localhost:8091` too and that page had to be
+talked back down. Two ports of one host are two registrations now, and the
+second page gets nothing at all.
+
+A verdict still travels to the page, for the cases a registration cannot
+anticipate — a domain switched off while its page is open, and a registration
+that outlived the domain it was made for. The bundle assumes it is wanted —
+being there is what says so — and the content script only ever corrects it
+downwards, handing `fetch`/`XHR` back via `src/injected/restore-originals.ts`.
 
 ## What Chrome version this actually needs
 
@@ -205,5 +212,12 @@ Worth separating, because they are fixable without changing the mechanism:
 3. **CSP stripping is a blunt instrument.** Very likely dead now: a MAIN-world
    content script runs behind `script-src 'self'`, which is what the stripping
    existed to get past. It is still wired up, and no test exercises it any more.
-4. **Two ports of one host cannot be told apart** by a registration. See the
-   table above.
+4. ~~**Two ports of one host cannot be told apart** by a registration.~~
+   **Fixed.** It was never an API limitation, only a misread of one: Chrome
+   refuses a port under the *wildcard* scheme, not a port as such. Naming the
+   two schemes `*` stands for — `http://localhost:8090/*` and
+   `https://localhost:8090/*` — registers with the port intact, so mocking
+   `localhost:8090` no longer puts the bundle on `localhost:8091`. See the
+   table above, `matchPatterns` in `src/background/main-world.ts`, and the
+   spec `another port of a mocked host is left entirely alone` in
+   `tests/specs/onload.spec.ts`.
