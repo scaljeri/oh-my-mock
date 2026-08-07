@@ -4,6 +4,7 @@ import { StorageUtils } from '../shared/utils/storage';
 import { StoreRegistrar } from '../shared/utils/store-registrar';
 import { StoreUtils } from '../shared/utils/store';
 import { ensureGroups } from './ensure-groups';
+import { clearForgottenDomains, rememberDomain } from './forgotten-domains';
 
 /**
  * What a change to the store record does: hand back the record it should
@@ -88,9 +89,31 @@ export function mutateStore(mutate: OhMyStoreMutation): Promise<IOhMyMock> {
  * turn.
  */
 export function addDomain(domain: ohMyDomain): Promise<IOhMyMock> {
-  return mutateStore(store => store.domains.includes(domain)
-    ? undefined
-    : { ...store, domains: [domain, ...store.domains] });
+  return mutateStore(async store => {
+    // Listing a domain is a statement that it exists, so a tombstone left by an
+    // earlier "forget this domain" has to go with it — the same thing the state
+    // handler says by calling `rememberDomain` for a domain the store does not
+    // list yet.
+    //
+    // That branch used to be the only one, and it is not the only way a domain
+    // comes back. `importJSON` writes the records itself and then asks for the
+    // domain to be listed through here, never sending a state at all; and the
+    // remove handler re-imports the demo data the moment it has finished
+    // deleting the demo domain, so that domain is forgotten and re-listed
+    // inside one call. Both left the tombstone standing over a domain that
+    // exists again — and the state handler then refused *every* write to it for
+    // the rest of the browser session, silently: mocking that records nothing,
+    // a toggle that will not switch, an aux change that never sticks. See
+    // `forgotten-domains.ts`.
+    //
+    // Before the store is written rather than after, so there is no moment in
+    // which the domain is listed and still tombstoned.
+    await rememberDomain(domain);
+
+    return store.domains.includes(domain)
+      ? undefined
+      : { ...store, domains: [domain, ...store.domains] };
+  });
 }
 
 /**
@@ -104,6 +127,15 @@ export function addDomain(domain: ohMyDomain): Promise<IOhMyMock> {
 export function clearStore(): Promise<IOhMyMock> {
   return mutateStore(async () => {
     await StorageUtils.reset();
+
+    // The tombstones go with it. They live in `chrome.storage.session`, which
+    // this wipe does not reach, and after it there is no record left for one to
+    // keep a state write from reviving — while `initStorage` runs straight
+    // afterwards and re-lists the popup's own domain from inside this very
+    // queue, never touching `addDomain`. So a domain the user deleted earlier
+    // in the session came back listed and still tombstoned, and every state
+    // write for it was refused for the rest of the browser session.
+    await clearForgottenDomains();
 
     return StoreUtils.init();
   });

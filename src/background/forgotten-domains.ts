@@ -98,6 +98,29 @@ export async function rememberDomain(domain: ohMyDomain): Promise<void> {
   }
 }
 
+/**
+ * Drops every tombstone, because there is nothing left for one to protect.
+ *
+ * Called from `clearStore`, which wipes storage: after it there are no records
+ * and no domain list, so a tombstone can no longer be keeping a state write
+ * from reviving anything. What it *can* still do is refuse one. `initStorage`
+ * runs straight after the wipe and re-lists the popup's own domain from inside
+ * the store's queue rather than through `addDomain` — so a domain the user had
+ * deleted earlier in the session comes back listed and still tombstoned, and
+ * every state write for it is refused for the rest of the browser session.
+ */
+export async function clearForgottenDomains(): Promise<void> {
+  const set = await primed();
+
+  if (!set.size) {
+    return;
+  }
+
+  set.clear();
+
+  await persist(set);
+}
+
 /** Whether a state write for `domain` would be reviving something deleted. */
 export async function isForgotten(domain: ohMyDomain): Promise<boolean> {
   return (await primed()).has(domain);

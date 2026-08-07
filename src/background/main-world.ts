@@ -74,6 +74,45 @@ function matchHost(domain: ohMyDomain): string {
   return domain.replace(/:\d+$/, '');
 }
 
+/**
+ * The host to build a match pattern from, or `undefined` when there is none
+ * Chrome would accept.
+ *
+ * `registerContentScripts` validates the **whole call** before it registers
+ * anything: one pattern it will not take rejects the promise and none of the
+ * others are registered either. The rejection is caught below and the next
+ * reconcile builds the same batch and fails the same way, so a single bad host
+ * means no domain in the browser gets the bundle — ever, for as long as it is
+ * stored and switched on.
+ *
+ * And a bad host is easy to store. The Domains page's "add domain" field is
+ * free text kept verbatim, and `https://example.com` is what gets typed when
+ * the label says domain and the address bar has a scheme on it. That used to be
+ * harmless: it matched no page and nothing happened. Since the bundle is
+ * registered per domain, its presence *is* the verdict — so one of these takes
+ * mocking down for everything.
+ *
+ * Answered by asking the URL parser rather than by a pattern of our own: it is
+ * the same parse Chrome does, so it agrees about the awkward cases — an IPv6
+ * literal keeps its brackets and colons, while a host with a scheme, a slash, a
+ * space or a stray colon in it does not survive the round trip.
+ *
+ * The parser's own answer is what comes back, not the string it was given, so a
+ * domain someone typed as `Example.com` is registered as the host it means
+ * rather than being turned down for its capitals. Anything the parse *changes*
+ * beyond case — `8080` becoming an IPv4 address is the entertaining one — is
+ * not the host it was meant to be, and is refused.
+ */
+function patternHost(host: string): string | undefined {
+  try {
+    const parsed = new URL(`http://${host}/`).host;
+
+    return parsed === host.toLowerCase() ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** `StateUtils.isState` reads `.type` off its argument, which `undefined` has not. */
 function isStateRecord(value: unknown): value is IState {
   return !!value && StateUtils.isState(value);
@@ -117,9 +156,24 @@ async function wantedHosts(): Promise<Set<string>> {
   const hosts = new Set<string>();
 
   for (const domain of domains) {
-    if (StateUtils.isActive(states[domain])) {
-      hosts.add(matchHost(domain));
+    if (!StateUtils.isActive(states[domain])) {
+      continue;
     }
+
+    const host = patternHost(matchHost(domain));
+
+    // Left out rather than allowed to poison the batch — see `patternHost`.
+    // `debug` and not `warn`: this runs on every reconcile, so a stored domain
+    // that will never be a host would say it on every storage change for the
+    // rest of the session. The domain is still listed and still visible on the
+    // Domains page, which is where it can be corrected.
+    if (!host) {
+      debug('Not registering the page-context bundle for a domain that is not a host', domain);
+
+      continue;
+    }
+
+    hosts.add(host);
   }
 
   return hosts;

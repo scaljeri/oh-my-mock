@@ -1,6 +1,7 @@
 import { IOhMyPacketContext, IPacketPayload } from '../../shared/packet-type';
 import { IData, IOhMyHit } from '../../shared/type';
 import { StorageUtils } from '../../shared/utils/storage';
+import { isForgotten } from '../forgotten-domains';
 import { error } from '../utils';
 
 /**
@@ -27,6 +28,7 @@ export class OhMyHitsHandler {
     payload: IPacketPayload<IOhMyHit[], IOhMyPacketContext>
   ): Promise<number | undefined> {
     const hits = payload?.data;
+    const domain = payload?.context?.domain;
 
     if (!Array.isArray(hits) || !hits.length) {
       return 0;
@@ -46,6 +48,26 @@ export class OhMyHitsHandler {
         // resurrect a record with nothing in it but two timestamps.
         if (!request) {
           continue;
+        }
+
+        // The read above and the write below are two storage round trips, and
+        // HITS and REMOVE are separate lanes of `OhMyQueue` — nothing keeps
+        // them apart. So "forget this domain" is free to delete this very
+        // record in between, and the write then puts it straight back: a
+        // request record belonging to a domain that is no longer listed,
+        // unreachable from every screen and never cleaned up. Measured at 22
+        // of 80 requests surviving a deletion that raced one batch of hits.
+        //
+        // Asked here rather than once at the top, and it closes the window
+        // rather than narrowing it: a removal adds its domain to the tombstone
+        // set *before* it deletes anything, and the set is one object in one
+        // service worker. So if this record has been deleted by now, the
+        // tombstone was already there to be seen; and if it has not, the write
+        // below is issued before the delete that would follow.
+        if (domain && await isForgotten(domain)) {
+          // Nothing later in the batch can be worth writing either — they all
+          // belong to the domain that is going.
+          break;
         }
 
         await OhMyHitsHandler.StorageUtils.set(hit.id, {
