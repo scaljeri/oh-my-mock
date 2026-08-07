@@ -83,7 +83,10 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
   @Input() filterStr: string | undefined;
   @Input() lastResult: string[] | undefined;
 
-  @Output() filteredData = new EventEmitter<string[]>();
+  // The other half of the removed `onFilterUpdateData` goes with it: this used
+  // to carry the matching ids on their own, and its `emit` was commented out
+  // when `update` started carrying them alongside the keywords and the options.
+  // An output nothing emits and nothing binds is an invitation to bind it.
   @Output() updateFilterOptions = new EventEmitter<Record<string, boolean>>();
   @Output() updateFilterStr = new EventEmitter<string>();
   @Output() update = new EventEmitter();
@@ -150,7 +153,6 @@ export class RequestFilterComponent implements OnInit, OnChanges, OnDestroy {
             });
 
             // this.updateFilterStr.emit(this.filterCtrl.value);
-            // this.filteredData.emit(data.map(d => d.id))
           });
         })
     );

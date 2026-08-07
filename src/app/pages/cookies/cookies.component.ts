@@ -64,6 +64,7 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
   isDrafting = false;
 
   private subscriptions = new Subscription();
+  private isDestroyed = false;
 
   ngOnInit(): void {
     // Both: the state holds the ids and the presets, the map holds the records,
@@ -88,13 +89,14 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
             this.selected = this.cookies.find((c) => c.id === selectedId);
           }
 
-          this.cdr.detectChanges();
+          this.detectChanges();
         }
       )
     );
   }
 
   ngOnDestroy(): void {
+    this.isDestroyed = true;
     this.subscriptions.unsubscribe();
   }
 
@@ -145,7 +147,7 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
     this.selected = saved;
     this.isDrafting = false;
     this.toast.success(`Saved ${saved.name}`, { duration: 2000 });
-    this.cdr.detectChanges();
+    this.detectChanges();
   }
 
   async onDelete(id: ohMyCookieId): Promise<void> {
@@ -154,6 +156,25 @@ export class PageCookiesComponent implements OnInit, OnDestroy {
     this.selected = undefined;
     this.isDrafting = false;
     this.toast.success('Deleted cookie', { duration: 2000 });
-    this.cdr.detectChanges();
+    this.detectChanges();
+  }
+
+  /**
+   * Rendering a view that has been torn down.
+   *
+   * `onSave` and `onDelete` both resume after an `await`, and the popup can be
+   * closed or the tab switched to another page while the background is still
+   * answering. The shape is the one `domains`, `domain-sidebar` and
+   * `har-import` already use.
+   *
+   * Note that Angular no longer punishes the unguarded call: `refreshView`
+   * returns early on a destroyed `LView`, so the `ViewDestroyedError` this used
+   * to raise is gone and the call is a no-op. The guard is here to state the
+   * invariant, not to prevent a crash.
+   */
+  private detectChanges(): void {
+    if (!this.isDestroyed) {
+      this.cdr.detectChanges();
+    }
   }
 }

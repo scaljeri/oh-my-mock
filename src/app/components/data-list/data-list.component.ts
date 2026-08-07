@@ -768,14 +768,14 @@ export class DataListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFilterUpdateData(data: string[]): void {
-    if (this.persistFilter) {
-      this.storeService.updateAux({ filteredRequests: data }, this.context);
-    }
-
-    this.filteredRequests = data;
-    this.recompute();
-  }
+  // There was an `onFilterUpdateData(data: string[])` here, the handler for
+  // `RequestFilterComponent`'s `filteredData` output. That output stopped being
+  // emitted when the filter was changed to send one `update` carrying the
+  // keywords, the options and the ids together, and the handler was never
+  // rebound — so it recomputed the rows and, alone among the recompute paths,
+  // never asked for a render. It was not a rendering bug that could bite,
+  // because nothing could call it; keeping it would have meant maintaining a
+  // second, subtly wrong copy of `onFilterUpdate` below.
 
   onFilterUpdate(update: Record<string, unknown>): void {
     if (this.persistFilter) {

@@ -175,3 +175,80 @@ describe('PageCookiesComponent', () => {
     expect(component.selected?.enabled).toEqual({ default: true });
   });
 });
+
+/**
+ * The same two paths as above, asserted on the DOM rather than on the fields.
+ *
+ * Both resume after an `await`, so the assignment that opens or closes the
+ * detail pane happens where nothing marks the view: under OnPush the fields
+ * change and the pane does not move. Reading `component.selected` cannot see
+ * that — it is true either way, which is the whole defect — so these go through
+ * `.oh-panes__detail`.
+ *
+ * `fixture.detectChanges()` would not rescue a missing `detectChanges()` here:
+ * it honours OnPush, so a view nothing has marked stays as it was.
+ *
+ * No `NO_ERRORS_SCHEMA`, unlike the suite above: it would let
+ * `.oh-panes__detail` match nothing and report the pane as closed whatever the
+ * component did.
+ */
+describe('PageCookiesComponent, the detail pane on screen', () => {
+  let fixture: ComponentFixture<PageCookiesComponent>;
+  let component: PageCookiesComponent;
+
+  const detailPane = (): Element | null =>
+    fixture.nativeElement.querySelector('.oh-panes__detail');
+  const panesHaveDetail = (): boolean =>
+    fixture.nativeElement
+      .querySelector('.oh-panes')
+      .classList.contains('has-detail');
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [PageCookiesComponent],
+      providers: [
+        {
+          provide: OhMyStateService,
+          useValue: {
+            state$: new BehaviorSubject(state({ cookies: ['c1'] })),
+            cookies$: new BehaviorSubject({ c1: cookie() })
+          }
+        },
+        {
+          provide: OhMyState,
+          useValue: {
+            upsertCookie: async () => cookie(),
+            deleteCookie: async () => undefined
+          }
+        },
+        {
+          provide: HotToastService,
+          useValue: { success: jest.fn(), error: jest.fn() }
+        }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(PageCookiesComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('puts the saved mock on screen', async () => {
+    expect(detailPane()).toBeNull();
+
+    await component.onSave({ name: 'session_id' });
+
+    expect(detailPane()).not.toBeNull();
+    expect(panesHaveDetail()).toBe(true);
+  });
+
+  it('takes the pane off screen once the delete has gone through', async () => {
+    await component.onSave({ name: 'session_id' });
+    expect(detailPane()).not.toBeNull();
+
+    await component.onDelete('c1');
+
+    expect(detailPane()).toBeNull();
+    expect(panesHaveDetail()).toBe(false);
+  });
+});

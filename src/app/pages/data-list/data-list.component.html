@@ -36,18 +36,24 @@ than beside it, so the list never loses width to it. -->
       </section>
     }
 
-    @if (!domain) {
-      <button
-        (click)="onAddData()"
-        class="new-data"
-        mat-fab
-        color="primary"
-        aria-label="Delete all mocks for a specific URL"
-      >
-        <!-- <mat-icon>add</mat-icon> -->
-        <mat-icon x-test="add-response" class="add" svgIcon="add"></mat-icon>
-      </button>
-    }
+    <!-- Unconditional, and it has to stay that way. This button used to sit
+    behind `@if (!domain)`, where `domain` was the `:domain` route parameter of
+    a list that could be pointed at *another* domain — you cannot add a request
+    to a domain you are only visiting, so the button was hidden there. Browsing
+    another domain moved to the state-explorer page in #32 and the route
+    parameter went with it, leaving `domain` declared and never assigned: the
+    condition read as a real rule while being permanently true. Re-attaching it
+    to the active domain would invert it and take the only way of adding a
+    request by hand off the page entirely. -->
+    <button
+      (click)="onAddData()"
+      class="new-data"
+      mat-fab
+      color="primary"
+      aria-label="Add a mock for a specific URL"
+    >
+      <mat-icon x-test="add-response" class="add" svgIcon="add"></mat-icon>
+    </button>
   </div>
 
   @if (hasDetail) {
