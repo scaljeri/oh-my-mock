@@ -77,6 +77,20 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
   /** The groups covering `activeDomain`, in the order that decides who answers. */
   groups: IOhMyGroupRow[] = [];
 
+  /**
+   * Which of the three inline forms is open, and on which row.
+   *
+   * Inline rather than dialogs, following the drawer's own idiom: naming a set
+   * of mocks is a two-second act and a modal over a 380px popup hides the list
+   * being changed. Only one can be open at a time — `openRenameOn` and
+   * `openDeleteOn` clear each other — so a row is never two things at once.
+   */
+  isCreating = false;
+  newName = '';
+  renamingId: ohMyGroupId | null = null;
+  renameName = '';
+  deletingId: ohMyGroupId | null = null;
+
   private subscriptions = new Subscription();
   private isDestroyed = false;
 
@@ -96,6 +110,9 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.appState.domain$.subscribe((domain) => {
         this.activeDomain = domain ?? '';
+        // A rename half-typed on the previous domain's group would otherwise
+        // still be open, over a row that is now somebody else's.
+        this.closeForms();
         this.detectChanges();
         // The group list is per domain, so switching domain changes it — and
         // nothing writes to storage on a switch, so the listener below will
@@ -181,6 +198,114 @@ export class DomainSidebarComponent implements OnInit, OnDestroy {
 
     await this.storeService.updateAux({ disabledGroups }, this.context);
     await this.refreshGroups();
+  }
+
+  /** Opens the "new group" field, closing whatever else was open. */
+  openCreate(): void {
+    this.closeForms();
+    this.isCreating = true;
+    this.newName = '';
+    this.detectChanges();
+  }
+
+  /**
+   * Creates a group holding nothing, covering the domain on screen.
+   *
+   * The name is all that is sent. The id and the place in the store's group
+   * list are the background's — see `OhMyState.createGroup`.
+   */
+  async onCreate(): Promise<void> {
+    const name = this.newName.trim();
+
+    // An empty name would make a row nobody can tell apart from another empty
+    // one, and the handler refuses it anyway. Keeping the field open says so
+    // more clearly than closing it and doing nothing.
+    if (!name) {
+      return;
+    }
+
+    this.closeForms();
+    await this.storeService.createGroup(name, this.context);
+    await this.refreshGroups();
+  }
+
+  /** Opens the rename field on one row. */
+  openRenameOn(row: IOhMyGroupRow): void {
+    this.closeForms();
+    this.renamingId = row.group.id;
+    this.renameName = row.group.name;
+    this.detectChanges();
+  }
+
+  /**
+   * Renames a group.
+   *
+   * The domain's own group is renameable like any other: its identity is the
+   * derived id, so the name is only ever a label — "My mocks" is where it
+   * starts, not what it is.
+   */
+  async onRename(row: IOhMyGroupRow): Promise<void> {
+    const name = this.renameName.trim();
+
+    if (!name || name === row.group.name) {
+      this.closeForms();
+      this.detectChanges();
+
+      return;
+    }
+
+    this.closeForms();
+    await this.storeService.renameGroup(row.group.id, name, this.context);
+    await this.refreshGroups();
+  }
+
+  /**
+   * Opens the delete confirmation on one row.
+   *
+   * The domain's own group opens it too, and gets the refusal instead of the
+   * question. Hiding or disabling the button would leave someone clicking at
+   * nothing and guessing why; this answers.
+   */
+  openDeleteOn(row: IOhMyGroupRow): void {
+    this.closeForms();
+    this.deletingId = row.group.id;
+    this.detectChanges();
+  }
+
+  /**
+   * Deletes a group and the mocks tagged with it.
+   *
+   * The confirmation says how many, because they are not moved anywhere — a
+   * request whose group is gone is served by nobody and drawn by nobody, so
+   * keeping the records would lose them rather than save them. See
+   * `OhMyGroupHandler.remove` for why re-tagging them to this domain's own
+   * group was rejected.
+   */
+  async onDelete(row: IOhMyGroupRow): Promise<void> {
+    // The handler refuses it as well. Both, because the handler is the rule and
+    // this is the only place anyone can see it being applied.
+    if (row.isOwn) {
+      return;
+    }
+
+    this.closeForms();
+    await this.storeService.deleteGroup(row.group.id, this.context);
+    await this.refreshGroups();
+  }
+
+  /** Shuts every inline form; what was typed into them is dropped. */
+  closeForms(): void {
+    this.isCreating = false;
+    this.newName = '';
+    this.renamingId = null;
+    this.renameName = '';
+    this.deletingId = null;
+  }
+
+  /** `closeForms` from the template, which has to redraw afterwards. */
+  onCancel(): void {
+    this.closeForms();
+    this.detectChanges();
   }
 
   /**

@@ -152,6 +152,50 @@
   transition: transform 180ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+// The toggle and its two actions sit side by side. The toggle used to *be* the
+// row, which is why the actions are siblings rather than children: a button
+// inside a button is invalid and the browser flattens it into one that fires
+// both handlers at once.
+.oh-group-nav__row {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-1;
+
+  // Hidden until the row is pointed at or something inside it has focus.
+  // `:focus-within` is not decoration here — without it the actions are
+  // unreachable by keyboard, since they are only ever rendered transparent.
+  &:hover .oh-group-nav__actions,
+  &:focus-within .oh-group-nav__actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.oh-group-nav__actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.oh-group-nav__action {
+  padding: 3px 6px;
+  border: 0;
+  border-radius: t.$oh-radius;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-xs;
+  color: t.$oh-text-subtle;
+  cursor: pointer;
+
+  &:hover {
+    background: t.$oh-bg-muted;
+    color: t.$oh-text;
+  }
+}
+
 .oh-group-nav__item {
   display: flex;
   align-items: center;
@@ -160,6 +204,7 @@
   // now, and a hundred-percent-wide sibling in a flex row pushes the row past
   // the drawer rather than sharing it.
   flex: 1;
+  width: 100%;
   min-width: 0;
   padding: 9px t.$oh-space-3;
   border: 0;
@@ -239,6 +284,102 @@
   font-size: t.$oh-size-sm;
   color: t.$oh-text-faint;
   font-variant-numeric: tabular-nums;
+}
+
+// ---- inline group forms ------------------------------------------------
+//
+// Naming a set of mocks and confirming a delete both happen in the drawer, in
+// the place the row is. A dialog over a popup this narrow covers the very list
+// you are naming the set apart from.
+
+.oh-group-nav__form {
+  display: flex;
+  align-items: center;
+  gap: t.$oh-space-1;
+  width: 100%;
+  padding: t.$oh-space-1 0;
+}
+
+.oh-group-nav__input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid t.$oh-border;
+  border-radius: t.$oh-radius;
+  background: t.$oh-bg-subtle;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text;
+
+  &:focus {
+    outline: none;
+    background: t.$oh-bg-surface;
+    border-color: t.$oh-brand;
+  }
+}
+
+.oh-group-nav__confirm {
+  flex: 0 0 auto;
+  padding: 6px t.$oh-space-3;
+  border: 0;
+  border-radius: t.$oh-radius;
+  background: t.$oh-brand;
+  color: #fff;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-base;
+  font-weight: t.$oh-weight-medium;
+  cursor: pointer;
+
+  &:hover {
+    background: t.$oh-brand-hover;
+  }
+}
+
+.oh-group-nav__cancel {
+  flex: 0 0 auto;
+  padding: 6px t.$oh-space-2;
+  border: 0;
+  background: transparent;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text-subtle;
+  cursor: pointer;
+
+  &:hover {
+    color: t.$oh-text;
+  }
+}
+
+.oh-group-nav__danger {
+  flex: 0 0 auto;
+  padding: 6px t.$oh-space-3;
+  border: 0;
+  border-radius: t.$oh-radius;
+  background: t.$oh-danger;
+  color: #fff;
+  font-family: t.$oh-font-sans;
+  font-size: t.$oh-size-base;
+  font-weight: t.$oh-weight-medium;
+  cursor: pointer;
+}
+
+.oh-group-nav__confirm-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.$oh-space-1;
+  width: 100%;
+  padding: t.$oh-space-2 t.$oh-space-3;
+  border-radius: 10px;
+  background: t.$oh-bg-sunken;
+}
+
+.oh-group-nav__warning,
+.oh-group-nav__refusal {
+  flex: 1 0 100%;
+  margin: 0 0 t.$oh-space-1;
+  font-size: t.$oh-size-base;
+  color: t.$oh-text;
 }
 
 .oh-domain-nav__empty {

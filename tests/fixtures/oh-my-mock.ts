@@ -152,6 +152,25 @@ export interface StoredRequest {
   selected?: Record<string, string>;
   mocks?: Record<string, { id: string; statusCode: number; label?: string }>;
   lastHit?: number;
+  /**
+   * Which mock group it belongs to. Absent means the domain's own local group
+   * — the default that let groups ship without rewriting a single request.
+   */
+  groupId?: string;
+}
+
+/**
+ * One mock group as stored.
+ *
+ * The id is the thing to watch: a domain's own group derives it from the
+ * domain (`local:<domain>`), and everything else generates one. Which of the
+ * two a record is decides whether it can be deleted.
+ */
+export interface StoredGroup {
+  id: string;
+  name: string;
+  source: 'local' | 'server' | 'cloud';
+  domains: string[];
 }
 
 /**
@@ -827,6 +846,51 @@ export class OhMyMockDriver {
 
       return stored[dataId] as StoredRequest | undefined;
     }, dataId);
+  }
+
+  /**
+   * The mock groups the store lists, in the order that decides who answers.
+   *
+   * Read through `OhMyMock.groups` rather than by scanning storage for group
+   * records, because being on that list is what makes a group exist — a record
+   * the list does not name is deleted as far as every reader is concerned, and
+   * a spec that scanned would call a half-finished delete a success.
+   *
+   * `domain` narrows it to the groups covering that domain. Worth passing:
+   * the list is **browser-wide**, so a profile always carries the demo
+   * domain's own group as well, and a spec about one site that forgets this
+   * asserts on somebody else's rows.
+   */
+  async groups(domain?: string): Promise<StoredGroup[]> {
+    return (await this.worker()).evaluate(async (domain) => {
+      const store = (await chrome.storage.local.get('OhMyMock')).OhMyMock as
+        { groups?: string[] } | undefined;
+      const ids = store?.groups ?? [];
+      const records = await chrome.storage.local.get(ids);
+
+      return ids
+        .map((id) => records[id] as StoredGroup | undefined)
+        .filter((g): g is StoredGroup => !!g)
+        .filter((g) => !domain || g.domains.includes(domain));
+    }, domain);
+  }
+
+  /**
+   * Files a stored request under a mock group.
+   *
+   * Membership is a tag on the request (`IData.groupId`) and nothing else — a
+   * group holds no list of its own — so this one write is the whole of it.
+   */
+  async tagRequest(dataId: string, groupId: string): Promise<void> {
+    await (await this.worker()).evaluate(
+      async ({ dataId, groupId }) => {
+        const stored = await chrome.storage.local.get(dataId);
+        const request = stored[dataId] as Record<string, unknown>;
+
+        await chrome.storage.local.set({ [dataId]: { ...request, groupId } });
+      },
+      { dataId, groupId }
+    );
   }
 
   /**

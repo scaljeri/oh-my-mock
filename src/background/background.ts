@@ -36,6 +36,7 @@ import { notWhileWiping, wipesRunOn } from './wipe-barrier';
 import { OhMyHitsHandler } from './handlers/hits-handler';
 // import { sendMsgToContent } from '../shared/utils/send-to-content';
 import { OhMyCookieHandler } from './handlers/cookie-handler';
+import { OhMyGroupHandler } from './handlers/group-handler';
 import { initCookieSync, primeCookieSync } from './cookie-sync';
 import { initCookieRecorder } from './cookie-recorder';
 import { reconcileMainWorldScripts, watchActiveDomains } from './main-world';
@@ -51,6 +52,10 @@ const queue = new OhMyQueue();
 OhMyResponseHandler.queue = queue; // Handlers can queue packets too!
 OhMyRequestHandler.queue = queue;
 OhMyCookieHandler.queue = queue;
+// The group handler deletes a group's requests out of the domain state, and
+// that state is written by every intercepted request — so it patches through
+// the state lane rather than writing the record itself.
+OhMyGroupHandler.queue = queue;
 
 // A full reset clears the whole of `chrome.storage.local`, and every lane below
 // writes records of its own outside the store's write queue. `wipe-barrier.ts`
@@ -96,6 +101,7 @@ queue.addHandler(payloadType.RESPONSE, OhMyResponseHandler.update);
 queue.addHandler(payloadType.REQUEST, OhMyRequestHandler.update);
 queue.addHandler(payloadType.REMOVE, OhMyRemoveHandler.update);
 queue.addHandler(payloadType.COOKIE, OhMyCookieHandler.update);
+queue.addHandler(payloadType.GROUP, OhMyGroupHandler.update);
 queue.addHandler(payloadType.HITS, OhMyHitsHandler.update);
 queue.addHandler(payloadType.SET_COOKIES, async (payload: IPacketPayload) => {
   const domain = payload.context?.domain;
@@ -128,7 +134,7 @@ queue.addHandler(payloadType.RESET, (payload: IPacketPayload) =>
 
 const messageBus = new OhMyMessageBus().setTrigger(triggerRuntime);
 
-const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.ADD_DOMAIN, payloadType.MOVE_GROUP, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
+const stream$ = messageBus.streamByType$([payloadType.UPSERT, payloadType.RESPONSE, payloadType.REQUEST, payloadType.STATE, payloadType.STORE, payloadType.ADD_DOMAIN, payloadType.MOVE_GROUP, payloadType.GROUP, payloadType.REMOVE, payloadType.RESET, payloadType.COOKIE, payloadType.SET_COOKIES, payloadType.HITS],
   [appSources.CONTENT, appSources.POPUP])
 
 /**

@@ -10,6 +10,15 @@ const DOMAIN = 'example.com';
 const group = (base: Partial<IOhMyGroup>): IOhMyGroup =>
   GroupUtils.init({ domains: [DOMAIN], ...base });
 
+/**
+ * The domain's own group, with the derived id `GroupUtils.localFor` matches on.
+ * Built through `defaultLocalFor` rather than given an id of its own, because
+ * an id of its own is precisely what would stop it being the domain's group.
+ */
+const localGroup = (): IOhMyGroup => GroupUtils.defaultLocalFor(DOMAIN);
+
+const LOCAL = GroupUtils.localIdFor(DOMAIN);
+
 const request = (base: Partial<IData> = {}): IData =>
   ({ id: 'r1', ...base }) as IData;
 
@@ -23,7 +32,7 @@ describe('countByGroup', () => {
    * would read as empty the moment groups shipped.
    */
   it('counts untagged requests towards the domain own local group', () => {
-    const local = group({ id: 'local', source: 'local' });
+    const local = localGroup();
 
     const counts = countByGroup(
       [request(), request({ id: 'r2' })],
@@ -31,11 +40,11 @@ describe('countByGroup', () => {
       DOMAIN
     );
 
-    expect(counts['local']).toBe(2);
+    expect(counts[LOCAL]).toBe(2);
   });
 
   it('counts a tagged request towards its tag', () => {
-    const local = group({ id: 'local', source: 'local' });
+    const local = localGroup();
     const theirs = group({ id: 'theirs', source: 'cloud' });
 
     const counts = countByGroup(
@@ -44,22 +53,39 @@ describe('countByGroup', () => {
       DOMAIN
     );
 
-    expect(counts).toEqual({ local: 1, theirs: 1 });
+    expect(counts).toEqual({ [LOCAL]: 1, theirs: 1 });
+  });
+
+  /**
+   * A group made from the drawer is `local` and covers the domain it was made
+   * on, so it answers the old "a local group covering this domain" test just
+   * as well as the domain's own does. Whichever came first in the array used
+   * to collect every untagged request — a count that changed with the order
+   * `chrome.storage` happened to hand the records back in.
+   */
+  it('does not count untagged requests towards a group someone made', () => {
+    const mine = group({ id: 'mine', source: 'local', name: 'Payments' });
+    const local = localGroup();
+
+    expect(countByGroup([request()], [mine, local], DOMAIN)).toEqual({
+      mine: 0,
+      [LOCAL]: 1
+    });
   });
 
   it('gives a group with nothing in it a zero rather than no entry', () => {
     const empty = group({ id: 'empty', source: 'server' });
-    const local = group({ id: 'local', source: 'local' });
+    const local = localGroup();
 
     expect(countByGroup([request()], [local, empty], DOMAIN)).toEqual({
-      local: 1,
+      [LOCAL]: 1,
       empty: 0
     });
   });
 
   /** Matches `GroupUtils.isActive`: nothing serves it, so nothing counts it. */
   it('counts a request tagged with a group that is gone towards nobody', () => {
-    const local = group({ id: 'local', source: 'local' });
+    const local = localGroup();
 
     const counts = countByGroup(
       [request({ groupId: 'deleted' })],
@@ -67,14 +93,14 @@ describe('countByGroup', () => {
       DOMAIN
     );
 
-    expect(counts).toEqual({ local: 0 });
+    expect(counts).toEqual({ [LOCAL]: 0 });
   });
 
   it('skips a record that has not loaded yet', () => {
-    const local = group({ id: 'local', source: 'local' });
+    const local = localGroup();
 
     expect(countByGroup([undefined, request()], [local], DOMAIN)).toEqual({
-      local: 1
+      [LOCAL]: 1
     });
   });
 

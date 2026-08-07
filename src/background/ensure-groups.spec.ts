@@ -154,6 +154,10 @@ describe('ensure-groups', () => {
   });
 
   it('adopts a group the store list never heard of, keeping the stated order', async () => {
+    // A generated id and `source: 'local'` is what the drawer's "New group"
+    // makes — a group of this browser's own that is *not* the domain's own
+    // group. So example.com still has none, and gets one, before the stray is
+    // adopted at the end of the list.
     const stray = GroupUtils.init({ source: 'local', domains: ['example.com'] });
     records[stray.id] = stray;
     const other = GroupUtils.init({ source: 'cloud', domains: ['x.com'] });
@@ -161,7 +165,11 @@ describe('ensure-groups', () => {
 
     const updated = await ensureGroups(store({ groups: [other.id] }));
 
-    expect(updated.groups).toEqual([other.id, stray.id]);
+    expect(updated.groups).toEqual([
+      other.id,
+      GroupUtils.localIdFor('example.com'),
+      stray.id
+    ]);
   });
 
   it('writes no request records — membership is the absent tag', async () => {

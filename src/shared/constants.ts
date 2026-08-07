@@ -112,6 +112,17 @@ export enum payloadType {
   /** Adds, changes or removes one cookie mock. */
   COOKIE = 'cookie',
   /**
+   * "Create this mock group, rename it, or delete it."
+   *
+   * Popup -> background. Its own message rather than a `STORE` one carrying a
+   * group list, for the reason `ADD_DOMAIN` has one: a group exists by being
+   * listed in `IOhMyMock.groups`, and a sender cannot say what that list *is*
+   * without undoing whatever reached it since the sender last looked. So it
+   * says what changed and the background works out the list — see
+   * `src/background/handlers/group-handler.ts`.
+   */
+  GROUP = 'group',
+  /**
    * "Put these cookies in the jar, and tell me when they are there."
    *
    * Content script -> background, for the cookies a served response sets. It

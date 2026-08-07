@@ -5,6 +5,24 @@ import { StateUtils } from './state';
 
 const DOMAIN: ohMyDomain = 'example.com';
 
+/**
+ * The id of the domain's own group.
+ *
+ * It turns up in nearly every expectation below because `coveringFor` appends
+ * it whenever the records handed in do not already carry it — the domain's own
+ * mocks have to have somewhere to be, record or no record. Named rather than
+ * spelled out so the assertions stay about the group under test.
+ */
+const LOCAL = GroupUtils.localIdFor(DOMAIN);
+
+/**
+ * A group with a generated id, covering `DOMAIN`.
+ *
+ * `source` defaults to `local`, and that is deliberate: a local group with a
+ * generated id is what the sidebar's "New group" makes. It is *not* the
+ * domain's own group — that one has the derived id — so it has to be listed in
+ * the order like anything else to be served.
+ */
 const group = (base: Partial<IOhMyGroup>): IOhMyGroup =>
   GroupUtils.init({ domains: [DOMAIN], ...base });
 
@@ -30,9 +48,9 @@ describe('GroupUtils', () => {
       const mine = group({ id: 'a', name: 'Mine' });
       const elsewhere = group({ id: 'b', domains: ['other.com'] });
 
-      const active = GroupUtils.activeFor([mine, elsewhere], state());
+      const active = GroupUtils.activeFor([mine, elsewhere], state(), ['a', 'b']);
 
-      expect(active.map(g => g.id)).toEqual(['a']);
+      expect(active.map(g => g.id)).toEqual(['a', LOCAL]);
     });
 
     it('leaves out the ones this domain switched off', () => {
@@ -41,10 +59,11 @@ describe('GroupUtils', () => {
 
       const active = GroupUtils.activeFor(
         [a, b],
-        state({ aux: { disabledGroups: ['b'] } })
+        state({ aux: { disabledGroups: ['b'] } }),
+        ['a', 'b']
       );
 
-      expect(active.map(g => g.id)).toEqual(['a']);
+      expect(active.map(g => g.id)).toEqual(['a', LOCAL]);
     });
 
     it('switching off is per domain — the group still covers the others', () => {
@@ -52,8 +71,12 @@ describe('GroupUtils', () => {
       const off = state({ aux: { disabledGroups: ['a'] } });
       const other = StateUtils.init({ domain: 'other.com' });
 
-      expect(GroupUtils.activeFor([shared], off)).toEqual([]);
-      expect(GroupUtils.activeFor([shared], other).map(g => g.id)).toEqual(['a']);
+      // Only the domain's own group is left here — that one cannot be switched
+      // off out of existence, it is where the untagged mocks live.
+      expect(GroupUtils.activeFor([shared], off, ['a']).map(g => g.id))
+        .toEqual([LOCAL]);
+      expect(GroupUtils.activeFor([shared], other, ['a']).map(g => g.id))
+        .toEqual(['a', GroupUtils.localIdFor('other.com')]);
     });
 
     it('orders by the store list, which is what decides who answers', () => {
@@ -63,7 +86,7 @@ describe('GroupUtils', () => {
 
       const active = GroupUtils.activeFor([a, b, c], state(), ['c', 'a', 'b']);
 
-      expect(active.map(g => g.id)).toEqual(['c', 'a', 'b']);
+      expect(active.map(g => g.id)).toEqual(['c', 'a', 'b', LOCAL]);
     });
 
     /**
@@ -82,7 +105,24 @@ describe('GroupUtils', () => {
 
       const active = GroupUtils.activeFor([known, stray], state(), ['known']);
 
-      expect(active.map(g => g.id)).toEqual(['known']);
+      expect(active.map(g => g.id)).toEqual(['known', LOCAL]);
+    });
+
+    /**
+     * The listing requirement used to be waived for anything with
+     * `source === 'local'`, which was the same thing as "the domain's own"
+     * only while `ensureGroups` was the only maker of groups. Now that the
+     * sidebar makes them, a deleted local group whose record a tab still held
+     * would have gone on serving there for the life of that tab — the deletion
+     * dropping it from `store.groups` being the only thing that says it is
+     * gone.
+     */
+    it('does not serve an unlisted local group either, only the derived one', () => {
+      const deleted = group({ id: 'deleted', source: 'local' });
+
+      const active = GroupUtils.activeFor([deleted], state(), []);
+
+      expect(active.map(g => g.id)).toEqual([LOCAL]);
     });
 
     /**
@@ -124,11 +164,11 @@ describe('GroupUtils', () => {
 
       const rows = GroupUtils.coveringFor([a, b], DOMAIN, ['b', 'a']);
 
-      expect(rows.map(g => g.id)).toEqual(['b', 'a']);
+      expect(rows.map(g => g.id)).toEqual(['b', 'a', LOCAL]);
       expect(
         GroupUtils.activeFor([a, b], state({ aux: { disabledGroups: ['b'] } }), ['b', 'a'])
           .map(g => g.id)
-      ).toEqual(['a']);
+      ).toEqual(['a', LOCAL]);
     });
   });
 
@@ -252,13 +292,29 @@ describe('GroupUtils', () => {
   });
 
   describe('localFor', () => {
-    it('finds this domain own group and ignores other sources', () => {
+    it('finds this domain own group by its derived id', () => {
       const cloud = group({ id: 'cloud', source: 'cloud' });
-      const local = group({ id: 'local', source: 'local' });
+      const local = GroupUtils.defaultLocalFor(DOMAIN);
 
-      expect(GroupUtils.localFor([cloud, local], DOMAIN)?.id).toBe('local');
+      expect(GroupUtils.localFor([cloud, local], DOMAIN)?.id).toBe(LOCAL);
       expect(GroupUtils.localFor([cloud], DOMAIN)).toBeUndefined();
       expect(GroupUtils.localFor([local], 'other.com')).toBeUndefined();
+    });
+
+    /**
+     * The reason this is keyed on the id rather than on the source. "A local
+     * group covering this domain" describes both of these, so the answer was
+     * whichever `Object.values` put first — and that answer decides where
+     * every untagged request is served and counted. It would have flipped
+     * between two reads of the same storage.
+     */
+    it('is not fooled by a second local group someone made for the domain', () => {
+      const mine = group({ id: 'mine', source: 'local', name: 'Payments' });
+      const local = GroupUtils.defaultLocalFor(DOMAIN);
+
+      expect(GroupUtils.localFor([mine, local], DOMAIN)?.id).toBe(LOCAL);
+      expect(GroupUtils.localFor([local, mine], DOMAIN)?.id).toBe(LOCAL);
+      expect(GroupUtils.localFor([mine], DOMAIN)).toBeUndefined();
     });
   });
 });

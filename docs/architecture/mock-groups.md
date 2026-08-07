@@ -7,6 +7,14 @@ consults them through `OhMyRequestIndex`, the sidebar draws them
 (`domain-sidebar/`), and the request list can be narrowed to traffic with a
 badge naming the group that answered. The rest is written down so the shape
 stops being reconstructed from scratch every time.
+**Status: model, serving path, sidebar and management built.** The records, the
+resolution and the migration exist (`src/shared/types/group.ts`,
+`src/shared/utils/group.ts`, `src/background/ensure-groups.ts`); the serving
+path consults them through `OhMyRequestIndex`; the sidebar draws them
+(`domain-sidebar/`) and can now create, rename and delete them
+(`src/background/handlers/group-handler.ts`). The group *view* — the library —
+is not built yet. The rest is written down so the shape stops being
+reconstructed from scratch every time.
 
 **Status: model, serving path, sidebar and reordering built.** The records, the
 resolution and the migration exist (`src/shared/types/group.ts`,
@@ -197,6 +205,84 @@ arbitrarily.
   derived, re-adding the domain silently reused the leftover. `ensureGroups`
   prunes local groups whose domain is gone; `server` and `cloud` groups keep
   their records while their domains come and go.
+- **"The domain's own group" is the derived id, not `source === 'local'`.**
+  Those were the same answer only while `ensureGroups` was the only maker of
+  groups. A group made from the drawer is local too and covers the domain it
+  was made on, so the source test would have had two candidates and returned
+  whichever `Object.values` put first — and that answer decides where every
+  *untagged* request is served and counted, so it would have flipped between
+  two reads of the same storage. `GroupUtils.localFor` matches
+  `local:<domain>` and nothing else, and `coveringFor` grants the
+  unlisted-but-still-serving exception to that id alone. Without the second
+  half, a group deleted from `store.groups` would go on serving in whichever
+  tab still held its record.
+
+## Managing them
+
+Three acts, all in the drawer where the groups already are, all through one
+message — `payloadType.GROUP`, handled by `OhMyGroupHandler`. The popup sends
+what *changed* and never the outcome: a group exists in two records, its own and
+its id in `IOhMyMock.groups`, and only `mutateStore` writes the second. A sender
+cannot say what that list is, because `ensureGroups` and every content script
+registering a domain add to it behind the sender's back.
+
+Order matters within each act, and it is chosen so that a half-finished one is
+harmless:
+
+- **Creating** writes the record *first*, then lists it. A record nobody lists
+  reads as deleted, and `ensureGroups` adopts it next time it scans. Listing
+  first would name a group that is not there.
+- **Deleting** removes the record *first*, then unlists it. A listed id whose
+  record is gone reads as nothing at all — which is what a group being deleted
+  should read as.
+
+A group made here is `source: 'local'` with a **generated** id. That is what
+keeps it distinct from the domain's own group, whose id is derived. See the
+`localFor` note below: the two are otherwise indistinguishable, and one of them
+owns every untagged request.
+
+### What happens to the mocks in a deleted group
+
+**They are deleted with it, and the drawer says how many first.**
+
+This is the decision the design left open, and it is the one that costs data if
+it goes quietly. The three candidates were:
+
+- **Leave them.** Rejected. `GroupUtils.isActive` does not serve a request
+  tagged with a group that is gone, `countByGroup` does not count it and the
+  drawer does not draw it — so the records would sit in storage, named by
+  `IState.requests` for ever, reachable by nothing. That is not keeping the
+  mocks; it is losing them somewhere nobody can look.
+- **Re-tag them to the domain's own group.** Rejected, because it is a merge,
+  and nothing in this design merges. Two sets are kept apart precisely because
+  their urls are regexes that cannot be compared; putting them in one leaves
+  `StateUtils.findRequest` — which answers with the first match — picking
+  between duplicates arbitrarily. That is the same trap `importJSON` has when
+  an import is run twice.
+- **Delete them.** Taken. It is the only outcome that leaves storage
+  consistent, and the only cost is that it has to be *said*: the confirmation
+  in the drawer names the set and counts the mocks going with it, and there is
+  no undo. Their response records go too, and the ids leave `IState.requests`
+  through the state handler's own lane — the state is rewritten by every
+  intercepted request, so nothing here writes that record whole.
+
+Untagged requests are never touched: they belong to the domain's own group, and
+that one cannot be deleted.
+
+### What the domain's own group can and cannot do
+
+It can be **renamed**. Its record exists for exactly that — which group it is
+comes from the derived id, so `GroupUtils.DEFAULT_LOCAL_NAME` ("My mocks") is
+where the name starts rather than what the group *is*.
+
+It cannot be **deleted**. It exists by virtue of the domain, so deleting it
+would mean `ensureGroups` writing it straight back on the next store write, with
+every untagged mock of the domain belonging nowhere in between. A local group
+dies with its domain and no sooner. The drawer refuses it *visibly* — the Delete
+button opens the same strip and puts the reason in it, rather than being hidden
+or greyed out, because a button that does nothing leaves someone clicking and
+guessing. `OhMyGroupHandler.remove` refuses it as well; the UI is where the rule
+is seen, the handler is where it is kept.
 
 ## Reordering
 

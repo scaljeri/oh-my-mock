@@ -76,9 +76,21 @@ export class GroupUtils {
    * only when its domain does. `undefined` while the record has not loaded or
    * been written yet, which is why every caller has to cope with its absence
    * rather than assume it.
+   *
+   * Matched on the **derived id**, not on "a local group covering this domain".
+   * The two were the same answer only while `ensureGroups` was the sole maker
+   * of groups; the sidebar can now make one too, and a group someone creates
+   * for a site they are on is `local` and covers that domain — so the source
+   * test would hand back whichever of the two `Object.values` happened to put
+   * first. That answer decides where every *untagged* request is counted and
+   * served from, and it would have flipped between reads of the same storage.
+   * The id is derivable precisely so that "the domain's own" is a fact rather
+   * than a search.
    */
   static localFor(groups: IOhMyGroup[], domain: ohMyDomain): IOhMyGroup | undefined {
-    return groups.find(g => g.source === 'local' && this.coversDomain(g, domain));
+    const id = this.localIdFor(domain);
+
+    return groups.find(g => g.id === id);
   }
 
   /**
@@ -111,6 +123,13 @@ export class GroupUtils {
    * `ensureGroups` writes on some paths and not others — and refusing it for
    * being unlisted would silence every untagged mock. It sorts last until the
    * list carries it.
+   *
+   * That exception is granted to the derived id alone, not to every `local`
+   * group. Now that the sidebar creates local groups, `source === 'local'`
+   * would have exempted those too — and a group deleted from the list, whose
+   * record a tab still held, would have gone on serving and being drawn there
+   * for as long as that tab lived. Exactly the "same group, three answers"
+   * this rule was written to end.
    */
   static coveringFor(groups: IOhMyGroup[], domain: ohMyDomain, order: ohMyGroupId[] = []): IOhMyGroup[] {
     const rank = (id: ohMyGroupId) => {
@@ -128,7 +147,7 @@ export class GroupUtils {
     }
 
     return covering
-      .filter(g => order.includes(g.id) || g.source === 'local')
+      .filter(g => order.includes(g.id) || g.id === this.localIdFor(domain))
       .sort((a, b) => rank(a.id) - rank(b.id));
   }
 

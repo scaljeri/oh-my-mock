@@ -44,3 +44,22 @@ export interface IOhMyGroup {
   version: string;
   modifiedOn?: string;
 }
+
+/**
+ * What a `payloadType.GROUP` packet carries: create, rename or delete one
+ * group.
+ *
+ * The change, never the result. A group exists in two records — its own, and
+ * its id in `IOhMyMock.groups` — and only the background may write the second
+ * (`src/background/store-writer.ts`). A sender that described the outcome
+ * would have to say what the whole group list is, and it cannot: whatever it
+ * read is already out of date by the time the background reads it again.
+ *
+ * `group.id` is what distinguishes the three. Absent means create; present
+ * means rename, or delete when `remove` is set.
+ */
+export interface IOhMyGroupUpdate {
+  group: Partial<IOhMyGroup>;
+  /** Deletes the group (by id), and the requests tagged with it, instead. */
+  remove?: boolean;
+}

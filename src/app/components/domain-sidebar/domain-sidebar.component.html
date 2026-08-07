@@ -30,7 +30,17 @@ would ask them to learn a concept where they only wanted to see their mocks.
     (cdkDropListDropped)="onDrop($event)"
   >
     @for (row of groups; track trackByGroup($index, row)) {
-      <li class="oh-group-nav__row" cdkDrag cdkDragLockAxis="y">
+      <!--
+      The actions are hidden until the row is hovered or something in it has
+      focus, so anything reaching for them has to come through the row first —
+      which is what a hand does anyway.
+      -->
+      <li
+        class="oh-group-nav__row"
+        x-test="group-row"
+        cdkDrag
+        cdkDragLockAxis="y"
+      >
         <!--
         A handle, so the drag cannot start on the checkbox beside it. Without
         one, every attempt to switch a group off that moved a few pixels became
@@ -49,48 +59,168 @@ would ask them to learn a concept where they only wanted to see their mocks.
           title="Drag, or use the arrow keys — the higher a set is, the sooner it answers"
           (keydown)="onReorderKey($event, $index)"
         ></button>
-        <!--
-        A checkbox rather than a link: it does not navigate, it decides whether
-        this group answers here. Switched off is stored per domain, so the same
-        group stays on for the other domains it covers.
-        -->
-        <button
-          class="oh-group-nav__item"
-          type="button"
-          role="checkbox"
-          x-test="group-item"
-          [attr.aria-checked]="row.enabled"
-          [class.is-off]="!row.enabled"
-          [title]="
-            row.enabled
-              ? 'Switch off for ' + activeDomain
-              : 'Switch on for ' + activeDomain
-          "
-          (click)="onToggleGroup(row)"
-        >
+        @if (renamingId === row.group.id) {
+          <!--
+          Renaming happens in place, over the row being renamed. A dialog would
+          cover the list you are naming this set apart *from*.
+          -->
+          <form
+            class="oh-group-nav__form"
+            (ngSubmit)="onRename(row)"
+            x-test="group-rename-form"
+          >
+            <input
+              class="oh-group-nav__input"
+              type="text"
+              name="renameName"
+              aria-label="Rename these mocks"
+              x-test="group-rename-input"
+              autocomplete="off"
+              [(ngModel)]="renameName"
+              (keydown.escape)="onCancel()"
+            />
+            <button
+              class="oh-group-nav__confirm"
+              type="submit"
+              x-test="group-rename-save"
+            >
+              Save
+            </button>
+            <button
+              class="oh-group-nav__cancel"
+              type="button"
+              x-test="group-rename-cancel"
+              (click)="onCancel()"
+            >
+              Cancel
+            </button>
+          </form>
+        } @else if (deletingId === row.group.id) {
+          <div class="oh-group-nav__confirm-strip" x-test="group-delete-confirm">
+            @if (row.isOwn) {
+              <!--
+              The refusal, said rather than implied. This group exists because
+              the domain does — its id is derived from it — so deleting it
+              would only mean the background writing it again, with every mock
+              that carries no tag homeless in between. A hidden or greyed-out
+              button leaves someone clicking at nothing and guessing why.
+              -->
+              <p class="oh-group-nav__refusal" x-test="group-delete-refusal">
+                These are {{ activeDomain }}'s own mocks. They go when the
+                domain does — forget the domain to be rid of them.
+              </p>
+              <button
+                class="oh-group-nav__cancel"
+                type="button"
+                x-test="group-delete-cancel"
+                (click)="onCancel()"
+              >
+                Close
+              </button>
+            } @else {
+              <!--
+              The count is the point of this sentence. The mocks are deleted
+              with the group, not moved: a mock whose group is gone is served
+              by nobody and shown by nobody, so keeping the records would lose
+              them rather than save them. Nobody should find that out
+              afterwards.
+              -->
+              <p class="oh-group-nav__warning" x-test="group-delete-warning">
+                Delete "{{ row.group.name }}" and its
+                {{ row.requests }} mock{{ row.requests === 1 ? '' : 's' }}?
+                They cannot be recovered.
+              </p>
+              <button
+                class="oh-group-nav__danger"
+                type="button"
+                x-test="group-delete-confirm-btn"
+                (click)="onDelete(row)"
+              >
+                Delete
+              </button>
+              <button
+                class="oh-group-nav__cancel"
+                type="button"
+                x-test="group-delete-cancel"
+                (click)="onCancel()"
+              >
+                Cancel
+              </button>
+            }
+          </div>
+        } @else {
+          <!--
+          A checkbox rather than a link: it does not navigate, it decides whether
+          this group answers here. Switched off is stored per domain, so the same
+          group stays on for the other domains it covers.
+          -->
+          <button
+            class="oh-group-nav__item"
+            type="button"
+            role="checkbox"
+            x-test="group-item"
+            [attr.aria-checked]="row.enabled"
+            [class.is-off]="!row.enabled"
+            [title]="
+              row.enabled
+                ? 'Switch off for ' + activeDomain
+                : 'Switch on for ' + activeDomain
+            "
+            (click)="onToggleGroup(row)"
+          >
 <!-- The tick is drawn in CSS. There is no `check` asset and an unregistered
-          `svgIcon` renders nothing at all — silently, which is how this project
-          keeps losing icons. -->
-          <span
-            class="oh-group-nav__check"
-            [class.is-on]="row.enabled"
-            aria-hidden="true"
-          ></span>
-          <span class="oh-group-nav__name" x-test="group-name">{{
-            row.group.name
-          }}</span>
-          <!-- Only the sources that are somewhere else are labelled; this
-          browser's own is the ordinary case and a badge on every row would be
-          noise. -->
-          @if (row.group.source !== 'local') {
-            <span class="oh-group-nav__source" x-test="group-source">{{
-              row.group.source
+            `svgIcon` renders nothing at all — silently, which is how this project
+            keeps losing icons. -->
+            <span
+              class="oh-group-nav__check"
+              [class.is-on]="row.enabled"
+              aria-hidden="true"
+            ></span>
+            <span class="oh-group-nav__name" x-test="group-name">{{
+              row.group.name
             }}</span>
-          }
-          <span class="oh-group-nav__count" x-test="group-count">{{
-            row.requests
-          }}</span>
-        </button>
+            <!-- Only the sources that are somewhere else are labelled; this
+            browser's own is the ordinary case and a badge on every row would be
+            noise. -->
+            @if (row.group.source !== 'local') {
+              <span class="oh-group-nav__source" x-test="group-source">{{
+                row.group.source
+              }}</span>
+            }
+            <span class="oh-group-nav__count" x-test="group-count">{{
+              row.requests
+            }}</span>
+          </button>
+          <!--
+          Siblings of the toggle, not children of it: a button inside a button
+          is invalid, and the browser flattens it into something that fires
+          both.
+          -->
+          <span class="oh-group-nav__actions">
+            <button
+              class="oh-group-nav__action"
+              type="button"
+              x-test="group-rename"
+              [title]="'Rename ' + row.group.name"
+              (click)="openRenameOn(row)"
+            >
+              Rename
+            </button>
+            <button
+              class="oh-group-nav__action"
+              type="button"
+              x-test="group-delete"
+              [title]="
+                row.isOwn
+                  ? 'The own mocks of ' + activeDomain + ' cannot be deleted'
+                  : 'Delete ' + row.group.name + ' and its mocks'
+              "
+              (click)="openDeleteOn(row)"
+            >
+              Delete
+            </button>
+          </span>
+        }
       </li>
     }
   </ul>
@@ -100,6 +230,49 @@ would ask them to learn a concept where they only wanted to see their mocks.
   }
 
   <div class="oh-domain-nav__footer">
+    @if (isCreating) {
+      <form class="oh-group-nav__form" (ngSubmit)="onCreate()" x-test="group-new-form">
+        <input
+          class="oh-group-nav__input"
+          type="text"
+          name="newName"
+          placeholder="Name these mocks"
+          aria-label="Name these mocks"
+          x-test="group-new-input"
+          autocomplete="off"
+          [(ngModel)]="newName"
+          (keydown.escape)="onCancel()"
+        />
+        <button class="oh-group-nav__confirm" type="submit" x-test="group-new-save">
+          Add
+        </button>
+        <button
+          class="oh-group-nav__cancel"
+          type="button"
+          x-test="group-new-cancel"
+          (click)="onCancel()"
+        >
+          Cancel
+        </button>
+      </form>
+    } @else {
+      <!--
+      A set starts empty and is filled from the request list, the same way the
+      domain's own set was filled. There is nothing to pick here — the source
+      is this browser; a server or cloud set arrives, it is not typed in.
+      -->
+      <button
+        class="oh-domain-nav__add"
+        type="button"
+        x-test="group-new"
+        title="A new, empty set of mocks for this site"
+        (click)="openCreate()"
+      >
+        <span class="oh-domain-nav__add-sign" aria-hidden="true">+</span>
+        New set of mocks
+      </button>
+    }
+
     <button
       class="oh-domain-nav__import"
       type="button"

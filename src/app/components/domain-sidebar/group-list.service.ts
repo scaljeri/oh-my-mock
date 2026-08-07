@@ -17,6 +17,17 @@ export interface IOhMyGroupRow {
   requests: number;
   /** Off means this domain switched it off; the group itself is untouched. */
   enabled: boolean;
+  /**
+   * The domain's own group — the one an untagged request belongs to.
+   *
+   * It cannot be deleted: it exists by virtue of the domain, so deleting it
+   * would only mean `ensureGroups` writing it again, with every untagged mock
+   * of the domain homeless in between. Decided here rather than in the
+   * template, because the answer is the derived id (`GroupUtils.localIdFor`)
+   * and not `source === 'local'` — a group made from this very drawer is local
+   * too, and deleting one of those has to work.
+   */
+  isOwn: boolean;
 }
 
 /**
@@ -106,11 +117,13 @@ export class GroupListService {
     );
     const counts = countByGroup(requests, groups, state.domain);
     const disabled = state.aux?.disabledGroups ?? [];
+    const own = GroupUtils.localIdFor(state.domain);
 
     return groups.map((group) => ({
       group,
       requests: counts[group.id] ?? 0,
-      enabled: !disabled.includes(group.id)
+      enabled: !disabled.includes(group.id),
+      isOwn: group.id === own
     }));
   }
 

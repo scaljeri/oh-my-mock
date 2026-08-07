@@ -14,6 +14,8 @@ import {
   ohMyPresetId,
   IOhMyCookie,
   ohMyCookieId,
+  IOhMyGroup,
+  IOhMyGroupUpdate,
   ohMyGroupId
 } from '@shared/type';
 import { IOhMyCookieUpdate } from '@shared/utils/cookie';
@@ -428,6 +430,59 @@ export class OhMyState {
     );
 
     return state;
+  }
+
+  /**
+   * Creates a mock group covering `context.domain`.
+   *
+   * Only the name goes over the wire. The id is the background's to generate
+   * and the place in `IOhMyMock.groups` is the background's to append — the
+   * popup is in no position to say what that list is, since `ensureGroups` and
+   * every content script registering a domain add to it behind its back. See
+   * `src/background/handlers/group-handler.ts`.
+   */
+  async createGroup(
+    name: string,
+    context: IOhMyContext
+  ): Promise<IOhMyGroup | undefined> {
+    return OhMySendToBg.full<IOhMyGroupUpdate, IOhMyGroup | undefined>(
+      { group: { name } },
+      payloadType.GROUP,
+      { domain: context.domain },
+      'popup;createGroup'
+    );
+  }
+
+  /** Renames one group. The id and the domains it covers are left alone. */
+  async renameGroup(
+    id: ohMyGroupId,
+    name: string,
+    context: IOhMyContext
+  ): Promise<IOhMyGroup | undefined> {
+    return OhMySendToBg.full<IOhMyGroupUpdate, IOhMyGroup | undefined>(
+      { group: { id, name } },
+      payloadType.GROUP,
+      { domain: context.domain },
+      'popup;renameGroup'
+    );
+  }
+
+  /**
+   * Deletes a group **and every request tagged with it**.
+   *
+   * The mocks go with it. They have to go somewhere: a request whose group is
+   * gone is served by nobody and drawn by nobody, so leaving the records would
+   * lose them rather than keep them. Whoever calls this owes the user that
+   * sentence *before* the call — the drawer says how many mocks it is about to
+   * take.
+   */
+  async deleteGroup(id: ohMyGroupId, context: IOhMyContext): Promise<void> {
+    await OhMySendToBg.full<IOhMyGroupUpdate, undefined>(
+      { group: { id }, remove: true },
+      payloadType.GROUP,
+      { domain: context.domain },
+      'popup;deleteGroup'
+    );
   }
 
   /**

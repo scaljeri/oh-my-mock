@@ -1,6 +1,6 @@
 ///<reference types="chrome"/>
 import { objectTypes, STORAGE_KEY } from '../constants';
-import { IData, IMock, IOhMyCookie, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
+import { IData, IMock, IOhMyCookie, IOhMyGroup, IOhMyMock, IState, ohMyDomain, ohMyMockId } from '../type';
 import { Subject } from 'rxjs';
 import { MigrateUtils } from './migrate';
 import { debugBuilder, errorBuilder } from './logging';
@@ -78,7 +78,11 @@ export class StorageUtils {
     StorageUtils.chrome.storage.onChanged.removeListener(StorageUtils.callback);
   }
 
-  static get<T extends IOhMyMock | IState | IMock | IData | IOhMyCookie>(key: string = STORAGE_KEY): Promise<T> {
+  // `IOhMyGroup` belongs in this union like everything else in it: a group is
+  // its own record, keyed by id next to the requests and the mocks. It was
+  // simply not written yet when the union was — `ensureGroups` only ever read
+  // groups in batches, and `getMany` has no such constraint.
+  static get<T extends IOhMyMock | IState | IMock | IData | IOhMyCookie | IOhMyGroup>(key: string = STORAGE_KEY): Promise<T> {
     // if (!key) {
     //   return Promise.resolve(undefined);
     // }
