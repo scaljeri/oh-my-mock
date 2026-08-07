@@ -50,7 +50,6 @@ import {
 import {
   NgClass,
   NgTemplateOutlet,
-  AsyncPipe,
   LowerCasePipe,
   DatePipe
 } from '@angular/common';
@@ -101,7 +100,6 @@ export const highlightSeq = [
     MatMenu,
     MatMenuItem,
     NgTemplateOutlet,
-    AsyncPipe,
     LowerCasePipe,
     DatePipe,
     StatusCodeTonePipe
@@ -203,6 +201,25 @@ export class DataListComponent implements OnInit, OnDestroy {
   public viewRows: IOhMyListRow[] = [];
 
   /**
+   * Whether a state has arrived. The template draws nothing before one has.
+   *
+   * This used to be `@if (state$ | async; as state)`, and that second
+   * subscription is why the list needed a stray re-render to appear at all.
+   * `state$` is debounced, and `debounceTime` gives every subscriber its own
+   * timer: the async pipe only subscribes when the template first renders,
+   * which is *after* `ngOnInit` has subscribed, so the pipe's timer always
+   * expires after the one driving the handler in `ngOnInit`. At the moment
+   * that handler called `detectChanges()`, the pipe therefore still held
+   * nothing, the `@if` was false, and neither the toolbar nor a single row
+   * existed — the render went to an empty view and the real one had to be
+   * chased by a timer.
+   *
+   * A flag set by the same handler that renders makes the gate and the render
+   * agree by construction, with no clock in between.
+   */
+  public hasState = false;
+
+  /**
    * The pinned request ids, in the order they were pinned.
    *
    * Persisted in `aux.stickyRequests` — but only for the domain the popup is
@@ -252,6 +269,10 @@ export class DataListComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       combineLatest([this.state$, this.requestsSubject]).subscribe(
         ([state, requests]) => {
+          // First, because it is what opens the template's gate: everything
+          // set below is only rendered once this is true.
+          this.hasState = true;
+
           // Only the mocks of the groups that are **on**. A group is a set that
           // is switched in or out as a whole; its mocks are not in play while it
           // is off, so they are not in the list either. The way back is the
@@ -297,23 +318,6 @@ export class DataListComponent implements OnInit, OnDestroy {
           // which the lines above may just have changed.
           this.recompute();
           this.cdr.detectChanges();
-
-          // A second render, 50ms later, and nobody knows what for.
-          //
-          // It arrived in `7fb09b2` "Feature/cypress (#132)" — a commit about
-          // test infrastructure, for a runner this project no longer uses — with
-          // no explanation, and a bare number like that is normally a guess at
-          // when something else lands.
-          //
-          // It is not inert, which is why it is still here: removing it makes
-          // `does not write back when the stored list is already clean` see a
-          // filter write it should not, so this pass is somehow suppressing one.
-          // That is worth understanding before it is deleted, and understanding
-          // it means working out which write and why — not shortening the
-          // number or deleting it and re-recording the test.
-          setTimeout(() => {
-            this.cdr.detectChanges();
-          }, 50);
         }
       )
     );

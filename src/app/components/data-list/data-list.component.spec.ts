@@ -1,5 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
 
@@ -144,6 +144,44 @@ describe('DataListComponent', () => {
       expect(component.stickyIds).toEqual([]);
       expect(component.viewRows.map(r => r.id)).toEqual(['a', 'b']);
     });
+  });
+
+  describe('rendering', () => {
+    /**
+     * The list used to gate its whole template on `state$ | async`, a *second*
+     * subscription to the same debounced stream the state handler uses. Every
+     * `debounceTime` subscriber gets its own timer, and the pipe only
+     * subscribes once the template first renders — after `ngOnInit` has
+     * subscribed. Its timer therefore always expired later than the handler's,
+     * so at the moment the handler called `detectChanges()` the pipe still held
+     * nothing, the `@if` was false, and the render painted an empty view. The
+     * rows only ever appeared because a bare `setTimeout(..., 50)` rendered a
+     * second time, and that number was a guess at when the pipe would catch up.
+     *
+     * `tick(50)` is the debounce on `state$` and not a millisecond more: it
+     * advances the clock to exactly the handler's own render and stops. Nothing
+     * that arrives later can help.
+     */
+    it('renders the rows in the same pass the state arrives', fakeAsync(() => {
+      const created = TestBed.createComponent(DataListComponent);
+
+      created.componentInstance.requests = { a: request('a', 300), b: request('b', 200) };
+      created.componentInstance.state = state(['a', 'b']);
+      created.detectChanges();
+
+      tick(50);
+
+      const el = created.nativeElement as HTMLElement;
+
+      expect(el.querySelectorAll('[x-test="list-request-item"]').length).toBe(2);
+      // The toolbar goes up with them — the filter box is the control the user
+      // reaches for first, and it lived behind the same gate.
+      expect(el.querySelector('oh-my-request-filter')).toBeTruthy();
+
+      // The filter runs its own debounced opening search; let it finish rather
+      // than leave fakeAsync with timers in the queue.
+      flush();
+    }));
   });
 
   describe('persisting the pins', () => {

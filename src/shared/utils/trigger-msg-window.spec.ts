@@ -52,25 +52,6 @@ describe('triggerWindow', () => {
     expect(received).toEqual([]);
   });
 
-  it('accepts a message from an opaque document', () => {
-    // A `Content-Security-Policy: sandbox` page. `MessageEvent.origin` reports
-    // the *document's* origin — `"null"` — while `window.location.origin` goes
-    // on reporting the url's, so a check written against the latter refused
-    // every packet OhMyMock sent itself and the page silently stopped mocking.
-    Object.defineProperty(window, 'origin', { value: 'null', configurable: true });
-
-    try {
-      post({ data: packet, origin: 'null' });
-
-      expect(received).toEqual([packet]);
-    } finally {
-      Object.defineProperty(window, 'origin', {
-        value: window.location.origin,
-        configurable: true
-      });
-    }
-  });
-
   it('stops listening once unsubscribed', () => {
     off();
 

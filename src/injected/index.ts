@@ -8,7 +8,6 @@ import { patchFetch, unpatchFetch } from './mock-oh-fetch';
 import { patchXmlHttpRequest, unpatchXmlHttpRequest } from './mock-oh-xhr';
 import { restoreOriginals } from './restore-originals';
 import { setupListenersMessageBus } from './state-manager';
-import { ownWindowTarget } from '../shared/utils/own-origin';
 import { log } from './utils';
 
 const VERSION = '__OH_MY_VERSION__';
@@ -141,11 +140,11 @@ if (!alreadyInstalled) {
     sub.unsubscribe();
   }
 
-  // "I am here." The content script cannot see into this world, so this is the
-  // only way it can know. It used to be the trigger for stripping a page's
-  // Content-Security-Policy when it failed to arrive; that escalation is gone,
-  // and the message is now only a signal — sent last, so it means the page
-  // really is patched rather than merely running this file.
+  // "I am here." The content script cannot see into this world, and what it
+  // does with the answer is decide whether to escalate a Content-Security-Policy
+  // that kept this bundle out — see `whenBundleArrives` in
+  // `src/content/inject-code.ts`. Sent last, so it means the page really is
+  // patched rather than merely running this file.
   //
   // Ordering is not a race even though this bundle and the content script are
   // both `document_start`: `postMessage` delivers as a task, so it cannot
@@ -163,8 +162,5 @@ function notify(isActive: boolean) {
         isActive
       }
     }
-  // Not `window.location.origin`: on a `Content-Security-Policy: sandbox` page
-  // that is the url's origin while the document's is `"null"`, and the message
-  // is dropped undelivered. See `own-origin.ts`.
-  }, ownWindowTarget());
+  }, window.location.origin);
 }

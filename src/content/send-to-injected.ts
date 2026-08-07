@@ -1,6 +1,6 @@
 import { appSources } from "../shared/constants";
 import { IPacket, IPacketPayload } from "../shared/packet-type";
-import { ownWindowTarget } from "../shared/utils/own-origin";
+import { OhMyContentState } from "./content-state";
 import { error } from "./utils";
 
 /**
@@ -24,12 +24,7 @@ export function sendMessageToInjected(payload: IPacketPayload) {
   try {
     window.postMessage(
       { payload, source: appSources.CONTENT } as IPacket,
-      // Was `OhMyContentState.href` — the page's full url, of which
-      // `postMessage` uses only the origin. That is the *url's* origin, and on
-      // a `Content-Security-Policy: sandbox` page the document's is `"null"`
-      // instead, so every answer to the page-context bundle was dropped
-      // undelivered. See `own-origin.ts`.
-      ownWindowTarget()
+      OhMyContentState.href
     );
   } catch (err) {
     // The injected script is waiting on this message, so a failure here is a

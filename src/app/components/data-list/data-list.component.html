@@ -1,12 +1,12 @@
 <!-- The colour legend that used to sit here explained a row-shading scheme the
 new list replaced with explicit Method, Response and Status columns. The
 preset selector and the overflow menu moved into the toolbar below. -->
-@if (state$ | async; as state) {
+@if (hasState) {
   <!-- Filter toolbar: its own row above the table, as in the design. It used to
   live inside the header row's Url cell. -->
   <div
     class="oh-toolbar"
-    [ngClass]="{ hidden: !state || hideFilter === true || requestCount === 0 }"
+    [ngClass]="{ hidden: hideFilter === true || requestCount === 0 }"
   >
     @if (showPreset && context) {
       <oh-my-preset
