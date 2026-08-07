@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Extension for caching and mocking API (XHR/Fetch) responses",
   "manifest_version": 3,
-  "minimum_chrome_version": "111",
+  "minimum_chrome_version": "109",
   "permissions": [
     "storage",
     "unlimitedStorage",

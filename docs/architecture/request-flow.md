@@ -244,7 +244,11 @@ id. Two calls to one endpoint are in flight at once often enough, and keyed by
 mock id the second would have been handed the first's answer.
 
 The offscreen API is why `minimum_chrome_version` is 109, and why the manifest
-asks for the `"offscreen"` permission. Only one offscreen document may exist per
+asks for the `"offscreen"` permission — it is the latest-arriving API the
+extension uses, later than everything MV3 and `chrome.scripting` need. Every
+floor is tabulated with its source in
+[`interception.md`](./interception.md#what-chrome-version-this-actually-needs).
+Only one offscreen document may exist per
 profile, so `ensureDocument` funnels concurrent callers through a single
 in-flight creation promise.
 
