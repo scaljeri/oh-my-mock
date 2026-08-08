@@ -61,6 +61,15 @@ export class OhMyContentState {
   private index = new OhMyRequestIndex();
   private indexStale = true;
 
+  /**
+   * How many times this page has been told its domain no longer exists.
+   *
+   * Every storage read below records the count it was issued under and checks
+   * it again before storing what came back — see `forget()` for what that is
+   * guarding against.
+   */
+  private generation = 0;
+
   constructor() {
     StorageUtils.listen();
     StorageUtils.updates$.subscribe(({ key, update }: IOhMyStorageUpdate) => {
@@ -99,13 +108,27 @@ export class OhMyContentState {
       }
 
       if (key === OhMyContentState.host) {
-        this.state = update.newValue as IState;
-        // A request this script has not seen before arrives as two updates -
-        // the record and the id list - in no guaranteed order.
-        this.loadRequests();
-        // `aux.disabledGroups` lives on the state, so switching a group off
-        // arrives here — and the group records it names may not be loaded.
-        this.loadGroups();
+        if (update.newValue) {
+          this.state = update.newValue as IState;
+          // A request this script has not seen before arrives as two updates -
+          // the record and the id list - in no guaranteed order.
+          this.loadRequests();
+          // `aux.disabledGroups` lives on the state, so switching a group off
+          // arrives here — and the group records it names may not be loaded.
+          this.loadGroups();
+        } else {
+          // The domain has stopped existing, so nothing held for it means
+          // anything any more. Dropped here, at the record that *is* the
+          // domain, rather than left to the individual deletions.
+          //
+          // And nothing is loaded on the way out: `loadGroups` goes by the
+          // store's list rather than by the state, so running it here fetched
+          // the group records the wipe was in the middle of deleting and put
+          // them straight back — with `seenGroups` marked, so they were never
+          // fetched again either.
+          this.forget();
+        }
+
         this.publishActive();
       } else if (key === STORAGE_KEY) {
         // `popupActive` lives on the store, so a popup opening or closing
@@ -120,6 +143,58 @@ export class OhMyContentState {
     });
 
     ohMyWindow().off?.push(() => StorageUtils.off())
+  }
+
+  /**
+   * Drops everything this page holds, because the domain it held it for is
+   * gone.
+   *
+   * A domain that does not exist is not mocked and nothing is recorded for it,
+   * so a cache still describing it is a reset that did not reset. The deletions
+   * alone do not achieve this, for two reasons — both of which only show up on
+   * a wipe, which is why the per-record handling above looked complete:
+   *
+   * - **`chrome.storage.local.clear()` announces every key at once, in
+   *   lexicographic order, and the domain's own key sits in the middle of that
+   *   list.** (Measured: one `onChanged` carrying every key, `newValue`
+   *   undefined.) So by the time the deletions of ids sorting after the host
+   *   are handled, `this.state` is already `undefined` — and `isOurs()` has
+   *   nothing left to recognise them by, since a request is ours because
+   *   `state.requests` names it. Every one of them is refused and stays in the
+   *   map, for the life of the page. Which half of a domain's requests that is
+   *   comes down to how their ids happen to sort against the host name, which
+   *   is not a distinction anything should be making.
+   * - **A read issued before the wipe lands after it.** `get()` only reads
+   *   storage for a key it holds nothing for, so a pre-wipe answer stored back
+   *   into an emptied slot is never re-read and never corrected. The domain's
+   *   own record is the one that matters: `receivedApiRequest` calls `init()`
+   *   on every intercepted call, so a page making requests while the wipe lands
+   *   is a page whose state read is in flight across it — and a state that came
+   *   back from before the wipe still says `appActive`, still lists its
+   *   requests, and goes on being served from.
+   *
+   * `generation` is what closes the second one: the reads below record it and
+   * refuse to store — or return — an answer from before the domain went.
+   *
+   * The store is deliberately not dropped. It is browser-global rather than
+   * this domain's, it has its own key and therefore its own deletion, and a
+   * single domain going does not take it with it.
+   */
+  private forget(): void {
+    this.generation++;
+    this.cache = {};
+    this.requests = {};
+    this.groups = {};
+    this.seenGroups.clear();
+    // For the memory rather than for the answers: the index buckets hold the
+    // `IData` records themselves, so emptying the map above frees nothing while
+    // the last index built still points at them. It cannot answer anything
+    // either way — `activeGroups()` is empty without a state, and `find()`
+    // consults nothing but the groups it is given — which is why no test kills
+    // this line.
+    this.index = new OhMyRequestIndex();
+    this.indexStale = true;
+    this.state = undefined;
   }
 
   /**
@@ -154,8 +229,11 @@ export class OhMyContentState {
       this.get<IOhMyMock>(STORAGE_KEY)
     ]);
 
+    // `get()` is the one place that fills the cache, and the only one that
+    // knows whether what it read is still about a domain that exists. This
+    // used to write the state into the cache a second time from out here,
+    // which is exactly the assignment `get()` now refuses to make.
     this.state = state;
-    this.cache[OhMyContentState.host] = state;
     this.store = store;
   }
 
@@ -222,7 +300,16 @@ export class OhMyContentState {
       return;
     }
 
-    Object.assign(this.requests, await StorageUtils.getMany<IData>(missing));
+    const issuedAt = this.generation;
+    const loaded = await StorageUtils.getMany<IData>(missing);
+
+    // The domain went while this batch was in flight; these are the records it
+    // had before it went. See `forget()`.
+    if (this.generation !== issuedAt) {
+      return;
+    }
+
+    Object.assign(this.requests, loaded);
     // Again, after the records have landed. The subscription marks the index
     // stale when the *event* arrives, but this read is asynchronous — a lookup
     // in between would rebuild from the map as it was, clear the flag, and
@@ -244,7 +331,15 @@ export class OhMyContentState {
 
     missing.forEach(id => this.seenGroups.add(id));
 
+    const issuedAt = this.generation;
     const loaded = await StorageUtils.getMany<IOhMyGroup>(missing);
+
+    // The domain went while this batch was in flight, and `forget()` has
+    // already emptied `seenGroups` — so these are pre-wipe records that nothing
+    // would ask for again. See `forget()`.
+    if (this.generation !== issuedAt) {
+      return;
+    }
 
     // Only the ones that answer here. The store lists every group in the
     // browser, and a group for another domain has nothing to say about this
@@ -315,11 +410,26 @@ export class OhMyContentState {
   }
 
   async get<T = unknown>(key = STORAGE_KEY): Promise<T> {
-    this.cache[key] ??= await StorageUtils.get(key);
+    if (this.cache[key] !== undefined) {
+      // The cache is keyed by store key / domain / mock id, so the caller is
+      // the only one who knows which of those shapes is stored under `key`.
+      return this.cache[key] as T;
+    }
 
-    // The cache is keyed by store key / domain / mock id, so the caller is the
-    // only one who knows which of those shapes is stored under `key`.
-    return this.cache[key] as T;
+    const issuedAt = this.generation;
+    const value = await StorageUtils.get(key);
+
+    if (this.generation !== issuedAt) {
+      // The domain went while this read was in flight, so `value` is what
+      // storage held before it went — see `forget()`. Neither stored nor
+      // handed back: "gone" is the answer, and it is the caller assigning this
+      // to `this.state` that made the old one stick.
+      return undefined as T;
+    }
+
+    this.cache[key] = value;
+
+    return value as T;
   }
 
   set(key: string, value: OhMyCacheValue): Promise<void> {

@@ -75,6 +75,31 @@ export interface SeedMockOptions {
    * reads as "this domain's own local group".
    */
   groupId?: string;
+  /**
+   * The ids to store the request and its response under, instead of generated
+   * ones.
+   *
+   * For the specs where the id itself is the subject. Stored ids are compared
+   * as bytes in the one place it turns out to matter:
+   * `chrome.storage.local.clear()` announces its deletions in lexicographic key
+   * order, and a domain's own key sits somewhere in the middle of that list. So
+   * "an id that sorts after the host name" is a case a spec has to be able to
+   * *ask* for — see `domain-gone.spec.ts`. Reusing an id across a reset is the
+   * other use: it is how a spec asks whether a page picked up the *new* record.
+   */
+  dataId?: string;
+  mockId?: string;
+  /**
+   * How the records reach storage.
+   *
+   * `batched` (the default) writes all four keys in one `chrome.storage.local
+   * .set`, which is one `onChanged` whose keys arrive in lexicographic order —
+   * so whether the record or the state comes first is decided by the id, not by
+   * the caller. `record-first` writes the record and then the state, which is
+   * the order `OhMyRequestHandler` really uses and the race the content
+   * script's `loadRequests()` safety net exists for.
+   */
+  writes?: 'batched' | 'record-first';
 }
 
 export interface SeedGroupOptions {
@@ -604,8 +629,9 @@ export class OhMyMockDriver {
       label: options.label ?? '',
       enabled: options.enabled ?? true,
       groupId: options.groupId ?? null,
-      dataId: nextId('data'),
-      mockId: nextId('mock')
+      dataId: options.dataId ?? nextId('data'),
+      mockId: options.mockId ?? nextId('mock'),
+      writes: options.writes ?? 'batched'
     };
 
     return (await this.worker()).evaluate(async (opts) => {
@@ -687,12 +713,22 @@ export class OhMyMockDriver {
         store.domains = [opts.domain, ...store.domains];
       }
 
-      await chrome.storage.local.set({
-        [opts.mockId]: mock,
-        [opts.dataId]: request,
-        [opts.domain]: state,
-        OhMyMock: store
-      });
+      if (opts.writes === 'record-first') {
+        // Two writes, the record before the list that names it — which is what
+        // `OhMyRequestHandler` does: it stores the record and *then* queues the
+        // state patch adding its id. One `set()` is a single `onChanged` whose
+        // keys arrive in lexicographic order, so it can only ever produce one
+        // of the two orders, and which one depends on the id.
+        await chrome.storage.local.set({ [opts.mockId]: mock, [opts.dataId]: request });
+        await chrome.storage.local.set({ [opts.domain]: state, OhMyMock: store });
+      } else {
+        await chrome.storage.local.set({
+          [opts.mockId]: mock,
+          [opts.dataId]: request,
+          [opts.domain]: state,
+          OhMyMock: store
+        });
+      }
 
       return { dataId: opts.dataId, mockId: opts.mockId };
     }, payload);

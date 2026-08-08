@@ -18,19 +18,23 @@
  * itself stopped would hang here rather than fail an assertion — which is the
  * failure mode a barrier like this invites.
  *
- * The assertion is reachability, not emptiness. Two things legitimately survive
- * a reset and neither is a stray record:
+ * The assertion is reachability, not emptiness. Two things legitimately appear
+ * after a reset and neither is a stray record:
  *
  *  - The popup re-registers the domain it is looking at the moment the reset
  *    returns — `nav-list` writes `popupActive` and clears the filter.
- *  - **A tab that was open across the reset brings its requests back.**
- *    `OhMyContentState` caches the state and its requests in the page, and the
- *    wipe cannot reach into another process to invalidate it, so the next call
- *    that tab makes is reported against the request it still remembers and the
- *    background writes that record again. Measured, not assumed: the seeded
- *    request record came back with its `mocks` map intact while this spec was
- *    being written. It is a *resurrection*, not an orphan — the state lists it
- *    — and it is beyond what a barrier inside the service worker can do.
+ *  - A call the tab made while the domain still existed is *held* at the
+ *    barrier for the length of the wipe, and recorded against the rebuilt state
+ *    afterwards. That is a new record the rebuilt store can be walked to, not a
+ *    survivor.
+ *
+ * What is **not** on that list any more is the tab bringing its old requests
+ * back. `OhMyContentState` used to keep the domain's records in the page across
+ * the wipe — the deletions of every key sorting after the host's were refused
+ * once the state had gone, and a storage read in flight put the state itself
+ * back — so the page went on answering from records the reset had deleted. It
+ * drops them now, on the deletion of the record that *is* the domain; see
+ * `forget()` there and the third test in `domain-gone.spec.ts`.
  */
 
 import { expect, SITE_DOMAIN, SITE_ORIGIN, test } from '../fixtures/extension';
@@ -128,12 +132,13 @@ test.describe('resetting everything', () => {
     // mock written across the wipe stays in storage for good, with no state and
     // no store entry naming it.
     //
-    // Reachability rather than emptiness, because two things legitimately come
-    // back. The popup re-registers the domain it is looking at the moment the
+    // Reachability rather than emptiness, because two things legitimately turn
+    // up. The popup re-registers the domain it is looking at the moment the
     // reset returns (`nav-list` writes `popupActive` and clears the filter), and
-    // a tab that was open through the reset goes on serving from the state it
-    // had cached and writes it back — see the note at the top of this file. Both
-    // are reachable from the store; an orphan is a record nothing points at.
+    // a call the tab made before the wipe is held at the barrier and recorded
+    // against the rebuilt state afterwards — see the note at the top of this
+    // file. Both are reachable from the store; an orphan is a record nothing
+    // points at.
     await expect
       .poll(async () => orphansOf(await ohMy.dumpStorage()), { timeout: 10_000 })
       .toEqual([]);
